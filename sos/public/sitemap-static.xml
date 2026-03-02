@@ -38,6 +38,24 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- Devenir Capitaine / Become Captain - HIGH PRIORITY RECRUITMENT PAGE -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/devenir-capitaine</loc>
+    <lastmod>2026-03-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/devenir-capitaine"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/become-captain"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/ser-capitan"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/kapitaen-werden"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/tornar-se-capitao"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/stat-kapitanom"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/chengwei-duizhang"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/كن-قائدا"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/captain-bane"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/devenir-capitaine"/>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
   <!-- Tarifs / Pricing -->
   <url>
     <loc>https://sos-expat.com/fr-fr/tarifs</loc>

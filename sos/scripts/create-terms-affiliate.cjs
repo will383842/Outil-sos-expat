@@ -5,6 +5,7 @@
  * Usage:
  *   node scripts/create-terms-affiliate.cjs
  *   node scripts/create-terms-affiliate.cjs --dry-run   (prévisualise sans écrire)
+ *   node scripts/create-terms-affiliate.cjs --force       (force la mise à jour même si le document existe)
  */
 
 const { initializeApp } = require("firebase-admin/app");
@@ -14,6 +15,7 @@ const app = initializeApp({ projectId: "sos-urgently-ac307" });
 const db = getFirestore(app);
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const FORCE = process.argv.includes("--force");
 
 const LANGUAGES = ["fr", "en", "es", "de", "pt", "ru", "hi", "ch", "ar"];
 
@@ -48,8 +50,8 @@ const TERMS_AFFILIATE = {
   <li>Commission par appel prestataire recruté : montant fixe différencié — 5$ (avocat) ou 3$ (expatrié aidant) par appel reçu.</li>
   <li>Les montants exacts sont paramétrables par SOS-Expat et consultables dans le tableau de bord.</li>
 </ul>
-<h3>3.2 Gel des taux</h3>
-<p>Les taux de commission sont gelés au moment de l'inscription et ne changent pas même si la configuration globale est modifiée.</p>
+<h3>3.2 Révision des taux</h3>
+<p>Les taux de commission en vigueur à la date d'inscription constituent les taux applicables par défaut. SOS-Expat se réserve le droit de modifier les taux de commission pour toute raison commerciale légitime, sous réserve d'un préavis de 60 jours communiqué par email et via le tableau de bord. L'Affilié qui n'accepte pas la modification peut résilier sans pénalité dans le délai de préavis.</p>
 <h3>3.3 Durée d'appel minimale</h3>
 <p>Un appel doit durer au minimum 2 minutes pour être éligible à une commission.</p>
 <h3>3.4 Fenêtre de recrutement</h3>
@@ -69,7 +71,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Période de rétention</h3>
 <p>Les commissions passent en statut « disponible » après la période de validation (variable selon le rôle, minimum 24h).</p>
 <h3>4.5 Confirmation 2FA</h3>
-<p>Tout retrait requiert une confirmation via Telegram.</p>
+<p>Tout retrait requiert une confirmation à deux facteurs (2FA) : soit via Telegram (bot officiel SOS-Expat), soit via un code OTP envoyé par email. Si Telegram est indisponible, l'email constitue le mode de confirmation de secours.</p>
 <h3>4.6 Traitement</h3>
 <p>Le traitement est hybride : automatique sous 500$, validation admin au-delà.</p>
 
@@ -95,7 +97,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>L'Affilié doit compléter la vérification d'identité (KYC) dans les 90 jours suivant sa première commission.</p>
 <h3>6.4</h3>
-<p>Si le KYC n'est pas complété sous 180 jours, les fonds sont considérés comme abandonnés.</p>
+<p>Si le KYC n'est pas complété dans les 180 jours suivant la première commission, le compte est suspendu et les fonds sont conservés pendant 24 mois supplémentaires. L'Affilié peut débloquer son compte à tout moment en complétant le KYC. Au-delà de 24 mois sans réponse malgré deux relances par email, les fonds peuvent être reversés à une association caritative désignée par SOS-Expat, après notification formelle avec un délai de réponse de 30 jours.</p>
 <h3>6.5</h3>
 <p>Types de comptes bancaires supportés : IBAN (Europe/SEPA), Sort Code (UK), ABA/Routing (USA), BSB (Australie), CLABE (Mexique), IFSC (Inde).</p>
 
@@ -111,9 +113,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>Le compte peut être suspendu immédiatement en cas de suspicion de fraude.</p>
 
-<h2>Article 8 — Données personnelles (RGPD)</h2>
+<h2>Article 8 — Données personnelles</h2>
 <h3>8.1</h3>
-<p>SOS-Expat traite les données personnelles conformément au RGPD.</p>
+<p>SOS-Expat traite les données personnelles conformément au RGPD (UE) ainsi qu'aux législations applicables selon le pays de résidence de l'Affilié, notamment : CCPA/CPRA (Californie, USA), LGPD (Brésil), Loi 25 (Québec), PDPA (Thaïlande), PDPL (Arabie Saoudite), POPIA (Afrique du Sud). L'entité responsable du traitement est WorldExpat OÜ, société de droit estonien, immatriculée en Estonie.</p>
 <h3>8.2</h3>
 <p>Base juridique : exécution du contrat d'affiliation.</p>
 <h3>8.3</h3>
@@ -147,14 +149,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>L'Affilié est seul responsable de ses obligations fiscales et sociales.</p>
 
-<h2>Article 12 — Droit applicable</h2>
+<h2>Article 12 — Droit applicable et règlement des litiges</h2>
 <h3>12.1</h3>
-<p>Les présentes conditions sont soumises au droit français.</p>
+<p>Les présentes conditions sont régies par le droit estonien, sans préjudice des dispositions impératives du droit du pays de résidence de l'Affilié. SOS-Expat est exploitée par WorldExpat OÜ, société de droit estonien immatriculée en Estonie.</p>
 <h3>12.2</h3>
-<p>Tout litige sera soumis aux tribunaux compétents de Paris.</p>
+<p>En cas de litige, les parties s'engagent à chercher une résolution amiable dans les 30 jours suivant la notification du litige. À défaut d'accord, le litige sera soumis à l'arbitrage de la Chambre de Commerce Internationale (CCI), avec siège à Tallinn (Estonie), conformément au Règlement d'arbitrage CCI en vigueur, par un arbitre unique statuant en français ou en anglais.</p>
+<h3>12.3</h3>
+<p>L'Affilié consommateur situé dans l'UE conserve le droit de saisir les juridictions de son pays de résidence pour les litiges relatifs à des droits de consommateur impératifs.</p>
 
 <h2>Article 13 — Contact</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>Article 14 — Modification des présentes CGU</h2>
+<p>SOS-Expat se réserve le droit de modifier les présentes conditions générales pour toute raison légitime (évolution réglementaire, changement de modèle économique, sécurité). Toute modification substantielle est notifiée avec un préavis minimum de 60 jours par email et via le tableau de bord. En l'absence d'opposition écrite dans le délai imparti, les nouvelles conditions sont réputées acceptées. L'Affilié qui n'accepte pas les modifications peut résilier sans pénalité.</p>
+
+<h2>Article 15 — Bonus de bienvenue</h2>
+<p>Un bonus de 50 USD est crédité sur la tirelire de l'Affilié lors de la liaison réussie de son compte Telegram via le bot officiel SOS-Expat. Ce bonus est bloqué jusqu'à ce que l'Affilié ait généré au moins 150 USD de commissions organiques cumulées. Il ne peut pas faire l'objet d'un retrait autonome avant déblocage et expire si le compte est résilié pour fraude.</p>
+
+<h2>Article 16 — Attribution et cookies</h2>
+<p>Le suivi des conversions repose sur le code affilié unique et un cookie last-click de 30 jours. En cas de conflit d'attribution (liens multiples, codes multiples, conversion cross-device), SOS-Expat applique la règle du dernier clic documenté. L'Affilié peut contester une attribution dans les 30 jours suivant la commission litigieuse en contactant contact@sos-expat.com avec les justificatifs nécessaires.</p>
+
+<h2>Article 17 — Obligations fiscales</h2>
+<p>L'Affilié est seul responsable de la déclaration et du paiement des impôts, taxes et cotisations sociales applicables à ses revenus de commission dans son pays de résidence. SOS-Expat se conforme aux obligations de déclaration automatique des plateformes prévues par la Directive DAC7 (UE 2021/514) pour les Affiliés dépassant 2 000 EUR/an ou 25 transactions/an, ainsi qu'au formulaire 1099-K pour les Affiliés américains. SOS-Expat peut procéder à une retenue à la source conformément au droit fiscal applicable.</p>
+
+<h2>Article 18 — Procédure contradictoire</h2>
+<p>Avant toute annulation de commissions pour fraude présumée ou tout clawback, SOS-Expat notifie l'Affilié par email avec un exposé motivé des faits reprochés. L'Affilié dispose de 15 jours calendaires pour répondre et fournir les éléments de preuve contraires. La décision finale est communiquée dans les 15 jours suivant la réponse ou l'expiration du délai.</p>
+
+<h2>Article 19 — Structure juridique du programme</h2>
+<p>Le programme d'affiliation de SOS-Expat est un programme à un seul niveau (single-tier). Les commissions ne sont versées qu'à l'Affilié direct ayant généré l'événement éligible. Il n'existe pas de commissions multi-niveaux, de structure pyramidale, ni de rémunération liée au recrutement d'autres Affiliés. Seules les commissions liées aux appels payants de clients référés ou de prestataires recrutés par l'Affilié sont éligibles.</p>`,
   },
 
   en: {
@@ -183,8 +204,8 @@ const TERMS_AFFILIATE = {
   <li>Commission per recruited provider call: differentiated fixed amount — $5 (lawyer) or $3 (expat helper) per call received.</li>
   <li>Exact amounts are configurable by SOS-Expat and available in the dashboard.</li>
 </ul>
-<h3>3.2 Rate Lock</h3>
-<p>Commission rates are locked at the time of registration and do not change even if the global configuration is modified.</p>
+<h3>3.2 Rate Modification</h3>
+<p>Commission rates applicable at the date of registration are the default applicable rates. SOS-Expat reserves the right to modify commission rates for legitimate business reasons, subject to 60 days' notice communicated by email and via the dashboard. An Affiliate who does not accept the modification may terminate without penalty within the notice period.</p>
 <h3>3.3 Minimum Call Duration</h3>
 <p>A call must last at least 2 minutes to be eligible for a commission.</p>
 <h3>3.4 Recruitment Window</h3>
@@ -204,7 +225,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Retention Period</h3>
 <p>Commissions become "available" after the validation period (varies by role, minimum 24 hours).</p>
 <h3>4.5 2FA Confirmation</h3>
-<p>Every withdrawal requires confirmation via Telegram.</p>
+<p>Every withdrawal requires two-factor authentication (2FA): either via Telegram (official SOS-Expat bot) or via an OTP code sent by email. If Telegram is unavailable, email serves as the fallback confirmation method.</p>
 <h3>4.6 Processing</h3>
 <p>Processing is hybrid: automatic under $500, admin approval above.</p>
 
@@ -230,7 +251,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>The Affiliate must complete identity verification (KYC) within 90 days of their first commission.</p>
 <h3>6.4</h3>
-<p>If KYC is not completed within 180 days, funds are considered abandoned.</p>
+<p>If KYC is not completed within 180 days of the first commission, the account is suspended and funds are held for an additional 24 months. The Affiliate may unblock their account at any time by completing KYC. Beyond 24 months without response despite two email reminders, funds may be donated to a charity designated by SOS-Expat, following formal notification with a 30-day response period.</p>
 <h3>6.5</h3>
 <p>Supported bank account types: IBAN (Europe/SEPA), Sort Code (UK), ABA/Routing (USA), BSB (Australia), CLABE (Mexico), IFSC (India).</p>
 
@@ -246,9 +267,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>The account may be suspended immediately in case of suspected fraud.</p>
 
-<h2>Article 8 — Personal Data (GDPR)</h2>
+<h2>Article 8 — Personal Data</h2>
 <h3>8.1</h3>
-<p>SOS-Expat processes personal data in accordance with the GDPR.</p>
+<p>SOS-Expat processes personal data in accordance with the GDPR (EU) and applicable laws based on the Affiliate's country of residence, including: CCPA/CPRA (California, USA), LGPD (Brazil), Law 25 (Québec), PDPA (Thailand), PDPL (Saudi Arabia), POPIA (South Africa). The data controller is WorldExpat OÜ, a company incorporated under Estonian law.</p>
 <h3>8.2</h3>
 <p>Legal basis: performance of the affiliate contract.</p>
 <h3>8.3</h3>
@@ -282,14 +303,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>The Affiliate is solely responsible for their tax and social obligations.</p>
 
-<h2>Article 12 — Governing Law</h2>
+<h2>Article 12 — Governing Law and Dispute Resolution</h2>
 <h3>12.1</h3>
-<p>These terms are governed by French law.</p>
+<p>These terms are governed by Estonian law, without prejudice to the mandatory provisions of the law of the Affiliate's country of residence. SOS-Expat is operated by WorldExpat OÜ, a company incorporated under Estonian law.</p>
 <h3>12.2</h3>
-<p>Any dispute shall be submitted to the competent courts of Paris.</p>
+<p>In the event of a dispute, the parties agree to seek an amicable resolution within 30 days of the dispute notification. Failing agreement, the dispute shall be submitted to arbitration by the International Chamber of Commerce (ICC), seated in Tallinn (Estonia), pursuant to the ICC Arbitration Rules in force, before a sole arbitrator conducting proceedings in English or French.</p>
+<h3>12.3</h3>
+<p>Affiliate consumers located in the EU retain the right to bring proceedings before the courts of their country of residence for disputes relating to mandatory consumer rights.</p>
 
 <h2>Article 13 — Contact</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>Article 14 — Modification of these Terms</h2>
+<p>SOS-Expat reserves the right to modify these general terms for any legitimate reason (regulatory changes, business model changes, security). Any material modification is notified with a minimum 60-day notice by email and via the dashboard. In the absence of written objection within the specified period, the new terms are deemed accepted. An Affiliate who does not accept the modifications may terminate without penalty.</p>
+
+<h2>Article 15 — Welcome Bonus</h2>
+<p>A bonus of $50 USD is credited to the Affiliate's wallet upon successful linking of their Telegram account via the official SOS-Expat bot. This bonus is locked until the Affiliate has generated at least $150 USD in cumulative organic commissions. It cannot be independently withdrawn before unlocking and expires if the account is terminated for fraud.</p>
+
+<h2>Article 16 — Attribution and Cookies</h2>
+<p>Conversion tracking relies on the unique affiliate code and a 30-day last-click cookie. In case of attribution conflict (multiple links, multiple codes, cross-device conversion), SOS-Expat applies the last documented click rule. The Affiliate may dispute an attribution within 30 days of the disputed commission by contacting contact@sos-expat.com with supporting evidence.</p>
+
+<h2>Article 17 — Tax Obligations</h2>
+<p>The Affiliate is solely responsible for declaring and paying taxes, levies, and social contributions applicable to their commission income in their country of residence. SOS-Expat complies with automatic platform reporting obligations under the DAC7 Directive (EU 2021/514) for Affiliates exceeding €2,000/year or 25 transactions/year, as well as Form 1099-K for US Affiliates. SOS-Expat may withhold tax in accordance with applicable tax law.</p>
+
+<h2>Article 18 — Adversarial Procedure</h2>
+<p>Before any cancellation of commissions for alleged fraud or any clawback, SOS-Expat notifies the Affiliate by email with a reasoned account of the alleged facts. The Affiliate has 15 calendar days to respond and provide counter-evidence. The final decision is communicated within 15 days of the response or expiry of the period.</p>
+
+<h2>Article 19 — Legal Structure of the Program</h2>
+<p>The SOS-Expat affiliate program is a single-tier program. Commissions are only paid to the direct Affiliate who generated the eligible event. There are no multi-level commissions, pyramid structures, or remuneration linked to the recruitment of other Affiliates. Only commissions related to paid calls from referred clients or providers recruited by the Affiliate are eligible.</p>`,
   },
 
   es: {
@@ -318,8 +358,8 @@ const TERMS_AFFILIATE = {
   <li>Comisión por llamada de prestador reclutado: monto fijo diferenciado — 5$ (abogado) o 3$ (expatriado asistente) por llamada recibida.</li>
   <li>Los montos exactos son configurables por SOS-Expat y consultables en el panel de control.</li>
 </ul>
-<h3>3.2 Congelación de tasas</h3>
-<p>Las tasas de comisión se congelan en el momento de la inscripción y no cambian aunque se modifique la configuración global.</p>
+<h3>3.2 Modificación de tasas</h3>
+<p>Las tasas de comisión vigentes en la fecha de inscripción son las tasas aplicables por defecto. SOS-Expat se reserva el derecho de modificar las tasas de comisión por motivos comerciales legítimos, con un preaviso de 60 días comunicado por correo electrónico y a través del panel de control. El Afiliado que no acepte la modificación puede rescindir sin penalización dentro del plazo de preaviso.</p>
 <h3>3.3 Duración mínima de llamada</h3>
 <p>Una llamada debe durar al menos 2 minutos para ser elegible para una comisión.</p>
 <h3>3.4 Ventana de reclutamiento</h3>
@@ -339,7 +379,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Período de retención</h3>
 <p>Las comisiones pasan a estado «disponible» después del período de validación (variable según el rol, mínimo 24 horas).</p>
 <h3>4.5 Confirmación 2FA</h3>
-<p>Todo retiro requiere confirmación mediante Telegram.</p>
+<p>Todo retiro requiere autenticación de dos factores (2FA): bien mediante Telegram (bot oficial de SOS-Expat), bien mediante un código OTP enviado por correo electrónico. Si Telegram no está disponible, el correo electrónico actúa como método de confirmación alternativo.</p>
 <h3>4.6 Procesamiento</h3>
 <p>El procesamiento es híbrido: automático por debajo de 500$, validación administrativa por encima.</p>
 
@@ -365,7 +405,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>El Afiliado debe completar la verificación de identidad (KYC) en los 90 días siguientes a su primera comisión.</p>
 <h3>6.4</h3>
-<p>Si el KYC no se completa en 180 días, los fondos se consideran abandonados.</p>
+<p>Si el KYC no se completa en los 180 días siguientes a la primera comisión, la cuenta queda suspendida y los fondos se conservan durante 24 meses adicionales. El Afiliado puede desbloquear su cuenta en cualquier momento completando el KYC. Pasados 24 meses sin respuesta a pesar de dos recordatorios por correo electrónico, los fondos podrán donarse a una organización benéfica designada por SOS-Expat, previa notificación formal con un plazo de respuesta de 30 días.</p>
 <h3>6.5</h3>
 <p>Tipos de cuentas bancarias admitidas: IBAN (Europa/SEPA), Sort Code (Reino Unido), ABA/Routing (EE.UU.), BSB (Australia), CLABE (México), IFSC (India).</p>
 
@@ -381,9 +421,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>La cuenta puede ser suspendida inmediatamente en caso de sospecha de fraude.</p>
 
-<h2>Artículo 8 — Datos personales (RGPD)</h2>
+<h2>Artículo 8 — Datos personales</h2>
 <h3>8.1</h3>
-<p>SOS-Expat trata los datos personales conforme al RGPD.</p>
+<p>SOS-Expat trata los datos personales conforme al RGPD (UE) y a las legislaciones aplicables según el país de residencia del Afiliado, incluyendo: CCPA/CPRA (California, EE.UU.), LGPD (Brasil), Ley 25 (Québec), PDPA (Tailandia), PDPL (Arabia Saudita), POPIA (Sudáfrica). El responsable del tratamiento es WorldExpat OÜ, empresa constituida bajo la ley estonia.</p>
 <h3>8.2</h3>
 <p>Base jurídica: ejecución del contrato de afiliación.</p>
 <h3>8.3</h3>
@@ -417,14 +457,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>El Afiliado es el único responsable de sus obligaciones fiscales y sociales.</p>
 
-<h2>Artículo 12 — Derecho aplicable</h2>
+<h2>Artículo 12 — Derecho aplicable y resolución de litigios</h2>
 <h3>12.1</h3>
-<p>Las presentes condiciones se rigen por el derecho francés.</p>
+<p>Las presentes condiciones se rigen por el derecho estonio, sin perjuicio de las disposiciones imperativas del derecho del país de residencia del Afiliado. SOS-Expat es operada por WorldExpat OÜ, sociedad constituida bajo la ley estonia.</p>
 <h3>12.2</h3>
-<p>Todo litigio se someterá a los tribunales competentes de París.</p>
+<p>En caso de litigio, las partes se comprometen a buscar una resolución amistosa en los 30 días siguientes a la notificación del litigio. Si no se llega a un acuerdo, el litigio se someterá al arbitraje de la Cámara de Comercio Internacional (CCI), con sede en Tallin (Estonia), conforme al Reglamento de Arbitraje de la CCI en vigor, ante un árbitro único que actuará en español, francés o inglés.</p>
+<h3>12.3</h3>
+<p>El Afiliado consumidor situado en la UE conserva el derecho de acudir a los tribunales de su país de residencia para los litigios relacionados con derechos de consumidor imperativos.</p>
 
 <h2>Artículo 13 — Contacto</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>Artículo 14 — Modificación de los presentes Términos</h2>
+<p>SOS-Expat se reserva el derecho de modificar las presentes condiciones generales por cualquier motivo legítimo (cambios normativos, cambios en el modelo de negocio, seguridad). Cualquier modificación sustancial se notifica con un preaviso mínimo de 60 días por correo electrónico y a través del panel de control. En ausencia de oposición escrita dentro del plazo establecido, las nuevas condiciones se consideran aceptadas. El Afiliado que no acepte las modificaciones puede rescindir sin penalización.</p>
+
+<h2>Artículo 15 — Bono de bienvenida</h2>
+<p>Se acredita un bono de 50 USD en la hucha del Afiliado al enlazar exitosamente su cuenta de Telegram mediante el bot oficial de SOS-Expat. Este bono permanece bloqueado hasta que el Afiliado haya generado al menos 150 USD en comisiones orgánicas acumuladas. No puede retirarse de forma independiente antes del desbloqueo y caduca si la cuenta se rescinde por fraude.</p>
+
+<h2>Artículo 16 — Atribución y cookies</h2>
+<p>El seguimiento de conversiones se basa en el código de afiliado único y una cookie last-click de 30 días. En caso de conflicto de atribución (múltiples enlaces, múltiples códigos, conversión cross-device), SOS-Expat aplica la regla del último clic documentado. El Afiliado puede impugnar una atribución en los 30 días siguientes a la comisión disputada contactando con contact@sos-expat.com y aportando la documentación necesaria.</p>
+
+<h2>Artículo 17 — Obligaciones fiscales</h2>
+<p>El Afiliado es el único responsable de declarar y pagar los impuestos, tasas y cotizaciones sociales aplicables a sus ingresos por comisiones en su país de residencia. SOS-Expat cumple con las obligaciones de declaración automática de plataformas previstas por la Directiva DAC7 (UE 2021/514) para Afiliados que superen los 2.000 EUR/año o 25 transacciones/año, así como el formulario 1099-K para Afiliados estadounidenses. SOS-Expat puede practicar retenciones fiscales conforme al derecho tributario aplicable.</p>
+
+<h2>Artículo 18 — Procedimiento contradictorio</h2>
+<p>Antes de cualquier cancelación de comisiones por presunto fraude o cualquier clawback, SOS-Expat notifica al Afiliado por correo electrónico con una exposición motivada de los hechos imputados. El Afiliado dispone de 15 días naturales para responder y aportar pruebas contrarias. La decisión final se comunica en los 15 días siguientes a la respuesta o al vencimiento del plazo.</p>
+
+<h2>Artículo 19 — Estructura jurídica del programa</h2>
+<p>El programa de afiliación de SOS-Expat es un programa de un solo nivel (single-tier). Las comisiones solo se abonan al Afiliado directo que haya generado el evento elegible. No existen comisiones multinivel, estructuras piramidales ni remuneración vinculada al reclutamiento de otros Afiliados. Solo son elegibles las comisiones relacionadas con llamadas pagadas de clientes referidos o prestadores reclutados por el Afiliado.</p>`,
   },
 
   de: {
@@ -453,8 +512,8 @@ const TERMS_AFFILIATE = {
   <li>Provision pro Anruf eines geworbenen Dienstleisters: differenzierter Festbetrag — 5$ (Anwalt) oder 3$ (Expat-Helfer) pro empfangenem Anruf.</li>
   <li>Die genauen Beträge sind von SOS-Expat konfigurierbar und im Dashboard einsehbar.</li>
 </ul>
-<h3>3.2 Festschreibung der Sätze</h3>
-<p>Die Provisionssätze werden zum Zeitpunkt der Registrierung festgeschrieben und ändern sich nicht, auch wenn die globale Konfiguration geändert wird.</p>
+<h3>3.2 Änderung der Provisionssätze</h3>
+<p>Die zum Zeitpunkt der Registrierung geltenden Provisionssätze sind die standardmäßig anwendbaren Sätze. SOS-Expat behält sich das Recht vor, die Provisionssätze aus legitimen geschäftlichen Gründen zu ändern, mit einer Frist von 60 Tagen, die per E-Mail und über das Dashboard mitgeteilt wird. Ein Partner, der die Änderung nicht akzeptiert, kann innerhalb der Kündigungsfrist ohne Strafe kündigen.</p>
 <h3>3.3 Mindestanrufdauer</h3>
 <p>Ein Anruf muss mindestens 2 Minuten dauern, um provisionsberechtigt zu sein.</p>
 <h3>3.4 Rekrutierungsfenster</h3>
@@ -474,7 +533,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Einbehaltungsfrist</h3>
 <p>Provisionen werden nach der Validierungsfrist (je nach Rolle unterschiedlich, mindestens 24 Stunden) als „verfügbar" eingestuft.</p>
 <h3>4.5 2FA-Bestätigung</h3>
-<p>Jede Auszahlung erfordert eine Bestätigung über Telegram.</p>
+<p>Jede Auszahlung erfordert eine Zwei-Faktor-Authentifizierung (2FA): entweder über Telegram (offizieller SOS-Expat-Bot) oder über einen per E-Mail gesendeten OTP-Code. Wenn Telegram nicht verfügbar ist, dient E-Mail als alternative Bestätigungsmethode.</p>
 <h3>4.6 Verarbeitung</h3>
 <p>Die Verarbeitung ist hybrid: automatisch unter 500$, Admin-Genehmigung darüber.</p>
 
@@ -500,7 +559,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>Der Partner muss die Identitätsüberprüfung (KYC) innerhalb von 90 Tagen nach seiner ersten Provision abschließen.</p>
 <h3>6.4</h3>
-<p>Wird das KYC nicht innerhalb von 180 Tagen abgeschlossen, gelten die Gelder als aufgegeben.</p>
+<p>Wird das KYC nicht innerhalb von 180 Tagen nach der ersten Provision abgeschlossen, wird das Konto gesperrt und die Gelder werden für weitere 24 Monate aufbewahrt. Der Partner kann sein Konto jederzeit durch Abschluss des KYC entsperren. Nach 24 Monaten ohne Reaktion trotz zweier E-Mail-Erinnerungen können die Gelder nach formeller Benachrichtigung mit einer Antwortfrist von 30 Tagen an eine von SOS-Expat benannte gemeinnützige Organisation gespendet werden.</p>
 <h3>6.5</h3>
 <p>Unterstützte Kontoarten: IBAN (Europa/SEPA), Sort Code (UK), ABA/Routing (USA), BSB (Australien), CLABE (Mexiko), IFSC (Indien).</p>
 
@@ -516,9 +575,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>Das Konto kann bei Betrugsverdacht sofort gesperrt werden.</p>
 
-<h2>Artikel 8 — Personenbezogene Daten (DSGVO)</h2>
+<h2>Artikel 8 — Personenbezogene Daten</h2>
 <h3>8.1</h3>
-<p>SOS-Expat verarbeitet personenbezogene Daten gemäß der DSGVO.</p>
+<p>SOS-Expat verarbeitet personenbezogene Daten gemäß der DSGVO (EU) und den je nach Wohnsitzland des Partners geltenden Gesetzen, einschließlich: CCPA/CPRA (Kalifornien, USA), LGPD (Brasilien), Gesetz 25 (Québec), PDPA (Thailand), PDPL (Saudi-Arabien), POPIA (Südafrika). Der Verantwortliche für die Datenverarbeitung ist WorldExpat OÜ, eine nach estnischem Recht gegründete Gesellschaft.</p>
 <h3>8.2</h3>
 <p>Rechtsgrundlage: Erfüllung des Partnervertrags.</p>
 <h3>8.3</h3>
@@ -552,14 +611,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>Der Partner ist allein verantwortlich für seine steuerlichen und sozialversicherungsrechtlichen Pflichten.</p>
 
-<h2>Artikel 12 — Anwendbares Recht</h2>
+<h2>Artikel 12 — Anwendbares Recht und Streitbeilegung</h2>
 <h3>12.1</h3>
-<p>Diese Bedingungen unterliegen französischem Recht.</p>
+<p>Diese Bedingungen unterliegen estnischem Recht, unbeschadet der zwingenden Bestimmungen des Rechts des Wohnsitzlandes des Partners. SOS-Expat wird von WorldExpat OÜ betrieben, einer nach estnischem Recht gegründeten Gesellschaft.</p>
 <h3>12.2</h3>
-<p>Jeder Rechtsstreit wird den zuständigen Gerichten in Paris vorgelegt.</p>
+<p>Im Streitfall verpflichten sich die Parteien, innerhalb von 30 Tagen nach Bekanntmachung des Streits eine gütliche Lösung zu suchen. Scheitert eine Einigung, wird der Streit der Schiedsgerichtsbarkeit der Internationalen Handelskammer (ICC) mit Sitz in Tallinn (Estland) gemäß den geltenden ICC-Schiedsregeln vor einem Einzelschiedsrichter, der das Verfahren auf Englisch oder Deutsch führt, vorgelegt.</p>
+<h3>12.3</h3>
+<p>Verbraucher-Partner mit Wohnsitz in der EU behalten das Recht, die Gerichte ihres Wohnsitzlandes für Streitigkeiten im Zusammenhang mit zwingenden Verbraucherrechten anzurufen.</p>
 
 <h2>Artikel 13 — Kontakt</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>Artikel 14 — Änderung dieser Bedingungen</h2>
+<p>SOS-Expat behält sich das Recht vor, diese allgemeinen Bedingungen aus legitimen Gründen zu ändern (regulatorische Änderungen, Änderungen des Geschäftsmodells, Sicherheit). Jede wesentliche Änderung wird mit einer Mindestfrist von 60 Tagen per E-Mail und über das Dashboard mitgeteilt. In Ermangelung eines schriftlichen Widerspruchs innerhalb der angegebenen Frist gelten die neuen Bedingungen als akzeptiert. Ein Partner, der die Änderungen nicht akzeptiert, kann ohne Strafe kündigen.</p>
+
+<h2>Artikel 15 — Willkommensbonus</h2>
+<p>Ein Bonus von 50 USD wird dem Sparschwein des Partners gutgeschrieben, wenn sein Telegram-Konto erfolgreich über den offiziellen SOS-Expat-Bot verknüpft wird. Dieser Bonus ist gesperrt, bis der Partner mindestens 150 USD an kumulierten organischen Provisionen generiert hat. Er kann vor der Freischaltung nicht eigenständig ausgezahlt werden und verfällt, wenn das Konto wegen Betrugs gekündigt wird.</p>
+
+<h2>Artikel 16 — Attribution und Cookies</h2>
+<p>Das Conversion-Tracking basiert auf dem eindeutigen Partner-Code und einem 30-Tage-Last-Click-Cookie. Bei Attributionskonflikten (mehrere Links, mehrere Codes, geräteübergreifende Conversion) wendet SOS-Expat die Regel des letzten dokumentierten Klicks an. Der Partner kann eine Attribution innerhalb von 30 Tagen nach der strittigen Provision anfechten, indem er contact@sos-expat.com mit den erforderlichen Belegen kontaktiert.</p>
+
+<h2>Artikel 17 — Steuerliche Pflichten</h2>
+<p>Der Partner ist allein verantwortlich für die Erklärung und Zahlung von Steuern, Abgaben und Sozialversicherungsbeiträgen auf seine Provisionseinnahmen in seinem Wohnsitzland. SOS-Expat erfüllt die automatischen Meldepflichten für Plattformen gemäß der DAC7-Richtlinie (EU 2021/514) für Partner, die 2.000 EUR/Jahr oder 25 Transaktionen/Jahr überschreiten, sowie das Formular 1099-K für US-Partner. SOS-Expat kann gemäß geltendem Steuerrecht Quellensteuern einbehalten.</p>
+
+<h2>Artikel 18 — Kontradiktorisches Verfahren</h2>
+<p>Vor jeder Stornierung von Provisionen wegen mutmaßlichem Betrug oder einem Clawback benachrichtigt SOS-Expat den Partner per E-Mail mit einer begründeten Darstellung der vorgeworfenen Sachverhalte. Der Partner hat 15 Kalendertage Zeit, zu antworten und Gegenbeweise vorzulegen. Die endgültige Entscheidung wird innerhalb von 15 Tagen nach der Antwort oder dem Ablauf der Frist mitgeteilt.</p>
+
+<h2>Artikel 19 — Rechtliche Struktur des Programms</h2>
+<p>Das Partnerprogramm von SOS-Expat ist ein einstufiges Programm (Single-Tier). Provisionen werden nur an den direkten Partner ausgezahlt, der das provisionsfähige Ereignis generiert hat. Es gibt keine mehrstufigen Provisionen, Pyramidenstrukturen oder Vergütungen, die mit der Anwerbung anderer Partner verbunden sind. Nur Provisionen im Zusammenhang mit bezahlten Anrufen von vermittelten Kunden oder vom Partner angeworbenen Dienstleistern sind provisionsfähig.</p>`,
   },
 
   pt: {
@@ -588,8 +666,8 @@ const TERMS_AFFILIATE = {
   <li>Comissão por chamada de prestador recrutado: montante fixo diferenciado — 5$ (advogado) ou 3$ (expatriado auxiliar) por chamada recebida.</li>
   <li>Os montantes exatos são configuráveis pela SOS-Expat e consultáveis no painel de controle.</li>
 </ul>
-<h3>3.2 Congelamento de taxas</h3>
-<p>As taxas de comissão são congeladas no momento da inscrição e não mudam mesmo que a configuração global seja alterada.</p>
+<h3>3.2 Modificação de taxas</h3>
+<p>As taxas de comissão em vigor na data de inscrição são as taxas aplicáveis por defeito. A SOS-Expat reserva-se o direito de modificar as taxas de comissão por motivos comerciais legítimos, mediante aviso prévio de 60 dias comunicado por e-mail e através do painel de controle. O Afiliado que não aceitar a modificação pode rescindir sem penalidade dentro do prazo de aviso.</p>
 <h3>3.3 Duração mínima de chamada</h3>
 <p>Uma chamada deve durar no mínimo 2 minutos para ser elegível a uma comissão.</p>
 <h3>3.4 Janela de recrutamento</h3>
@@ -609,7 +687,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Período de retenção</h3>
 <p>As comissões passam ao estado «disponível» após o período de validação (variável conforme a função, mínimo de 24 horas).</p>
 <h3>4.5 Confirmação 2FA</h3>
-<p>Todo saque requer confirmação via Telegram.</p>
+<p>Todo saque requer autenticação de dois fatores (2FA): seja via Telegram (bot oficial da SOS-Expat), seja via código OTP enviado por e-mail. Se o Telegram estiver indisponível, o e-mail serve como método de confirmação alternativo.</p>
 <h3>4.6 Processamento</h3>
 <p>O processamento é híbrido: automático abaixo de 500$, validação administrativa acima.</p>
 
@@ -635,7 +713,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>O Afiliado deve completar a verificação de identidade (KYC) nos 90 dias seguintes à sua primeira comissão.</p>
 <h3>6.4</h3>
-<p>Se o KYC não for completado em 180 dias, os fundos são considerados abandonados.</p>
+<p>Se o KYC não for completado nos 180 dias seguintes à primeira comissão, a conta fica suspensa e os fundos são conservados por mais 24 meses. O Afiliado pode desbloquear a sua conta a qualquer momento completando o KYC. Após 24 meses sem resposta apesar de dois lembretes por e-mail, os fundos poderão ser doados a uma instituição de caridade designada pela SOS-Expat, mediante notificação formal com prazo de resposta de 30 dias.</p>
 <h3>6.5</h3>
 <p>Tipos de contas bancárias suportados: IBAN (Europa/SEPA), Sort Code (Reino Unido), ABA/Routing (EUA), BSB (Austrália), CLABE (México), IFSC (Índia).</p>
 
@@ -651,9 +729,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>A conta pode ser suspensa imediatamente em caso de suspeita de fraude.</p>
 
-<h2>Artigo 8 — Dados pessoais (RGPD)</h2>
+<h2>Artigo 8 — Dados pessoais</h2>
 <h3>8.1</h3>
-<p>A SOS-Expat trata os dados pessoais em conformidade com o RGPD.</p>
+<p>A SOS-Expat trata os dados pessoais em conformidade com o RGPD (UE) e com as legislações aplicáveis em função do país de residência do Afiliado, incluindo: CCPA/CPRA (Califórnia, EUA), LGPD (Brasil), Lei 25 (Québec), PDPA (Tailândia), PDPL (Arábia Saudita), POPIA (África do Sul). O responsável pelo tratamento é a WorldExpat OÜ, sociedade constituída ao abrigo da lei estoniana.</p>
 <h3>8.2</h3>
 <p>Base jurídica: execução do contrato de afiliação.</p>
 <h3>8.3</h3>
@@ -687,14 +765,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>O Afiliado é o único responsável pelas suas obrigações fiscais e sociais.</p>
 
-<h2>Artigo 12 — Direito aplicável</h2>
+<h2>Artigo 12 — Direito aplicável e resolução de litígios</h2>
 <h3>12.1</h3>
-<p>Os presentes termos são regidos pelo direito francês.</p>
+<p>Os presentes termos são regidos pelo direito estoniano, sem prejuízo das disposições imperativas do direito do país de residência do Afiliado. A SOS-Expat é operada pela WorldExpat OÜ, sociedade constituída ao abrigo da lei estoniana.</p>
 <h3>12.2</h3>
-<p>Qualquer litígio será submetido aos tribunais competentes de Paris.</p>
+<p>Em caso de litígio, as partes comprometem-se a procurar uma resolução amigável nos 30 dias seguintes à notificação do litígio. Na falta de acordo, o litígio será submetido à arbitragem da Câmara de Comércio Internacional (CCI), com sede em Tallinn (Estónia), nos termos do Regulamento de Arbitragem da CCI em vigor, perante um árbitro único que conduzirá o processo em inglês ou português.</p>
+<h3>12.3</h3>
+<p>O Afiliado consumidor situado na UE conserva o direito de recorrer aos tribunais do seu país de residência para litígios relacionados com direitos de consumidor imperativos.</p>
 
 <h2>Artigo 13 — Contacto</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>Artigo 14 — Modificação dos presentes Termos</h2>
+<p>A SOS-Expat reserva-se o direito de modificar os presentes termos gerais por qualquer motivo legítimo (alterações regulatórias, mudanças no modelo de negócio, segurança). Qualquer modificação substancial é notificada com um aviso prévio mínimo de 60 dias por e-mail e através do painel de controle. Na ausência de oposição escrita dentro do prazo estabelecido, os novos termos são considerados aceites. O Afiliado que não aceitar as modificações pode rescindir sem penalidade.</p>
+
+<h2>Artigo 15 — Bónus de boas-vindas</h2>
+<p>Um bónus de 50 USD é creditado no mealheiro do Afiliado ao ligar com sucesso a sua conta Telegram através do bot oficial da SOS-Expat. Este bónus fica bloqueado até que o Afiliado tenha gerado pelo menos 150 USD em comissões orgânicas acumuladas. Não pode ser levantado de forma independente antes do desbloqueio e caduca se a conta for rescindida por fraude.</p>
+
+<h2>Artigo 16 — Atribuição e cookies</h2>
+<p>O rastreamento de conversões baseia-se no código de afiliado único e num cookie last-click de 30 dias. Em caso de conflito de atribuição (múltiplos links, múltiplos códigos, conversão cross-device), a SOS-Expat aplica a regra do último clique documentado. O Afiliado pode contestar uma atribuição nos 30 dias seguintes à comissão disputada contactando contact@sos-expat.com com a documentação necessária.</p>
+
+<h2>Artigo 17 — Obrigações fiscais</h2>
+<p>O Afiliado é o único responsável pela declaração e pagamento de impostos, taxas e contribuições sociais aplicáveis aos seus rendimentos de comissões no seu país de residência. A SOS-Expat cumpre as obrigações de declaração automática das plataformas previstas pela Diretiva DAC7 (UE 2021/514) para Afiliados que excedam 2.000 EUR/ano ou 25 transações/ano, bem como o formulário 1099-K para Afiliados norte-americanos. A SOS-Expat pode efetuar retenção na fonte em conformidade com o direito fiscal aplicável.</p>
+
+<h2>Artigo 18 — Procedimento contraditório</h2>
+<p>Antes de qualquer cancelamento de comissões por fraude presumida ou qualquer clawback, a SOS-Expat notifica o Afiliado por e-mail com uma exposição fundamentada dos factos imputados. O Afiliado dispõe de 15 dias de calendário para responder e apresentar elementos de prova contrários. A decisão final é comunicada nos 15 dias seguintes à resposta ou ao termo do prazo.</p>
+
+<h2>Artigo 19 — Estrutura jurídica do programa</h2>
+<p>O programa de afiliação da SOS-Expat é um programa de nível único (single-tier). As comissões só são pagas ao Afiliado direto que gerou o evento elegível. Não existem comissões multinível, estruturas piramidais nem remuneração associada ao recrutamento de outros Afiliados. Apenas são elegíveis as comissões relacionadas com chamadas pagas de clientes indicados ou prestadores recrutados pelo Afiliado.</p>`,
   },
 
   ru: {
@@ -723,8 +820,8 @@ const TERMS_AFFILIATE = {
   <li>Комиссия за звонок привлечённого поставщика услуг: дифференцированная фиксированная сумма — 5$ (адвокат) или 3$ (экспат-помощник) за полученный звонок.</li>
   <li>Точные суммы настраиваются SOS-Expat и доступны в личном кабинете.</li>
 </ul>
-<h3>3.2 Фиксация ставок</h3>
-<p>Ставки комиссий фиксируются на момент регистрации и не изменяются даже при изменении глобальной конфигурации.</p>
+<h3>3.2 Изменение ставок</h3>
+<p>Ставки комиссий, действующие на дату регистрации, являются ставками по умолчанию. SOS-Expat оставляет за собой право изменять ставки комиссий по обоснованным коммерческим причинам с предварительным уведомлением за 60 дней, направляемым по электронной почте и через личный кабинет. Партнёр, не принявший изменение, вправе расторгнуть договор без штрафа в течение срока уведомления.</p>
 <h3>3.3 Минимальная продолжительность звонка</h3>
 <p>Звонок должен длиться не менее 2 минут для получения права на комиссию.</p>
 <h3>3.4 Окно рекрутинга</h3>
@@ -744,7 +841,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Период удержания</h3>
 <p>Комиссии переходят в статус «доступно» после периода проверки (варьируется в зависимости от роли, минимум 24 часа).</p>
 <h3>4.5 Подтверждение 2FA</h3>
-<p>Каждый вывод средств требует подтверждения через Telegram.</p>
+<p>Каждый вывод средств требует двухфакторной аутентификации (2FA): либо через Telegram (официальный бот SOS-Expat), либо через OTP-код, отправленный по электронной почте. Если Telegram недоступен, электронная почта служит резервным методом подтверждения.</p>
 <h3>4.6 Обработка</h3>
 <p>Обработка гибридная: автоматическая при суммах менее 500$, утверждение администратором свыше.</p>
 
@@ -770,7 +867,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>Партнёр обязан пройти верификацию личности (KYC) в течение 90 дней после получения первой комиссии.</p>
 <h3>6.4</h3>
-<p>Если KYC не пройден в течение 180 дней, средства считаются невостребованными.</p>
+<p>Если KYC не завершён в течение 180 дней после первой комиссии, аккаунт приостанавливается, а средства хранятся ещё 24 месяца. Партнёр может разблокировать аккаунт в любое время, пройдя KYC. По истечении 24 месяцев без ответа, несмотря на два напоминания по электронной почте, средства могут быть перечислены в благотворительную организацию, определённую SOS-Expat, после официального уведомления с 30-дневным сроком ответа.</p>
 <h3>6.5</h3>
 <p>Поддерживаемые типы банковских счетов: IBAN (Европа/SEPA), Sort Code (Великобритания), ABA/Routing (США), BSB (Австралия), CLABE (Мексика), IFSC (Индия).</p>
 
@@ -786,9 +883,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>Аккаунт может быть немедленно заблокирован при подозрении на мошенничество.</p>
 
-<h2>Статья 8 — Персональные данные (GDPR)</h2>
+<h2>Статья 8 — Персональные данные</h2>
 <h3>8.1</h3>
-<p>SOS-Expat обрабатывает персональные данные в соответствии с GDPR.</p>
+<p>SOS-Expat обрабатывает персональные данные в соответствии с GDPR (ЕС) и применимым законодательством в зависимости от страны проживания Партнёра, включая: CCPA/CPRA (Калифорния, США), LGPD (Бразилия), Закон 25 (Квебек), PDPA (Таиланд), PDPL (Саудовская Аравия), POPIA (ЮАР). Контролёром данных является WorldExpat OÜ, компания, зарегистрированная по эстонскому праву.</p>
 <h3>8.2</h3>
 <p>Правовое основание: исполнение партнёрского договора.</p>
 <h3>8.3</h3>
@@ -822,14 +919,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>Партнёр самостоятельно несёт ответственность за свои налоговые и социальные обязательства.</p>
 
-<h2>Статья 12 — Применимое право</h2>
+<h2>Статья 12 — Применимое право и разрешение споров</h2>
 <h3>12.1</h3>
-<p>Настоящие условия регулируются французским правом.</p>
+<p>Настоящие условия регулируются эстонским правом без ущерба для обязательных норм права страны проживания Партнёра. SOS-Expat управляется компанией WorldExpat OÜ, зарегистрированной по эстонскому праву.</p>
 <h3>12.2</h3>
-<p>Любой спор подлежит рассмотрению компетентными судами Парижа.</p>
+<p>В случае спора стороны обязуются предпринять попытку урегулирования в течение 30 дней с момента уведомления о споре. При отсутствии договорённости спор передаётся на рассмотрение арбитража Международной торговой палаты (МТП) с местом проведения в Таллине (Эстония) в соответствии с действующим Регламентом арбитража МТП, единственным арбитром, ведущим разбирательство на русском, английском или французском языке.</p>
+<h3>12.3</h3>
+<p>Партнёры-потребители, проживающие в ЕС, сохраняют право обращаться в суды своей страны проживания по спорам, связанным с обязательными правами потребителей.</p>
 
 <h2>Статья 13 — Контакты</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>Статья 14 — Изменение настоящих условий</h2>
+<p>SOS-Expat оставляет за собой право изменять настоящие общие условия по любым законным причинам (изменения в законодательстве, изменение бизнес-модели, безопасность). О любом существенном изменении уведомляется с минимальным предупреждением за 60 дней по электронной почте и через личный кабинет. В отсутствие письменных возражений в установленный срок новые условия считаются принятыми. Партнёр, не принявший изменения, вправе расторгнуть договор без штрафа.</p>
+
+<h2>Статья 15 — Приветственный бонус</h2>
+<p>Бонус в размере 50 USD начисляется на кошелёк Партнёра при успешной привязке аккаунта Telegram через официальный бот SOS-Expat. Этот бонус заблокирован до тех пор, пока Партнёр не накопит не менее 150 USD органических комиссий. Он не может быть самостоятельно выведен до разблокировки и аннулируется в случае расторжения аккаунта за мошенничество.</p>
+
+<h2>Статья 16 — Атрибуция и куки</h2>
+<p>Отслеживание конверсий основано на уникальном партнёрском коде и 30-дневном last-click cookie. При конфликте атрибуции (несколько ссылок, несколько кодов, кросс-устройственная конверсия) SOS-Expat применяет правило последнего задокументированного клика. Партнёр может оспорить атрибуцию в течение 30 дней после спорной комиссии, обратившись на contact@sos-expat.com с необходимыми подтверждающими документами.</p>
+
+<h2>Статья 17 — Налоговые обязательства</h2>
+<p>Партнёр несёт единоличную ответственность за декларирование и уплату налогов, сборов и взносов на социальное страхование с доходов от комиссий в стране своего проживания. SOS-Expat выполняет обязательства по автоматической отчётности платформ согласно Директиве DAC7 (ЕС 2021/514) для Партнёров, превышающих 2 000 EUR/год или 25 транзакций/год, а также требования Формы 1099-K для Партнёров из США. SOS-Expat может удерживать налог у источника в соответствии с применимым налоговым законодательством.</p>
+
+<h2>Статья 18 — Состязательная процедура</h2>
+<p>До любой отмены комиссий за предполагаемое мошенничество или любого clawback SOS-Expat уведомляет Партнёра по электронной почте с обоснованным изложением предъявляемых фактов. Партнёр имеет 15 календарных дней для ответа и предоставления опровергающих доказательств. Окончательное решение сообщается в течение 15 дней после получения ответа или истечения срока.</p>
+
+<h2>Статья 19 — Правовая структура программы</h2>
+<p>Партнёрская программа SOS-Expat является одноуровневой программой (single-tier). Комиссии выплачиваются только прямому Партнёру, сгенерировавшему квалифицирующее событие. Не существует многоуровневых комиссий, пирамидных структур или вознаграждения, связанного с привлечением других Партнёров. Право на комиссию имеют только выплаты, связанные с оплаченными звонками привлечённых клиентов или поставщиков услуг, завербованных Партнёром.</p>`,
   },
 
   hi: {
@@ -858,8 +974,8 @@ const TERMS_AFFILIATE = {
   <li>भर्ती किए गए सेवा प्रदाता कॉल पर कमीशन: विभेदित निश्चित राशि — 5$ (वकील) या 3$ (प्रवासी सहायक) प्रति प्राप्त कॉल।</li>
   <li>सटीक राशियाँ SOS-Expat द्वारा कॉन्फ़िगर करने योग्य हैं और डैशबोर्ड में उपलब्ध हैं।</li>
 </ul>
-<h3>3.2 दरों का स्थिरीकरण</h3>
-<p>कमीशन दरें पंजीकरण के समय स्थिर कर दी जाती हैं और वैश्विक कॉन्फ़िगरेशन संशोधित होने पर भी नहीं बदलतीं।</p>
+<h3>3.2 दरों का संशोधन</h3>
+<p>पंजीकरण की तिथि पर लागू कमीशन दरें डिफ़ॉल्ट लागू दरें हैं। SOS-Expat को वैध व्यावसायिक कारणों से कमीशन दरें संशोधित करने का अधिकार सुरक्षित है, जिसके लिए ईमेल और डैशबोर्ड के माध्यम से 60 दिन का पूर्व नोटिस दिया जाएगा। संशोधन स्वीकार न करने वाला सहबद्ध नोटिस अवधि के भीतर बिना दंड के अनुबंध समाप्त कर सकता है।</p>
 <h3>3.3 न्यूनतम कॉल अवधि</h3>
 <p>कमीशन के लिए पात्र होने के लिए कॉल कम से कम 2 मिनट तक चलना चाहिए।</p>
 <h3>3.4 भर्ती विंडो</h3>
@@ -879,7 +995,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 प्रतिधारण अवधि</h3>
 <p>सत्यापन अवधि (भूमिका के अनुसार भिन्न, न्यूनतम 24 घंटे) के बाद कमीशन «उपलब्ध» स्थिति में आ जाते हैं।</p>
 <h3>4.5 2FA पुष्टि</h3>
-<p>प्रत्येक निकासी के लिए Telegram के माध्यम से पुष्टि आवश्यक है।</p>
+<p>प्रत्येक निकासी के लिए दो-कारक प्रमाणीकरण (2FA) आवश्यक है: या तो Telegram (आधिकारिक SOS-Expat बॉट) के माध्यम से, या ईमेल द्वारा भेजे गए OTP कोड के माध्यम से। यदि Telegram अनुपलब्ध है, तो ईमेल वैकल्पिक पुष्टि विधि के रूप में कार्य करता है।</p>
 <h3>4.6 प्रसंस्करण</h3>
 <p>प्रसंस्करण हाइब्रिड है: 500$ से कम पर स्वचालित, उससे अधिक पर व्यवस्थापक अनुमोदन।</p>
 
@@ -905,7 +1021,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>सहबद्ध को अपने पहले कमीशन के 90 दिनों के भीतर पहचान सत्यापन (KYC) पूरा करना होगा।</p>
 <h3>6.4</h3>
-<p>यदि KYC 180 दिनों के भीतर पूरा नहीं होता है, तो धनराशि को परित्यक्त माना जाता है।</p>
+<p>यदि पहले कमीशन के 180 दिनों के भीतर KYC पूरा नहीं होता है, तो खाता निलंबित कर दिया जाता है और धनराशि अतिरिक्त 24 महीनों के लिए संरक्षित रखी जाती है। सहबद्ध किसी भी समय KYC पूरा करके अपना खाता अनब्लॉक कर सकता है। दो ईमेल अनुस्मारक के बावजूद 24 महीने बिना प्रतिक्रिया के गुजरने पर, 30 दिन के जवाबी समय के साथ औपचारिक सूचना के बाद धनराशि SOS-Expat द्वारा निर्दिष्ट किसी धर्मार्थ संस्था को दान की जा सकती है।</p>
 <h3>6.5</h3>
 <p>समर्थित बैंक खाता प्रकार: IBAN (यूरोप/SEPA), Sort Code (यूके), ABA/Routing (USA), BSB (ऑस्ट्रेलिया), CLABE (मेक्सिको), IFSC (भारत)।</p>
 
@@ -921,9 +1037,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>धोखाधड़ी के संदेह में खाता तुरंत निलंबित किया जा सकता है।</p>
 
-<h2>अनुच्छेद 8 — व्यक्तिगत डेटा (GDPR)</h2>
+<h2>अनुच्छेद 8 — व्यक्तिगत डेटा</h2>
 <h3>8.1</h3>
-<p>SOS-Expat GDPR के अनुसार व्यक्तिगत डेटा का प्रसंस्करण करता है।</p>
+<p>SOS-Expat GDPR (EU) के अनुसार और सहबद्ध के निवास देश के अनुसार लागू कानूनों के तहत व्यक्तिगत डेटा का प्रसंस्करण करता है, जिनमें शामिल हैं: CCPA/CPRA (कैलिफ़ोर्निया, USA), LGPD (ब्राज़ील), कानून 25 (क्यूबेक), PDPA (थाईलैंड), PDPL (सऊदी अरब), POPIA (दक्षिण अफ्रीका)। डेटा नियंत्रक WorldExpat OÜ है, जो एस्टोनियाई कानून के तहत पंजीकृत कंपनी है।</p>
 <h3>8.2</h3>
 <p>कानूनी आधार: सहबद्ध अनुबंध का निष्पादन।</p>
 <h3>8.3</h3>
@@ -957,14 +1073,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>सहबद्ध अपने कर और सामाजिक दायित्वों के लिए स्वयं ज़िम्मेदार है।</p>
 
-<h2>अनुच्छेद 12 — लागू कानून</h2>
+<h2>अनुच्छेद 12 — लागू कानून और विवाद समाधान</h2>
 <h3>12.1</h3>
-<p>ये शर्तें फ्रांसीसी कानून द्वारा शासित हैं।</p>
+<p>ये शर्तें एस्टोनियाई कानून द्वारा शासित हैं, बिना सहबद्ध के निवास देश के अनिवार्य प्रावधानों पर प्रतिकूल प्रभाव डाले। SOS-Expat का संचालन WorldExpat OÜ द्वारा किया जाता है, जो एस्टोनियाई कानून के तहत पंजीकृत कंपनी है।</p>
 <h3>12.2</h3>
-<p>कोई भी विवाद पेरिस के सक्षम न्यायालयों के समक्ष प्रस्तुत किया जाएगा।</p>
+<p>विवाद की स्थिति में, पक्ष विवाद की अधिसूचना के 30 दिनों के भीतर सौहार्दपूर्ण समाधान खोजने का प्रयास करने के लिए सहमत हैं। समझौते के अभाव में, विवाद अंतर्राष्ट्रीय वाणिज्य चैंबर (ICC) के मध्यस्थता के अधीन होगा, जिसका मुख्यालय तालिन (एस्टोनिया) में है, प्रभावी ICC मध्यस्थता नियमों के अनुसार, एक एकल मध्यस्थ के समक्ष जो अंग्रेजी या हिंदी में कार्यवाही संचालित करेगा।</p>
+<h3>12.3</h3>
+<p>EU में स्थित सहबद्ध उपभोक्ता अनिवार्य उपभोक्ता अधिकारों से संबंधित विवादों के लिए अपने निवास देश के न्यायालयों में जाने का अधिकार सुरक्षित रखते हैं।</p>
 
 <h2>अनुच्छेद 13 — संपर्क</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>अनुच्छेद 14 — इन शर्तों का संशोधन</h2>
+<p>SOS-Expat किसी भी वैध कारण (नियामक परिवर्तन, व्यवसाय मॉडल में बदलाव, सुरक्षा) के लिए इन सामान्य शर्तों को संशोधित करने का अधिकार सुरक्षित रखता है। किसी भी महत्वपूर्ण संशोधन की सूचना ईमेल और डैशबोर्ड के माध्यम से न्यूनतम 60 दिन पहले दी जाती है। निर्धारित अवधि के भीतर लिखित आपत्ति न होने पर नई शर्तें स्वीकृत मानी जाती हैं। संशोधन स्वीकार न करने वाला सहबद्ध बिना दंड के अनुबंध समाप्त कर सकता है।</p>
+
+<h2>अनुच्छेद 15 — स्वागत बोनस</h2>
+<p>आधिकारिक SOS-Expat बॉट के माध्यम से Telegram खाता सफलतापूर्वक लिंक करने पर सहबद्ध के वॉलेट में 50 USD बोनस जमा किया जाता है। यह बोनस तब तक लॉक रहता है जब तक सहबद्ध कम से कम 150 USD संचित जैविक कमीशन अर्जित नहीं कर लेता। इसे अनलॉक होने से पहले स्वतंत्र रूप से नहीं निकाला जा सकता और धोखाधड़ी के कारण खाता बंद होने पर यह समाप्त हो जाता है।</p>
+
+<h2>अनुच्छेद 16 — एट्रिब्यूशन और कुकीज़</h2>
+<p>रूपांतरण ट्रैकिंग अद्वितीय सहबद्ध कोड और 30-दिन के last-click कुकी पर आधारित है। एट्रिब्यूशन विवाद (एकाधिक लिंक, एकाधिक कोड, क्रॉस-डिवाइस रूपांतरण) की स्थिति में, SOS-Expat अंतिम दस्तावेज़ीकृत क्लिक नियम लागू करता है। सहबद्ध विवादित कमीशन के 30 दिनों के भीतर आवश्यक प्रमाणों के साथ contact@sos-expat.com से संपर्क करके एट्रिब्यूशन पर आपत्ति कर सकता है।</p>
+
+<h2>अनुच्छेद 17 — कर दायित्व</h2>
+<p>सहबद्ध अपने निवास देश में कमीशन आय पर लागू करों, शुल्कों और सामाजिक योगदानों की घोषणा और भुगतान के लिए पूरी तरह जिम्मेदार है। SOS-Expat DAC7 निर्देश (EU 2021/514) के तहत प्लेटफॉर्म की स्वचालित रिपोर्टिंग दायित्वों का पालन करता है जो 2,000 EUR/वर्ष या 25 लेनदेन/वर्ष से अधिक सहबद्धों के लिए है, साथ ही अमेरिकी सहबद्धों के लिए Form 1099-K। SOS-Expat लागू कर कानून के अनुसार स्रोत पर कर कटौती कर सकता है।</p>
+
+<h2>अनुच्छेद 18 — विरोधी प्रक्रिया</h2>
+<p>कथित धोखाधड़ी के लिए कमीशन रद्द करने या किसी भी clawback से पहले, SOS-Expat सहबद्ध को ईमेल द्वारा आरोपित तथ्यों का एक तर्कसंगत विवरण प्रदान करता है। सहबद्ध के पास जवाब देने और प्रति-साक्ष्य प्रस्तुत करने के लिए 15 कैलेंडर दिन होते हैं। अंतिम निर्णय जवाब या समय-सीमा समाप्ति के 15 दिनों के भीतर सूचित किया जाता है।</p>
+
+<h2>अनुच्छेद 19 — कार्यक्रम की कानूनी संरचना</h2>
+<p>SOS-Expat का सहबद्ध कार्यक्रम एक एकल-स्तरीय कार्यक्रम (single-tier) है। कमीशन केवल उस प्रत्यक्ष सहबद्ध को दिया जाता है जिसने योग्य घटना उत्पन्न की। कोई बहु-स्तरीय कमीशन, पिरामिड संरचना, या अन्य सहबद्धों की भर्ती से जुड़ा पारिश्रमिक नहीं है। केवल संदर्भित ग्राहकों के भुगतान किए गए कॉल या सहबद्ध द्वारा भर्ती किए गए प्रदाताओं से संबंधित कमीशन ही पात्र हैं।</p>`,
   },
 
   ch: {
@@ -993,8 +1128,8 @@ const TERMS_AFFILIATE = {
   <li>招募服务商来电佣金：区分的固定金额 — 5美元（律师）或3美元（外籍帮助者）每次接听通话。</li>
   <li>具体金额由SOS-Expat配置，可在控制面板中查看。</li>
 </ul>
-<h3>3.2 费率锁定</h3>
-<p>佣金费率在注册时锁定，即使全局配置被修改也不会改变。</p>
+<h3>3.2 费率修改</h3>
+<p>注册日期适用的佣金费率为默认适用费率。SOS-Expat保留以合理商业理由修改佣金费率的权利，须通过电子邮件和控制面板提前60天通知。不接受修改的联盟成员可在通知期内无罚款终止合同。</p>
 <h3>3.3 最低通话时长</h3>
 <p>通话必须持续至少2分钟才有资格获得佣金。</p>
 <h3>3.4 招募窗口</h3>
@@ -1014,7 +1149,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 保留期</h3>
 <p>佣金在验证期（因角色而异，最短24小时）后变为"可用"状态。</p>
 <h3>4.5 双重认证确认</h3>
-<p>每次提现都需要通过Telegram进行确认。</p>
+<p>每次提现都需要双重身份验证（2FA）：可通过Telegram（官方SOS-Expat机器人）或通过电子邮件发送的OTP代码。如果Telegram不可用，电子邮件将作为备用确认方式。</p>
 <h3>4.6 处理</h3>
 <p>处理方式为混合模式：500美元以下自动处理，以上需管理员审批。</p>
 
@@ -1040,7 +1175,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>联盟成员必须在获得首次佣金后90天内完成身份验证（KYC）。</p>
 <h3>6.4</h3>
-<p>如果KYC在180天内未完成，资金视为放弃。</p>
+<p>如果首次佣金后180天内未完成KYC，账户将被暂停，资金将再保留24个月。联盟成员可随时完成KYC解除账户冻结。超过24个月，在两次电子邮件提醒后仍无回应的，经正式通知（含30天答复期）后，资金可捐赠给SOS-Expat指定的慈善机构。</p>
 <h3>6.5</h3>
 <p>支持的银行账户类型：IBAN（欧洲/SEPA）、Sort Code（英国）、ABA/Routing（美国）、BSB（澳大利亚）、CLABE（墨西哥）、IFSC（印度）。</p>
 
@@ -1056,9 +1191,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>在怀疑欺诈的情况下，账户可能会被立即暂停。</p>
 
-<h2>第八条 — 个人数据（GDPR）</h2>
+<h2>第八条 — 个人数据</h2>
 <h3>8.1</h3>
-<p>SOS-Expat根据GDPR处理个人数据。</p>
+<p>SOS-Expat根据GDPR（欧盟）以及联盟成员所在国的适用法律处理个人数据，包括：CCPA/CPRA（美国加利福尼亚州）、LGPD（巴西）、第25号法律（魁北克）、PDPA（泰国）、PDPL（沙特阿拉伯）、POPIA（南非）。数据控制者为WorldExpat OÜ，一家依爱沙尼亚法律注册成立的公司。</p>
 <h3>8.2</h3>
 <p>法律依据：执行联盟合同。</p>
 <h3>8.3</h3>
@@ -1092,14 +1227,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>联盟成员对其税务和社会义务承担全部责任。</p>
 
-<h2>第十二条 — 适用法律</h2>
+<h2>第十二条 — 适用法律和争议解决</h2>
 <h3>12.1</h3>
-<p>本条款受法国法律管辖。</p>
+<p>本条款受爱沙尼亚法律管辖，但不影响联盟成员居住国法律的强制性规定。SOS-Expat由WorldExpat OÜ运营，WorldExpat OÜ是依爱沙尼亚法律注册成立的公司。</p>
 <h3>12.2</h3>
-<p>任何争议应提交至巴黎管辖法院。</p>
+<p>发生争议时，双方同意在争议通知后30天内寻求友好解决方案。如未能达成协议，争议应提交国际商会（ICC）仲裁，仲裁地为爱沙尼亚塔林，依据现行ICC仲裁规则，由一名仲裁员以英语或中文进行仲裁程序。</p>
+<h3>12.3</h3>
+<p>位于欧盟的联盟成员消费者保留就强制性消费者权利相关争议向其居住国法院提起诉讼的权利。</p>
 
 <h2>第十三条 — 联系方式</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>第十四条 — 修改本条款</h2>
+<p>SOS-Expat保留出于任何合法原因（法规变更、商业模式变更、安全性）修改本一般条款的权利。任何实质性修改将通过电子邮件和控制面板提前至少60天通知。在规定期限内未提出书面异议的，新条款视为已接受。不接受修改的联盟成员可无罚款终止合同。</p>
+
+<h2>第十五条 — 欢迎奖励</h2>
+<p>通过官方SOS-Expat机器人成功关联Telegram账户后，联盟成员的钱包将获得50美元奖励。该奖励将被锁定，直到联盟成员累计获得至少150美元的有机佣金。在解锁前不能独立提现，如账户因欺诈被终止则奖励将失效。</p>
+
+<h2>第十六条 — 归因与Cookies</h2>
+<p>转化追踪基于唯一联盟代码和30天最后点击Cookie。发生归因冲突（多个链接、多个代码、跨设备转化）时，SOS-Expat适用最后记录点击规则。联盟成员可在争议佣金发生后30天内联系contact@sos-expat.com并提供必要证明文件，对归因提出异议。</p>
+
+<h2>第十七条 — 税务义务</h2>
+<p>联盟成员全权负责在其居住国申报并缴纳适用于其佣金收入的税款、税费和社会保险费。SOS-Expat遵守DAC7指令（EU 2021/514）规定的平台自动报告义务，适用于年收入超过2,000欧元或年交易超过25笔的联盟成员，以及适用于美国联盟成员的1099-K表格。SOS-Expat可根据适用税法进行预扣税。</p>
+
+<h2>第十八条 — 对抗性程序</h2>
+<p>在因涉嫌欺诈取消任何佣金或任何追回之前，SOS-Expat将通过电子邮件向联盟成员发出通知，说明所指控事实的理由。联盟成员有15个日历日的时间回复并提供反驳证据。最终决定将在收到回复或期限届满后15天内告知。</p>
+
+<h2>第十九条 — 计划的法律结构</h2>
+<p>SOS-Expat联盟计划为单层计划（single-tier）。佣金仅支付给产生合格事件的直接联盟成员。不存在多层佣金、传销结构或与招募其他联盟成员相关的报酬。只有与联盟成员推荐的客户的付费通话或联盟成员招募的服务提供商相关的佣金才有资格获得。</p>`,
   },
 
   ar: {
@@ -1128,8 +1282,8 @@ const TERMS_AFFILIATE = {
   <li>عمولة لكل مكالمة مقدم خدمة مُجنَّد: مبلغ ثابت مُتمايز — 5$ (محامٍ) أو 3$ (مغترب مساعد) لكل مكالمة مستلمة.</li>
   <li>المبالغ الدقيقة قابلة للتكوين من قبل SOS-Expat ويمكن الاطلاع عليها في لوحة التحكم.</li>
 </ul>
-<h3>3.2 تجميد الأسعار</h3>
-<p>يتم تجميد معدلات العمولة عند التسجيل ولا تتغير حتى لو تم تعديل التكوين العام.</p>
+<h3>3.2 تعديل الأسعار</h3>
+<p>معدلات العمولة السارية في تاريخ التسجيل هي المعدلات الافتراضية المطبقة. تحتفظ SOS-Expat بالحق في تعديل معدلات العمولة لأسباب تجارية مشروعة، مع إشعار مسبق مدته 60 يوماً يُبلَّغ به عبر البريد الإلكتروني ولوحة التحكم. يحق للشريك الذي لا يقبل التعديل إنهاء العقد دون غرامة خلال فترة الإشعار.</p>
 <h3>3.3 الحد الأدنى لمدة المكالمة</h3>
 <p>يجب أن تستمر المكالمة لمدة دقيقتين على الأقل لتكون مؤهلة للحصول على عمولة.</p>
 <h3>3.4 نافذة التجنيد</h3>
@@ -1149,7 +1303,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 فترة الاحتفاظ</h3>
 <p>تصبح العمولات «متاحة» بعد فترة التحقق (تختلف حسب الدور، بحد أدنى 24 ساعة).</p>
 <h3>4.5 تأكيد المصادقة الثنائية</h3>
-<p>يتطلب كل سحب تأكيداً عبر Telegram.</p>
+<p>يتطلب كل سحب مصادقة ثنائية (2FA): إما عبر Telegram (بوت SOS-Expat الرسمي) أو عبر رمز OTP المُرسَل بالبريد الإلكتروني. إذا كان Telegram غير متاح، يعمل البريد الإلكتروني كوسيلة تأكيد بديلة.</p>
 <h3>4.6 المعالجة</h3>
 <p>المعالجة هجينة: تلقائية تحت 500$، موافقة المسؤول فوق ذلك.</p>
 
@@ -1175,7 +1329,7 @@ const TERMS_AFFILIATE = {
 <h3>6.3</h3>
 <p>يجب على الشريك إكمال التحقق من الهوية (KYC) في غضون 90 يوماً من أول عمولة له.</p>
 <h3>6.4</h3>
-<p>إذا لم يتم إكمال التحقق من الهوية خلال 180 يوماً، تُعتبر الأموال متروكة.</p>
+<p>إذا لم يتم إكمال التحقق من الهوية خلال 180 يوماً من أول عمولة، يُوقَّف الحساب وتُحتفظ بالأموال لمدة 24 شهراً إضافية. يمكن للشريك إلغاء تجميد حسابه في أي وقت بإكمال التحقق من الهوية. بعد 24 شهراً دون رد رغم إرسال تذكيرَين بالبريد الإلكتروني، يجوز التبرع بالأموال إلى مؤسسة خيرية تحددها SOS-Expat، بعد إشعار رسمي مع منح مهلة رد 30 يوماً.</p>
 <h3>6.5</h3>
 <p>أنواع الحسابات المصرفية المدعومة: IBAN (أوروبا/SEPA)، Sort Code (المملكة المتحدة)، ABA/Routing (الولايات المتحدة)، BSB (أستراليا)، CLABE (المكسيك)، IFSC (الهند).</p>
 
@@ -1191,9 +1345,9 @@ const TERMS_AFFILIATE = {
 <h3>7.5</h3>
 <p>يمكن تعليق الحساب فوراً في حالة الاشتباه بالاحتيال.</p>
 
-<h2>المادة 8 — البيانات الشخصية (اللائحة العامة لحماية البيانات)</h2>
+<h2>المادة 8 — البيانات الشخصية</h2>
 <h3>8.1</h3>
-<p>تعالج SOS-Expat البيانات الشخصية وفقاً للائحة العامة لحماية البيانات (GDPR).</p>
+<p>تعالج SOS-Expat البيانات الشخصية وفقاً للائحة العامة لحماية البيانات (GDPR) وللقوانين المطبقة حسب بلد إقامة الشريك، بما في ذلك: CCPA/CPRA (كاليفورنيا، الولايات المتحدة)، LGPD (البرازيل)، القانون 25 (كيبيك)، PDPA (تايلاند)، PDPL (المملكة العربية السعودية)، POPIA (جنوب أفريقيا). المتحكم في البيانات هو WorldExpat OÜ، شركة مؤسسة بموجب القانون الإستوني.</p>
 <h3>8.2</h3>
 <p>الأساس القانوني: تنفيذ عقد الشراكة.</p>
 <h3>8.3</h3>
@@ -1227,14 +1381,33 @@ const TERMS_AFFILIATE = {
 <h3>11.3</h3>
 <p>الشريك وحده مسؤول عن التزاماته الضريبية والاجتماعية.</p>
 
-<h2>المادة 12 — القانون الواجب التطبيق</h2>
+<h2>المادة 12 — القانون الواجب التطبيق وتسوية النزاعات</h2>
 <h3>12.1</h3>
-<p>تخضع هذه الشروط للقانون الفرنسي.</p>
+<p>تخضع هذه الشروط للقانون الإستوني، دون الإخلال بالأحكام الآمرة لقانون بلد إقامة الشريك. تُشغَّل SOS-Expat من قِبَل WorldExpat OÜ، شركة مؤسسة بموجب القانون الإستوني.</p>
 <h3>12.2</h3>
-<p>يُحال أي نزاع إلى المحاكم المختصة في باريس.</p>
+<p>في حالة نزاع، تلتزم الأطراف بالسعي إلى التسوية الودية خلال 30 يوماً من إخطار النزاع. في غياب اتفاق، يُحال النزاع إلى التحكيم أمام غرفة التجارة الدولية (ICC)، مقرها تالين (إستونيا)، وفقاً لقواعد التحكيم المعمول بها لدى ICC، أمام محكم وحيد يُدير الإجراءات باللغة العربية أو الإنجليزية.</p>
+<h3>12.3</h3>
+<p>يحتفظ الشركاء المستهلكون المقيمون في الاتحاد الأوروبي بالحق في اللجوء إلى محاكم بلد إقامتهم بشأن النزاعات المتعلقة بحقوق المستهلك الآمرة.</p>
 
 <h2>المادة 13 — الاتصال</h2>
-<p>contact@sos-expat.com</p>`,
+<p>contact@sos-expat.com</p>
+<h2>المادة 14 — تعديل هذه الشروط</h2>
+<p>تحتفظ SOS-Expat بالحق في تعديل هذه الشروط العامة لأي سبب مشروع (تغييرات تنظيمية، تغييرات في نموذج الأعمال، الأمان). يتم إخطار أي تعديل جوهري بإشعار مسبق لا يقل عن 60 يوماً عبر البريد الإلكتروني ولوحة التحكم. في غياب اعتراض كتابي خلال المهلة المحددة، تُعتبر الشروط الجديدة مقبولة. يحق للشريك الذي لا يقبل التعديلات إنهاء العقد دون غرامة.</p>
+
+<h2>المادة 15 — مكافأة الترحيب</h2>
+<p>تُضاف مكافأة قدرها 50 دولاراً أمريكياً إلى محفظة الشريك عند ربط حسابه على Telegram بنجاح عبر بوت SOS-Expat الرسمي. تظل هذه المكافأة مجمّدة حتى يكسب الشريك ما لا يقل عن 150 دولاراً أمريكياً من العمولات العضوية التراكمية. لا يمكن سحبها بصورة مستقلة قبل إلغاء التجميد، وتنتهي صلاحيتها في حال إنهاء الحساب بسبب الاحتيال.</p>
+
+<h2>المادة 16 — الإسناد وملفات تعريف الارتباط</h2>
+<p>يعتمد تتبع التحويلات على رمز الشريك الفريد وملف تعريف ارتباط last-click مدته 30 يوماً. في حالة نزاع الإسناد (روابط متعددة، رموز متعددة، تحويل عبر أجهزة مختلفة)، تطبق SOS-Expat قاعدة آخر نقرة موثقة. يمكن للشريك الطعن في الإسناد خلال 30 يوماً من العمولة المتنازع عليها بالتواصل مع contact@sos-expat.com مع تقديم المستندات اللازمة.</p>
+
+<h2>المادة 17 — الالتزامات الضريبية</h2>
+<p>يتحمل الشريك وحده مسؤولية الإقرار بعمولاته ودفع الضرائب والرسوم والاشتراكات الاجتماعية المطبقة على دخله من العمولات في بلد إقامته. تمتثل SOS-Expat لالتزامات الإبلاغ التلقائي للمنصات المنصوص عليها في توجيه DAC7 (EU 2021/514) للشركاء الذين يتجاوزون 2,000 يورو/السنة أو 25 معاملة/السنة، فضلاً عن نموذج 1099-K للشركاء الأمريكيين. يجوز لـ SOS-Expat إجراء الاستقطاع من المصدر وفقاً للقانون الضريبي المطبق.</p>
+
+<h2>المادة 18 — الإجراء التداولي</h2>
+<p>قبل أي إلغاء للعمولات بسبب الاحتيال المزعوم أو أي استرداد، تُخطر SOS-Expat الشريك عبر البريد الإلكتروني بعرض مسبّب للوقائع المنسوبة إليه. يتاح للشريك 15 يوماً تقويمياً للرد وتقديم أدلة دحض. يُبلَّغ بالقرار النهائي في غضون 15 يوماً من تلقي الرد أو انتهاء المهلة.</p>
+
+<h2>المادة 19 — الهيكل القانوني للبرنامج</h2>
+<p>برنامج الشراكة في SOS-Expat هو برنامج أحادي المستوى (single-tier). تُدفع العمولات فقط للشريك المباشر الذي أنشأ الحدث المؤهل. لا توجد عمولات متعددة المستويات، ولا هياكل هرمية، ولا مكافآت مرتبطة بتجنيد شركاء آخرين. فقط العمولات المتعلقة بالمكالمات المدفوعة من العملاء المُحالين أو مقدمي الخدمات الذين جنّدهم الشريك هي المؤهلة.</p>`,
   },
 };
 
@@ -1253,8 +1426,8 @@ async function main() {
     const ref = db.collection("legal_documents").doc(docId);
     const snap = await ref.get();
 
-    if (snap.exists) {
-      console.log(`  [SKIP] ${docId} — document existe deja`);
+    if (snap.exists && !FORCE) {
+      console.log(`  [SKIP] ${docId} — document existe deja (utiliser --force pour ecraser)`);
       skipped++;
       continue;
     }
@@ -1272,7 +1445,7 @@ async function main() {
       type: "terms_affiliate",
       language: lang,
       isActive: true,
-      version: "1.1",
+      version: "2.0",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       publishedAt: FieldValue.serverTimestamp(),

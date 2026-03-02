@@ -458,6 +458,17 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/chatter-bane\/?$/i,          // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/كن-مسوقا\/?$/i,              // AR (native)
 
+  // ========== CAPTAIN LANDING - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/devenir-capitaine\/?$/i,     // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/become-captain\/?$/i,        // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/ser-capitan\/?$/i,           // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/kapitaen-werden\/?$/i,       // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/stat-kapitanom\/?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/tornar-se-capitao\/?$/i,     // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/chengwei-duizhang\/?$/i,     // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/captain-bane\/?$/i,          // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/كن-قائدا\/?$/i,              // AR (native)
+
   // ========== CHATTER REGISTER - All 9 languages ==========
   /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/inscription\/?$/i,  // FR
   /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/register\/?$/i,     // EN
