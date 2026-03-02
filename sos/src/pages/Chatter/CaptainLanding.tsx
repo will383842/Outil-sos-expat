@@ -1,8 +1,8 @@
 /**
- * CaptainLanding - Landing Page Capitaine Chatter
+ * CaptainLanding - Recrutement Capitaines Chatter
  *
- * Recruter des capitaines pour construire des équipes de chatters worldwide.
- * Style identique à ChatterLanding (dark theme, amber/yellow CTAs, sections modulaires).
+ * Ton startup : rejoindre une equipe, grandir ensemble, postes evolutifs.
+ * Candidatures stockees dans Firestore `captain_applications`.
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -14,7 +14,9 @@ import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { trackMetaViewContent } from '@/utils/metaPixel';
-import { logAnalyticsEvent } from '@/config/firebase';
+import { logAnalyticsEvent, db, storage } from '@/config/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import {
   ArrowRight,
@@ -26,12 +28,24 @@ import {
   Crown,
   Globe,
   TrendingUp,
-  Shield,
   Star,
+  Target,
+  DollarSign,
+  Clock,
+  Smartphone,
+  Zap,
+  Send,
+  Building2,
+  Rocket,
+  Heart,
+  Upload,
+  FileText,
+  Image,
+  X,
 } from 'lucide-react';
 
 // ============================================================================
-// STYLES - Identique à ChatterLanding
+// STYLES
 // ============================================================================
 const globalStyles = `
   @media (max-width: 768px) {
@@ -41,37 +55,25 @@ const globalStyles = `
   }
   .captain-landing h1,
   .captain-landing h2,
-  .captain-landing h3 {
-    color: white;
-  }
+  .captain-landing h3 { color: white; }
   .captain-landing h1 span,
   .captain-landing h2 span,
-  .captain-landing h3 span {
-    font-size: inherit;
-  }
+  .captain-landing h3 span { font-size: inherit; }
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
     50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
   }
   .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-  .section-content {
-    padding: 3rem 1rem;
-    position: relative;
-  }
-  @media (min-width: 640px) {
-    .section-content { padding: 4rem 1.5rem; }
-  }
-  @media (min-width: 1024px) {
-    .section-content { padding: 6rem 2rem; }
-  }
-  .section-lazy {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 600px;
-  }
+  .section-content { padding: 3rem 1rem; position: relative; }
+  @media (min-width: 640px) { .section-content { padding: 4rem 1.5rem; } }
+  @media (min-width: 1024px) { .section-content { padding: 6rem 2rem; } }
   @media (prefers-reduced-motion: reduce) {
     .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
   }
 `;
+
+const FCFA = 600;
+const fmt = (usd: number) => (usd * FCFA).toLocaleString('fr-FR');
 
 // ============================================================================
 // COMPOSANTS
@@ -102,28 +104,14 @@ const FAQItem: React.FC<{
   index: number;
 }> = ({ question, answer, isOpen, onToggle, index }) => (
   <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
-    <button
-      type="button"
-      onClick={onToggle}
-      className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-left min-h-[48px]"
-      aria-expanded={isOpen}
-      aria-controls={`faq-captain-answer-${index}`}
-      id={`faq-captain-question-${index}`}
-    >
+    <button type="button" onClick={onToggle} className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-left min-h-[48px]" aria-expanded={isOpen} aria-controls={`faq-captain-answer-${index}`} id={`faq-captain-question-${index}`}>
       <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
       <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
-    <div
-      id={`faq-captain-answer-${index}`}
-      role="region"
-      aria-labelledby={`faq-captain-question-${index}`}
-      className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
-    >
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed">
-        {answer}
-      </div>
+    <div id={`faq-captain-answer-${index}`} role="region" aria-labelledby={`faq-captain-question-${index}`} className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed">{answer}</div>
     </div>
   </div>
 );
@@ -160,12 +148,70 @@ const CaptainLanding: React.FC = () => {
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [teamSize, setTeamSize] = useState(30);
   const [callsPerChatter, setCallsPerChatter] = useState(15);
+  const [personalCalls, setPersonalCalls] = useState(20);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-  const registerRoute = `/${getTranslatedRouteSlug('chatter-register' as RouteKey, langCode)}`;
-  const goToRegister = () => navigate(registerRoute);
+  // Form
+  const [form, setForm] = useState({ name: '', whatsapp: '', country: '', motivation: '' });
+  const [formState, setFormState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
-  const ctaAriaLabel = intl.formatMessage({ id: 'captain.aria.cta.main', defaultMessage: 'Devenir Capitaine Chatter maintenant' });
+  // CV upload
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvUrl, setCvUrl] = useState('');
+  const [cvUploading, setCvUploading] = useState(false);
+  const [cvProgress, setCvProgress] = useState(0);
+
+  // Photo upload
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoProgress, setPhotoProgress] = useState(0);
+  const [photoPreview, setPhotoPreview] = useState('');
+
+  const uploadFile = (file: File, path: string, onProgress: (p: number) => void): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const storageRef = ref(storage, path);
+      const task = uploadBytesResumable(storageRef, file);
+      task.on('state_changed',
+        (snap) => onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+        reject,
+        () => getDownloadURL(task.snapshot.ref).then(resolve).catch(reject)
+      );
+    });
+  };
+
+  const handleCvSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+    setCvFile(file);
+    setCvUploading(true);
+    setCvProgress(0);
+    try {
+      const url = await uploadFile(file, `captain_applications_cv/${Date.now()}_${file.name}`, setCvProgress);
+      setCvUrl(url);
+    } catch { setCvFile(null); }
+    setCvUploading(false);
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setPhotoUploading(true);
+    setPhotoProgress(0);
+    try {
+      const url = await uploadFile(file, `captain_applications_cv/${Date.now()}_photo_${file.name}`, setPhotoProgress);
+      setPhotoUrl(url);
+    } catch { setPhotoFile(null); setPhotoPreview(''); }
+    setPhotoUploading(false);
+  };
+
+  const registerRoute = `/${getTranslatedRouteSlug('chatter-register' as RouteKey, langCode)}`;
+  const scrollToForm = () => document.getElementById('captain-form')?.scrollIntoView({ behavior: 'smooth' });
+  const ctaLabel = intl.formatMessage({ id: 'captain.aria.cta.main', defaultMessage: 'Rejoindre l\'equipe SOS-Expat' });
 
   useEffect(() => {
     trackMetaViewContent({ content_name: 'captain_landing', content_category: 'landing_page', content_type: 'page' });
@@ -178,129 +224,122 @@ const CaptainLanding: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Revenue calculations
+  // Calculator
   const totalTeamCalls = teamSize * callsPerChatter;
-  const commissionPerCall = 3; // $3 per team call (lawyer) / average
-  const monthlyCommissions = totalTeamCalls * commissionPerCall;
-  const currentTier = TIERS.reduce((acc, tier) => totalTeamCalls >= tier.calls ? tier : acc, TIERS[0]);
-  const tierBonus = currentTier.bonus;
-  const qualityBonus = 100; // $100/month quality bonus
-  const totalMonthly = monthlyCommissions + tierBonus + qualityBonus;
+  const teamComm = totalTeamCalls * 2.5;
+  const tier = TIERS.reduce((a, t) => totalTeamCalls >= t.calls ? t : a, TIERS[0]);
+  const qualityOk = teamSize >= 10 && teamComm >= 100;
+  const qualityBonus = qualityOk ? 100 : 0;
+  const persRev = personalCalls * 4;
+  const total = teamComm + tier.bonus + qualityBonus + persRev;
 
-  // SEO
-  const seoTitle = intl.formatMessage({ id: 'captain.landing.seo.title', defaultMessage: 'Devenir Capitaine Chatter | Dirigez une equipe mondiale | SOS-Expat' });
-  const seoDescription = intl.formatMessage({ id: 'captain.landing.seo.description', defaultMessage: 'Devenez Capitaine Chatter et dirigez votre equipe de chatters dans le monde entier. Commissions sur chaque appel + bonus de palier + bonus qualite.' });
+  // Submit to Firestore
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormState('sending');
+    try {
+      await addDoc(collection(db, 'captain_applications'), {
+        name: form.name.trim(),
+        whatsapp: form.whatsapp.trim(),
+        country: form.country.trim(),
+        motivation: form.motivation.trim(),
+        ...(cvUrl && { cvUrl }),
+        ...(photoUrl && { photoUrl }),
+        status: 'pending',
+        source: 'captain_landing',
+        language: langCode,
+        createdAt: serverTimestamp(),
+      });
+      logAnalyticsEvent('captain_application', { country: form.country });
+      setFormState('sent');
+    } catch {
+      setFormState('error');
+    }
+  };
 
-  // FAQ
+  const seoTitle = intl.formatMessage({ id: 'captain.landing.seo.title', defaultMessage: 'Rejoignez SOS-Expat | Devenez Capitaine Chatter | Startup en pleine croissance' });
+  const seoDesc = intl.formatMessage({ id: 'captain.landing.seo.description', defaultMessage: 'Rejoignez l\'equipe SOS-Expat en tant que Capitaine. Poste evolutif, contact direct fondateur, revenus attractifs, possibilite de poste a Dakar.' });
+
   const faqItems = useMemo(() => [
     {
-      q: intl.formatMessage({ id: 'captain.faq.q1', defaultMessage: "Comment devenir Capitaine ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a1', defaultMessage: "Inscrivez-vous comme chatter, puis recrutez votre premiere equipe. Les chatters les plus actifs sont promus Capitaine par notre equipe admin." }),
+      q: intl.formatMessage({ id: 'captain.faq.q1', defaultMessage: "Comment on devient Capitaine ?" }),
+      a: intl.formatMessage({ id: 'captain.faq.a1', defaultMessage: "Postulez ici, on vous contacte pour un echange. Vous commencez comme chatter pour comprendre le terrain, puis on vous confie une equipe selon vos resultats." }),
     },
     {
-      q: intl.formatMessage({ id: 'captain.faq.q2', defaultMessage: "Combien de chatters dois-je recruter ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a2', defaultMessage: "Il n'y a pas de limite ! Plus votre equipe est grande, plus vous gagnez. Les meilleurs capitaines ont 50-200+ chatters actifs couvrant des dizaines de pays." }),
+      q: intl.formatMessage({ id: 'captain.faq.q2', defaultMessage: "C'est quoi concretement le role ?" }),
+      a: intl.formatMessage({ id: 'captain.faq.a2', defaultMessage: "Recruter et animer une equipe de chatters (WhatsApp, Telegram, campus...). Vous etes un leader d'equipe dans une startup, pas un freelance isole." }),
     },
     {
-      q: intl.formatMessage({ id: 'captain.faq.q3', defaultMessage: "Comment sont calcules mes gains ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a3', defaultMessage: "Vous gagnez 2-3$ sur chaque appel de votre equipe (N1 et N2), plus un bonus de palier mensuel (25$ a 400$), plus un bonus qualite de 100$/mois si active." }),
+      q: intl.formatMessage({ id: 'captain.faq.q3', defaultMessage: "Comment sont calcules les revenus ?" }),
+      a: intl.formatMessage({ id: 'captain.faq.a3', defaultMessage: "2-3$ par appel de votre equipe + bonus palier mensuel (25-400$) + bonus qualite (100$/mois). Plus vos appels perso a 3-5$. Tout est cumule." }),
     },
     {
-      q: intl.formatMessage({ id: 'captain.faq.q4', defaultMessage: "Puis-je continuer a faire mes propres appels ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a4', defaultMessage: "Absolument ! En tant que capitaine, vous gagnez toujours 3-5$ par appel direct EN PLUS de vos commissions d'equipe. Les deux se cumulent." }),
+      q: intl.formatMessage({ id: 'captain.faq.q4', defaultMessage: "C'est vraiment evolutif ?" }),
+      a: intl.formatMessage({ id: 'captain.faq.a4', defaultMessage: "Oui. SOS-Expat est une startup en pleine croissance. Les capitaines performants accerent aux postes a responsabilite (management, operations, strategie) avec remuneration fixe + variable." }),
     },
     {
-      q: intl.formatMessage({ id: 'captain.faq.q5', defaultMessage: "Quels pays puis-je couvrir ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a5', defaultMessage: "Tous les 197 pays du monde ! L'admin vous assigne des pays et langues selon votre profil, mais votre equipe peut recruter partout." }),
-    },
-    {
-      q: intl.formatMessage({ id: 'captain.faq.q6', defaultMessage: "Le bonus qualite, c'est quoi ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a6', defaultMessage: "C'est un bonus mensuel de 100$ attribue aux capitaines dont l'equipe maintient un bon niveau d'activite et de satisfaction client." }),
+      q: intl.formatMessage({ id: 'captain.faq.q5', defaultMessage: "Je dois investir quelque chose ?" }),
+      a: intl.formatMessage({ id: 'captain.faq.a5', defaultMessage: "Zero. Pas d'investissement, pas de frais. Un smartphone et de la motivation suffisent." }),
     },
   ], [intl]);
 
   return (
     <Layout showFooter={false}>
-      <SEOHead
-        title={seoTitle}
-        description={seoDescription}
-        ogImage="/og-image.png"
-        ogType="website"
-        contentType="LandingPage"
-      />
+      <SEOHead title={seoTitle} description={seoDesc} ogImage="/og-image.png" ogType="website" contentType="LandingPage" />
       <HreflangLinks pathname={location.pathname} />
-
       <style>{globalStyles}</style>
 
       <div className="captain-landing bg-black text-white">
 
         {/* ================================================================
-            HERO
+            1. HERO — Ton startup, rejoindre l'aventure
         ================================================================ */}
-        <section className="min-h-[100svh] flex justify-center items-center relative bg-gradient-to-b from-indigo-950 via-purple-900 to-black overflow-hidden" aria-label={intl.formatMessage({ id: 'captain.landing.hero.label', defaultMessage: 'Devenir Capitaine Chatter' })}>
+        <section className="min-h-[100svh] flex justify-center items-center relative bg-gradient-to-b from-indigo-950 via-purple-900 to-black overflow-hidden" aria-label={ctaLabel}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(251,191,36,0.12),transparent_50%)]" aria-hidden="true" />
 
-          <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
-
-            {/* Badge */}
+          <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-amber-500/30 mb-6">
-              <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
-              <FormattedMessage id="captain.landing.hero.badge" defaultMessage="Programme Capitaine Chatter" />
+              <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
+              <FormattedMessage id="captain.landing.hero.badge" defaultMessage="On recrute" />
             </div>
 
-            <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <FormattedMessage id="captain.landing.hero.line1" defaultMessage="Dirigez une equipe" />{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400">
-                <FormattedMessage id="captain.landing.hero.highlight" defaultMessage="mondiale" />
-              </span>
+            <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-4 sm:mb-6 !leading-[1.1]">
+              <FormattedMessage id="captain.landing.hero.line1" defaultMessage="Rejoignez l'equipe" />
               <br />
-              <span className="text-gray-200">
-                <FormattedMessage id="captain.landing.hero.line2" defaultMessage="de chatters" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400">
+                <FormattedMessage id="captain.landing.hero.highlight" defaultMessage="SOS-Expat" />
               </span>
             </h1>
 
-            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
-              <p className="text-center sm:text-base mb-4">
-                <FormattedMessage id="captain.landing.hero.sources" defaultMessage="3 sources de revenus en tant que Capitaine :" />
-              </p>
-              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
-                {/* Source 1 : Commissions equipe */}
-                <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">2-3$</div>
-                  <div className="text-xs sm:text-sm">
-                    <FormattedMessage id="captain.landing.hero.source1" defaultMessage="par appel d'equipe" />
-                  </div>
-                </div>
-                {/* Source 2 : Bonus palier */}
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">25-400$</div>
-                  <div className="text-xs sm:text-sm">
-                    <FormattedMessage id="captain.landing.hero.source2" defaultMessage="bonus palier/mois" />
-                  </div>
-                </div>
-                {/* Source 3 : Bonus qualite */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border rounded-xl p-3 sm:p-4 text-center relative">
-                  <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full text-xs">
-                    <FormattedMessage id="captain.landing.hero.extra" defaultMessage="+ EXTRA" />
-                  </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">100$/mois</div>
-                  <div className="text-xs sm:text-sm">
-                    <FormattedMessage id="captain.landing.hero.source3" defaultMessage="bonus qualite" />
-                  </div>
-                </div>
+            <p className="text-base sm:text-lg text-white/80 mb-6 sm:mb-8 max-w-2xl mx-auto">
+              <FormattedMessage id="captain.landing.hero.desc" defaultMessage="On cherche des leaders pour construire et animer des equipes de chatters dans le monde entier. Un vrai poste, evolutif, au sein d'une startup en pleine croissance." />
+            </p>
+
+            {/* 3 key facts */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
+                <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact1" defaultMessage="Revenus attractifs" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="$ + FCFA" /></p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
+                <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact2" defaultMessage="Poste evolutif" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact2b" defaultMessage="Grandissez avec nous" /></p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
+                <Crown className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact3" defaultMessage="Contact CEO" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact3b" defaultMessage="Direct, sans filtre" /></p>
               </div>
             </div>
 
-            <p className="text-base sm:text-lg mb-5 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
-              <FormattedMessage id="captain.landing.hero.desc" defaultMessage="Recrutez des chatters dans le monde entier. Plus votre equipe grandit, plus vos revenus explosent. Les top capitaines gagnent 2000-8000$/mois !" />
-            </p>
-
-            <CTAButton onClick={goToRegister} size="large" className="w-full sm:w-auto max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
-              <FormattedMessage id="captain.landing.cta.start" defaultMessage="Devenir Capitaine" />
+            <CTAButton onClick={scrollToForm} size="large" className="w-full sm:w-auto max-w-md mx-auto animate-pulse-glow" ariaLabel={ctaLabel}>
+              <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
             </CTAButton>
 
-            <p className="text-gray-300 mt-4 sm:mt-6 sm:text-base">
-              <FormattedMessage id="captain.landing.reassurance" defaultMessage="100% gratuit - D'abord chatter, puis promu Capitaine" />
+            <p className="text-gray-400 mt-4 text-sm">
+              <FormattedMessage id="captain.landing.reassurance" defaultMessage="100% gratuit · 100% remote · Startup en pleine croissance" />
             </p>
           </div>
 
@@ -308,253 +347,305 @@ const CaptainLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION - VOTRE MISSION
+            2. PROFILS RECHERCHES + ETAT D'ESPRIT
         ================================================================ */}
-        <section className="section-content bg-black" aria-labelledby="captain-mission-title">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12">
-              <div className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-purple-500/30 mb-4">
-                <Globe className="w-4 h-4" />
-                <FormattedMessage id="captain.landing.mission.badge" defaultMessage="Votre Mission" />
+        <section className="section-content bg-black" aria-labelledby="captain-profile-title">
+          <div className="max-w-4xl mx-auto">
+            <h2 id="captain-profile-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+              <FormattedMessage id="captain.landing.profile.title" defaultMessage="Qui on recherche" />
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 text-center mb-8">
+              <FormattedMessage id="captain.landing.profile.sub" defaultMessage="Pas besoin de diplome. On cherche un etat d'esprit." />
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+              {[
+                { icon: <Target className="w-5 h-5 text-amber-400" />, textId: 'captain.landing.profile.1', textDefault: 'A l\'aise avec les reseaux sociaux (WhatsApp, Telegram, Facebook)' },
+                { icon: <Users className="w-5 h-5 text-blue-400" />, textId: 'captain.landing.profile.2', textDefault: 'Sens du leadership — vous savez motiver et federer un groupe' },
+                { icon: <Globe className="w-5 h-5 text-green-400" />, textId: 'captain.landing.profile.3', textDefault: 'Connexion avec des communautes d\'expatries ou d\'etudiants internationaux' },
+                { icon: <Zap className="w-5 h-5 text-purple-400" />, textId: 'captain.landing.profile.4', textDefault: 'Envie d\'entreprendre et de grandir dans une startup — pas juste un "side hustle"' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex-shrink-0 mt-0.5">{item.icon}</div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id={item.textId} defaultMessage={item.textDefault} />
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Etat d'esprit */}
+            <div className="bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/20 rounded-2xl p-5 sm:p-6 text-center">
+              <h3 className="!text-lg sm:!text-xl font-bold text-amber-400 mb-3">
+                <FormattedMessage id="captain.landing.mindset.title" defaultMessage="L'etat d'esprit qu'on valorise" />
+              </h3>
+              <div className="flex flex-wrap justify-center gap-2">
+                {[
+                  intl.formatMessage({ id: 'captain.landing.mindset.1', defaultMessage: 'Proactif' }),
+                  intl.formatMessage({ id: 'captain.landing.mindset.2', defaultMessage: 'Bienveillant' }),
+                  intl.formatMessage({ id: 'captain.landing.mindset.3', defaultMessage: 'Ambitieux' }),
+                  intl.formatMessage({ id: 'captain.landing.mindset.4', defaultMessage: 'Esprit d\'equipe' }),
+                  intl.formatMessage({ id: 'captain.landing.mindset.5', defaultMessage: 'Debrouillard' }),
+                  intl.formatMessage({ id: 'captain.landing.mindset.6', defaultMessage: 'Fiable' }),
+                ].map((tag, i) => (
+                  <span key={i} className="bg-white/10 border border-white/10 text-white/90 text-sm font-medium px-3 py-1.5 rounded-full">
+                    {tag}
+                  </span>
+                ))}
               </div>
-              <h2 id="captain-mission-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
-                <FormattedMessage id="captain.landing.mission.title" defaultMessage="Couvrir le monde entier" />
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl max-w-3xl mx-auto text-white/90">
-                <FormattedMessage id="captain.landing.mission.subtitle" defaultMessage="En tant que Capitaine, vous recrutez et formez des chatters pour aider les expatries dans TOUS les pays et TOUTES les langues." />
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            3. VOTRE ROLE — Ce qu'on attend
+        ================================================================ */}
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="captain-role-title">
+          <div className="max-w-4xl mx-auto">
+            <h2 id="captain-role-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+              <FormattedMessage id="captain.landing.role.title" defaultMessage="Le role de Capitaine" />
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 text-center mb-8">
+              <FormattedMessage id="captain.landing.role.sub" defaultMessage="Vous etes un leader d'equipe, pas un freelance isole." />
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+              {[
+                { icon: <Users className="w-5 h-5 text-amber-400" />, textId: 'captain.landing.role.1', textDefault: 'Recruter et integrer des chatters (WhatsApp, Telegram, campus, reseaux sociaux)' },
+                { icon: <Heart className="w-5 h-5 text-pink-400" />, textId: 'captain.landing.role.2', textDefault: 'Animer et motiver votre equipe au quotidien — bienveillance et entraide' },
+                { icon: <Globe className="w-5 h-5 text-blue-400" />, textId: 'captain.landing.role.3', textDefault: 'Couvrir vos pays et langues assignes — assurer la presence SOS-Expat partout' },
+                { icon: <Star className="w-5 h-5 text-purple-400" />, textId: 'captain.landing.role.4', textDefault: 'Maintenir la qualite — une equipe active et fiable, c\'est ca qui compte' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex-shrink-0 mt-0.5">{item.icon}</div>
+                  <p className="text-sm sm:text-base text-white/90">
+                    <FormattedMessage id={item.textId} defaultMessage={item.textDefault} />
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            3. REVENUS — Tableau $/FCFA clair
+        ================================================================ */}
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="captain-rev-title">
+          <div className="max-w-5xl mx-auto">
+            <h2 id="captain-rev-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+              <FormattedMessage id="captain.landing.rev.title" defaultMessage="Vos revenus" />
+            </h2>
+            <p className="text-sm text-white/60 text-center mb-8">
+              <FormattedMessage id="captain.landing.rev.sub" defaultMessage="3 sources cumulables. Transparence totale." />
+            </p>
+
+            {/* Commissions par appel */}
+            <div className="grid sm:grid-cols-2 gap-3 mb-5">
+              <div className="bg-gradient-to-br from-amber-500/15 to-yellow-500/5 border border-amber-500/20 rounded-2xl p-5 text-center">
+                <p className="text-xs text-white/50 mb-1"><FormattedMessage id="captain.landing.rev.lawyer" defaultMessage="Appel avocat" /></p>
+                <p className="text-3xl sm:text-4xl font-black text-amber-400">3$</p>
+                <p className="text-sm text-amber-300/60">{fmt(3)} FCFA</p>
+              </div>
+              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/5 border border-green-500/20 rounded-2xl p-5 text-center">
+                <p className="text-xs text-white/50 mb-1"><FormattedMessage id="captain.landing.rev.expat" defaultMessage="Appel expatrie" /></p>
+                <p className="text-3xl sm:text-4xl font-black text-green-400">2$</p>
+                <p className="text-sm text-green-300/60">{fmt(2)} FCFA</p>
+              </div>
+            </div>
+
+            {/* Paliers */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden mb-5">
+              <div className="bg-white/5 px-5 py-3 border-b border-white/10">
+                <h3 className="!text-base sm:!text-lg font-bold text-white flex items-center gap-2">
+                  <Star className="w-5 h-5 text-amber-400" />
+                  <FormattedMessage id="captain.landing.rev.tiers" defaultMessage="Bonus de palier mensuel" />
+                </h3>
+              </div>
+              <div className="divide-y divide-white/5">
+                {TIERS.map(t => (
+                  <div key={t.name} className="flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{t.icon}</span>
+                      <span className={`font-bold ${t.text}`}>{t.name}</span>
+                      <span className="text-xs text-white/40">{t.calls}+ appels</span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`font-black text-lg ${t.text}`}>{t.bonus}$</span>
+                      <span className="text-xs text-white/40 block">{fmt(t.bonus)} FCFA</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bonus qualite */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-3 mb-5">
+              <div className="text-center sm:text-left flex-1">
+                <p className="text-xs text-purple-300/70 font-bold uppercase"><FormattedMessage id="captain.landing.rev.quality" defaultMessage="Bonus qualite mensuel" /></p>
+                <p className="text-2xl font-black text-purple-400">100$ <span className="text-base text-purple-300/60">/ {fmt(100)} FCFA</span></p>
+              </div>
+              <p className="text-xs text-white/50 text-center sm:text-right">
+                <FormattedMessage id="captain.landing.rev.quality.cond" defaultMessage="Condition : 10 recrues actives + 100$ de commissions equipe" />
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Recrutement */}
-              <article className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-2xl p-5 sm:p-6">
-                <div className="text-3xl mb-3">
-                  <Users className="w-8 h-8 text-amber-400" />
-                </div>
-                <h3 className="!text-xl font-bold text-white mb-2">
-                  <FormattedMessage id="captain.landing.mission.recruit.title" defaultMessage="Recrutez sans limite" />
-                </h3>
-                <p className="text-sm sm:text-base text-white/80">
-                  <FormattedMessage id="captain.landing.mission.recruit.desc" defaultMessage="Construisez une equipe de chatters illimitee. Niveau 1 (vos recrues directes) + Niveau 2 (les recrues de vos recrues)." />
-                </p>
-              </article>
-
-              {/* Couverture mondiale */}
-              <article className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-5 sm:p-6">
-                <div className="text-3xl mb-3">
-                  <Globe className="w-8 h-8 text-green-400" />
-                </div>
-                <h3 className="!text-xl font-bold text-white mb-2">
-                  <FormattedMessage id="captain.landing.mission.cover.title" defaultMessage="197 pays a couvrir" />
-                </h3>
-                <p className="text-sm sm:text-base text-white/80">
-                  <FormattedMessage id="captain.landing.mission.cover.desc" defaultMessage="Chaque capitaine se voit assigner des pays et langues. Votre objectif : maximiser la couverture mondiale de SOS-Expat." />
-                </p>
-              </article>
-
-              {/* Leadership */}
-              <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6 sm:col-span-2 lg:col-span-1">
-                <div className="text-3xl mb-3">
-                  <Crown className="w-8 h-8 text-purple-400" />
-                </div>
-                <h3 className="!text-xl font-bold text-white mb-2">
-                  <FormattedMessage id="captain.landing.mission.lead.title" defaultMessage="Formez et motivez" />
-                </h3>
-                <p className="text-sm sm:text-base text-white/80">
-                  <FormattedMessage id="captain.landing.mission.lead.desc" defaultMessage="Guidez votre equipe vers le succes. Plus vos chatters sont actifs, plus vous gagnez. Leur succes = votre succes." />
-                </p>
-              </article>
+            {/* Exemple concret */}
+            <div className="bg-gradient-to-r from-amber-500/10 to-green-500/10 border border-amber-500/20 rounded-2xl p-5 text-center">
+              <p className="text-xs text-white/50 uppercase font-bold mb-3"><FormattedMessage id="captain.landing.rev.example" defaultMessage="Exemple : equipe de 30 chatters, 15 appels/mois chacun" /></p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.team" defaultMessage="Equipe" /></p><p className="font-black text-amber-400">1 125$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.tier" defaultMessage="Palier" /></p><p className="font-black text-green-400">100$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.quality" defaultMessage="Qualite" /></p><p className="font-black text-purple-400">100$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40">TOTAL</p><p className="font-black text-white">1 325$</p></div>
+              </div>
+              <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
+                = {fmt(1325)} FCFA/mois
+              </p>
+              <p className="text-[10px] text-white/40 mt-1"><FormattedMessage id="captain.landing.rev.ex.note" defaultMessage="+ vos propres appels a 3-5$" /></p>
             </div>
           </div>
         </section>
 
         {/* ================================================================
-            SECTION - 3 SOURCES DE REVENUS CAPITAINE
+            4. CARRIERE — Grandir avec la startup
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="captain-revenue-title">
-          <div className="max-w-7xl mx-auto">
-            <h2 id="captain-revenue-title" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
-              <span className="text-amber-400"><FormattedMessage id="captain.landing.revenue.highlight" defaultMessage="3 sources" /></span>{' '}
-              <FormattedMessage id="captain.landing.revenue.title" defaultMessage="de revenus Capitaine" />
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl mb-10 sm:mb-12 lg:mb-16 text-center">
-              <FormattedMessage id="captain.landing.revenue.subtitle" defaultMessage="Tout se cumule. Aucune limite." />
-            </p>
+        <section className="section-content bg-gray-950" aria-labelledby="captain-career-title">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-pink-500/10 border-2 border-amber-500/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+              <h2 id="captain-career-title" className="!text-2xl sm:!text-3xl lg:!text-4xl font-black text-center mb-3">
+                <FormattedMessage id="captain.landing.career.title" defaultMessage="Un poste, pas un plan." />
+              </h2>
+              <p className="text-sm text-white/60 text-center mb-6 sm:mb-8 max-w-2xl mx-auto">
+                <FormattedMessage id="captain.landing.career.sub" defaultMessage="SOS-Expat est une startup en pleine croissance. Les capitaines d'aujourd'hui sont les managers de demain." />
+              </p>
 
-            <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-              {/* Source 1 - Commissions equipe */}
-              <article className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-amber-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-black">1</span>
-                </div>
-                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
-                  <FormattedMessage id="captain.landing.source1.title" defaultMessage="Commissions d'equipe" />
-                </h3>
-                <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
-                  <FormattedMessage id="captain.landing.source1.desc" defaultMessage="Chaque appel de votre equipe vous rapporte. Plus d'appels = plus de gains. Automatique et illimite." />
-                </p>
-                <div className="space-y-1 sm:space-y-2">
-                  <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-amber-400">
-                    3$ <FormattedMessage id="captain.landing.source1.lawyer" defaultMessage="/ appel avocat" />
+              <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Crown className="w-7 h-7 text-amber-400" />
                   </div>
-                  <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-yellow-400">
-                    2$ <FormattedMessage id="captain.landing.source1.expat" defaultMessage="/ appel expatrie" />
-                  </div>
-                </div>
-              </article>
-
-              {/* Source 2 - Bonus palier mensuel */}
-              <article className="bg-gradient-to-br from-green-500/20 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-green-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-black">2</span>
-                </div>
-                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
-                  <FormattedMessage id="captain.landing.source2.title" defaultMessage="Bonus de palier" />
-                </h3>
-                <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
-                  <FormattedMessage id="captain.landing.source2.desc" defaultMessage="5 paliers mensuels bases sur les appels totaux de votre equipe. Plus l'equipe performe, plus le bonus est gros." />
-                </p>
-                <div className="space-y-2">
-                  {TIERS.map(tier => (
-                    <div key={tier.name} className={`flex items-center justify-between bg-gradient-to-r ${tier.color} border ${tier.border} rounded-lg px-3 py-2`}>
-                      <span className="flex items-center gap-2 text-sm sm:text-base font-medium">
-                        <span>{tier.icon}</span> {tier.name}
-                        <span className="text-xs text-white/60">({tier.calls}+ appels)</span>
-                      </span>
-                      <span className={`font-bold ${tier.text}`}>{tier.bonus}$/mois</span>
-                    </div>
-                  ))}
-                </div>
-              </article>
-
-              {/* Source 3 - Bonus qualite */}
-              <article className="bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 relative overflow-hidden">
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-full shadow-lg animate-pulse">
-                  <FormattedMessage id="captain.landing.source3.badge" defaultMessage="EXCLUSIF" />
-                </div>
-                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-purple-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-black">3</span>
-                </div>
-                <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
-                  <FormattedMessage id="captain.landing.source3.title" defaultMessage="Bonus qualite" />
-                </h3>
-                <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5">
-                  <FormattedMessage id="captain.landing.source3.desc" defaultMessage="100$/mois de bonus supplementaire pour les capitaines dont l'equipe maintient un excellent niveau d'activite." />
-                </p>
-                <div className="bg-white/10 border rounded-xl p-4 text-center">
-                  <div className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
-                    100$/mois
-                  </div>
-                  <p className="text-sm text-white/70">
-                    <FormattedMessage id="captain.landing.source3.condition" defaultMessage="Equipe active et performante = bonus garanti" />
+                  <h3 className="!text-base sm:!text-lg font-bold text-amber-400 mb-1">
+                    <FormattedMessage id="captain.landing.career.ceo" defaultMessage="Acces direct au fondateur" />
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/70">
+                    <FormattedMessage id="captain.landing.career.ceo.desc" defaultMessage="Reunion Zoom hebdomadaire avec le fondateur. Echanges directs, pas de hierarchie inutile." />
                   </p>
                 </div>
-              </article>
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp className="w-7 h-7 text-green-400" />
+                  </div>
+                  <h3 className="!text-base sm:!text-lg font-bold text-green-400 mb-1">
+                    <FormattedMessage id="captain.landing.career.grow" defaultMessage="Evolution reelle" />
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/70">
+                    <FormattedMessage id="captain.landing.career.grow.desc" defaultMessage="Postes cles a responsabilite, remuneration fixe + variable, management. Selon vos resultats." />
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Building2 className="w-7 h-7 text-purple-400" />
+                  </div>
+                  <h3 className="!text-base sm:!text-lg font-bold text-purple-400 mb-1">
+                    <FormattedMessage id="captain.landing.career.dakar" defaultMessage="Bureau Dakar" />
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/70">
+                    <FormattedMessage id="captain.landing.career.dakar.desc" defaultMessage="Possibilite de rejoindre la structure sur place. Un vrai poste dans une vraie entreprise." />
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ================================================================
-            SECTION - CALCULATEUR CAPTAIN
+            5. AVANTAGES — Grid compact
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 via-green-950/20 to-gray-950" aria-labelledby="captain-calc-title">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-8 sm:mb-10">
-              <span className="inline-block bg-amber-500/20 text-amber-400 px-4 py-1.5 rounded-full text-sm sm:text-base font-bold border border-amber-500/30 mb-4">
-                <FormattedMessage id="captain.landing.calc.badge" defaultMessage="Calculateur de revenus" />
-              </span>
-              <h2 id="captain-calc-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
-                <FormattedMessage id="captain.landing.calc.title" defaultMessage="Simulez VOS gains de Capitaine" />
-              </h2>
+        <section className="section-content bg-gradient-to-b from-gray-950 to-black" aria-labelledby="captain-perks-title">
+          <div className="max-w-4xl mx-auto">
+            <h2 id="captain-perks-title" className="!text-3xl sm:!text-4xl font-black text-center mb-6 sm:mb-8">
+              <FormattedMessage id="captain.landing.perks.title" defaultMessage="Pourquoi nous rejoindre" />
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { icon: <Globe className="w-5 h-5" />, label: intl.formatMessage({ id: 'captain.landing.perk.remote', defaultMessage: '100% remote' }), color: 'text-blue-400' },
+                { icon: <Clock className="w-5 h-5" />, label: intl.formatMessage({ id: 'captain.landing.perk.flex', defaultMessage: 'Horaires flexibles' }), color: 'text-amber-400' },
+                { icon: <Zap className="w-5 h-5" />, label: intl.formatMessage({ id: 'captain.landing.perk.startup', defaultMessage: 'Culture startup' }), color: 'text-green-400' },
+                { icon: <Crown className="w-5 h-5" />, label: intl.formatMessage({ id: 'captain.landing.perk.autonomy', defaultMessage: 'Autonomie totale' }), color: 'text-purple-400' },
+                { icon: <Smartphone className="w-5 h-5" />, label: intl.formatMessage({ id: 'captain.landing.perk.phone', defaultMessage: 'Smartphone suffit' }), color: 'text-pink-400' },
+                { icon: <Users className="w-5 h-5" />, label: intl.formatMessage({ id: 'captain.landing.perk.team', defaultMessage: 'Esprit d\'equipe' }), color: 'text-cyan-400' },
+              ].map((p, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 flex items-center gap-2.5">
+                  <span className={p.color}>{p.icon}</span>
+                  <span className="text-sm font-semibold text-white/90">{p.label}</span>
+                </div>
+              ))}
             </div>
+          </div>
+        </section>
 
-            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
+        {/* ================================================================
+            6. CALCULATEUR — 3 sliders, $/FCFA
+        ================================================================ */}
+        <section className="section-content bg-gradient-to-b from-black via-green-950/20 to-gray-950" aria-labelledby="captain-calc-title">
+          <div className="max-w-5xl mx-auto">
+            <h2 id="captain-calc-title" className="!text-3xl sm:!text-4xl font-black text-center mb-2">
+              <FormattedMessage id="captain.landing.calc.title" defaultMessage="Estimez vos revenus" />
+            </h2>
+            <p className="text-sm text-white/50 text-center mb-8"><FormattedMessage id="captain.landing.calc.sub" defaultMessage="Deplacez les curseurs pour simuler" /></p>
+
+            <div className="grid lg:grid-cols-2 gap-6">
               {/* Sliders */}
-              <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <h3 className="!text-lg sm:!text-xl font-bold text-white mb-6">
-                  <FormattedMessage id="captain.landing.calc.config" defaultMessage="Configurez votre equipe" />
-                </h3>
-                <div className="space-y-6">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6">
+                <div className="space-y-5">
                   <div>
-                    <label htmlFor="captain-team-slider" className="text-sm sm:text-base block mb-2">
-                      <FormattedMessage
-                        id="captain.landing.calc.teamSize"
-                        defaultMessage="Chatters dans votre equipe : {count}"
-                        values={{ count: <span className="text-amber-400 font-bold">{teamSize}</span> }}
-                      />
+                    <label htmlFor="c-team" className="text-sm flex justify-between mb-2">
+                      <span><FormattedMessage id="captain.landing.calc.team" defaultMessage="Taille de votre equipe" /></span>
+                      <span className="text-amber-400 font-bold">{teamSize}</span>
                     </label>
-                    <input
-                      id="captain-team-slider"
-                      type="range"
-                      min="5"
-                      max="200"
-                      value={teamSize}
-                      onChange={(e) => setTeamSize(Number(e.target.value))}
-                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400 [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
+                    <input id="c-team" type="range" min="5" max="200" value={teamSize} onChange={e => setTeamSize(Number(e.target.value))}
+                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400 [&::-webkit-slider-thumb]:cursor-pointer" />
                   </div>
                   <div>
-                    <label htmlFor="captain-calls-slider" className="text-sm sm:text-base block mb-2">
-                      <FormattedMessage
-                        id="captain.landing.calc.callsPerChatter"
-                        defaultMessage="Appels/mois par chatter : {count}"
-                        values={{ count: <span className="text-green-400 font-bold">{callsPerChatter}</span> }}
-                      />
+                    <label htmlFor="c-calls" className="text-sm flex justify-between mb-2">
+                      <span><FormattedMessage id="captain.landing.calc.calls" defaultMessage="Appels/mois par chatter" /></span>
+                      <span className="text-green-400 font-bold">{callsPerChatter}</span>
                     </label>
-                    <input
-                      id="captain-calls-slider"
-                      type="range"
-                      min="5"
-                      max="40"
-                      value={callsPerChatter}
-                      onChange={(e) => setCallsPerChatter(Number(e.target.value))}
-                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-400 [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
+                    <input id="c-calls" type="range" min="5" max="40" value={callsPerChatter} onChange={e => setCallsPerChatter(Number(e.target.value))}
+                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-400 [&::-webkit-slider-thumb]:cursor-pointer" />
                   </div>
-
-                  {/* Current tier indicator */}
-                  <div className={`bg-gradient-to-r ${currentTier.color} border ${currentTier.border} rounded-xl p-4 text-center`}>
-                    <p className="text-xs text-white/60 mb-1">
-                      <FormattedMessage id="captain.landing.calc.currentTier" defaultMessage="Votre palier actuel" />
-                    </p>
-                    <p className={`text-xl sm:text-2xl font-black ${currentTier.text}`}>
-                      {currentTier.icon} {currentTier.name}
-                    </p>
-                    <p className="text-xs text-white/60 mt-1">
-                      {totalTeamCalls} <FormattedMessage id="captain.landing.calc.teamCalls" defaultMessage="appels equipe/mois" />
-                    </p>
+                  <div>
+                    <label htmlFor="c-pers" className="text-sm flex justify-between mb-2">
+                      <span><FormattedMessage id="captain.landing.calc.personal" defaultMessage="Vos appels directs/mois" /></span>
+                      <span className="text-blue-400 font-bold">{personalCalls}</span>
+                    </label>
+                    <input id="c-pers" type="range" min="0" max="60" value={personalCalls} onChange={e => setPersonalCalls(Number(e.target.value))}
+                      className="w-full appearance-none cursor-pointer h-2 bg-white/10 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400 [&::-webkit-slider-thumb]:cursor-pointer" />
+                  </div>
+                  <div className={`bg-gradient-to-r ${tier.color} border ${tier.border} rounded-xl p-3 text-center`}>
+                    <span className={`text-lg font-black ${tier.text}`}>{tier.icon} {tier.name}</span>
+                    <span className="text-xs text-white/40 ml-2">({totalTeamCalls} appels)</span>
                   </div>
                 </div>
               </div>
 
-              {/* Result */}
-              <div className="bg-gradient-to-br from-amber-500/15 to-green-500/10 border-2 border-amber-500/30 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
-                <p className="text-xs sm:text-sm text-center mb-2 text-white/60">
-                  <FormattedMessage id="captain.landing.calc.totalLabel" defaultMessage="VOS REVENUS CAPITAINE MENSUELS" />
+              {/* Resultat */}
+              <div className="bg-gradient-to-br from-amber-500/10 to-green-500/10 border-2 border-amber-500/20 rounded-2xl p-5 sm:p-6 flex flex-col justify-center">
+                <p className="text-xs text-center mb-1 text-white/50 uppercase font-bold"><FormattedMessage id="captain.landing.calc.result" defaultMessage="Revenus mensuels estimes" /></p>
+                <p className="text-4xl sm:text-5xl font-black text-center bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-green-400 mb-0.5" aria-live="polite">
+                  {total.toLocaleString()}$
                 </p>
-                <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-center bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-400 to-green-400 mb-4" aria-live="polite">
-                  {totalMonthly}$
-                </p>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center justify-between text-sm sm:text-base">
-                    <span><FormattedMessage id="captain.landing.calc.commissions" defaultMessage="Commissions equipe" /></span>
-                    <span className="font-bold text-amber-400">{monthlyCommissions}$</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm sm:text-base">
-                    <span><FormattedMessage id="captain.landing.calc.tierBonus" defaultMessage="Bonus palier" /> ({currentTier.name})</span>
-                    <span className="font-bold text-green-400">{tierBonus}$</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm sm:text-base">
-                    <span><FormattedMessage id="captain.landing.calc.qualityBonus" defaultMessage="Bonus qualite" /></span>
-                    <span className="font-bold text-purple-400">{qualityBonus}$</span>
-                  </div>
-                  <div className="border-t border-white/20 pt-2 flex items-center justify-between text-sm">
-                    <span className="text-white/60"><FormattedMessage id="captain.landing.calc.excludingPersonal" defaultMessage="+ vos appels directs a 3-5$" /></span>
-                    <span className="text-white/60"><FormattedMessage id="captain.landing.calc.notIncluded" defaultMessage="non inclus" /></span>
-                  </div>
+                <p className="text-base sm:text-lg font-bold text-center text-amber-300/60 mb-4">{fmt(total)} FCFA</p>
+
+                <div className="space-y-1.5 text-sm mb-5">
+                  <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r1" defaultMessage="Commissions equipe" /></span><span className="font-bold text-amber-400">{teamComm.toLocaleString()}$</span></div>
+                  <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r2" defaultMessage="Bonus palier" /> ({tier.name})</span><span className="font-bold text-green-400">{tier.bonus}$</span></div>
+                  <div className={`flex justify-between ${!qualityOk ? 'opacity-40' : ''}`}><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r3" defaultMessage="Bonus qualite" /></span><span className="font-bold text-purple-400">{qualityBonus}$</span></div>
+                  <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r4" defaultMessage="Appels directs" /></span><span className="font-bold text-blue-400">{persRev}$</span></div>
                 </div>
-                <CTAButton onClick={goToRegister} className="w-full" ariaLabel={ctaAriaLabel}>
-                  <FormattedMessage id="captain.landing.calc.cta" defaultMessage="Commencer maintenant" />
+
+                <CTAButton onClick={scrollToForm} className="w-full" ariaLabel={ctaLabel}>
+                  <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
                 </CTAButton>
               </div>
             </div>
@@ -562,244 +653,195 @@ const CaptainLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION - COMMENT DEVENIR CAPITAINE
+            7. FORMULAIRE — Candidature → Firestore
         ================================================================ */}
-        <section className="section-content bg-gray-950" aria-labelledby="captain-steps-title">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12">
-              <span className="inline-block bg-green-500/20 text-green-400 px-4 py-1.5 rounded-full text-sm sm:text-base font-bold border border-green-500/30 mb-4">
-                <FormattedMessage id="captain.landing.steps.badge" defaultMessage="4 etapes simples" />
-              </span>
-              <h2 id="captain-steps-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
-                <FormattedMessage id="captain.landing.steps.title" defaultMessage="Comment devenir" />{' '}
-                <span className="text-amber-400"><FormattedMessage id="captain.landing.steps.highlight" defaultMessage="Capitaine" /></span>
+        <section id="captain-form" className="section-content bg-gradient-to-b from-gray-950 via-indigo-950/20 to-black" aria-labelledby="captain-form-title">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-6">
+              <Heart className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+              <h2 id="captain-form-title" className="!text-3xl sm:!text-4xl font-black mb-2">
+                <FormattedMessage id="captain.landing.form.title" defaultMessage="Rejoignez l'equipe" />
               </h2>
+              <p className="text-sm text-white/60">
+                <FormattedMessage id="captain.landing.form.sub" defaultMessage="On vous recontacte rapidement sur WhatsApp." />
+              </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {[
-                {
-                  step: 1,
-                  icon: <Check className="w-6 h-6" />,
-                  titleId: 'captain.landing.step1.title',
-                  titleDefault: 'Inscrivez-vous',
-                  descId: 'captain.landing.step1.desc',
-                  descDefault: 'Creez votre compte chatter gratuitement en 2 minutes. Liez Telegram.',
-                  color: 'bg-amber-500',
-                },
-                {
-                  step: 2,
-                  icon: <Users className="w-6 h-6" />,
-                  titleId: 'captain.landing.step2.title',
-                  titleDefault: 'Recrutez',
-                  descId: 'captain.landing.step2.desc',
-                  descDefault: 'Commencez a recruter des chatters avec votre code de parrainage. Partagez sur les reseaux.',
-                  color: 'bg-green-500',
-                },
-                {
-                  step: 3,
-                  icon: <TrendingUp className="w-6 h-6" />,
-                  titleId: 'captain.landing.step3.title',
-                  titleDefault: 'Performez',
-                  descId: 'captain.landing.step3.desc',
-                  descDefault: 'Montrez vos resultats : equipe active, bons appels, couverture geographique. L\'admin vous remarquera.',
-                  color: 'bg-blue-500',
-                },
-                {
-                  step: 4,
-                  icon: <Crown className="w-6 h-6" />,
-                  titleId: 'captain.landing.step4.title',
-                  titleDefault: 'Promotion !',
-                  descId: 'captain.landing.step4.desc',
-                  descDefault: 'Vous etes promu Capitaine ! Acces au dashboard equipe, bonus palier, bonus qualite, et gestion de pays.',
-                  color: 'bg-purple-500',
-                },
-              ].map(item => (
-                <article key={item.step} className="bg-white/5 border rounded-2xl p-5 sm:p-6 text-center">
-                  <div className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
-                    <span className="text-white">{item.icon}</span>
+            {formState === 'sent' ? (
+              <div className="bg-green-500/15 border border-green-500/30 rounded-2xl p-8 text-center">
+                <Check className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <h3 className="!text-2xl font-bold text-green-400 mb-2">
+                  <FormattedMessage id="captain.landing.form.ok.title" defaultMessage="Candidature recue !" />
+                </h3>
+                <p className="text-sm text-white/70 mb-4">
+                  <FormattedMessage id="captain.landing.form.ok.desc" defaultMessage="On revient vers vous tres vite sur WhatsApp. En attendant, vous pouvez deja creer votre compte chatter pour decouvrir la plateforme." />
+                </p>
+                <CTAButton onClick={() => navigate(registerRoute)} className="mx-auto">
+                  <FormattedMessage id="captain.landing.form.ok.cta" defaultMessage="Creer mon compte" />
+                </CTAButton>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 space-y-4">
+                <div>
+                  <label htmlFor="cap-name" className="text-sm font-medium text-white/80 block mb-1.5">
+                    <FormattedMessage id="captain.landing.form.name" defaultMessage="Nom complet" /> *
+                  </label>
+                  <input id="cap-name" type="text" required value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder={intl.formatMessage({ id: 'captain.landing.form.name.ph', defaultMessage: 'Ex: Moussa Traore' })} />
+                </div>
+                <div>
+                  <label htmlFor="cap-wa" className="text-sm font-medium text-white/80 block mb-1.5">WhatsApp *</label>
+                  <input id="cap-wa" type="tel" required value={form.whatsapp} onChange={e => setForm(p => ({ ...p, whatsapp: e.target.value }))}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder="+221 77 123 45 67" />
+                </div>
+                <div>
+                  <label htmlFor="cap-country" className="text-sm font-medium text-white/80 block mb-1.5">
+                    <FormattedMessage id="captain.landing.form.country" defaultMessage="Pays" /> *
+                  </label>
+                  <input id="cap-country" type="text" required value={form.country} onChange={e => setForm(p => ({ ...p, country: e.target.value }))}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 transition-colors"
+                    placeholder={intl.formatMessage({ id: 'captain.landing.form.country.ph', defaultMessage: 'Ex: Senegal' })} />
+                </div>
+                {/* Photo */}
+                <div>
+                  <label className="text-sm font-medium text-white/80 block mb-1.5">
+                    <FormattedMessage id="captain.landing.form.photo" defaultMessage="Photo de profil (optionnel)" />
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {photoPreview ? (
+                      <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400 flex-shrink-0">
+                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(''); setPhotoUrl(''); }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                          <X className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
+                        <Image className="w-6 h-6 text-white/30" />
+                      </div>
+                    )}
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:border-amber-400/50 transition-colors min-h-[48px]">
+                        <Upload className="w-4 h-4 text-white/50" />
+                        <span className="text-white/50 text-sm">
+                          {photoUploading ? `${photoProgress}%` : photoFile ? photoFile.name : intl.formatMessage({ id: 'captain.landing.form.photo.ph', defaultMessage: 'Choisir une photo' })}
+                        </span>
+                      </div>
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoSelect} />
+                    </label>
                   </div>
-                  <div className="text-xs text-white/40 font-bold mb-2">
-                    <FormattedMessage id="captain.landing.stepLabel" defaultMessage="ETAPE {n}" values={{ n: item.step }} />
-                  </div>
-                  <h3 className="!text-xl font-bold text-white mb-2">
-                    <FormattedMessage id={item.titleId} defaultMessage={item.titleDefault} />
-                  </h3>
-                  <p className="text-sm sm:text-base text-white/80">
-                    <FormattedMessage id={item.descId} defaultMessage={item.descDefault} />
+                  {photoUploading && (
+                    <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-400 rounded-full transition-all duration-300" style={{ width: `${photoProgress}%` }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* CV */}
+                <div>
+                  <label className="text-sm font-medium text-white/80 block mb-1.5">
+                    <FormattedMessage id="captain.landing.form.cv" defaultMessage="CV (PDF ou Word, max 5MB)" />
+                  </label>
+                  <label className="block cursor-pointer">
+                    <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-3 hover:border-amber-400/50 transition-colors min-h-[48px]">
+                      {cvFile ? <FileText className="w-4 h-4 text-amber-400" /> : <Upload className="w-4 h-4 text-white/50" />}
+                      <span className={cvFile ? 'text-white text-sm' : 'text-white/50 text-sm'}>
+                        {cvUploading ? `Upload... ${cvProgress}%` : cvFile ? cvFile.name : intl.formatMessage({ id: 'captain.landing.form.cv.ph', defaultMessage: 'Choisir un fichier' })}
+                      </span>
+                      {cvFile && !cvUploading && <Check className="w-4 h-4 text-green-400 ml-auto" />}
+                    </div>
+                    <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleCvSelect} />
+                  </label>
+                  {cvUploading && (
+                    <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-400 rounded-full transition-all duration-300" style={{ width: `${cvProgress}%` }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Motivation */}
+                <div>
+                  <label htmlFor="cap-motiv" className="text-sm font-medium text-white/80 block mb-1.5">
+                    <FormattedMessage id="captain.landing.form.motivation" defaultMessage="Message de motivation (optionnel)" />
+                  </label>
+                  <textarea id="cap-motiv" rows={3} value={form.motivation} onChange={e => setForm(p => ({ ...p, motivation: e.target.value }))}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 transition-colors resize-none min-h-[48px]"
+                    placeholder={intl.formatMessage({ id: 'captain.landing.form.motiv.ph', defaultMessage: 'Votre experience, vos reseaux, votre motivation...' })} />
+                </div>
+
+                {formState === 'error' && (
+                  <p className="text-red-400 text-sm text-center">
+                    <FormattedMessage id="captain.landing.form.error" defaultMessage="Erreur d'envoi. Reessayez ou contactez-nous sur WhatsApp." />
                   </p>
-                </article>
-              ))}
-            </div>
+                )}
+
+                <button type="submit" disabled={formState === 'sending' || cvUploading || photoUploading}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold rounded-2xl py-4 text-lg shadow-lg hover:shadow-xl hover:from-amber-300 hover:to-yellow-300 active:scale-[0.98] transition-all will-change-transform disabled:opacity-60">
+                  {formState === 'sending' ? (
+                    <FormattedMessage id="captain.landing.form.sending" defaultMessage="Envoi en cours..." />
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <FormattedMessage id="captain.landing.form.submit" defaultMessage="Envoyer ma candidature" />
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-white/30 text-center">
+                  <FormattedMessage id="captain.landing.form.privacy" defaultMessage="Vos donnees restent confidentielles." />
+                </p>
+              </form>
+            )}
           </div>
         </section>
 
         {/* ================================================================
-            SECTION - AVANTAGES EXCLUSIFS CAPITAINE
+            8. FAQ — 5 questions
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950" aria-labelledby="captain-perks-title">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12">
-              <span className="inline-block bg-purple-500/20 text-purple-400 px-4 py-1.5 rounded-full text-sm sm:text-base font-bold border border-purple-500/30 mb-4">
-                <Star className="w-4 h-4 inline mr-1" />
-                <FormattedMessage id="captain.landing.perks.badge" defaultMessage="Avantages exclusifs" />
-              </span>
-              <h2 id="captain-perks-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
-                <FormattedMessage id="captain.landing.perks.title" defaultMessage="Pourquoi devenir" />{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-purple-400">
-                  <FormattedMessage id="captain.landing.perks.highlight" defaultMessage="Capitaine ?" />
-                </span>
-              </h2>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-              {[
-                { emoji: '👑', titleKey: 'captain.landing.perk1.title', titleDefault: 'Statut Capitaine', descKey: 'captain.landing.perk1.desc', descDefault: 'Badge exclusif visible par toute la communaute. Reconnaissance officielle.', color: 'text-amber-400' },
-                { emoji: '📊', titleKey: 'captain.landing.perk2.title', titleDefault: 'Dashboard equipe', descKey: 'captain.landing.perk2.desc', descDefault: 'Suivez les performances de chaque chatter : appels, gains, activite en temps reel.', color: 'text-blue-400' },
-                { emoji: '🌍', titleKey: 'captain.landing.perk3.title', titleDefault: 'Pays assignes', descKey: 'captain.landing.perk3.desc', descDefault: 'Pays et langues assignes par l\'admin. Vous etes responsable de la couverture de vos zones.', color: 'text-green-400' },
-                { emoji: '💰', titleKey: 'captain.landing.perk4.title', titleDefault: 'Triple revenu', descKey: 'captain.landing.perk4.desc', descDefault: 'Commissions d\'equipe + bonus palier + bonus qualite. Tout se cumule chaque mois.', color: 'text-yellow-400' },
-                { emoji: '🚀', titleKey: 'captain.landing.perk5.title', titleDefault: 'Croissance infinie', descKey: 'captain.landing.perk5.desc', descDefault: 'Aucune limite de recrutement. Plus votre equipe grandit, plus vos revenus explosent.', color: 'text-purple-400' },
-                { emoji: '🛡️', titleKey: 'captain.landing.perk6.title', titleDefault: 'Support prioritaire', descKey: 'captain.landing.perk6.desc', descDefault: 'Acces direct a l\'equipe SOS-Expat. Formation, outils, et accompagnement personnalise.', color: 'text-red-400' },
-              ].map((item, i) => (
-                <div key={i} className="bg-white/5 border rounded-xl sm:rounded-2xl p-4 sm:p-5">
-                  <span className="text-3xl mb-3 block" aria-hidden="true">{item.emoji}</span>
-                  <div className={`font-bold text-base sm:text-lg ${item.color} mb-1`}>
-                    <FormattedMessage id={item.titleKey} defaultMessage={item.titleDefault} />
-                  </div>
-                  <div className="text-sm text-white/70">
-                    <FormattedMessage id={item.descKey} defaultMessage={item.descDefault} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ================================================================
-            SECTION - ZERO RISQUE
-        ================================================================ */}
-        <section className="section-content bg-gray-950" aria-labelledby="captain-risk-title">
-          <div className="max-w-5xl mx-auto">
-            <h2 id="captain-risk-title" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-8 sm:mb-12">
-              <FormattedMessage id="captain.landing.risk.title" defaultMessage="Zero risque." />{' '}
-              <span className="text-green-400"><FormattedMessage id="captain.landing.risk.highlight" defaultMessage="Zero limite." /></span>
-            </h2>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
-              {[
-                { emoji: '💸', titleKey: 'captain.landing.risk.free', titleDefault: '100% gratuit', descKey: 'captain.landing.risk.free.desc', descDefault: 'Aucun investissement. Jamais.', color: 'text-green-400' },
-                { emoji: '🌍', titleKey: 'captain.landing.risk.global', titleDefault: '197 pays', descKey: 'captain.landing.risk.global.desc', descDefault: 'Recrutez dans le monde entier.', color: 'text-blue-400' },
-                { emoji: '📱', titleKey: 'captain.landing.risk.phone', titleDefault: 'Smartphone suffit', descKey: 'captain.landing.risk.phone.desc', descDefault: 'Gerez votre equipe depuis votre telephone.', color: 'text-amber-400' },
-                { emoji: '⏰', titleKey: 'captain.landing.risk.flexible', titleDefault: 'Horaires libres', descKey: 'captain.landing.risk.flexible.desc', descDefault: 'Travaillez quand vous voulez.', color: 'text-red-400' },
-              ].map((item, i) => (
-                <div key={i} className="bg-white/10 border rounded-xl sm:rounded-2xl p-4 sm:p-5 text-center">
-                  <span className="text-3xl sm:text-4xl mb-2 block" aria-hidden="true">{item.emoji}</span>
-                  <div className={`font-bold text-sm sm:text-base ${item.color} mb-0.5`}>
-                    <FormattedMessage id={item.titleKey} defaultMessage={item.titleDefault} />
-                  </div>
-                  <div className="text-gray-300 text-xs sm:text-sm">
-                    <FormattedMessage id={item.descKey} defaultMessage={item.descDefault} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ================================================================
-            SECTION - FAQ
-        ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="captain-faq-title">
+        <section className="section-content bg-black" id="faq" aria-labelledby="captain-faq-title">
           <div className="max-w-3xl mx-auto">
-            <h2 id="captain-faq-title" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
-              <FormattedMessage id="captain.faq.title" defaultMessage="Questions ?" />
+            <h2 id="captain-faq-title" className="!text-3xl sm:!text-4xl font-black text-center mb-6">
+              <FormattedMessage id="captain.faq.title" defaultMessage="Questions frequentes" />
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-10 lg:mb-12 text-center">
-              <FormattedMessage id="captain.faq.subtitle" defaultMessage="Tout ce qu'il faut savoir avant de devenir Capitaine" />
-            </p>
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3">
               {faqItems.map((item, i) => (
-                <FAQItem
-                  key={i}
-                  index={i}
-                  question={item.q}
-                  answer={item.a}
-                  isOpen={openFAQ === i}
-                  onToggle={() => setOpenFAQ(openFAQ === i ? null : i)}
-                />
+                <FAQItem key={i} index={i} question={item.q} answer={item.a} isOpen={openFAQ === i} onToggle={() => setOpenFAQ(openFAQ === i ? null : i)} />
               ))}
             </div>
           </div>
         </section>
 
         {/* ================================================================
-            CTA FINAL
+            9. CTA FINAL
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 via-purple-950/20 to-black relative" aria-labelledby="captain-cta-final">
+        <section className="section-content bg-gradient-to-b from-black via-purple-950/20 to-black relative" aria-labelledby="captain-cta-final">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.06),transparent_50%)]" aria-hidden="true" />
-
-          <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-amber-400 mx-auto mb-4" />
-
-            <h2 id="captain-cta-final" className="!text-2xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-4 sm:mb-6">
-              <FormattedMessage id="captain.landing.cta.title" defaultMessage="Devenez le leader" />
-              <br />
-              <span className="text-amber-400"><FormattedMessage id="captain.landing.cta.highlight" defaultMessage="de votre equipe mondiale" /></span>
+          <div className="relative z-10 max-w-3xl mx-auto text-center">
+            <Rocket className="w-12 h-12 sm:w-16 sm:h-16 text-amber-400 mx-auto mb-4" />
+            <h2 id="captain-cta-final" className="!text-2xl sm:!text-4xl lg:!text-5xl font-black text-white mb-3 sm:mb-5">
+              <FormattedMessage id="captain.landing.cta.title" defaultMessage="L'aventure commence ici." />
             </h2>
-
-            <p className="text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto">
-              <FormattedMessage id="captain.landing.cta.desc" defaultMessage="Commencez comme chatter, prouvez votre valeur, et devenez Capitaine. Vos gains n'ont aucune limite." />
+            <p className="text-sm sm:text-base text-white/60 mb-6 max-w-xl mx-auto">
+              <FormattedMessage id="captain.landing.cta.desc" defaultMessage="Startup en pleine croissance. Equipe bienveillante. Poste evolutif. On vous attend." />
             </p>
-
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-10">
-              {[
-                'captain.landing.recap.commissions',
-                'captain.landing.recap.tierBonus',
-                'captain.landing.recap.qualityBonus',
-                'captain.landing.recap.free',
-              ].map((key, i) => (
-                <span key={i} className="flex items-center gap-1.5 bg-amber-500/15 border text-white rounded-full px-3 sm:px-4 py-2 sm:text-base font-medium">
-                  <Check className="w-4 h-4 text-amber-400" aria-hidden="true" />
-                  <FormattedMessage
-                    id={key}
-                    defaultMessage={
-                      i === 0 ? 'Commissions illimitees' :
-                      i === 1 ? 'Bonus palier' :
-                      i === 2 ? '100$/mois qualite' : 'Gratuit'
-                    }
-                  />
-                </span>
-              ))}
-            </div>
-
-            <CTAButton onClick={goToRegister} size="large" className="w-full max-w-sm sm:max-w-md mx-auto" ariaLabel={ctaAriaLabel}>
-              <FormattedMessage id="captain.landing.cta.final" defaultMessage="Devenir Capitaine maintenant" />
+            <CTAButton onClick={scrollToForm} size="large" className="w-full max-w-md mx-auto" ariaLabel={ctaLabel}>
+              <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
             </CTAButton>
-
-            <p className="text-gray-300 mt-5 sm:mt-6 sm:text-base lg:text-lg">
-              <FormattedMessage id="captain.landing.cta.footer" defaultMessage="Inscription gratuite - Commencez comme chatter - Promotion sur merite" />
-            </p>
           </div>
         </section>
 
         {/* ================================================================
-            STICKY CTA MOBILE
+            10. STICKY CTA MOBILE
         ================================================================ */}
         {showStickyCTA && (
-          <div
-            className="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-            role="complementary"
-            aria-label={ctaAriaLabel}
-          >
+          <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} role="complementary" aria-label={ctaLabel}>
             <div className="bg-black/95 backdrop-blur-md border-t px-4 py-3">
-              <button
-                onClick={goToRegister}
-                aria-label={ctaAriaLabel}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform"
-              >
-                <Crown className="w-5 h-5" aria-hidden="true" />
-                <FormattedMessage id="captain.landing.cta.start" defaultMessage="Devenir Capitaine" />
+              <button onClick={scrollToForm} aria-label={ctaLabel}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform">
+                <Rocket className="w-5 h-5" aria-hidden="true" />
+                <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>

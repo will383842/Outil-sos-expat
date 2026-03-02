@@ -69,6 +69,18 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
+    // CAPTAIN APPLICATIONS CV: Anonymous upload for captain recruitment
+    // Security: Anonymous uploads allowed (candidates not authenticated)
+    // - PDF/DOCX/images only, max 5MB
+    // - Read: authenticated users (admins reviewing applications)
+    match /captain_applications_cv/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isValidDocumentType() &&
+                   request.resource != null &&
+                   request.resource.size < 5 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+
     // P1 SECURITY FIX: Require ownership check for delete
     match /profile_photos/{userId}/{fileName} {
       allow read: if isAuthenticated();

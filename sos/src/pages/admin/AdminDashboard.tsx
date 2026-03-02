@@ -19,13 +19,15 @@ import {
   AlertTriangle,
   UserCheck,
   Cog,
+  Crown,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import ProfessionalDashboard from "../../components/admin/ProfessionalDashboard";
 import Button from "../../components/common/Button";
 import { useAuth } from "../../contexts/AuthContext";
-import { functions } from "../../config/firebase";
+import { functions, db } from "../../config/firebase";
 import { httpsCallable } from "firebase/functions";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
 import { logError } from "../../utils/logging";
 import Modal from "../../components/common/Modal";
@@ -78,6 +80,14 @@ const AdminDashboard: React.FC = () => {
     failed: number;
     skipped: number;
   } | null>(null);
+  const [pendingCaptainCount, setPendingCaptainCount] = useState(0);
+
+  // Fetch pending captain applications count
+  useEffect(() => {
+    getDocs(query(collection(db, 'captain_applications'), where('status', '==', 'pending')))
+      .then((snap) => { if (mountedRef.current) setPendingCaptainCount(snap.size); })
+      .catch(() => {});
+  }, []);
 
   // Restauration des rôles
   const handleRestoreRoles = async () => {
@@ -379,6 +389,15 @@ const AdminDashboard: React.FC = () => {
                 >
                   {intl.formatMessage({ id: 'admin.dashboard.quickAccess.countryStats' })}
                 </button>
+                {pendingCaptainCount > 0 && (
+                  <button
+                    onClick={() => navigate("/admin/team/captains/recruitment")}
+                    className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-md text-sm hover:bg-amber-100 transition-colors flex items-center gap-1.5"
+                  >
+                    <Crown size={14} />
+                    {pendingCaptainCount} candidature{pendingCaptainCount !== 1 ? 's' : ''} Captain
+                  </button>
+                )}
               </div>
             </div>
 

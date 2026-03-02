@@ -67,6 +67,8 @@ import {
   // Blogger icons
   FolderOpen,
   Code,
+  // Team icons
+  UsersRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -699,6 +701,24 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/chatters/config",
         icon: Settings,
         descriptionKey: "admin.menu.chattersConfig.description",
+      },
+    ],
+  },
+
+  // ===== 👥 EQUIPE (Recrutement interne) =====
+  {
+    id: "team",
+    labelKey: "admin.menu.team",
+    icon: UsersRound,
+    descriptionKey: "admin.menu.team.description",
+    children: [
+      {
+        id: "team-captain-recruitment",
+        labelKey: "admin.menu.teamCaptainRecruitment",
+        path: "/admin/team/captains/recruitment",
+        icon: Crown,
+        badge: "NEW",
+        descriptionKey: "admin.menu.teamCaptainRecruitment.description",
       },
     ],
   },

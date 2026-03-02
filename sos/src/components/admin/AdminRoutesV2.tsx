@@ -348,6 +348,9 @@ const AdminChatterPayments = lazy(
 const AdminChatterConfig = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterConfig")
 );
+const AdminTeamCaptainRecruitment = lazy(
+  () => import("../../pages/admin/Team/AdminTeamCaptainRecruitment")
+);
 const AdminCaptainsList = lazy(
   () => import("../../pages/admin/Chatter/AdminCaptainsList")
 );
@@ -1244,6 +1247,15 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminChatterPayments />
+          </Suspense>
+        }
+      />
+      {/* Team - Captain Recruitment */}
+      <Route
+        path="team/captains/recruitment"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTeamCaptainRecruitment />
           </Suspense>
         }
       />
