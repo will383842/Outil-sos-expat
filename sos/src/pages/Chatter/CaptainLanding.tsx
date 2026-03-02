@@ -15,6 +15,7 @@ import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { trackMetaViewContent } from '@/utils/metaPixel';
 import toast from 'react-hot-toast';
+import IntlPhoneInput from '@/components/forms-data/IntlPhoneInput';
 import { logAnalyticsEvent, db, storage } from '@/config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -74,6 +75,54 @@ const globalStyles = `
   @media (prefers-reduced-motion: reduce) {
     .animate-bounce, .transition-all { animation: none !important; transition: none !important; }
   }
+  /* react-phone-input-2 dark theme overrides */
+  .captain-landing .react-tel-input .form-control {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 0.75rem !important;
+    color: white !important;
+    width: 100% !important;
+    height: 48px !important;
+    font-size: 1rem !important;
+  }
+  .captain-landing .react-tel-input .form-control:focus {
+    border-color: #f59e0b !important;
+    box-shadow: none !important;
+  }
+  .captain-landing .react-tel-input .form-control::placeholder { color: rgba(255,255,255,0.3) !important; }
+  .captain-landing .react-tel-input .flag-dropdown {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-right: none !important;
+    border-radius: 0.75rem 0 0 0.75rem !important;
+  }
+  .captain-landing .react-tel-input .flag-dropdown:hover,
+  .captain-landing .react-tel-input .flag-dropdown.open { background: rgba(255,255,255,0.15) !important; }
+  .captain-landing .react-tel-input .flag-dropdown.open { border-radius: 0.75rem 0 0 0 !important; }
+  .captain-landing .react-tel-input .selected-flag { border-radius: 0.75rem 0 0 0.75rem !important; background: transparent !important; }
+  .captain-landing .react-tel-input .selected-flag:hover { background: rgba(255,255,255,0.05) !important; }
+  .captain-landing .react-tel-input .country-list {
+    background: #111827 !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 0 0 0.75rem 0.75rem !important;
+  }
+  .captain-landing .react-tel-input .country-list .country { color: rgba(255,255,255,0.85) !important; }
+  .captain-landing .react-tel-input .country-list .country:hover,
+  .captain-landing .react-tel-input .country-list .country.highlight { background: rgba(251,191,36,0.15) !important; }
+  .captain-landing .react-tel-input .country-list .country-name { color: rgba(255,255,255,0.9) !important; }
+  .captain-landing .react-tel-input .country-list .dial-code { color: rgba(251,191,36,0.8) !important; }
+  .captain-landing .react-tel-input .country-list .divider { border-color: rgba(255,255,255,0.1) !important; }
+  .captain-landing .react-tel-input .country-list .search { background: #111827 !important; padding: 8px !important; }
+  .captain-landing .react-tel-input .country-list .search-box {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: white !important;
+    border-radius: 0.5rem !important;
+    width: 100% !important;
+  }
+  .captain-landing .react-tel-input .country-list .search-box::placeholder { color: rgba(255,255,255,0.3) !important; }
+  .captain-landing .react-tel-input .arrow { border-top-color: rgba(255,255,255,0.6) !important; }
+  .captain-landing .react-tel-input .arrow.up { border-bottom-color: rgba(255,255,255,0.6) !important; }
 `;
 
 // Currency: now dynamic via useCountryLandingConfig (see component body)
@@ -261,6 +310,10 @@ const CaptainLanding: React.FC = () => {
   // Submit to Firestore
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.whatsapp || form.whatsapp.replace(/\D/g, '').length < 7) {
+      toast.error(intl.formatMessage({ id: 'captain.landing.form.wa.required', defaultMessage: 'Veuillez saisir votre numéro WhatsApp avec indicatif pays.' }));
+      return;
+    }
     setFormState('sending');
     try {
       await addDoc(collection(db, 'captain_applications'), {
@@ -751,9 +804,15 @@ const CaptainLanding: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="cap-wa" className="text-sm font-medium text-white/80 block mb-1.5">WhatsApp *</label>
-                  <input id="cap-wa" type="tel" required value={form.whatsapp} onChange={e => setForm(p => ({ ...p, whatsapp: e.target.value }))}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 transition-colors"
-                    placeholder="+221 77 123 45 67" />
+                  <IntlPhoneInput
+                    id="cap-wa"
+                    value={form.whatsapp}
+                    onChange={(val) => setForm(p => ({ ...p, whatsapp: val }))}
+                    defaultCountry={countryCode?.toLowerCase() || 'fr'}
+                    locale={langCode}
+                    placeholder="+221 77 123 45 67"
+                    aria-required={true}
+                  />
                 </div>
                 <div>
                   <label htmlFor="cap-country" className="text-sm font-medium text-white/80 block mb-1.5">

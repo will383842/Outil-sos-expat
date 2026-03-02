@@ -5086,6 +5086,7 @@
   "captain.landing.form.cv": "CV (PDF ou Word, max 5MB)",
   "captain.landing.form.cv.ph": "Choisir un fichier",
   "captain.landing.form.error": "Erreur d'envoi. Réessayez ou contactez-nous sur WhatsApp.",
+  "captain.landing.form.wa.required": "Veuillez saisir votre numéro WhatsApp avec indicatif pays.",
   "captain.landing.form.motiv.ph": "Votre expérience, vos réseaux, votre motivation...",
   "captain.landing.form.motivation": "Message de motivation (optionnel)",
   "captain.landing.form.name": "Nom complet",
