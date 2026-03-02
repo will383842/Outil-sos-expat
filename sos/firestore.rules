@@ -3138,6 +3138,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= CAPTAIN APPLICATIONS (public recruitment) =================
+    // Candidatures Capitaines - ecriture publique (landing page), lecture/update/delete admin only
+    match /captain_applications/{applicationId} {
+      // Create: anyone can submit a captain application (landing page, no auth)
+      allow create: if request.resource.data.keys().hasAll(['name', 'whatsapp', 'country', 'status'])
+                    && request.resource.data.status == 'pending';
+      // Read, update, delete: admin only
+      allow read, update, delete: if isAdmin();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

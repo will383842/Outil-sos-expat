@@ -215,6 +215,7 @@ const CaptainLanding: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
     setPhotoUploading(true);
@@ -531,12 +532,12 @@ const CaptainLanding: React.FC = () => {
               <p className="text-xs text-white/50 uppercase font-bold mb-3"><FormattedMessage id="captain.landing.rev.example" defaultMessage="Exemple : equipe de 30 chatters, 15 appels/mois chacun" /></p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                 <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.team" defaultMessage="Equipe" /></p><p className="font-black text-amber-400">1 125$</p></div>
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.tier" defaultMessage="Palier" /></p><p className="font-black text-green-400">100$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.tier" defaultMessage="Palier" /></p><p className="font-black text-green-400">400$</p></div>
                 <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.quality" defaultMessage="Qualite" /></p><p className="font-black text-purple-400">100$</p></div>
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40">TOTAL</p><p className="font-black text-white">1 325$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40">TOTAL</p><p className="font-black text-white">1 625$</p></div>
               </div>
               <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
-                = 1 325${local(1325)}/mois
+                = 1 625${local(1625)}/mois
               </p>
               <p className="text-[10px] text-white/40 mt-1"><FormattedMessage id="captain.landing.rev.ex.note" defaultMessage="+ vos propres appels a 3-5$" /></p>
             </div>
@@ -748,10 +749,10 @@ const CaptainLanding: React.FC = () => {
                   </label>
                   <div className="flex items-center gap-3">
                     {photoPreview ? (
-                      <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400 flex-shrink-0">
-                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(''); setPhotoUrl(''); }}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                      <div className="relative w-16 h-16 flex-shrink-0">
+                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover rounded-full border-2 border-amber-400" />
+                        <button type="button" onClick={() => { if (photoPreview) URL.revokeObjectURL(photoPreview); setPhotoFile(null); setPhotoPreview(''); setPhotoUrl(''); }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center z-10">
                           <X className="w-3 h-3 text-white" />
                         </button>
                       </div>

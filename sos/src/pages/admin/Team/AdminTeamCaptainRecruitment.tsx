@@ -9,7 +9,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useIntl } from 'react-intl';
+import { useIntl, FormattedMessage } from 'react-intl';
+import toast from 'react-hot-toast';
 import {
   collection,
   onSnapshot,
@@ -25,7 +26,6 @@ import {
   Crown,
   Download,
   FileText,
-  Eye,
   X,
   ChevronDown,
   Trash2,
@@ -52,20 +52,21 @@ interface CaptainApplication {
   createdAt: { seconds: number } | null;
 }
 
-const STATUS_CONFIG: Record<ApplicationStatus, { label: string; bg: string; text: string; dot: string }> = {
-  pending: { label: 'En attente', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' },
-  contacted: { label: 'Contacte', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' },
-  approved: { label: 'Approuve', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
-  rejected: { label: 'Rejete', bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
+const STATUS_STYLES: Record<ApplicationStatus, { bg: string; text: string; dot: string }> = {
+  pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' },
+  contacted: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' },
+  approved: { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
+  rejected: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
 };
 
-const TABS: { key: 'all' | ApplicationStatus; label: string }[] = [
-  { key: 'all', label: 'Tous' },
-  { key: 'pending', label: 'En attente' },
-  { key: 'contacted', label: 'Contactes' },
-  { key: 'approved', label: 'Approuves' },
-  { key: 'rejected', label: 'Rejetes' },
-];
+const STATUS_KEYS: Record<ApplicationStatus, string> = {
+  pending: 'admin.team.recruitment.pending',
+  contacted: 'admin.team.recruitment.contacted',
+  approved: 'admin.team.recruitment.approved',
+  rejected: 'admin.team.recruitment.rejected',
+};
+
+const TAB_KEYS: ('all' | ApplicationStatus)[] = ['all', 'pending', 'contacted', 'approved', 'rejected'];
 
 const AdminTeamCaptainRecruitment: React.FC = () => {
   const intl = useIntl();
@@ -75,13 +76,23 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
   const [expandedMotivation, setExpandedMotivation] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
+  const statusLabel = (s: ApplicationStatus) => intl.formatMessage({ id: STATUS_KEYS[s], defaultMessage: s });
+  const tabLabel = (key: 'all' | ApplicationStatus) =>
+    key === 'all' ? intl.formatMessage({ id: 'admin.team.recruitment.all', defaultMessage: 'Tous' }) : statusLabel(key);
+
   useEffect(() => {
     const q = query(collection(db, 'captain_applications'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const apps = snap.docs.map((d) => ({ id: d.id, ...d.data() } as CaptainApplication));
-      setApplications(apps);
-      setLoading(false);
-    });
+    const unsub = onSnapshot(q,
+      (snap) => {
+        const apps = snap.docs.map((d) => ({ id: d.id, ...d.data() } as CaptainApplication));
+        setApplications(apps);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('captain_applications listener error:', err);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, []);
 
@@ -89,17 +100,29 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
   const pendingCount = applications.filter((a) => a.status === 'pending').length;
 
   const changeStatus = async (id: string, status: ApplicationStatus) => {
-    await updateDoc(doc(db, 'captain_applications', id), { status });
+    try {
+      await updateDoc(doc(db, 'captain_applications', id), { status });
+      toast.success(intl.formatMessage({ id: 'admin.team.recruitment.statusUpdated', defaultMessage: 'Statut mis a jour' }));
+    } catch (err) {
+      console.error('changeStatus error:', err);
+      toast.error(intl.formatMessage({ id: 'admin.team.recruitment.error', defaultMessage: 'Erreur, reessayez' }));
+    }
   };
 
   const deleteApplication = async (id: string) => {
-    if (!window.confirm('Supprimer cette candidature ?')) return;
-    await deleteDoc(doc(db, 'captain_applications', id));
+    if (!window.confirm(intl.formatMessage({ id: 'admin.team.recruitment.confirmDelete', defaultMessage: 'Supprimer cette candidature ?' }))) return;
+    try {
+      await deleteDoc(doc(db, 'captain_applications', id));
+      toast.success(intl.formatMessage({ id: 'admin.team.recruitment.deleted', defaultMessage: 'Candidature supprimee' }));
+    } catch (err) {
+      console.error('deleteApplication error:', err);
+      toast.error(intl.formatMessage({ id: 'admin.team.recruitment.error', defaultMessage: 'Erreur, reessayez' }));
+    }
   };
 
   const formatDate = (ts: { seconds: number } | null) => {
     if (!ts) return '—';
-    return new Date(ts.seconds * 1000).toLocaleDateString('fr-FR', {
+    return new Date(ts.seconds * 1000).toLocaleDateString(intl.locale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -107,6 +130,8 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
       minute: '2-digit',
     });
   };
+
+  const waLink = (num: string) => `https://wa.me/${num.replace(/[^0-9]/g, '')}`;
 
   return (
     <AdminLayout>
@@ -119,10 +144,10 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">
-                {intl.formatMessage({ id: 'admin.team.recruitment.title', defaultMessage: 'Recrutement Capitaines' })}
+                <FormattedMessage id="admin.team.recruitment.title" defaultMessage="Recrutement Capitaines" />
               </h1>
               <p className="text-sm text-gray-500">
-                {applications.length} candidature{applications.length !== 1 ? 's' : ''} — {pendingCount} en attente
+                {applications.length} candidature{applications.length !== 1 ? 's' : ''} — {pendingCount} {statusLabel('pending').toLowerCase()}
               </p>
             </div>
           </div>
@@ -130,28 +155,32 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-3">
-          {TABS.map((tab) => {
-            const count = tab.key === 'all' ? applications.length : applications.filter((a) => a.status === tab.key).length;
+          {TAB_KEYS.map((key) => {
+            const count = key === 'all' ? applications.length : applications.filter((a) => a.status === key).length;
             return (
               <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                key={key}
+                onClick={() => setActiveTab(key)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                  activeTab === tab.key
+                  activeTab === key
                     ? 'bg-amber-100 text-amber-800 border border-amber-300'
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-transparent'
                 }`}
               >
-                {tab.label} ({count})
+                {tabLabel(key)} ({count})
               </button>
             );
           })}
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Chargement...</div>
+          <div className="text-center py-12 text-gray-400">
+            <FormattedMessage id="admin.team.recruitment.loading" defaultMessage="Chargement..." />
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">Aucune candidature{activeTab !== 'all' ? ` ${STATUS_CONFIG[activeTab as ApplicationStatus]?.label.toLowerCase()}` : ''}.</div>
+          <div className="text-center py-12 text-gray-400">
+            <FormattedMessage id="admin.team.recruitment.empty" defaultMessage="Aucune candidature." />
+          </div>
         ) : (
           <>
             {/* Desktop table */}
@@ -160,9 +189,13 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Photo</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Candidat</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600">
+                      <FormattedMessage id="admin.team.recruitment.col.candidate" defaultMessage="Candidat" />
+                    </th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">WhatsApp</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Pays</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600">
+                      <FormattedMessage id="admin.team.recruitment.col.country" defaultMessage="Pays" />
+                    </th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Date</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">CV</th>
@@ -173,7 +206,6 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                 <tbody>
                   {filtered.map((app) => (
                     <tr key={app.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      {/* Photo */}
                       <td className="px-4 py-3">
                         {app.photoUrl ? (
                           <a href={app.photoUrl} target="_blank" rel="noopener noreferrer">
@@ -185,25 +217,19 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      {/* Name */}
                       <td className="px-4 py-3 font-medium text-gray-900">{app.name}</td>
-                      {/* WhatsApp */}
                       <td className="px-4 py-3">
-                        <a href={`https://wa.me/${app.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer"
+                        <a href={waLink(app.whatsapp)} target="_blank" rel="noopener noreferrer"
                           className="text-green-600 hover:text-green-800 underline">{app.whatsapp}</a>
                       </td>
-                      {/* Country */}
                       <td className="px-4 py-3 text-gray-600">{app.country}</td>
-                      {/* Date */}
                       <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(app.createdAt)}</td>
-                      {/* Status */}
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[app.status]?.bg} ${STATUS_CONFIG[app.status]?.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[app.status]?.dot}`} />
-                          {STATUS_CONFIG[app.status]?.label}
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[app.status]?.bg} ${STATUS_STYLES[app.status]?.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLES[app.status]?.dot}`} />
+                          {statusLabel(app.status)}
                         </span>
                       </td>
-                      {/* CV */}
                       <td className="px-4 py-3">
                         {app.cvUrl ? (
                           <a href={app.cvUrl} target="_blank" rel="noopener noreferrer"
@@ -214,7 +240,6 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           <span className="text-gray-300 text-xs">—</span>
                         )}
                       </td>
-                      {/* Motivation */}
                       <td className="px-4 py-3 max-w-[250px]">
                         {app.motivation ? (
                           <div>
@@ -222,7 +247,9 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                             {app.motivation.length > 60 && (
                               <button onClick={() => setExpandedMotivation(expandedMotivation === app.id ? null : app.id)}
                                 className="text-amber-600 text-xs hover:underline mt-0.5">
-                                {expandedMotivation === app.id ? 'Fermer' : 'Voir tout'}
+                                {expandedMotivation === app.id
+                                  ? intl.formatMessage({ id: 'admin.team.recruitment.close', defaultMessage: 'Fermer' })
+                                  : intl.formatMessage({ id: 'admin.team.recruitment.viewAll', defaultMessage: 'Voir tout' })}
                               </button>
                             )}
                             {expandedMotivation === app.id && (
@@ -241,7 +268,6 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           <span className="text-gray-300 text-xs">—</span>
                         )}
                       </td>
-                      {/* Actions */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <select
@@ -249,14 +275,14 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                             onChange={(e) => changeStatus(app.id, e.target.value as ApplicationStatus)}
                             className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-amber-400 min-h-[36px]"
                           >
-                            <option value="pending">En attente</option>
-                            <option value="contacted">Contacte</option>
-                            <option value="approved">Approuve</option>
-                            <option value="rejected">Rejete</option>
+                            <option value="pending">{statusLabel('pending')}</option>
+                            <option value="contacted">{statusLabel('contacted')}</option>
+                            <option value="approved">{statusLabel('approved')}</option>
+                            <option value="rejected">{statusLabel('rejected')}</option>
                           </select>
                           <button onClick={() => deleteApplication(app.id)}
                             className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Supprimer">
+                            title={intl.formatMessage({ id: 'admin.team.recruitment.delete', defaultMessage: 'Supprimer' })}>
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -271,9 +297,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
             <div className="lg:hidden space-y-3">
               {filtered.map((app) => (
                 <div key={app.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  {/* Card header */}
                   <div className="p-4 flex items-start gap-3">
-                    {/* Photo */}
                     {app.photoUrl ? (
                       <a href={app.photoUrl} target="_blank" rel="noopener noreferrer">
                         <img src={app.photoUrl} alt={app.name} className="w-12 h-12 rounded-full object-cover border border-gray-200 flex-shrink-0" />
@@ -286,15 +310,15 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-semibold text-gray-900 truncate">{app.name}</h3>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_CONFIG[app.status]?.bg} ${STATUS_CONFIG[app.status]?.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[app.status]?.dot}`} />
-                          {STATUS_CONFIG[app.status]?.label}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_STYLES[app.status]?.bg} ${STATUS_STYLES[app.status]?.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLES[app.status]?.dot}`} />
+                          {statusLabel(app.status)}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <Phone className="w-3 h-3" />
-                          <a href={`https://wa.me/${app.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer"
+                          <a href={waLink(app.whatsapp)} target="_blank" rel="noopener noreferrer"
                             className="text-green-600">{app.whatsapp}</a>
                         </span>
                         <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> {app.country}</span>
@@ -303,24 +327,21 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Expand button */}
                   <button onClick={() => setExpandedCard(expandedCard === app.id ? null : app.id)}
                     className="w-full px-4 py-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 hover:bg-gray-50 min-h-[44px]">
-                    <span>Details</span>
+                    <span><FormattedMessage id="admin.team.recruitment.details" defaultMessage="Details" /></span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${expandedCard === app.id ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Expanded content */}
                   {expandedCard === app.id && (
                     <div className="px-4 pb-4 space-y-3 border-t border-gray-100">
-                      {/* CV */}
                       {app.cvUrl && (
                         <a href={app.cvUrl} target="_blank" rel="noopener noreferrer"
                           className="flex items-center gap-2 text-blue-600 text-sm font-medium min-h-[44px]">
-                          <FileText className="w-4 h-4" /> Telecharger le CV
+                          <FileText className="w-4 h-4" />
+                          <FormattedMessage id="admin.team.recruitment.downloadCv" defaultMessage="Telecharger le CV" />
                         </a>
                       )}
-                      {/* Motivation */}
                       {app.motivation && (
                         <div>
                           <p className="text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
@@ -329,21 +350,20 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">{app.motivation}</p>
                         </div>
                       )}
-                      {/* Actions */}
                       <div className="flex items-center gap-2 pt-2">
                         <select
                           value={app.status}
                           onChange={(e) => changeStatus(app.id, e.target.value as ApplicationStatus)}
                           className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-amber-400 min-h-[44px]"
                         >
-                          <option value="pending">En attente</option>
-                          <option value="contacted">Contacte</option>
-                          <option value="approved">Approuve</option>
-                          <option value="rejected">Rejete</option>
+                          <option value="pending">{statusLabel('pending')}</option>
+                          <option value="contacted">{statusLabel('contacted')}</option>
+                          <option value="approved">{statusLabel('approved')}</option>
+                          <option value="rejected">{statusLabel('rejected')}</option>
                         </select>
                         <button onClick={() => deleteApplication(app.id)}
                           className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                          title="Supprimer">
+                          title={intl.formatMessage({ id: 'admin.team.recruitment.delete', defaultMessage: 'Supprimer' })}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

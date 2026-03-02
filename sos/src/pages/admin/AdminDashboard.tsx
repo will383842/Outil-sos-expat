@@ -395,7 +395,7 @@ const AdminDashboard: React.FC = () => {
                     className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-md text-sm hover:bg-amber-100 transition-colors flex items-center gap-1.5"
                   >
                     <Crown size={14} />
-                    {pendingCaptainCount} candidature{pendingCaptainCount !== 1 ? 's' : ''} Captain
+                    {intl.formatMessage({ id: 'admin.dashboard.captainApplications', defaultMessage: '{count} candidatures Captain' }, { count: pendingCaptainCount })}
                   </button>
                 )}
               </div>

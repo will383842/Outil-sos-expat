@@ -34,7 +34,10 @@
     "kill-emulators": "node scripts/kill-emulators.cjs",
     "dev:full": "node scripts/check-emulator-env.cjs && node scripts/check-emulator-ports.cjs && concurrently -n \"EMULATORS,FUNCTIONS,FRONTEND\" -c \"blue,green,yellow\" --kill-others-on-fail \"npm run dev:emulators\" \"npm run dev:functions\" \"npm run dev\"",
     "clean:tmp": "node -e \"const fs = require('fs'); const path = require('path'); const cleanup = (dir) => { const items = fs.readdirSync(dir).filter(f => f.startsWith('tmpclaude-')); items.forEach(f => { const p = path.join(dir, f); const s = fs.statSync(p); if (s.isDirectory()) fs.rmSync(p, {recursive:true}); else fs.unlinkSync(p); }); return items.length; }; const root = path.join(__dirname, '..'); let total = cleanup(root); const subdirs = ['sos', 'sos/firebase/functions', 'sos/firebase/functions/src', 'sos/cloudflare-worker', 'sos/src/locales', 'sos/src/locales/fr-fr', 'sos/src/locales/en']; subdirs.forEach(d => { try { total += cleanup(path.join(root, d)); } catch {} }); console.log('Cleaned ' + total + ' temp files');\"",
-    "clean:tmp:recursive": "node -e \"const fs = require('fs'); const path = require('path'); let count = 0; const walk = (dir) => { try { fs.readdirSync(dir).forEach(f => { const p = path.join(dir, f); const s = fs.statSync(p); if (s.isDirectory() && !f.includes('node_modules')) walk(p); if (f.startsWith('tmpclaude-')) { if (s.isDirectory()) fs.rmSync(p, {recursive:true}); else fs.unlinkSync(p); count++; } }); } catch {} }; walk(path.join(__dirname, '..')); console.log('Cleaned ' + count + ' temp files recursively');\""
+    "clean:tmp:recursive": "node -e \"const fs = require('fs'); const path = require('path'); let count = 0; const walk = (dir) => { try { fs.readdirSync(dir).forEach(f => { const p = path.join(dir, f); const s = fs.statSync(p); if (s.isDirectory() && !f.includes('node_modules')) walk(p); if (f.startsWith('tmpclaude-')) { if (s.isDirectory()) fs.rmSync(p, {recursive:true}); else fs.unlinkSync(p); count++; } }); } catch {} }; walk(path.join(__dirname, '..')); console.log('Cleaned ' + count + ' temp files recursively');\"",
+    "warm-ssr": "node scripts/warm-ssr-cache.js",
+    "warm-ssr-all": "node scripts/warm-ssr-cache.js --all",
+    "submit-indexnow": "node scripts/submit-indexnow.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

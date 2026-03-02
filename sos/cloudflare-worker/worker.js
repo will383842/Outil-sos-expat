@@ -156,7 +156,8 @@ const BLOG_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/hilfezentrum\/[^\/]+$/i,          // German
   /^\/[a-z]{2}(-[a-z]{2})?\/centro-ayuda\/[^\/]+$/i,          // Spanish
   /^\/[a-z]{2}(-[a-z]{2})?\/centro-ajuda\/[^\/]+$/i,          // Portuguese
-  /^\/[a-z]{2}(-[a-z]{2})?\/tsentr-pomoshchi\/[^\/]+$/i,      // Russian
+  /^\/[a-z]{2}(-[a-z]{2})?\/tsentr-pomoshchi\/[^\/]+$/i,      // Russian (transliterated)
+  /^\/[a-z]{2}(-[a-z]{2})?\/centr-pomoshi\/[^\/]+$/i,         // Russian (alternate slug)
   /^\/[a-z]{2}(-[a-z]{2})?\/bangzhu-zhongxin\/[^\/]+$/i,      // Chinese (pinyin)
   /^\/[a-z]{2}(-[a-z]{2})?\/sahayata-kendra\/[^\/]+$/i,       // Hindi (romanized)
   /^\/[a-z]{2}(-[a-z]{2})?\/مركز-المساعدة\/[^\/]+$/i,         // Arabic (native)
@@ -289,7 +290,8 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/help-center\/?$/i,           // EN
   /^\/[a-z]{2}(-[a-z]{2})?\/centro-ayuda\/?$/i,          // ES
   /^\/[a-z]{2}(-[a-z]{2})?\/hilfezentrum\/?$/i,          // DE
-  /^\/[a-z]{2}(-[a-z]{2})?\/tsentr-pomoshchi\/?$/i,      // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/tsentr-pomoshchi\/?$/i,      // RU (transliterated)
+  /^\/[a-z]{2}(-[a-z]{2})?\/centr-pomoshi\/?$/i,         // RU (alternate slug)
   /^\/[a-z]{2}(-[a-z]{2})?\/centro-ajuda\/?$/i,          // PT
   /^\/[a-z]{2}(-[a-z]{2})?\/bangzhu-zhongxin\/?$/i,      // ZH
   /^\/[a-z]{2}(-[a-z]{2})?\/sahayata-kendra\/?$/i,       // HI
