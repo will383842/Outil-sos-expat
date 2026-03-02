@@ -2566,7 +2566,6 @@ export {
   logConnection,
   getConnectionLogs,
   getConnectionStats,
-  onUserSignIn,
   onUserDeletedConnectionLog,
   logConnectionV1,
 } from "./monitoring/connectionLogs";

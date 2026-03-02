@@ -662,55 +662,6 @@ export const getConnectionStats = onCall(
 // ============================================================================
 
 /**
- * Automatically log successful user sign-ins
- */
-export const onUserSignIn = functions
-  .region(CONFIG.REGION)
-  .auth.user()
-  .beforeSignIn(async (user, context) => {
-    try {
-      // Get user role from Firestore
-      let userRole: string | null = null;
-      try {
-        const userDoc = await admin.firestore().collection('users').doc(user.uid).get();
-        userRole = userDoc.data()?.role || null;
-      } catch {
-        // User might not exist in Firestore yet
-      }
-
-      // Extract IP from context if available
-      const ipAddress = context.ipAddress || null;
-      const userAgent = context.userAgent || null;
-
-      await createConnectionLog({
-        eventType: 'login',
-        userId: user.uid,
-        userEmail: user.email || null,
-        userRole,
-        service: 'firebase_auth',
-        action: 'login_success',
-        ipAddress,
-        userAgent,
-        sessionId: null,
-        metadata: {
-          provider: context.credential?.providerId || 'password',
-          signInMethod: context.credential?.signInMethod || 'email',
-          isNewUser: context.additionalUserInfo?.isNewUser || false
-        }
-      });
-    } catch (error) {
-      // Don't block sign-in if logging fails
-      logger.error('[ConnectionLogs] Failed to log sign-in', {
-        error: error instanceof Error ? error.message : String(error),
-        userId: user.uid
-      });
-    }
-
-    // Return undefined to allow sign-in to proceed
-    return;
-  });
-
-/**
  * Log when a user is deleted (acts as logout indicator)
  * Note: Firebase doesn't have a direct signOut trigger, so we use user deletion
  * For actual logout tracking, clients should call logConnection with eventType='logout'
