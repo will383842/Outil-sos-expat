@@ -49,8 +49,13 @@ export type GroupSizeTier =
   | "gt100k";
 
 export type GroupAdminCommissionType =
-  | "client_referral"
-  | "recruitment"
+  | "client_referral"    // $5/$3 per direct client call (lawyer/expat)
+  | "n1_call"            // $1 per N1 recruit's client call
+  | "n2_call"            // $0.50 per N2 recruit's client call
+  | "activation_bonus"   // $5 when recruit makes 2 referrals
+  | "n1_recruit_bonus"   // $1 when N1 recruits a N2
+  | "provider_call"      // $5/$3 per recruited provider call (6 months)
+  | "recruitment"        // Legacy: kept for backward compat
   | "manual_adjustment";
 
 export type GroupAdminCommissionStatus =
@@ -171,6 +176,7 @@ export interface GroupAdmin {
   recruitedBy: string | null;
   recruitedByCode: string | null;
   recruitedAt?: FirebaseDate | null;
+  parrainNiveau2Id?: string | null;
 
   preferredPaymentMethod: GroupAdminPaymentMethod | null;
   paymentDetails: GroupAdminPaymentDetails | null;
@@ -266,6 +272,8 @@ export interface GroupAdminWithdrawal {
   paymentReference?: string;
   processingFee?: number;
   netAmount?: number;
+  withdrawalFee?: number;   // 300 cents = $3 fixed processing fee
+  totalDebited?: number;    // amount + withdrawalFee
   createdAt: FirebaseDate;
   approvedAt?: FirebaseDate;
   completedAt?: FirebaseDate;
@@ -289,9 +297,13 @@ export interface GroupAdminRecruit {
   recruitmentCode: string;
   recruitedAt: FirebaseDate;
   commissionWindowEnd: FirebaseDate;
-  commissionPaid: boolean;
-  commissionId?: string;
-  commissionPaidAt?: FirebaseDate;
+  activationCallCount: number;
+  activationBonusPaid: boolean;
+  activationBonusCommissionId?: string;
+  activationBonusPaidAt?: FirebaseDate;
+  commissionPaid: boolean;  // Legacy
+  commissionId?: string;    // Legacy
+  commissionPaidAt?: FirebaseDate; // Legacy
 }
 
 // ============================================================================

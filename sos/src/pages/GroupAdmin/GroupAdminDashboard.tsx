@@ -235,7 +235,7 @@ const GroupAdminDashboard: React.FC = () => {
               <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-100 dark:to-emerald-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link ($10 per client)" />
+                    <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link ($5 lawyer / $3 expat per call)" />
                   </span>
                   <span className="text-sm dark:text-green-300 font-bold bg-green-200 dark:bg-green-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeClient}
@@ -277,7 +277,7 @@ const GroupAdminDashboard: React.FC = () => {
               <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-100 dark:to-indigo-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Lien de recrutement (50$ quand la recrue atteint 200$)" />
+                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Lien de recrutement (5$ activation + 1$/appel membres)" />
                   </span>
                   <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeRecruitment}

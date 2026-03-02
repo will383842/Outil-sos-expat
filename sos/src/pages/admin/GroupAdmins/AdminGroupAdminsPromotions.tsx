@@ -91,8 +91,11 @@ interface FormData {
 }
 
 const COMMISSION_TYPES = [
-  { value: "client_referral", label: "Client Referral ($10)" },
-  { value: "recruitment", label: "Recruitment ($5)" },
+  { value: "client_referral", label: "Client Referral ($5/$3)" },
+  { value: "activation_bonus", label: "Activation Bonus ($5)" },
+  { value: "n1_call", label: "N1 Call ($1)" },
+  { value: "n2_call", label: "N2 Call ($0.50)" },
+  { value: "n1_recruit_bonus", label: "N1 Recruit Bonus ($1)" },
   { value: "manual_adjustment", label: "Manual Adjustment" },
 ];
 

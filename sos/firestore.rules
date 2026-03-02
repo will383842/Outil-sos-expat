@@ -3144,7 +3144,10 @@ service cloud.firestore {
       // Create: anyone can submit a captain application (landing page, no auth)
       allow create: if request.resource.data.keys().hasAll(['name', 'whatsapp', 'country', 'status'])
                     && request.resource.data.keys().hasOnly(['name', 'whatsapp', 'country', 'status', 'motivation', 'cvUrl', 'photoUrl', 'source', 'language', 'createdAt'])
-                    && request.resource.data.status == 'pending';
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.whatsapp is string
+                    && request.resource.data.whatsapp.size() > 0
+                    && request.resource.data.whatsapp.matches('^\\+[1-9][0-9]{6,14}$');
       // Read, update, delete: admin only
       allow read, update, delete: if isAdmin();
     }

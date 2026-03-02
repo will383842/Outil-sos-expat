@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsAffiliate, functions } from '@/config/firebase';
+import { functionsAffiliate } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -130,7 +130,7 @@ const AdminGroupAdminsList: React.FC = () => {
   const toggleFeatured = async (id: string, current: boolean) => {
     setFeaturedLoading(id);
     try {
-      const fn = httpsCallable(functions, 'setProviderBadge');
+      const fn = httpsCallable(functionsAffiliate, 'setProviderBadge');
       await fn({ providerId: id, isFeatured: !current });
       setGroupAdmins((prev) => prev.map((x) => x.id === id ? { ...x, isFeatured: !current } : x));
       toast.success(!current ? 'Badge attribué ✓' : 'Badge retiré');

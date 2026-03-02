@@ -631,7 +631,7 @@ export const adminMenuTree: AdminMenuItem[] = [
       {
         id: "chatters-captains",
         labelKey: "admin.menu.chattersCaptains",
-        path: "/admin/chatters/captains",
+        path: "/admin/team/captains/recruitment",
         icon: Crown,
         descriptionKey: "admin.menu.chattersCaptains.description",
       },

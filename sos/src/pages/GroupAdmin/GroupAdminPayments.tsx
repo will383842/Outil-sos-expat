@@ -291,6 +291,22 @@ const GroupAdminPayments: React.FC = () => {
                       className="w-full px-4 py-2 border dark:border-white/10 rounded-lg bg-white dark:bg-white/10 text-gray-900 dark:text-white"
                     />
                     <p className="text-xs dark:text-gray-300 mt-1">Min: $30 | Max: {formatGroupAdminAmount(profile.availableBalance)}</p>
+                    {withdrawForm.amount >= 3000 && (
+                      <div className="mt-2 p-2 bg-gray-50 dark:bg-white/5 rounded-lg text-xs dark:text-gray-300 space-y-1">
+                        <div className="flex justify-between">
+                          <span>Montant :</span>
+                          <span>{formatGroupAdminAmount(withdrawForm.amount)}</span>
+                        </div>
+                        <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                          <span>Frais de traitement :</span>
+                          <span>-$3.00</span>
+                        </div>
+                        <div className="flex justify-between font-semibold border-t dark:border-white/10 pt-1">
+                          <span>Total débité :</span>
+                          <span>{formatGroupAdminAmount(withdrawForm.amount + 300)}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>

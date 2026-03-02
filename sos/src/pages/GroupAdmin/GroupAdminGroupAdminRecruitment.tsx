@@ -3,8 +3,8 @@
  *
  * Shows:
  * - Recruitment link to share with other group admins
- * - List of recruited admins with progress towards $200 threshold
- * - $50 bonus status for each recruit
+ * - List of recruited admins with progress towards activation (2 referrals)
+ * - $5 activation bonus status for each recruit
  * - Summary stats
  */
 
@@ -76,8 +76,8 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
     bonusesPending: 0,
     totalBonusEarned: 0,
   });
-  const [threshold, setThreshold] = useState(20000); // $200
-  const [bonusAmount, setBonusAmount] = useState(5000); // $50
+  const [threshold, setThreshold] = useState(2); // 2 referrals required for activation
+  const [bonusAmount, setBonusAmount] = useState(500); // $5 activation bonus
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recruitmentLink, setRecruitmentLink] = useState('');

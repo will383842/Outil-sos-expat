@@ -37,12 +37,15 @@ interface GroupAdminConfig {
   isGroupAdminListingPageVisible: boolean;
   newRegistrationsEnabled: boolean;
   withdrawalsEnabled: boolean;
-  commissionClientAmount: number;
   commissionClientAmountLawyer?: number;
   commissionClientAmountExpat?: number;
-  commissionRecruitmentAmount: number;
+  commissionClientCallAmount?: number;
+  commissionN1CallAmount: number;
+  commissionN2CallAmount: number;
+  commissionActivationBonusAmount: number;
+  commissionN1RecruitBonusAmount: number;
+  activationCallsRequired: number;
   clientDiscountAmount: number;
-  recruitmentCommissionThreshold: number;
   paymentMode: "manual" | "automatic";
   recruitmentWindowMonths: number;
   minimumWithdrawalAmount: number;
@@ -332,16 +335,54 @@ const AdminGroupAdminsConfig: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentCommission' })}</label>
+              <label className={UI.label}>{intl.formatMessage({ id: 'admin.commission.n1CallLabel', defaultMessage: 'N1 appel (cents) — $1/appel membre recrue' })}</label>
               <input
                 type="number"
-                value={config.commissionRecruitmentAmount}
-                onChange={(e) => updateField('commissionRecruitmentAmount', parseInt(e.target.value) || 0)}
+                value={config.commissionN1CallAmount ?? 100}
+                onChange={(e) => updateField('commissionN1CallAmount', parseInt(e.target.value) || 0)}
                 className={UI.input}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {intl.formatMessage({ id: 'groupAdmin.admin.config.currentPerRecruit' }, { amount: (config.commissionRecruitmentAmount / 100).toFixed(2) })}
-              </p>
+              <p className="text-xs text-gray-500 mt-1">= ${((config.commissionN1CallAmount ?? 100) / 100).toFixed(2)}</p>
+            </div>
+            <div>
+              <label className={UI.label}>{intl.formatMessage({ id: 'admin.commission.n2CallLabel', defaultMessage: 'N2 appel (cents) — $0.50/appel recrue de la recrue' })}</label>
+              <input
+                type="number"
+                value={config.commissionN2CallAmount ?? 50}
+                onChange={(e) => updateField('commissionN2CallAmount', parseInt(e.target.value) || 0)}
+                className={UI.input}
+              />
+              <p className="text-xs text-gray-500 mt-1">= ${((config.commissionN2CallAmount ?? 50) / 100).toFixed(2)}</p>
+            </div>
+            <div>
+              <label className={UI.label}>{intl.formatMessage({ id: 'admin.commission.activationBonusLabel', defaultMessage: 'Bonus activation (cents) — $5 quand recrue fait 2 parrainages' })}</label>
+              <input
+                type="number"
+                value={config.commissionActivationBonusAmount ?? 500}
+                onChange={(e) => updateField('commissionActivationBonusAmount', parseInt(e.target.value) || 0)}
+                className={UI.input}
+              />
+              <p className="text-xs text-gray-500 mt-1">= ${((config.commissionActivationBonusAmount ?? 500) / 100).toFixed(2)}</p>
+            </div>
+            <div>
+              <label className={UI.label}>{intl.formatMessage({ id: 'admin.commission.n1RecruitBonusLabel', defaultMessage: 'Bonus recrutement N1 (cents) — $1 quand N1 recrute un N2' })}</label>
+              <input
+                type="number"
+                value={config.commissionN1RecruitBonusAmount ?? 100}
+                onChange={(e) => updateField('commissionN1RecruitBonusAmount', parseInt(e.target.value) || 0)}
+                className={UI.input}
+              />
+              <p className="text-xs text-gray-500 mt-1">= ${((config.commissionN1RecruitBonusAmount ?? 100) / 100).toFixed(2)}</p>
+            </div>
+            <div>
+              <label className={UI.label}>{intl.formatMessage({ id: 'admin.commission.activationCallsRequired', defaultMessage: 'Parrainages requis pour activation (anti-fraude)' })}</label>
+              <input
+                type="number"
+                value={config.activationCallsRequired ?? 2}
+                onChange={(e) => updateField('activationCallsRequired', parseInt(e.target.value) || 0)}
+                className={UI.input}
+              />
+              <p className="text-xs text-gray-500 mt-1">Nombre de parrainages clients avant que le bonus activation soit déclenché</p>
             </div>
             <div>
               <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.clientDiscount' })}</label>
@@ -353,18 +394,6 @@ const AdminGroupAdminsConfig: React.FC = () => {
               />
               <p className="text-xs text-gray-500 mt-1">
                 {intl.formatMessage({ id: 'groupAdmin.admin.config.currentDiscount' }, { amount: (config.clientDiscountAmount / 100).toFixed(2) })}
-              </p>
-            </div>
-            <div>
-              <label className={UI.label}>{intl.formatMessage({ id: 'groupAdmin.admin.config.recruitmentThreshold' })}</label>
-              <input
-                type="number"
-                value={config.recruitmentCommissionThreshold}
-                onChange={(e) => updateField('recruitmentCommissionThreshold', parseInt(e.target.value) || 0)}
-                className={UI.input}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {intl.formatMessage({ id: 'groupAdmin.admin.config.thresholdDesc' }, { amount: (config.recruitmentCommissionThreshold / 100).toFixed(2) })}
               </p>
             </div>
             <div>

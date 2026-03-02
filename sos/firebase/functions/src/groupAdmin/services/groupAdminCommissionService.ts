@@ -19,8 +19,11 @@ import {
 import {
   getGroupAdminConfig,
   getClientCommissionAmount,
-  getRecruitmentCommissionAmount,
-  getRecruitmentCommissionThreshold,
+  getN1CallAmount,
+  getN2CallAmount,
+  getActivationBonusAmount,
+  getN1RecruitBonusAmount,
+  getActivationCallsRequired,
 } from "../groupAdminConfig";
 
 // Lazy Firestore initialization
@@ -164,8 +167,10 @@ export async function createClientReferralCommission(
       callId,
     });
 
-    // Check if this GroupAdmin was recruited and if the threshold is now met
-    await checkAndPayRecruitmentCommission(groupAdminId);
+    // Chatter-style N1/N2/activation logic (non-blocking, non-critical)
+    checkAndPayActivationBonus(groupAdminId, callId).catch((err) =>
+      logger.warn("[GroupAdminCommission] Activation bonus check failed (non-critical)", { groupAdminId, err })
+    );
 
     // Check for badge awards (non-blocking)
     checkAndAwardBadges(groupAdminId).catch((err) =>
@@ -309,18 +314,14 @@ export async function createRecruitmentCommission(
 }
 
 /**
- * Check if a recruited GroupAdmin has reached the threshold for the recruiter to get paid.
- * Called after each client referral commission is created.
+ * Check if a recruited GroupAdmin should trigger the $5 activation bonus for their recruiter.
+ * Called after each client_referral commission is created.
+ * Bonus is paid when the recruit makes their 2nd referral (configurable via activationCallsRequired).
  *
- * Uses a Firestore transaction on the recruit record to prevent race conditions:
- * two concurrent calls completing at the same time could both see commissionPaid=false
- * and each create a recruitment commission. The transaction ensures only one wins.
- *
- * All amounts are in USD cents (fixed amounts, independent of call currency).
+ * Uses a Firestore transaction to prevent race conditions (only one process wins).
  */
-async function checkAndPayRecruitmentCommission(groupAdminId: string): Promise<void> {
+async function checkAndPayActivationBonus(groupAdminId: string, _callId: string): Promise<void> {
   try {
-    // ---- Preliminary reads (outside transaction) ----
     const groupAdminDoc = await getDb().collection("group_admins").doc(groupAdminId).get();
     if (!groupAdminDoc.exists) return;
 
@@ -341,63 +342,41 @@ async function checkAndPayRecruitmentCommission(groupAdminId: string): Promise<v
     const recruit = recruitDoc.data() as GroupAdminRecruit;
 
     // Already paid — skip
-    if (recruit.commissionPaid) return;
+    if (recruit.activationBonusPaid) return;
 
     // Check commission window
-    if (recruit.commissionWindowEnd.toDate() < new Date()) {
-      logger.info("[GroupAdminCommission] Recruitment window expired, skipping", {
-        recruitedId: groupAdminId,
-        recruiterId: groupAdmin.recruitedBy,
+    if (recruit.commissionWindowEnd.toDate() < new Date()) return;
+
+    // Increment activationCallCount atomically, check if threshold reached
+    const required = await getActivationCallsRequired();
+    const newCount = (recruit.activationCallCount ?? 0) + 1;
+
+    if (newCount < required) {
+      // Just increment the counter
+      await recruitDoc.ref.update({
+        activationCallCount: newCount,
+        updatedAt: Timestamp.now(),
       });
       return;
     }
 
-    // Sum all non-cancelled client_referral commissions for this recruited admin (USD cents)
-    const commissionsSnapshot = await getDb()
-      .collection("group_admin_commissions")
-      .where("groupAdminId", "==", groupAdminId)
-      .where("type", "==", "client_referral")
-      .get();
-
-    let totalEarnedFromCommissions = 0;
-    for (const doc of commissionsSnapshot.docs) {
-      const c = doc.data() as GroupAdminCommission;
-      if (c.status !== "cancelled") {
-        totalEarnedFromCommissions += c.amount;
-      }
-    }
-
-    const threshold = await getRecruitmentCommissionThreshold();
-
-    if (totalEarnedFromCommissions < threshold) return;
-
-    logger.info("[GroupAdminCommission] Recruitment threshold reached, paying recruiter", {
-      recruitedId: groupAdminId,
-      recruiterId: groupAdmin.recruitedBy,
-      totalEarned: totalEarnedFromCommissions,
-      threshold,
-    });
-
-    // ---- Atomic transaction: mark recruit as paid + create commission ----
+    // Threshold reached — pay activation bonus via transaction
     const recruitRef = recruitDoc.ref;
     const recruiterRef = getDb().collection("group_admins").doc(groupAdmin.recruitedBy);
-    const amount = await getRecruitmentCommissionAmount();
+    const amount = await getActivationBonusAmount();
 
     await getDb().runTransaction(async (tx) => {
-      // Re-read inside transaction to guard against concurrent writes
       const freshRecruit = await tx.get(recruitRef);
-      if (!freshRecruit.exists || freshRecruit.data()?.commissionPaid === true) {
-        // Another process already paid — abort silently
+      if (!freshRecruit.exists || freshRecruit.data()?.activationBonusPaid === true) {
+        // Already paid by concurrent process
         return;
       }
 
-      // Verify recruiter is still active
       const recruiterSnap = await tx.get(recruiterRef);
       if (!recruiterSnap.exists || (recruiterSnap.data() as GroupAdmin).status !== "active") {
         return;
       }
 
-      // Create commission document
       const commissionRef = getDb().collection("group_admin_commissions").doc();
       const now = Timestamp.now();
       const currentMonth = new Date().toISOString().substring(0, 7);
@@ -406,33 +385,32 @@ async function checkAndPayRecruitmentCommission(groupAdminId: string): Promise<v
       const commission: GroupAdminCommission = {
         id: commissionRef.id,
         groupAdminId: groupAdmin.recruitedBy!,
-        type: "recruitment",
+        type: "activation_bonus",
         status: "pending",
         amount,
         originalAmount: amount,
-        currency: "USD", // Always USD — fixed amount, not a % of call price
-        description: `Recruitment commission for ${groupAdmin.firstName} ${groupAdmin.lastName}`,
+        currency: "USD",
+        description: `Activation bonus — ${groupAdmin.firstName} ${groupAdmin.lastName} made ${required} referrals`,
         createdAt: now,
         sourceRecruitId: groupAdminId,
       };
 
       tx.set(commissionRef, commission);
 
-      // Mark recruitment record as paid
       tx.update(recruitRef, {
+        activationBonusPaid: true,
+        activationBonusCommissionId: commissionRef.id,
+        activationBonusPaidAt: now,
+        activationCallCount: newCount,
+        // Legacy backward compat
         commissionPaid: true,
         commissionId: commissionRef.id,
         commissionPaidAt: now,
       });
 
-      // Update recruiter stats
       tx.update(recruiterRef, {
-        totalRecruits: FieldValue.increment(1),
         totalCommissions: FieldValue.increment(1),
         pendingBalance: FieldValue.increment(amount),
-        "currentMonthStats.recruits": recruiter.currentMonthStats.month === currentMonth
-          ? FieldValue.increment(1)
-          : 1,
         "currentMonthStats.earnings": recruiter.currentMonthStats.month === currentMonth
           ? FieldValue.increment(amount)
           : amount,
@@ -440,18 +418,238 @@ async function checkAndPayRecruitmentCommission(groupAdminId: string): Promise<v
         updatedAt: now,
       });
 
-      logger.info("[GroupAdminCommission] Recruitment commission created (transaction)", {
+      logger.info("[GroupAdminCommission] Activation bonus paid (transaction)", {
         recruiterId: groupAdmin.recruitedBy,
         commissionId: commissionRef.id,
         amount,
         recruitedId: groupAdminId,
+        activationCallCount: newCount,
       });
     });
   } catch (error) {
-    logger.error("[GroupAdminCommission] Error checking recruitment threshold", {
+    logger.error("[GroupAdminCommission] Error checking activation bonus", {
       groupAdminId,
       error,
     });
+  }
+}
+
+/**
+ * Create a N1 call commission for the recruiter of a GroupAdmin.
+ * $1 per client call made by the N1 recruit (the GA who was recruited by the recruiter).
+ */
+export async function createN1CallCommission(
+  recruitedAdminId: string,
+  callId: string,
+  providerType?: 'lawyer' | 'expat'
+): Promise<void> {
+  try {
+    const gaDoc = await getDb().collection("group_admins").doc(recruitedAdminId).get();
+    if (!gaDoc.exists) return;
+
+    const ga = gaDoc.data() as GroupAdmin;
+    if (!ga.recruitedBy) return;
+
+    // Duplicate check
+    const dupCheck = await getDb()
+      .collection("group_admin_commissions")
+      .where("groupAdminId", "==", ga.recruitedBy)
+      .where("type", "==", "n1_call")
+      .where("sourceCallId", "==", callId)
+      .limit(1)
+      .get();
+    if (!dupCheck.empty) return;
+
+    const recruiterDoc = await getDb().collection("group_admins").doc(ga.recruitedBy).get();
+    if (!recruiterDoc.exists) return;
+    const recruiter = recruiterDoc.data() as GroupAdmin;
+    if (recruiter.status !== "active") return;
+
+    const amount = await getN1CallAmount();
+    const commissionRef = getDb().collection("group_admin_commissions").doc();
+    const now = Timestamp.now();
+    const currentMonth = new Date().toISOString().substring(0, 7);
+
+    const commission: GroupAdminCommission = {
+      id: commissionRef.id,
+      groupAdminId: ga.recruitedBy,
+      type: "n1_call",
+      status: "pending",
+      amount,
+      originalAmount: amount,
+      currency: "USD",
+      description: `N1 call commission — recruit ${ga.firstName} ${ga.lastName} call ${callId}`,
+      createdAt: now,
+      sourceRecruitId: recruitedAdminId,
+      sourceCallId: callId,
+    };
+
+    await getDb().runTransaction(async (tx) => {
+      tx.set(commissionRef, commission);
+      tx.update(recruiterDoc.ref, {
+        totalCommissions: FieldValue.increment(1),
+        pendingBalance: FieldValue.increment(amount),
+        "currentMonthStats.earnings": recruiter.currentMonthStats.month === currentMonth
+          ? FieldValue.increment(amount)
+          : amount,
+        "currentMonthStats.month": currentMonth,
+        updatedAt: now,
+      });
+    });
+
+    logger.info("[GroupAdminCommission] N1 call commission created", {
+      recruiterId: ga.recruitedBy,
+      recruitedAdminId,
+      callId,
+      amount,
+    });
+  } catch (error) {
+    logger.error("[GroupAdminCommission] Error creating N1 call commission", { recruitedAdminId, callId, error });
+  }
+}
+
+/**
+ * Create a N2 call commission for the grandparent recruiter.
+ * $0.50 per client call made by a N2 recruit.
+ */
+export async function createN2CallCommission(
+  recruitedAdminId: string,
+  callId: string,
+  providerType?: 'lawyer' | 'expat'
+): Promise<void> {
+  try {
+    const gaDoc = await getDb().collection("group_admins").doc(recruitedAdminId).get();
+    if (!gaDoc.exists) return;
+
+    const ga = gaDoc.data() as GroupAdmin;
+    // N2 parent is stored on the recruit doc as parrainNiveau2Id
+    const n2ParentId = ga.parrainNiveau2Id;
+    if (!n2ParentId) return;
+
+    // Duplicate check
+    const dupCheck = await getDb()
+      .collection("group_admin_commissions")
+      .where("groupAdminId", "==", n2ParentId)
+      .where("type", "==", "n2_call")
+      .where("sourceCallId", "==", callId)
+      .limit(1)
+      .get();
+    if (!dupCheck.empty) return;
+
+    const n2Doc = await getDb().collection("group_admins").doc(n2ParentId).get();
+    if (!n2Doc.exists) return;
+    const n2 = n2Doc.data() as GroupAdmin;
+    if (n2.status !== "active") return;
+
+    const amount = await getN2CallAmount();
+    const commissionRef = getDb().collection("group_admin_commissions").doc();
+    const now = Timestamp.now();
+    const currentMonth = new Date().toISOString().substring(0, 7);
+
+    const commission: GroupAdminCommission = {
+      id: commissionRef.id,
+      groupAdminId: n2ParentId,
+      type: "n2_call",
+      status: "pending",
+      amount,
+      originalAmount: amount,
+      currency: "USD",
+      description: `N2 call commission — N2 recruit ${ga.firstName} ${ga.lastName} call ${callId}`,
+      createdAt: now,
+      sourceRecruitId: recruitedAdminId,
+      sourceCallId: callId,
+    };
+
+    await getDb().runTransaction(async (tx) => {
+      tx.set(commissionRef, commission);
+      tx.update(n2Doc.ref, {
+        totalCommissions: FieldValue.increment(1),
+        pendingBalance: FieldValue.increment(amount),
+        "currentMonthStats.earnings": n2.currentMonthStats.month === currentMonth
+          ? FieldValue.increment(amount)
+          : amount,
+        "currentMonthStats.month": currentMonth,
+        updatedAt: now,
+      });
+    });
+
+    logger.info("[GroupAdminCommission] N2 call commission created", {
+      n2ParentId,
+      recruitedAdminId,
+      callId,
+      amount,
+    });
+  } catch (error) {
+    logger.error("[GroupAdminCommission] Error creating N2 call commission", { recruitedAdminId, callId, error });
+  }
+}
+
+/**
+ * Create a N1 recruit bonus commission ($1) when a N1 recruit recruits a new N2.
+ * Called from onGroupAdminCreated when the new GA has a recruitedBy that has a recruitedBy.
+ */
+export async function createN1RecruitBonusCommission(
+  n1AdminId: string,
+  n2AdminId: string
+): Promise<void> {
+  try {
+    // Duplicate check
+    const dupCheck = await getDb()
+      .collection("group_admin_commissions")
+      .where("groupAdminId", "==", n1AdminId)
+      .where("type", "==", "n1_recruit_bonus")
+      .where("sourceRecruitId", "==", n2AdminId)
+      .limit(1)
+      .get();
+    if (!dupCheck.empty) return;
+
+    const n1Doc = await getDb().collection("group_admins").doc(n1AdminId).get();
+    if (!n1Doc.exists) return;
+    const n1 = n1Doc.data() as GroupAdmin;
+    if (n1.status !== "active") return;
+
+    const n2Doc = await getDb().collection("group_admins").doc(n2AdminId).get();
+    const n2 = n2Doc.exists ? (n2Doc.data() as GroupAdmin) : null;
+
+    const amount = await getN1RecruitBonusAmount();
+    const commissionRef = getDb().collection("group_admin_commissions").doc();
+    const now = Timestamp.now();
+    const currentMonth = new Date().toISOString().substring(0, 7);
+    const recruitName = n2 ? `${n2.firstName} ${n2.lastName}` : n2AdminId;
+
+    const commission: GroupAdminCommission = {
+      id: commissionRef.id,
+      groupAdminId: n1AdminId,
+      type: "n1_recruit_bonus",
+      status: "pending",
+      amount,
+      originalAmount: amount,
+      currency: "USD",
+      description: `N1 recruit bonus — ${recruitName} joined your network`,
+      createdAt: now,
+      sourceRecruitId: n2AdminId,
+    };
+
+    await getDb().runTransaction(async (tx) => {
+      tx.set(commissionRef, commission);
+      tx.update(n1Doc.ref, {
+        totalCommissions: FieldValue.increment(1),
+        pendingBalance: FieldValue.increment(amount),
+        "currentMonthStats.earnings": n1.currentMonthStats.month === currentMonth
+          ? FieldValue.increment(amount)
+          : amount,
+        "currentMonthStats.month": currentMonth,
+        updatedAt: now,
+      });
+    });
+
+    logger.info("[GroupAdminCommission] N1 recruit bonus created", {
+      n1AdminId,
+      n2AdminId,
+      amount,
+    });
+  } catch (error) {
+    logger.error("[GroupAdminCommission] Error creating N1 recruit bonus", { n1AdminId, n2AdminId, error });
   }
 }
 

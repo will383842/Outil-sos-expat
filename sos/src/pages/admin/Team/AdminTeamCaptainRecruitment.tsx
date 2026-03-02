@@ -20,7 +20,8 @@ import {
   doc,
   deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
+import { db, storage } from '../../../config/firebase';
+import { ref as storageRef, deleteObject } from 'firebase/storage';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import {
   Crown,
@@ -102,21 +103,27 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
   const changeStatus = async (id: string, status: ApplicationStatus) => {
     try {
       await updateDoc(doc(db, 'captain_applications', id), { status });
-      toast.success(intl.formatMessage({ id: 'admin.team.recruitment.statusUpdated', defaultMessage: 'Statut mis a jour' }));
+      toast.success(intl.formatMessage({ id: 'admin.team.recruitment.statusUpdated', defaultMessage: 'Statut mis à jour' }));
     } catch (err) {
       console.error('changeStatus error:', err);
-      toast.error(intl.formatMessage({ id: 'admin.team.recruitment.error', defaultMessage: 'Erreur, reessayez' }));
+      toast.error(intl.formatMessage({ id: 'admin.team.recruitment.error', defaultMessage: 'Erreur, réessayez' }));
     }
   };
 
-  const deleteApplication = async (id: string) => {
+  const deleteApplication = async (id: string, cvUrl?: string, photoUrl?: string) => {
     if (!window.confirm(intl.formatMessage({ id: 'admin.team.recruitment.confirmDelete', defaultMessage: 'Supprimer cette candidature ?' }))) return;
     try {
       await deleteDoc(doc(db, 'captain_applications', id));
-      toast.success(intl.formatMessage({ id: 'admin.team.recruitment.deleted', defaultMessage: 'Candidature supprimee' }));
+      // Nettoyage fichiers Storage (CV + photo)
+      const deleteFile = async (url: string) => {
+        try { await deleteObject(storageRef(storage, url)); } catch { /* fichier déjà supprimé ou introuvable */ }
+      };
+      if (cvUrl) await deleteFile(cvUrl);
+      if (photoUrl) await deleteFile(photoUrl);
+      toast.success(intl.formatMessage({ id: 'admin.team.recruitment.deleted', defaultMessage: 'Candidature supprimée' }));
     } catch (err) {
       console.error('deleteApplication error:', err);
-      toast.error(intl.formatMessage({ id: 'admin.team.recruitment.error', defaultMessage: 'Erreur, reessayez' }));
+      toast.error(intl.formatMessage({ id: 'admin.team.recruitment.error', defaultMessage: 'Erreur, réessayez' }));
     }
   };
 
@@ -190,11 +197,11 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.photo" defaultMessage="Photo" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.candidate" defaultMessage="Candidat" /></th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">WhatsApp</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.whatsapp" defaultMessage="WhatsApp" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.country" defaultMessage="Pays" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.date" defaultMessage="Date" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.status" defaultMessage="Status" /></th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">CV</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.cv" defaultMessage="CV" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.motivation" defaultMessage="Motivation" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.actions" defaultMessage="Actions" /></th>
                   </tr>
@@ -282,7 +289,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                             <option value="approved">{statusLabel('approved')}</option>
                             <option value="rejected">{statusLabel('rejected')}</option>
                           </select>
-                          <button onClick={() => deleteApplication(app.id)}
+                          <button onClick={() => deleteApplication(app.id, app.cvUrl, app.photoUrl)}
                             className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title={intl.formatMessage({ id: 'admin.team.recruitment.delete', defaultMessage: 'Supprimer' })}>
                             <Trash2 className="w-4 h-4" />
@@ -326,6 +333,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                         <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> {app.country}</span>
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(app.createdAt)}</span>
                         {app.language && <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-medium text-gray-500 uppercase">{app.language}</span>}
+                        {app.source && <span className="px-1.5 py-0.5 bg-blue-50 rounded text-[10px] font-medium text-blue-500">{app.source}</span>}
                       </div>
                     </div>
                   </div>
@@ -364,7 +372,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           <option value="approved">{statusLabel('approved')}</option>
                           <option value="rejected">{statusLabel('rejected')}</option>
                         </select>
-                        <button onClick={() => deleteApplication(app.id)}
+                        <button onClick={() => deleteApplication(app.id, app.cvUrl, app.photoUrl)}
                           className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title={intl.formatMessage({ id: 'admin.team.recruitment.delete', defaultMessage: 'Supprimer' })}>
                           <Trash2 className="w-4 h-4" />

@@ -85,7 +85,7 @@ const GroupAdminReferrals: React.FC = () => {
             <FormattedMessage id="groupAdmin.referrals.heading" defaultMessage="Recruited Admins" />
           </h1>
           <p className="text-gray-600 dark:text-gray-600 mb-8">
-            <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $50 when your recruit reaches $200 in earnings" />
+            <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 activation bonus + $1 per call from their members" />
           </p>
 
           {/* Recruitment Link Card */}
@@ -142,7 +142,7 @@ const GroupAdminReferrals: React.FC = () => {
             </div>
 
             <p className="text-purple-100 text-sm">
-              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $50 when your recruit reaches $200 in earnings." />
+              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $5 when they make their first 2 referrals, then $1 per call from their members." />
             </p>
           </div>
 
@@ -157,7 +157,7 @@ const GroupAdminReferrals: React.FC = () => {
                 <p className="text-blue-600 dark:text-blue-400 mt-1">
                   <FormattedMessage
                     id="groupAdmin.referrals.commissionWindowInfo.description"
-                    defaultMessage="You have 6 months from the recruitment date to earn the $50 commission. The commission is paid when your recruit reaches $200 in total earnings within this window."
+                    defaultMessage="You have 6 months from the recruitment date to earn commissions. You get $5 when your recruit makes their first 2 referrals (activation), then $1 per call from their members."
                   />
                 </p>
               </div>
@@ -219,10 +219,10 @@ const GroupAdminReferrals: React.FC = () => {
 
                       {/* Commission Window Status */}
                       <div className="flex sm:items-end gap-1">
-                        {recruit.commissionPaid ? (
+                        {(recruit.activationBonusPaid || recruit.commissionPaid) ? (
                           <span className="inline-flex items-center gap-1 text-green-600 font-medium">
                             <CheckCircle className="w-4 h-4" />
-                            <FormattedMessage id="groupAdmin.referrals.paid" defaultMessage="$50 Paid" />
+                            <FormattedMessage id="groupAdmin.referrals.paid" defaultMessage="Bonus Paid" />
                           </span>
                         ) : timeRemaining.isExpired ? (
                           <span className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400 font-medium">

@@ -22,7 +22,11 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { GroupAdmin } from "../types";
-import { createClientReferralCommission } from "../services/groupAdminCommissionService";
+import {
+  createClientReferralCommission,
+  createN1CallCommission,
+  createN2CallCommission,
+} from "../services/groupAdminCommissionService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -207,6 +211,16 @@ export async function handleCallCompleted(
           groupAdminCommissionId: commission.id,
           groupAdminCommissionAt: Timestamp.now(),
         });
+
+        // N1/N2 network commissions (non-blocking, non-critical)
+        // If this GA was recruited by N1, N1 earns $1 per call
+        createN1CallCommission(groupAdminId, sessionId, providerType).catch((err) =>
+          logger.warn("[onCallCompletedGroupAdmin] N1 call commission failed (non-critical)", { sessionId, err })
+        );
+        // N2 commission ($0.50 per call from N2 recruit) — parrainNiveau2Id on GA doc
+        createN2CallCommission(groupAdminId, sessionId, providerType).catch((err) =>
+          logger.warn("[onCallCompletedGroupAdmin] N2 call commission failed (non-critical)", { sessionId, err })
+        );
 
         // Create commission notification (i18n: 9 languages, English fallback)
         const notifRef = db.collection("group_admin_notifications").doc();

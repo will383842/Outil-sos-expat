@@ -12,7 +12,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { ALLOWED_ORIGINS } from "../../../lib/functionConfigs";
 
 import { GroupAdmin, GroupAdminRecruit } from "../../types";
-import { getRecruitmentCommissionThreshold } from "../../groupAdminConfig";
+import { getActivationCallsRequired } from "../../groupAdminConfig";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -70,13 +70,14 @@ interface EnrichedRecruitment {
 
 function computeStatus(
   recruit: GroupAdminRecruit,
-  recruitedTotalEarned: number,
-  threshold: number,
+  activationCallCount: number,
+  activationCallsRequired: number,
 ): RecruitmentComputedStatus {
-  if (recruit.commissionPaid) return "paid";
+  // New system: activationBonusPaid replaces commissionPaid
+  if (recruit.activationBonusPaid || recruit.commissionPaid) return "paid";
   const windowExpired = recruit.commissionWindowEnd.toDate() < new Date();
   if (windowExpired) return "expired";
-  if (recruitedTotalEarned >= threshold) return "eligible";
+  if (activationCallCount >= activationCallsRequired) return "eligible";
   return "pending";
 }
 
@@ -118,7 +119,7 @@ export const adminGetRecruitmentsList = onCall(
 
     try {
       const db = getFirestore();
-      const threshold = await getRecruitmentCommissionThreshold();
+      const activationCallsRequired = await getActivationCallsRequired();
 
       // Fetch all recruitment records (collection is expected to be small-to-medium)
       const recruitSnap = await db
@@ -155,8 +156,8 @@ export const adminGetRecruitmentsList = onCall(
         const recruiter = gaMap.get(recruit.recruiterId);
         const recruited = gaMap.get(recruit.recruitedId);
 
-        const recruitedTotalEarned = recruited?.totalEarned ?? 0;
-        const cs = computeStatus(recruit, recruitedTotalEarned, threshold);
+        const activationCallCount = recruit.activationCallCount ?? 0;
+        const cs = computeStatus(recruit, activationCallCount, activationCallsRequired);
 
         const entry: EnrichedRecruitment = {
           id: recruit.id,
@@ -172,12 +173,12 @@ export const adminGetRecruitmentsList = onCall(
           recruitedGroupName: recruit.recruitedGroupName || recruited?.groupName || "",
           recruitedAt: recruit.recruitedAt?.toDate?.().toISOString() ?? "",
           commissionWindowEnd: recruit.commissionWindowEnd?.toDate?.().toISOString() ?? "",
-          commissionPaid: recruit.commissionPaid,
-          commissionId: recruit.commissionId,
-          commissionPaidAt: recruit.commissionPaidAt?.toDate?.().toISOString(),
-          recruitedTotalEarned,
-          threshold,
-          progressPercent: Math.min(100, Math.round((recruitedTotalEarned / threshold) * 100)),
+          commissionPaid: recruit.activationBonusPaid || recruit.commissionPaid,
+          commissionId: recruit.activationBonusCommissionId || recruit.commissionId,
+          commissionPaidAt: (recruit.activationBonusPaidAt ?? recruit.commissionPaidAt)?.toDate?.().toISOString(),
+          recruitedTotalEarned: activationCallCount,  // repurposed as callCount for display
+          threshold: activationCallsRequired,
+          progressPercent: Math.min(100, Math.round((activationCallCount / activationCallsRequired) * 100)),
           computedStatus: cs,
         };
 
@@ -259,7 +260,7 @@ export const adminGetGroupAdminRecruits = onCall(
 
     try {
       const db = getFirestore();
-      const threshold = await getRecruitmentCommissionThreshold();
+      const activationCallsRequired = await getActivationCallsRequired();
 
       const recruitSnap = await db
         .collection("group_admin_recruited_admins")
@@ -268,7 +269,7 @@ export const adminGetGroupAdminRecruits = onCall(
         .get();
 
       if (recruitSnap.empty) {
-        return { recruits: [], threshold };
+        return { recruits: [], threshold: activationCallsRequired };
       }
 
       // Fetch all recruited profiles
@@ -285,7 +286,7 @@ export const adminGetGroupAdminRecruits = onCall(
       const recruits: EnrichedRecruitment[] = recruitSnap.docs.map(doc => {
         const recruit = { id: doc.id, ...doc.data() } as GroupAdminRecruit;
         const recruited = gaMap.get(recruit.recruitedId);
-        const recruitedTotalEarned = recruited?.totalEarned ?? 0;
+        const activationCallCount = recruit.activationCallCount ?? 0;
 
         return {
           id: recruit.id,
@@ -299,17 +300,17 @@ export const adminGetGroupAdminRecruits = onCall(
           recruitedGroupName: recruit.recruitedGroupName || recruited?.groupName || "",
           recruitedAt: recruit.recruitedAt?.toDate?.().toISOString() ?? "",
           commissionWindowEnd: recruit.commissionWindowEnd?.toDate?.().toISOString() ?? "",
-          commissionPaid: recruit.commissionPaid,
-          commissionId: recruit.commissionId,
-          commissionPaidAt: recruit.commissionPaidAt?.toDate?.().toISOString(),
-          recruitedTotalEarned,
-          threshold,
-          progressPercent: Math.min(100, Math.round((recruitedTotalEarned / threshold) * 100)),
-          computedStatus: computeStatus(recruit, recruitedTotalEarned, threshold),
+          commissionPaid: recruit.activationBonusPaid || recruit.commissionPaid,
+          commissionId: recruit.activationBonusCommissionId || recruit.commissionId,
+          commissionPaidAt: (recruit.activationBonusPaidAt ?? recruit.commissionPaidAt)?.toDate?.().toISOString(),
+          recruitedTotalEarned: activationCallCount,
+          threshold: activationCallsRequired,
+          progressPercent: Math.min(100, Math.round((activationCallCount / activationCallsRequired) * 100)),
+          computedStatus: computeStatus(recruit, activationCallCount, activationCallsRequired),
         };
       });
 
-      return { recruits, threshold };
+      return { recruits, threshold: activationCallsRequired };
     } catch (error) {
       logger.error("[adminGetGroupAdminRecruits] Error", { error });
       throw new HttpsError("internal", "Failed to fetch recruits");

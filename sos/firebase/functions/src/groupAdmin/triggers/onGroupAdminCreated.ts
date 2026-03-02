@@ -15,6 +15,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { GroupAdmin, GroupAdminNotification } from "../types";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
 import { generateWelcomeEmail } from "../../email/welcomeTemplates";
+import { createN1RecruitBonusCommission } from "../services/groupAdminCommissionService";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -65,17 +66,17 @@ export const onGroupAdminCreated = onDocumentCreated(
           zh: "欢迎加入 SOS-Expat Group Admin 计划！",
           ar: "!مرحبًا بك في برنامج Group Admin SOS-Expat",
         },
-        message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link with your group members to earn $10 per client.`,
+        message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link to earn $5/call (lawyer) or $3/call (expat).`,
         messageTranslations: {
-          fr: `Félicitations ${groupAdminData.firstName} ! Votre compte a été créé. Commencez à partager votre lien d'affiliation avec les membres de votre groupe pour gagner 10$ par client.`,
-          en: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link with your group members to earn $10 per client.`,
-          es: `¡Felicidades ${groupAdminData.firstName}! Tu cuenta ha sido creada. Comienza a compartir tu enlace de afiliación con los miembros de tu grupo para ganar $10 por cliente.`,
-          de: `Herzlichen Glückwunsch ${groupAdminData.firstName}! Ihr Konto wurde erstellt. Teilen Sie Ihren Affiliate-Link mit Ihren Gruppenmitgliedern und verdienen Sie $10 pro Kunde.`,
-          pt: `Parabéns ${groupAdminData.firstName}! Sua conta foi criada. Comece a compartilhar seu link de afiliação com os membros do seu grupo para ganhar $10 por cliente.`,
-          ru: `Поздравляем ${groupAdminData.firstName}! Ваш аккаунт создан. Начните делиться партнёрской ссылкой с участниками группы и зарабатывайте $10 за каждого клиента.`,
-          hi: `बधाई ${groupAdminData.firstName}! आपका खाता बन गया है। अपने ग्रुप के सदस्यों के साथ अपना एफिलिएट लिंक शेयर करें और प्रति ग्राहक $10 कमाएं।`,
-          zh: `恭喜 ${groupAdminData.firstName}！您的帐户已创建。开始与您的群组成员分享您的推广链接，每位客户赚取 $10。`,
-          ar: `تهانينا ${groupAdminData.firstName}! تم إنشاء حسابك. ابدأ بمشاركة رابط الإحالة مع أعضاء مجموعتك لكسب 10$ لكل عميل.`,
+          fr: `Félicitations ${groupAdminData.firstName} ! Votre compte a été créé. Partagez votre lien d'affiliation pour gagner 5$/appel (avocat) ou 3$/appel (expatrié).`,
+          en: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link to earn $5/call (lawyer) or $3/call (expat).`,
+          es: `¡Felicidades ${groupAdminData.firstName}! Tu cuenta ha sido creada. Comparte tu enlace de afiliación para ganar $5/llamada (abogado) o $3/llamada (expat).`,
+          de: `Herzlichen Glückwunsch ${groupAdminData.firstName}! Ihr Konto wurde erstellt. Teilen Sie Ihren Affiliate-Link und verdienen Sie $5/Anruf (Anwalt) oder $3/Anruf (Expat).`,
+          pt: `Parabéns ${groupAdminData.firstName}! Sua conta foi criada. Compartilhe seu link de afiliação para ganhar $5/chamada (advogado) ou $3/chamada (expat).`,
+          ru: `Поздравляем ${groupAdminData.firstName}! Ваш аккаунт создан. Делитесь партнёрской ссылкой и зарабатывайте $5/звонок (юрист) или $3/звонок (экспат).`,
+          hi: `बधाई ${groupAdminData.firstName}! आपका खाता बन गया है। अपना एफिलिएट लिंक शेयर करें — $5/कॉल (वकील) या $3/कॉल (प्रवासी) कमाएं।`,
+          zh: `恭喜 ${groupAdminData.firstName}！您的帐户已创建。分享您的推广链接，每次律师通话赚取 $5，每次外籍人士通话赚取 $3。`,
+          ar: `تهانينا ${groupAdminData.firstName}! تم إنشاء حسابك. شارك رابط الإحالة لتكسب 5$/مكالمة (محامي) أو 3$/مكالمة (مغترب).`,
         },
         data: {
           affiliateCodeClient: groupAdminData.affiliateCodeClient,
@@ -155,17 +156,17 @@ export const onGroupAdminCreated = onDocumentCreated(
               zh: "新管理员已招募！",
               ar: "!تم تجنيد مشرف جديد",
             },
-            message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they reach $50 in earnings.`,
+            message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they make their first 2 referrals, then $1 per call from their members.`,
             messageTranslations: {
-              fr: `${groupAdminData.firstName} ${groupAdminData.lastName} a rejoint via votre lien de recrutement ! Vous gagnerez 5$ quand il atteindra 50$ de gains.`,
-              en: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they reach $50 in earnings.`,
-              es: `${groupAdminData.firstName} ${groupAdminData.lastName} se unió a través de tu enlace de reclutamiento. Ganarás $5 cuando alcance $50 en ganancias.`,
-              de: `${groupAdminData.firstName} ${groupAdminData.lastName} ist über Ihren Rekrutierungslink beigetreten! Sie verdienen $5, wenn er $50 an Einnahmen erreicht.`,
-              pt: `${groupAdminData.firstName} ${groupAdminData.lastName} entrou pelo seu link de recrutamento! Você ganhará $5 quando ele atingir $50 em ganhos.`,
-              ru: `${groupAdminData.firstName} ${groupAdminData.lastName} присоединился по вашей ссылке! Вы получите $5, когда он заработает $50.`,
-              hi: `${groupAdminData.firstName} ${groupAdminData.lastName} आपके रिक्रूटमेंट लिंक से जुड़ा! जब वह $50 कमाएगा तो आपको $5 मिलेंगे।`,
-              zh: `${groupAdminData.firstName} ${groupAdminData.lastName} 通过您的招募链接加入了！当他赚到 $50 时，您将获得 $5。`,
-              ar: `${groupAdminData.firstName} ${groupAdminData.lastName} انضم عبر رابط التجنيد الخاص بك! ستحصل على 5$ عندما يصل إلى 50$ من الأرباح.`,
+              fr: `${groupAdminData.firstName} ${groupAdminData.lastName} a rejoint via votre lien de recrutement ! Vous gagnerez 5$ à leur activation (2 parrainages), puis 1$ par appel de leurs membres.`,
+              en: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they make their first 2 referrals, then $1 per call from their members.`,
+              es: `${groupAdminData.firstName} ${groupAdminData.lastName} se unió a través de tu enlace. Ganarás $5 cuando hagan sus primeras 2 referencias, luego $1 por cada llamada de sus miembros.`,
+              de: `${groupAdminData.firstName} ${groupAdminData.lastName} ist beigetreten! Sie verdienen $5 bei ihrer Aktivierung (2 Empfehlungen), dann $1 pro Anruf ihrer Mitglieder.`,
+              pt: `${groupAdminData.firstName} ${groupAdminData.lastName} entrou pelo seu link! Você ganhará $5 na ativação deles (2 indicações), depois $1 por chamada dos membros deles.`,
+              ru: `${groupAdminData.firstName} ${groupAdminData.lastName} присоединился! Вы получите $5 при активации (2 реферала), затем $1 за каждый звонок их участников.`,
+              hi: `${groupAdminData.firstName} ${groupAdminData.lastName} जुड़ गए! उनके पहले 2 रेफरल पर $5 मिलेंगे, फिर उनके सदस्यों के प्रत्येक कॉल पर $1।`,
+              zh: `${groupAdminData.firstName} ${groupAdminData.lastName} 已加入！他们完成首次2次推荐时您获得$5，之后每次成员通话获得$1。`,
+              ar: `${groupAdminData.firstName} ${groupAdminData.lastName} انضم! ستحصل على 5$ عند تفعيلهم (إحالتان)، ثم 1$ لكل مكالمة من أعضائهم.`,
             },
             data: {
               recruitedId: groupAdminId,
@@ -184,6 +185,18 @@ export const onGroupAdminCreated = onDocumentCreated(
           totalRecruits: FieldValue.increment(1),
           updatedAt: now,
         });
+
+        // Set parrainNiveau2Id on the new GA (recruiter's own recruiter = N2 level)
+        const recruiterDoc = await db.collection("group_admins").doc(groupAdminData.recruitedBy).get();
+        if (recruiterDoc.exists) {
+          const recruiterData = recruiterDoc.data() as GroupAdmin;
+          if (recruiterData.recruitedBy) {
+            batch.update(db.collection("group_admins").doc(groupAdminId), {
+              parrainNiveau2Id: recruiterData.recruitedBy,
+              updatedAt: now,
+            });
+          }
+        }
       }
 
       await batch.commit();
@@ -193,9 +206,20 @@ export const onGroupAdminCreated = onDocumentCreated(
         recruitedBy: groupAdminData.recruitedBy,
       });
 
-      // Note: Recruitment commission is NOT paid immediately.
-      // It is triggered when the recruited admin reaches $50 in totalEarned.
-      // See groupAdminCommissionService.checkAndPayRecruitmentCommission()
+      // N1 recruit bonus: if new GA's recruiter was itself recruited by someone,
+      // that grandparent earns $1 for the new N2 joining.
+      if (groupAdminData.recruitedBy) {
+        const recruiterSnap = await db.collection("group_admins").doc(groupAdminData.recruitedBy).get();
+        if (recruiterSnap.exists) {
+          const recruiterData = recruiterSnap.data() as GroupAdmin;
+          if (recruiterData.recruitedBy) {
+            // N1 = groupAdminData.recruitedBy, N2 = groupAdminId
+            createN1RecruitBonusCommission(recruiterData.recruitedBy, groupAdminId).catch((err) =>
+              logger.warn("[onGroupAdminCreated] N1 recruit bonus failed (non-critical)", { err })
+            );
+          }
+        }
+      }
     } catch (error) {
       logger.error("[onGroupAdminCreated] Error in post-registration tasks", {
         groupAdminId,

@@ -820,7 +820,7 @@ const GroupAdminDirectory: React.FC = () => {
                 <ExternalLink className="w-4 h-4" />
               </a>
               <a
-                href="/group-admin"
+                href="/devenir-admin-groupe"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 text-slate-300 hover:text-white font-medium text-base transition-all duration-200"
               >
                 En savoir plus

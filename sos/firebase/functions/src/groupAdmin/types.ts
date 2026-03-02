@@ -3,8 +3,9 @@
  *
  * Complete type definitions for the SOS-Expat GroupAdmin (Group/Community Administrators) program.
  * Supports:
- * - Client referral commissions ($10 per client)
- * - Admin recruitment commissions ($50 per recruited admin, paid when recruit reaches $200)
+ * - Client referral commissions ($5 lawyer / $3 expat per client call)
+ * - N1/N2 network commissions (Chatter-style: $1 N1 per call, $0.50 N2 per call)
+ * - Activation bonus ($5 when recruit makes 2 referrals)
  * - Resources & ready-to-use posts
  * - Gamification (badges, leaderboard)
  * - 9 languages: fr, en, es, pt, ar, de, it, nl, zh (app navigation languages)
@@ -84,8 +85,13 @@ export type GroupSizeTier =
  * Commission type for GroupAdmins
  */
 export type GroupAdminCommissionType =
-  | "client_referral"    // $10 per client booking
-  | "recruitment"        // $50 per recruited admin
+  | "client_referral"    // $5/$3 per direct client call (lawyer/expat)
+  | "n1_call"            // $1 per N1 recruit's client call
+  | "n2_call"            // $0.50 per N2 recruit's client call
+  | "activation_bonus"   // $5 when recruit makes their 2nd referral
+  | "n1_recruit_bonus"   // $1 when N1 recruits a N2
+  | "provider_call"      // $5/$3 per recruited provider call (6 months)
+  | "recruitment"        // Legacy: kept for backward compat
   | "manual_adjustment"; // Admin manual adjustment
 
 /**
@@ -308,7 +314,7 @@ export interface GroupAdmin {
 
   // ---- Recruitment (who recruited this GroupAdmin) ----
 
-  /** GroupAdmin who recruited this one */
+  /** GroupAdmin who recruited this one (N1 parent) */
   recruitedBy: string | null;
 
   /** Recruitment code used */
@@ -316,6 +322,9 @@ export interface GroupAdmin {
 
   /** When recruited */
   recruitedAt: Timestamp | null;
+
+  /** N2 level: the recruiter of this GA's recruiter (set on creation) */
+  parrainNiveau2Id?: string | null;
 
   // ---- Payment Details ----
 
@@ -642,13 +651,25 @@ export interface GroupAdminRecruit {
   /** Commission window end date (6 months after recruitment) */
   commissionWindowEnd: Timestamp;
 
-  /** Whether commission was paid */
+  /** Number of client_referral commissions the recruit has made (for activation bonus anti-fraud) */
+  activationCallCount: number;
+
+  /** Whether the $5 activation bonus was paid to the recruiter */
+  activationBonusPaid: boolean;
+
+  /** Activation bonus commission ID if paid */
+  activationBonusCommissionId?: string;
+
+  /** When activation bonus was paid */
+  activationBonusPaidAt?: Timestamp;
+
+  /** Whether commission was paid (legacy field, kept for backward compat) */
   commissionPaid: boolean;
 
-  /** Commission ID if paid */
+  /** Commission ID if paid (legacy) */
   commissionId?: string;
 
-  /** When commission was paid */
+  /** When commission was paid (legacy) */
   commissionPaidAt?: Timestamp;
 }
 
@@ -1090,22 +1111,26 @@ export interface GroupAdminConfig {
 
   // ---- Commission Amounts (in cents) ----
 
-  /** Client referral commission ($10 = 1000) */
-  commissionClientAmount: number;
-
   /** Commission client referral — lawyer provider (500 cents = $5) */
   commissionClientAmountLawyer?: number;
   /** Commission client referral — expat provider (300 cents = $3) */
   commissionClientAmountExpat?: number;
+  /** Fallback client commission when no provider type known (300 cents = $3) */
+  commissionClientCallAmount?: number;
 
-  /** Recruitment commission ($50 = 5000) */
-  commissionRecruitmentAmount: number;
+  /** N1 call commission: $1 per client call made by a N1 recruit */
+  commissionN1CallAmount: number;
+  /** N2 call commission: $0.50 per client call made by a N2 recruit */
+  commissionN2CallAmount: number;
+  /** Activation bonus: $5 when recruit makes their 2nd client referral */
+  commissionActivationBonusAmount: number;
+  /** N1 recruit bonus: $1 when N1 recruits a N2 */
+  commissionN1RecruitBonusAmount: number;
+  /** Number of client referrals required from recruit to trigger activation bonus */
+  activationCallsRequired: number;
 
   /** Client discount amount in cents ($5 = 500) */
   clientDiscountAmount: number;
-
-  /** Minimum totalEarned (cents) a recruited admin must reach before recruiter gets $50 */
-  recruitmentCommissionThreshold: number;
 
   /** Payment processing mode */
   paymentMode: "manual" | "automatic";
@@ -1170,13 +1195,16 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   withdrawalsEnabled: true,
 
   // All amounts in USD cents — fixed values, independent of call currency (EUR/USD/etc.)
-  commissionClientAmount: 1000,        // $10 per client referral
-  commissionClientAmountLawyer: 500,   // $5 per client referral (lawyer)
-  commissionClientAmountExpat: 300,    // $3 per client referral (expat)
-  commissionRecruitmentAmount: 5000,    // $50 per recruited admin (paid once threshold met)
-  clientDiscountAmount: 500,           // $5 discount for client
-  recruitmentCommissionThreshold: 20000, // $200 — recruited admin must earn this in commissions before recruiter gets $50
-  paymentMode: "manual",               // manual | automatic
+  commissionClientAmountLawyer: 500,     // $5 per client call (lawyer)
+  commissionClientAmountExpat: 300,      // $3 per client call (expat)
+  commissionClientCallAmount: 300,       // $3 fallback (expat rate)
+  commissionN1CallAmount: 100,           // $1 per N1 recruit's client call
+  commissionN2CallAmount: 50,            // $0.50 per N2 recruit's client call
+  commissionActivationBonusAmount: 500,  // $5 activation bonus (recruit makes 2 referrals)
+  commissionN1RecruitBonusAmount: 100,   // $1 when N1 recruits a N2
+  activationCallsRequired: 2,            // 2 referrals needed to trigger activation bonus
+  clientDiscountAmount: 500,             // $5 discount for client
+  paymentMode: "manual",                 // manual | automatic
 
   recruitmentWindowMonths: 6,
   attributionWindowDays: 30,

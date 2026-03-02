@@ -159,6 +159,7 @@ export async function areWithdrawalsEnabled(): Promise<boolean> {
 
 /**
  * Get client commission amount in cents (split by provider type)
+ * Lawyer = $5, Expat = $3, fallback = $3
  */
 export async function getClientCommissionAmount(providerType?: 'lawyer' | 'expat'): Promise<number> {
   const config = await getGroupAdminConfig();
@@ -168,15 +169,48 @@ export async function getClientCommissionAmount(providerType?: 'lawyer' | 'expat
   if (providerType === 'expat' && config.commissionClientAmountExpat != null) {
     return config.commissionClientAmountExpat;
   }
-  return config.commissionClientAmount;
+  // New fallback: commissionClientCallAmount ($3) instead of old $10
+  return config.commissionClientCallAmount ?? config.commissionClientAmountExpat ?? 300;
 }
 
 /**
- * Get recruitment commission amount in cents
+ * Get N1 call commission amount in cents ($1 per N1 recruit's client call)
  */
-export async function getRecruitmentCommissionAmount(): Promise<number> {
+export async function getN1CallAmount(): Promise<number> {
   const config = await getGroupAdminConfig();
-  return config.commissionRecruitmentAmount;
+  return config.commissionN1CallAmount ?? 100;
+}
+
+/**
+ * Get N2 call commission amount in cents ($0.50 per N2 recruit's client call)
+ */
+export async function getN2CallAmount(): Promise<number> {
+  const config = await getGroupAdminConfig();
+  return config.commissionN2CallAmount ?? 50;
+}
+
+/**
+ * Get activation bonus amount in cents ($5 when recruit makes 2 referrals)
+ */
+export async function getActivationBonusAmount(): Promise<number> {
+  const config = await getGroupAdminConfig();
+  return config.commissionActivationBonusAmount ?? 500;
+}
+
+/**
+ * Get N1 recruit bonus amount in cents ($1 when N1 recruits a N2)
+ */
+export async function getN1RecruitBonusAmount(): Promise<number> {
+  const config = await getGroupAdminConfig();
+  return config.commissionN1RecruitBonusAmount ?? 100;
+}
+
+/**
+ * Get activation calls required (number of referrals needed to trigger bonus)
+ */
+export async function getActivationCallsRequired(): Promise<number> {
+  const config = await getGroupAdminConfig();
+  return config.activationCallsRequired ?? 2;
 }
 
 /**
@@ -185,14 +219,6 @@ export async function getRecruitmentCommissionAmount(): Promise<number> {
 export async function getClientDiscountAmount(): Promise<number> {
   const config = await getGroupAdminConfig();
   return config.clientDiscountAmount;
-}
-
-/**
- * Get recruitment commission threshold in cents
- */
-export async function getRecruitmentCommissionThreshold(): Promise<number> {
-  const config = await getGroupAdminConfig();
-  return config.recruitmentCommissionThreshold;
 }
 
 /**

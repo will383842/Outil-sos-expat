@@ -9,7 +9,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
-import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
@@ -283,7 +282,6 @@ const CaptainLanding: React.FC = () => {
     setPhotoUploading(false);
   };
 
-  const registerRoute = `/${getTranslatedRouteSlug('chatter-register' as RouteKey, langCode)}`;
   const scrollToForm = () => document.getElementById('captain-form')?.scrollIntoView({ behavior: 'smooth' });
   const ctaLabel = intl.formatMessage({ id: 'captain.aria.cta.main', defaultMessage: 'Rejoindre l\'equipe SOS-Expat' });
 
@@ -310,8 +308,16 @@ const CaptainLanding: React.FC = () => {
   // Submit to Firestore
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.name || form.name.trim().length < 2) {
+      toast.error(intl.formatMessage({ id: 'captain.landing.form.name.required', defaultMessage: 'Veuillez saisir votre nom complet.' }));
+      return;
+    }
     if (!form.whatsapp || form.whatsapp.replace(/\D/g, '').length < 7) {
       toast.error(intl.formatMessage({ id: 'captain.landing.form.wa.required', defaultMessage: 'Veuillez saisir votre numéro WhatsApp avec indicatif pays.' }));
+      return;
+    }
+    if (!form.country || form.country.trim().length < 2) {
+      toast.error(intl.formatMessage({ id: 'captain.landing.form.country.required', defaultMessage: 'Veuillez indiquer votre pays.' }));
       return;
     }
     setFormState('sending');
@@ -432,7 +438,7 @@ const CaptainLanding: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
                 <p className="text-xs sm:text-sm font-black text-amber-400"><FormattedMessage id="captain.landing.hero.fact1" defaultMessage="2-3$/appel" /></p>
-                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="par call equipe" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="par call équipe" /></p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
@@ -442,7 +448,7 @@ const CaptainLanding: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <Crown className="w-5 h-5 text-purple-400 mx-auto mb-1" />
                 <p className="text-xs sm:text-sm font-black text-purple-400"><FormattedMessage id="captain.landing.hero.fact3" defaultMessage="+100$/mois" /></p>
-                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact3b" defaultMessage="bonus qualite" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact3b" defaultMessage="bonus qualité" /></p>
               </div>
             </div>
 
@@ -964,7 +970,7 @@ const CaptainLanding: React.FC = () => {
         {showStickyCTA && (
           <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} role="complementary" aria-label={ctaLabel}>
             <div className="bg-black/95 backdrop-blur-md border-t border-white/10 px-4 py-3">
-              <button onClick={scrollToForm} aria-label={ctaLabel}
+              <button type="button" onClick={scrollToForm} aria-label={ctaLabel}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform">
                 <Rocket className="w-5 h-5" aria-hidden="true" />
                 <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
