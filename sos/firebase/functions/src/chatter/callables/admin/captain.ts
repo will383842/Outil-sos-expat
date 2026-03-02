@@ -209,34 +209,34 @@ export const adminRevokeCaptain = onCall(
     const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
     const archiveId = `${chatterId}_${monthKey}_revoked`;
     const teamCalls = chatter.captainMonthlyTeamCalls || 0;
-    if (teamCalls > 0) {
-      await db.collection("captain_monthly_archives").doc(archiveId).set({
-        captainId: chatterId,
-        month: today.getMonth() + 1,
-        year: today.getFullYear(),
-        teamCalls,
-        tierName: chatter.captainCurrentTier || "Aucun",
-        tierReached: chatter.captainCurrentTier || null,
-        tierBonus: 0,
-        bonusAmount: 0,
-        qualityBonusPaid: false,
-        qualityBonusAmount: 0,
-        qualityBonusCriteriaMet: false,
-        qualityBonusAdminOverride: false,
-        activeN1Count: 0,
-        monthlyTeamCommissions: 0,
-        revokedAt: now,
-        createdAt: now,
-      });
-    }
+    await db.collection("captain_monthly_archives").doc(archiveId).set({
+      captainId: chatterId,
+      month: today.getMonth() + 1,
+      year: today.getFullYear(),
+      teamCalls,
+      tierName: chatter.captainCurrentTier || "Aucun",
+      tierReached: chatter.captainCurrentTier || null,
+      tierBonus: 0,
+      bonusAmount: 0,
+      qualityBonusPaid: false,
+      qualityBonusAmount: 0,
+      qualityBonusCriteriaMet: false,
+      qualityBonusAdminOverride: false,
+      activeN1Count: 0,
+      monthlyTeamCommissions: 0,
+      revokedAt: now,
+      createdAt: now,
+    });
 
     await chatterRef.update({
-      role: FieldValue.delete(),
+      role: "chatter",
       captainPromotedAt: FieldValue.delete(),
       captainPromotedBy: FieldValue.delete(),
       captainMonthlyTeamCalls: FieldValue.delete(),
       captainCurrentTier: FieldValue.delete(),
       captainQualityBonusEnabled: FieldValue.delete(),
+      captainAssignedCountries: FieldValue.delete(),
+      captainAssignedLanguages: FieldValue.delete(),
       updatedAt: now,
     });
 
@@ -912,7 +912,7 @@ export const adminTransferChatters = onCall(
       errors: errors.length,
     });
 
-    return { success: true, transferred, errors };
+    return { success: transferred > 0, transferred, errors };
   }
 );
 

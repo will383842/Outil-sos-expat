@@ -272,8 +272,8 @@ export async function awardGroupAdminProviderRecruitmentCommission(
       const existingCommission = await db
         .collection("group_admin_commissions")
         .where("groupAdminId", "==", recruitment.groupAdminId)
-        .where("sourceId", "==", callId)
-        .where("type", "==", "provider_recruitment")
+        .where("sourceCallId", "==", callId)
+        .where("type", "==", "client_referral")
         .limit(1)
         .get();
 

@@ -334,19 +334,19 @@ const AdminLandingPages: React.FC = () => {
                   name: 'Influencer',
                   icon: '📢',
                   color: 'red',
-                  slugs: { fr: 'devenir-influenceur', en: 'become-influencer', es: 'ser-influencer', de: 'influencer-werden', pt: 'tornar-se-influencer', ru: 'stat-influenserom', zh: 'chengwei-influencer', hi: 'influencer-bane', ar: 'كن-مؤثرا' },
+                  slugs: { fr: 'devenir-influenceur', en: 'become-influencer', es: 'ser-influencer', de: 'influencer-werden', pt: 'tornar-se-influenciador', ru: 'stat-influentserom', zh: 'chengwei-yingxiangli', hi: 'influencer-bane', ar: 'كن-مؤثرا' },
                 },
                 {
                   name: 'Blogger',
                   icon: '✍️',
                   color: 'blue',
-                  slugs: { fr: 'devenir-blogger', en: 'become-blogger', es: 'ser-blogger', de: 'blogger-werden', pt: 'tornar-se-blogger', ru: 'stat-bloggerom', zh: 'chengwei-blogger', hi: 'blogger-bane', ar: 'كن-مدونا' },
+                  slugs: { fr: 'devenir-blogger', en: 'become-blogger', es: 'ser-blogger', de: 'blogger-werden', pt: 'tornar-se-blogger', ru: 'stat-bloggerom', zh: 'chengwei-boke', hi: 'blogger-banen', ar: 'كن-مدون' },
                 },
                 {
                   name: 'Admin Groupe',
                   icon: '👥',
                   color: 'green',
-                  slugs: { fr: 'devenir-admin-groupe', en: 'become-group-admin', es: 'ser-admin-grupo', de: 'gruppenadmin-werden', pt: 'tornar-se-admin-grupo', ru: 'stat-admin-gruppy', zh: 'chengwei-qunzhu', hi: 'group-admin-bane', ar: 'كن-مدير-مجموعة' },
+                  slugs: { fr: 'devenir-admin-groupe', en: 'become-group-admin', es: 'convertirse-admin-grupo', de: 'gruppenadmin-werden', pt: 'tornar-se-admin-grupo', ru: 'stat-admin-gruppy', zh: 'chengwei-qunzhu', hi: 'group-admin-bane', ar: 'كن-مسؤول-مجموعة' },
                 },
               ];
 

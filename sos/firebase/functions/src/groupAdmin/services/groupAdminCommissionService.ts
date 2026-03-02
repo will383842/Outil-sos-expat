@@ -637,7 +637,7 @@ export async function cancelCommissionsForCallSession(
   try {
     const commissionsQuery = await db
       .collection("group_admin_commissions")
-      .where("sourceId", "==", callSessionId)
+      .where("sourceCallId", "==", callSessionId)
       .get();
 
     const commissionsQuery2 = await db

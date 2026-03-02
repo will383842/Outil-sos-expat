@@ -135,6 +135,8 @@ interface Captain {
   qualityBonusEnabled: boolean;
   createdAt: string;
   promotedAt?: string;
+  assignedCountries?: string[];
+  assignedLanguages?: string[];
 }
 
 interface CaptainsListResponse {

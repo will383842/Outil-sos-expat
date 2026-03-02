@@ -1256,18 +1256,18 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="chatters/captains/:captainId"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminCaptainDetail />
-          </Suspense>
-        }
-      />
-      <Route
         path="chatters/captains/coverage"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminCaptainCoverage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/captains/:captainId"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCaptainDetail />
           </Suspense>
         }
       />

@@ -476,6 +476,8 @@ export const registerGroupAdmin = onCall(
             role: "groupAdmin",
             isGroupAdmin: true,
             groupAdminStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
             telegramOnboardingCompleted: false,
             updatedAt: now,
           });
@@ -487,6 +489,8 @@ export const registerGroupAdmin = onCall(
             role: "groupAdmin",
             isGroupAdmin: true,
             groupAdminStatus: "active",
+            affiliateCodeClient,
+            affiliateCodeRecruitment,
             telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,

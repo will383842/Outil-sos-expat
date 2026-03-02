@@ -121,6 +121,10 @@ interface CaptainDashboardData {
     assignedCountries?: string[];
     assignedLanguages?: string[];
   };
+  captainConfig?: {
+    commissionCaptainCallAmountLawyer: number;
+    commissionCaptainCallAmountExpat: number;
+  };
   qualityBonusStatus?: QualityBonusStatus;
   tierProgression: {
     currentTier: TierInfo | null;

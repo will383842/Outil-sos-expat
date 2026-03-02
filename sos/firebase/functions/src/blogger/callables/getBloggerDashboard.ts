@@ -43,6 +43,10 @@ export const getBloggerDashboard = onCall(
 
       const blogger = bloggerDoc.data() as Blogger;
 
+      if (blogger.status === "banned") {
+        throw new HttpsError("permission-denied", "Account is banned");
+      }
+
       // 3. Get recent commissions
       const commissionsQuery = await db
         .collection("blogger_commissions")
