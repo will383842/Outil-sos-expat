@@ -18,6 +18,9 @@ import { logAnalyticsEvent, db, storage } from '@/config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
+import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
+import FAQPageSchema from '@/components/seo/FAQPageSchema';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import {
   ArrowRight,
   Check,
@@ -72,8 +75,7 @@ const globalStyles = `
   }
 `;
 
-const FCFA = 600;
-const fmt = (usd: number) => (usd * FCFA).toLocaleString('fr-FR');
+// Currency: now dynamic via useCountryLandingConfig (see component body)
 
 // ============================================================================
 // COMPOSANTS
@@ -144,6 +146,21 @@ const CaptainLanding: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const langCode = (language || 'fr') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
+
+  // Country-based currency
+  const { countryCode, lang: urlLang } = useCountryFromUrl();
+  const { config: countryConfig } = useCountryLandingConfig('chatter', countryCode, urlLang || langCode);
+  const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
+  const local = (usd: number) => {
+    if (hideConversionCurrencies.includes(countryConfig.currency.code)) return '';
+    const str = convertToLocal(usd, countryConfig.currency);
+    return str ? ` (${str})` : '';
+  };
+  const localBlock = (usd: number) => {
+    if (hideConversionCurrencies.includes(countryConfig.currency.code)) return null;
+    const str = convertToLocal(usd, countryConfig.currency);
+    return str || null;
+  };
 
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [teamSize, setTeamSize] = useState(30);
@@ -285,8 +302,28 @@ const CaptainLanding: React.FC = () => {
 
   return (
     <Layout showFooter={false}>
-      <SEOHead title={seoTitle} description={seoDesc} ogImage="/og-image.png" ogType="website" contentType="LandingPage" />
+      <SEOHead
+        title={seoTitle}
+        description={seoDesc}
+        ogImage="/og-image.png"
+        ogType="website"
+        contentType="LandingPage"
+        keywords={intl.formatMessage({ id: 'captain.landing.seo.keywords', defaultMessage: 'capitaine chatter, recrutement, SOS Expat, startup, remote, equipe, leader, revenus, commission, WhatsApp, Telegram' })}
+        aiSummary={intl.formatMessage({ id: 'captain.landing.seo.aiSummary', defaultMessage: 'Page de recrutement pour devenir Capitaine Chatter chez SOS-Expat. Role de leader d\'equipe 100% remote avec revenus attractifs (commissions + bonus). Postulez directement avec CV et photo.' })}
+        expertise="beginner"
+        trustworthiness="high"
+        contentQuality="high"
+      />
       <HreflangLinks pathname={location.pathname} />
+      <FAQPageSchema
+        faqs={faqItems.map(item => ({ question: item.q, answer: item.a }))}
+        pageTitle={seoTitle}
+        pageUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+      />
+      <BreadcrumbSchema items={[
+        { name: 'SOS Expat', url: '/' },
+        { name: intl.formatMessage({ id: 'captain.landing.breadcrumb', defaultMessage: 'Devenir Capitaine Chatter' }) },
+      ]} />
       <style>{globalStyles}</style>
 
       <div className="captain-landing bg-black text-white">
@@ -320,7 +357,7 @@ const CaptainLanding: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
                 <p className="text-xs sm:text-sm font-bold text-white"><FormattedMessage id="captain.landing.hero.fact1" defaultMessage="Revenus attractifs" /></p>
-                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="$ + FCFA" /></p>
+                <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="$ + {currency}" values={{ currency: countryConfig.currency.symbol }} /></p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
@@ -428,7 +465,7 @@ const CaptainLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            3. REVENUS — Tableau $/FCFA clair
+            3. REVENUS — Tableau $ + devise locale
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="captain-rev-title">
           <div className="max-w-5xl mx-auto">
@@ -444,12 +481,12 @@ const CaptainLanding: React.FC = () => {
               <div className="bg-gradient-to-br from-amber-500/15 to-yellow-500/5 border border-amber-500/20 rounded-2xl p-5 text-center">
                 <p className="text-xs text-white/50 mb-1"><FormattedMessage id="captain.landing.rev.lawyer" defaultMessage="Appel avocat" /></p>
                 <p className="text-3xl sm:text-4xl font-black text-amber-400">3$</p>
-                <p className="text-sm text-amber-300/60">{fmt(3)} FCFA</p>
+                {localBlock(3) && <p className="text-sm text-amber-300/60">{localBlock(3)}</p>}
               </div>
               <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/5 border border-green-500/20 rounded-2xl p-5 text-center">
                 <p className="text-xs text-white/50 mb-1"><FormattedMessage id="captain.landing.rev.expat" defaultMessage="Appel expatrie" /></p>
                 <p className="text-3xl sm:text-4xl font-black text-green-400">2$</p>
-                <p className="text-sm text-green-300/60">{fmt(2)} FCFA</p>
+                {localBlock(2) && <p className="text-sm text-green-300/60">{localBlock(2)}</p>}
               </div>
             </div>
 
@@ -471,7 +508,7 @@ const CaptainLanding: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <span className={`font-black text-lg ${t.text}`}>{t.bonus}$</span>
-                      <span className="text-xs text-white/40 block">{fmt(t.bonus)} FCFA</span>
+                      {localBlock(t.bonus) && <span className="text-xs text-white/40 block">{localBlock(t.bonus)}</span>}
                     </div>
                   </div>
                 ))}
@@ -482,7 +519,7 @@ const CaptainLanding: React.FC = () => {
             <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-3 mb-5">
               <div className="text-center sm:text-left flex-1">
                 <p className="text-xs text-purple-300/70 font-bold uppercase"><FormattedMessage id="captain.landing.rev.quality" defaultMessage="Bonus qualite mensuel" /></p>
-                <p className="text-2xl font-black text-purple-400">100$ <span className="text-base text-purple-300/60">/ {fmt(100)} FCFA</span></p>
+                <p className="text-2xl font-black text-purple-400">100${local(100)}</p>
               </div>
               <p className="text-xs text-white/50 text-center sm:text-right">
                 <FormattedMessage id="captain.landing.rev.quality.cond" defaultMessage="Condition : 10 recrues actives + 100$ de commissions equipe" />
@@ -499,7 +536,7 @@ const CaptainLanding: React.FC = () => {
                 <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40">TOTAL</p><p className="font-black text-white">1 325$</p></div>
               </div>
               <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
-                = {fmt(1325)} FCFA/mois
+                = 1 325${local(1325)}/mois
               </p>
               <p className="text-[10px] text-white/40 mt-1"><FormattedMessage id="captain.landing.rev.ex.note" defaultMessage="+ vos propres appels a 3-5$" /></p>
             </div>
@@ -585,7 +622,7 @@ const CaptainLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            6. CALCULATEUR — 3 sliders, $/FCFA
+            6. CALCULATEUR — 3 sliders, $ + devise locale
         ================================================================ */}
         <section className="section-content bg-gradient-to-b from-black via-green-950/20 to-gray-950" aria-labelledby="captain-calc-title">
           <div className="max-w-5xl mx-auto">
@@ -635,7 +672,7 @@ const CaptainLanding: React.FC = () => {
                 <p className="text-4xl sm:text-5xl font-black text-center bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-green-400 mb-0.5" aria-live="polite">
                   {total.toLocaleString()}$
                 </p>
-                <p className="text-base sm:text-lg font-bold text-center text-amber-300/60 mb-4">{fmt(total)} FCFA</p>
+                {localBlock(total) && <p className="text-base sm:text-lg font-bold text-center text-amber-300/60 mb-4">{localBlock(total)}</p>}
 
                 <div className="space-y-1.5 text-sm mb-5">
                   <div className="flex justify-between"><span className="text-white/60"><FormattedMessage id="captain.landing.calc.r1" defaultMessage="Commissions equipe" /></span><span className="font-bold text-amber-400">{teamComm.toLocaleString()}$</span></div>
