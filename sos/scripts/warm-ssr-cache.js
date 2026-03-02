@@ -11,7 +11,8 @@
 const SSR_FUNCTION_URL =
   'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
 const SITE_BASE = 'https://sos-expat.com';
-const MAX_CONCURRENT = 5;
+const MAX_CONCURRENT = 1;       // Séquentiel — évite le rate limit de renderForBotsV2
+const DELAY_BETWEEN_MS = 2000;  // 2s entre chaque requête (~0.5 req/s)
 const TIMEOUT_MS = 90_000;
 const RETRY_COUNT = 2;
 
@@ -80,6 +81,17 @@ const PRIORITY_PATHS = [
   // HI — key pages
   '/hi-in/aksar-puche-jaane-wale-sawal',
   '/hi-in/kaise-kaam-karta-hai',
+
+  // Captain landing — all 9 languages (new page, priority warm-up)
+  '/fr-fr/devenir-capitaine',
+  '/en-us/become-captain',
+  '/es-es/ser-capitan',
+  '/de-de/kapitaen-werden',
+  '/pt-pt/tornar-se-capitao',
+  '/ru-ru/stat-kapitanom',
+  '/zh-cn/chengwei-duizhang',
+  '/ar-sa/كن-قائدا',
+  '/hi-in/captain-bane',
 ];
 
 // ─── All static pages (run with --all) ─────────────────────────────────────
@@ -145,7 +157,7 @@ async function warmUrl(urlPath, index, total) {
     }
 
     if (attempt <= RETRY_COUNT) {
-      await new Promise(r => setTimeout(r, 3000 * attempt));
+      await new Promise(r => setTimeout(r, 4000 * attempt)); // 4s, 8s entre retries
     }
   }
 
@@ -180,12 +192,16 @@ async function main() {
   console.log(`\n🔥 SSR Cache Warm-up`);
   console.log(`   Mode      : ${useAll ? '--all (full sitemap)' : 'priority pages only'}`);
   console.log(`   URLs      : ${total}`);
-  console.log(`   Concurrent: ${MAX_CONCURRENT}`);
-  console.log(`   Timeout   : ${TIMEOUT_MS / 1000}s per request\n`);
+  console.log(`   Concurrent: ${MAX_CONCURRENT} (séquentiel)`);
+  console.log(`   Délai     : ${DELAY_BETWEEN_MS / 1000}s entre chaque requête`);
+  console.log(`   Timeout   : ${TIMEOUT_MS / 1000}s par requête\n`);
 
   const startMs = Date.now();
 
-  const tasks = paths.map((urlPath, idx) => () => warmUrl(urlPath, idx + 1, total));
+  const tasks = paths.map((urlPath, idx) => async () => {
+    if (idx > 0) await new Promise(r => setTimeout(r, DELAY_BETWEEN_MS));
+    return warmUrl(urlPath, idx + 1, total);
+  });
   const results = await runWithConcurrency(tasks, MAX_CONCURRENT);
 
   const ok = results.filter(r => r.ok).length;
