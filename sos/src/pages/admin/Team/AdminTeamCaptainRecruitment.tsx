@@ -147,7 +147,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                 <FormattedMessage id="admin.team.recruitment.title" defaultMessage="Recrutement Capitaines" />
               </h1>
               <p className="text-sm text-gray-500">
-                {applications.length} candidature{applications.length !== 1 ? 's' : ''} — {pendingCount} {statusLabel('pending').toLowerCase()}
+                {intl.formatMessage({ id: 'admin.team.recruitment.subtitle', defaultMessage: '{total} candidature(s) — {pending} {pendingLabel}' }, { total: applications.length, pending: pendingCount, pendingLabel: statusLabel('pending').toLowerCase() })}
               </p>
             </div>
           </div>
@@ -188,19 +188,15 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Photo</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">
-                      <FormattedMessage id="admin.team.recruitment.col.candidate" defaultMessage="Candidat" />
-                    </th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.photo" defaultMessage="Photo" /></th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.candidate" defaultMessage="Candidat" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">WhatsApp</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">
-                      <FormattedMessage id="admin.team.recruitment.col.country" defaultMessage="Pays" />
-                    </th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Date</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.country" defaultMessage="Pays" /></th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.date" defaultMessage="Date" /></th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.status" defaultMessage="Status" /></th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600">CV</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Motivation</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Actions</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.motivation" defaultMessage="Motivation" /></th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600"><FormattedMessage id="admin.team.recruitment.col.actions" defaultMessage="Actions" /></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -256,7 +252,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setExpandedMotivation(null)}>
                                 <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-semibold text-gray-900">Motivation — {app.name}</h3>
+                                    <h3 className="font-semibold text-gray-900">{intl.formatMessage({ id: 'admin.team.recruitment.col.motivation', defaultMessage: 'Motivation' })} — {app.name}</h3>
                                     <button onClick={() => setExpandedMotivation(null)}><X className="w-5 h-5 text-gray-400" /></button>
                                   </div>
                                   <p className="text-gray-700 whitespace-pre-wrap">{app.motivation}</p>
@@ -345,7 +341,7 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                       {app.motivation && (
                         <div>
                           <p className="text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
-                            <MessageSquare className="w-3 h-3" /> Motivation
+                            <MessageSquare className="w-3 h-3" /> <FormattedMessage id="admin.team.recruitment.col.motivation" defaultMessage="Motivation" />
                           </p>
                           <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">{app.motivation}</p>
                         </div>

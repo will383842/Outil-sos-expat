@@ -14,6 +14,7 @@ import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import { trackMetaViewContent } from '@/utils/metaPixel';
+import toast from 'react-hot-toast';
 import { logAnalyticsEvent, db, storage } from '@/config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -185,6 +186,11 @@ const CaptainLanding: React.FC = () => {
   const [photoProgress, setPhotoProgress] = useState(0);
   const [photoPreview, setPhotoPreview] = useState('');
 
+  // Cleanup photo preview URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => { if (photoPreview) URL.revokeObjectURL(photoPreview); };
+  }, [photoPreview]);
+
   const uploadFile = (file: File, path: string, onProgress: (p: number) => void): Promise<string> => {
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, path);
@@ -200,30 +206,31 @@ const CaptainLanding: React.FC = () => {
   const handleCvSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB'); return; }
     setCvFile(file);
     setCvUploading(true);
     setCvProgress(0);
     try {
       const url = await uploadFile(file, `captain_applications_cv/${Date.now()}_${file.name}`, setCvProgress);
       setCvUrl(url);
-    } catch { setCvFile(null); }
+    } catch { setCvFile(null); setCvUrl(''); }
     setCvUploading(false);
   };
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB'); return; }
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
     setPhotoUploading(true);
     setPhotoProgress(0);
     try {
       const url = await uploadFile(file, `captain_applications_cv/${Date.now()}_photo_${file.name}`, setPhotoProgress);
       setPhotoUrl(url);
-    } catch { setPhotoFile(null); setPhotoPreview(''); }
+    } catch { setPhotoFile(null); setPhotoUrl(''); URL.revokeObjectURL(previewUrl); setPhotoPreview(''); }
     setPhotoUploading(false);
   };
 
