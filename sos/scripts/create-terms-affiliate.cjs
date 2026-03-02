@@ -71,7 +71,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Période de rétention</h3>
 <p>Les commissions passent en statut « disponible » après la période de validation (variable selon le rôle, minimum 24h).</p>
 <h3>4.5 Confirmation 2FA</h3>
-<p>Tout retrait requiert une confirmation à deux facteurs (2FA) : soit via Telegram (bot officiel SOS-Expat), soit via un code OTP envoyé par email. Si Telegram est indisponible, l'email constitue le mode de confirmation de secours.</p>
+<p>Tout retrait requiert une confirmation via le bot Telegram officiel SOS-Expat. L'Affilié doit avoir lié son compte Telegram à son compte SOS-Expat avant de pouvoir effectuer un retrait. Cette étape constitue la vérification de sécurité obligatoire de la transaction.</p>
 <h3>4.6 Traitement</h3>
 <p>Le traitement est hybride : automatique sous 500$, validation admin au-delà.</p>
 
@@ -225,7 +225,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Retention Period</h3>
 <p>Commissions become "available" after the validation period (varies by role, minimum 24 hours).</p>
 <h3>4.5 2FA Confirmation</h3>
-<p>Every withdrawal requires two-factor authentication (2FA): either via Telegram (official SOS-Expat bot) or via an OTP code sent by email. If Telegram is unavailable, email serves as the fallback confirmation method.</p>
+<p>Every withdrawal requires confirmation via the official SOS-Expat Telegram bot. The Affiliate must have linked their Telegram account to their SOS-Expat account before making a withdrawal. This step is the mandatory security verification for the transaction.</p>
 <h3>4.6 Processing</h3>
 <p>Processing is hybrid: automatic under $500, admin approval above.</p>
 
@@ -379,7 +379,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Período de retención</h3>
 <p>Las comisiones pasan a estado «disponible» después del período de validación (variable según el rol, mínimo 24 horas).</p>
 <h3>4.5 Confirmación 2FA</h3>
-<p>Todo retiro requiere autenticación de dos factores (2FA): bien mediante Telegram (bot oficial de SOS-Expat), bien mediante un código OTP enviado por correo electrónico. Si Telegram no está disponible, el correo electrónico actúa como método de confirmación alternativo.</p>
+<p>Todo retiro requiere confirmación a través del bot oficial de Telegram de SOS-Expat. El Afiliado debe haber vinculado su cuenta de Telegram a su cuenta SOS-Expat antes de poder realizar un retiro. Este paso constituye la verificación de seguridad obligatoria de la transacción.</p>
 <h3>4.6 Procesamiento</h3>
 <p>El procesamiento es híbrido: automático por debajo de 500$, validación administrativa por encima.</p>
 
@@ -533,7 +533,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Einbehaltungsfrist</h3>
 <p>Provisionen werden nach der Validierungsfrist (je nach Rolle unterschiedlich, mindestens 24 Stunden) als „verfügbar" eingestuft.</p>
 <h3>4.5 2FA-Bestätigung</h3>
-<p>Jede Auszahlung erfordert eine Zwei-Faktor-Authentifizierung (2FA): entweder über Telegram (offizieller SOS-Expat-Bot) oder über einen per E-Mail gesendeten OTP-Code. Wenn Telegram nicht verfügbar ist, dient E-Mail als alternative Bestätigungsmethode.</p>
+<p>Jede Auszahlung erfordert eine Bestätigung über den offiziellen SOS-Expat-Telegram-Bot. Der Partner muss sein Telegram-Konto mit seinem SOS-Expat-Konto verknüpft haben, bevor er eine Auszahlung vornehmen kann. Dieser Schritt ist die obligatorische Sicherheitsverifizierung der Transaktion.</p>
 <h3>4.6 Verarbeitung</h3>
 <p>Die Verarbeitung ist hybrid: automatisch unter 500$, Admin-Genehmigung darüber.</p>
 
@@ -687,7 +687,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Período de retenção</h3>
 <p>As comissões passam ao estado «disponível» após o período de validação (variável conforme a função, mínimo de 24 horas).</p>
 <h3>4.5 Confirmação 2FA</h3>
-<p>Todo saque requer autenticação de dois fatores (2FA): seja via Telegram (bot oficial da SOS-Expat), seja via código OTP enviado por e-mail. Se o Telegram estiver indisponível, o e-mail serve como método de confirmação alternativo.</p>
+<p>Todo saque requer confirmação através do bot oficial do Telegram da SOS-Expat. O Afiliado deve ter vinculado a sua conta Telegram à sua conta SOS-Expat antes de poder efetuar um saque. Esta etapa constitui a verificação de segurança obrigatória da transação.</p>
 <h3>4.6 Processamento</h3>
 <p>O processamento é híbrido: automático abaixo de 500$, validação administrativa acima.</p>
 
@@ -841,7 +841,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 Период удержания</h3>
 <p>Комиссии переходят в статус «доступно» после периода проверки (варьируется в зависимости от роли, минимум 24 часа).</p>
 <h3>4.5 Подтверждение 2FA</h3>
-<p>Каждый вывод средств требует двухфакторной аутентификации (2FA): либо через Telegram (официальный бот SOS-Expat), либо через OTP-код, отправленный по электронной почте. Если Telegram недоступен, электронная почта служит резервным методом подтверждения.</p>
+<p>Каждый вывод средств требует подтверждения через официальный Telegram-бот SOS-Expat. Партнёр должен привязать свой аккаунт Telegram к аккаунту SOS-Expat до выполнения вывода средств. Этот шаг является обязательной проверкой безопасности транзакции.</p>
 <h3>4.6 Обработка</h3>
 <p>Обработка гибридная: автоматическая при суммах менее 500$, утверждение администратором свыше.</p>
 
@@ -995,7 +995,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 प्रतिधारण अवधि</h3>
 <p>सत्यापन अवधि (भूमिका के अनुसार भिन्न, न्यूनतम 24 घंटे) के बाद कमीशन «उपलब्ध» स्थिति में आ जाते हैं।</p>
 <h3>4.5 2FA पुष्टि</h3>
-<p>प्रत्येक निकासी के लिए दो-कारक प्रमाणीकरण (2FA) आवश्यक है: या तो Telegram (आधिकारिक SOS-Expat बॉट) के माध्यम से, या ईमेल द्वारा भेजे गए OTP कोड के माध्यम से। यदि Telegram अनुपलब्ध है, तो ईमेल वैकल्पिक पुष्टि विधि के रूप में कार्य करता है।</p>
+<p>प्रत्येक निकासी के लिए आधिकारिक SOS-Expat Telegram बॉट के माध्यम से पुष्टि आवश्यक है। सहबद्ध को निकासी करने से पहले अपना Telegram खाता अपने SOS-Expat खाते से लिंक करना होगा। यह चरण लेनदेन का अनिवार्य सुरक्षा सत्यापन है।</p>
 <h3>4.6 प्रसंस्करण</h3>
 <p>प्रसंस्करण हाइब्रिड है: 500$ से कम पर स्वचालित, उससे अधिक पर व्यवस्थापक अनुमोदन।</p>
 
@@ -1149,7 +1149,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 保留期</h3>
 <p>佣金在验证期（因角色而异，最短24小时）后变为"可用"状态。</p>
 <h3>4.5 双重认证确认</h3>
-<p>每次提现都需要双重身份验证（2FA）：可通过Telegram（官方SOS-Expat机器人）或通过电子邮件发送的OTP代码。如果Telegram不可用，电子邮件将作为备用确认方式。</p>
+<p>每次提现都需要通过官方SOS-Expat Telegram机器人进行确认。联盟成员在提现前必须将其Telegram账户与SOS-Expat账户绑定。此步骤是交易的强制性安全验证。</p>
 <h3>4.6 处理</h3>
 <p>处理方式为混合模式：500美元以下自动处理，以上需管理员审批。</p>
 
@@ -1303,7 +1303,7 @@ const TERMS_AFFILIATE = {
 <h3>4.4 فترة الاحتفاظ</h3>
 <p>تصبح العمولات «متاحة» بعد فترة التحقق (تختلف حسب الدور، بحد أدنى 24 ساعة).</p>
 <h3>4.5 تأكيد المصادقة الثنائية</h3>
-<p>يتطلب كل سحب مصادقة ثنائية (2FA): إما عبر Telegram (بوت SOS-Expat الرسمي) أو عبر رمز OTP المُرسَل بالبريد الإلكتروني. إذا كان Telegram غير متاح، يعمل البريد الإلكتروني كوسيلة تأكيد بديلة.</p>
+<p>يتطلب كل سحب تأكيداً عبر بوت Telegram الرسمي لـ SOS-Expat. يجب على الشريك ربط حسابه على Telegram بحسابه في SOS-Expat قبل إجراء أي عملية سحب. تُعدّ هذه الخطوة التحقق الأمني الإلزامي للمعاملة.</p>
 <h3>4.6 المعالجة</h3>
 <p>المعالجة هجينة: تلقائية تحت 500$، موافقة المسؤول فوق ذلك.</p>
 
