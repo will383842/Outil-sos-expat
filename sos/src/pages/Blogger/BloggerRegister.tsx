@@ -546,7 +546,7 @@ const BloggerRegister: React.FC = () => {
         });
 
         // Google Ads: Enhanced Conversions + SignUp tracking
-        setGoogleAdsUserData({ email: formData.email, firstName: formData.firstName, lastName: formData.lastName, country: formData.country });
+        await setGoogleAdsUserData({ email: formData.email, firstName: formData.firstName, lastName: formData.lastName, country: formData.country });
         trackGoogleAdsSignUp({ method: 'email', content_name: 'blogger_registration', country: formData.country });
 
         await refreshUser();

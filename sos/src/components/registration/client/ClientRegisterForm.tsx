@@ -17,7 +17,7 @@ import { FieldError, FieldSuccess } from '../shared/FieldFeedback';
 import FAQSection from '../shared/FAQSection';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
-import { trackGoogleAdsSignUp, setGoogleAdsUserData, getGoogleClickId } from '@/utils/googleAds';
+import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 
 import '@/styles/registration-dark.css';
@@ -385,7 +385,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
 
       // Google Ads: Enhanced Conversions + SignUp tracking
-      setGoogleAdsUserData({ email: form.email, firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
+      await setGoogleAdsUserData({ email: form.email, firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'client_registration', country: phoneCountry });
 
       setIsRedirecting(true);

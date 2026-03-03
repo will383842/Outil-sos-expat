@@ -3009,9 +3009,9 @@ const BookingRequest: React.FC = () => {
         num_items: 1,
       });
 
-      // Google Ads: Enhanced Conversions user data
+      // Google Ads: Enhanced Conversions user data (await SHA256 hashing before tracking)
       if (user?.email) {
-        setGoogleAdsUserData({
+        await setGoogleAdsUserData({
           email: user.email,
           firstName: user.displayName?.split(' ')[0],
           lastName: user.displayName?.split(' ').slice(1).join(' '),
@@ -3398,9 +3398,9 @@ const BookingRequest: React.FC = () => {
           num_items: 1,
         });
 
-        // Google Ads: Enhanced Conversions user data
+        // Google Ads: Enhanced Conversions user data (await SHA256 hashing before tracking)
         if (user?.email) {
-          setGoogleAdsUserData({
+          await setGoogleAdsUserData({
             email: user.email,
             firstName: user.displayName?.split(' ')[0],
             lastName: user.displayName?.split(' ').slice(1).join(' '),

@@ -230,7 +230,7 @@ const GroupAdminRegister: React.FC = () => {
         });
 
         // Google Ads: Enhanced Conversions + SignUp tracking
-        setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
+        await setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
         trackGoogleAdsSignUp({ method: 'email', content_name: 'groupadmin_registration', country: data.country });
 
         setTimeout(() => {

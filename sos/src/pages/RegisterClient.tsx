@@ -346,7 +346,7 @@ const RegisterClient: React.FC = () => {
       if (auth.currentUser?.email) {
         setMetaPixelUserData({ email: auth.currentUser.email });
         // Google Ads: Enhanced Conversions + SignUp tracking
-        setGoogleAdsUserData({ email: auth.currentUser.email, firstName: auth.currentUser.displayName?.split(' ')[0] });
+        await setGoogleAdsUserData({ email: auth.currentUser.email, firstName: auth.currentUser.displayName?.split(' ')[0] });
       }
       trackGoogleAdsSignUp({ method: 'google', content_name: 'client_registration_google' });
       clearStoredReferral();

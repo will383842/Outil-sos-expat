@@ -36,7 +36,7 @@ import { generateBothInvoices } from "../services/invoiceGenerator";
 import { usePricingConfig } from "../services/pricingService";
 import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLogger";
 import { trackMetaPurchase, setMetaPixelUserData } from "../utils/metaPixel";
-import { trackGoogleAdsPurchase, setGoogleAdsUserData, getGoogleClickId } from "../utils/googleAds";
+import { trackGoogleAdsPurchase, setGoogleAdsUserData } from "../utils/googleAds";
 import { trackAdPurchase } from "../services/adAttributionService";
 import { getOrCreateEventId } from "../utils/sharedEventId";
 
@@ -1065,23 +1065,24 @@ const SuccessPayment: React.FC = () => {
         });
       }
 
-      // Google Ads: Enhanced Conversions user data
-      if (user?.email) {
-        setGoogleAdsUserData({
-          email: user.email,
-          firstName: user.displayName?.split(' ')[0],
-          lastName: user.displayName?.split(' ').slice(1).join(' '),
+      // Google Ads: Enhanced Conversions user data + tracking
+      // Wrapped in async IIFE because setGoogleAdsUserData uses SHA256 hashing
+      (async () => {
+        if (user?.email) {
+          await setGoogleAdsUserData({
+            email: user.email,
+            firstName: user.displayName?.split(' ')[0],
+            lastName: user.displayName?.split(' ').slice(1).join(' '),
+          });
+        }
+        trackGoogleAdsPurchase({
+          value: amount,
+          currency: currency.toUpperCase(),
+          content_name: isLawyer ? 'lawyer_call' : 'expat_call',
+          content_type: 'service',
+          transaction_id: orderId || callId || undefined,
         });
-      }
-
-      // Google Ads tracking (with GCLID for attribution)
-      trackGoogleAdsPurchase({
-        value: amount,
-        currency: currency.toUpperCase(),
-        content_name: isLawyer ? 'lawyer_call' : 'expat_call',
-        content_type: 'service',
-        transaction_id: orderId || callId || getGoogleClickId() || undefined,
-      });
+      })();
 
       // Ad Attribution tracking (Firestore - pour dashboard admin)
       trackAdPurchase({
