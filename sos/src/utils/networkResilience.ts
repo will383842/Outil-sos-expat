@@ -12,6 +12,7 @@ const FIREBASE_PATTERNS = [
   'securetoken.googleapis.com',
   'firestore.googleapis.com',
   'cloudfunctions.net', // Cloud Functions v2 - nécessaire pour PayPal et autres callables
+  'a.run.app', // Cloud Run (Gen2 functions) - trackCAPIEvent, etc.
 ];
 
 /**
@@ -29,6 +30,16 @@ export const isAbortError = (error: unknown): boolean => {
     return error.name === 'AbortError' ||
            error.message.includes('aborted') ||
            error.message.includes('AbortError');
+  }
+  return false;
+};
+
+/**
+ * Vérifie si une erreur est un Failed to fetch (extension bloquante ou réseau)
+ */
+const isFailedToFetch = (error: unknown): boolean => {
+  if (error instanceof TypeError) {
+    return error.message === 'Failed to fetch';
   }
   return false;
 };
@@ -86,8 +97,8 @@ export const resilientFetch = async (
     } catch (error) {
       lastError = error as Error;
 
-      // Si c'est une requête Firebase et une AbortError, on réessaye
-      if (isFirebase && isAbortError(error) && attempt < maxRetries - 1) {
+      // Si c'est une requête Firebase et une AbortError/Failed to fetch, on réessaye
+      if (isFirebase && (isAbortError(error) || isFailedToFetch(error)) && attempt < maxRetries - 1) {
         console.warn(
           `[NetworkResilience] Requête Firebase avortée (tentative ${attempt + 1}/${maxRetries}), nouvelle tentative...`
         );
@@ -159,8 +170,8 @@ export const installNetworkResilience = (): void => {
       } catch (error) {
         lastError = error as Error;
 
-        // Si c'est une AbortError et pas le dernier essai, on réessaye
-        if (isAbortError(error) && attempt < maxRetries - 1) {
+        // Si c'est une AbortError ou Failed to fetch et pas le dernier essai, on réessaye
+        if ((isAbortError(error) || isFailedToFetch(error)) && attempt < maxRetries - 1) {
           // Log discret (pas d'erreur pour ne pas effrayer l'utilisateur)
           if (attempt === 0) {
             console.info('[SOS Expat] Optimisation de la connexion en cours...');
@@ -196,7 +207,10 @@ export const suppressExtensionErrors = (): void => {
       'frame_ant.js',
       'AbortError: The user aborted a request',
       'net::ERR_BLOCKED_BY_CLIENT',
+      'net::ERR_FAILED',
       'Uncaught (in promise) AbortError',
+      'Failed to fetch',
+      'trackcapievent',
     ];
 
     if (suppressPatterns.some(pattern => message.includes(pattern))) {
@@ -209,6 +223,27 @@ export const suppressExtensionErrors = (): void => {
 
     originalError(...args);
   };
+};
+
+/**
+ * Supprime les unhandledrejection venant d'extensions (frame_ant.js, etc.)
+ * Ces rejections sont créées en parallèle par l'extension et ne sont pas catchées
+ * par le try/catch de l'app car elles viennent d'une chaîne de promesses séparée.
+ */
+export const suppressTrackingRejections = (): void => {
+  if (typeof window === 'undefined') return;
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason;
+    if (reason instanceof TypeError && reason.message === 'Failed to fetch') {
+      // Vérifier si c'est lié au tracking (frame_ant.js dans la stack)
+      const stack = reason.stack || '';
+      if (stack.includes('frame_ant') || stack.includes('trackcapievent') || stack.includes('a.run.app')) {
+        event.preventDefault();
+        return;
+      }
+    }
+  });
 };
 
 /**
