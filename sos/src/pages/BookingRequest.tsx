@@ -76,7 +76,7 @@ import { smartNormalizePhone } from "@/utils/phone";
 import { FormattedMessage, useIntl } from "react-intl";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { trackMetaLead, trackMetaInitiateCheckout, getMetaIdentifiers, setMetaPixelUserData } from "@/utils/metaPixel";
-import { trackGoogleAdsLead, trackGoogleAdsBeginCheckout } from "@/utils/googleAds";
+import { trackGoogleAdsLead, trackGoogleAdsBeginCheckout, setGoogleAdsUserData } from "@/utils/googleAds";
 import { trackAdLead, trackAdInitiateCheckout } from "@/services/adAttributionService";
 import { generateEventIdForType } from "@/utils/sharedEventId";
 
@@ -3009,6 +3009,15 @@ const BookingRequest: React.FC = () => {
         num_items: 1,
       });
 
+      // Google Ads: Enhanced Conversions user data
+      if (user?.email) {
+        setGoogleAdsUserData({
+          email: user.email,
+          firstName: user.displayName?.split(' ')[0],
+          lastName: user.displayName?.split(' ').slice(1).join(' '),
+        });
+      }
+
       // Track Google Ads Lead
       trackGoogleAdsLead({
         value: eurTotalForDisplay,
@@ -3388,6 +3397,15 @@ const BookingRequest: React.FC = () => {
           content_category: isLawyer ? 'lawyer' : 'expat',
           num_items: 1,
         });
+
+        // Google Ads: Enhanced Conversions user data
+        if (user?.email) {
+          setGoogleAdsUserData({
+            email: user.email,
+            firstName: user.displayName?.split(' ')[0],
+            lastName: user.displayName?.split(' ').slice(1).join(' '),
+          });
+        }
 
         // Track Google Ads
         trackGoogleAdsLead({

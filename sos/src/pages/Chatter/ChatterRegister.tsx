@@ -20,6 +20,7 @@ import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
+import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { logAnalyticsEvent } from '@/config/firebase';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 
@@ -239,6 +240,10 @@ const ChatterRegister: React.FC = () => {
         lastName: data.lastName,
         country: data.country,
       });
+
+      // Google Ads: Enhanced Conversions + SignUp tracking
+      setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
+      trackGoogleAdsSignUp({ method: 'email', content_name: 'chatter_registration', country: data.country });
 
       // Redirect to Telegram onboarding after short delay (mandatory step)
       setTimeout(() => {

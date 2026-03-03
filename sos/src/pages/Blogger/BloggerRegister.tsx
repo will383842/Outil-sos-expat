@@ -58,6 +58,7 @@ import { storeReferralCode, getStoredReferralCode, clearStoredReferral } from '@
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
+import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 import { useAntiBot } from '@/hooks/useAntiBot';
 
@@ -543,6 +544,10 @@ const BloggerRegister: React.FC = () => {
           lastName: formData.lastName,
           country: formData.country,
         });
+
+        // Google Ads: Enhanced Conversions + SignUp tracking
+        setGoogleAdsUserData({ email: formData.email, firstName: formData.firstName, lastName: formData.lastName, country: formData.country });
+        trackGoogleAdsSignUp({ method: 'email', content_name: 'blogger_registration', country: formData.country });
 
         await refreshUser();
         setTimeout(() => {

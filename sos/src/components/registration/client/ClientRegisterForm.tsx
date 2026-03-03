@@ -17,6 +17,7 @@ import { FieldError, FieldSuccess } from '../shared/FieldFeedback';
 import FAQSection from '../shared/FAQSection';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { trackGoogleAdsSignUp, setGoogleAdsUserData, getGoogleClickId } from '@/utils/googleAds';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 
 import '@/styles/registration-dark.css';
@@ -382,6 +383,10 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       trackMetaComplete({ content_name: 'client_registration', status: 'completed', country: phoneCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'client_registration' });
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
+
+      // Google Ads: Enhanced Conversions + SignUp tracking
+      setGoogleAdsUserData({ email: form.email, firstName: capitalFirst, lastName: capitalLast, country: phoneCountry });
+      trackGoogleAdsSignUp({ method: 'email', content_name: 'client_registration', country: phoneCountry });
 
       setIsRedirecting(true);
       hasNavigatedRef.current = true;

@@ -14,6 +14,7 @@ import {
 import { sanitizeString, sanitizeStringFinal, sanitizeEmailInput, sanitizeEmailFinal, sanitizeEmail } from '../shared/sanitize';
 import { getCountryCode, isCountrySupportedByStripe } from '../shared/stripeCountries';
 import { getRegistrationErrorMessage } from '../shared/registrationErrors';
+import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 
 import RegistrationWizard from '../shared/RegistrationWizard';
 import DarkInput from '../shared/DarkInput';
@@ -488,6 +489,8 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
         trackAdRegistration({ contentName: 'expat_registration' });
         setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: sanitizeString(form.firstName), lastName: sanitizeString(form.lastName), country: form.currentPresenceCountry });
+        setGoogleAdsUserData({ email: form.email, firstName: form.firstName, lastName: form.lastName, country: form.currentPresenceCountry });
+        trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
 
         // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
         setTimeout(() => {
@@ -529,6 +532,8 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       trackMetaComplete({ content_name: 'expat_registration', status: 'completed', country: form.currentPresenceCountry, eventID: metaEventId });
       trackAdRegistration({ contentName: 'expat_registration' });
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: sanitizeString(form.firstName), lastName: sanitizeString(form.lastName), country: form.currentPresenceCountry });
+      setGoogleAdsUserData({ email: form.email, firstName: form.firstName, lastName: form.lastName, country: form.currentPresenceCountry });
+      trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
 
       // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
       setTimeout(() => {

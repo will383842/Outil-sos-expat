@@ -21,6 +21,7 @@ import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lu
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
+import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 
 const UI = {
@@ -227,6 +228,10 @@ const GroupAdminRegister: React.FC = () => {
           lastName: data.lastName,
           country: data.country,
         });
+
+        // Google Ads: Enhanced Conversions + SignUp tracking
+        setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
+        trackGoogleAdsSignUp({ method: 'email', content_name: 'groupadmin_registration', country: data.country });
 
         setTimeout(() => {
           navigate(telegramRoute, { replace: true });
