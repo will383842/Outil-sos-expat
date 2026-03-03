@@ -52,7 +52,7 @@ import { getDateLocale } from "../utils/formatters";
 import { normalizeCountryToCode } from "../utils/countryUtils";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
-// PayPalScriptProvider est fourni par PayPalContext au niveau App.tsx
+// PayPalScriptProvider est fourni par PayPalContext au niveau CallCheckoutWrapper.tsx
 import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
 import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
 import { getStoredMetaIdentifiers } from "../utils/fbpCookie";

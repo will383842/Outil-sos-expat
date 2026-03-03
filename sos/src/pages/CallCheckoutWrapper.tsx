@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../multilingual-system';
 import CallCheckout from './CallCheckout';
+import { PayPalProvider } from '../contexts/PayPalContext';
 import { AlertCircle } from 'lucide-react';
 import { Provider, normalizeProvider, createDefaultProvider } from '../types/provider';
 
@@ -635,10 +636,12 @@ const CallCheckoutWrapper: React.FC = () => {
 
   // Success — CallCheckout
   return (
-    <CallCheckout
-      selectedProvider={state.provider}
-      onGoBack={handleGoBack}
-    />
+    <PayPalProvider>
+      <CallCheckout
+        selectedProvider={state.provider}
+        onGoBack={handleGoBack}
+      />
+    </PayPalProvider>
   );
 };
 

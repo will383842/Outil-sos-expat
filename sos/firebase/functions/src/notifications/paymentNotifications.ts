@@ -336,36 +336,41 @@ export const sendPaymentNotifications = async (callSessionId: string, database: 
       console.log(`\n📨 [${debugId}] STEP 5: Creating message_events...`);
 
       // Notification au client: Appel programmé
-      if (clientId || clientEmail) {
-        console.log(`📨 [${debugId}] Creating CLIENT notification (call.scheduled.client)...`);
+      // FIX: Isolated try-catch — client notification failure must NOT block provider SMS
+      try {
+        if (clientId || clientEmail) {
+          console.log(`📨 [${debugId}] Creating CLIENT notification (call.scheduled.client)...`);
 
-        const clientEventData = {
-          eventId: "call.scheduled.client",
-          locale: language,
-          to: {
-            uid: clientId || null,
-            email: clientEmail || null,
-            phone: clientPhone || null,
-          },
-          context: {
-            callSessionId,
-            title,
-            scheduledTime: scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
-            providerName: cs?.participants?.provider?.name ?? cs?.providerName ?? "Expert",
-          },
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
+          const clientEventData = {
+            eventId: "call.scheduled.client",
+            locale: language,
+            to: {
+              uid: clientId || null,
+              email: clientEmail || null,
+              phone: clientPhone || null,
+            },
+            context: {
+              callSessionId,
+              title,
+              scheduledTime: scheduledTime instanceof Date ? scheduledTime.toISOString() : scheduledTime,
+              providerName: cs?.participants?.provider?.name ?? cs?.providerName ?? "Expert",
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
 
-        console.log(`📨 [${debugId}] Client event data:`, JSON.stringify({
-          ...clientEventData,
-          createdAt: 'serverTimestamp()'
-        }, null, 2));
+          console.log(`📨 [${debugId}] Client event data:`, JSON.stringify({
+            ...clientEventData,
+            createdAt: 'serverTimestamp()'
+          }, null, 2));
 
-        const clientEventRef = await database.collection("message_events").add(clientEventData);
-        console.log(`✅ [${debugId}] Client notification created: ${clientEventRef.id}`);
-        logger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId, eventDocId: clientEventRef.id, debugId });
-      } else {
-        console.log(`⚠️ [${debugId}] SKIPPED client notification - no clientId or clientEmail`);
+          const clientEventRef = await database.collection("message_events").add(clientEventData);
+          console.log(`✅ [${debugId}] Client notification created: ${clientEventRef.id}`);
+          logger.info("PAYMENT_NOTIFICATIONS", "Notification client créée", { callSessionId, clientId, eventDocId: clientEventRef.id, debugId });
+        } else {
+          console.log(`⚠️ [${debugId}] SKIPPED client notification - no clientId or clientEmail`);
+        }
+      } catch (clientNotifError) {
+        console.error(`⚠️ [${debugId}] CLIENT notification failed (non-blocking - provider SMS will still be sent):`, clientNotifError);
       }
 
       // Notification au provider: Appel entrant programmé avec détails booking

@@ -7444,6 +7444,7 @@
   "helpCenter.minRead": "min de lecture",
   "helpCenter.minReadSuffix": "min de lecture",
   "helpCenter.noArticlesFound": "Aucun article trouvé pour ces critères",
+  "helpCenter.relatedArticles": "Articles liés",
   "helpCenter.resetSearch": "Réinitialiser la recherche",
   "helpCenter.searchLabel": "Champ de recherche du centre d'aide",
   "helpCenter.searchPlaceholder": "Rechercher dans l'aide...",

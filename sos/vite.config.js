@@ -168,6 +168,11 @@ export default defineConfig(({ mode }) => {
               return 'vendor-stripe';
             }
 
+            // PayPal - chargé uniquement pour paiements
+            if (id.includes('@paypal') || id.includes('paypal')) {
+              return 'vendor-paypal';
+            }
+
             // MUI - Material UI (admin seulement)
             if (id.includes('@mui')) {
               return 'vendor-mui';

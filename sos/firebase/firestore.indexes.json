@@ -1385,6 +1385,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "isPublished",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "help_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "locale",
           "order": "ASCENDING"
         },

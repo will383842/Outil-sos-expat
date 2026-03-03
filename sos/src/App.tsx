@@ -22,7 +22,7 @@ import { WizardProvider } from './contexts/WizardContext';
 import { FeedbackButton } from './components/feedback';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
-import { PayPalProvider } from './contexts/PayPalContext';
+
 // FCM Push Notifications — P0-1 FIX: was never imported/called
 import { useFCM } from './hooks/useFCM';
 // AFFILIATE: Capture referral codes from URL
@@ -916,7 +916,6 @@ const App: React.FC = () => {
   return (
     <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
       <OfflineBanner />
-      <PayPalProvider>
       <WizardProvider>
       <PWAProvider
         enableOfflineStorage={true}
@@ -1063,7 +1062,6 @@ const App: React.FC = () => {
       )}
       </PWAProvider>
       </WizardProvider>
-      </PayPalProvider>
     </IntlProvider>
   );
 };

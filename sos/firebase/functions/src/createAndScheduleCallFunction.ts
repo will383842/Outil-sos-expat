@@ -635,11 +635,11 @@ export const createAndScheduleCallHTTPS = onCall(
         // P0 FIX: Use actual booking form data for SMS notifications instead of hardcoded values
         const title = bookingTitle || (serviceType === 'lawyer_call' ? 'Consultation avocat' : 'Consultation expat');
         const description = bookingDescription || `${title} - ${serviceType}`;
-        // P0 CRITICAL FIX: Use PROVIDER's country as intervention country
-        // The client contacts a provider based in Thailand for Thailand-related questions
-        // clientCurrentCountry often contains the client's residence (France) instead of the intervention country
+        // FIX: Use CLIENT's selected intervention country first (what they typed in "Où avez-vous besoin d'aide?")
+        // clientCurrentCountry IS the intervention country selected in the booking form — NOT the client's residence
+        // Provider's country is a fallback only when the client didn't fill the field
         // P3 FIX: Convert ISO code to full country name for SMS readability and IA sync consistency
-        const rawInterventionCountry = providerDocData?.country || clientCurrentCountry || 'N/A';
+        const rawInterventionCountry = clientCurrentCountry || providerDocData?.country || 'N/A';
         const interventionCountry = getCountryName(rawInterventionCountry) || rawInterventionCountry;
         const clientDisplayName = clientFirstName || clientData?.firstName || clientName;
 
@@ -658,36 +658,41 @@ export const createAndScheduleCallHTTPS = onCall(
         console.log(`📨 [${requestId}]   - clientEmail: ${clientEmail ? 'SET' : 'NOT_SET'}`);
         console.log(`📨 [${requestId}]   - Will create event? ${!!(clientId || clientEmail)}`);
 
-        if (clientId || clientEmail) {
-          const clientEventData = {
-            eventId: 'call.scheduled.client',
-            locale: language,
-            to: {
-              uid: clientId || null,
-              email: clientEmail || null,
-              phone: decryptedClientPhone || null,
-            },
-            context: {
-              callSessionId: callSession.id,
-              title,
-              scheduledTime: scheduledTime.toISOString(),
-              providerName,
-            },
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          };
-          console.log(`📨 [${requestId}]   Client event data prepared:`);
-          console.log(`📨 [${requestId}]     - eventId: ${clientEventData.eventId}`);
-          console.log(`📨 [${requestId}]     - locale: ${clientEventData.locale}`);
-          console.log(`📨 [${requestId}]     - to.uid: ${clientEventData.to.uid}`);
-          console.log(`📨 [${requestId}]     - to.phone: ${clientEventData.to.phone ? clientEventData.to.phone.substring(0, 5) + '***' : 'NULL'}`);
-          console.log(`📨 [${requestId}]     - context.title: ${clientEventData.context.title}`);
-          console.log(`📨 [${requestId}]   Writing to Firestore message_events...`);
+        // FIX: Isolated try-catch — client notification failure must NOT block provider SMS
+        try {
+          if (clientId || clientEmail) {
+            const clientEventData = {
+              eventId: 'call.scheduled.client',
+              locale: language,
+              to: {
+                uid: clientId || null,
+                email: clientEmail || null,
+                phone: decryptedClientPhone || null,
+              },
+              context: {
+                callSessionId: callSession.id,
+                title,
+                scheduledTime: scheduledTime.toISOString(),
+                providerName,
+              },
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            console.log(`📨 [${requestId}]   Client event data prepared:`);
+            console.log(`📨 [${requestId}]     - eventId: ${clientEventData.eventId}`);
+            console.log(`📨 [${requestId}]     - locale: ${clientEventData.locale}`);
+            console.log(`📨 [${requestId}]     - to.uid: ${clientEventData.to.uid}`);
+            console.log(`📨 [${requestId}]     - to.phone: ${clientEventData.to.phone ? clientEventData.to.phone.substring(0, 5) + '***' : 'NULL'}`);
+            console.log(`📨 [${requestId}]     - context.title: ${clientEventData.context.title}`);
+            console.log(`📨 [${requestId}]   Writing to Firestore message_events...`);
 
-          const clientEventRef = await db.collection('message_events').add(clientEventData);
-          console.log(`✅ [${requestId}] CLIENT notification created: ${clientEventRef.id}`);
-          console.log(`✅ [${requestId}]   → NOTE: inapp=true only (no SMS/email/push for client)`);
-        } else {
-          console.log(`⚠️ [${requestId}] SKIPPING client notification - no clientId or email`);
+            const clientEventRef = await db.collection('message_events').add(clientEventData);
+            console.log(`✅ [${requestId}] CLIENT notification created: ${clientEventRef.id}`);
+            console.log(`✅ [${requestId}]   → NOTE: inapp=true only (no SMS/email/push for client)`);
+          } else {
+            console.log(`⚠️ [${requestId}] SKIPPING client notification - no clientId or email`);
+          }
+        } catch (clientNotifError) {
+          console.error(`⚠️ [${requestId}] CLIENT notification failed (non-blocking - provider SMS will still be sent):`, clientNotifError);
         }
 
         // Create message_events for provider - ONLY SMS with booking details

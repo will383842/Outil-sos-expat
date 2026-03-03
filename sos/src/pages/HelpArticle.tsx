@@ -1,7 +1,7 @@
 // src/pages/HelpArticle.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { ChevronLeft, Clock } from "lucide-react";
+import { ChevronLeft, Clock, BookOpen } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { ArticleSchema, BreadcrumbSchema } from "../components/seo";
@@ -102,6 +102,7 @@ const HelpArticle: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
   const [article, setArticle] = useState<HelpArticleType | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<HelpArticleType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const articleRef = useRef<HelpArticleType | null>(null);
@@ -167,6 +168,11 @@ const HelpArticle: React.FC = () => {
           articleRef.current = foundArticle;
           setArticle(foundArticle);
           setNotFound(false);
+          // Articles de la même catégorie (liens internes)
+          const related = articles
+            .filter((a) => a.categoryId === foundArticle.categoryId && a.id !== foundArticle.id)
+            .slice(0, 4);
+          setRelatedArticles(related);
         } else {
           setNotFound(true);
         }
@@ -372,6 +378,42 @@ const HelpArticle: React.FC = () => {
               </section>
             )}
           </article>
+
+          {/* Articles liés (liens internes SEO) */}
+          {relatedArticles.length > 0 && (
+            <section className="mt-8">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <BookOpen size={20} className="text-red-400" />
+                {intl.formatMessage({ id: "helpCenter.relatedArticles" })}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {relatedArticles.map((rel) => {
+                  const relTitle = getTranslatedValue(rel.title, language);
+                  const relExcerpt = getTranslatedValue(rel.excerpt, language);
+                  const relSlug = getTranslatedValue(rel.slug, language);
+                  return (
+                    <Link
+                      key={rel.id}
+                      to={`/${currentLocale}/centre-aide/${relSlug}`}
+                      className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 p-4 transition-all"
+                    >
+                      <span className="mt-1 flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/20 text-red-400">
+                        <BookOpen size={16} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white group-hover:text-red-300 transition-colors line-clamp-2">
+                          {relTitle}
+                        </p>
+                        {relExcerpt && (
+                          <p className="mt-1 text-xs text-white/50 line-clamp-2">{relExcerpt}</p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </Layout>
