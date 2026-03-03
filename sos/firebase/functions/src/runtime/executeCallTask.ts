@@ -144,6 +144,12 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
     }
 
     // ✅ ÉTAPE 5: Re-check provider availability before calling
+    // P0 CRITICAL FIX: Le provider est intentionnellement marqué 'busy' (reason: 'pending_call')
+    // par createAndScheduleCallFunction AVANT le Cloud Task. Il ne faut PAS avorter l'appel
+    // simplement parce que availability === 'busy' — c'est NOTRE réservation.
+    // On avorte UNIQUEMENT si:
+    //   1. Le provider est passé offline (isOnline !== true)
+    //   2. Le provider est busy pour un AUTRE appel (currentCallSessionId !== callSessionId)
     logger.info(`🔍 [executeCallTask] Re-checking provider availability for: ${callSessionId}`);
     const callSessionDoc = await db.collection('call_sessions').doc(callSessionId).get();
     if (callSessionDoc.exists) {
@@ -152,9 +158,20 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
       if (providerId) {
         const profileDoc = await db.collection('sos_profiles').doc(providerId).get();
         const profileData = profileDoc.data();
-        if (profileData && (profileData.availability !== 'available' || profileData.isOnline !== true)) {
-          logger.warn(`⚠️ [executeCallTask] Provider ${providerId} is no longer available (availability: ${profileData.availability}, isOnline: ${profileData.isOnline}), aborting call`);
-          await lockRef.update({ status: 'aborted_provider_unavailable', updatedAt: new Date() });
+
+        logger.info(`🔍 [executeCallTask] Provider ${providerId} status: availability=${profileData?.availability}, isOnline=${profileData?.isOnline}, currentCallSessionId=${profileData?.currentCallSessionId}, busyReason=${profileData?.busyReason}`);
+
+        // Cas 1: Provider offline → avorter
+        const isOffline = profileData && profileData.isOnline !== true;
+        // Cas 2: Provider busy pour un AUTRE appel (pas le nôtre)
+        const isBusyForOtherCall = profileData?.availability === 'busy'
+          && profileData?.currentCallSessionId
+          && profileData?.currentCallSessionId !== callSessionId;
+
+        if (isOffline || isBusyForOtherCall) {
+          const abortReason = isOffline ? 'provider_went_offline' : 'provider_busy_other_call';
+          logger.warn(`⚠️ [executeCallTask] Provider ${providerId} unavailable: ${abortReason} (availability: ${profileData?.availability}, isOnline: ${profileData?.isOnline}, currentCallSessionId: ${profileData?.currentCallSessionId})`);
+          await lockRef.update({ status: `aborted_${abortReason}`, updatedAt: new Date() });
 
           // C1 AUDIT FIX: Cancel payment immediately when provider is unavailable
           // Without this, the payment authorization stays blocked on the client's card
@@ -175,14 +192,18 @@ export async function runExecuteCallTask(req: Request, res: Response): Promise<v
 
           res.status(200).json({
             success: false,
-            error: 'Provider no longer available',
+            error: `Provider no longer available: ${abortReason}`,
             callSessionId,
-            providerStatus: profileData.status,
+            providerAvailability: profileData?.availability,
+            providerIsOnline: profileData?.isOnline,
+            providerCurrentCallSessionId: profileData?.currentCallSessionId,
             paymentCancelled,
           });
           return;
         }
-        logger.info(`✅ [executeCallTask] Provider ${providerId} still available (availability: ${profileData?.availability}, isOnline: ${profileData?.isOnline})`);
+
+        // Provider OK: soit 'busy' pour NOTRE appel (pending_call), soit 'available'
+        logger.info(`✅ [executeCallTask] Provider ${providerId} OK to call (availability: ${profileData?.availability}, isOnline: ${profileData?.isOnline}, busyReason: ${profileData?.busyReason}, currentCallSessionId: ${profileData?.currentCallSessionId})`);
       }
     }
 

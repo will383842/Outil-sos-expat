@@ -1102,8 +1102,8 @@ export const stripeWebhook = onRequest(
   {
     region: "europe-west3", // Coherence avec createPaymentIntent (payments en west3)
     invoker: "public", // P0 CRITICAL FIX: Allow unauthenticated access for Stripe webhooks
-    memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
-    cpu: 0.083,
+    memory: "256MiB",
+    cpu: 0.25,          // P0 FIX 2026-03-03: Restored from 0.083 — processes Stripe events with Firestore batch writes, Meta CAPI, encryption. 0.083 = extreme throttle.
     secrets: [
       STRIPE_SECRET_KEY_TEST,
       STRIPE_SECRET_KEY_LIVE,

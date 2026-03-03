@@ -978,11 +978,10 @@ export const executeCallTask = onRequest(
     // 3 retries: 3*150 + 2*15 = 480s minimum
     // 120s was causing premature function timeout → only 2 retries executed
     timeoutSeconds: 540,
-    memory: "256MiB",
-    // P0 FIX: Use fractional CPU to reduce quota consumption (like twilioCallWebhook)
-    // With concurrency: 1, we can use cpu < 1 which uses less quota per instance
-    // 0.25 CPU is sufficient since function mostly waits for Twilio API responses
-    cpu: 0.083,
+    memory: "512MiB",  // P0 FIX 2026-03-03: Restored from 256MiB — function loads firebase-admin + Twilio SDK + Stripe SDK, 256MiB caused OOM risk
+    // P0 FIX 2026-03-03: Restored from 0.083 — this function runs up to 540s with 3 Twilio retries + Stripe refunds.
+    // 0.083 vCPU = 8% CPU throttle, causes extreme slowness on TLS crypto for API calls.
+    cpu: 0.5,
     maxInstances: 10,
     minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
     concurrency: 1,   // P0 FIX: Set to 1 to allow fractional CPU (concurrency > 1 requires cpu >= 1)
@@ -3204,6 +3203,7 @@ export {
   // Triggers
   paymentOnWithdrawalCreated,
   paymentOnWithdrawalStatusChanged,
+  paymentOnPaymentStatusChanged,
   paymentProcessAutomaticPayments,
   paymentWebhookWise,
   paymentWebhookFlutterwave,

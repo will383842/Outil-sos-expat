@@ -1475,6 +1475,15 @@ export class TwilioCallManager {
    * - 90% fewer Firestore reads (1 listener vs ~30 reads per wait)
    * - Same UX (actually faster response time)
    */
+  /**
+   * P0 FIX 2026-03-03: Reverted to polling-based approach (from commit 960d81f2).
+   *
+   * WHY: The onSnapshot-based listener was unreliable on Cloud Run:
+   * - If the listener lost connection (network, overloaded instance), it silently waited
+   *   until the 90s timeout without retrying — causing "connection timeout" on successful calls.
+   * - Polling reads Firestore directly every 3s, which is inherently reliable (read-after-write).
+   * - The extra Firestore reads (~30 per wait) are negligible compared to a failed call.
+   */
   private async waitForConnection(
     sessionId: string,
     participantType: "provider" | "client",
@@ -1482,121 +1491,121 @@ export class TwilioCallManager {
   ): Promise<boolean> {
     const waitId = `wait_${Date.now().toString(36)}`;
     const maxWaitTime = CALL_CONFIG.CONNECTION_WAIT_TIME;
+    const checkInterval = 3000; // 3 seconds
+    const maxChecks = Math.floor(maxWaitTime / checkInterval);
     const AMD_MAX_WAIT_SECONDS = 40;
 
     logger.info(`\n${'─'.repeat(60)}`);
-    logger.info(`⏳ [${waitId}] waitForConnection START (OPTIMIZED - real-time listener)`);
+    logger.info(`⏳ [${waitId}] waitForConnection START (POLLING — reliable)`);
     logger.info(`⏳ [${waitId}]   sessionId: ${sessionId}`);
     logger.info(`⏳ [${waitId}]   participantType: ${participantType}`);
     logger.info(`⏳ [${waitId}]   attempt: ${attempt}`);
     logger.info(`⏳ [${waitId}]   maxWaitTime: ${maxWaitTime}ms (${maxWaitTime/1000}s)`);
+    logger.info(`⏳ [${waitId}]   checkInterval: ${checkInterval}ms`);
+    logger.info(`⏳ [${waitId}]   maxChecks: ${maxChecks}`);
 
-    return new Promise<boolean>((resolve) => {
-      let resolved = false;
-      let unsubscribe: (() => void) | null = null;
-      let timeoutId: NodeJS.Timeout | null = null;
-      let amdTimeoutId: NodeJS.Timeout | null = null;
-      const startTime = Date.now();
+    for (let check = 0; check < maxChecks; check++) {
+      try {
+        const session = await this.getCallSession(sessionId);
 
-      // Cleanup function to prevent memory leaks
-      const cleanup = () => {
-        if (unsubscribe) {
-          unsubscribe();
-          unsubscribe = null;
+        if (!session) {
+          logger.info(`⏳ [${waitId}] ❌ Check ${check}: Session NOT FOUND - returning false`);
+          return false;
         }
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
+
+        // Check if session was marked as failed/cancelled during wait
+        if (session.status === "failed" || session.status === "cancelled") {
+          logger.info(`⏳ [${waitId}] 🛑 Session is ${session.status} - stopping wait`);
+          logger.info(`${'─'.repeat(60)}\n`);
+          return false;
         }
-        if (amdTimeoutId) {
-          clearTimeout(amdTimeoutId);
-          amdTimeoutId = null;
+
+        const participant =
+          participantType === "provider"
+            ? session.participants.provider
+            : session.participants.client;
+
+        const currentStatus = participant?.status || 'undefined';
+        const callSid = participant?.callSid || 'no_callSid';
+
+        logger.info(`⏳ [${waitId}] Check ${check}/${maxChecks}: status="${currentStatus}", callSid=${callSid?.slice(0,15)}...`);
+
+        // Check for terminal statuses
+        if (currentStatus === "connected") {
+          logger.info(`⏳ [${waitId}] ✅ SUCCESS: ${participantType} is CONNECTED after ${check * checkInterval / 1000}s`);
+          logger.info(`${'─'.repeat(60)}\n`);
+          return true;
         }
-      };
 
-      // Resolve only once
-      const resolveOnce = (result: boolean, reason: string) => {
-        if (resolved) return;
-        resolved = true;
-        const elapsed = Math.round((Date.now() - startTime) / 1000);
-        logger.info(`⏳ [${waitId}] ${result ? '✅' : '❌'} ${reason} after ${elapsed}s`);
-        logger.info(`${'─'.repeat(60)}\n`);
-        cleanup();
-        resolve(result);
-      };
-
-      // Global timeout
-      timeoutId = setTimeout(() => {
-        resolveOnce(false, `TIMEOUT: ${participantType} did not connect within ${maxWaitTime/1000}s`);
-      }, maxWaitTime);
-
-      // Set up real-time listener
-      const docRef = this.db.collection("call_sessions").doc(sessionId);
-
-      unsubscribe = docRef.onSnapshot(
-        (snapshot) => {
-          if (resolved) return;
-
-          const session = snapshot.data() as CallSessionState | undefined;
-
-          if (!session) {
-            resolveOnce(false, `Session NOT FOUND`);
-            return;
-          }
-
-          // Check session-level terminal states
-          if (session.status === "failed" || session.status === "cancelled") {
-            resolveOnce(false, `Session is ${session.status} - stopping wait`);
-            return;
-          }
-
-          const participant = participantType === "provider"
-            ? session.participants?.provider
-            : session.participants?.client;
-
-          const currentStatus = participant?.status || 'undefined';
-          const elapsed = Math.round((Date.now() - startTime) / 1000);
-
-          logger.info(`⏳ [${waitId}] Status update: "${currentStatus}" (${elapsed}s elapsed)`);
-
-          // Check for terminal statuses
-          if (currentStatus === "connected") {
-            resolveOnce(true, `SUCCESS: ${participantType} is CONNECTED`);
-            return;
-          }
-
-          if (currentStatus === "disconnected") {
-            resolveOnce(false, `FAIL: ${participantType} DISCONNECTED`);
-            return;
-          }
-
-          if (currentStatus === "no_answer") {
-            resolveOnce(false, `FAIL: ${participantType} NO_ANSWER`);
-            return;
-          }
-
-          // Handle AMD pending with specific timeout
-          if (currentStatus === "amd_pending" && !amdTimeoutId) {
-            logger.info(`⏳ [${waitId}] 🔍 AMD PENDING: Starting ${AMD_MAX_WAIT_SECONDS}s AMD timeout`);
-            amdTimeoutId = setTimeout(() => {
-              if (!resolved) {
-                resolveOnce(false, `AMD pending for >${AMD_MAX_WAIT_SECONDS}s - callback likely failed`);
-              }
-            }, AMD_MAX_WAIT_SECONDS * 1000);
-          }
-
-          // Clear AMD timeout if status changed from amd_pending
-          if (currentStatus !== "amd_pending" && amdTimeoutId) {
-            clearTimeout(amdTimeoutId);
-            amdTimeoutId = null;
-          }
-        },
-        (error) => {
-          logger.error(`⏳ [${waitId}] ⚠️ Listener ERROR: ${String(error)}`);
-          // Don't resolve on transient errors - let timeout handle it
+        if (currentStatus === "disconnected") {
+          logger.info(`⏳ [${waitId}] ❌ FAIL: ${participantType} DISCONNECTED - returning false`);
+          logger.info(`${'─'.repeat(60)}\n`);
+          return false;
         }
-      );
-    });
+
+        if (currentStatus === "no_answer") {
+          logger.info(`⏳ [${waitId}] ❌ FAIL: ${participantType} NO_ANSWER - returning false`);
+          logger.info(`${'─'.repeat(60)}\n`);
+          return false;
+        }
+
+        // Log "calling" status
+        if (currentStatus === "calling" && check === 0) {
+          logger.info(`⏳ [${waitId}] 📞 CALLING: New call attempt started, waiting for ringing/answered webhook...`);
+        }
+
+        // AMD pending status handling with explicit timeout
+        if (currentStatus === "amd_pending") {
+          const elapsedSeconds = Math.floor((check * checkInterval) / 1000);
+          if (check === 0) {
+            logger.info(`⏳ [${waitId}] 🔍 AMD PENDING: Waiting for DTMF confirmation (press 1)...`);
+          } else if (elapsedSeconds % 15 === 0 && elapsedSeconds > 0) {
+            logger.info(`⏳ [${waitId}] 🔍 AMD still pending after ${elapsedSeconds}s...`);
+          }
+
+          // If AMD/DTMF pending for too long, callback likely failed
+          if (elapsedSeconds >= AMD_MAX_WAIT_SECONDS) {
+            logger.info(`⏳ [${waitId}] ⚠️ AMD pending for ${elapsedSeconds}s > ${AMD_MAX_WAIT_SECONDS}s limit`);
+            logger.info(`⏳ [${waitId}]   DTMF callback likely failed - treating as timeout`);
+            logger.info(`${'─'.repeat(60)}\n`);
+            return false;
+          }
+        }
+
+        // Log other statuses for debugging
+        if (check === 0 && currentStatus !== "amd_pending" && currentStatus !== "calling") {
+          logger.info(`⏳ [${waitId}]   Initial status: "${currentStatus}" - waiting for "connected"...`);
+        }
+
+        // Wait before next check (skip on last iteration)
+        if (check < maxChecks - 1) {
+          await this.delay(checkInterval);
+        }
+
+      } catch (error) {
+        logger.warn(`⏳ [${waitId}] ⚠️ Check ${check} ERROR: ${String(error)}`);
+        // Continue trying on errors — this is the key advantage of polling over onSnapshot
+        await this.delay(checkInterval);
+      }
+    }
+
+    // Timeout reached
+    logger.info(`⏳ [${waitId}] ❌ TIMEOUT: ${participantType} did not connect within ${maxWaitTime/1000}s`);
+    logger.info(`⏳ [${waitId}]   Total time waited: ~${maxChecks * checkInterval / 1000}s`);
+    logger.info(`${'─'.repeat(60)}\n`);
+
+    // Log final state for debugging
+    try {
+      const finalSession = await this.getCallSession(sessionId);
+      const finalParticipant = participantType === "provider"
+        ? finalSession?.participants.provider
+        : finalSession?.participants.client;
+      logger.info(`⏳ [${waitId}] Final state: status="${finalParticipant?.status}", callSid=${finalParticipant?.callSid?.slice(0,15)}...`);
+    } catch (e) {
+      logger.info(`⏳ [${waitId}] Could not fetch final state: ${String(e)}`);
+    }
+
+    return false;
   }
 
   async handleEarlyDisconnection(

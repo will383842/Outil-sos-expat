@@ -1233,7 +1233,7 @@ export const twilioAmdTwiml = onRequest(
     memory: '256MiB',  // P0 FIX: 128MiB was too low (firebase-admin requires ~150MB)
     cpu: 0.083,
     maxInstances: 10,
-    minInstances: 0,  // Reduced to 0 to free CPU quota for createPaymentIntent. AMD TwiML is called after AMD detection completes, brief cold start acceptable.
+    minInstances: 1,  // P0 FIX 2026-03-03: Restored to 1 — cold start causes crypto validation to use blocking default (true) → 403 → Twilio hangs up. This is the FIRST callback when client answers, cold start is UNACCEPTABLE.
     concurrency: 1,
     // P0 FIX: Add secrets for Twilio signature validation
     secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]
@@ -1951,7 +1951,7 @@ export const twilioGatherResponse = onRequest(
     memory: '256MiB',
     cpu: 0.083,
     maxInstances: 10,
-    minInstances: 0,  // P0 FIX 2026-02-12: Reduced to 0 due to CPU quota exhaustion (208 services in europe-west3)
+    minInstances: 1,  // P0 FIX 2026-03-03: Restored to 1 — this handles DTMF confirmation (press 1). Cold start → crypto validation default blocking → 403 → call drops when user presses 1.
     concurrency: 1,
     // P0 FIX: Add secrets for Twilio signature validation
     secrets: [TWILIO_AUTH_TOKEN_SECRET, TWILIO_ACCOUNT_SID_SECRET]

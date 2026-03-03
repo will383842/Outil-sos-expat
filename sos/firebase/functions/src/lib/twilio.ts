@@ -244,7 +244,7 @@ export const TWILIO_PHONE_NUMBER_SECRET = TWILIO_PHONE_NUMBER;
 // Cached for 5 minutes. Uses synchronous cache read + background refresh
 // to avoid making validateTwilioWebhookSignature async (7 callers).
 // Default: true (blocking mode) — admin can set to false via Firestore for debugging.
-let cryptoBlockingCached = true; // AUDIT FIX 2026-02-28: Default to BLOCKING (was false/monitoring)
+let cryptoBlockingCached = false; // P0 FIX 2026-03-03: Default to MONITORING — HMAC fails on Cloud Run due to URL path normalization (Twilio signs without trailing /, Express adds /). Blocking caused 403 → Twilio hangs up immediately (3-4s call bug)
 let cryptoBlockingLastFetch = 0;
 const CRYPTO_BLOCKING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let cryptoBlockingFetchInProgress = false;
@@ -270,7 +270,7 @@ function isCryptoValidationBlocking(): boolean {
   if (now - cryptoBlockingLastFetch > CRYPTO_BLOCKING_CACHE_TTL) {
     refreshCryptoBlockingConfig(); // fire-and-forget background fetch
   }
-  return cryptoBlockingCached; // return current cached value (default: false)
+  return cryptoBlockingCached; // return current cached value (default: false = MONITORING, safe for Cloud Run URL normalization)
 }
 
 /**
