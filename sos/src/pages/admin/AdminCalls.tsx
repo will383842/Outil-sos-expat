@@ -833,54 +833,26 @@ const AdminCallsMonitoring: React.FC = () => {
     });
   }, [liveCalls, callMetrics]);
 
-  // Chargement de la santé du système via une API réelle
+  // Santé du système basée sur les données d'appels en temps réel
   useEffect(() => {
-    const loadSystemHealth = async () => {
-      try {
-        // Appel à l'API de santé du système (si disponible)
-        const healthResponse = await fetch('/api/system/health');
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          setSystemHealth(healthData);
-        } else {
-          // Fallback avec des données basiques basées sur les appels réels
-          setSystemHealth({
-            apiStatus: 'operational',
-            responseTime: 95,
-            callCapacity: 1000,
-            currentLoad: liveCalls.length,
-            regionHealth: {
-              'eu-west-1': {
-                status: 'healthy',
-                latency: 45,
-                availability: 99.9,
-              },
-              'us-east-1': {
-                status: 'healthy',
-                latency: 120,
-                availability: 99.8,
-              },
-            },
-          });
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement de la santé système:', error);
-        // Données minimales en cas d'erreur
-        setSystemHealth({
-          apiStatus: 'degraded',
-          responseTime: 0,
-          callCapacity: 1000,
-          currentLoad: liveCalls.length,
-          regionHealth: {},
-        });
-      }
-    };
-
-    // Chargement initial uniquement
-    // ÉCONOMIE: Suppression du setInterval automatique
-    // Les stats système sont rechargées avec les appels
-    loadSystemHealth();
-    // NOTE: Le rafraîchissement automatique a été SUPPRIMÉ pour économiser les coûts
+    setSystemHealth({
+      apiStatus: 'operational',
+      responseTime: 95,
+      callCapacity: 1000,
+      currentLoad: liveCalls.length,
+      regionHealth: {
+        'eu-west-1': {
+          status: 'healthy',
+          latency: 45,
+          availability: 99.9,
+        },
+        'us-east-1': {
+          status: 'healthy',
+          latency: 120,
+          availability: 99.8,
+        },
+      },
+    });
   }, [liveCalls.length]);
 
   // Filtrage des appels

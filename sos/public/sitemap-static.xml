@@ -326,6 +326,60 @@
     <priority>0.4</priority>
   </url>
 
+  <!-- CGU Bloggeurs / Terms Bloggers -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/cgu-bloggeurs</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cgu-bloggeurs"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/terms-bloggers"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/terminos-bloggers"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/agb-blogger"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/termos-bloggers"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/usloviya-blogery"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/tiaokuan-boke"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/شروط-المدونين"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/shartein-bloggers"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cgu-bloggeurs"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- CGU Admins Groupe / Terms Group Admins -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/cgu-admins-groupe</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cgu-admins-groupe"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/terms-group-admins"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/terminos-admins-grupo"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/agb-gruppenadmins"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/termos-admins-grupo"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/usloviya-adminy-grupp"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/tiaokuan-qunguanli"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/شروط-مشرفي-المجموعات"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/shartein-group-admins"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cgu-admins-groupe"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- CGU Affiliation / Terms Affiliate -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/cgu-affiliation</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/cgu-affiliation"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/terms-affiliate"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/terminos-afiliacion"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/agb-partnerprogramm"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/termos-afiliacao"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/usloviya-partnerstva"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/tiaokuan-lianmeng"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/شروط-الشراكة"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/shartein-affiliate"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cgu-affiliation"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
   <!-- Politique de confidentialité / Privacy Policy -->
   <url>
     <loc>https://sos-expat.com/fr-fr/politique-confidentialite</loc>
@@ -360,6 +414,78 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/cookies"/>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
+  </url>
+
+  <!-- Devenir Influenceur / Become Influencer - RECRUITMENT PAGE -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/devenir-influenceur</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/devenir-influenceur"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/become-influencer"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/ser-influencer"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/influencer-werden"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/tornar-se-influenciador"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/stat-influentserom"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/chengwei-yingxiangli"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/كن-مؤثرا"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/influencer-bane"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/devenir-influenceur"/>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Devenir Blogger / Become Blogger - RECRUITMENT PAGE -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/devenir-blogger</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/devenir-blogger"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/become-blogger"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/ser-blogger"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/blogger-werden"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/tornar-se-blogger"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/stat-bloggerom"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/chengwei-boke"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/كن-مدون"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/blogger-banen"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/devenir-blogger"/>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Devenir Admin Groupe / Become Group Admin - RECRUITMENT PAGE -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/devenir-admin-groupe</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/devenir-admin-groupe"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/become-group-admin"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/convertirse-admin-grupo"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/gruppenadmin-werden"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/tornar-se-admin-grupo"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/stat-admin-gruppy"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/chengwei-qunzhu"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/كن-مسؤول-مجموعة"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/group-admin-bane"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/devenir-admin-groupe"/>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Presse / Press -->
+  <url>
+    <loc>https://sos-expat.com/fr-fr/presse</loc>
+    <lastmod>2026-03-03</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/presse"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/imprensa"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/pressa"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/xinwen"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/صحافة"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 
   <!-- Consommateurs / Consumers -->

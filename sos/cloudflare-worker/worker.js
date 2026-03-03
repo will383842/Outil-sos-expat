@@ -556,6 +556,15 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/groupadmin\/panjikaran\/?$/i, // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/مسؤول-مجموعة\/التسجيل\/?$/i, // AR (native)
 
+  // ========== PRESS PAGE - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/presse\/?$/i,               // FR/DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/press\/?$/i,                // EN/HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/prensa\/?$/i,               // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/pressa\/?$/i,               // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/imprensa\/?$/i,             // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/xinwen\/?$/i,               // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/صحافة\/?$/i,                // AR (native)
+
   // ========== PIONEERS - All 9 languages ==========
   /^\/[a-z]{2}(-[a-z]{2})?\/pioneers\/?$/i,              // FR/EN
   /^\/[a-z]{2}(-[a-z]{2})?\/pioneros\/?$/i,              // ES
@@ -993,33 +1002,78 @@ async function handleRequest(request, env, ctx) {
   }
   pagesUrl.search = url.search; // Preserve query parameters
 
-  const originResponse = await fetch(pagesUrl.toString(), {
-    method: request.method,
-    headers: request.headers,
-    redirect: 'follow',
-  });
-  const newHeaders = new Headers(originResponse.headers);
-  newHeaders.set('X-Worker-Active', 'true');
-  newHeaders.set('X-Worker-Bot-Detected', botDetected ? 'true' : 'false');
-  newHeaders.set('X-Worker-SSR-Match', needsSSR ? 'true' : 'false');
-  newHeaders.set('X-Worker-Path', pathname);
+  try {
+    const originResponse = await fetch(pagesUrl.toString(), {
+      method: request.method,
+      headers: request.headers,
+      redirect: 'follow',
+    });
+    const newHeaders = new Headers(originResponse.headers);
+    newHeaders.set('X-Worker-Active', 'true');
+    newHeaders.set('X-Worker-Bot-Detected', botDetected ? 'true' : 'false');
+    newHeaders.set('X-Worker-SSR-Match', needsSSR ? 'true' : 'false');
+    newHeaders.set('X-Worker-Path', pathname);
 
-  // Ajouter des headers de cache agressifs pour les assets statiques (icônes, fonts, images)
-  const isStaticAsset = /\.(png|jpg|jpeg|webp|svg|ico|woff2?|ttf|eot|css|js)$/i.test(pathname);
-  if (isStaticAsset && originResponse.status === 200) {
-    newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+    // Ajouter des headers de cache agressifs pour les assets statiques (icônes, fonts, images)
+    const isStaticAsset = /\.(png|jpg|jpeg|webp|svg|ico|woff2?|ttf|eot|css|js)$/i.test(pathname);
+    if (isStaticAsset && originResponse.status === 200) {
+      newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+
+    // COOP headers required for Firebase Auth popup (Google login)
+    // Without these, the popup cannot communicate with the parent window
+    newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    newHeaders.set('Cross-Origin-Embedder-Policy', 'unsafe-none');
+
+    // For SPA routes: if Pages returned OK, serve with 200 (React Router handles routing).
+    // If Pages returned an error (503, 404, etc.), serve our fallback HTML so the browser retries.
+    if (!isAsset) {
+      if (originResponse.ok) {
+        return new Response(originResponse.body, {
+          status: 200,
+          statusText: 'OK',
+          headers: newHeaders,
+        });
+      }
+      // Pages returned an error for SPA route — serve auto-retry fallback
+      console.error(`[WORKER] Pages returned ${originResponse.status} for SPA route ${pathname}`);
+      return new Response(
+        '<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="3"><title>Loading...</title></head><body><p>Loading...</p></body></html>',
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html;charset=UTF-8',
+            'Cache-Control': 'no-cache, no-store',
+            'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+            'Cross-Origin-Embedder-Policy': 'unsafe-none',
+          },
+        }
+      );
+    }
+
+    return new Response(originResponse.body, {
+      status: originResponse.status,
+      statusText: originResponse.statusText,
+      headers: newHeaders,
+    });
+  } catch (error) {
+    console.error(`[WORKER] Origin fetch error for ${pathname}: ${error.message}`);
+    // Fallback: return a minimal HTML page that will retry loading
+    if (!isAsset) {
+      return new Response(
+        '<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="3"></head><body><p>Loading...</p></body></html>',
+        {
+          status: 503,
+          headers: {
+            'Content-Type': 'text/html;charset=UTF-8',
+            'Retry-After': '3',
+            'Cache-Control': 'no-cache, no-store',
+          },
+        }
+      );
+    }
+    return new Response('Service temporarily unavailable', { status: 503, headers: { 'Retry-After': '3' } });
   }
-
-  // COOP headers required for Firebase Auth popup (Google login)
-  // Without these, the popup cannot communicate with the parent window
-  newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-  newHeaders.set('Cross-Origin-Embedder-Policy', 'unsafe-none');
-
-  return new Response(originResponse.body, {
-    status: originResponse.status,
-    statusText: originResponse.statusText,
-    headers: newHeaders,
-  });
 }
 
 // Export for Cloudflare Workers

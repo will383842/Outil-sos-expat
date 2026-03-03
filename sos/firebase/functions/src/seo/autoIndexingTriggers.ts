@@ -5,11 +5,13 @@
 
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { submitToIndexNow, generateBlogUrls, generateLandingUrls } from './indexNowService';
+import { submitToIndexNow, generateBlogUrls, generateLandingUrls, generateFaqUrls } from './indexNowService';
 import { pingSitemap, pingCustomSitemap } from './sitemapPingService';
 import { submitBatchToGoogleIndexing } from './googleIndexingService';
 import { invalidateCache } from './dynamicRender';
 import * as admin from 'firebase-admin';
+import { TELEGRAM_BOT_TOKEN } from '../lib/secrets';
+import { sendTelegramMessageDirect } from '../telegram/providers/telegramBot';
 
 const REGION = 'europe-west1';
 const SITE_URL = 'https://sos-expat.com';
@@ -208,9 +210,18 @@ export const onBlogPostUpdated = onDocumentUpdated(
       const slug = after.slug || postId;
       const urls = generateBlogUrls(slug);
 
-      await submitToIndexNow(urls);
+      const [indexNowResult, googleResult] = await Promise.all([
+        submitToIndexNow(urls),
+        submitBatchToGoogleIndexing(urls, 9),
+      ]);
       await pingSitemap();
-      await logIndexingEvent('blog_published', postId, urls, { success: true, urls });
+      await logIndexingEvent('blog_published', postId, urls, {
+        success: indexNowResult.success,
+        urls,
+        googleSuccess: googleResult.successCount,
+      });
+
+      console.log(`✅ Article ${postId} indexé après publication (Google: ${googleResult.successCount}/${urls.length})`);
     }
   }
 );
@@ -333,11 +344,61 @@ export const onLandingPageCreated = onDocumentCreated(
 
     console.log(`🔗 URLs landing à indexer: ${urls.length}`);
 
-    await submitToIndexNow(urls);
+    const [indexNowResult, googleResult] = await Promise.all([
+      submitToIndexNow(urls),
+      submitBatchToGoogleIndexing(urls, 9),
+    ]);
     await pingSitemap();
-    await logIndexingEvent('landing', pageId, urls, { success: true, urls });
+    await logIndexingEvent('landing', pageId, urls, {
+      success: indexNowResult.success,
+      urls,
+      googleSuccess: googleResult.successCount,
+    });
 
-    console.log(`✅ Landing page ${pageId} indexée`);
+    console.log(`✅ Landing page ${pageId} indexée (Google: ${googleResult.successCount}/${urls.length})`);
+  }
+);
+
+// ============================================
+// 🎯 TRIGGER: Landing page mise à jour (activation)
+// ============================================
+export const onLandingPageUpdated = onDocumentUpdated(
+  {
+    document: 'landing_pages/{pageId}',
+    region: REGION,
+    memory: '256MiB',
+    cpu: 0.083,
+    timeoutSeconds: 60,
+  },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    const pageId = event.params.pageId;
+
+    if (!before || !after) return;
+
+    const wasInactive = !before.isActive;
+    const isNowActive = after.isActive;
+
+    if (wasInactive && isNowActive) {
+      console.log(`🎯 Landing page ${pageId} vient d'être activée`);
+
+      const slug = after.slug || pageId;
+      const urls = generateLandingUrls(slug);
+
+      const [indexNowResult, googleResult] = await Promise.all([
+        submitToIndexNow(urls),
+        submitBatchToGoogleIndexing(urls, 9),
+      ]);
+      await pingSitemap();
+      await logIndexingEvent('landing_activated', pageId, urls, {
+        success: indexNowResult.success,
+        urls,
+        googleSuccess: googleResult.successCount,
+      });
+
+      console.log(`✅ Landing page ${pageId} indexée après activation (Google: ${googleResult.successCount}/${urls.length})`);
+    }
   }
 );
 
@@ -447,20 +508,313 @@ export const scheduledSitemapPing = onSchedule(
     console.log('⏰ Ping sitemap programmé...');
 
     const db = admin.firestore();
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const recentProfiles = await db.collection('sos_profiles')
-      .where('createdAt', '>=', oneHourAgo)
+      .where('createdAt', '>=', oneDayAgo)
       .limit(1)
       .get();
 
     if (!recentProfiles.empty) {
-      console.log('📊 Nouvelles pages détectées, ping sitemap...');
+      console.log('📊 Nouvelles pages détectées (dernières 24h), ping sitemap...');
       await pingSitemap();
       await pingCustomSitemap('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles');
     } else {
-      console.log('📊 Pas de nouvelles pages, ping ignoré');
+      console.log('📊 Pas de nouvelles pages dans les dernières 24h, ping ignoré');
     }
+  }
+);
+
+// ============================================
+// 🚀 SCHEDULED: Indexation accélérée quotidienne (200 URLs/jour)
+// ============================================
+export const scheduledBulkIndexing = onSchedule(
+  {
+    schedule: '0 9 * * *', // 9h Paris tous les jours (1h après ping sitemap)
+    region: REGION,
+    memory: '512MiB',
+    cpu: 0.25,
+    timeoutSeconds: 300, // 5 min max (200 URLs × 100ms delay = ~20s)
+  },
+  async () => {
+    console.log('🚀 Indexation accélérée quotidienne...');
+
+    const db = admin.firestore();
+    const DAILY_QUOTA = 200;
+
+    // Récupérer le curseur de la dernière exécution
+    const stateDoc = await db.collection('admin_config').doc('bulk_indexing_state').get();
+    const state = stateDoc.exists ? stateDoc.data() : null;
+    const lastProcessedId = state?.lastProcessedId || null;
+    const totalSubmitted = state?.totalSubmitted || 0;
+
+    // Récupérer les profils visibles et approuvés pas encore soumis
+    let query = db.collection('sos_profiles')
+      .where('isVisible', '==', true)
+      .where('isApproved', '==', true)
+      .where('isActive', '==', true)
+      .orderBy('__name__')
+      .limit(DAILY_QUOTA);
+
+    if (lastProcessedId) {
+      query = query.startAfter(lastProcessedId);
+    }
+
+    const snapshot = await query.get();
+
+    if (snapshot.empty) {
+      // Toutes les pages ont été soumises — recommencer le cycle
+      console.log(`✅ Cycle d'indexation complet (${totalSubmitted} URLs total). Redémarrage du cycle.`);
+      await db.collection('admin_config').doc('bulk_indexing_state').set({
+        lastProcessedId: null,
+        totalSubmitted: 0,
+        cycleResetAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastRunAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      // Ping sitemap pour le nouveau cycle
+      await pingSitemap();
+      return;
+    }
+
+    // Collecter toutes les URLs (1 URL FR prioritaire par profil pour maximiser la couverture)
+    const urlsToSubmit: string[] = [];
+    let lastId = '';
+
+    for (const doc of snapshot.docs) {
+      const profile = doc.data();
+      lastId = doc.id;
+
+      // Prioriser l'URL française (la plus importante pour SEO)
+      const slugs = profile.slugs as Record<string, string> | undefined;
+      if (slugs?.fr) {
+        urlsToSubmit.push(`${SITE_URL}/${slugs.fr}`);
+      } else if (slugs?.en) {
+        urlsToSubmit.push(`${SITE_URL}/${slugs.en}`);
+      } else if (profile.slug) {
+        urlsToSubmit.push(`${SITE_URL}/${profile.slug}`);
+      }
+
+      // Si on a encore du quota, ajouter les autres langues clés
+      if (urlsToSubmit.length < DAILY_QUOTA && slugs) {
+        for (const lang of ['en', 'es', 'de'] as const) {
+          if (slugs[lang] && urlsToSubmit.length < DAILY_QUOTA) {
+            const url = `${SITE_URL}/${slugs[lang]}`;
+            if (!urlsToSubmit.includes(url)) {
+              urlsToSubmit.push(url);
+            }
+          }
+        }
+      }
+    }
+
+    if (urlsToSubmit.length === 0) {
+      console.log('⏭️ Aucune URL à soumettre (profils sans slugs)');
+      return;
+    }
+
+    console.log(`📤 Soumission de ${urlsToSubmit.length} URLs à Google (quota: ${DAILY_QUOTA}/jour)...`);
+
+    // Soumettre en parallèle à Google et IndexNow
+    const [googleResult, indexNowResult] = await Promise.all([
+      submitBatchToGoogleIndexing(urlsToSubmit.slice(0, DAILY_QUOTA), DAILY_QUOTA),
+      submitToIndexNow(urlsToSubmit), // IndexNow est illimité
+    ]);
+
+    // Sauvegarder l'état pour la prochaine exécution
+    const newTotal = totalSubmitted + urlsToSubmit.length;
+    await db.collection('admin_config').doc('bulk_indexing_state').set({
+      lastProcessedId: lastId,
+      totalSubmitted: newTotal,
+      lastRunAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastBatchSize: urlsToSubmit.length,
+      googleSuccess: googleResult.successCount,
+      googleErrors: googleResult.errorCount,
+      indexNowSuccess: indexNowResult.success,
+    });
+
+    await logIndexingEvent('bulk_daily', 'scheduled', urlsToSubmit, {
+      success: googleResult.successCount > 0,
+      googleSuccess: googleResult.successCount,
+      googleErrors: googleResult.errorCount,
+      indexNowSuccess: indexNowResult.success,
+    });
+
+    console.log(`✅ Indexation accélérée: ${googleResult.successCount}/${urlsToSubmit.length} Google, IndexNow: ${indexNowResult.success}`);
+    console.log(`📊 Progression totale: ${newTotal} URLs soumises depuis le début du cycle`);
+  }
+);
+
+// ============================================
+// 📊 SCHEDULED: Rapport SEO hebdomadaire (lundi 10h)
+// ============================================
+export const scheduledSeoHealthCheck = onSchedule(
+  {
+    schedule: '0 10 * * 1', // Lundi 10h Paris
+    region: REGION,
+    memory: '512MiB',
+    cpu: 0.25,
+    timeoutSeconds: 120,
+    secrets: [TELEGRAM_BOT_TOKEN],
+  },
+  async () => {
+    console.log('📊 Rapport SEO hebdomadaire...');
+
+    const db = admin.firestore();
+    const now = Date.now();
+    const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    // 1. Compter les profils indexables vs total
+    const [totalProfiles, indexableProfiles] = await Promise.all([
+      db.collection('sos_profiles').count().get(),
+      db.collection('sos_profiles')
+        .where('isVisible', '==', true)
+        .where('isApproved', '==', true)
+        .where('isActive', '==', true)
+        .count().get(),
+    ]);
+
+    const totalCount = totalProfiles.data().count;
+    const indexableCount = indexableProfiles.data().count;
+
+    // 2. Compter les profils SANS slugs (problème SEO)
+    const allIndexable = await db.collection('sos_profiles')
+      .where('isVisible', '==', true)
+      .where('isApproved', '==', true)
+      .where('isActive', '==', true)
+      .select('slug', 'slugs')
+      .get();
+
+    let noSlugCount = 0;
+    const noSlugIds: string[] = [];
+    allIndexable.docs.forEach(doc => {
+      const data = doc.data();
+      const hasSlugs = data.slugs && typeof data.slugs === 'object' && Object.keys(data.slugs).length > 0;
+      if (!hasSlugs && !data.slug) {
+        noSlugCount++;
+        if (noSlugIds.length < 5) noSlugIds.push(doc.id);
+      }
+    });
+
+    // 3. Lire les logs d'indexation de la semaine
+    const recentLogs = await db.collection('indexing_logs')
+      .where('timestamp', '>=', oneWeekAgo)
+      .get();
+
+    let weekSuccessCount = 0;
+    let weekErrorCount = 0;
+    const errorTypes: Record<string, number> = {};
+
+    recentLogs.docs.forEach(doc => {
+      const log = doc.data();
+      if (log.indexNowSuccess) weekSuccessCount++;
+      else {
+        weekErrorCount++;
+        const errorKey = log.indexNowError || 'unknown';
+        errorTypes[errorKey] = (errorTypes[errorKey] || 0) + 1;
+      }
+    });
+
+    // 4. Lire l'état du bulk indexing
+    const bulkState = await db.collection('admin_config').doc('bulk_indexing_state').get();
+    const bulk = bulkState.exists ? bulkState.data() : null;
+
+    // 5. Vérifier les sitemaps dynamiques (HTTP check)
+    const sitemapUrls = [
+      'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles',
+      'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp',
+      'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq',
+      'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding',
+    ];
+
+    const sitemapResults: { name: string; ok: boolean; status: number }[] = [];
+    for (const url of sitemapUrls) {
+      try {
+        const resp = await fetch(url, { method: 'HEAD' });
+        const name = url.split('/').pop() || url;
+        sitemapResults.push({ name, ok: resp.ok, status: resp.status });
+      } catch {
+        const name = url.split('/').pop() || url;
+        sitemapResults.push({ name, ok: false, status: 0 });
+      }
+    }
+
+    const sitemapErrors = sitemapResults.filter(s => !s.ok);
+
+    // 6. Construire le message Telegram
+    const estimatedUrls = indexableCount * 9; // 9 langues
+    const hasProblems = noSlugCount > 0 || weekErrorCount > 3 || sitemapErrors.length > 0;
+    const statusEmoji = hasProblems ? '⚠️' : '✅';
+
+    let message = `${statusEmoji} *Rapport SEO Hebdomadaire*\n\n`;
+    message += `📄 *Pages indexables:* ${indexableCount} profils (${estimatedUrls} URLs)\n`;
+    message += `📊 *Total profils:* ${totalCount} (${totalCount - indexableCount} en attente)\n\n`;
+
+    // Bulk indexing progress
+    if (bulk) {
+      message += `🚀 *Indexation accélérée:*\n`;
+      message += `  Soumises: ${bulk.totalSubmitted || 0} URLs\n`;
+      message += `  Dernier batch: ${bulk.googleSuccess || 0}/${bulk.lastBatchSize || 0} Google OK\n\n`;
+    }
+
+    // Semaine recap
+    message += `📈 *Cette semaine:*\n`;
+    message += `  ${weekSuccessCount} soumissions OK, ${weekErrorCount} erreurs\n`;
+    if (weekErrorCount > 0) {
+      const topErrors = Object.entries(errorTypes).slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(', ');
+      message += `  Erreurs: ${topErrors}\n`;
+    }
+    message += '\n';
+
+    // Sitemaps
+    message += `🗺️ *Sitemaps:*\n`;
+    sitemapResults.forEach(s => {
+      message += `  ${s.ok ? '✅' : '❌'} ${s.name} (${s.status})\n`;
+    });
+    message += '\n';
+
+    // Problèmes détectés
+    if (noSlugCount > 0) {
+      message += `⚠️ *${noSlugCount} profils sans slug!*\n`;
+      message += `  IDs: ${noSlugIds.join(', ')}${noSlugCount > 5 ? '...' : ''}\n`;
+      message += `  → Non indexables par Google\n\n`;
+    }
+
+    if (!hasProblems) {
+      message += `✅ Aucun problème détecté. SEO OK!`;
+    }
+
+    // 7. Envoyer via Telegram
+    try {
+      const adminConfig = await db.collection('telegram_admin_config').doc('settings').get();
+      const adminChatId = adminConfig.exists ? adminConfig.data()?.recipientChatId : null;
+
+      if (adminChatId) {
+        await sendTelegramMessageDirect(adminChatId, message, { parseMode: 'Markdown' });
+        console.log('✅ Rapport SEO envoyé via Telegram');
+      } else {
+        console.warn('⚠️ Pas de chat ID admin configuré dans telegram_admin_config/settings');
+      }
+    } catch (error) {
+      console.error('❌ Erreur envoi Telegram:', error);
+    }
+
+    // 8. Sauvegarder le rapport dans Firestore
+    await db.collection('seo_health_reports').add({
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      totalProfiles: totalCount,
+      indexableProfiles: indexableCount,
+      estimatedUrls,
+      noSlugCount,
+      noSlugIds,
+      weekSuccessCount,
+      weekErrorCount,
+      errorTypes,
+      sitemapStatus: sitemapResults,
+      bulkIndexingState: bulk || null,
+      hasProblems,
+    });
+
+    console.log(`📊 Rapport SEO: ${indexableCount} indexables, ${noSlugCount} sans slug, ${weekErrorCount} erreurs`);
   }
 );
 
@@ -547,13 +901,7 @@ function generateHelpCenterUrls(slug: string): string[] {
   });
 }
 
-/**
- * Génère les URLs pour un FAQ (9 langues)
- * Route: /{lang}/faq/{slug}
- */
-function generateFaqUrls(slug: string): string[] {
-  return LANGUAGES.map(lang => `${SITE_URL}/${lang}/faq/${slug}`);
-}
+// generateFaqUrls is imported from indexNowService (uses correct locale format)
 
 /**
  * Log l'événement d'indexation dans Firestore
@@ -573,6 +921,8 @@ async function logIndexingEvent(
       urls: urls.slice(0, 10),
       indexNowSuccess: result.success,
       indexNowError: result.error || null,
+      googleSuccess: result.googleSuccess ?? null,
+      googleErrors: result.googleErrors ?? null,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
   } catch (error) {

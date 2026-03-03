@@ -14,7 +14,10 @@ export {
   onFaqCreated,
   onFaqUpdated,
   onLandingPageCreated,
+  onLandingPageUpdated,
   scheduledSitemapPing,
+  scheduledBulkIndexing,
+  scheduledSeoHealthCheck,
 } from './autoIndexingTriggers';
 
 // Sitemaps dynamiques
@@ -26,7 +29,7 @@ export {
 } from './sitemaps';
 
 // Services (pour usage interne ou API)
-export { submitToIndexNow, submitSingleUrl } from './indexNowService';
+export { submitToIndexNow, submitSingleUrl, generateBlogUrls, generateLandingUrls, generateFaqUrls } from './indexNowService';
 export { pingSitemap, pingCustomSitemap } from './sitemapPingService';
 export { submitToGoogleIndexing, submitBatchToGoogleIndexing, getUrlIndexingStatus } from './googleIndexingService';
 

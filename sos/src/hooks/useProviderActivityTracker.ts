@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
+import { getAuth } from 'firebase/auth';
 import { functions } from '../config/firebase';
 import { PROVIDER_ACTIVITY_CONFIG, toMs } from '../config/providerActivityConfig';
 import type { ActivityEvent } from '../types/providerActivity';
@@ -104,19 +105,45 @@ export const useProviderActivityTracker = ({
   const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
   const pauseInactivityCheck = useRef(false);
 
+  // Circuit breaker: stop calling after consecutive auth failures
+  const authFailureCountRef = useRef(0);
+  const AUTH_FAILURE_LIMIT = 3;
+
   // Fonction pour mettre à jour l'activité dans Firebase
   // ✅ BUG FIX: Ajout de retry logic avec exponential backoff pour plus de fiabilité
   const updateActivityInFirebase = useCallback(async () => {
     if (!isOnline || !isProvider) return;
+
+    // Circuit breaker: stop spamming if auth keeps failing
+    if (authFailureCountRef.current >= AUTH_FAILURE_LIMIT) {
+      return;
+    }
+
+    // Vérifier que l'utilisateur est toujours authentifié avant d'appeler
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      console.warn('[ActivityTracker] ⚠️ No authenticated user, skipping activity update');
+      authFailureCountRef.current++;
+      return;
+    }
 
     try {
       await retryWithBackoff(async () => {
         const updateProviderActivity = httpsCallable(functions, 'updateProviderActivity');
         await updateProviderActivity({ userId });
       });
-      // ✅ P0 FIX: Remove verbose logging to reduce console spam
+      // Reset circuit breaker on success
+      authFailureCountRef.current = 0;
     } catch (error) {
-      // Only log errors after all retries have failed
+      // Detect auth errors and increment circuit breaker
+      if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('unauthenticated') || msg.includes('unauthorized') || msg.includes('401')) {
+          authFailureCountRef.current++;
+          console.warn(`[ActivityTracker] ⚠️ Auth failure ${authFailureCountRef.current}/${AUTH_FAILURE_LIMIT}, ${authFailureCountRef.current >= AUTH_FAILURE_LIMIT ? 'circuit breaker OPEN — stopping calls' : 'will retry next interval'}`);
+          return;
+        }
+      }
       console.error('[ActivityTracker] ❌ Error updating activity (all retries failed):', error);
     }
   }, [userId, isOnline, isProvider]);
@@ -158,6 +185,18 @@ export const useProviderActivityTracker = ({
       }
     }, PROVIDER_ACTIVITY_CONFIG.EVENT_DEBOUNCE_MS);
   }, [isOnline, isProvider, updateActivityInFirebase]);
+
+  // 🔄 Reset circuit breaker quand l'auth se rétablit (token refresh, re-login)
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user && authFailureCountRef.current > 0) {
+        console.log('[ActivityTracker] ✅ Auth restored, resetting circuit breaker');
+        authFailureCountRef.current = 0;
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // 🔒 Gestion de la visibilité de l'onglet (tab en arrière-plan)
   useEffect(() => {

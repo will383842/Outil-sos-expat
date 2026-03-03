@@ -14,6 +14,7 @@ import {
   ProviderStatsSummary,
   ProviderStatsType,
 } from "../utils/providerStatsTypes";
+import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // Lazy initialization
 const IS_DEPLOYMENT_ANALYSIS =
@@ -54,6 +55,7 @@ export const getProviderStats = onCall<GetProviderStatsParams, Promise<GetProvid
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 60,
+    cors: ALLOWED_ORIGINS,
   },
   async (req) => {
     assertAdmin(req);
@@ -200,6 +202,7 @@ export const getProviderStatsSummary = onCall<
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 60,
+    cors: ALLOWED_ORIGINS,
   },
   async (req) => {
     assertAdmin(req);
@@ -301,6 +304,7 @@ export const getProviderStatsMonths = onCall<
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 30,
+    cors: ALLOWED_ORIGINS,
   },
   async (req) => {
     assertAdmin(req);
@@ -362,6 +366,7 @@ export const exportProviderStatsCsv = onCall<
     region: "europe-west1",
     memory: "256MiB",
     timeoutSeconds: 120,
+    cors: ALLOWED_ORIGINS,
   },
   async (req) => {
     assertAdmin(req);

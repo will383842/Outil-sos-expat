@@ -868,7 +868,7 @@ export const triggerFetchExchangeRates = onCall(
  * Backfill des taux ECB historiques
  */
 export const triggerFetchHistoricalRates = onCall(
-  { ...TRIGGER_CONFIG, memory: '1GiB' as const, timeoutSeconds: 300 },
+  { ...TRIGGER_CONFIG, memory: '1GiB' as const, cpu: 1, timeoutSeconds: 300 },
   async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise');
     const isAdmin = request.auth.token.admin === true || request.auth.token.role === 'admin';
