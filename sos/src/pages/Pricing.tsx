@@ -133,35 +133,40 @@ const Pricing: React.FC = () => {
   }, [pricing]);
 
   const dynamicServices = useMemo<DynamicService[]>(() => {
-    if (!pricing || !effectivePrices.lawyer || !effectivePrices.expat)
-      return [];
+    if (!pricing) return [];
+
+    // FIX: Utiliser les effective prices de la devise sélectionnée (pas toujours EUR)
+    const expatEffective = selectedCurrency === "eur" ? effectivePrices.expat : effectivePrices.expatUsd;
+    const lawyerEffective = selectedCurrency === "eur" ? effectivePrices.lawyer : effectivePrices.lawyerUsd;
+
+    if (!lawyerEffective || !expatEffective) return [];
 
     return [
       {
         id: "expat_call",
         type: "expat_call",
         title: intl.formatMessage({ id: "pricing.expatTitle" }),
-        price: effectivePrices.expat.price.totalAmount,
-        duration: effectivePrices.expat.price.duration,
+        price: expatEffective.price.totalAmount,
+        duration: expatEffective.price.duration,
         currency: selectedCurrency,
         description: intl.formatMessage({ id: "pricing.expatDescription" }),
         isActive: true,
-        connectionFee: effectivePrices.expat.price.connectionFeeAmount,
-        providerAmount: effectivePrices.expat.price.providerAmount,
-        effectivePrice: effectivePrices.expat,
+        connectionFee: expatEffective.price.connectionFeeAmount,
+        providerAmount: expatEffective.price.providerAmount,
+        effectivePrice: expatEffective,
       },
       {
         id: "lawyer_call",
         type: "lawyer_call",
         title: intl.formatMessage({ id: "pricing.lawyerTitle" }),
-        price: effectivePrices.lawyer.price.totalAmount,
-        duration: effectivePrices.lawyer.price.duration,
+        price: lawyerEffective.price.totalAmount,
+        duration: lawyerEffective.price.duration,
         currency: selectedCurrency,
         description: intl.formatMessage({ id: "pricing.lawyerDescription" }),
         isActive: true,
-        connectionFee: effectivePrices.lawyer.price.connectionFeeAmount,
-        providerAmount: effectivePrices.lawyer.price.providerAmount,
-        effectivePrice: effectivePrices.lawyer,
+        connectionFee: lawyerEffective.price.connectionFeeAmount,
+        providerAmount: lawyerEffective.price.providerAmount,
+        effectivePrice: lawyerEffective,
       },
     ];
   }, [pricing, effectivePrices, selectedCurrency, intl]);
@@ -628,12 +633,9 @@ const Pricing: React.FC = () => {
                                 </div>
                               ) : (
                                 <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3">
-                                  {/* FIX: Display only selected currency */}
+                                  {/* FIX: Utilise service.price qui est déjà dans la bonne devise */}
                                   <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-none">
-                                    {selectedCurrency === "eur"
-                                      ? formatPriceEur(isLawyer ? effectivePrices.lawyer?.price.totalAmount || 0 : effectivePrices.expat?.price.totalAmount || 0)
-                                      : formatPriceUsd(isLawyer ? effectivePrices.lawyerUsd?.price.totalAmount || 0 : effectivePrices.expatUsd?.price.totalAmount || 0)
-                                    }
+                                    {formatPrice(Math.round(service.price))}
                                   </span>
                                 </div>
                               )}
