@@ -32,6 +32,9 @@ import {
   Shield,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminErrorState from '@/components/admin/AdminErrorState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 
 // Design tokens
 const UI = {
@@ -114,10 +117,10 @@ const AdminChatterDetail: React.FC = () => {
   const formatAmount = (cents: number) => {
     return new Intl.NumberFormat(intl.locale, {
       style: 'currency',
-      currency: 'XOF',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(cents);
+    }).format(cents / 100);
   };
 
   // Get level name
@@ -156,20 +159,15 @@ const AdminChatterDetail: React.FC = () => {
     }
   };
 
-  // Get status color
-  const getStatusColor = (status: string) => {
+  // Map chatter status to StatusType for the unified StatusBadge
+  const mapChatterStatus = (status: string): StatusType => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'pending':
-      case 'quiz_required':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'suspended':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'banned':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      case 'active': return 'active';
+      case 'pending': return 'pending';
+      case 'quiz_required': return 'quiz_required';
+      case 'suspended': return 'suspended';
+      case 'banned': return 'banned';
+      default: return 'inactive';
     }
   };
 
@@ -192,10 +190,7 @@ const AdminChatterDetail: React.FC = () => {
           <FormattedMessage id="common.back" defaultMessage="Retour" />
         </button>
 
-        <div className={`${UI.card} p-8 text-center`}>
-          <AlertTriangle className="w-12 h-12 mx-auto text-red-500 mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">{error || 'Chatter not found'}</p>
-        </div>
+        <AdminErrorState error={error || 'Chatter not found'} onRetry={fetchChatter} />
       </div>
     );
   }
@@ -224,9 +219,7 @@ const AdminChatterDetail: React.FC = () => {
                 {chatter.firstName} {chatter.lastName}
               </h1>
               <div className="flex items-center gap-3 mt-1">
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(chatter.status)}`}>
-                  {chatter.status}
-                </span>
+                <StatusBadge status={mapChatterStatus(chatter.status)} label={chatter.status} size="sm" />
                 <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                   <Star className="w-4 h-4 text-red-500" />
                   {getLevelName(chatter.level)}
@@ -491,9 +484,7 @@ const AdminChatterDetail: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-green-600">+{formatAmount(c.amount)}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(c.status)}`}>
-                    {c.status}
-                  </span>
+                  <StatusBadge status={mapChatterStatus(c.status)} label={c.status} size="sm" />
                 </div>
               </div>
             ))}

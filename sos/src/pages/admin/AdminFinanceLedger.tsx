@@ -21,6 +21,7 @@ import {
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Button from '../../components/common/Button';
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   BookOpen,
   RefreshCw,
@@ -196,12 +197,20 @@ const AmountDisplay: React.FC<{ amount: number; type?: 'debit' | 'credit' | 'neu
   return <span className={`font-mono ${colorClass}`}>{formatted}</span>;
 };
 
+/** Map JournalEntryStatus to unified StatusType */
+const ledgerStatusToStatusType = (status: JournalEntryStatus): StatusType => {
+  const map: Record<JournalEntryStatus, StatusType> = {
+    posted: 'success',
+    pending: 'pending',
+    reversed: 'cancelled',
+  };
+  return map[status] || 'pending';
+};
+
 const StatusBadge: React.FC<{ status: JournalEntryStatus }> = ({ status }) => {
   const config = STATUS_CONFIG[status];
   return (
-    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-      {config.label}
-    </span>
+    <UnifiedStatusBadge status={ledgerStatusToStatusType(status)} label={config.label} size="sm" />
   );
 };
 

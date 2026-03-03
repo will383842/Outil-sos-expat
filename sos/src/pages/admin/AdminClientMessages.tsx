@@ -12,6 +12,7 @@ import type { Timestamp } from "firebase/firestore";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import AdminLayout from "../../components/admin/AdminLayout";
 
 interface Message {
   id: string;
@@ -59,60 +60,62 @@ const AdminClientMessages: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">
-        Messages clients après paiement
-      </h1>
-      {isLoading ? (
-        <p>Chargement en cours...</p>
-      ) : messages.length === 0 ? (
-        <p>Aucun message pour le moment.</p>
-      ) : (
-        <div className="space-y-4">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className="border border-gray-200 rounded-md p-4 flex justify-between items-start bg-white"
-            >
-              <div>
-                <p className="text-gray-900 font-medium mb-2">{msg.message}</p>
+    <AdminLayout>
+      <div className="p-6">
+        <h1 className="text-2xl font-semibold mb-4">
+          Messages clients après paiement
+        </h1>
+        {isLoading ? (
+          <p>Chargement en cours...</p>
+        ) : messages.length === 0 ? (
+          <p>Aucun message pour le moment.</p>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className="border border-gray-200 rounded-md p-4 flex justify-between items-start bg-white"
+              >
+                <div>
+                  <p className="text-gray-900 font-medium mb-2">{msg.message}</p>
 
-                {msg.metadata?.clientFirstName && (
-                  <p className="text-sm text-gray-700">
-                    👤 Client : {msg.metadata.clientFirstName} — 🌍{" "}
-                    {msg.metadata.clientCountry}
+                  {msg.metadata?.clientFirstName && (
+                    <p className="text-sm text-gray-700">
+                      👤 Client : {msg.metadata.clientFirstName} — 🌍{" "}
+                      {msg.metadata.clientCountry}
+                    </p>
+                  )}
+
+                  {msg.metadata?.providerPhone && (
+                    <p className="text-sm text-gray-500">
+                      📞 Prestataire : {msg.metadata.providerPhone}
+                    </p>
+                  )}
+
+                  <p className="text-sm text-gray-500 mt-1">
+                    🕒 Envoyé le :{" "}
+                    {msg.createdAt
+                      ? format(msg.createdAt.toDate(), "dd/MM/yyyy HH:mm")
+                      : "Date inconnue"}
                   </p>
-                )}
+                </div>
 
-                {msg.metadata?.providerPhone && (
-                  <p className="text-sm text-gray-500">
-                    📞 Prestataire : {msg.metadata.providerPhone}
-                  </p>
-                )}
+                <div className="flex flex-col items-end space-y-2">
+                  {!msg.isRead && <Badge variant="destructive">Non lu</Badge>}
+                  {msg.isRead && <Badge variant="outline">Lu</Badge>}
 
-                <p className="text-sm text-gray-500 mt-1">
-                  🕒 Envoyé le :{" "}
-                  {msg.createdAt
-                    ? format(msg.createdAt.toDate(), "dd/MM/yyyy HH:mm")
-                    : "Date inconnue"}
-                </p>
+                  {!msg.isRead && (
+                    <Button size="sm" onClick={() => void markAsRead(msg.id)}>
+                      Marquer comme lu
+                    </Button>
+                  )}
+                </div>
               </div>
-
-              <div className="flex flex-col items-end space-y-2">
-                {!msg.isRead && <Badge variant="destructive">Non lu</Badge>}
-                {msg.isRead && <Badge variant="outline">Lu</Badge>}
-
-                {!msg.isRead && (
-                  <Button size="sm" onClick={() => void markAsRead(msg.id)}>
-                    Marquer comme lu
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </AdminLayout>
   );
 };
 

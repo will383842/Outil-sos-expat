@@ -17,6 +17,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../contexts/useAuth';
@@ -250,12 +251,7 @@ export function PaymentsMonitoringDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des paiements...</p>
-        </div>
-      </div>
+      <LoadingSpinner size="large" color="blue" text="Chargement des paiements..." fullPage />
     );
   }
 

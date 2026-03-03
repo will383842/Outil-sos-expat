@@ -34,7 +34,9 @@ import {
   UserCheck,
 } from 'lucide-react';
 import Button from '../../components/common/Button';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import AdminLayout from '../../components/admin/AdminLayout';
+import AdminErrorState from '../../components/admin/AdminErrorState';
 import { useAuth } from '../../contexts/AuthContext';
 
 type ServiceType = 'lawyer_call' | 'expat_call';
@@ -107,6 +109,7 @@ const AdminKYCProviders: React.FC = () => {
   const { language } = useApp();
   const [providers, setProviders] = useState<KYCProvider[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedProvider, setSelectedProvider] = useState<KYCProvider | null>(null);
@@ -189,6 +192,7 @@ const AdminKYCProviders: React.FC = () => {
   const loadKYCProviders = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
 
       // Query all providers (those with serviceType set) instead of filtering by kycStatus
       // This ensures we see ALL providers who may need KYC verification
@@ -331,10 +335,11 @@ const AdminKYCProviders: React.FC = () => {
       calculateStats(providersData);
     } catch (error) {
       console.error('Erreur chargement KYC:', error);
+      setError(intl.formatMessage({ id: 'admin.kyc.loadError', defaultMessage: 'Erreur lors du chargement des dossiers KYC. Veuillez réessayer.' }));
     } finally {
       setLoading(false);
     }
-  }, [calculateStats, filters]);
+  }, [calculateStats, filters, intl]);
 
   useEffect(() => {
     void loadKYCProviders();
@@ -609,6 +614,8 @@ const AdminKYCProviders: React.FC = () => {
           </div>
         </div>
 
+        {error && <AdminErrorState error={error} onRetry={loadKYCProviders} className="mb-6" />}
+
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -782,8 +789,7 @@ const AdminKYCProviders: React.FC = () => {
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex justify-center items-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
-                <span className="ml-2 text-gray-600">Chargement des dossiers KYC...</span>
+                <LoadingSpinner text="Chargement des dossiers KYC..." />
               </div>
             ) : providers.length === 0 ? (
               <div className="text-center py-12">

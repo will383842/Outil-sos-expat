@@ -1,5 +1,6 @@
 // src/pages/admin/AdminPromoCodes.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from "react-hot-toast";
 import { useAdminTranslations } from "../../utils/adminTranslations";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
+import AdminErrorState from "../../components/admin/AdminErrorState";
+import { StatusBadge } from '@/components/admin/StatusBadge';
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
@@ -116,6 +119,7 @@ const AdminPromoCodes: React.FC = () => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [couponUsages, setCouponUsages] = useState<CouponUsage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [isLoadingUsages, setIsLoadingUsages] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
@@ -244,6 +248,7 @@ const AdminPromoCodes: React.FC = () => {
   const loadCoupons = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
+      setError(null);
 
       const baseRef = collection(db, "coupons");
       const constraints: QueryConstraint[] = [orderBy("created_at", "desc")];
@@ -276,6 +281,7 @@ const AdminPromoCodes: React.FC = () => {
         error: `Error loading coupons: ${msg}`,
         context: { component: "AdminPromoCodes" },
       });
+      setError("Erreur lors du chargement des codes promo. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -594,15 +600,9 @@ const AdminPromoCodes: React.FC = () => {
 
   const getStatusBadge = (active: boolean) =>
     active ? (
-      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center">
-        <CheckCircle size={12} className="mr-1" />
-        Actif
-      </span>
+      <StatusBadge status="active" label="Actif" size="sm" icon={<CheckCircle size={12} />} />
     ) : (
-      <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium flex items-center">
-        <XCircle size={12} className="mr-1" />
-        Inactif
-      </span>
+      <StatusBadge status="inactive" label="Inactif" size="sm" icon={<XCircle size={12} />} />
     );
 
   const isExpired = (validUntil: Date): boolean => validUntil < new Date();
@@ -657,6 +657,8 @@ const AdminPromoCodes: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {error && <AdminErrorState error={error} onRetry={loadCoupons} className="mb-6" />}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -755,10 +757,7 @@ const AdminPromoCodes: React.FC = () => {
                   {isLoading && page === 1 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                        <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                        </div>
-                        <p className="mt-2">Chargement des codes promo...</p>
+                        <LoadingSpinner text="Chargement des codes promo..." />
                       </td>
                     </tr>
                   ) : filteredCoupons.length > 0 ? (
@@ -1279,10 +1278,7 @@ const AdminPromoCodes: React.FC = () => {
 
               {isLoadingUsages ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">
-                    Chargement des utilisations...
-                  </p>
+                  <LoadingSpinner text="Chargement des utilisations..." />
                 </div>
               ) : couponUsages.length > 0 ? (
                 <div className="overflow-x-auto">

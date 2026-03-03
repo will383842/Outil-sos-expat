@@ -39,6 +39,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Modal from '../../components/common/Modal';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ImageUploader = React.lazy(() => import('../../components/common/ImageUploader'));
@@ -3287,10 +3288,7 @@ const AdminAaaProfiles: React.FC = () => {
                     {isLoadingProfiles ? (
                       <tr>
                         <td colSpan={13} className="px-6 py-4 text-center">
-                          <div className="flex justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                          </div>
-                          <p className="mt-2 text-gray-500">Chargement...</p>
+                          <LoadingSpinner text="Chargement..." />
                         </td>
                       </tr>
                     ) : filteredProfiles.length > 0 ? (

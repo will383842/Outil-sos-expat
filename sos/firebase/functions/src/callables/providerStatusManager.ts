@@ -171,7 +171,23 @@ export async function setProviderBusy(
 
       console.log(`🔶 [${logId}] Current status: ${previousStatus}, isOnline: ${userData?.isOnline}`);
 
-      // 2. Vérifier si déjà busy
+      // 2. AUDIT FIX: Vérifier si provider offline DANS la transaction (atomique)
+      // Avant ce fix, le check offline était fait en amont de manière non-atomique
+      // (race condition possible entre le check et setProviderBusy)
+      if (previousStatus === 'offline' || userData?.isOnline === false) {
+        console.log(`🔶 [${logId}] ❌ Provider is offline inside transaction - rejecting reservation`);
+        return {
+          success: false,
+          providerId,
+          previousStatus,
+          newStatus: 'busy' as AvailabilityStatus,
+          timestamp: now.toMillis(),
+          error: 'Provider is offline',
+          skipPropagation: true,
+        };
+      }
+
+      // 3. Vérifier si déjà busy
       if (previousStatus === 'busy') {
         // Si le provider est busy par un sibling, on peut l'écraser avec son propre appel
         if (userData?.busyBySibling === true) {
@@ -195,23 +211,16 @@ export async function setProviderBusy(
         }
       }
 
-      // 3. Préparer les données de mise à jour
-      // ✅ BUG FIX: Sauvegarder si le prestataire était offline AVANT l'appel
-      // pour pouvoir le remettre offline après l'appel (respecter son intention)
-      const wasOfflineBeforeCall = previousStatus === 'offline' || userData?.isOnline === false;
-
+      // 4. Préparer les données de mise à jour
+      // AUDIT FIX: Plus besoin de wasOfflineBeforeCall car les offline sont rejetés en step 2
       const updateData = {
         availability: 'busy',
-        // ✅ BUG FIX: Ne PAS forcer isOnline: true si le prestataire était offline
-        // Un prestataire offline ne devrait pas recevoir d'appel, mais si ça arrive
-        // (race condition), on sauvegarde son intention pour la restaurer après
-        isOnline: wasOfflineBeforeCall ? false : true,
+        isOnline: true, // Garanti non-offline grâce au check atomique step 2
         currentCallSessionId: callSessionId,
         busySince: now,
         busyReason: reason,
         busyBySibling: false, // Ce prestataire est directement en appel
-        // ✅ BUG FIX: Sauvegarder l'intention pour setProviderAvailable
-        wasOfflineBeforeCall: wasOfflineBeforeCall,
+        wasOfflineBeforeCall: false, // Toujours false car offline rejeté en step 2
         lastStatusChange: now,
         lastActivityCheck: now,
         // ✅ BUG FIX: Toujours définir lastActivity pour que checkProviderInactivity fonctionne
@@ -219,14 +228,14 @@ export async function setProviderBusy(
         updatedAt: now,
       };
 
-      // 4. Mettre à jour dans la transaction
+      // 5. Mettre à jour dans la transaction
       transaction.update(userRef, updateData);
 
       if (profileDoc.exists) {
         transaction.update(profileRef, updateData);
       }
 
-      // Log d'audit (créer un nouveau document)
+      // 6. Log d'audit (créer un nouveau document)
       const auditLogRef = db.collection('provider_status_logs').doc();
       transaction.set(auditLogRef, {
         providerId,

@@ -56,6 +56,7 @@ import {
 import { useAuth } from '../../../contexts/AuthContext';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { logError } from '../../../utils/logging';
+import { KPICard } from '@/components/admin/KPICard';
 import useGcpBillingCosts, {
   GcpServiceCost,
   GcpRegionCost,
@@ -142,51 +143,8 @@ const getServiceIcon = (serviceName: string) => {
 // SUB-COMPONENTS
 // ============================================================================
 
-interface KPICardProps {
-  title: string;
-  value: string;
-  change?: number;
-  icon: React.ElementType;
-  color: string;
-  subtitle?: string;
-}
-
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  change,
-  icon: Icon,
-  color,
-  subtitle,
-}) => (
-  <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-sm font-medium text-gray-600">{title}</span>
-      <div className={`p-2 rounded-lg ${color}`}>
-        <Icon className="w-5 h-5" />
-      </div>
-    </div>
-    <p className="text-2xl font-bold text-gray-900">{value}</p>
-    {change !== undefined && (
-      <div className="flex items-center mt-2">
-        {change >= 0 ? (
-          <TrendingUp className="w-4 h-4 text-red-500 mr-1" />
-        ) : (
-          <TrendingDown className="w-4 h-4 text-green-500 mr-1" />
-        )}
-        <span
-          className={`text-sm font-medium ${
-            change >= 0 ? 'text-red-600' : 'text-green-600'
-          }`}
-        >
-          {formatPercent(change)}
-        </span>
-        <span className="text-xs text-gray-500 ml-1">vs periode prec.</span>
-      </div>
-    )}
-    {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-  </div>
-);
+// KPICard is imported from @/components/admin/KPICard
+// NOTE: For GCP costs, positive change means costs went UP (bad), so we negate percentChange.
 
 interface AlertCardProps {
   alert: GcpCostAlert;
@@ -468,35 +426,33 @@ const AdminGcpCosts: React.FC = () => {
               <KPICard
                 title="Cout total"
                 value={formatCurrency(data.totalCost, data.currency)}
-                change={data.percentChange}
-                icon={DollarSign}
-                color="bg-red-100 text-red-600"
+                percentChange={data.percentChange != null ? -(data.percentChange) : undefined}
+                icon={<DollarSign className="w-5 h-5 text-red-600" />}
+                colorTheme="red"
               />
               <KPICard
                 title="Prevision mensuelle"
                 value={formatCurrency(data.monthlyForecast, data.currency)}
-                icon={TrendingUp}
-                color="bg-blue-100 text-blue-600"
-                subtitle={`Budget: ${formatCurrency(data.budgetLimit, data.currency)}`}
+                icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
+                colorTheme="blue"
               />
               <KPICard
                 title="Budget utilise"
                 value={`${data.budgetUsedPercent.toFixed(1)}%`}
-                icon={Calendar}
-                color={
+                icon={<Calendar className="w-5 h-5 text-amber-600" />}
+                colorTheme={
                   data.budgetUsedPercent > 90
-                    ? 'bg-red-100 text-red-600'
+                    ? 'red'
                     : data.budgetUsedPercent > 75
-                    ? 'bg-yellow-100 text-yellow-600'
-                    : 'bg-green-100 text-green-600'
+                    ? 'amber'
+                    : 'green'
                 }
               />
               <KPICard
                 title="Services actifs"
                 value={data.costByService.length.toString()}
-                icon={Server}
-                color="bg-purple-100 text-purple-600"
-                subtitle={`${data.costByRegion.length} regions`}
+                icon={<Server className="w-5 h-5 text-purple-600" />}
+                colorTheme="purple"
               />
             </div>
 

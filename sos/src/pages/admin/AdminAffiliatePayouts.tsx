@@ -29,11 +29,28 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from "../../components/admin/StatusBadge";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useAffiliateAdmin } from "../../hooks/useAffiliate";
-import { formatCents, getPayoutStatusLabel, getStatusColor } from "../../types/affiliate";
+import { formatCents, getPayoutStatusLabel } from "../../types/affiliate";
 import type { AffiliatePayout, PayoutStatus } from "../../types/affiliate";
+
+// ============================================================================
+// STATUS MAPPING
+// ============================================================================
+
+const mapPayoutStatus = (status: PayoutStatus): { statusType: StatusType; label: string } => {
+  const map: Record<PayoutStatus, { statusType: StatusType; label: string }> = {
+    pending: { statusType: "pending", label: "En attente" },
+    approved: { statusType: "approved", label: "Approuvé" },
+    processing: { statusType: "processing", label: "En traitement" },
+    completed: { statusType: "success", label: "Complété" },
+    failed: { statusType: "failed", label: "Échoué" },
+    rejected: { statusType: "rejected", label: "Rejeté" },
+  };
+  return map[status] || { statusType: "pending", label: status };
+};
 
 // ============================================================================
 // TYPES
@@ -101,32 +118,6 @@ const StatCard: React.FC<{
         </div>
       </div>
     </div>
-  );
-};
-
-// ============================================================================
-// STATUS BADGE COMPONENT
-// ============================================================================
-
-const StatusBadge: React.FC<{ status: PayoutStatus }> = ({ status }) => {
-  const icons: Record<PayoutStatus, React.ReactNode> = {
-    pending: <Clock className="h-3 w-3" />,
-    approved: <CheckCircle className="h-3 w-3" />,
-    processing: <Loader2 className="h-3 w-3 animate-spin" />,
-    completed: <CheckCircle className="h-3 w-3" />,
-    failed: <XCircle className="h-3 w-3" />,
-    rejected: <XCircle className="h-3 w-3" />,
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
-        status
-      )}`}
-    >
-      {icons[status]}
-      {getPayoutStatusLabel(status, "fr")}
-    </span>
   );
 };
 
@@ -651,7 +642,7 @@ const AdminAffiliatePayouts: React.FC = () => {
                         </p>
                       </td>
                       <td className="px-4 py-4">
-                        <StatusBadge status={payout.status} />
+                        <UnifiedStatusBadge status={mapPayoutStatus(payout.status).statusType} label={getPayoutStatusLabel(payout.status, "fr")} size="sm" />
                         {payout.wiseTransferId && (
                           <p className="text-xs text-gray-400 mt-1">
                             Wise #{payout.wiseTransferId}

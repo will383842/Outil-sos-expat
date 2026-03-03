@@ -41,9 +41,12 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../utils/logging";
 
@@ -187,35 +190,20 @@ interface StatusLabels {
   pending: string;
 }
 
-const StatusBadge: React.FC<{ status: string; size?: 'sm' | 'md'; labels: StatusLabels }> = ({ status, size = 'sm', labels }) => {
-  const getConfig = () => {
-    switch (status) {
-      case 'completed':
-        return { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle, label: labels.completed };
-      case 'failed':
-        return { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle, label: labels.failed };
-      case 'cancelled':
-        return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: StopCircle, label: labels.cancelled };
-      case 'active':
-        return { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: PlayCircle, label: labels.active };
-      case 'pending':
-        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock, label: labels.pending };
-      default:
-        return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: AlertTriangle, label: status };
-    }
+const SessionStatusBadge: React.FC<{ status: string; size?: 'sm' | 'md'; labels: StatusLabels }> = ({ status, size = 'sm', labels }) => {
+  const statusMap: Record<string, { type: StatusType; label: string; icon: React.FC<{ size?: number | string; className?: string }> }> = {
+    completed: { type: 'success', label: labels.completed, icon: CheckCircle },
+    failed: { type: 'failed', label: labels.failed, icon: XCircle },
+    cancelled: { type: 'cancelled', label: labels.cancelled, icon: StopCircle },
+    active: { type: 'processing', label: labels.active, icon: PlayCircle },
+    pending: { type: 'pending', label: labels.pending, icon: Clock },
   };
 
-  const config = getConfig();
-  const IconComponent = config.icon;
-  const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
-  const iconSize = size === 'sm' ? 12 : 14;
-  const padding = size === 'sm' ? 'px-2 py-1' : 'px-3 py-1.5';
+  const mapped = statusMap[status] || { type: 'pending' as StatusType, label: status, icon: AlertTriangle };
+  const Icon = mapped.icon;
 
   return (
-    <span className={`inline-flex items-center ${padding} rounded-full ${textSize} font-medium border ${config.color}`}>
-      <IconComponent size={iconSize} className="mr-1" />
-      {config.label}
-    </span>
+    <StatusBadge status={mapped.type} label={mapped.label} size={size} icon={<Icon size={size === 'sm' ? 12 : 14} />} />
   );
 };
 
@@ -228,31 +216,19 @@ interface PaymentLabels {
 }
 
 const PaymentStatusBadge: React.FC<{ status: string; amount: number; labels: PaymentLabels; locale?: string }> = ({ status, amount, labels, locale = 'fr-FR' }) => {
-  const getConfig = () => {
-    switch (status) {
-      case 'captured':
-        return { color: 'bg-green-100 text-green-800', label: labels.captured };
-      case 'authorized':
-        return { color: 'bg-blue-100 text-blue-800', label: labels.authorized };
-      case 'refunded':
-        return { color: 'bg-orange-100 text-orange-800', label: labels.refunded };
-      case 'failed':
-        return { color: 'bg-red-100 text-red-800', label: labels.failed };
-      case 'pending':
-        return { color: 'bg-yellow-100 text-yellow-800', label: labels.pending };
-      default:
-        return { color: 'bg-gray-100 text-gray-800', label: status };
-    }
+  const statusMap: Record<string, { type: StatusType; label: string }> = {
+    captured: { type: 'paid', label: labels.captured },
+    authorized: { type: 'processing', label: labels.authorized },
+    refunded: { type: 'refunded', label: labels.refunded },
+    failed: { type: 'failed', label: labels.failed },
+    pending: { type: 'pending', label: labels.pending },
   };
 
-  const config = getConfig();
+  const mapped = statusMap[status] || { type: 'pending' as StatusType, label: status };
 
   return (
     <div className="text-center">
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <DollarSign size={12} className="mr-1" />
-        {config.label}
-      </span>
+      <StatusBadge status={mapped.type} label={mapped.label} size="sm" icon={<DollarSign size={12} />} />
       <div className="text-sm font-medium text-gray-900 mt-1">
         {amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
       </div>
@@ -935,10 +911,7 @@ const AdminCallsSessions: React.FC = () => {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{intl.formatMessage({ id: 'admin.callSessions.loadingHistory', defaultMessage: "Chargement de l'historique des sessions..." })}</p>
-          </div>
+          <LoadingSpinner size="large" color="blue" text={intl.formatMessage({ id: 'admin.callSessions.loadingHistory', defaultMessage: "Chargement de l'historique des sessions..." })} />
         </div>
       </AdminLayout>
     );
@@ -1237,7 +1210,7 @@ const AdminCallsSessions: React.FC = () => {
                       </td>
                       
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={session.status} labels={statusLabels} />
+                        <SessionStatusBadge status={session.status} labels={statusLabels} />
                       </td>
 
                       <td className="px-6 py-4">
@@ -1376,7 +1349,7 @@ const AdminCallsSessions: React.FC = () => {
                     {intl.formatMessage({ id: 'admin.callSessions.sessionId', defaultMessage: 'Session' })} #{selectedSession.id}
                   </h3>
                   <div className="flex items-center space-x-3">
-                    <StatusBadge status={selectedSession.status} size="md" labels={statusLabels} />
+                    <SessionStatusBadge status={selectedSession.status} size="md" labels={statusLabels} />
                     <span className={`px-3 py-1 text-sm rounded-full ${
                       selectedSession.metadata.serviceType === 'lawyer_call'
                         ? 'bg-blue-100 text-blue-800'

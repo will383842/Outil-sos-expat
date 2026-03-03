@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusType } from "@/components/admin/StatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
@@ -217,18 +218,18 @@ const AdminChatterReferrals: React.FC = () => {
     );
   };
 
-  const getStatusBadge = (status: string) => {
+  const mapCommissionStatus = (status: string): { status: StatusType; label: string } => {
     switch (status) {
       case "pending":
-        return <Badge variant="secondary">En attente</Badge>;
+        return { status: "pending", label: "En attente" };
       case "validated":
-        return <Badge className="bg-blue-500">Validé</Badge>;
+        return { status: "info", label: "Validé" };
       case "available":
-        return <Badge className="bg-green-500">Disponible</Badge>;
+        return { status: "available", label: "Disponible" };
       case "paid":
-        return <Badge className="bg-purple-500">Payé</Badge>;
+        return { status: "paid", label: "Payé" };
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return { status: "pending", label: status };
     }
   };
 
@@ -430,7 +431,12 @@ const AdminChatterReferrals: React.FC = () => {
                     <TableCell className="font-semibold text-green-600">
                       ${(commission.amount / 100).toFixed(2)}
                     </TableCell>
-                    <TableCell>{getStatusBadge(commission.status)}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const mapped = mapCommissionStatus(commission.status);
+                        return <StatusBadge status={mapped.status} label={mapped.label} size="sm" />;
+                      })()}
+                    </TableCell>
                     <TableCell>
                       {new Date(commission.createdAt).toLocaleDateString()}
                     </TableCell>

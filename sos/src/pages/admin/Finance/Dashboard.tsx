@@ -18,7 +18,6 @@ import {
 } from 'recharts';
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   CreditCard,
   RefreshCw,
@@ -44,6 +43,7 @@ import { db } from '../../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { KPICard } from '@/components/admin/KPICard';
 
 // ============================================================================
 // TYPES
@@ -207,55 +207,7 @@ const formatDateLabel = (date: Date, rangeType: DateRangeType): string => {
   return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
 };
 
-// ============================================================================
-// KPI CARD COMPONENT
-// ============================================================================
-
-interface KPICardProps {
-  title: string;
-  value: string;
-  change?: number;
-  icon: React.ReactNode;
-  loading?: boolean;
-  subtitle?: string;
-  iconBgColor?: string;
-}
-
-const KPICard: React.FC<KPICardProps> = ({ title, value, change, icon, loading, subtitle, iconBgColor = 'bg-gray-100' }) => {
-  const isPositive = change !== undefined && change >= 0;
-
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          {loading ? (
-            <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
-          ) : (
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-          )}
-          {change !== undefined && !loading && (
-            <div className={`flex items-center text-sm mt-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-              {isPositive ? (
-                <TrendingUp size={14} className="mr-1" />
-              ) : (
-                <TrendingDown size={14} className="mr-1" />
-              )}
-              <span>{isPositive ? '+' : ''}{change.toFixed(1)}%</span>
-              <span className="text-gray-400 ml-1 text-xs">vs periode prec.</span>
-            </div>
-          )}
-          {subtitle && !loading && (
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-          )}
-        </div>
-        <div className={`p-3 rounded-full ${iconBgColor}`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-};
+// KPICard is imported from @/components/admin/KPICard
 
 // ============================================================================
 // SECONDARY KPI CARD COMPONENT
@@ -861,35 +813,34 @@ const FinanceDashboard: React.FC = () => {
           <KPICard
             title={intl.formatMessage({ id: 'admin.finance.dashboard.totalRevenue', defaultMessage: 'Revenus Totaux' })}
             value={formatCurrency(data?.totalRevenue.current || 0)}
-            change={data?.totalRevenue.percentChange}
+            percentChange={data?.totalRevenue.percentChange}
             icon={<DollarSign size={24} className="text-green-600" />}
-            iconBgColor="bg-green-100"
-            loading={isLoading}
+            colorTheme="green"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({ id: 'admin.finance.dashboard.totalTransactions', defaultMessage: 'Transactions' })}
             value={formatNumber(data?.totalTransactions.current || 0)}
-            change={data?.totalTransactions.percentChange}
+            percentChange={data?.totalTransactions.percentChange}
             icon={<CreditCard size={24} className="text-blue-600" />}
-            iconBgColor="bg-blue-100"
-            loading={isLoading}
+            colorTheme="blue"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({ id: 'admin.finance.dashboard.avgTransaction', defaultMessage: 'Panier Moyen' })}
             value={formatCurrency(data?.avgTransactionValue.current || 0)}
-            change={data?.avgTransactionValue.percentChange}
+            percentChange={data?.avgTransactionValue.percentChange}
             icon={<TrendingUp size={24} className="text-purple-600" />}
-            iconBgColor="bg-purple-100"
-            loading={isLoading}
+            colorTheme="purple"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({ id: 'admin.finance.dashboard.netRevenue', defaultMessage: 'Revenus Nets' })}
             value={formatCurrency(data?.netRevenue.current || 0)}
-            change={data?.netRevenue.percentChange}
+            percentChange={data?.netRevenue.percentChange}
             icon={<DollarSign size={24} className="text-red-600" />}
-            iconBgColor="bg-red-100"
-            loading={isLoading}
-            subtitle={intl.formatMessage({ id: 'admin.finance.dashboard.afterRefunds', defaultMessage: 'Apres remboursements' })}
+            colorTheme="red"
+            isLoading={isLoading}
           />
         </div>
 

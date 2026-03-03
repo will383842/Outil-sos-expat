@@ -52,6 +52,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { KPICard } from '@/components/admin/KPICard';
 import { useMetaAnalytics, CAPIEventType, EventSource, MetaAlert } from '../../hooks/useMetaAnalytics';
 
 // ============================================================================
@@ -99,41 +100,7 @@ const EVENT_TYPE_ICONS: Record<CAPIEventType, React.ReactNode> = {
 // Components
 // ============================================================================
 
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  iconBgColor: string;
-  loading?: boolean;
-  subtitle?: string;
-  trend?: 'up' | 'down' | 'neutral';
-}
-
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  icon,
-  iconBgColor,
-  loading,
-  subtitle,
-}) => (
-  <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md transition-shadow">
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-        {loading ? (
-          <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
-        ) : (
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-        )}
-        {subtitle && !loading && (
-          <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-        )}
-      </div>
-      <div className={`p-3 rounded-full ${iconBgColor}`}>{icon}</div>
-    </div>
-  </div>
-);
+// KPICard is imported from @/components/admin/KPICard
 
 interface QualityScoreCardProps {
   score: number;
@@ -528,25 +495,22 @@ const AdminMetaAnalytics: React.FC = () => {
             title={t('admin.metaAnalytics.kpi.totalEvents')}
             value={formatNumber(data?.totalEvents || 0)}
             icon={<Zap size={24} className="text-blue-600" />}
-            iconBgColor="bg-blue-100"
-            loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.lastDays', { days: String(days) })}
+            colorTheme="blue"
+            isLoading={isLoading}
           />
           <KPICard
             title={t('admin.metaAnalytics.kpi.uniqueUsers')}
             value={formatNumber(data?.uniqueUsers || 0)}
             icon={<Users size={24} className="text-green-600" />}
-            iconBgColor="bg-green-100"
-            loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.withUserId')}
+            colorTheme="green"
+            isLoading={isLoading}
           />
           <KPICard
             title={t('admin.metaAnalytics.kpi.totalValue')}
             value={formatCurrency(data?.totalValue || 0)}
             icon={<DollarSign size={24} className="text-red-600" />}
-            iconBgColor="bg-red-100"
-            loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.purchasesLeads')}
+            colorTheme="red"
+            isLoading={isLoading}
           />
           <KPICard
             title={t('admin.metaAnalytics.kpi.conversionRate')}
@@ -556,9 +520,8 @@ const AdminMetaAnalytics: React.FC = () => {
                 : '0%'
             }
             icon={<TrendingUp size={24} className="text-purple-600" />}
-            iconBgColor="bg-purple-100"
-            loading={isLoading}
-            subtitle={t('admin.metaAnalytics.kpi.checkoutPurchase')}
+            colorTheme="purple"
+            isLoading={isLoading}
           />
           <QualityScoreCard
             score={data?.qualityMetrics?.averageScore || 0}

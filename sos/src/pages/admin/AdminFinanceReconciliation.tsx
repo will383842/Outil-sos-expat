@@ -24,6 +24,7 @@ import { db, functions } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Button from '../../components/common/Button';
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   RefreshCw,
   CheckCircle,
@@ -166,13 +167,27 @@ const StatCard: React.FC<{
   </div>
 );
 
+/** Map ReconciliationStatus to unified StatusType */
+const reconciliationStatusToStatusType = (status: ReconciliationStatus): StatusType => {
+  const map: Record<ReconciliationStatus, StatusType> = {
+    matched: 'success',
+    unmatched: 'error',
+    discrepancy: 'warning',
+    pending: 'pending',
+    manual: 'info',
+  };
+  return map[status] || 'pending';
+};
+
 const StatusBadge: React.FC<{ status: ReconciliationStatus }> = ({ status }) => {
   const config = STATUS_CONFIG[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-      {config.icon}
-      {config.label}
-    </span>
+    <UnifiedStatusBadge
+      status={reconciliationStatusToStatusType(status)}
+      label={config.label}
+      icon={config.icon}
+      size="sm"
+    />
   );
 };
 

@@ -25,7 +25,6 @@ import {
 } from 'recharts';
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   Phone,
   DollarSign,
@@ -52,6 +51,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { fetchWithCache } from '../../utils/firestoreCache';
+import { KPICard } from '@/components/admin/KPICard';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -296,70 +296,7 @@ const calculatePercentageChange = (current: number, previous: number): number =>
 // SUB-COMPONENTS
 // ============================================================================
 
-// Hero KPI Card with glassmorphism effect
-interface HeroKPICardProps {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  change?: number;
-  icon: React.ReactNode;
-  colorClass: string;
-  isLoading?: boolean;
-}
-
-const HeroKPICard: React.FC<HeroKPICardProps> = ({
-  title,
-  value,
-  subtitle,
-  change,
-  icon,
-  colorClass,
-  isLoading,
-}) => {
-  if (isLoading) {
-    return (
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl border border-white/20 shadow-xl shadow-gray-200/50 p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-24 mb-3"></div>
-          <div className="h-10 bg-gray-200 rounded w-32 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded w-20"></div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl border border-white/20 shadow-xl shadow-gray-200/50 p-6 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-      {/* Background gradient decoration */}
-      <div className={`absolute top-0 right-0 w-32 h-32 ${colorClass} opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2`}></div>
-
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</span>
-          <div className={`p-2 rounded-xl ${colorClass} bg-opacity-10`}>
-            {icon}
-          </div>
-        </div>
-
-        <div className={`text-3xl font-bold ${colorClass.replace('bg-', 'text-')} mb-1`}>
-          {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
-        </div>
-
-        {(subtitle || change !== undefined) && (
-          <div className="flex items-center gap-2 text-sm">
-            {change !== undefined && (
-              <span className={`flex items-center ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {change >= 0 ? <TrendingUp size={14} className="mr-1" /> : <TrendingDown size={14} className="mr-1" />}
-                {change >= 0 ? '+' : ''}{change.toFixed(1)}%
-              </span>
-            )}
-            {subtitle && <span className="text-gray-400">{subtitle}</span>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+// HeroKPICard replaced by unified KPICard from @/components/admin/KPICard with variant="glass"
 
 // Chart Card Container
 interface ChartCardProps {
@@ -1039,52 +976,55 @@ const ProfessionalDashboard: React.FC = () => {
       {/* HERO KPI SECTION */}
       {/* ================================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <HeroKPICard
+        <KPICard
           title={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.totalUsers' })}
           value={metrics?.totalUsers || 0}
-          subtitle={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.newThisPeriod' }, { count: metrics?.newRegistrations || 0 })}
           icon={<Users size={20} className="text-blue-600" />}
-          colorClass="bg-blue-600"
+          colorTheme="blue"
+          variant="glass"
           isLoading={isLoading}
         />
-        <HeroKPICard
+        <KPICard
           title={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.connected' })}
           value={metrics?.activeUsers || 0}
-          subtitle={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.percentOfTotal' }, { percentage: (metrics?.activeUsersPercentage ?? 0).toFixed(1) })}
-          change={metrics?.userGrowth}
+          percentChange={metrics?.userGrowth}
           icon={<Activity size={20} className="text-green-600" />}
-          colorClass="bg-green-600"
+          colorTheme="green"
+          variant="glass"
           isLoading={isLoading}
         />
-        <HeroKPICard
+        <KPICard
           title={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.revenueThisMonth' })}
           value={`${(metrics?.totalRevenue || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`}
-          change={metrics?.revenueGrowth}
+          percentChange={metrics?.revenueGrowth}
           icon={<DollarSign size={20} className="text-red-600" />}
-          colorClass="bg-red-600"
+          colorTheme="red"
+          variant="glass"
           isLoading={isLoading}
         />
-        <HeroKPICard
+        <KPICard
           title={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.successfulCalls' })}
           value={metrics?.successfulCalls || 0}
-          subtitle={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.outOfCalls' }, { count: metrics?.totalCalls || 0 })}
-          change={metrics?.callsGrowth}
+          percentChange={metrics?.callsGrowth}
           icon={<Phone size={20} className="text-purple-600" />}
-          colorClass="bg-purple-600"
+          colorTheme="purple"
+          variant="glass"
           isLoading={isLoading}
         />
-        <HeroKPICard
+        <KPICard
           title={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.successRate' })}
           value={`${(metrics?.successRate || 0).toFixed(1)}%`}
           icon={<Target size={20} className="text-amber-600" />}
-          colorClass="bg-amber-600"
+          colorTheme="amber"
+          variant="glass"
           isLoading={isLoading}
         />
-        <HeroKPICard
+        <KPICard
           title={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.avgDuration' })}
           value={intl.formatMessage({ id: 'admin.dashboard.professional.kpi.minutes' }, { minutes: Math.round((metrics?.avgCallDuration || 0) / 60) })}
           icon={<Clock size={20} className="text-cyan-600" />}
-          colorClass="bg-cyan-600"
+          colorTheme="cyan"
+          variant="glass"
           isLoading={isLoading}
         />
       </div>

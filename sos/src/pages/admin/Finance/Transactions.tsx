@@ -45,6 +45,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
 // =============================================================================
 // TYPES
@@ -142,56 +143,16 @@ const getCountryFlag = (countryCode?: string): string => {
 // HELPER COMPONENTS
 // =============================================================================
 
-interface StatusBadgeProps {
-  status: PaymentStatus;
-}
-
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const intl = useIntl();
-
-  const config: Record<PaymentStatus, { bg: string; text: string; border: string; icon: React.ReactNode }> = {
-    paid: {
-      bg: 'bg-green-50',
-      text: 'text-green-700',
-      border: 'border-green-200',
-      icon: <CheckCircle className="w-3.5 h-3.5" />,
-    },
-    pending: {
-      bg: 'bg-yellow-50',
-      text: 'text-yellow-700',
-      border: 'border-yellow-200',
-      icon: <Clock className="w-3.5 h-3.5" />,
-    },
-    refunded: {
-      bg: 'bg-blue-50',
-      text: 'text-blue-700',
-      border: 'border-blue-200',
-      icon: <RefundIcon className="w-3.5 h-3.5" />,
-    },
-    disputed: {
-      bg: 'bg-orange-50',
-      text: 'text-orange-700',
-      border: 'border-orange-200',
-      icon: <AlertTriangle className="w-3.5 h-3.5" />,
-    },
-    failed: {
-      bg: 'bg-red-50',
-      text: 'text-red-700',
-      border: 'border-red-200',
-      icon: <XCircle className="w-3.5 h-3.5" />,
-    },
+/** Map PaymentStatus to unified StatusType */
+const paymentStatusToStatusType = (status: PaymentStatus): StatusType => {
+  const map: Record<PaymentStatus, StatusType> = {
+    paid: 'paid',
+    pending: 'pending',
+    refunded: 'refunded',
+    disputed: 'warning',
+    failed: 'failed',
   };
-
-  const { bg, text, border, icon } = config[status] || config.pending;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border ${bg} ${text} ${border}`}
-    >
-      {icon}
-      {intl.formatMessage({ id: `admin.transactions.status.${status}` })}
-    </span>
-  );
+  return map[status] || 'pending';
 };
 
 interface TransactionTypeIconProps {
@@ -1270,7 +1231,7 @@ const Transactions: React.FC = () => {
 
                         {/* Status */}
                         <td className="px-4 py-3">
-                          <StatusBadge status={transaction.status} />
+                          <StatusBadge status={paymentStatusToStatusType(transaction.status)} label={transaction.status} size="sm" />
                         </td>
 
                         {/* Actions */}

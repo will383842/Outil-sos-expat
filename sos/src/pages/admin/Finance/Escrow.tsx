@@ -22,6 +22,7 @@ import AdminLayout from '../../../components/admin/AdminLayout';
 import Modal from '../../../components/common/Modal';
 import Button from '../../../components/common/Button';
 import { useIntl } from 'react-intl';
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   DollarSign,
   Clock,
@@ -304,42 +305,24 @@ const AdminEscrow: React.FC = () => {
     }
   };
 
-  // Status badge
-  const StatusBadge: React.FC<{ status: string; type: 'stripe' | 'paypal' }> = ({ status, type }) => {
-    let color = 'bg-gray-100 text-gray-800';
-    let icon = <Clock className="w-3 h-3" />;
-
-    if (type === 'stripe') {
-      if (status === 'pending_kyc') {
-        color = 'bg-yellow-100 text-yellow-800';
-        icon = <Clock className="w-3 h-3" />;
-      } else if (status === 'transferred') {
-        color = 'bg-green-100 text-green-800';
-        icon = <CheckCircle className="w-3 h-3" />;
-      }
-    } else {
-      if (status === 'pending' || status === 'pending_retry_after_kyc') {
-        color = 'bg-yellow-100 text-yellow-800';
-        icon = <Clock className="w-3 h-3" />;
-      } else if (status === 'failed') {
-        color = 'bg-red-100 text-red-800';
-        icon = <XCircle className="w-3 h-3" />;
-      } else if (status === 'max_retries_reached') {
-        color = 'bg-red-100 text-red-800';
-        icon = <AlertTriangle className="w-3 h-3" />;
-      } else if (status === 'success') {
-        color = 'bg-green-100 text-green-800';
-        icon = <CheckCircle className="w-3 h-3" />;
-      }
-    }
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${color}`}>
-        {icon}
-        {status}
-      </span>
-    );
+  // Map escrow statuses to unified StatusType
+  const escrowStatusToStatusType = (status: string): StatusType => {
+    const map: Record<string, StatusType> = {
+      pending_kyc: 'warning',
+      transferred: 'success',
+      refunded: 'refunded',
+      pending: 'pending',
+      pending_retry_after_kyc: 'warning',
+      failed: 'failed',
+      max_retries_reached: 'error',
+      success: 'success',
+    };
+    return map[status] || 'pending';
   };
+
+  const EscrowStatusBadge: React.FC<{ status: string }> = ({ status }) => (
+    <UnifiedStatusBadge status={escrowStatusToStatusType(status)} label={status} size="sm" />
+  );
 
   // Filter data
   const filteredStripeData = pendingTransfers.filter((item) => {
@@ -688,7 +671,7 @@ const AdminEscrow: React.FC = () => {
                             {item.providerPayPalEmail}
                           </td>
                           <td className="px-4 py-3">
-                            <StatusBadge status={item.status} type="paypal" />
+                            <EscrowStatusBadge status={item.status} />
                           </td>
                           <td className="px-4 py-3">
                             <span className={`font-medium ${item.retryCount >= 3 ? 'text-red-600' : 'text-gray-900'}`}>

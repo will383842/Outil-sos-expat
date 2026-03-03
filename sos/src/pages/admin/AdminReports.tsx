@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
@@ -427,10 +428,7 @@ const AdminReports: React.FC = () => {
                   {isLoading ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                        <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
-                        </div>
-                        <p className="mt-2">{t('admin.reports.loading')}</p>
+                        <LoadingSpinner text={t('admin.reports.loading')} />
                       </td>
                     </tr>
                   ) : filteredReports.length > 0 ? (

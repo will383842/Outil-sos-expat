@@ -67,12 +67,12 @@ import {
   getCurrentPeriod,
   formatCurrency,
   formatDate,
-  getStatusColor,
   getTypeColor,
   isFilingOverdue,
   getDaysUntilDue,
   subscribeTaxFilings,
 } from '../../../services/taxFilingService';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import { Timestamp } from 'firebase/firestore';
 
 // ============================================================================
@@ -393,18 +393,21 @@ export default function TaxFilings() {
     return intl.formatDate(date, { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const renderStatusBadge = (status: TaxFilingStatus) => {
-    const colorClass = getStatusColor(status);
-    const label = TAX_FILING_STATUS_LABELS[status]?.fr || status;
+  const taxFilingStatusToStatusType = (status: TaxFilingStatus): StatusType => {
+    const map: Record<TaxFilingStatus, StatusType> = {
+      DRAFT: 'pending',
+      PENDING_REVIEW: 'warning',
+      SUBMITTED: 'processing',
+      ACCEPTED: 'success',
+      REJECTED: 'rejected',
+      PAID: 'paid',
+    };
+    return map[status] || 'pending';
+  };
 
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-        {status === 'PAID' && <CheckCircle className="w-3 h-3 mr-1" />}
-        {status === 'REJECTED' && <XCircle className="w-3 h-3 mr-1" />}
-        {status === 'SUBMITTED' && <Send className="w-3 h-3 mr-1" />}
-        {label}
-      </span>
-    );
+  const renderStatusBadge = (status: TaxFilingStatus) => {
+    const label = TAX_FILING_STATUS_LABELS[status]?.fr || status;
+    return <StatusBadge status={taxFilingStatusToStatusType(status)} label={label} size="sm" />;
   };
 
   const renderTypeBadge = (type: TaxFilingType) => {

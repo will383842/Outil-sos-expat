@@ -25,6 +25,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminErrorState from '@/components/admin/AdminErrorState';
 import Button from '../../../components/common/Button';
 import {
   DollarSign,
@@ -34,7 +35,6 @@ import {
   RefreshCw,
   Filter,
   Download,
-  AlertTriangle,
   TrendingUp,
   Search,
   Eye,
@@ -49,12 +49,13 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  AlertCircle,
   CheckSquare,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PaymentUserType, WithdrawalStatus, STATUS_COLORS } from '../../../types/payment';
 import { toCsv } from '../../../services/finance/reports';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 
 // ============================================================================
 // TYPES
@@ -98,33 +99,28 @@ type SortOrder = 'asc' | 'desc';
 const PAGE_SIZE = 25;
 
 // ============================================================================
-// STATUS BADGE COMPONENT
+// STATUS BADGE COMPONENT (uses shared StatusBadge)
 // ============================================================================
 
-const StatusBadge: React.FC<{ status: WithdrawalStatus }> = ({ status }) => {
+const withdrawalStatusMap: Record<WithdrawalStatus, { statusType: StatusType; labelKey: string }> = {
+  pending: { statusType: 'pending', labelKey: 'admin.withdrawals.status.pending' },
+  validating: { statusType: 'validating', labelKey: 'admin.withdrawals.status.validating' },
+  approved: { statusType: 'approved', labelKey: 'admin.withdrawals.status.approved' },
+  queued: { statusType: 'queued', labelKey: 'admin.withdrawals.status.queued' },
+  processing: { statusType: 'processing', labelKey: 'admin.withdrawals.status.processing' },
+  sent: { statusType: 'sent', labelKey: 'admin.withdrawals.status.sent' },
+  completed: { statusType: 'paid', labelKey: 'admin.withdrawals.status.completed' },
+  failed: { statusType: 'failed', labelKey: 'admin.withdrawals.status.failed' },
+  rejected: { statusType: 'rejected', labelKey: 'admin.withdrawals.status.rejected' },
+  cancelled: { statusType: 'cancelled', labelKey: 'admin.withdrawals.status.cancelled' },
+};
+
+const WithdrawalStatusBadge: React.FC<{ status: WithdrawalStatus }> = ({ status }) => {
   const intl = useIntl();
+  const { statusType, labelKey } = withdrawalStatusMap[status] || withdrawalStatusMap.pending;
+  const label = intl.formatMessage({ id: labelKey, defaultMessage: status });
 
-  const config: Record<WithdrawalStatus, { color: string; icon: React.ReactNode; labelKey: string }> = {
-    pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: <Clock className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.pending' },
-    validating: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: <Search className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.validating' },
-    approved: { color: 'bg-indigo-100 text-indigo-800 border-indigo-200', icon: <CheckCircle className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.approved' },
-    queued: { color: 'bg-purple-100 text-purple-800 border-purple-200', icon: <Clock className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.queued' },
-    processing: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: <RefreshCw className="w-3.5 h-3.5 animate-spin" />, labelKey: 'admin.withdrawals.status.processing' },
-    sent: { color: 'bg-indigo-100 text-indigo-800 border-indigo-200', icon: <Send className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.sent' },
-    completed: { color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.completed' },
-    failed: { color: 'bg-red-100 text-red-800 border-red-200', icon: <XCircle className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.failed' },
-    rejected: { color: 'bg-red-100 text-red-800 border-red-200', icon: <Ban className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.rejected' },
-    cancelled: { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: <XCircle className="w-3.5 h-3.5" />, labelKey: 'admin.withdrawals.status.cancelled' },
-  };
-
-  const { color, icon, labelKey } = config[status] || config.pending;
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
-      {icon}
-      {intl.formatMessage({ id: labelKey, defaultMessage: status })}
-    </span>
-  );
+  return <StatusBadge status={statusType} label={label} size="sm" />;
 };
 
 // ============================================================================
@@ -218,7 +214,7 @@ const AdminPaymentsDashboard: React.FC = () => {
   const [stats, setStats] = useState<WithdrawalStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const lastDocsRef = React.useRef<Map<PaymentUserType, QueryDocumentSnapshot<DocumentData>>>(new Map());
   const [hasMore, setHasMore] = useState(true);
 
   // Filters
@@ -328,7 +324,7 @@ const AdminPaymentsDashboard: React.FC = () => {
   const fetchWithdrawals = useCallback(async (reset = false) => {
     if (reset) {
       setIsLoading(true);
-      setLastDoc(null);
+      lastDocsRef.current = new Map();
     } else {
       setIsLoadingMore(true);
     }
@@ -336,10 +332,11 @@ const AdminPaymentsDashboard: React.FC = () => {
 
     try {
       const userTypes: PaymentUserType[] = userTypeFilter === 'all'
-        ? ['chatter', 'influencer', 'blogger']
+        ? ['chatter', 'influencer', 'blogger', 'group_admin']
         : [userTypeFilter];
 
       const allWithdrawals: UnifiedWithdrawal[] = [];
+      const newLastDocs = new Map(reset ? [] : lastDocsRef.current);
 
       for (const userType of userTypes) {
         const colRef = collection(db, getCollectionName(userType));
@@ -365,14 +362,28 @@ const AdminPaymentsDashboard: React.FC = () => {
         }
 
         constraints.push(orderBy('requestedAt', 'desc'));
+
+        // Use cursor from previous page if not resetting
+        const prevLastDoc = !reset ? lastDocsRef.current.get(userType) : undefined;
+        if (prevLastDoc) {
+          constraints.push(startAfter(prevLastDoc));
+        }
+
         constraints.push(limit(PAGE_SIZE));
 
         const q = query(colRef, ...constraints);
         const snapshot = await getDocs(q);
 
+        // Track last doc for pagination cursor
+        if (snapshot.docs.length > 0) {
+          newLastDocs.set(userType, snapshot.docs[snapshot.docs.length - 1]);
+        }
+
         const withdrawals = snapshot.docs.map(docSnap => mapDocToWithdrawal(docSnap, userType));
         allWithdrawals.push(...withdrawals);
       }
+
+      lastDocsRef.current = newLastDocs;
 
       // Sort combined results
       allWithdrawals.sort((a, b) => b.requestedAt.getTime() - a.requestedAt.getTime());
@@ -397,7 +408,7 @@ const AdminPaymentsDashboard: React.FC = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const userTypes: PaymentUserType[] = ['chatter', 'influencer', 'blogger'];
+      const userTypes: PaymentUserType[] = ['chatter', 'influencer', 'blogger', 'group_admin'];
       const stats: WithdrawalStats = {
         pending: { count: 0, amount: 0 },
         processing: { count: 0, amount: 0 },
@@ -806,15 +817,7 @@ const AdminPaymentsDashboard: React.FC = () => {
         </div>
 
         {/* Messages */}
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" />
-            <span className="text-red-700">{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
-              <XCircle className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+        {error && <AdminErrorState error={error} onRetry={() => { fetchWithdrawals(true); fetchStats(); }} />}
 
         {success && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
@@ -1135,7 +1138,7 @@ const AdminPaymentsDashboard: React.FC = () => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <StatusBadge status={withdrawal.status} />
+                          <WithdrawalStatusBadge status={withdrawal.status} />
                           {withdrawal.telegramConfirmationPending && (
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 border border-blue-200 rounded-full" title="En attente de confirmation Telegram">
                               TG

@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, Timestamp } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
+import AdminErrorState from "../../components/admin/AdminErrorState";
+import { StatusBadge, type StatusType } from "../../components/admin/StatusBadge";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -44,13 +46,47 @@ import {
   getCommissionActionTypeLabel,
   getCommissionStatusLabel,
   getPayoutStatusLabel,
-  getStatusColor,
   type AffiliateStatus,
   type AffiliateCommission,
   type AffiliatePayout,
   type CommissionStatus,
   type PayoutStatus,
 } from "../../types/affiliate";
+
+// ============================================================================
+// STATUS MAPPING
+// ============================================================================
+
+const mapAffiliateStatus = (status: AffiliateStatus): { statusType: StatusType; label: string } => {
+  const map: Record<AffiliateStatus, { statusType: StatusType; label: string }> = {
+    active: { statusType: "active", label: "Actif" },
+    suspended: { statusType: "suspended", label: "Suspendu" },
+    flagged: { statusType: "warning", label: "Signalé" },
+  };
+  return map[status] || { statusType: "inactive", label: status };
+};
+
+const mapCommissionStatus = (status: CommissionStatus): StatusType => {
+  const map: Record<CommissionStatus, StatusType> = {
+    pending: "pending",
+    available: "available",
+    paid: "paid",
+    cancelled: "cancelled",
+  };
+  return map[status] || "inactive";
+};
+
+const mapPayoutStatus = (status: PayoutStatus): StatusType => {
+  const map: Record<PayoutStatus, StatusType> = {
+    pending: "pending",
+    approved: "approved",
+    processing: "processing",
+    completed: "success",
+    failed: "failed",
+    rejected: "rejected",
+  };
+  return map[status] || "inactive";
+};
 
 // ============================================================================
 // TYPES
@@ -158,39 +194,6 @@ const StatCard: React.FC<{
 };
 
 // ============================================================================
-// STATUS BADGE COMPONENT
-// ============================================================================
-
-const StatusBadge: React.FC<{ status: AffiliateStatus }> = ({ status }) => {
-  const config = {
-    active: {
-      icon: <CheckCircle className="h-3 w-3" />,
-      label: "Actif",
-      classes: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-    },
-    suspended: {
-      icon: <Ban className="h-3 w-3" />,
-      label: "Suspendu",
-      classes: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    },
-    flagged: {
-      icon: <Flag className="h-3 w-3" />,
-      label: "Signalé",
-      classes: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-    },
-  };
-
-  const { icon, label, classes } = config[status] || config.active;
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${classes}`}>
-      {icon}
-      {label}
-    </span>
-  );
-};
-
-// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -206,6 +209,7 @@ const AdminAffiliateDetail: React.FC = () => {
   const [payouts, setPayouts] = useState<AffiliatePayout[]>([]);
   const [referrals, setReferrals] = useState<ReferralUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "commissions" | "referrals" | "payouts">("overview");
   const [copiedCode, setCopiedCode] = useState(false);
 
@@ -220,6 +224,7 @@ const AdminAffiliateDetail: React.FC = () => {
 
     setIsLoading(true);
     try {
+      setError(null);
       const userDoc = await getDoc(doc(db, "users", affiliateId));
 
       if (!userDoc.exists()) {
@@ -332,6 +337,7 @@ const AdminAffiliateDetail: React.FC = () => {
       );
     } catch (error) {
       console.error("[AdminAffiliateDetail] Error fetching data:", error);
+      setError("Erreur lors du chargement des données de l'affilié. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -421,7 +427,7 @@ const AdminAffiliateDetail: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {affiliate.displayName}
               </h1>
-              <StatusBadge status={affiliate.affiliateStatus} />
+              <StatusBadge status={mapAffiliateStatus(affiliate.affiliateStatus).statusType} label={mapAffiliateStatus(affiliate.affiliateStatus).label} size="sm" />
             </div>
             <p className="text-sm text-gray-500 mt-1">{affiliate.email}</p>
           </div>
@@ -465,6 +471,8 @@ const AdminAffiliateDetail: React.FC = () => {
             )}
           </div>
         </div>
+
+        {error && <AdminErrorState error={error} onRetry={fetchAffiliate} />}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -770,9 +778,7 @@ const AdminAffiliateDetail: React.FC = () => {
                         {commission.refereeEmail}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(commission.status)}`}>
-                          {getCommissionStatusLabel(commission.status)}
-                        </span>
+                        <StatusBadge status={mapCommissionStatus(commission.status)} label={getCommissionStatusLabel(commission.status)} size="sm" />
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">
                         {formatCents(commission.amount)}
@@ -856,9 +862,7 @@ const AdminAffiliateDetail: React.FC = () => {
                         {new Date(payout.requestedAt).toLocaleDateString("fr-FR")}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payout.status)}`}>
-                          {getPayoutStatusLabel(payout.status)}
-                        </span>
+                        <StatusBadge status={mapPayoutStatus(payout.status)} label={getPayoutStatusLabel(payout.status)} size="sm" />
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">
                         {formatCents(payout.amount)}

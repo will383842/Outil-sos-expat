@@ -10,6 +10,7 @@
 // Firestore Triggers
 export { paymentOnWithdrawalCreated } from "./onWithdrawalCreated";
 export { paymentOnWithdrawalStatusChanged } from "./onWithdrawalStatusChanged";
+export { paymentOnPaymentStatusChanged } from "./onPaymentStatusChanged";
 
 // Scheduled Functions
 export { paymentProcessAutomaticPayments } from "./processAutomaticPayments";

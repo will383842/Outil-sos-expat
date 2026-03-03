@@ -13,7 +13,6 @@ import {
   Shield,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   Eye,
   RefreshCw,
   Loader2,
@@ -40,6 +39,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from "../../components/admin/StatusBadge";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -85,74 +85,27 @@ interface FlaggedAffiliate {
 }
 
 // ============================================================================
-// SEVERITY BADGE COMPONENT
+// STATUS MAPPING
 // ============================================================================
 
-const SeverityBadge: React.FC<{ severity: FraudAlert["severity"] }> = ({ severity }) => {
-  const config = {
-    low: {
-      label: "Faible",
-      classes: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-    },
-    medium: {
-      label: "Moyen",
-      classes: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-    },
-    high: {
-      label: "Élevé",
-      classes: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
-    },
-    critical: {
-      label: "Critique",
-      classes: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    },
+const mapSeverity = (severity: FraudAlert["severity"]): { statusType: StatusType; label: string } => {
+  const map: Record<FraudAlert["severity"], { statusType: StatusType; label: string }> = {
+    low: { statusType: "info", label: "Faible" },
+    medium: { statusType: "warning", label: "Moyen" },
+    high: { statusType: "error", label: "Élevé" },
+    critical: { statusType: "failed", label: "Critique" },
   };
-
-  const { label, classes } = config[severity];
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${classes}`}>
-      {label}
-    </span>
-  );
+  return map[severity] || { statusType: "info", label: severity };
 };
 
-// ============================================================================
-// STATUS BADGE COMPONENT
-// ============================================================================
-
-const StatusBadge: React.FC<{ status: FraudAlert["status"] }> = ({ status }) => {
-  const config = {
-    pending: {
-      icon: <Clock className="h-3 w-3" />,
-      label: "En attente",
-      classes: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-    },
-    validated: {
-      icon: <CheckCircle className="h-3 w-3" />,
-      label: "Validé",
-      classes: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-    },
-    dismissed: {
-      icon: <XCircle className="h-3 w-3" />,
-      label: "Ignoré",
-      classes: "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400",
-    },
-    blocked: {
-      icon: <Ban className="h-3 w-3" />,
-      label: "Bloqué",
-      classes: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    },
+const mapFraudAlertStatus = (status: FraudAlert["status"]): { statusType: StatusType; label: string } => {
+  const map: Record<FraudAlert["status"], { statusType: StatusType; label: string }> = {
+    pending: { statusType: "pending", label: "En attente" },
+    validated: { statusType: "success", label: "Validé" },
+    dismissed: { statusType: "inactive", label: "Ignoré" },
+    blocked: { statusType: "banned", label: "Bloqué" },
   };
-
-  const { icon, label, classes } = config[status];
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${classes}`}>
-      {icon}
-      {label}
-    </span>
-  );
+  return map[status] || { statusType: "pending", label: status };
 };
 
 // ============================================================================
@@ -510,10 +463,10 @@ const AdminAffiliateFraudAlerts: React.FC = () => {
                           </button>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <SeverityBadge severity={alert.severity} />
+                          <UnifiedStatusBadge status={mapSeverity(alert.severity).statusType} label={mapSeverity(alert.severity).label} size="sm" />
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <StatusBadge status={alert.status} />
+                          <UnifiedStatusBadge status={mapFraudAlertStatus(alert.status).statusType} label={mapFraudAlertStatus(alert.status).label} size="sm" />
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
@@ -653,8 +606,8 @@ const AdminAffiliateFraudAlerts: React.FC = () => {
           {selectedAlert && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <SeverityBadge severity={selectedAlert.severity} />
-                <StatusBadge status={selectedAlert.status} />
+                <UnifiedStatusBadge status={mapSeverity(selectedAlert.severity).statusType} label={mapSeverity(selectedAlert.severity).label} size="sm" />
+                <UnifiedStatusBadge status={mapFraudAlertStatus(selectedAlert.status).statusType} label={mapFraudAlertStatus(selectedAlert.status).label} size="sm" />
               </div>
 
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-3">

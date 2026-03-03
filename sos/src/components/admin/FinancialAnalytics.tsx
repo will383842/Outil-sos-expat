@@ -6,6 +6,7 @@ import { getDateLocale } from '../../utils/formatters';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, DollarSign, Calendar, Users, Percent, Download } from 'lucide-react';
 import Button from '../common/Button';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface Payment {
   id: string;
@@ -269,12 +270,7 @@ export const FinancialAnalytics: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Calcul des analytics...</span>
-      </div>
-    );
+    return <LoadingSpinner color="blue" text="Calcul des analytics..." fullPage />;
   }
 
   if (!analytics) {

@@ -275,6 +275,14 @@ const MobileSideDrawer: React.FC<MobileSideDrawerProps> = ({
                   src={photo}
                   alt={`${user?.firstName || 'User'} profile photo`}
                   className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/20"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.onerror = null;
+                    target.style.display = 'none';
+                    target.parentElement?.insertAdjacentHTML('afterbegin',
+                      '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
+                    );
+                  }}
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">

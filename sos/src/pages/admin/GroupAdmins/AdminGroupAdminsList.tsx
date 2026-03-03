@@ -32,6 +32,8 @@ import {
   Eye,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -247,17 +249,15 @@ const AdminGroupAdminsList: React.FC = () => {
 
   const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><CheckCircle className="w-3 h-3" /><FormattedMessage id="groupAdmin.status.active" defaultMessage="Active" /></span>;
-      case 'suspended':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"><Clock className="w-3 h-3" /><FormattedMessage id="groupAdmin.status.suspended" defaultMessage="Suspended" /></span>;
-      case 'banned':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><AlertTriangle className="w-3 h-3" /><FormattedMessage id="groupAdmin.status.banned" defaultMessage="Banned" /></span>;
-      default:
-        return null;
-    }
+  const getGroupAdminStatusBadge = (status: string) => {
+    const statusMap: Record<string, { statusType: StatusType; labelKey: string; defaultLabel: string }> = {
+      active: { statusType: 'active', labelKey: 'groupAdmin.status.active', defaultLabel: 'Active' },
+      suspended: { statusType: 'suspended', labelKey: 'groupAdmin.status.suspended', defaultLabel: 'Suspended' },
+      banned: { statusType: 'banned', labelKey: 'groupAdmin.status.banned', defaultLabel: 'Banned' },
+    };
+    const config = statusMap[status];
+    if (!config) return null;
+    return <StatusBadge status={config.statusType} label={intl.formatMessage({ id: config.labelKey, defaultMessage: config.defaultLabel })} size="sm" />;
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -454,7 +454,7 @@ const AdminGroupAdminsList: React.FC = () => {
                             <p className="text-xs text-gray-500">{GROUP_SIZES.find(s => s.code === admin.groupSize)?.name || admin.groupSize || intl.formatMessage({ id: 'groupAdmin.admin.list.na' })}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4">{getStatusBadge(admin.status)}</td>
+                        <td className="px-4 py-4">{getGroupAdminStatusBadge(admin.status)}</td>
                         {/* Toggle visibilité */}
                         <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                           {visibilityLoading.get(admin.id) ? (

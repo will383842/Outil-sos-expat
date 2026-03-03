@@ -19,6 +19,7 @@ import {
   Facebook,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -143,45 +144,20 @@ const AdminGroupAdminsPayments: React.FC = () => {
   const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString();
 
-  const getStatusBadge = (status: string) => {
+  const mapWithdrawalStatus = (status: string): { statusType: StatusType; label: string } => {
     switch (status) {
       case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-            <Clock className="w-3 h-3" />
-            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.pending' })}
-          </span>
-        );
+        return { statusType: 'pending', label: intl.formatMessage({ id: 'groupAdmin.admin.payments.status.pending' }) };
       case 'approved':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-            <CheckCircle className="w-3 h-3" />
-            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.approved' })}
-          </span>
-        );
+        return { statusType: 'approved', label: intl.formatMessage({ id: 'groupAdmin.admin.payments.status.approved' }) };
       case 'processing':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.processing' })}
-          </span>
-        );
+        return { statusType: 'processing', label: intl.formatMessage({ id: 'groupAdmin.admin.payments.status.processing' }) };
       case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle className="w-3 h-3" />
-            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.completed' })}
-          </span>
-        );
+        return { statusType: 'paid', label: intl.formatMessage({ id: 'groupAdmin.admin.payments.status.completed' }) };
       case 'rejected':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-            <XCircle className="w-3 h-3" />
-            {intl.formatMessage({ id: 'groupAdmin.admin.payments.status.rejected' })}
-          </span>
-        );
+        return { statusType: 'rejected', label: intl.formatMessage({ id: 'groupAdmin.admin.payments.status.rejected' }) };
       default:
-        return null;
+        return { statusType: 'pending', label: status };
     }
   };
 
@@ -334,7 +310,10 @@ const AdminGroupAdminsPayments: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        {getStatusBadge(withdrawal.status)}
+                        {(() => {
+                          const mapped = mapWithdrawalStatus(withdrawal.status);
+                          return <StatusBadge status={mapped.statusType} label={mapped.label} size="sm" />;
+                        })()}
                         {withdrawal.rejectionReason && (
                           <p className="text-xs text-red-500 mt-1">{withdrawal.rejectionReason}</p>
                         )}

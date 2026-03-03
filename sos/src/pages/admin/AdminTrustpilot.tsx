@@ -3,6 +3,7 @@
 // Analyse des performances de la stratégie d'avis externes
 
 import React, { useState, useEffect, useCallback } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useIntl } from 'react-intl';
 import {
   LineChart,
@@ -44,6 +45,7 @@ import {
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Button from '../../components/common/Button';
+import { KPICard } from '@/components/admin/KPICard';
 
 // Types
 interface TrustpilotEvent {
@@ -143,35 +145,7 @@ const formatPercentage = (value: number): string => {
   return `${value.toFixed(1)}%`;
 };
 
-// KPI Card Component
-const KPICard: React.FC<{
-  title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ReactNode;
-  color: string;
-  subtitle?: string;
-}> = ({ title, value, change, icon, color, subtitle }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
-        {typeof change === 'number' && (
-          <div className={`flex items-center mt-2 text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {change >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-            <span className="ml-1">{Math.abs(change).toFixed(1)}%</span>
-            <span className="ml-1 text-gray-400">vs p\u00e9riode pr\u00e9c.</span>
-          </div>
-        )}
-      </div>
-      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
-        {icon}
-      </div>
-    </div>
-  </div>
-);
+// KPICard is imported from @/components/admin/KPICard
 
 // Star Rating Component
 const StarRating: React.FC<{ rating: number; size?: number }> = ({ rating, size = 16 }) => (
@@ -400,9 +374,7 @@ const AdminTrustpilot: React.FC = () => {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
-            </div>
+            <LoadingSpinner size="large" color="green" fullPage />
           ) : (
             <div className="space-y-8">
               {/* KPI Cards */}
@@ -410,30 +382,26 @@ const AdminTrustpilot: React.FC = () => {
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.trustpilot.kpi.invitesSent', defaultMessage: 'Invitations envoy\u00e9es' })}
                   value={summary?.totalInvitesSent || 0}
-                  icon={<Mail size={24} className="text-white" />}
-                  color="bg-green-600"
-                  subtitle={`Clients satisfaits (4-5\u2605)`}
+                  icon={<Mail size={24} className="text-green-600" />}
+                  colorTheme="green"
                 />
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.trustpilot.kpi.clicked', defaultMessage: 'Clics sur Trustpilot' })}
                   value={summary?.totalClicked || 0}
-                  icon={<MousePointer size={24} className="text-white" />}
-                  color="bg-blue-600"
-                  subtitle="Liens Trustpilot cliqu\u00e9s"
+                  icon={<MousePointer size={24} className="text-blue-600" />}
+                  colorTheme="blue"
                 />
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.trustpilot.kpi.clickRate', defaultMessage: 'Taux de clic' })}
                   value={formatPercentage(summary?.clickRate || 0)}
-                  icon={<TrendingUp size={24} className="text-white" />}
-                  color="bg-purple-600"
-                  subtitle="Clics / Invitations"
+                  icon={<TrendingUp size={24} className="text-purple-600" />}
+                  colorTheme="purple"
                 />
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.trustpilot.kpi.avgRating', defaultMessage: 'Note moyenne' })}
                   value={`${(summary?.avgRating || 0).toFixed(1)}\u2605`}
-                  icon={<Star size={24} className="text-white fill-white" />}
-                  color="bg-yellow-500"
-                  subtitle="Des clients invit\u00e9s"
+                  icon={<Star size={24} className="text-amber-600 fill-amber-600" />}
+                  colorTheme="amber"
                 />
               </div>
 

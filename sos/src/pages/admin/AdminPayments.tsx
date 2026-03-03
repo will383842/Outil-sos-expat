@@ -43,6 +43,8 @@ import {
 } from 'lucide-react';
 import { isUrlExpired } from '../../utils/urlUtils';
 import { useIntl, FormattedMessage } from 'react-intl';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import { getCountryFlag, getCountryName } from '../../utils/formatters';
 import { countriesData } from '../../data/countries';
 import { toCsv } from '../../services/finance/reports';
@@ -659,36 +661,13 @@ const AdminPayments: React.FC = () => {
 
   // Render status badge with icon
   const renderStatusBadge = (status: PaymentStatus) => {
-    switch (status) {
-      case 'paid':
-        return (
-          <span className="inline-flex items-center text-green-700 bg-green-100 border border-green-200 px-2 py-0.5 rounded text-sm">
-            <CheckCircle size={14} className="mr-1" />
-            {intl.formatMessage({ id: 'admin.payments.statusPaid' })}
-          </span>
-        );
-      case 'refunded':
-        return (
-          <span className="inline-flex items-center text-blue-700 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded text-sm">
-            <RotateCcw size={14} className="mr-1" />
-            {intl.formatMessage({ id: 'admin.payments.statusRefunded' })}
-          </span>
-        );
-      case 'failed':
-        return (
-          <span className="inline-flex items-center text-red-700 bg-red-100 border border-red-200 px-2 py-0.5 rounded text-sm">
-            <XCircle size={14} className="mr-1" />
-            {intl.formatMessage({ id: 'admin.payments.statusFailed' })}
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded text-sm">
-            <Clock size={14} className="mr-1" />
-            {intl.formatMessage({ id: 'admin.payments.statusPending' })}
-          </span>
-        );
-    }
+    const statusMap: Record<string, { type: StatusType; label: string; icon: React.ReactNode }> = {
+      paid: { type: 'paid', label: intl.formatMessage({ id: 'admin.payments.statusPaid' }), icon: <CheckCircle size={14} /> },
+      refunded: { type: 'refunded', label: intl.formatMessage({ id: 'admin.payments.statusRefunded' }), icon: <RotateCcw size={14} /> },
+      failed: { type: 'failed', label: intl.formatMessage({ id: 'admin.payments.statusFailed' }), icon: <XCircle size={14} /> },
+    };
+    const mapped = statusMap[status] || { type: 'pending' as StatusType, label: intl.formatMessage({ id: 'admin.payments.statusPending' }), icon: <Clock size={14} /> };
+    return <StatusBadge status={mapped.type} label={mapped.label} size="sm" icon={mapped.icon} />;
   };
 
   const activeCountries = useMemo(() => getActiveCountries(), []);

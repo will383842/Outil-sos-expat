@@ -21,7 +21,6 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   Phone,
   DollarSign,
@@ -43,6 +42,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { fetchWithCache } from "../../utils/firestoreCache";
+import { KPICard } from '@/components/admin/KPICard';
 
 // Types
 interface ChartDataPoint {
@@ -194,42 +194,7 @@ const groupByDate = (
     });
 };
 
-// KPI Card Component
-const KPICard: React.FC<{
-  title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ReactNode;
-  color: string;
-  suffix?: string;
-}> = ({ title, value, change, icon, color, suffix }) => {
-  const intl = useIntl();
-  const t = (key: string) => intl.formatMessage({ id: key });
-
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className={`text-2xl font-bold ${color}`}>
-            {typeof value === "number" ? value.toLocaleString("fr-FR") : value}
-            {suffix && <span className="text-sm font-normal ml-1">{suffix}</span>}
-          </p>
-          {change !== undefined && (
-            <div className={`flex items-center text-sm mt-1 ${change >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {change >= 0 ? <TrendingUp size={14} className="mr-1" /> : <TrendingDown size={14} className="mr-1" />}
-              <span>{change >= 0 ? "+" : ""}{change.toFixed(1)}%</span>
-              <span className="text-gray-400 ml-1">{t("admin.charts.vsPreviousPeriod")}</span>
-            </div>
-          )}
-        </div>
-        <div className={`p-3 rounded-full bg-opacity-10 ${color.replace("text-", "bg-")}`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-};
+// KPICard is imported from @/components/admin/KPICard
 
 // Main Component
 const DashboardCharts: React.FC = () => {
@@ -578,34 +543,34 @@ const DashboardCharts: React.FC = () => {
             <KPICard
               title={t("admin.charts.newUsers")}
               value={stats.kpis.totalNewUsers}
-              change={stats.kpis.userGrowth}
+              percentChange={stats.kpis.userGrowth}
               icon={<UserPlus size={24} className="text-blue-600" />}
-              color="text-blue-600"
+              colorTheme="blue"
             />
             <KPICard
               title={t("admin.charts.newProviders")}
               value={stats.kpis.totalNewProviders}
               icon={<Briefcase size={24} className="text-purple-600" />}
-              color="text-purple-600"
+              colorTheme="purple"
             />
             <KPICard
               title={t("admin.charts.totalCalls")}
               value={stats.kpis.totalCalls}
               icon={<Phone size={24} className="text-green-600" />}
-              color="text-green-600"
+              colorTheme="green"
             />
             <KPICard
               title={t("admin.charts.successRate")}
               value={`${stats.kpis.conversionRate.toFixed(1)}%`}
               icon={<TrendingUp size={24} className="text-amber-600" />}
-              color="text-amber-600"
+              colorTheme="amber"
             />
             <KPICard
               title={t("admin.charts.revenue")}
               value={stats.kpis.totalRevenue.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
-              change={stats.kpis.revenueGrowth}
+              percentChange={stats.kpis.revenueGrowth}
               icon={<DollarSign size={24} className="text-red-600" />}
-              color="text-red-600"
+              colorTheme="red"
               suffix="€"
             />
           </div>

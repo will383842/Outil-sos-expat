@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useAdminTranslations } from '../../utils/adminTranslations';
 import {
@@ -55,6 +56,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import AdminErrorState from '../../components/admin/AdminErrorState';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/common/Button';
@@ -160,6 +162,7 @@ const AdminUsers: React.FC = () => {
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<'all' | Role>(() => {
     const path = location.pathname;
     if (path.includes('/users/chatters')) return 'chatter';
@@ -224,6 +227,7 @@ const AdminUsers: React.FC = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         // Construction sûre des contraintes de requête (sans `any`)
         const queryConstraints: QueryConstraint[] = [];
@@ -276,13 +280,14 @@ const AdminUsers: React.FC = () => {
         setHasMore(usersSnapshot.docs.length === page * USERS_PER_PAGE);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-         
+
         console.error('Erreur lors du chargement des utilisateurs :', err);
         logError({
           origin: 'frontend',
           error: `Error loading users: ${message}`,
           context: { component: 'AdminUsers' },
         });
+        setError('Erreur lors du chargement des utilisateurs. Veuillez réessayer.');
       } finally {
         setLoading(false);
       }
@@ -802,6 +807,8 @@ const AdminUsers: React.FC = () => {
           </div>
         </div>
 
+        {error && <AdminErrorState error={error} onRetry={() => { setPage(1); }} />}
+
         {/* Cards synthèse - Ligne 1: Principaux */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -1284,10 +1291,7 @@ const AdminUsers: React.FC = () => {
                 {loading ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-4 text-center">
-                      <div className="flex justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
-                      </div>
-                      <p className="mt-2 text-gray-500">{adminT.loading}</p>
+                      <LoadingSpinner text={adminT.loading} />
                     </td>
                   </tr>
                 ) : filteredUsers.length > 0 ? (

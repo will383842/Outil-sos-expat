@@ -13,7 +13,8 @@ import { decryptPhoneNumber } from './utils/encryption';
 // Import pricing service to calculate provider earnings
 import { getServiceAmounts } from './services/pricingService';
 // P0 FIX: Import setProviderBusy to reserve provider immediately after payment
-import { setProviderBusy } from './callables/providerStatusManager';
+// AUDIT FIX: Import setProviderAvailable to release provider on error after reservation
+import { setProviderBusy, setProviderAvailable } from './callables/providerStatusManager';
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import {
   ENCRYPTION_KEY,
@@ -157,6 +158,10 @@ export const createAndScheduleCallHTTPS = onCall(
       callSessionId: request.data?.callSessionId,
       amount: request.data?.amount,
     });
+
+    // AUDIT FIX: Track if provider was marked busy, to release on error
+    let providerMarkedBusy = false;
+    let reservedProviderId: string | null = null;
 
     try {
       // ========================================
@@ -455,6 +460,9 @@ export const createAndScheduleCallHTTPS = onCall(
       }
 
       console.log(`✅ [${requestId}] Provider ${providerId} réservé (pending_call)`);
+      // AUDIT FIX: Track successful reservation for cleanup on error
+      providerMarkedBusy = true;
+      reservedProviderId = providerId;
 
       // ========================================
       // 8.1 CRÉATION DE LA SESSION D'APPEL
@@ -987,7 +995,24 @@ export const createAndScheduleCallHTTPS = onCall(
       });
 
       // ========================================
-      // 11.1 ANNULATION AUTOMATIQUE DU PAIEMENT EN CAS D'ÉCHEC
+      // 11.1 AUDIT FIX: LIBÉRATION DU PROVIDER SI MARQUÉ BUSY
+      // ========================================
+      // Si le provider a été réservé (setProviderBusy success) mais qu'une erreur
+      // est survenue ensuite (createCallSession, Cloud Tasks, etc.), on le libère
+      // pour éviter qu'il reste bloqué busy indéfiniment
+      if (providerMarkedBusy && reservedProviderId) {
+        try {
+          console.log(`🔓 [${requestId}] Libération du provider ${reservedProviderId} suite à l'échec...`);
+          await setProviderAvailable(reservedProviderId, 'error_recovery');
+          console.log(`✅ [${requestId}] Provider ${reservedProviderId} libéré avec succès`);
+        } catch (releaseError) {
+          console.error(`⚠️ [${requestId}] Impossible de libérer le provider:`, releaseError);
+          // Le cron checkProviderInactivity le libérera sous 15 minutes max
+        }
+      }
+
+      // ========================================
+      // 11.2 ANNULATION AUTOMATIQUE DU PAIEMENT EN CAS D'ÉCHEC
       // ========================================
       const paymentIntentId = request.data?.paymentIntentId;
       if (paymentIntentId && paymentIntentId.startsWith('pi_')) {

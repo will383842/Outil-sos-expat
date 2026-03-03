@@ -14,6 +14,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   AlertTriangle,
   Clock,
@@ -201,26 +202,34 @@ const AdminFinancePayouts: React.FC = () => {
     };
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-      pending: { color: "bg-yellow-100 text-yellow-800", icon: <Clock className="w-3 h-3" />, label: "En attente" },
-      failed: { color: "bg-red-100 text-red-800", icon: <XCircle className="w-3 h-3" />, label: "Échec" },
-      max_retries_reached: { color: "bg-orange-100 text-orange-800", icon: <AlertTriangle className="w-3 h-3" />, label: "Max retries" },
-      resolved: { color: "bg-green-100 text-green-800", icon: <CheckCircle className="w-3 h-3" />, label: "Résolu" },
-      pending_kyc: { color: "bg-blue-100 text-blue-800", icon: <User className="w-3 h-3" />, label: "KYC en attente" },
-      processing: { color: "bg-purple-100 text-purple-800", icon: <RefreshCw className="w-3 h-3" />, label: "En cours" },
-      completed: { color: "bg-green-100 text-green-800", icon: <CheckCircle className="w-3 h-3" />, label: "Complété" },
-    };
-
-    const config = statusConfig[status] || { color: "bg-gray-100 text-gray-800", icon: null, label: status };
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        {config.icon}
-        {config.label}
-      </span>
-    );
+  /** Map payout/escrow statuses to unified StatusType */
+  const payoutStatusLabels: Record<string, string> = {
+    pending: "En attente",
+    failed: "Échec",
+    max_retries_reached: "Max retries",
+    resolved: "Résolu",
+    pending_kyc: "KYC en attente",
+    processing: "En cours",
+    completed: "Complété",
   };
+
+  const payoutStatusMap: Record<string, StatusType> = {
+    pending: "pending",
+    failed: "failed",
+    max_retries_reached: "error",
+    resolved: "success",
+    pending_kyc: "info",
+    processing: "processing",
+    completed: "success",
+  };
+
+  const getStatusBadge = (status: string) => (
+    <StatusBadge
+      status={payoutStatusMap[status] || "pending"}
+      label={payoutStatusLabels[status] || status}
+      size="sm"
+    />
+  );
 
   const getDaysAgo = (timestamp: Timestamp | undefined) => {
     if (!timestamp) return "-";

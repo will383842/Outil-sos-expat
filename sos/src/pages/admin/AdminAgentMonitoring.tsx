@@ -42,7 +42,9 @@ import {
   XCircle
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useIntl } from 'react-intl';
 
@@ -192,32 +194,24 @@ const AdminAgentMonitoring: React.FC = () => {
     return <Minus className="w-4 h-4 text-gray-500" />;
   };
 
-  // Helper pour le badge de statut
-  const StatusBadge: React.FC<{ status: AgentPerformanceMetrics['status'] }> = ({ status }) => {
-    const config = {
-      IDLE: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Idle' },
-      PROCESSING: { color: 'bg-blue-100 text-blue-800', icon: Activity, label: 'Processing' },
-      ERROR: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Error' },
-      OFFLINE: { color: 'bg-gray-100 text-gray-800', icon: Server, label: 'Offline' }
-    };
-    const { color, icon: Icon, label } = config[status];
+  // Map agent status to unified StatusType
+  const agentStatusMap: Record<AgentPerformanceMetrics['status'], { type: StatusType; label: string }> = {
+    IDLE: { type: 'success', label: 'Idle' },
+    PROCESSING: { type: 'processing', label: 'Processing' },
+    ERROR: { type: 'error', label: 'Error' },
+    OFFLINE: { type: 'offline', label: 'Offline' },
+  };
 
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${color}`}>
-        <Icon className="w-3 h-3 mr-1" />
-        {label}
-      </span>
-    );
+  const AgentStatusBadge: React.FC<{ status: AgentPerformanceMetrics['status'] }> = ({ status }) => {
+    const { type, label } = agentStatusMap[status];
+    return <UnifiedStatusBadge status={type} label={label} size="sm" />;
   };
 
   if (loading && !metrics) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">{intl.formatMessage({ id: 'admin.common.loading', defaultMessage: 'Chargement...' })}</p>
-          </div>
+          <LoadingSpinner size="large" color="blue" text={intl.formatMessage({ id: 'admin.common.loading', defaultMessage: 'Chargement...' })} />
         </div>
       </AdminLayout>
     );
@@ -560,7 +554,7 @@ const AdminAgentMonitoring: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <StatusBadge status={agent.status} />
+                    <AgentStatusBadge status={agent.status} />
                   </td>
                   <td className="py-3 px-4 text-right">
                     <span className="font-medium">{agent.tasks.total24h}</span>

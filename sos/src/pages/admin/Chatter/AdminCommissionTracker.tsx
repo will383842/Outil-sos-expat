@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import CommissionWaterfall from '../../../components/admin/CommissionWaterfall';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
+import { KPICard as UnifiedKPICard } from '@/components/admin/KPICard';
 
 // Design tokens
 const UI = {
@@ -49,13 +51,6 @@ const UI = {
   },
   input: "w-full px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500",
   select: "px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500",
-  badge: {
-    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300",
-    validated: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300",
-    available: "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300",
-    paid: "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300",
-    cancelled: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300",
-  },
 } as const;
 
 // Commission types with labels
@@ -216,53 +211,24 @@ const getTypeColor = (type: string): string => {
   }
 };
 
-// KPI Card Component
-const KPICard: React.FC<{
-  title: string;
-  value: string;
-  subtitle?: string;
-  icon: React.ReactNode;
-  trend?: { value: number; positive: boolean };
-  color: string;
-}> = ({ title, value, subtitle, icon, trend, color }) => (
-  <div className={UI.card + " p-6"}>
-    <div className="flex items-center justify-between mb-4">
-      <div className={`p-3 rounded-xl ${color}`}>{icon}</div>
-      {trend && (
-        <div
-          className={`flex items-center gap-1 text-sm font-medium ${
-            trend.positive ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
-          {trend.positive ? (
-            <ArrowUpRight className="w-4 h-4" />
-          ) : (
-            <ArrowDownRight className="w-4 h-4" />
-          )}
-          {Math.abs(trend.value)}%
-        </div>
-      )}
-    </div>
-    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-      {value}
-    </div>
-    <div className="text-sm text-gray-500 dark:text-gray-400">{title}</div>
-    {subtitle && (
-      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-        {subtitle}
-      </div>
-    )}
-  </div>
-);
+// KPICard is imported from @/components/admin/KPICard as UnifiedKPICard
 
-// Status Badge Component
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const badgeClass = UI.badge[status as keyof typeof UI.badge] || UI.badge.pending;
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
+// Commission status mapping
+const mapCommissionStatusType = (status: string): StatusType => {
+  switch (status) {
+    case 'pending':
+      return 'pending';
+    case 'validated':
+      return 'validating';
+    case 'available':
+      return 'available';
+    case 'paid':
+      return 'paid';
+    case 'cancelled':
+      return 'cancelled';
+    default:
+      return 'pending';
+  }
 };
 
 // Main Component
@@ -492,33 +458,33 @@ const AdminCommissionTracker: React.FC = () => {
         {/* KPIs */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPICard
+            <UnifiedKPICard
               title="Total Commissions"
               value={formatCurrency(stats.totals.amount)}
-              subtitle={`${stats.totals.count.toLocaleString()} commissions`}
-              icon={<DollarSign className="w-6 h-6 text-white" />}
-              color="bg-gradient-to-br from-green-500 to-emerald-600"
+              icon={<DollarSign className="w-6 h-6 text-green-600" />}
+              colorTheme="green"
+              variant="glass"
             />
-            <KPICard
+            <UnifiedKPICard
               title="Pending"
               value={formatCurrency(stats.totals.pending)}
-              subtitle="In validation period"
-              icon={<Clock className="w-6 h-6 text-white" />}
-              color="bg-gradient-to-br from-yellow-500 to-orange-500"
+              icon={<Clock className="w-6 h-6 text-amber-600" />}
+              colorTheme="amber"
+              variant="glass"
             />
-            <KPICard
+            <UnifiedKPICard
               title="Available"
               value={formatCurrency(stats.totals.available)}
-              subtitle="Ready for withdrawal"
-              icon={<CheckCircle className="w-6 h-6 text-white" />}
-              color="bg-gradient-to-br from-blue-500 to-indigo-600"
+              icon={<CheckCircle className="w-6 h-6 text-blue-600" />}
+              colorTheme="blue"
+              variant="glass"
             />
-            <KPICard
+            <UnifiedKPICard
               title="Paid Out"
               value={formatCurrency(stats.totals.paid)}
-              subtitle="Total withdrawn"
-              icon={<TrendingUp className="w-6 h-6 text-white" />}
-              color="bg-gradient-to-br from-purple-500 to-pink-600"
+              icon={<TrendingUp className="w-6 h-6 text-purple-600" />}
+              colorTheme="purple"
+              variant="glass"
             />
           </div>
         )}
@@ -841,7 +807,7 @@ const AdminCommissionTracker: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={commission.status} />
+                        <StatusBadge status={mapCommissionStatusType(commission.status)} label={commission.status.charAt(0).toUpperCase() + commission.status.slice(1)} size="sm" />
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-700 dark:text-gray-300">

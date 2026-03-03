@@ -997,8 +997,11 @@ async function handleRequest(request, env, ctx) {
     // Static assets: fetch the exact path
     pagesUrl = new URL(pathname, PAGES_ORIGIN);
   } else {
-    // SPA routes: fetch root index.html (React Router handles routing)
-    pagesUrl = new URL('/', PAGES_ORIGIN);
+    // SPA routes: fetch the actual pathname from Pages origin.
+    // Pages serves index.html (with 404 status) for unknown paths — this is expected SPA behavior.
+    // We previously fetched '/' but _redirects has '/ /fr-fr 301' which causes a redirect chain
+    // ending in 404, triggering our fallback loading page instead of serving the app.
+    pagesUrl = new URL(pathname, PAGES_ORIGIN);
   }
   pagesUrl.search = url.search; // Preserve query parameters
 
@@ -1025,17 +1028,20 @@ async function handleRequest(request, env, ctx) {
     newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     newHeaders.set('Cross-Origin-Embedder-Policy', 'unsafe-none');
 
-    // For SPA routes: if Pages returned OK, serve with 200 (React Router handles routing).
-    // If Pages returned an error (503, 404, etc.), serve our fallback HTML so the browser retries.
+    // For SPA routes: Cloudflare Pages serves index.html for unknown paths (SPA behavior).
+    // Pages returns 200 for exact matches, or 404 with index.html body for SPA routes.
+    // Both are valid — React Router handles client-side routing.
+    // Only genuine server errors (500, 503) should trigger the fallback.
     if (!isAsset) {
-      if (originResponse.ok) {
+      if (originResponse.ok || originResponse.status === 404) {
+        // 404 from Pages = SPA route (index.html served as body) — this is normal
         return new Response(originResponse.body, {
           status: 200,
           statusText: 'OK',
           headers: newHeaders,
         });
       }
-      // Pages returned an error for SPA route — serve auto-retry fallback
+      // Genuine server error (500, 503, etc.) — serve retry fallback
       console.error(`[WORKER] Pages returned ${originResponse.status} for SPA route ${pathname}`);
       return new Response(
         '<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="3"><title>Loading...</title></head><body><p>Loading...</p></body></html>',

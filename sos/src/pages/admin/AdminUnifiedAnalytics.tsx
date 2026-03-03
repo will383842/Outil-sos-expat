@@ -60,6 +60,7 @@ import { fetchWithCache } from '../../utils/firestoreCache';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { KPICard } from '@/components/admin/KPICard';
 
 // ============================================================================
 // TYPES
@@ -364,62 +365,7 @@ const formatDateLabel = (date: Date, period: PeriodType): string => {
 // COMPONENTS
 // ============================================================================
 
-// KPI Card Component
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  trend?: number;
-  icon: React.ReactNode;
-  iconBgColor: string;
-  loading?: boolean;
-  subtitle?: string;
-}
-
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  trend,
-  icon,
-  iconBgColor,
-  loading,
-  subtitle,
-}) => {
-  const isPositive = trend !== undefined && trend >= 0;
-
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          {loading ? (
-            <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
-          ) : (
-            <p className="text-2xl font-bold text-gray-900">
-              {typeof value === 'number' ? formatNumber(value) : value}
-            </p>
-          )}
-          {trend !== undefined && !loading && (
-            <div className={`flex items-center text-sm mt-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-              {isPositive ? (
-                <TrendingUp size={14} className="mr-1" />
-              ) : (
-                <TrendingDown size={14} className="mr-1" />
-              )}
-              <span>{formatPercentage(trend)}</span>
-              <span className="text-gray-400 ml-1 text-xs">vs periode prec.</span>
-            </div>
-          )}
-          {subtitle && !loading && (
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-          )}
-        </div>
-        <div className={`p-3 rounded-full ${iconBgColor}`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-};
+// KPICard is imported from @/components/admin/KPICard
 
 // Section Header Component
 interface SectionHeaderProps {
@@ -1319,29 +1265,26 @@ const AdminUnifiedAnalytics: React.FC = () => {
             <KPICard
               title={t.dauFull}
               value={data?.dau.current || 0}
-              trend={data?.dau.trend}
+              percentChange={data?.dau.trend}
               icon={<Users size={24} className="text-blue-600" />}
-              iconBgColor="bg-blue-100"
-              loading={isLoading}
-              subtitle={t.dau}
+              colorTheme="blue"
+              isLoading={isLoading}
             />
             <KPICard
               title={t.wauFull}
               value={data?.wau.current || 0}
-              trend={data?.wau.trend}
+              percentChange={data?.wau.trend}
               icon={<Activity size={24} className="text-green-600" />}
-              iconBgColor="bg-green-100"
-              loading={isLoading}
-              subtitle={t.wau}
+              colorTheme="green"
+              isLoading={isLoading}
             />
             <KPICard
               title={t.mauFull}
               value={data?.mau.current || 0}
-              trend={data?.mau.trend}
+              percentChange={data?.mau.trend}
               icon={<TrendingUp size={24} className="text-purple-600" />}
-              iconBgColor="bg-purple-100"
-              loading={isLoading}
-              subtitle={t.mau}
+              colorTheme="purple"
+              isLoading={isLoading}
             />
           </div>
 
@@ -1424,26 +1367,26 @@ const AdminUnifiedAnalytics: React.FC = () => {
             <KPICard
               title={t.totalCalls}
               value={data?.totalCalls.current || 0}
-              trend={data?.totalCalls.trend}
+              percentChange={data?.totalCalls.trend}
               icon={<Phone size={24} className="text-green-600" />}
-              iconBgColor="bg-green-100"
-              loading={isLoading}
+              colorTheme="green"
+              isLoading={isLoading}
             />
             <KPICard
               title={t.successRate}
               value={`${(data?.successRate.current || 0).toFixed(1)}%`}
-              trend={data?.successRate.trend}
+              percentChange={data?.successRate.trend}
               icon={<CheckCircle size={24} className="text-blue-600" />}
-              iconBgColor="bg-blue-100"
-              loading={isLoading}
+              colorTheme="blue"
+              isLoading={isLoading}
             />
             <KPICard
               title={t.avgDuration}
               value={`${(data?.avgDuration.current || 0).toFixed(1)} ${t.minutes}`}
-              trend={data?.avgDuration.trend}
-              icon={<Clock size={24} className="text-orange-600" />}
-              iconBgColor="bg-orange-100"
-              loading={isLoading}
+              percentChange={data?.avgDuration.trend}
+              icon={<Clock size={24} className="text-amber-600" />}
+              colorTheme="amber"
+              isLoading={isLoading}
             />
           </div>
 
@@ -1557,26 +1500,26 @@ const AdminUnifiedAnalytics: React.FC = () => {
             <KPICard
               title={t.totalRevenue}
               value={formatCurrency(data?.totalRevenue.current || 0)}
-              trend={data?.totalRevenue.trend}
+              percentChange={data?.totalRevenue.trend}
               icon={<DollarSign size={24} className="text-red-600" />}
-              iconBgColor="bg-red-100"
-              loading={isLoading}
+              colorTheme="red"
+              isLoading={isLoading}
             />
             <KPICard
               title={t.platformFees}
               value={formatCurrency(data?.platformFees.current || 0)}
-              trend={data?.platformFees.trend}
+              percentChange={data?.platformFees.trend}
               icon={<TrendingUp size={24} className="text-green-600" />}
-              iconBgColor="bg-green-100"
-              loading={isLoading}
+              colorTheme="green"
+              isLoading={isLoading}
             />
             <KPICard
               title={t.providerPayouts}
               value={formatCurrency(data?.providerPayouts.current || 0)}
-              trend={data?.providerPayouts.trend}
+              percentChange={data?.providerPayouts.trend}
               icon={<Briefcase size={24} className="text-purple-600" />}
-              iconBgColor="bg-purple-100"
-              loading={isLoading}
+              colorTheme="purple"
+              isLoading={isLoading}
             />
           </div>
 

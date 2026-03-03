@@ -19,7 +19,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-import { adminMenuTree, type AdminMenuItem } from '../../config/adminMenu';
+import { adminMenuTree, buildBreadcrumb, getFinalMenu, type AdminMenuItem } from '../../config/adminMenu';
 import SidebarItem from './sidebar/SidebarItem';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,6 +27,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
 import Button from '../common/Button';
 import ErrorBoundary from '../common/ErrorBoundary';
+import LoadingSpinner from '../common/LoadingSpinner';
 import { logError } from '../../utils/logging';
 
 // =============================================================================
@@ -154,7 +155,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // HOOKS
   // =========================================================================
   const navigate = useNavigate();
-  const _location = useLocation();
+  const location = useLocation();
   const outlet = useOutlet();
   
   const authContext = useAuth();
@@ -181,20 +182,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // MENU FILTRE PAR ROLE
   // =========================================================================
   const filteredMenu = useMemo(() => {
-    const userRole = user?.role || 'admin';
-    if (userRole === 'admin') return adminMenuTree;
-    // Pour les rôles non-admin (ex: accountant), ne montrer que les items
-    // qui ont allowedRoles incluant ce rôle (ou sans restriction)
-    function filterItems(items: AdminMenuItem[]): AdminMenuItem[] {
-      return items.filter(item => {
-        if (!item.allowedRoles) return false; // pas de allowedRoles = admin only
-        return item.allowedRoles.includes(userRole);
-      }).map(item => ({
-        ...item,
-        children: item.children ? filterItems(item.children) : undefined,
-      }));
-    }
-    return filterItems(adminMenuTree);
+    return getFinalMenu(user?.role || 'admin');
   }, [user?.role]);
 
   // =========================================================================
@@ -302,6 +290,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     return `${first}${last}`.toUpperCase();
   }, [user?.firstName, user?.lastName]);
 
+  const breadcrumbItems = useMemo(() => {
+    return buildBreadcrumb(location.pathname);
+  }, [location.pathname]);
+
   // =========================================================================
   // GUARDS
   // =========================================================================
@@ -310,10 +302,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   if (isLoading || !authInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t("admin.layout.loading")}</p>
-        </div>
+        <LoadingSpinner size="large" text={t("admin.layout.loading")} />
       </div>
     );
   }
@@ -484,7 +473,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
                 <div className="flex-1 overflow-y-auto">
                   <nav className="px-2 py-4 space-y-1">
-                    {adminMenuTree.map((node) => (
+                    {filteredMenu.map((node) => (
                       <SidebarItem key={node.id} node={node} isSidebarCollapsed={!isSidebarOpen} />
                     ))}
 
@@ -556,12 +545,28 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               </button>
             )}
             <div className="flex-1 px-4 flex justify-between items-center">
-              <nav className="flex items-center text-sm">
+              <nav className="flex items-center text-sm" aria-label="Breadcrumb">
                 <Link to="/" className="text-gray-500 hover:text-gray-700 p-1 -m-1 rounded-md" aria-label={t('admin.layout.backHome')}>
                   <Home className="h-5 w-5" />
                 </Link>
                 <span className="mx-2 text-gray-400">/</span>
-                <span className="text-gray-900 font-medium">{t('admin.layout.administration')}</span>
+                <Link to="/admin" className="text-gray-500 hover:text-gray-700">
+                  {t('admin.layout.administration')}
+                </Link>
+                {breadcrumbItems.map((item, index) => (
+                  <React.Fragment key={item.id}>
+                    <span className="mx-2 text-gray-400">/</span>
+                    {index === breadcrumbItems.length - 1 ? (
+                      <span className="text-gray-900 font-medium truncate max-w-[200px]">
+                        {intl.formatMessage({ id: item.labelKey, defaultMessage: item.id })}
+                      </span>
+                    ) : (
+                      <Link to={item.path || '#'} className="text-gray-500 hover:text-gray-700 truncate max-w-[150px]">
+                        {intl.formatMessage({ id: item.labelKey, defaultMessage: item.id })}
+                      </Link>
+                    )}
+                  </React.Fragment>
+                ))}
               </nav>
               <div className="flex items-center space-x-4">
                 <AdminLanguageSelector />

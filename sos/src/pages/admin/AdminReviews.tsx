@@ -1,5 +1,6 @@
 // src/pages/admin/AdminReviews.tsx
 import React, { useEffect, useMemo, useState } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -43,6 +44,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import AdminErrorState from '../../components/admin/AdminErrorState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -325,6 +329,7 @@ const AdminReviews: React.FC = () => {
   // List & pagination
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
 
@@ -603,6 +608,7 @@ const AdminReviews: React.FC = () => {
   const loadReviews = async (loadMore = false) => {
     try {
       setIsLoading(true);
+      if (!loadMore) setError(null);
       const qRef = query(collection(db, 'reviews'), ...buildQueryConstraints(loadMore));
       const snap = await getDocs(qRef);
 
@@ -624,6 +630,7 @@ const AdminReviews: React.FC = () => {
       }
     } catch (err) {
       console.error('Error loading reviews:', err);
+      setError(lang === 'fr' ? 'Erreur lors du chargement des avis. Veuillez réessayer.' : 'Error loading reviews. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -1041,21 +1048,13 @@ rows[m][bucketKey] += 1;
   /* =========================== UI HELPERS =========================== */
 
   const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'published':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{t('published')}</span>;
-      case 'pending':
-      case undefined:
-        return (
-          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium flex items-center">
-            <Clock size={12} className="mr-1" /> {t('pending')}
-          </span>
-        );
-      case 'hidden':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">{t('hide')}</span>;
-      default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
-    }
+    const statusMap: Record<string, { type: StatusType; label: string }> = {
+      published: { type: 'success', label: t('published') },
+      pending: { type: 'warning', label: t('pending') },
+      hidden: { type: 'error', label: t('hide') },
+    };
+    const mapped = statusMap[status || 'pending'] || { type: 'pending' as StatusType, label: status || '' };
+    return <StatusBadge status={mapped.type} label={mapped.label} size="sm" />;
   };
 
   const getServiceTypeBadge = (serviceType?: string) => {
@@ -1266,6 +1265,8 @@ rows[m][bucketKey] += 1;
               </div>
             </div>
           </div>
+
+          {error && <AdminErrorState error={error} onRetry={() => loadReviews(false)} className="mb-6" />}
 
           {/* Alerts */}
           <div className="space-y-2 mb-6">
@@ -1749,10 +1750,7 @@ rows[m][bucketKey] += 1;
                   {isLoading && reviews.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                        <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                        </div>
-                        <p className="mt-2">{t('loading')}</p>
+                        <LoadingSpinner text={t('loading')} />
                       </td>
                     </tr>
                   ) : filteredAndSorted.length > 0 ? (

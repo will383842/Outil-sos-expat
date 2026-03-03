@@ -14,6 +14,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useIntl } from 'react-intl';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import {
   Shield,
   AlertTriangle,
@@ -146,30 +148,20 @@ const AdminSystemHealth: React.FC = () => {
   };
 
   // Status badge component
-  const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-    const colors: Record<string, string> = {
-      healthy: 'bg-green-100 text-green-800',
-      passed: 'bg-green-100 text-green-800',
-      warning: 'bg-yellow-100 text-yellow-800',
-      critical: 'bg-red-100 text-red-800',
-      failed: 'bg-red-100 text-red-800',
-      emergency: 'bg-purple-100 text-purple-800'
+  const HealthStatusBadge: React.FC<{ status: string }> = ({ status }) => {
+    const statusMap: Record<string, { type: StatusType; icon: React.ReactNode }> = {
+      healthy: { type: 'success', icon: <CheckCircle className="w-3 h-3" /> },
+      passed: { type: 'success', icon: <CheckCircle className="w-3 h-3" /> },
+      warning: { type: 'warning', icon: <AlertTriangle className="w-3 h-3" /> },
+      critical: { type: 'error', icon: <XCircle className="w-3 h-3" /> },
+      failed: { type: 'failed', icon: <XCircle className="w-3 h-3" /> },
+      emergency: { type: 'error', icon: <AlertTriangle className="w-3 h-3" /> },
     };
 
-    const icons: Record<string, React.ReactNode> = {
-      healthy: <CheckCircle className="w-4 h-4" />,
-      passed: <CheckCircle className="w-4 h-4" />,
-      warning: <AlertTriangle className="w-4 h-4" />,
-      critical: <XCircle className="w-4 h-4" />,
-      failed: <XCircle className="w-4 h-4" />,
-      emergency: <AlertTriangle className="w-4 h-4" />
-    };
+    const mapped = statusMap[status] || { type: 'pending' as StatusType, icon: null };
 
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100'}`}>
-        {icons[status]}
-        {status.toUpperCase()}
-      </span>
+      <StatusBadge status={mapped.type} label={status.toUpperCase()} size="sm" icon={mapped.icon} />
     );
   };
 
@@ -226,7 +218,7 @@ const AdminSystemHealth: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {healthSummary && <StatusBadge status={healthSummary.status} />}
+          {healthSummary && <HealthStatusBadge status={healthSummary.status} />}
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}
@@ -340,7 +332,7 @@ const AdminSystemHealth: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <StatusBadge status={alert.severity} />
+                      <HealthStatusBadge status={alert.severity} />
                       <span className="text-xs text-gray-500">{alert.category}</span>
                     </div>
                     <h4 className="font-medium mt-1">{alert.title}</h4>
@@ -404,7 +396,7 @@ const AdminSystemHealth: React.FC = () => {
                       {new Date(report.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-2">
-                      <StatusBadge status={report.overallStatus} />
+                      <HealthStatusBadge status={report.overallStatus} />
                     </td>
                     <td className="py-2">
                       <span className="text-green-600">{report.summary.passed} ✓</span>

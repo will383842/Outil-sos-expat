@@ -2558,6 +2558,8 @@
   "admin.menu.connectionLogs.description": "User connection history",
   "admin.menu.contactRequests": "Contact Requests",
   "admin.menu.contactRequests.description": "Contact management",
+  "admin.menu.content": "Content & SEO",
+  "admin.menu.content.description": "Press, legal documents, FAQs, help center",
   "admin.menu.costMonitoring": "Cost Monitoring",
   "admin.menu.costMonitoring.description": "Cloud cost monitoring and alerts",
   "admin.menu.countriesManagement": "Countries & Regions",

@@ -46,6 +46,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
 // =============================================================================
 // TYPES
@@ -166,18 +167,15 @@ const INVOICE_TYPE_COLORS: Record<InvoiceType, string> = {
   subscription: 'bg-orange-100 text-orange-800 border-orange-200',
 };
 
-const STATUS_COLORS: Record<InvoiceStatus, string> = {
-  generated: 'bg-gray-100 text-gray-800 border-gray-200',
-  downloaded: 'bg-blue-100 text-blue-800 border-blue-200',
-  sent: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  paid: 'bg-green-100 text-green-800 border-green-200',
-};
-
-const STATUS_ICONS: Record<InvoiceStatus, React.ReactNode> = {
-  generated: <FileText size={14} />,
-  downloaded: <Download size={14} />,
-  sent: <Send size={14} />,
-  paid: <CheckCircle size={14} />,
+/** Map InvoiceStatus to unified StatusType */
+const invoiceStatusToStatusType = (status: InvoiceStatus): StatusType => {
+  const map: Record<InvoiceStatus, StatusType> = {
+    generated: 'pending',
+    downloaded: 'info',
+    sent: 'sent',
+    paid: 'paid',
+  };
+  return map[status] || 'pending';
 };
 
 // =============================================================================
@@ -293,12 +291,9 @@ const TypeBadge: React.FC<{ type: InvoiceType }> = ({ type }) => (
   </span>
 );
 
-// Invoice Status Badge
-const StatusBadge: React.FC<{ status: InvoiceStatus }> = ({ status }) => (
-  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_COLORS[status]}`}>
-    {STATUS_ICONS[status]}
-    {status.charAt(0).toUpperCase() + status.slice(1)}
-  </span>
+// Invoice Status Badge (uses unified StatusBadge)
+const InvoiceStatusBadge: React.FC<{ status: InvoiceStatus }> = ({ status }) => (
+  <StatusBadge status={invoiceStatusToStatusType(status)} label={status.charAt(0).toUpperCase() + status.slice(1)} size="sm" />
 );
 
 // Invoice Item Row for Manual Invoice Form
@@ -1196,7 +1191,7 @@ const AdminInvoices: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={invoice.status} />
+                        <InvoiceStatusBadge status={invoice.status} />
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-100 rounded-full text-xs font-medium">
@@ -1300,7 +1295,7 @@ const AdminInvoices: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <TypeBadge type={previewInvoice.type} />
-                  <StatusBadge status={previewInvoice.status} />
+                  <InvoiceStatusBadge status={previewInvoice.status} />
                 </div>
               </div>
 

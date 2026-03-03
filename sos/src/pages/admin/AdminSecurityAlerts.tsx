@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import {
@@ -584,9 +585,7 @@ const AdminSecurityAlerts: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-        </div>
+        <LoadingSpinner size="large" color="blue" fullPage />
       </AdminLayout>
     );
   }

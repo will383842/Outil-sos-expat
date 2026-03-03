@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useIntl } from "react-intl";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import Button from "@/components/common/Button";
 import {
   Clock,
@@ -148,22 +150,19 @@ function formatDateOnly(d: Date): string {
 // -------------------------
 // Components
 // -------------------------
-const StatusBadge: React.FC<{ status: BackupStatus; intl: ReturnType<typeof useIntl> }> = ({ status, intl }) => {
-  const configs: Record<BackupStatus, { bg: string; text: string; icon: typeof CheckCircle; label: string }> = {
-    completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: intl.formatMessage({ id: "admin.backups.status.completed" }) },
-    failed: { bg: "bg-red-100", text: "text-red-800", icon: AlertTriangle, label: intl.formatMessage({ id: "admin.backups.status.failed" }) },
-    pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock, label: intl.formatMessage({ id: "admin.backups.status.pending" }) },
-    in_progress: { bg: "bg-blue-100", text: "text-blue-800", icon: RefreshCw, label: intl.formatMessage({ id: "admin.backups.status.inProgress" }) },
-    partial: { bg: "bg-orange-100", text: "text-orange-800", icon: AlertTriangle, label: intl.formatMessage({ id: "admin.backups.status.partial", defaultMessage: "Partiel" }) },
+const BackupStatusBadge: React.FC<{ status: BackupStatus; intl: ReturnType<typeof useIntl> }> = ({ status, intl }) => {
+  const statusMap: Record<BackupStatus, { type: StatusType; label: string; icon: React.FC<{ size?: number | string; className?: string }> }> = {
+    completed: { type: 'success', label: intl.formatMessage({ id: "admin.backups.status.completed" }), icon: CheckCircle },
+    failed: { type: 'failed', label: intl.formatMessage({ id: "admin.backups.status.failed" }), icon: AlertTriangle },
+    pending: { type: 'pending', label: intl.formatMessage({ id: "admin.backups.status.pending" }), icon: Clock },
+    in_progress: { type: 'processing', label: intl.formatMessage({ id: "admin.backups.status.inProgress" }), icon: RefreshCw },
+    partial: { type: 'warning', label: intl.formatMessage({ id: "admin.backups.status.partial", defaultMessage: "Partiel" }), icon: AlertTriangle },
   };
-  const config = configs[status] || configs.pending;
-  const Icon = config.icon;
+  const mapped = statusMap[status] || statusMap.pending;
+  const Icon = mapped.icon;
 
   return (
-    <span className={`inline-flex items-center rounded-full ${config.bg} ${config.text} px-2 py-0.5 text-xs`}>
-      <Icon size={12} className="mr-1" />
-      {config.label}
-    </span>
+    <StatusBadge status={mapped.type} label={mapped.label} size="sm" icon={<Icon size={12} />} />
   );
 };
 
@@ -695,7 +694,7 @@ const AdminBackups: React.FC = () => {
                                   <Database size={14} className="text-gray-400" />
                                   <span>{formatDate(backup.createdAt, intl.locale)}</span>
                                   <TypeBadge type={backup.type} backupType={backup.backupType} intl={intl} />
-                                  <StatusBadge status={backup.status} intl={intl} />
+                                  <BackupStatusBadge status={backup.status} intl={intl} />
                                 </div>
                                 <span className="text-gray-500">
                                   {backup.totalDocuments?.toLocaleString()} {intl.formatMessage({ id: "admin.backups.byDate.docs" })}
@@ -708,7 +707,7 @@ const AdminBackups: React.FC = () => {
                                   <Users size={14} className="text-gray-400" />
                                   <span>{formatDate(backup.createdAt, intl.locale)}</span>
                                   <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Auth</span>
-                                  <StatusBadge status={backup.status} intl={intl} />
+                                  <BackupStatusBadge status={backup.status} intl={intl} />
                                 </div>
                                 <span className="text-gray-500">
                                   {backup.totalDocuments?.toLocaleString()} {intl.formatMessage({ id: "admin.backups.byDate.users" })}
@@ -1016,7 +1015,7 @@ const AdminBackups: React.FC = () => {
                           <TypeBadge type={row.type} backupType={row.backupType} intl={intl} />
                         </td>
                         <td className="px-6 py-3">
-                          <StatusBadge status={row.status} intl={intl} />
+                          <BackupStatusBadge status={row.status} intl={intl} />
                         </td>
                         <td className="px-6 py-3 text-sm">
                           {row.totalDocuments?.toLocaleString() || "-"}

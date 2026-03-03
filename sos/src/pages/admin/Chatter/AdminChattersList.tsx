@@ -37,6 +37,10 @@ import {
   Check,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminErrorState from '@/components/admin/AdminErrorState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { KPICard } from '@/components/admin/KPICard';
+import type { StatusType } from '@/components/admin/StatusBadge';
 
 // Design tokens
 const UI = {
@@ -264,42 +268,21 @@ const AdminChattersList: React.FC = () => {
   const formatAmount = (cents: number) => {
     return new Intl.NumberFormat(intl.locale, {
       style: 'currency',
-      currency: 'XOF',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(cents);
+    }).format(cents / 100);
   };
 
-  // Get status color
-  const getStatusColor = (status: string) => {
+  // Map chatter status to StatusType for the unified StatusBadge
+  const mapChatterStatus = (status: string): StatusType => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'pending':
-      case 'quiz_required':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'suspended':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'banned':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
-    }
-  };
-
-  // Get status icon
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'pending':
-      case 'quiz_required':
-        return <Clock className="w-4 h-4" />;
-      case 'suspended':
-      case 'banned':
-        return <AlertTriangle className="w-4 h-4" />;
-      default:
-        return null;
+      case 'active': return 'active';
+      case 'pending': return 'pending';
+      case 'quiz_required': return 'quiz_required';
+      case 'suspended': return 'suspended';
+      case 'banned': return 'banned';
+      default: return 'inactive';
     }
   };
 
@@ -460,85 +443,43 @@ const AdminChattersList: React.FC = () => {
       {/* Statistics Cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          <div className={`${UI.card} p-3 sm:p-4`}>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-                  <FormattedMessage id="admin.chatters.stats.active" defaultMessage="Actifs" />
-                </p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalActive}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={`${UI.card} p-3 sm:p-4`}>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-                  <FormattedMessage id="admin.chatters.stats.pending" defaultMessage="En attente" />
-                </p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalPending}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={`${UI.card} p-3 sm:p-4`}>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-                  <FormattedMessage id="admin.chatters.stats.newMonth" defaultMessage="Nouveaux (mois)" />
-                </p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  {stats.newThisMonth}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={`${UI.card} p-3 sm:p-4`}>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-                  <FormattedMessage id="admin.chatters.stats.suspended" defaultMessage="Suspendus" />
-                </p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalSuspended}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={`${UI.card} p-3 sm:p-4`}>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-                  <FormattedMessage id="admin.chatters.stats.earnings" defaultMessage="Total versé" />
-                </p>
-                <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
-                  {formatAmount(stats.totalEarnings)}
-                </p>
-              </div>
-            </div>
-          </div>
+          <KPICard
+            title={intl.formatMessage({ id: 'admin.chatters.stats.active', defaultMessage: 'Actifs' })}
+            value={stats.totalActive}
+            icon={<CheckCircle className="w-5 h-5 text-green-600" />}
+            colorTheme="green"
+            variant="glass"
+          />
+          <KPICard
+            title={intl.formatMessage({ id: 'admin.chatters.stats.pending', defaultMessage: 'En attente' })}
+            value={stats.totalPending}
+            icon={<Clock className="w-5 h-5 text-red-600" />}
+            colorTheme="red"
+            variant="glass"
+          />
+          <KPICard
+            title={intl.formatMessage({ id: 'admin.chatters.stats.newMonth', defaultMessage: 'Nouveaux (mois)' })}
+            value={stats.newThisMonth}
+            icon={<UserPlus className="w-5 h-5 text-purple-600" />}
+            colorTheme="purple"
+            variant="glass"
+          />
+          <KPICard
+            title={intl.formatMessage({ id: 'admin.chatters.stats.suspended', defaultMessage: 'Suspendus' })}
+            value={stats.totalSuspended}
+            icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
+            colorTheme="red"
+            variant="glass"
+          />
+          <KPICard
+            title={intl.formatMessage({ id: 'admin.chatters.stats.earnings', defaultMessage: 'Total versé' })}
+            value={stats.totalEarnings / 100}
+            isCurrency
+            currency="USD"
+            icon={<DollarSign className="w-5 h-5 text-green-600" />}
+            colorTheme="green"
+            variant="glass"
+          />
         </div>
       )}
 
@@ -657,11 +598,7 @@ const AdminChattersList: React.FC = () => {
       )}
 
       {/* Error */}
-      {error && (
-        <div className={`${UI.card} p-4 bg-red-50 dark:bg-red-900/20`}>
-          <p className="text-red-600 dark:text-red-400 text-sm sm:text-base">{error}</p>
-        </div>
-      )}
+      {error && <AdminErrorState error={error} onRetry={fetchChatters} />}
 
       {/* Directory info banner */}
       <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-300">
@@ -767,10 +704,7 @@ const AdminChattersList: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(chatter.status)}`}>
-                            {getStatusIcon(chatter.status)}
-                            <span className="hidden sm:inline">{chatter.status}</span>
-                          </span>
+                          <StatusBadge status={mapChatterStatus(chatter.status)} label={chatter.status} size="sm" />
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                           <div className="flex items-center gap-1.5 sm:gap-2">

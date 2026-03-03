@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +27,8 @@ import {
 } from 'firebase/firestore';
 import { db, functions } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import AdminErrorState from '../../components/admin/AdminErrorState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -62,6 +65,7 @@ const AdminNotifications: React.FC = () => {
 
   const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [showTestModal, setShowTestModal] = useState(false);
   const [testProviderId, setTestProviderId] = useState('');
@@ -87,6 +91,7 @@ const AdminNotifications: React.FC = () => {
   const loadNotificationLogs = async () => {
     try {
       setIsLoading(true);
+      setError(null);
 
       // P2 FIX: Limite réduite à 30 pour économiser le cache
       const notificationsQuery = query(
@@ -147,6 +152,7 @@ const AdminNotifications: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading notification logs:', error);
+      setError(intl.formatMessage({ id: 'admin.notifications.error.loadFailed', defaultMessage: 'Erreur lors du chargement des notifications. Veuillez réessayer.' }));
     } finally {
       setIsLoading(false);
     }
@@ -229,15 +235,9 @@ const AdminNotifications: React.FC = () => {
 
   const getStatusBadge = (success: boolean) =>
     success ? (
-      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center">
-        <CheckCircle size={12} className="mr-1" />
-        {intl.formatMessage({ id: 'admin.notifications.status.success' })}
-      </span>
+      <StatusBadge status="success" label={intl.formatMessage({ id: 'admin.notifications.status.success' })} size="sm" icon={<CheckCircle size={12} />} />
     ) : (
-      <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium flex items-center">
-        <XCircle size={12} className="mr-1" />
-        {intl.formatMessage({ id: 'admin.notifications.status.failed' })}
-      </span>
+      <StatusBadge status="failed" label={intl.formatMessage({ id: 'admin.notifications.status.failed' })} size="sm" icon={<XCircle size={12} />} />
     );
 
   return (
@@ -260,6 +260,8 @@ const AdminNotifications: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {error && <AdminErrorState error={error} onRetry={loadNotificationLogs} className="mb-6" />}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -368,10 +370,7 @@ const AdminNotifications: React.FC = () => {
                   {isLoading ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                        <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
-                        </div>
-                        <p className="mt-2">{intl.formatMessage({ id: 'admin.notifications.loading' })}</p>
+                        <LoadingSpinner text={intl.formatMessage({ id: 'admin.notifications.loading' })} />
                       </td>
                     </tr>
                   ) : notificationLogs.length > 0 ? (

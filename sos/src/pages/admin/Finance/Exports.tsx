@@ -17,6 +17,7 @@ import {
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/useAuth';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   Download,
   FileText,
@@ -730,21 +731,19 @@ export default function FinanceExports() {
   // RENDER FUNCTIONS
   // ============================================================================
 
-  const renderStatusBadge = (status: ExportStatus) => {
-    const config = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: <Clock className="w-3 h-3" /> },
-      processing: { bg: 'bg-blue-100', text: 'text-blue-800', icon: <Loader2 className="w-3 h-3 animate-spin" /> },
-      completed: { bg: 'bg-green-100', text: 'text-green-800', icon: <CheckCircle className="w-3 h-3" /> },
-      failed: { bg: 'bg-red-100', text: 'text-red-800', icon: <XCircle className="w-3 h-3" /> },
+  const exportStatusToStatusType = (status: ExportStatus): StatusType => {
+    const map: Record<ExportStatus, StatusType> = {
+      pending: 'pending',
+      processing: 'processing',
+      completed: 'success',
+      failed: 'failed',
     };
-    const c = config[status] || config.pending;
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${c.bg} ${c.text}`}>
-        {c.icon}
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
+    return map[status] || 'pending';
   };
+
+  const renderStatusBadge = (status: ExportStatus) => (
+    <StatusBadge status={exportStatusToStatusType(status)} label={status.charAt(0).toUpperCase() + status.slice(1)} size="sm" />
+  );
 
   const renderTemplatesTab = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -42,6 +42,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { StatusBadge, type StatusType } from "../../components/admin/StatusBadge";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -52,6 +53,21 @@ import {
   getCommissionActionTypeLabel,
   getCommissionStatusLabel,
 } from "../../types/affiliate";
+
+// ============================================================================
+// STATUS MAPPING
+// ============================================================================
+
+const mapCommissionStatus = (status: string): { statusType: StatusType; label: string } => {
+  const map: Record<string, { statusType: StatusType; label: string }> = {
+    pending: { statusType: "pending", label: "En attente" },
+    available: { statusType: "available", label: "Disponible" },
+    processing: { statusType: "processing", label: "En cours" },
+    paid: { statusType: "paid", label: "Payée" },
+    cancelled: { statusType: "cancelled", label: "Annulée" },
+  };
+  return map[status] || { statusType: "pending", label: status };
+};
 
 // ============================================================================
 // TYPES
@@ -76,49 +92,6 @@ interface Commission {
 
 type FilterStatus = CommissionStatus | "all";
 type FilterType = CommissionActionType | "all";
-
-// ============================================================================
-// STATUS BADGE COMPONENT
-// ============================================================================
-
-const StatusBadge: React.FC<{ status: CommissionStatus }> = ({ status }) => {
-  const config = {
-    pending: {
-      icon: <Clock className="h-3 w-3" />,
-      label: "En attente",
-      classes: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-    },
-    available: {
-      icon: <CheckCircle className="h-3 w-3" />,
-      label: "Disponible",
-      classes: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-    },
-    processing: {
-      icon: <Loader2 className="h-3 w-3 animate-spin" />,
-      label: "En cours",
-      classes: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-    },
-    paid: {
-      icon: <CheckCircle className="h-3 w-3" />,
-      label: "Payée",
-      classes: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    },
-    cancelled: {
-      icon: <XCircle className="h-3 w-3" />,
-      label: "Annulée",
-      classes: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    },
-  };
-
-  const { icon, label, classes } = config[status] || config.pending;
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${classes}`}>
-      {icon}
-      {label}
-    </span>
-  );
-};
 
 // ============================================================================
 // STAT CARD COMPONENT
@@ -595,7 +568,7 @@ const AdminAffiliateCommissions: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <StatusBadge status={commission.status} />
+                      <StatusBadge status={mapCommissionStatus(commission.status).statusType} label={mapCommissionStatus(commission.status).label} size="sm" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">

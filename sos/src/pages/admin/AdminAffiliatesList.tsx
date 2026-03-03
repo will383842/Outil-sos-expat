@@ -24,16 +24,30 @@ import {
   Loader2,
   Copy,
   CheckCircle,
-  Ban,
   Flag,
   Download,
 } from "lucide-react";
 import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, updateDoc, Timestamp, startAfter, DocumentSnapshot } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
+import AdminErrorState from "../../components/admin/AdminErrorState";
+import { StatusBadge, type StatusType } from "../../components/admin/StatusBadge";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useAuth } from "../../contexts/AuthContext";
 import { formatCents, type AffiliateStatus } from "../../types/affiliate";
+
+// ============================================================================
+// STATUS MAPPING
+// ============================================================================
+
+const mapAffiliateStatus = (status: AffiliateStatus): { statusType: StatusType; label: string } => {
+  const map: Record<AffiliateStatus, { statusType: StatusType; label: string }> = {
+    active: { statusType: "active", label: "Actif" },
+    suspended: { statusType: "suspended", label: "Suspendu" },
+    flagged: { statusType: "warning", label: "Signalé" },
+  };
+  return map[status] || { statusType: "inactive", label: status };
+};
 
 // ============================================================================
 // TYPES
@@ -105,39 +119,6 @@ const StatCard: React.FC<{
         </div>
       </div>
     </div>
-  );
-};
-
-// ============================================================================
-// STATUS BADGE COMPONENT
-// ============================================================================
-
-const AffiliateStatusBadge: React.FC<{ status: AffiliateStatus }> = ({ status }) => {
-  const config = {
-    active: {
-      icon: <CheckCircle className="h-3 w-3" />,
-      label: "Actif",
-      classes: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-    },
-    suspended: {
-      icon: <Ban className="h-3 w-3" />,
-      label: "Suspendu",
-      classes: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    },
-    flagged: {
-      icon: <Flag className="h-3 w-3" />,
-      label: "Signalé",
-      classes: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-    },
-  };
-
-  const { icon, label, classes } = config[status] || config.active;
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${classes}`}>
-      {icon}
-      {label}
-    </span>
   );
 };
 
@@ -244,6 +225,7 @@ const AdminAffiliatesList: React.FC = () => {
   // State
   const [affiliates, setAffiliates] = useState<AffiliateUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [sortField, setSortField] = useState<SortField>("totalEarned");
@@ -275,6 +257,7 @@ const AdminAffiliatesList: React.FC = () => {
 
     setIsLoading(true);
     try {
+      setError(null);
       // Query users with affiliateCode
       let q = query(
         collection(db, "users"),
@@ -346,6 +329,7 @@ const AdminAffiliatesList: React.FC = () => {
       setHasMore(snapshot.docs.length === 100);
     } catch (error) {
       console.error("[AdminAffiliatesList] Error fetching affiliates:", error);
+      setError("Erreur lors du chargement des affiliés. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -509,6 +493,8 @@ const AdminAffiliatesList: React.FC = () => {
           />
         </div>
 
+        {error && <AdminErrorState error={error} onRetry={() => fetchAffiliates(true)} />}
+
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -643,7 +629,7 @@ const AdminAffiliatesList: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <AffiliateStatusBadge status={affiliate.affiliateStatus} />
+                        <StatusBadge status={mapAffiliateStatus(affiliate.affiliateStatus).statusType} label={mapAffiliateStatus(affiliate.affiliateStatus).label} size="sm" />
                       </td>
                       <td className="px-4 py-4 text-right">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">

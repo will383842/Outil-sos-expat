@@ -62,6 +62,7 @@ import {
   Ban,
 } from 'lucide-react';
 import { logError } from '../../../utils/logging';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
 // ============ TYPES ============
 type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -160,22 +161,15 @@ const PAGE_SIZE = 25;
 const COMMISSION_RATE = 0.20; // 20% platform commission
 
 // ============ UTILITY COMPONENTS ============
-const StatusBadge: React.FC<{ status: PayoutStatus }> = ({ status }) => {
-  const config = {
-    pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock, label: 'Pending' },
-    processing: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Loader, label: 'Processing', pulse: true },
-    completed: { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle, label: 'Completed' },
-    failed: { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle, label: 'Failed' },
-  }[status];
-
-  const IconComponent = config.icon;
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${config.color} ${config.pulse ? 'animate-pulse' : ''}`}>
-      <IconComponent size={12} className="mr-1" />
-      {config.label}
-    </span>
-  );
+/** Map PayoutStatus to unified StatusType */
+const payoutStatusToStatusType = (status: PayoutStatus): StatusType => {
+  const map: Record<PayoutStatus, StatusType> = {
+    pending: 'pending',
+    processing: 'processing',
+    completed: 'success',
+    failed: 'failed',
+  };
+  return map[status] || 'pending';
 };
 
 const ProviderTypeBadge: React.FC<{ type: ProviderType }> = ({ type }) => {
@@ -1081,7 +1075,7 @@ const Payouts: React.FC = () => {
 
                     {/* Status */}
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <StatusBadge status={payout.status} />
+                      <StatusBadge status={payoutStatusToStatusType(payout.status)} label={payout.status} size="sm" />
                       {payout.failureReason && (
                         <div className="text-xs text-red-500 mt-1" title={payout.failureReason}>
                           {payout.failureReason.substring(0, 30)}...
@@ -1198,7 +1192,7 @@ const Payouts: React.FC = () => {
                     </h3>
                     <p className="text-gray-500">{selectedPayout.providerInfo?.email}</p>
                     <div className="flex items-center space-x-2 mt-2">
-                      <StatusBadge status={selectedPayout.status} />
+                      <StatusBadge status={payoutStatusToStatusType(selectedPayout.status)} label={selectedPayout.status} size="sm" />
                       {selectedPayout.providerInfo?.type && (
                         <ProviderTypeBadge type={selectedPayout.providerInfo.type} />
                       )}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useIntl } from "react-intl";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../contexts/AppContext";
@@ -37,6 +38,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
@@ -783,62 +786,23 @@ const AdminReceivedCalls: React.FC = () => {
 
   const getPayoutStatusBadge = (payout?: ReceivedCall['payout']) => {
     if (!payout) {
-      return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          <Clock size={12} className="mr-1" />
-          {t('admin.receivedCalls.payoutStatus.pending')}
-        </span>
-      );
+      return <StatusBadge status="pending" label={t('admin.receivedCalls.payoutStatus.pending')} size="sm" icon={<Clock size={12} />} />;
     }
 
-    switch (payout.status) {
-      case 'paid':
-        return (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle size={12} className="mr-1" />
-            {t('admin.receivedCalls.payoutStatus.paid')}
-          </span>
-        );
-      case 'pending_kyc':
-        return (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-            <AlertCircle size={12} className="mr-1" />
-            {t('admin.receivedCalls.payoutStatus.pendingKyc')}
-          </span>
-        );
-      case 'failed':
-        return (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle size={12} className="mr-1" />
-            {t('admin.receivedCalls.payoutStatus.failed')}
-          </span>
-        );
-      case 'processing':
-        return (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <RefreshCw size={12} className="mr-1 animate-spin" />
-            {t('admin.receivedCalls.payoutStatus.processing')}
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <Clock size={12} className="mr-1" />
-            {t('admin.receivedCalls.payoutStatus.pending')}
-          </span>
-        );
-    }
+    const statusMap: Record<string, { type: StatusType; label: string; icon: React.ReactNode }> = {
+      paid: { type: 'paid', label: t('admin.receivedCalls.payoutStatus.paid'), icon: <CheckCircle size={12} /> },
+      pending_kyc: { type: 'warning', label: t('admin.receivedCalls.payoutStatus.pendingKyc'), icon: <AlertCircle size={12} /> },
+      failed: { type: 'failed', label: t('admin.receivedCalls.payoutStatus.failed'), icon: <XCircle size={12} /> },
+      processing: { type: 'processing', label: t('admin.receivedCalls.payoutStatus.processing'), icon: <RefreshCw size={12} /> },
+    };
+    const mapped = statusMap[payout.status] || { type: 'pending' as StatusType, label: t('admin.receivedCalls.payoutStatus.pending'), icon: <Clock size={12} /> };
+    return <StatusBadge status={mapped.type} label={mapped.label} size="sm" icon={mapped.icon} />;
   };
 
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('admin.receivedCalls.loading')}</p>
-          </div>
-        </div>
+        <LoadingSpinner size="large" color="blue" text={t('admin.receivedCalls.loading')} fullPage />
       </AdminLayout>
     );
   }

@@ -11,6 +11,7 @@ import { functionsAffiliate } from "@/config/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusType } from "@/components/admin/StatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -138,33 +139,33 @@ const AdminChatterFraud: React.FC = () => {
     }
   };
 
-  const getSeverityBadge = (severity: string) => {
+  const mapSeverity = (severity: string): { status: StatusType; label: string } => {
     switch (severity) {
       case "critical":
-        return <Badge className="bg-red-600">Critique</Badge>;
+        return { status: "error", label: "Critique" };
       case "high":
-        return <Badge className="bg-orange-500">Élevé</Badge>;
+        return { status: "warning", label: "Élevé" };
       case "medium":
-        return <Badge className="bg-yellow-500">Moyen</Badge>;
+        return { status: "warning", label: "Moyen" };
       case "low":
-        return <Badge className="bg-blue-500">Faible</Badge>;
+        return { status: "info", label: "Faible" };
       default:
-        return <Badge variant="outline">{severity}</Badge>;
+        return { status: "pending", label: severity };
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const mapFraudStatus = (status: string): { status: StatusType; label: string } => {
     switch (status) {
       case "pending":
-        return <Badge variant="secondary">En attente</Badge>;
+        return { status: "pending", label: "En attente" };
       case "reviewed":
-        return <Badge className="bg-blue-500">Examiné</Badge>;
+        return { status: "info", label: "Examiné" };
       case "dismissed":
-        return <Badge variant="outline">Rejeté</Badge>;
+        return { status: "inactive", label: "Rejeté" };
       case "action_taken":
-        return <Badge className="bg-green-500">Action prise</Badge>;
+        return { status: "success", label: "Action prise" };
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return { status: "pending", label: status };
     }
   };
 
@@ -352,7 +353,12 @@ const AdminChatterFraud: React.FC = () => {
                         <p className="text-xs text-gray-500">{alert.chatterEmail}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{getSeverityBadge(alert.severity)}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const mapped = mapSeverity(alert.severity);
+                        return <StatusBadge status={mapped.status} label={mapped.label} size="sm" />;
+                      })()}
+                    </TableCell>
                     <TableCell>
                       <div className="text-sm max-w-xs">
                         {alert.type === "high_ratio" && alert.details.ratio && (
@@ -369,7 +375,12 @@ const AdminChatterFraud: React.FC = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(alert.status)}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const mapped = mapFraudStatus(alert.status);
+                        return <StatusBadge status={mapped.status} label={mapped.label} size="sm" />;
+                      })()}
+                    </TableCell>
                     <TableCell>
                       {new Date(alert.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -412,7 +423,12 @@ const AdminChatterFraud: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Sévérité</p>
-                  <div className="mt-1">{getSeverityBadge(selectedAlert.severity)}</div>
+                  <div className="mt-1">
+                    {(() => {
+                      const mapped = mapSeverity(selectedAlert.severity);
+                      return <StatusBadge status={mapped.status} label={mapped.label} size="sm" />;
+                    })()}
+                  </div>
                 </div>
               </div>
 

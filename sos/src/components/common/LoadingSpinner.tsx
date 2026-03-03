@@ -3,12 +3,13 @@ import React from 'react';
 interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
   color?: 'red' | 'blue' | 'green' | 'white' | 'gray';
-  className?: string; 
+  className?: string;
   text?: string;
+  fullPage?: boolean;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = 'medium', color = 'red', className = '', text
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  size = 'medium', color = 'red', className = '', text, fullPage = false
 }) => {
   const sizeClasses = {
     small: 'w-4 h-4',
@@ -24,7 +25,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     gray: 'text-gray-600'
   };
 
-  return (
+  const content = (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <div className={`${sizeClasses[size]} ${colorClasses[color]} animate-spin`}>
         <svg className="w-full h-full" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -46,6 +47,16 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       {text && <p className="mt-2 text-sm text-gray-600 animate-pulse">{text}</p>}
     </div>
   );
+
+  if (fullPage) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 };
 
 export default LoadingSpinner;

@@ -10,6 +10,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   Table,
   TableBody,
@@ -158,18 +159,20 @@ const AdminChatterAnalytics: React.FC = () => {
     }).format(cents / 100);
   };
 
-  const getStatusBadgeVariant = (
-    status: string
-  ): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  const mapChatterStatus = (status: string): StatusType => {
     switch (status) {
       case 'active':
-        return 'default';
+        return 'active';
       case 'suspended':
-        return 'secondary';
+        return 'suspended';
       case 'banned':
-        return 'destructive';
+        return 'banned';
+      case 'pending':
+        return 'pending';
+      case 'quiz_required':
+        return 'quiz_required';
       default:
-        return 'outline';
+        return 'pending';
     }
   };
 
@@ -512,9 +515,7 @@ const AdminChatterAnalytics: React.FC = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getStatusBadgeVariant(chatter.status)}>
-                                {chatter.status}
-                              </Badge>
+                              <StatusBadge status={mapChatterStatus(chatter.status)} label={chatter.status} size="sm" />
                             </TableCell>
                             <TableCell>
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

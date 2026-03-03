@@ -29,6 +29,7 @@ import { functions, db } from "../../config/firebase";
 import { httpsCallable } from "firebase/functions";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { logError } from "../../utils/logging";
 import Modal from "../../components/common/Modal";
 import {
@@ -214,7 +215,7 @@ const AdminDashboard: React.FC = () => {
     return (
       <AdminLayout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+          <LoadingSpinner size="large" />
         </div>
       </AdminLayout>
     );
@@ -247,10 +248,7 @@ const AdminDashboard: React.FC = () => {
     return (
       <AdminLayout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-            <p className="text-gray-500">{intl.formatMessage({ id: 'admin.dashboard.loading' })}</p>
-          </div>
+          <LoadingSpinner size="large" text={intl.formatMessage({ id: 'admin.dashboard.loading' })} />
         </div>
       </AdminLayout>
     );

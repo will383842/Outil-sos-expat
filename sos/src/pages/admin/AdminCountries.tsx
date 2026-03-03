@@ -12,8 +12,10 @@ import {
 import { collection, query, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import AdminErrorState from '../../components/admin/AdminErrorState';
 import Button from '../../components/common/Button';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../contexts/AuthContext';
 import { countriesData, CountryData } from '../../data/countries';
 
@@ -270,7 +272,7 @@ const AdminCountries: React.FC = () => {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+          <LoadingSpinner />
         </div>
       </AdminLayout>
     );
@@ -329,14 +331,7 @@ const AdminCountries: React.FC = () => {
           </div>
 
           {/* Messages d'erreur et succès */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center">
-                <XCircle className="h-5 w-5 text-red-600 mr-2" />
-                <span className="text-red-800">{error}</span>
-              </div>
-            </div>
-          )}
+          {error && <AdminErrorState error={error} onRetry={loadCountryStatuses} className="mb-6" />}
 
           {successMessage && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
@@ -429,8 +424,7 @@ const AdminCountries: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {isLoading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                <p className="mt-2 text-gray-500">Chargement des pays...</p>
+                <LoadingSpinner text="Chargement des pays..." />
               </div>
             ) : filteredCountries.length === 0 ? (
               <div className="p-8 text-center text-gray-500">

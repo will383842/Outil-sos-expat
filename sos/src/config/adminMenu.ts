@@ -87,7 +87,7 @@ export type AdminMenuItem = {
 };
 
 export const adminMenuTree: AdminMenuItem[] = [
-  // ===== TABLEAU DE BORD (Priorite 1 - Usage quotidien) =====
+  // ===== 1. TABLEAU DE BORD =====
   {
     id: "dashboard",
     labelKey: "admin.menu.dashboard",
@@ -96,88 +96,56 @@ export const adminMenuTree: AdminMenuItem[] = [
     descriptionKey: "admin.menu.dashboard.description",
   },
 
-  // ===== UTILISATEURS & PRESTATAIRES (Priorite 2 - Usage quotidien) =====
+  // ===== 2. UTILISATEURS (clients + providers + validations + reviews) =====
   {
     id: "users",
     labelKey: "admin.menu.users",
     icon: Users,
     descriptionKey: "admin.menu.users.description",
     children: [
-      // Sous-section : TOUS LES UTILISATEURS
       {
-        id: "all-users",
-        labelKey: "admin.menu.allUsers",
+        id: "gestion-globale",
+        labelKey: "admin.menu.globalManagement",
+        path: "/admin/users/all",
         icon: UsersIcon,
-        descriptionKey: "admin.menu.allUsers.description",
+        descriptionKey: "admin.menu.globalManagement.description",
+      },
+      {
+        id: "clients",
+        labelKey: "admin.menu.clients",
+        path: "/admin/users/clients",
+        icon: Users,
+        descriptionKey: "admin.menu.clients.description",
+      },
+      {
+        id: "prestataires-section",
+        labelKey: "admin.menu.providers",
+        icon: UserCheck,
+        descriptionKey: "admin.menu.providers.description",
         children: [
           {
-            id: "gestion-globale",
-            labelKey: "admin.menu.globalManagement",
-            path: "/admin/users/all",
-            icon: UsersIcon,
-            descriptionKey: "admin.menu.globalManagement.description",
+            id: "avocats",
+            labelKey: "admin.menu.lawyers",
+            path: "/admin/users/providers/lawyers",
+            icon: Shield,
+            descriptionKey: "admin.menu.lawyers.description",
           },
           {
-            id: "clients",
-            labelKey: "admin.menu.clients",
-            path: "/admin/users/clients",
-            icon: Users,
-            descriptionKey: "admin.menu.clients.description",
+            id: "expats",
+            labelKey: "admin.menu.expats",
+            path: "/admin/users/providers/expats",
+            icon: Globe,
+            descriptionKey: "admin.menu.expats.description",
           },
           {
-            id: "prestataires-section",
-            labelKey: "admin.menu.providers",
-            icon: UserCheck,
-            descriptionKey: "admin.menu.providers.description",
-            children: [
-              {
-                id: "avocats",
-                labelKey: "admin.menu.lawyers",
-                path: "/admin/users/providers/lawyers",
-                icon: Shield,
-                descriptionKey: "admin.menu.lawyers.description",
-              },
-              {
-                id: "expats",
-                labelKey: "admin.menu.expats",
-                path: "/admin/users/providers/expats",
-                icon: Globe,
-                descriptionKey: "admin.menu.expats.description",
-              },
-              {
-                id: "provider-stats",
-                labelKey: "admin.menu.providerStats",
-                path: "/admin/users/providers/stats",
-                icon: TrendingUp,
-                descriptionKey: "admin.menu.providerStats.description",
-              },
-            ],
+            id: "provider-stats",
+            labelKey: "admin.menu.providerStats",
+            path: "/admin/users/providers/stats",
+            icon: TrendingUp,
+            descriptionKey: "admin.menu.providerStats.description",
           },
-          {
-            id: "chatters-users",
-            labelKey: "admin.menu.chattersUsers",
-            path: "/admin/users/chatters",
-            icon: MessageCircle,
-            descriptionKey: "admin.menu.chattersUsers.description",
-          },
-          {
-            id: "influencers-users",
-            labelKey: "admin.menu.influencersUsers",
-            path: "/admin/users/influencers",
-            icon: Megaphone,
-            descriptionKey: "admin.menu.influencersUsers.description",
-          },
-          {
-            id: "bloggers-users",
-            labelKey: "admin.menu.bloggersUsers",
-            path: "/admin/users/bloggers",
-            icon: FileText,
-            descriptionKey: "admin.menu.bloggersUsers.description",
-          },
-          // Group Admins moved to dedicated section below
         ],
       },
-      // Sous-section : AAA PROFILES
       {
         id: "aaa-profiles",
         labelKey: "admin.menu.aaaProfiles",
@@ -185,7 +153,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: TestTube,
         descriptionKey: "admin.menu.aaaProfiles.description",
       },
-      // Sous-section : VALIDATION AVOCATS
       {
         id: "validation-prestataires",
         labelKey: "admin.menu.providerValidation",
@@ -194,7 +161,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         badge: "3",
         descriptionKey: "admin.menu.providerValidation.description",
       },
-      // Sous-section : KYC PRESTATAIRES
       {
         id: "kyc-prestataires",
         labelKey: "admin.menu.kycProviders",
@@ -203,7 +169,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         badge: "2",
         descriptionKey: "admin.menu.kycProviders.description",
       },
-      // Sous-section : AVIS ET NOTATION
       {
         id: "avis-notation",
         labelKey: "admin.menu.reviews",
@@ -211,13 +176,10 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: Star,
         descriptionKey: "admin.menu.reviews.description",
       },
-      // NOTE: "Validation Profils" supprimé car redondant avec "Validation Prestataires"
-      // La page AdminProfileValidation utilisait des Cloud Functions non implémentées
-      // Toute la validation se fait maintenant via AdminApprovals (/admin/approvals/lawyers)
     ],
   },
 
-  // ===== APPELS (Priorite 3 - Monitoring critique) =====
+  // ===== 3. APPELS & SERVICES =====
   {
     id: "calls",
     labelKey: "admin.menu.calls",
@@ -257,8 +219,7 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
-  // ===== FINANCES (Priorite 4 - Business critique) =====
-  // Accessible aux roles: admin, accountant
+  // ===== 4. FINANCE & PAIEMENTS (finance + payments fusionnés) =====
   {
     id: "finance",
     labelKey: "admin.menu.finance",
@@ -266,7 +227,6 @@ export const adminMenuTree: AdminMenuItem[] = [
     descriptionKey: "admin.menu.finance.description",
     allowedRoles: ["admin", "accountant"],
     children: [
-      // Dashboard Financier
       {
         id: "finance-dashboard",
         labelKey: "admin.menu.financeDashboard",
@@ -274,7 +234,7 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: LayoutDashboard,
         descriptionKey: "admin.menu.financeDashboard.description",
       },
-      // Sous-section : Transactions & Paiements
+      // Transactions & Paiements
       {
         id: "finance-transactions",
         labelKey: "admin.menu.transactions",
@@ -312,7 +272,38 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
-      // Sous-section : Remboursements & Litiges
+      // Retraits & Paiements centralisés (ex-section payments)
+      {
+        id: "finance-withdrawals",
+        labelKey: "admin.menu.payments",
+        icon: Wallet,
+        descriptionKey: "admin.menu.payments.description",
+        children: [
+          {
+            id: "payments-dashboard",
+            labelKey: "admin.menu.paymentsDashboard",
+            path: "/admin/payments",
+            icon: LayoutDashboard,
+            descriptionKey: "admin.menu.paymentsDashboard.description",
+          },
+          {
+            id: "payments-withdrawals",
+            labelKey: "admin.menu.paymentsWithdrawals",
+            path: "/admin/payments/withdrawals",
+            icon: Banknote,
+            badge: "NEW",
+            descriptionKey: "admin.menu.paymentsWithdrawals.description",
+          },
+          {
+            id: "payments-config",
+            labelKey: "admin.menu.paymentsConfig",
+            path: "/admin/payments/config",
+            icon: Settings,
+            descriptionKey: "admin.menu.paymentsConfig.description",
+          },
+        ],
+      },
+      // Remboursements & Litiges
       {
         id: "finance-disputes-refunds",
         labelKey: "admin.menu.refundsDisputes",
@@ -336,7 +327,7 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
-      // Sous-section : Comptabilite & Fiscalite
+      // Comptabilité & Fiscalité
       {
         id: "finance-accounting",
         labelKey: "admin.menu.accountingTax",
@@ -444,7 +435,7 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: FileSpreadsheet,
         descriptionKey: "admin.menu.financeReports.description",
       },
-      // Suivi des Couts Cloud
+      // Suivi des Coûts Cloud
       {
         id: "cost-monitoring",
         labelKey: "admin.menu.costMonitoring",
@@ -452,7 +443,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: TrendingDown,
         descriptionKey: "admin.menu.costMonitoring.description",
       },
-      // Google Cloud Platform Costs
       {
         id: "gcp-costs",
         labelKey: "admin.menu.gcpCosts",
@@ -464,7 +454,7 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
-  // ===== MARKETING & COMMUNICATIONS (Priorite 5) =====
+  // ===== 5. MARKETING & COMMS (nettoyé — press/legal/FAQs extraits vers content) =====
   {
     id: "marketing",
     labelKey: "admin.menu.marketing",
@@ -540,6 +530,366 @@ export const adminMenuTree: AdminMenuItem[] = [
         badge: "NEW",
         descriptionKey: "admin.menu.userFeedback.description",
       },
+    ],
+  },
+
+  // ===== 6. PROGRAMMES AFFILIÉS (affiliation + chatters + influencers + bloggers + groupadmins + training) =====
+  {
+    id: "affiliates",
+    labelKey: "admin.menu.affiliation",
+    icon: Handshake,
+    descriptionKey: "admin.menu.affiliation.description",
+    children: [
+      // Sous-section : Affiliation globale
+      {
+        id: "affiliation-global",
+        labelKey: "admin.menu.affiliation",
+        icon: Handshake,
+        descriptionKey: "admin.menu.affiliation.description",
+        children: [
+          {
+            id: "affiliate-dashboard",
+            labelKey: "admin.menu.affiliateDashboard",
+            path: "/admin/affiliates/dashboard",
+            icon: LayoutDashboard,
+            descriptionKey: "admin.menu.affiliateDashboard.description",
+          },
+          {
+            id: "affiliates-list",
+            labelKey: "admin.menu.affiliatesList",
+            path: "/admin/affiliates",
+            icon: UserPlus,
+            descriptionKey: "admin.menu.affiliatesList.description",
+          },
+          {
+            id: "affiliate-commissions",
+            labelKey: "admin.menu.affiliateCommissions",
+            path: "/admin/affiliates/commissions",
+            icon: Percent,
+            descriptionKey: "admin.menu.affiliateCommissions.description",
+          },
+          {
+            id: "affiliate-payouts",
+            labelKey: "admin.menu.affiliatePayouts",
+            path: "/admin/affiliates/payouts",
+            icon: Wallet,
+            descriptionKey: "admin.menu.affiliatePayouts.description",
+          },
+          {
+            id: "affiliate-reports",
+            labelKey: "admin.menu.affiliateReports",
+            path: "/admin/affiliates/reports",
+            icon: BarChart3,
+            descriptionKey: "admin.menu.affiliateReports.description",
+          },
+          {
+            id: "affiliate-fraud",
+            labelKey: "admin.menu.affiliateFraud",
+            path: "/admin/affiliates/fraud",
+            icon: ShieldAlert,
+            badge: "NEW",
+            descriptionKey: "admin.menu.affiliateFraud.description",
+          },
+          {
+            id: "affiliate-config",
+            labelKey: "admin.menu.affiliateConfig",
+            path: "/admin/affiliates/config",
+            icon: Settings,
+            descriptionKey: "admin.menu.affiliateConfig.description",
+          },
+          {
+            id: "commission-rules",
+            labelKey: "admin.menu.commissionRules",
+            path: "/admin/affiliates/rules",
+            icon: Cog,
+            descriptionKey: "admin.menu.commissionRules.description",
+          },
+          {
+            id: "ambassadors",
+            labelKey: "admin.menu.ambassadors",
+            path: "/admin/ambassadors",
+            icon: Award,
+            descriptionKey: "admin.menu.ambassadors.description",
+          },
+        ],
+      },
+      // Sous-section : Chatters
+      {
+        id: "chatters",
+        labelKey: "admin.menu.chatters",
+        icon: MessageCircle,
+        descriptionKey: "admin.menu.chatters.description",
+        children: [
+          {
+            id: "chatters-list",
+            labelKey: "admin.menu.chattersList",
+            path: "/admin/chatters",
+            icon: Users,
+            descriptionKey: "admin.menu.chattersList.description",
+          },
+          {
+            id: "chatters-captains",
+            labelKey: "admin.menu.chattersCaptains",
+            path: "/admin/team/captains/recruitment",
+            icon: Crown,
+            descriptionKey: "admin.menu.chattersCaptains.description",
+          },
+          {
+            id: "chatters-referrals",
+            labelKey: "admin.menu.chattersReferrals",
+            path: "/admin/chatters/referrals",
+            icon: UserPlus,
+            descriptionKey: "admin.menu.chattersReferrals.description",
+          },
+          {
+            id: "chatters-commissions",
+            labelKey: "admin.menu.chattersCommissions",
+            path: "/admin/chatters/commissions",
+            icon: DollarSign,
+            badge: "NEW",
+            descriptionKey: "admin.menu.chattersCommissions.description",
+          },
+          {
+            id: "chatters-payments",
+            labelKey: "admin.menu.chattersPayments",
+            path: "/admin/chatters/payments",
+            icon: Wallet,
+            descriptionKey: "admin.menu.chattersPayments.description",
+          },
+          {
+            id: "chatters-fraud",
+            labelKey: "admin.menu.chattersFraud",
+            path: "/admin/chatters/fraud",
+            icon: ShieldAlert,
+            descriptionKey: "admin.menu.chattersFraud.description",
+          },
+          {
+            id: "chatters-promotions",
+            labelKey: "admin.menu.chattersPromotions",
+            path: "/admin/chatters/promotions",
+            icon: Percent,
+            descriptionKey: "admin.menu.chattersPromotions.description",
+          },
+          {
+            id: "chatters-country-rotation",
+            labelKey: "admin.menu.chattersCountryRotation",
+            path: "/admin/chatters/country-rotation",
+            icon: RotateCcw,
+            badge: "NEW",
+            descriptionKey: "admin.menu.chattersCountryRotation.description",
+          },
+          {
+            id: "chatters-analytics",
+            labelKey: "admin.menu.chattersAnalytics",
+            path: "/admin/chatters/analytics",
+            icon: BarChart3,
+            badge: "NEW",
+            descriptionKey: "admin.menu.chattersAnalytics.description",
+          },
+          {
+            id: "chatters-funnel",
+            labelKey: "admin.menu.chattersFunnel",
+            path: "/admin/chatters/funnel",
+            icon: TrendingDown,
+            badge: "NEW",
+            descriptionKey: "admin.menu.chattersFunnel.description",
+          },
+          {
+            id: "chatters-config",
+            labelKey: "admin.menu.chattersConfig",
+            path: "/admin/chatters/config",
+            icon: Settings,
+            descriptionKey: "admin.menu.chattersConfig.description",
+          },
+        ],
+      },
+      // Sous-section : Influenceurs
+      {
+        id: "influencers",
+        labelKey: "admin.menu.influencers",
+        icon: Megaphone,
+        descriptionKey: "admin.menu.influencers.description",
+        children: [
+          {
+            id: "influencers-list",
+            labelKey: "admin.menu.influencersList",
+            path: "/admin/influencers",
+            icon: Users,
+            descriptionKey: "admin.menu.influencersList.description",
+          },
+          {
+            id: "influencers-payments",
+            labelKey: "admin.menu.influencersPayments",
+            path: "/admin/influencers/payments",
+            icon: Wallet,
+            badge: "NEW",
+            descriptionKey: "admin.menu.influencersPayments.description",
+          },
+          {
+            id: "influencers-leaderboard",
+            labelKey: "admin.menu.influencersLeaderboard",
+            path: "/admin/influencers/leaderboard",
+            icon: Award,
+            descriptionKey: "admin.menu.influencersLeaderboard.description",
+          },
+          {
+            id: "influencers-resources",
+            labelKey: "admin.menu.influencersResources",
+            path: "/admin/influencers/resources",
+            icon: FolderOpen,
+            badge: "NEW",
+            descriptionKey: "admin.menu.influencersResources.description",
+          },
+          {
+            id: "influencers-config",
+            labelKey: "admin.menu.influencersConfig",
+            path: "/admin/influencers/config",
+            icon: Settings,
+            descriptionKey: "admin.menu.influencersConfig.description",
+          },
+        ],
+      },
+      // Sous-section : Blogueurs
+      {
+        id: "bloggers",
+        labelKey: "admin.menu.bloggers",
+        icon: FileText,
+        descriptionKey: "admin.menu.bloggers.description",
+        children: [
+          {
+            id: "bloggers-list",
+            labelKey: "admin.menu.bloggersList",
+            path: "/admin/bloggers",
+            icon: Users,
+            descriptionKey: "admin.menu.bloggersList.description",
+          },
+          {
+            id: "bloggers-payments",
+            labelKey: "admin.menu.bloggersPayments",
+            path: "/admin/bloggers/payments",
+            icon: Wallet,
+            badge: "NEW",
+            descriptionKey: "admin.menu.bloggersPayments.description",
+          },
+          {
+            id: "bloggers-resources",
+            labelKey: "admin.menu.bloggersResources",
+            path: "/admin/bloggers/resources",
+            icon: FolderOpen,
+            badge: "NEW",
+            descriptionKey: "admin.menu.bloggersResources.description",
+          },
+          {
+            id: "bloggers-guide",
+            labelKey: "admin.menu.bloggersGuide",
+            path: "/admin/bloggers/guide",
+            icon: BookOpen,
+            badge: "NEW",
+            descriptionKey: "admin.menu.bloggersGuide.description",
+          },
+          {
+            id: "bloggers-articles",
+            labelKey: "admin.menu.bloggersArticles",
+            path: "/admin/bloggers/articles",
+            icon: FileText,
+            badge: "NEW",
+            descriptionKey: "admin.menu.bloggersArticles.description",
+          },
+          {
+            id: "bloggers-widgets",
+            labelKey: "admin.menu.bloggersWidgets",
+            path: "/admin/bloggers/widgets",
+            icon: Code,
+            badge: "NEW",
+            descriptionKey: "admin.menu.bloggersWidgets.description",
+          },
+          {
+            id: "bloggers-config",
+            labelKey: "admin.menu.bloggersConfig",
+            path: "/admin/bloggers/config",
+            icon: Settings,
+            descriptionKey: "admin.menu.bloggersConfig.description",
+          },
+        ],
+      },
+      // Sous-section : Group Admins
+      {
+        id: "groupadmins",
+        labelKey: "admin.menu.groupAdminsSection",
+        icon: Shield,
+        descriptionKey: "admin.menu.groupAdminsSection.description",
+        children: [
+          {
+            id: "groupadmins-list",
+            labelKey: "admin.menu.groupAdminsList",
+            path: "/admin/group-admins",
+            icon: Users,
+            descriptionKey: "admin.menu.groupAdminsList.description",
+          },
+          {
+            id: "groupadmins-recruitments",
+            labelKey: "admin.menu.groupAdminsRecruitments",
+            path: "/admin/group-admins/recruitments",
+            icon: UserPlus,
+            badge: "NEW",
+            descriptionKey: "admin.menu.groupAdminsRecruitments.description",
+          },
+          {
+            id: "groupadmins-payments",
+            labelKey: "admin.menu.groupAdminsPayments",
+            path: "/admin/group-admins/payments",
+            icon: Wallet,
+            descriptionKey: "admin.menu.groupAdminsPayments.description",
+          },
+          {
+            id: "groupadmins-resources",
+            labelKey: "admin.menu.groupAdminsResources",
+            path: "/admin/group-admins/resources",
+            icon: FolderOpen,
+            descriptionKey: "admin.menu.groupAdminsResources.description",
+          },
+          {
+            id: "groupadmins-posts",
+            labelKey: "admin.menu.groupAdminsPosts",
+            path: "/admin/group-admins/posts",
+            icon: FileText,
+            descriptionKey: "admin.menu.groupAdminsPosts.description",
+          },
+          {
+            id: "groupadmins-promotions",
+            labelKey: "admin.menu.groupAdminsPromotions",
+            path: "/admin/group-admins/promotions",
+            icon: Percent,
+            descriptionKey: "admin.menu.groupAdminsPromotions.description",
+          },
+          {
+            id: "groupadmins-config",
+            labelKey: "admin.menu.groupAdminsConfig",
+            path: "/admin/group-admins/config",
+            icon: Settings,
+            descriptionKey: "admin.menu.groupAdminsConfig.description",
+          },
+        ],
+      },
+      // Sous-section : Formation
+      {
+        id: "training-modules",
+        labelKey: "admin.menu.trainingModules",
+        path: "/admin/training/modules",
+        icon: GraduationCap,
+        badge: "NEW",
+        descriptionKey: "admin.menu.trainingModules.description",
+      },
+    ],
+  },
+
+  // ===== 7. CONTENU & SEO (press + legal docs + FAQs) =====
+  {
+    id: "content",
+    labelKey: "admin.menu.content",
+    icon: Newspaper,
+    descriptionKey: "admin.menu.content.description",
+    children: [
       {
         id: "press",
         labelKey: "admin.menu.press",
@@ -564,414 +914,37 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
-    ],
-  },
-
-  // ===== 🤝 AFFILIATION & PARTENARIATS (Priorité 6) =====
-  {
-    id: "affiliation",
-    labelKey: "admin.menu.affiliation",
-    icon: Handshake,
-    descriptionKey: "admin.menu.affiliation.description",
-    children: [
       {
-        id: "affiliate-dashboard",
-        labelKey: "admin.menu.affiliateDashboard",
-        path: "/admin/affiliates/dashboard",
-        icon: LayoutDashboard,
-        descriptionKey: "admin.menu.affiliateDashboard.description",
-      },
-      {
-        id: "affiliates-list",
-        labelKey: "admin.menu.affiliatesList",
-        path: "/admin/affiliates",
-        icon: UserPlus,
-        descriptionKey: "admin.menu.affiliatesList.description",
-      },
-      {
-        id: "affiliate-commissions",
-        labelKey: "admin.menu.affiliateCommissions",
-        path: "/admin/affiliates/commissions",
-        icon: Percent,
-        descriptionKey: "admin.menu.affiliateCommissions.description",
-      },
-      {
-        id: "affiliate-payouts",
-        labelKey: "admin.menu.affiliatePayouts",
-        path: "/admin/affiliates/payouts",
-        icon: Wallet,
-        descriptionKey: "admin.menu.affiliatePayouts.description",
-      },
-      {
-        id: "affiliate-reports",
-        labelKey: "admin.menu.affiliateReports",
-        path: "/admin/affiliates/reports",
-        icon: BarChart3,
-        descriptionKey: "admin.menu.affiliateReports.description",
-      },
-      {
-        id: "affiliate-fraud",
-        labelKey: "admin.menu.affiliateFraud",
-        path: "/admin/affiliates/fraud",
-        icon: ShieldAlert,
-        badge: "NEW",
-        descriptionKey: "admin.menu.affiliateFraud.description",
-      },
-      {
-        id: "affiliate-config",
-        labelKey: "admin.menu.affiliateConfig",
-        path: "/admin/affiliates/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.affiliateConfig.description",
-      },
-      {
-        id: "commission-rules",
-        labelKey: "admin.menu.commissionRules",
-        path: "/admin/affiliates/rules",
-        icon: Cog,
-        descriptionKey: "admin.menu.commissionRules.description",
-      },
-      {
-        id: "ambassadors",
-        labelKey: "admin.menu.ambassadors",
-        path: "/admin/ambassadors",
-        icon: Award,
-        descriptionKey: "admin.menu.ambassadors.description",
-      },
-    ],
-  },
-
-  // ===== 💬 CHATTERS (Priorité 6.5 - Programme Ambassadeur) =====
-  {
-    id: "chatters",
-    labelKey: "admin.menu.chatters",
-    icon: MessageCircle,
-    descriptionKey: "admin.menu.chatters.description",
-    children: [
-      {
-        id: "chatters-list",
-        labelKey: "admin.menu.chattersList",
-        path: "/admin/chatters",
-        icon: Users,
-        descriptionKey: "admin.menu.chattersList.description",
-      },
-      {
-        id: "chatters-captains",
-        labelKey: "admin.menu.chattersCaptains",
-        path: "/admin/team/captains/recruitment",
-        icon: Crown,
-        descriptionKey: "admin.menu.chattersCaptains.description",
-      },
-      {
-        id: "chatters-referrals",
-        labelKey: "admin.menu.chattersReferrals",
-        path: "/admin/chatters/referrals",
-        icon: UserPlus,
-        descriptionKey: "admin.menu.chattersReferrals.description",
-      },
-      {
-        id: "chatters-commissions",
-        labelKey: "admin.menu.chattersCommissions",
-        path: "/admin/chatters/commissions",
-        icon: DollarSign,
-        badge: "NEW",
-        descriptionKey: "admin.menu.chattersCommissions.description",
-      },
-      {
-        id: "chatters-payments",
-        labelKey: "admin.menu.chattersPayments",
-        path: "/admin/chatters/payments",
-        icon: Wallet,
-        descriptionKey: "admin.menu.chattersPayments.description",
-      },
-      {
-        id: "chatters-fraud",
-        labelKey: "admin.menu.chattersFraud",
-        path: "/admin/chatters/fraud",
-        icon: ShieldAlert,
-        descriptionKey: "admin.menu.chattersFraud.description",
-      },
-      {
-        id: "chatters-promotions",
-        labelKey: "admin.menu.chattersPromotions",
-        path: "/admin/chatters/promotions",
-        icon: Percent,
-        descriptionKey: "admin.menu.chattersPromotions.description",
-      },
-      {
-        id: "chatters-country-rotation",
-        labelKey: "admin.menu.chattersCountryRotation",
-        path: "/admin/chatters/country-rotation",
-        icon: RotateCcw,
-        badge: "NEW",
-        descriptionKey: "admin.menu.chattersCountryRotation.description",
-      },
-      {
-        id: "chatters-analytics",
-        labelKey: "admin.menu.chattersAnalytics",
-        path: "/admin/chatters/analytics",
-        icon: BarChart3,
-        badge: "NEW",
-        descriptionKey: "admin.menu.chattersAnalytics.description",
-      },
-      {
-        id: "chatters-funnel",
-        labelKey: "admin.menu.chattersFunnel",
-        path: "/admin/chatters/funnel",
-        icon: TrendingDown,
-        badge: "NEW",
-        descriptionKey: "admin.menu.chattersFunnel.description",
-      },
-      {
-        id: "chatters-config",
-        labelKey: "admin.menu.chattersConfig",
-        path: "/admin/chatters/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.chattersConfig.description",
-      },
-    ],
-  },
-
-  // ===== 👥 EQUIPE (Recrutement interne) =====
-  {
-    id: "team",
-    labelKey: "admin.menu.team",
-    icon: UsersRound,
-    descriptionKey: "admin.menu.team.description",
-    children: [
-      {
-        id: "team-captain-recruitment",
-        labelKey: "admin.menu.teamCaptainRecruitment",
-        path: "/admin/team/captains/recruitment",
-        icon: Crown,
-        badge: "NEW",
-        descriptionKey: "admin.menu.teamCaptainRecruitment.description",
-      },
-    ],
-  },
-
-  // ===== 📣 INFLUENCEURS (Priorité 6.6 - Programme Influenceurs) =====
-  {
-    id: "influencers",
-    labelKey: "admin.menu.influencers",
-    icon: Megaphone,
-    descriptionKey: "admin.menu.influencers.description",
-    children: [
-      {
-        id: "influencers-list",
-        labelKey: "admin.menu.influencersList",
-        path: "/admin/influencers",
-        icon: Users,
-        descriptionKey: "admin.menu.influencersList.description",
-      },
-      {
-        id: "influencers-payments",
-        labelKey: "admin.menu.influencersPayments",
-        path: "/admin/influencers/payments",
-        icon: Wallet,
-        badge: "NEW",
-        descriptionKey: "admin.menu.influencersPayments.description",
-      },
-      {
-        id: "influencers-leaderboard",
-        labelKey: "admin.menu.influencersLeaderboard",
-        path: "/admin/influencers/leaderboard",
-        icon: Award,
-        descriptionKey: "admin.menu.influencersLeaderboard.description",
-      },
-      {
-        id: "influencers-resources",
-        labelKey: "admin.menu.influencersResources",
-        path: "/admin/influencers/resources",
-        icon: FolderOpen,
-        badge: "NEW",
-        descriptionKey: "admin.menu.influencersResources.description",
-      },
-      {
-        id: "influencers-config",
-        labelKey: "admin.menu.influencersConfig",
-        path: "/admin/influencers/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.influencersConfig.description",
-      },
-    ],
-  },
-
-  // ===== 📝 BLOGUEURS (Priorité 6.7 - Programme Blogueurs) =====
-  {
-    id: "bloggers",
-    labelKey: "admin.menu.bloggers",
-    icon: FileText,
-    descriptionKey: "admin.menu.bloggers.description",
-    children: [
-      {
-        id: "bloggers-list",
-        labelKey: "admin.menu.bloggersList",
-        path: "/admin/bloggers",
-        icon: Users,
-        descriptionKey: "admin.menu.bloggersList.description",
-      },
-      {
-        id: "bloggers-payments",
-        labelKey: "admin.menu.bloggersPayments",
-        path: "/admin/bloggers/payments",
-        icon: Wallet,
-        badge: "NEW",
-        descriptionKey: "admin.menu.bloggersPayments.description",
-      },
-      {
-        id: "bloggers-resources",
-        labelKey: "admin.menu.bloggersResources",
-        path: "/admin/bloggers/resources",
-        icon: FolderOpen,
-        badge: "NEW",
-        descriptionKey: "admin.menu.bloggersResources.description",
-      },
-      {
-        id: "bloggers-guide",
-        labelKey: "admin.menu.bloggersGuide",
-        path: "/admin/bloggers/guide",
-        icon: BookOpen,
-        badge: "NEW",
-        descriptionKey: "admin.menu.bloggersGuide.description",
-      },
-      {
-        id: "bloggers-articles",
-        labelKey: "admin.menu.bloggersArticles",
-        path: "/admin/bloggers/articles",
+        id: "legal-documents",
+        labelKey: "admin.menu.legalDocuments",
+        path: "/admin/documents",
         icon: FileText,
-        badge: "NEW",
-        descriptionKey: "admin.menu.bloggersArticles.description",
+        descriptionKey: "admin.menu.legalDocuments.description",
       },
       {
-        id: "bloggers-widgets",
-        labelKey: "admin.menu.bloggersWidgets",
-        path: "/admin/bloggers/widgets",
-        icon: Code,
-        badge: "NEW",
-        descriptionKey: "admin.menu.bloggersWidgets.description",
+        id: "faqs-management",
+        labelKey: "admin.menu.faqs",
+        path: "/admin/cms/faqs",
+        icon: HelpCircle,
+        descriptionKey: "admin.menu.faqs.description",
       },
       {
-        id: "bloggers-config",
-        labelKey: "admin.menu.bloggersConfig",
-        path: "/admin/bloggers/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.bloggersConfig.description",
+        id: "help-center",
+        labelKey: "admin.menu.helpCenter",
+        path: "/admin/help/center",
+        icon: HelpingHand,
+        descriptionKey: "admin.menu.helpCenter.description",
       },
     ],
   },
 
-  // ===== 👥 GROUPADMINS (Priorité 6.75 - Programme Group Administrators) =====
-  {
-    id: "groupadmins",
-    labelKey: "admin.menu.groupAdminsSection",
-    icon: Shield,
-    descriptionKey: "admin.menu.groupAdminsSection.description",
-    children: [
-      {
-        id: "groupadmins-list",
-        labelKey: "admin.menu.groupAdminsList",
-        path: "/admin/groupadmins",
-        icon: Users,
-        descriptionKey: "admin.menu.groupAdminsList.description",
-      },
-      {
-        id: "groupadmins-recruitments",
-        labelKey: "admin.menu.groupAdminsRecruitments",
-        path: "/admin/groupadmins/recruitments",
-        icon: UserPlus,
-        badge: "NEW",
-        descriptionKey: "admin.menu.groupAdminsRecruitments.description",
-      },
-      {
-        id: "groupadmins-payments",
-        labelKey: "admin.menu.groupAdminsPayments",
-        path: "/admin/groupadmins/payments",
-        icon: Wallet,
-        descriptionKey: "admin.menu.groupAdminsPayments.description",
-      },
-      {
-        id: "groupadmins-resources",
-        labelKey: "admin.menu.groupAdminsResources",
-        path: "/admin/groupadmins/resources",
-        icon: FolderOpen,
-        descriptionKey: "admin.menu.groupAdminsResources.description",
-      },
-      {
-        id: "groupadmins-posts",
-        labelKey: "admin.menu.groupAdminsPosts",
-        path: "/admin/groupadmins/posts",
-        icon: FileText,
-        descriptionKey: "admin.menu.groupAdminsPosts.description",
-      },
-      {
-        id: "groupadmins-config",
-        labelKey: "admin.menu.groupAdminsConfig",
-        path: "/admin/groupadmins/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.groupAdminsConfig.description",
-      },
-    ],
-  },
-
-  // ===== 📚 FORMATIONS (Priorité 6.8 - Formation Chatters & Influenceurs) =====
-  {
-    id: "training",
-    labelKey: "admin.menu.training",
-    icon: GraduationCap,
-    descriptionKey: "admin.menu.training.description",
-    children: [
-      {
-        id: "training-modules",
-        labelKey: "admin.menu.trainingModules",
-        path: "/admin/training/modules",
-        icon: BookOpen,
-        badge: "NEW",
-        descriptionKey: "admin.menu.trainingModules.description",
-      },
-    ],
-  },
-
-  // ===== 💳 PAIEMENTS CENTRALISES (Priorité 6.9 - Gestion des retraits) =====
-  {
-    id: "payments",
-    labelKey: "admin.menu.payments",
-    icon: Wallet,
-    descriptionKey: "admin.menu.payments.description",
-    children: [
-      {
-        id: "payments-dashboard",
-        labelKey: "admin.menu.paymentsDashboard",
-        path: "/admin/payments",
-        icon: LayoutDashboard,
-        descriptionKey: "admin.menu.paymentsDashboard.description",
-      },
-      {
-        id: "payments-withdrawals",
-        labelKey: "admin.menu.paymentsWithdrawals",
-        path: "/admin/payments/withdrawals",
-        icon: Banknote,
-        badge: "NEW",
-        descriptionKey: "admin.menu.paymentsWithdrawals.description",
-      },
-      {
-        id: "payments-config",
-        labelKey: "admin.menu.paymentsConfig",
-        path: "/admin/payments/config",
-        icon: Settings,
-        descriptionKey: "admin.menu.paymentsConfig.description",
-      },
-    ],
-  },
-
-  // ===== ANALYTICS & RAPPORTS (Priorite 7) =====
+  // ===== 8. ANALYTICS & RAPPORTS =====
   {
     id: "analytics",
     labelKey: "admin.menu.analytics",
     icon: TrendingUp,
     descriptionKey: "admin.menu.analytics.description",
     children: [
-      // Analytics centralises - Prominent entry
       {
         id: "unified-analytics",
         labelKey: "admin.menu.unifiedAnalytics",
@@ -980,7 +953,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         badge: "NEW",
         descriptionKey: "admin.menu.unifiedAnalytics.description",
       },
-      // Sous-section : STATISTIQUES
       {
         id: "statistics",
         labelKey: "admin.menu.statistics",
@@ -996,7 +968,6 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
-      // Sous-section : ERREURS, HACKS, ALERTES
       {
         id: "errors-security",
         labelKey: "admin.menu.errorsSecurity",
@@ -1023,16 +994,7 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
-  // ===== BOITE A OUTILS (Priorite 7.5 - Outils externes) =====
-  {
-    id: "toolbox",
-    labelKey: "admin.menu.toolbox",
-    path: "/admin/toolbox",
-    icon: Wrench,
-    descriptionKey: "admin.menu.toolbox.description",
-  },
-
-  // ===== ADMINISTRATION SYSTEME (Priorite 8 - Usage occasionnel) =====
+  // ===== 9. CONFIGURATION SYSTEME (admin-system + toolbox + team fusionnés) =====
   {
     id: "admin-system",
     labelKey: "admin.menu.adminSystem",
@@ -1054,32 +1016,26 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.countriesManagement.description",
       },
       {
-        id: "legal-documents",
-        labelKey: "admin.menu.legalDocuments",
-        path: "/admin/documents",
-        icon: FileText,
-        descriptionKey: "admin.menu.legalDocuments.description",
-      },
-      {
-        id: "help-center",
-        labelKey: "admin.menu.helpCenter",
-        path: "/admin/help/center",
-        icon: HelpingHand,
-        descriptionKey: "admin.menu.helpCenter.description",
-      },
-      {
-        id: "faqs-management",
-        labelKey: "admin.menu.faqs",
-        path: "/admin/cms/faqs",
-        icon: HelpCircle,
-        descriptionKey: "admin.menu.faqs.description",
-      },
-      {
         id: "ia-management",
         labelKey: "admin.menu.iaManagement",
         path: "/admin/ia",
         icon: Bot,
         descriptionKey: "admin.menu.iaManagement.description",
+      },
+      {
+        id: "toolbox",
+        labelKey: "admin.menu.toolbox",
+        path: "/admin/toolbox",
+        icon: Wrench,
+        descriptionKey: "admin.menu.toolbox.description",
+      },
+      {
+        id: "team-captain-recruitment",
+        labelKey: "admin.menu.teamCaptainRecruitment",
+        path: "/admin/team/captains/recruitment",
+        icon: Crown,
+        badge: "NEW",
+        descriptionKey: "admin.menu.teamCaptainRecruitment.description",
       },
       {
         id: "system-maintenance",
@@ -1142,14 +1098,6 @@ export const adminMenuTree: AdminMenuItem[] = [
       },
     ],
   },
-  // // ===== 🌐 DASHBOARD LINGUISTIQUE (Priorité 9) =====
-  // {
-  //   id: 'language-dashboard',
-  //   label: 'tableau de bord linguistique',
-  //   path: '/admin/language/dashboard',
-  //   icon: Globe2,
-  //   description: 'Vue d\'ensemble et KPIs en temps réel'
-  // },
 ];
 
 // ===== FONCTIONS UTILITAIRES AMÉLIORÉES =====

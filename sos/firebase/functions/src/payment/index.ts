@@ -50,6 +50,7 @@ export {
 export {
   paymentOnWithdrawalCreated,
   paymentOnWithdrawalStatusChanged,
+  paymentOnPaymentStatusChanged,
   paymentProcessAutomaticPayments,
   paymentWebhookWise,
   paymentWebhookFlutterwave,

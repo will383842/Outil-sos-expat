@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { DollarSign, Save, RotateCcw, TrendingUp, Calculator } from 'lucide-react';
 import Button from '../common/Button';
 import MoneyInput from '@/components/admin/MoneyInput';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 /* =========================================
  * Types
@@ -229,12 +230,7 @@ export const PricingManagement: React.FC = () => {
    * Rendu
    * ========================================= */
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-        <span className="ml-2 text-gray-600">Chargement de la configuration...</span>
-      </div>
-    );
+    return <LoadingSpinner text="Chargement de la configuration..." fullPage />;
   }
 
   if (!config) {

@@ -50,6 +50,8 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Button from '../../components/common/Button';
+import { KPICard } from '@/components/admin/KPICard';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import adAttributionService, { AdStats, CampaignStats, AdConversion, ContentTypeStats, CreativeStats, CountryStats } from '../../services/adAttributionService';
 import { normalizeSourceName, getSourceColor } from '../../utils/trafficSource';
 import { ContentType, CONTENT_TYPE_COLORS, parseUtmContent, getContentTypeLabel } from '../../utils/utmContentParser';
@@ -178,34 +180,7 @@ const calculateCPA = (revenue: number, conversions: number): number => {
   return revenue / conversions;
 };
 
-// KPI Card Component
-const KPICard: React.FC<{
-  title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ReactNode;
-  color: string;
-  subtitle?: string;
-}> = ({ title, value, change, icon, color, subtitle }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
-        {typeof change === 'number' && (
-          <div className={`flex items-center mt-2 text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {change >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-            <span className="ml-1">{Math.abs(change).toFixed(1)}%</span>
-          </div>
-        )}
-      </div>
-      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
-        {icon}
-      </div>
-    </div>
-  </div>
-);
+// KPICard is imported from @/components/admin/KPICard
 
 // Source Icon Component
 const SourceIcon: React.FC<{ source: string; size?: number }> = ({ source, size = 20 }) => {
@@ -384,7 +359,7 @@ const AdminAdsAnalytics: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+              <LoadingSpinner size="large" color="blue" />
             </div>
           ) : (
             <div className="space-y-8">
@@ -393,30 +368,26 @@ const AdminAdsAnalytics: React.FC = () => {
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.adsAnalytics.kpi.totalConversions' })}
                   value={summary?.totalConversions || 0}
-                  icon={<Target size={24} className="text-white" />}
-                  color="bg-blue-600"
-                  subtitle={`${intl.formatMessage({ id: 'admin.adsAnalytics.kpi.topSource' })}: ${summary?.topSource || 'N/A'}`}
+                  icon={<Target size={24} className="text-blue-600" />}
+                  colorTheme="blue"
                 />
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.adsAnalytics.kpi.generatedRevenue' })}
                   value={formatCurrency(summary?.totalRevenue || 0, intl.locale)}
-                  icon={<DollarSign size={24} className="text-white" />}
-                  color="bg-green-600"
-                  subtitle={`${summary?.totalPurchases || 0} ${intl.formatMessage({ id: 'admin.adsAnalytics.kpi.purchases' })}`}
+                  icon={<DollarSign size={24} className="text-green-600" />}
+                  colorTheme="green"
                 />
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.adsAnalytics.kpi.generatedLeads' })}
                   value={summary?.totalLeads || 0}
-                  icon={<Users size={24} className="text-white" />}
-                  color="bg-purple-600"
-                  subtitle={intl.formatMessage({ id: 'admin.adsAnalytics.kpi.consultationRequests' })}
+                  icon={<Users size={24} className="text-purple-600" />}
+                  colorTheme="purple"
                 />
                 <KPICard
                   title={intl.formatMessage({ id: 'admin.adsAnalytics.kpi.avgBasket' })}
                   value={formatCurrency(summary?.avgOrderValue || 0, intl.locale)}
-                  icon={<ShoppingCart size={24} className="text-white" />}
-                  color="bg-orange-500"
-                  subtitle={intl.formatMessage({ id: 'admin.adsAnalytics.kpi.perTransaction' })}
+                  icon={<ShoppingCart size={24} className="text-amber-600" />}
+                  colorTheme="amber"
                 />
               </div>
 

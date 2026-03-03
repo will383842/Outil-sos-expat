@@ -52,6 +52,7 @@ import {
   Trophy,
 } from "lucide-react";
 import AdminLayout from "../../../components/admin/AdminLayout";
+import { StatusBadge, type StatusType } from "@/components/admin/StatusBadge";
 
 interface Promotion {
   id: string;
@@ -254,15 +255,15 @@ const AdminInfluencersPromotions: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (promo: Promotion) => {
+  const getPromoStatus = (promo: Promotion): { statusType: StatusType; label: string } => {
     const now = new Date();
     const start = toDate(promo.startDate);
     const end = toDate(promo.endDate);
 
-    if (!promo.isActive) return <Badge variant="secondary">Inactif</Badge>;
-    if (now < start) return <Badge className="bg-blue-500 text-white">Planifié</Badge>;
-    if (now > end) return <Badge variant="destructive">Terminé</Badge>;
-    return <Badge className="bg-green-500 text-white">En cours</Badge>;
+    if (!promo.isActive) return { statusType: "inactive", label: "Inactif" };
+    if (now < start) return { statusType: "info", label: "Planifié" };
+    if (now > end) return { statusType: "error", label: "Terminé" };
+    return { statusType: "active", label: "En cours" };
   };
 
   return (
@@ -366,7 +367,9 @@ const AdminInfluencersPromotions: React.FC = () => {
                           <span className="text-xs text-gray-400">Illimité</span>
                         )}
                       </TableCell>
-                      <TableCell>{getStatusBadge(promo)}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={getPromoStatus(promo).statusType} label={getPromoStatus(promo).label} size="sm" />
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(promo)}>

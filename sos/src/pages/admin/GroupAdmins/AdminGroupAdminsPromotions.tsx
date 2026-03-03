@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusType } from "@/components/admin/StatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -253,15 +254,15 @@ const AdminGroupAdminsPromotions: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (promo: Promotion) => {
+  const getPromoStatus = (promo: Promotion): { status: StatusType; label: string } => {
     const now = new Date();
     const start = toDate(promo.startDate);
     const end = toDate(promo.endDate);
 
-    if (!promo.isActive) return <Badge variant="secondary">Inactif</Badge>;
-    if (now < start) return <Badge className="bg-blue-500 text-white">Planifié</Badge>;
-    if (now > end) return <Badge variant="destructive">Terminé</Badge>;
-    return <Badge className="bg-green-500 text-white">En cours</Badge>;
+    if (!promo.isActive) return { status: "inactive", label: "Inactif" };
+    if (now < start) return { status: "info", label: "Planifié" };
+    if (now > end) return { status: "error", label: "Terminé" };
+    return { status: "active", label: "En cours" };
   };
 
   return (
@@ -365,7 +366,12 @@ const AdminGroupAdminsPromotions: React.FC = () => {
                           <span className="text-xs text-gray-400">Illimité</span>
                         )}
                       </TableCell>
-                      <TableCell>{getStatusBadge(promo)}</TableCell>
+                      <TableCell>
+                        {(() => {
+                          const mapped = getPromoStatus(promo);
+                          return <StatusBadge status={mapped.status} label={mapped.label} size="sm" />;
+                        })()}
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(promo)}>

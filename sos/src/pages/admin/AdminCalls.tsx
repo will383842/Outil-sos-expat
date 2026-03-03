@@ -88,8 +88,12 @@ import {
 import { db } from "../../config/firebase";
 import { CALLS_CONFIG } from "../../config/callsConfig";
 import AdminLayout from "../../components/admin/AdminLayout";
+import AdminErrorState from "../../components/admin/AdminErrorState";
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import Modal from "../../components/common/Modal";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import RealtimeSuspendedBanner, { RealtimeCountdown } from "../../components/admin/RealtimeSuspendedBanner";
 import { useAutoSuspendRealtime } from "../../hooks/useAutoSuspendRealtime";
 import { useAuth } from "../../contexts/AuthContext";
@@ -221,79 +225,28 @@ interface SystemHealth {
 const CallStatusBadge: React.FC<{ status: string; animated?: boolean }> = ({ status, animated = false }) => {
   const intl = useIntl();
 
-  const getConfig = () => {
-    switch (status) {
-      case 'active':
-        return {
-          color: 'bg-green-100 text-green-800 border-green-200',
-          icon: Phone,
-          label: intl.formatMessage({ id: 'admin.calls.status.active' }),
-          pulse: true
-        };
-      case 'both_connecting':
-        return {
-          color: 'bg-blue-100 text-blue-800 border-blue-200',
-          icon: PhoneCall,
-          label: intl.formatMessage({ id: 'admin.calls.status.connecting' }),
-          pulse: true
-        };
-      case 'provider_connecting':
-        return {
-          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-          icon: PhoneIncoming,
-          label: intl.formatMessage({ id: 'admin.calls.status.providerConnecting' }),
-          pulse: true
-        };
-      case 'client_connecting':
-        return {
-          color: 'bg-orange-100 text-orange-800 border-orange-200',
-          icon: PhoneOutgoing,
-          label: intl.formatMessage({ id: 'admin.calls.status.clientConnecting' }),
-          pulse: true
-        };
-      case 'pending':
-        return {
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
-          icon: Clock,
-          label: intl.formatMessage({ id: 'admin.calls.status.pending' })
-        };
-      case 'completed':
-        return {
-          color: 'bg-green-100 text-green-800 border-green-200',
-          icon: CheckCircle,
-          label: intl.formatMessage({ id: 'admin.calls.status.completed' })
-        };
-      case 'failed':
-        return {
-          color: 'bg-red-100 text-red-800 border-red-200',
-          icon: XCircle,
-          label: intl.formatMessage({ id: 'admin.calls.status.failed' })
-        };
-      case 'cancelled':
-        return {
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
-          icon: PhoneOff,
-          label: intl.formatMessage({ id: 'admin.calls.status.cancelled' })
-        };
-      default:
-        return {
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
-          icon: Minus,
-          label: status
-        };
-    }
+  const statusMap: Record<string, { type: StatusType; label: string; icon: React.FC<{ size?: number | string; className?: string }>; pulse?: boolean }> = {
+    active: { type: 'active', label: intl.formatMessage({ id: 'admin.calls.status.active' }), icon: Phone, pulse: true },
+    both_connecting: { type: 'processing', label: intl.formatMessage({ id: 'admin.calls.status.connecting' }), icon: PhoneCall, pulse: true },
+    provider_connecting: { type: 'warning', label: intl.formatMessage({ id: 'admin.calls.status.providerConnecting' }), icon: PhoneIncoming, pulse: true },
+    client_connecting: { type: 'warning', label: intl.formatMessage({ id: 'admin.calls.status.clientConnecting' }), icon: PhoneOutgoing, pulse: true },
+    pending: { type: 'pending', label: intl.formatMessage({ id: 'admin.calls.status.pending' }), icon: Clock },
+    completed: { type: 'success', label: intl.formatMessage({ id: 'admin.calls.status.completed' }), icon: CheckCircle },
+    failed: { type: 'failed', label: intl.formatMessage({ id: 'admin.calls.status.failed' }), icon: XCircle },
+    cancelled: { type: 'cancelled', label: intl.formatMessage({ id: 'admin.calls.status.cancelled' }), icon: PhoneOff },
   };
 
-  const config = getConfig();
-  const IconComponent = config.icon;
+  const mapped = statusMap[status] || { type: 'pending' as StatusType, label: status, icon: Minus };
+  const Icon = mapped.icon;
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${config.color} ${
-      animated && config.pulse ? 'animate-pulse' : ''
-    }`}>
-      <IconComponent size={12} className="mr-1" />
-      {config.label}
-    </span>
+    <StatusBadge
+      status={mapped.type}
+      label={mapped.label}
+      size="sm"
+      icon={<Icon size={12} />}
+      pulse={animated && !!mapped.pulse}
+    />
   );
 };
 
@@ -505,6 +458,7 @@ const AdminCallsMonitoring: React.FC = () => {
   
   // States UI
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<'grid' | 'list' | 'board'>('grid');
   const [selectedCall, setSelectedCall] = useState<LiveCallSession | null>(null);
   const [showCallModal, setShowCallModal] = useState(false);
@@ -561,6 +515,7 @@ const AdminCallsMonitoring: React.FC = () => {
 
     const loadCalls = async () => {
       try {
+        setError(null);
         // ✅ FIX: Construire la liste des statuts dynamiquement selon les filtres
         const activeStatuses = [
           'pending',
@@ -1013,10 +968,7 @@ const AdminCallsMonitoring: React.FC = () => {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{intl.formatMessage({ id: 'admin.calls.loading' })}</p>
-          </div>
+          <LoadingSpinner size="large" text={intl.formatMessage({ id: 'admin.calls.loading' })} />
         </div>
       </AdminLayout>
     );

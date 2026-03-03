@@ -47,6 +47,8 @@ import {
 } from "lucide-react";
 import { useIntl } from "react-intl";
 import AdminLayout from "../../components/admin/AdminLayout";
+import AdminErrorState from "../../components/admin/AdminErrorState";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import AdminMapVisibilityToggle from "../../components/admin/AdminMapVisibilityToggle";
@@ -312,6 +314,7 @@ const AdminExpats: React.FC = () => {
 
   // state
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expats, setExpats] = useState<Expat[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -568,6 +571,7 @@ const AdminExpats: React.FC = () => {
     async (direction: "init" | "next" | "prev" = "init") => {
       setLoading(true);
       try {
+        setError(null);
         let targetCursor: QueryDocumentSnapshot<DocumentData> | null = null;
         let newPageIndex = pageIndex;
 
@@ -615,6 +619,7 @@ const AdminExpats: React.FC = () => {
         void loadCount();
       } catch (e) {
         console.error(e);
+        setError('Erreur lors du chargement des expatriés. Veuillez réessayer.');
       } finally {
         setLoading(false);
       }
@@ -1099,6 +1104,8 @@ const AdminExpats: React.FC = () => {
           </div>
         </div>
 
+        {error && <AdminErrorState error={error} onRetry={() => loadPage("init")} />}
+
         {/* Cards synthèse */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -1323,8 +1330,7 @@ const AdminExpats: React.FC = () => {
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex justify-center items-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <span className="ml-2 text-gray-600">{t("loading")}</span>
+                <LoadingSpinner color="green" text={t("loading")} />
               </div>
             ) : expats.length === 0 ? (
               <div className="text-center py-12">

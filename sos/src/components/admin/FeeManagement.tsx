@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc, serverTimestamp, Timestamp, arrayUnion } from "fir
 import { db } from "../../config/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { Save, RotateCcw, Percent, CreditCard, Wallet, AlertTriangle, ArrowDown, DollarSign, Banknote } from "lucide-react";
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 /* =========================================
  * Types
@@ -197,11 +198,7 @@ const FeeManagement: React.FC = () => {
   const sim = simulateFees(simGateway, simCurrency, simTotal, simProvider, config);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    );
+    return <LoadingSpinner color="blue" fullPage />;
   }
 
   /* ---------- Render ---------- */

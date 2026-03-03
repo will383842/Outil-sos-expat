@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Globe, Plus, Edit, Trash2, Save, X, Eye, CheckCircle, AlertCircle, Database, Loader2 } from 'lucide-react';
 import {
   FAQ,
@@ -308,9 +309,7 @@ const AdminFAQs: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-        </div>
+        <LoadingSpinner size="large" fullPage />
       </AdminLayout>
     );
   }

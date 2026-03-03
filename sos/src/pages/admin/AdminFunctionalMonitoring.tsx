@@ -14,6 +14,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useIntl } from 'react-intl';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { StatusBadge as UnifiedStatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 import {
   Activity,
   AlertTriangle,
@@ -161,29 +162,21 @@ const AdminFunctionalMonitoring: React.FC = () => {
     }
   };
 
-  // Status badge component
-  const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-    const colors: Record<string, string> = {
-      healthy: 'bg-green-100 text-green-800',
-      warning: 'bg-yellow-100 text-yellow-800',
-      critical: 'bg-red-100 text-red-800',
-      emergency: 'bg-purple-100 text-purple-800'
-    };
-
-    const icons: Record<string, React.ReactNode> = {
-      healthy: <CheckCircle className="w-4 h-4" />,
-      warning: <AlertTriangle className="w-4 h-4" />,
-      critical: <XCircle className="w-4 h-4" />,
-      emergency: <AlertTriangle className="w-4 h-4" />
-    };
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100'}`}>
-        {icons[status]}
-        {status.toUpperCase()}
-      </span>
-    );
+  // Map monitoring status to unified StatusType
+  const monitoringStatusMap: Record<string, StatusType> = {
+    healthy: 'success',
+    warning: 'warning',
+    critical: 'error',
+    emergency: 'error',
   };
+
+  const MonitoringStatusBadge: React.FC<{ status: string }> = ({ status }) => (
+    <UnifiedStatusBadge
+      status={monitoringStatusMap[status] || 'pending'}
+      label={status.toUpperCase()}
+      size="sm"
+    />
+  );
 
   // Metric card component
   const MetricCard: React.FC<{
@@ -272,7 +265,7 @@ const AdminFunctionalMonitoring: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {healthSummary && <StatusBadge status={healthSummary.status} />}
+            {healthSummary && <MonitoringStatusBadge status={healthSummary.status} />}
             <button
               onClick={() => fetchData(true)}
               disabled={refreshing}
@@ -479,7 +472,7 @@ const AdminFunctionalMonitoring: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {getCategoryIcon(alert.category)}
-                        <StatusBadge status={alert.severity} />
+                        <MonitoringStatusBadge status={alert.severity} />
                         <span className="text-xs text-gray-500">{getCategoryLabel(alert.category)}</span>
                       </div>
                       <h4 className="font-medium text-lg">{alert.title}</h4>

@@ -32,6 +32,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -229,31 +230,16 @@ const AdminGroupAdminDetail: React.FC = () => {
   const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString();
 
-  const getStatusBadge = (status: string) => {
+  const mapGroupAdminStatus = (status: string): { statusType: StatusType; label: string } => {
     switch (status) {
       case 'active':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle className="w-4 h-4" />
-            {intl.formatMessage({ id: 'groupAdmin.status.active' })}
-          </span>
-        );
+        return { statusType: 'active', label: intl.formatMessage({ id: 'groupAdmin.status.active' }) };
       case 'suspended':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-            <Clock className="w-4 h-4" />
-            {intl.formatMessage({ id: 'groupAdmin.status.suspended' })}
-          </span>
-        );
+        return { statusType: 'suspended', label: intl.formatMessage({ id: 'groupAdmin.status.suspended' }) };
       case 'banned':
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-            <AlertTriangle className="w-4 h-4" />
-            {intl.formatMessage({ id: 'groupAdmin.status.banned', defaultMessage: 'Banned' })}
-          </span>
-        );
+        return { statusType: 'banned', label: intl.formatMessage({ id: 'groupAdmin.status.banned', defaultMessage: 'Banned' }) };
       default:
-        return null;
+        return { statusType: 'pending', label: status };
     }
   };
 
@@ -303,7 +289,10 @@ const AdminGroupAdminDetail: React.FC = () => {
             <p className="text-gray-500">{admin.email}</p>
           </div>
           <div className="flex items-center gap-2">
-            {getStatusBadge(admin.status)}
+            {(() => {
+              const mapped = mapGroupAdminStatus(admin.status);
+              return <StatusBadge status={mapped.statusType} label={mapped.label} size="md" />;
+            })()}
             <button onClick={fetchDetails} className={`${UI.button.secondary} p-2`}>
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -367,24 +356,16 @@ const AdminGroupAdminDetail: React.FC = () => {
                       </div>
                       <div className="text-right">
                         {recruit.computedStatus === 'paid' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            <CheckCircle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.paid' })}
-                          </span>
+                          <StatusBadge status="paid" label={intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.paid' })} size="sm" icon={<CheckCircle className="w-3 h-3" />} />
                         )}
                         {recruit.computedStatus === 'pending' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400">
-                            <Clock className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.pending' })}
-                          </span>
+                          <StatusBadge status="pending" label={intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.pending' })} size="sm" icon={<Clock className="w-3 h-3" />} />
                         )}
                         {recruit.computedStatus === 'eligible' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                            <CheckCircle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.eligible' })}
-                          </span>
+                          <StatusBadge status="info" label={intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.eligible' })} size="sm" icon={<CheckCircle className="w-3 h-3" />} />
                         )}
                         {recruit.computedStatus === 'expired' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                            <AlertTriangle className="w-3 h-3" /> {intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.expired' })}
-                          </span>
+                          <StatusBadge status="error" label={intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitStatus.expired' })} size="sm" icon={<AlertTriangle className="w-3 h-3" />} />
                         )}
                       </div>
                     </div>

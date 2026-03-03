@@ -3,6 +3,7 @@
 // =============================================================================
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
 import {
   ClipboardCheck,
@@ -43,6 +44,8 @@ import { Timestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { useAuth } from '../../contexts/AuthContext';
@@ -316,30 +319,20 @@ const STRINGS: Record<Lang, Record<string, string>> = {
 const tFor = (lang: Lang) => (key: string) => STRINGS[lang][key] ?? key;
 
 // ============ UTILITY COMPONENTS ============
-const StatusBadge: React.FC<{ status: ValidationStatus; t: (key: string) => string }> = ({ status, t }) => {
-  const config: Record<ValidationStatus, { color: string; icon: React.FC<{ size?: number | string; className?: string }> }> = {
-    pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock },
-    in_review: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Eye },
-    changes_requested: { color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Edit3 },
-    approved: { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle },
-    rejected: { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle },
+const ValidationStatusBadge: React.FC<{ status: ValidationStatus; t: (key: string) => string }> = ({ status, t }) => {
+  const statusMap: Record<ValidationStatus, { type: StatusType; label: string; icon: React.FC<{ size?: number | string; className?: string }> }> = {
+    pending: { type: 'warning', label: t('pending'), icon: Clock },
+    in_review: { type: 'processing', label: t('inReview'), icon: Eye },
+    changes_requested: { type: 'warning', label: t('changesRequested'), icon: Edit3 },
+    approved: { type: 'approved', label: t('approved'), icon: CheckCircle },
+    rejected: { type: 'rejected', label: t('rejected'), icon: XCircle },
   };
 
-  const statusLabels: Record<ValidationStatus, string> = {
-    pending: t('pending'),
-    in_review: t('inReview'),
-    changes_requested: t('changesRequested'),
-    approved: t('approved'),
-    rejected: t('rejected'),
-  };
-
-  const { color, icon: Icon } = config[status];
+  const mapped = statusMap[status];
+  const Icon = mapped.icon;
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
-      <Icon size={12} className="mr-1" />
-      {statusLabels[status]}
-    </span>
+    <StatusBadge status={mapped.type} label={mapped.label} size="sm" icon={<Icon size={12} />} />
   );
 };
 
@@ -494,7 +487,7 @@ const ProfileReviewModal: React.FC<ProfileReviewModalProps> = ({
             <h3 className="text-xl font-semibold text-gray-900">{item.providerName}</h3>
             <div className="flex items-center space-x-3 mt-2">
               <ProviderTypeBadge type={item.providerType} t={t} />
-              <StatusBadge status={item.status} t={t} />
+              <ValidationStatusBadge status={item.status} t={t} />
             </div>
             <div className="flex items-center space-x-4 mt-3 text-sm text-gray-600">
               <span className="flex items-center">
@@ -1160,12 +1153,7 @@ const AdminProfileValidation: React.FC = () => {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('loading')}</p>
-          </div>
-        </div>
+        <LoadingSpinner size="large" text={t('loading')} fullPage />
       </AdminLayout>
     );
   }
@@ -1368,7 +1356,7 @@ const AdminProfileValidation: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={item.status} t={t} />
+                        <ValidationStatusBadge status={item.status} t={t} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.assignedToName || (

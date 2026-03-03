@@ -13,7 +13,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle,
   Loader2,
   RefreshCw,
   User,
@@ -21,6 +20,10 @@ import {
   Smartphone,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminErrorState from '@/components/admin/AdminErrorState';
+import Modal from '../../../components/common/Modal';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
 
 // Design tokens
 const UI = {
@@ -59,6 +62,12 @@ const AdminChatterPayments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Modal states
+  const [rejectModal, setRejectModal] = useState<{ isOpen: boolean; withdrawalId: string }>({ isOpen: false, withdrawalId: '' });
+  const [rejectReason, setRejectReason] = useState('');
+  const [completeModal, setCompleteModal] = useState<{ isOpen: boolean; withdrawalId: string }>({ isOpen: false, withdrawalId: '' });
+  const [transactionId, setTransactionId] = useState('');
 
   // Fetch withdrawals
   const fetchWithdrawals = async () => {
@@ -118,11 +127,20 @@ const AdminChatterPayments: React.FC = () => {
     }
   };
 
-  // Handle reject
-  const handleReject = async (withdrawalId: string) => {
-    const reason = prompt('Raison du rejet:');
-    if (!reason) return;
+  // Handle reject (via modal)
+  const openRejectModal = (withdrawalId: string) => {
+    setRejectReason('');
+    setRejectModal({ isOpen: true, withdrawalId });
+  };
 
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('Veuillez saisir une raison');
+      return;
+    }
+
+    const { withdrawalId } = rejectModal;
+    setRejectModal({ isOpen: false, withdrawalId: '' });
     setProcessingId(withdrawalId);
 
     try {
@@ -130,7 +148,7 @@ const AdminChatterPayments: React.FC = () => {
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'reject',
-        reason,
+        reason: rejectReason.trim(),
       });
 
       await fetchWithdrawals();
@@ -142,10 +160,15 @@ const AdminChatterPayments: React.FC = () => {
     }
   };
 
-  // Handle mark complete
-  const handleMarkComplete = async (withdrawalId: string) => {
-    const transactionId = prompt('ID de transaction (optionnel):');
+  // Handle mark complete (via modal)
+  const openCompleteModal = (withdrawalId: string) => {
+    setTransactionId('');
+    setCompleteModal({ isOpen: true, withdrawalId });
+  };
 
+  const confirmComplete = async () => {
+    const { withdrawalId } = completeModal;
+    setCompleteModal({ isOpen: false, withdrawalId: '' });
     setProcessingId(withdrawalId);
 
     try {
@@ -153,7 +176,7 @@ const AdminChatterPayments: React.FC = () => {
       await adminProcessWithdrawal({
         withdrawalId,
         action: 'complete',
-        transactionId: transactionId || undefined,
+        transactionId: transactionId.trim() || undefined,
       });
 
       await fetchWithdrawals();
@@ -179,19 +202,14 @@ const AdminChatterPayments: React.FC = () => {
     }
   };
 
-  // Get status color
-  const getStatusColor = (status: string) => {
+  // Map payment status to StatusType for the unified StatusBadge
+  const mapPaymentStatus = (status: string): StatusType => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'pending':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'processing':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'failed':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      case 'completed': return 'paid';
+      case 'pending': return 'pending';
+      case 'processing': return 'processing';
+      case 'failed': return 'failed';
+      default: return 'inactive';
     }
   };
 
@@ -245,14 +263,7 @@ const AdminChatterPayments: React.FC = () => {
       </div>
 
       {/* Error */}
-      {error && (
-        <div className={`${UI.card} p-4 bg-red-50 dark:bg-red-900/20`}>
-          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-            <AlertTriangle className="w-5 h-5" />
-            <p>{error}</p>
-          </div>
-        </div>
-      )}
+      {error && <AdminErrorState error={error} onRetry={fetchWithdrawals} />}
 
       {/* Content */}
       {loading ? (
@@ -303,9 +314,7 @@ const AdminChatterPayments: React.FC = () => {
                   </div>
 
                   {/* Status */}
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(withdrawal.status)}`}>
-                    {withdrawal.status}
-                  </span>
+                  <StatusBadge status={mapPaymentStatus(withdrawal.status)} label={withdrawal.status} />
                 </div>
 
                 {/* Actions */}
@@ -325,7 +334,7 @@ const AdminChatterPayments: React.FC = () => {
                         Approuver
                       </button>
                       <button
-                        onClick={() => handleReject(withdrawal.id)}
+                        onClick={() => openRejectModal(withdrawal.id)}
                         disabled={processingId === withdrawal.id}
                         className={`${UI.button.danger} px-4 py-2 flex items-center gap-2`}
                       >
@@ -337,7 +346,7 @@ const AdminChatterPayments: React.FC = () => {
 
                   {withdrawal.status === 'processing' && (
                     <button
-                      onClick={() => handleMarkComplete(withdrawal.id)}
+                      onClick={() => openCompleteModal(withdrawal.id)}
                       disabled={processingId === withdrawal.id}
                       className={`${UI.button.success} px-4 py-2 flex items-center gap-2`}
                     >
@@ -385,6 +394,78 @@ const AdminChatterPayments: React.FC = () => {
           ))}
         </div>
       )}
+      {/* Rejection Modal */}
+      <Modal
+        isOpen={rejectModal.isOpen}
+        onClose={() => setRejectModal({ isOpen: false, withdrawalId: '' })}
+        title="Rejeter le retrait"
+        size="small"
+      >
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">
+            Raison du rejet <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Saisissez la raison du rejet..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+            rows={3}
+            autoFocus
+          />
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setRejectModal({ isOpen: false, withdrawalId: '' })}
+              className={`${UI.button.secondary} px-4 py-2`}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={confirmReject}
+              disabled={!rejectReason.trim()}
+              className={`${UI.button.danger} px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Confirmer le rejet
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Complete Transaction Modal */}
+      <Modal
+        isOpen={completeModal.isOpen}
+        onClose={() => setCompleteModal({ isOpen: false, withdrawalId: '' })}
+        title="Marquer comme terminé"
+        size="small"
+      >
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">
+            ID de transaction (optionnel)
+          </label>
+          <input
+            type="text"
+            value={transactionId}
+            onChange={(e) => setTransactionId(e.target.value)}
+            placeholder="Ex: TXN-123456..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            autoFocus
+          />
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setCompleteModal({ isOpen: false, withdrawalId: '' })}
+              className={`${UI.button.secondary} px-4 py-2`}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={confirmComplete}
+              className={`${UI.button.success} px-4 py-2`}
+            >
+              Confirmer
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
     </AdminLayout>
   );

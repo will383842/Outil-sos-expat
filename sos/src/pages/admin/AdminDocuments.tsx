@@ -17,6 +17,10 @@ import {
 import { collection, query, getDocs, doc, updateDoc, serverTimestamp, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import AdminErrorState from '../../components/admin/AdminErrorState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -28,6 +32,7 @@ const AdminDocuments: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -49,6 +54,7 @@ const AdminDocuments: React.FC = () => {
   const loadDocuments = async () => {
     try {
       setIsLoading(true);
+      setError(null);
 
       // Construire la requête Firestore avec les filtres
       // P2 FIX: Limite réduite à 30 pour économiser le cache
@@ -81,6 +87,7 @@ const AdminDocuments: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading documents:', error);
+      setError('Erreur lors du chargement des documents. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
@@ -182,30 +189,13 @@ const AdminDocuments: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return (
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center">
-            <CheckCircle size={12} className="mr-1" />
-            Approuvé
-          </span>
-        );
-      case 'rejected':
-        return (
-          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium flex items-center">
-            <XCircle size={12} className="mr-1" />
-            Rejeté
-          </span>
-        );
-      case 'pending':
-      default:
-        return (
-          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium flex items-center">
-            <Clock size={12} className="mr-1" />
-            En attente
-          </span>
-        );
-    }
+    const statusMap: Record<string, { type: StatusType; label: string; icon: React.ReactNode }> = {
+      approved: { type: 'approved', label: 'Approuvé', icon: <CheckCircle size={12} /> },
+      rejected: { type: 'rejected', label: 'Rejeté', icon: <XCircle size={12} /> },
+      pending: { type: 'warning', label: 'En attente', icon: <Clock size={12} /> },
+    };
+    const mapped = statusMap[status] || statusMap.pending;
+    return <StatusBadge status={mapped.type} label={mapped.label} size="sm" icon={mapped.icon} />;
   };
 
   const getDocumentTypeBadge = (type: string) => {
@@ -302,6 +292,8 @@ const AdminDocuments: React.FC = () => {
             </div>
           </div>
 
+          {error && <AdminErrorState error={error} onRetry={loadDocuments} className="mb-6" />}
+
           {/* Documents Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
@@ -332,10 +324,7 @@ const AdminDocuments: React.FC = () => {
                   {isLoading ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                        <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                        </div>
-                        <p className="mt-2">Chargement des documents...</p>
+                        <LoadingSpinner text="Chargement des documents..." />
                       </td>
                     </tr>
                   ) : filteredDocuments.length > 0 ? (

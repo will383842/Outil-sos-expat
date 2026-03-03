@@ -4,6 +4,7 @@
 // =============================================================================
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import {
@@ -76,8 +77,10 @@ import { useAutoSuspendRealtime } from '../../hooks/useAutoSuspendRealtime';
 import { useAuth } from '../../contexts/AuthContext';
 import { logError } from '../../utils/logging';
 import AdminGdprPurgeModal from '../../components/admin/AdminGdprPurgeModal';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import AdminErrorState from '../../components/admin/AdminErrorState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import type { StatusType } from '@/components/admin/StatusBadge';
+import toast from 'react-hot-toast';
 
 // ============ TYPES ============
 interface Provider {
@@ -219,27 +222,28 @@ interface ModalTranslations {
 }
 
 // ============ COMPOSANTS UTILITAIRES ============
-const StatusBadge: React.FC<{ status: 'available' | 'busy' | 'offline'; isOnline: boolean; translations: ProviderTranslations }> = ({ status, isOnline, translations }) => {
-  const getConfig = () => {
+
+const ProviderAvailabilityBadge: React.FC<{ status: 'available' | 'busy' | 'offline'; isOnline: boolean; translations: ProviderTranslations }> = ({ status, isOnline, translations }) => {
+  const getConfig = (): { statusType: StatusType; label: string; icon: React.ReactNode; pulse: boolean } => {
     if (!isOnline || status === 'offline') {
-      return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: WifiOff, label: translations.statusOffline };
+      return { statusType: 'offline', label: translations.statusOffline, icon: <WifiOff size={12} />, pulse: false };
     }
     if (status === 'busy') {
-      return { color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Phone, label: translations.statusBusy, pulse: true };
+      return { statusType: 'busy', label: translations.statusBusy, icon: <Phone size={12} />, pulse: true };
     }
-    return { color: 'bg-green-100 text-green-800 border-green-200', icon: Wifi, label: translations.statusOnline, pulse: true };
+    return { statusType: 'available', label: translations.statusOnline, icon: <Wifi size={12} />, pulse: true };
   };
 
   const config = getConfig();
-  const IconComponent = config.icon;
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${config.color} ${
-      config.pulse ? 'animate-pulse' : ''
-    }`}>
-      <IconComponent size={12} className="mr-1" />
-      {config.label}
-    </span>
+    <StatusBadge
+      status={config.statusType}
+      label={config.label}
+      icon={config.icon}
+      pulse={config.pulse}
+      size="sm"
+    />
   );
 };
 
@@ -787,6 +791,7 @@ const AdminProviders: React.FC = () => {
 
   // States UI
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -972,6 +977,7 @@ const AdminProviders: React.FC = () => {
     }
 
     try {
+      setError(null);
       // ✅ FIX: Utiliser createdAt au lieu de lastActivity car lastActivity
       // n'existe pas toujours sur les nouveaux profils (exclut les profils sans ce champ)
       const providersQuery = query(
@@ -1032,6 +1038,7 @@ const AdminProviders: React.FC = () => {
         error: `Erreur chargement prestataires: ${(error as Error).message}`,
         context: { component: 'AdminProviders' },
       });
+      setError('Erreur lors du chargement des prestataires. Veuillez réessayer.');
       setIsLoading(false);
     } finally {
       if (showRefreshIndicator) {
@@ -1292,7 +1299,7 @@ const AdminProviders: React.FC = () => {
       if (result.success) {
         toast.success(`${result.successful} prestataire(s) traite(s) avec succes`);
       } else {
-        toast.warning(`${result.successful} reussi(s), ${result.failed} echec(s)`);
+        toast.error(`${result.successful} reussi(s), ${result.failed} echec(s)`);
       }
 
       setShowBulkActionModal(false);
@@ -1483,12 +1490,7 @@ const AdminProviders: React.FC = () => {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('admin.providers.loading')}</p>
-          </div>
-        </div>
+        <LoadingSpinner size="large" text={t('admin.providers.loading')} fullPage />
       </AdminLayout>
     );
   }
@@ -1502,14 +1504,6 @@ const AdminProviders: React.FC = () => {
           </div>
         }
       >
-        <ToastContainer
-          position="top-right"
-          autoClose={4000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          pauseOnHover
-        />
 
         {isSuspendedDueToInactivity && (
           <RealtimeSuspendedBanner onResume={resumeRealtime} reason="inactivity" />
@@ -1594,6 +1588,8 @@ const AdminProviders: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {error && <AdminErrorState error={error} onRetry={() => loadProviders(true)} className="mb-6" />}
 
           {/* Bulk Action Toolbar */}
           {selectedIds.size > 0 && (
@@ -1945,7 +1941,7 @@ const AdminProviders: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={provider.availability} isOnline={provider.isOnline} translations={providerTranslations} />
+                        <ProviderAvailabilityBadge status={provider.availability} isOnline={provider.isOnline} translations={providerTranslations} />
                         {provider.availability === 'busy' && provider.busySince && (
                           <div className="text-xs text-gray-500 mt-1">
                             depuis {formatRelativeTime(provider.busySince)}
@@ -2179,7 +2175,7 @@ const AdminProviders: React.FC = () => {
                     </h3>
                     <p className="text-gray-500">{selectedProvider.email}</p>
                     <div className="flex items-center space-x-2 mt-2">
-                      <StatusBadge status={selectedProvider.availability} isOnline={selectedProvider.isOnline} translations={providerTranslations} />
+                      <ProviderAvailabilityBadge status={selectedProvider.availability} isOnline={selectedProvider.isOnline} translations={providerTranslations} />
                       <ProviderTypeBadge type={selectedProvider.type} translations={providerTranslations} />
                     </div>
                     <ProviderStatusIndicators provider={selectedProvider} translations={providerTranslations} locale={locale} />

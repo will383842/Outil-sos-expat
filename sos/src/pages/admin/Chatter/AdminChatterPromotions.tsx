@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusType } from "@/components/admin/StatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -214,21 +215,21 @@ const AdminChatterPromotions: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (promo: ChatterPromotion) => {
+  const getPromoStatus = (promo: ChatterPromotion): { status: StatusType; label: string } => {
     const now = new Date();
     const start = new Date(promo.startDate);
     const end = new Date(promo.endDate);
 
     if (!promo.isActive) {
-      return <Badge variant="secondary">Inactif</Badge>;
+      return { status: "inactive", label: "Inactif" };
     }
     if (now < start) {
-      return <Badge className="bg-blue-500">Planifié</Badge>;
+      return { status: "info", label: "Planifié" };
     }
     if (now > end) {
-      return <Badge variant="destructive">Terminé</Badge>;
+      return { status: "error", label: "Terminé" };
     }
-    return <Badge className="bg-green-500">En cours</Badge>;
+    return { status: "active", label: "En cours" };
   };
 
   const getTypeBadge = (type: string) => {
@@ -393,7 +394,12 @@ const AdminChatterPromotions: React.FC = () => {
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(promo)}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const mapped = getPromoStatus(promo);
+                        return <StatusBadge status={mapped.status} label={mapped.label} size="sm" />;
+                      })()}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button

@@ -49,6 +49,7 @@ import { db } from '../../../config/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { KPICard } from '@/components/admin/KPICard';
 
 // ============================================================================
 // TYPES
@@ -191,65 +192,9 @@ const formatDateLabel = (date: Date, rangeType: DateRangeType): string => {
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 };
 
-// ============================================================================
-// KPI CARD COMPONENT
-// ============================================================================
-
-interface KPICardProps {
-  title: string;
-  value: string;
-  change?: number;
-  icon: React.ReactNode;
-  loading?: boolean;
-  subtitle?: string;
-  iconBgColor?: string;
-}
-
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  change,
-  icon,
-  loading,
-  subtitle,
-  iconBgColor = 'bg-gray-100',
-}) => {
-  // For costs, negative change is good (costs decreased)
-  const isPositive = change !== undefined && change <= 0;
-
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          {loading ? (
-            <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
-          ) : (
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-          )}
-          {change !== undefined && !loading && (
-            <div
-              className={`flex items-center text-sm mt-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}
-            >
-              {isPositive ? (
-                <TrendingDown size={14} className="mr-1" />
-              ) : (
-                <TrendingUp size={14} className="mr-1" />
-              )}
-              <span>
-                {change >= 0 ? '+' : ''}
-                {change.toFixed(1)}%
-              </span>
-              <span className="text-gray-400 ml-1 text-xs">vs periode prec.</span>
-            </div>
-          )}
-          {subtitle && !loading && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-        </div>
-        <div className={`p-3 rounded-full ${iconBgColor}`}>{icon}</div>
-      </div>
-    </div>
-  );
-};
+// KPICard is imported from @/components/admin/KPICard
+// NOTE: For cost monitoring, negative percentChange is good (costs decreased).
+// The unified KPICard treats positive as green, so we negate the value to invert the logic.
 
 // ============================================================================
 // QUOTA PROGRESS BAR COMPONENT
@@ -898,10 +843,10 @@ const CostMonitoring: React.FC = () => {
               defaultMessage: 'Firestore',
             })}
             value={formatCurrency(data?.firestoreCost.current || 0)}
-            change={data?.firestoreCost.percentChange}
-            icon={<Database size={24} className="text-orange-600" />}
-            iconBgColor="bg-orange-100"
-            loading={isLoading}
+            percentChange={data?.firestoreCost.percentChange != null ? -(data.firestoreCost.percentChange) : undefined}
+            icon={<Database size={24} className="text-amber-600" />}
+            colorTheme="amber"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({
@@ -909,10 +854,10 @@ const CostMonitoring: React.FC = () => {
               defaultMessage: 'Cloud Functions',
             })}
             value={formatCurrency(data?.functionsCost.current || 0)}
-            change={data?.functionsCost.percentChange}
+            percentChange={data?.functionsCost.percentChange != null ? -(data.functionsCost.percentChange) : undefined}
             icon={<Zap size={24} className="text-blue-600" />}
-            iconBgColor="bg-blue-100"
-            loading={isLoading}
+            colorTheme="blue"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({
@@ -920,10 +865,10 @@ const CostMonitoring: React.FC = () => {
               defaultMessage: 'Storage',
             })}
             value={formatCurrency(data?.storageCost.current || 0)}
-            change={data?.storageCost.percentChange}
+            percentChange={data?.storageCost.percentChange != null ? -(data.storageCost.percentChange) : undefined}
             icon={<HardDrive size={24} className="text-green-600" />}
-            iconBgColor="bg-green-100"
-            loading={isLoading}
+            colorTheme="green"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({
@@ -931,10 +876,10 @@ const CostMonitoring: React.FC = () => {
               defaultMessage: 'Twilio',
             })}
             value={formatCurrency(data?.twilioCost.current || 0)}
-            change={data?.twilioCost.percentChange}
+            percentChange={data?.twilioCost.percentChange != null ? -(data.twilioCost.percentChange) : undefined}
             icon={<Phone size={24} className="text-red-600" />}
-            iconBgColor="bg-red-100"
-            loading={isLoading}
+            colorTheme="red"
+            isLoading={isLoading}
           />
           <KPICard
             title={intl.formatMessage({
@@ -942,10 +887,10 @@ const CostMonitoring: React.FC = () => {
               defaultMessage: 'Stripe Fees',
             })}
             value={formatCurrency(data?.stripeFees.current || 0)}
-            change={data?.stripeFees.percentChange}
+            percentChange={data?.stripeFees.percentChange != null ? -(data.stripeFees.percentChange) : undefined}
             icon={<CreditCard size={24} className="text-purple-600" />}
-            iconBgColor="bg-purple-100"
-            loading={isLoading}
+            colorTheme="purple"
+            isLoading={isLoading}
           />
         </div>
 

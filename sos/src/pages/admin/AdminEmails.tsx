@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useAuth } from '../../contexts/AuthContext';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { logError } from '../../utils/logging';
@@ -31,9 +32,7 @@ const AdminEmailsPage: React.FC = () => {
   if (!user) {
     return (
       <AdminLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-        </div>
+        <LoadingSpinner size="large" fullPage />
       </AdminLayout>
     );
   }
@@ -59,9 +58,7 @@ const AdminEmailsPage: React.FC = () => {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-        </div>
+        <LoadingSpinner size="large" fullPage />
       </AdminLayout>
     );
   }

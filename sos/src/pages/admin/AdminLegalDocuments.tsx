@@ -22,6 +22,7 @@ import {
 import { collection, query, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -581,10 +582,7 @@ const AdminLegalDocuments: React.FC = () => {
                     {isLoading ? (
                       <tr>
                         <td colSpan={supportedLanguages.length + 1} className="px-4 py-8 text-center">
-                          <div className="flex justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                          </div>
-                          <p className="mt-2 text-gray-500">{intl.formatMessage({ id: 'admin.legal.loading', defaultMessage: 'Loading...' })}</p>
+                          <LoadingSpinner text={intl.formatMessage({ id: 'admin.legal.loading', defaultMessage: 'Loading...' })} />
                         </td>
                       </tr>
                     ) : (
@@ -708,8 +706,7 @@ const AdminLegalDocuments: React.FC = () => {
                     {isLoading ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-8 text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                          <p className="mt-2 text-gray-500">{intl.formatMessage({ id: 'admin.legal.loading', defaultMessage: 'Loading...' })}</p>
+                          <LoadingSpinner text={intl.formatMessage({ id: 'admin.legal.loading', defaultMessage: 'Loading...' })} />
                         </td>
                       </tr>
                     ) : filteredDocuments.length > 0 ? (
