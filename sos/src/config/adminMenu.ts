@@ -1200,6 +1200,8 @@ export function hasMenuAccess(
 ): boolean {
   // Permissions granulaires par rôle
   const rolePermissions: Record<string, string[]> = {
+    "admin": ["*"],       // Accès total
+    "accountant": ["*"],  // Accès total (filtrage fait au niveau des routes)
     "super-admin": ["*"], // Accès total
     "finance-admin": ["dashboard", "finance", "analytics", "business"],
     "support-admin": ["dashboard", "users", "calls", "marketing"],
