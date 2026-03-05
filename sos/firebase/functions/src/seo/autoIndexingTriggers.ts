@@ -562,25 +562,36 @@ export const scheduledBulkIndexing = onSchedule(
 
     const snapshot = await query.get();
 
+    let activeDocs = snapshot.docs;
+    let isCycleReset = false;
+
     if (snapshot.empty) {
-      // Toutes les pages ont été soumises — recommencer le cycle
-      console.log(`✅ Cycle d'indexation complet (${totalSubmitted} URLs total). Redémarrage du cycle.`);
-      await db.collection('admin_config').doc('bulk_indexing_state').set({
-        lastProcessedId: null,
-        totalSubmitted: 0,
-        cycleResetAt: admin.firestore.FieldValue.serverTimestamp(),
-        lastRunAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-      // Ping sitemap pour le nouveau cycle
-      await pingSitemap();
-      return;
+      // Toutes les pages ont été soumises — recommencer le cycle depuis le début
+      console.log(`✅ Cycle d'indexation complet (${totalSubmitted} URLs total). Redémarrage immédiat du cycle.`);
+      isCycleReset = true;
+      // Relancer depuis le début du cycle (sans filtre startAfter)
+      const restartSnapshot = await db.collection('sos_profiles')
+        .where('isVisible', '==', true)
+        .where('isApproved', '==', true)
+        .where('isActive', '==', true)
+        .orderBy('__name__')
+        .limit(DAILY_QUOTA)
+        .get();
+
+      if (restartSnapshot.empty) {
+        console.log('⏭️ Aucun profil indexable trouvé, ping sitemap uniquement.');
+        await pingSitemap();
+        return;
+      }
+
+      activeDocs = restartSnapshot.docs;
     }
 
     // Collecter toutes les URLs (1 URL FR prioritaire par profil pour maximiser la couverture)
     const urlsToSubmit: string[] = [];
     let lastId = '';
 
-    for (const doc of snapshot.docs) {
+    for (const doc of activeDocs) {
       const profile = doc.data();
       lastId = doc.id;
 
@@ -621,8 +632,9 @@ export const scheduledBulkIndexing = onSchedule(
     ]);
 
     // Sauvegarder l'état pour la prochaine exécution
-    const newTotal = totalSubmitted + urlsToSubmit.length;
-    await db.collection('admin_config').doc('bulk_indexing_state').set({
+    // Si cycle reset: totalSubmitted repart de 0 pour ce nouveau cycle
+    const newTotal = isCycleReset ? urlsToSubmit.length : totalSubmitted + urlsToSubmit.length;
+    const stateToSave: Record<string, unknown> = {
       lastProcessedId: lastId,
       totalSubmitted: newTotal,
       lastRunAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -630,7 +642,11 @@ export const scheduledBulkIndexing = onSchedule(
       googleSuccess: googleResult.successCount,
       googleErrors: googleResult.errorCount,
       indexNowSuccess: indexNowResult.success,
-    });
+    };
+    if (isCycleReset) {
+      stateToSave.cycleResetAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+    await db.collection('admin_config').doc('bulk_indexing_state').set(stateToSave);
 
     await logIndexingEvent('bulk_daily', 'scheduled', urlsToSubmit, {
       success: googleResult.successCount > 0,
