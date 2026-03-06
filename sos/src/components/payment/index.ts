@@ -33,7 +33,7 @@ export {
 
 export {
   WithdrawalStatusBadge,
-  withdrawalStatusLabels,
+  withdrawalStatusLabelKeys,
   isTerminalWithdrawalStatus,
   isSuccessWithdrawalStatus,
   isErrorWithdrawalStatus,
