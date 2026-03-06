@@ -175,13 +175,23 @@ export const getInfluencerDashboard = onCall(
         monthlyStats,
         unreadNotifications,
         config: {
-          commissionClientAmount: config.commissionClientAmount,
-          commissionRecruitmentAmount: config.commissionRecruitmentAmount,
+          // Use lockedRates (lifetime rate lock) when available, fallback to global config
+          commissionClientAmount: influencer.lockedRates?.commissionClientAmount ?? config.commissionClientAmount,
+          commissionClientAmountLawyer: influencer.lockedRates?.commissionClientAmountLawyer ?? config.commissionClientAmountLawyer,
+          commissionClientAmountExpat: influencer.lockedRates?.commissionClientAmountExpat ?? config.commissionClientAmountExpat,
+          commissionRecruitmentAmount: influencer.lockedRates?.commissionRecruitmentAmount ?? config.commissionRecruitmentAmount,
           clientDiscountPercent: config.clientDiscountPercent,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           levelThresholds: config.levelThresholds,
           levelBonuses: config.levelBonuses,
         },
+        // Commission Plan info (for display on dashboard)
+        commissionPlan: influencer.commissionPlanId ? {
+          id: influencer.commissionPlanId,
+          name: influencer.commissionPlanName || "Plan personnalis\u00e9",
+          rateLockDate: influencer.rateLockDate,
+          isLifetimeLock: true,
+        } : null,
       };
     } catch (error) {
       if (error instanceof HttpsError) {

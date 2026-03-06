@@ -159,10 +159,10 @@ function ModuleCard({ module, locale, onOpen, disabled }: ModuleCardProps) {
             )}
           </div>
           <h4 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">
-            {module.title}
+            {getLocalizedText(module.title, module.titleTranslations, locale)}
           </h4>
           <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-            {module.description}
+            {getLocalizedText(module.description, module.descriptionTranslations, locale)}
           </p>
 
           {/* Progress bar for started modules */}

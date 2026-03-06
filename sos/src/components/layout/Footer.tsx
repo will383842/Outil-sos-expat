@@ -703,6 +703,10 @@ const Footer: React.FC = () => {
             label: intl.formatMessage({ id: "footer.support.press" }),
             href: `/${getTranslatedRouteSlug("press", resolvedLang)}`,
           },
+          {
+            label: intl.formatMessage({ id: "footer.partners", defaultMessage: "Nos partenaires" }),
+            href: `/${getTranslatedRouteSlug("partners-page", resolvedLang)}`,
+          },
         ],
       },
     }),

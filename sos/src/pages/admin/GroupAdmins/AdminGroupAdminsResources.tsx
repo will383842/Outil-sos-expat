@@ -50,7 +50,7 @@ const RESOURCE_TYPES = [
   { code: 'template', name: 'Template' },
 ];
 
-const LANGUAGES = ['en', 'fr', 'es', 'pt', 'de', 'ar', 'it', 'nl', 'zh'];
+const LANGUAGES = ['en', 'fr', 'es', 'pt', 'de', 'ar', 'zh', 'ru', 'hi'];
 
 interface Resource {
   id: string;

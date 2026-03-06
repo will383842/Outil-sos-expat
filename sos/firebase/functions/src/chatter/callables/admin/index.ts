@@ -34,6 +34,9 @@ import {
   failWithdrawal,
 } from "../../services";
 
+// Re-export manageChatter
+export { adminManageChatter } from "./manageChatter";
+
 // Lazy initialization
 function ensureInitialized() {
   if (!getApps().length) {

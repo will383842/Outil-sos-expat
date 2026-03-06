@@ -111,14 +111,50 @@ export const onBloggerCreated = onDocumentCreated(
         });
       }
 
-      // 4. Handle recruitment - increment recruiter's totalRecruits
+      // 4. Handle recruitment - increment recruiter's totalRecruits + notify recruiter
       if (blogger.recruitedBy) {
         try {
           await db.collection("bloggers").doc(blogger.recruitedBy).update({
             totalRecruits: FieldValue.increment(1),
             updatedAt: Timestamp.now(),
           });
-          logger.info("[onBloggerCreated] Recruiter totalRecruits incremented", {
+
+          // Notify recruiter about new recruit (aligned with Chatter behavior)
+          const recruiterNotifRef = db.collection("blogger_notifications").doc();
+          await recruiterNotifRef.set({
+            id: recruiterNotifRef.id,
+            bloggerId: blogger.recruitedBy,
+            type: "system",
+            title: "Nouveau blogueur recruté !",
+            titleTranslations: {
+              fr: "Nouveau blogueur recruté !",
+              en: "New blogger recruited!",
+              es: "¡Nuevo blogger reclutado!",
+              de: "Neuer Blogger rekrutiert!",
+              pt: "Novo blogueiro recrutado!",
+              ru: "Новый блогер привлечён!",
+              hi: "नया ब्लॉगर भर्ती हुआ!",
+              zh: "新博主已招募！",
+              ar: "تم تجنيد مدوّن جديد!",
+            },
+            message: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. s'est inscrit avec votre lien de recrutement.`,
+            messageTranslations: {
+              fr: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. s'est inscrit avec votre lien de recrutement.`,
+              en: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. signed up with your recruitment link.`,
+              es: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. se registró con tu enlace de reclutamiento.`,
+              de: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. hat sich über Ihren Rekrutierungslink registriert.`,
+              pt: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. inscreveu-se com o seu link de recrutamento.`,
+              ru: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. зарегистрировался по вашей ссылке.`,
+              hi: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. आपके रिक्रूटमेंट लिंक से साइन अप किया।`,
+              zh: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. 通过您的招募链接注册。`,
+              ar: `${blogger.firstName} ${(blogger.lastName || "").charAt(0)}. سجّل عبر رابط التجنيد الخاص بك.`,
+            },
+            isRead: false,
+            emailSent: false,
+            createdAt: Timestamp.now(),
+          });
+
+          logger.info("[onBloggerCreated] Recruiter totalRecruits incremented + notified", {
             bloggerId,
             recruiterId: blogger.recruitedBy,
           });

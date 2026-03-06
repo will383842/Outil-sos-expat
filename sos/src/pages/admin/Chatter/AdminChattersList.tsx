@@ -35,6 +35,10 @@ import {
   Mail,
   X,
   Check,
+  Trash2,
+  ShieldOff,
+  ShieldCheck,
+  AlertCircle,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import AdminErrorState from '@/components/admin/AdminErrorState';
@@ -154,6 +158,38 @@ interface Chatter {
   isVisible?: boolean;
 }
 
+interface BalanceInfo {
+  availableBalance: number;
+  pendingBalance: number;
+  validatedBalance: number;
+  totalEarned: number;
+  piggyBankBalance: number;
+  piggyBankIsUnlocked: boolean;
+  pendingWithdrawals: number;
+  pendingWithdrawalsCount: number;
+  hasActiveFunds: boolean;
+}
+
+interface ManageChatterResponse {
+  success: boolean;
+  message: string;
+  balanceInfo: BalanceInfo;
+  actionApplied: string;
+  warning?: string;
+}
+
+type ManageAction = 'block' | 'restrict' | 'reactivate' | 'delete' | 'getBalanceInfo';
+
+interface ActionModalState {
+  isOpen: boolean;
+  chatter: Chatter | null;
+  action: ManageAction | null;
+  balanceInfo: BalanceInfo | null;
+  balanceLoading: boolean;
+  reason: string;
+  confirmText: string;
+}
+
 interface ChatterListResponse {
   chatters: Chatter[];
   total: number;
@@ -211,6 +247,57 @@ const AdminChattersList: React.FC = () => {
   // Export
   const [exporting, setExporting] = useState(false);
 
+  // Action modal
+  const [actionModal, setActionModal] = useState<ActionModalState>({
+    isOpen: false,
+    chatter: null,
+    action: null,
+    balanceInfo: null,
+    balanceLoading: false,
+    reason: '',
+    confirmText: '',
+  });
+  const [actionLoading, setActionLoading] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handler = () => setOpenDropdownId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openDropdownId]);
+
+  // Open action modal and fetch balance info
+  const openActionModal = useCallback(async (chatter: Chatter, action: ManageAction) => {
+    setOpenDropdownId(null);
+    setActionModal({
+      isOpen: true,
+      chatter,
+      action,
+      balanceInfo: null,
+      balanceLoading: true,
+      reason: '',
+      confirmText: '',
+    });
+
+    try {
+      const fn = httpsCallable<any, ManageChatterResponse>(functionsAffiliate, 'adminManageChatter');
+      const result = await fn({ chatterId: chatter.id, action: 'getBalanceInfo' });
+      setActionModal((prev) => ({
+        ...prev,
+        balanceInfo: result.data.balanceInfo,
+        balanceLoading: false,
+      }));
+    } catch (err) {
+      console.error('Error fetching balance:', err);
+      setActionModal((prev) => ({
+        ...prev,
+        balanceLoading: false,
+      }));
+    }
+  }, []);
+
   const limit = 20;
 
   // Fetch chatters
@@ -246,6 +333,39 @@ const AdminChattersList: React.FC = () => {
       setLoading(false);
     }
   }, [page, statusFilter, countryFilter, languageFilter, searchQuery]);
+
+  // Execute action
+  const executeAction = useCallback(async () => {
+    if (!actionModal.chatter || !actionModal.action) return;
+    if (['block', 'restrict', 'delete'].includes(actionModal.action) && !actionModal.reason.trim()) {
+      toast.error('Veuillez entrer une raison');
+      return;
+    }
+    if (actionModal.action === 'delete' && actionModal.confirmText !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const fn = httpsCallable<any, ManageChatterResponse>(functionsAffiliate, 'adminManageChatter');
+      const result = await fn({
+        chatterId: actionModal.chatter.id,
+        action: actionModal.action,
+        reason: actionModal.reason,
+        confirmDeletion: actionModal.action === 'delete' ? true : undefined,
+      });
+
+      toast.success(result.data.message);
+      setActionModal((prev) => ({ ...prev, isOpen: false }));
+      fetchChatters();
+    } catch (err: any) {
+      console.error('Error executing action:', err);
+      toast.error(err.message || 'Erreur lors de l\'action');
+    } finally {
+      setActionLoading(false);
+    }
+  }, [actionModal, fetchChatters]);
 
   useEffect(() => {
     fetchChatters();
@@ -744,7 +864,7 @@ const AdminChattersList: React.FC = () => {
                           )}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={(e) => { e.stopPropagation(); void toggleFeatured(chatter.id, !!chatter.isFeatured); }}
                               disabled={featuredLoading === chatter.id}
@@ -758,10 +878,84 @@ const AdminChattersList: React.FC = () => {
                             </button>
                             <button
                               onClick={() => navigate(`/admin/chatters/${chatter.id}`)}
-                              className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                              title="Voir détails"
                             >
-                              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
                             </button>
+                            {/* Actions dropdown */}
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(openDropdownId === chatter.id ? null : chatter.id);
+                                }}
+                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Actions"
+                              >
+                                <MoreVertical className="w-4 h-4 text-gray-400" />
+                              </button>
+                              {openDropdownId === chatter.id && (
+                                <div
+                                  className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {chatter.status === 'active' && (
+                                    <>
+                                      <button
+                                        onClick={() => openActionModal(chatter, 'restrict')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-yellow-600"
+                                      >
+                                        <Pause className="w-4 h-4" />
+                                        Suspendre
+                                      </button>
+                                      <button
+                                        onClick={() => openActionModal(chatter, 'block')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-orange-600"
+                                      >
+                                        <Ban className="w-4 h-4" />
+                                        Bloquer (bannir)
+                                      </button>
+                                    </>
+                                  )}
+                                  {chatter.status === 'suspended' && (
+                                    <>
+                                      <button
+                                        onClick={() => openActionModal(chatter, 'reactivate')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-green-600"
+                                      >
+                                        <ShieldCheck className="w-4 h-4" />
+                                        Réactiver
+                                      </button>
+                                      <button
+                                        onClick={() => openActionModal(chatter, 'block')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-orange-600"
+                                      >
+                                        <Ban className="w-4 h-4" />
+                                        Bloquer (bannir)
+                                      </button>
+                                    </>
+                                  )}
+                                  {chatter.status === 'banned' && (
+                                    <button
+                                      onClick={() => openActionModal(chatter, 'reactivate')}
+                                      className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-green-600"
+                                    >
+                                      <ShieldCheck className="w-4 h-4" />
+                                      Débloquer / Réactiver
+                                    </button>
+                                  )}
+                                  <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                                  <button
+                                    onClick={() => openActionModal(chatter, 'delete')}
+                                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Supprimer
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -818,6 +1012,204 @@ const AdminChattersList: React.FC = () => {
             </div>
           )}
         </>
+      )}
+      {/* ========== ACTION CONFIRMATION MODAL ========== */}
+      {actionModal.isOpen && actionModal.chatter && actionModal.action && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between ${
+              actionModal.action === 'delete' ? 'bg-red-50 dark:bg-red-900/20' :
+              actionModal.action === 'block' ? 'bg-orange-50 dark:bg-orange-900/20' :
+              actionModal.action === 'restrict' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+              'bg-green-50 dark:bg-green-900/20'
+            }`}>
+              <div className="flex items-center gap-3">
+                {actionModal.action === 'delete' && <Trash2 className="w-5 h-5 text-red-600" />}
+                {actionModal.action === 'block' && <Ban className="w-5 h-5 text-orange-600" />}
+                {actionModal.action === 'restrict' && <ShieldOff className="w-5 h-5 text-yellow-600" />}
+                {actionModal.action === 'reactivate' && <ShieldCheck className="w-5 h-5 text-green-600" />}
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {actionModal.action === 'delete' && 'Supprimer le chatter'}
+                  {actionModal.action === 'block' && 'Bloquer (bannir) le chatter'}
+                  {actionModal.action === 'restrict' && 'Suspendre le chatter'}
+                  {actionModal.action === 'reactivate' && 'Réactiver le chatter'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setActionModal((prev) => ({ ...prev, isOpen: false }))}
+                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Chatter Info */}
+            <div className="px-6 py-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                  {actionModal.chatter.firstName?.[0]}{actionModal.chatter.lastName?.[0]}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    {actionModal.chatter.firstName} {actionModal.chatter.lastName}
+                  </p>
+                  <p className="text-sm text-gray-500">{actionModal.chatter.email}</p>
+                </div>
+                <StatusBadge status={mapChatterStatus(actionModal.chatter.status)} label={actionModal.chatter.status} size="sm" />
+              </div>
+
+              {/* Balance Info */}
+              <div className={`rounded-xl p-4 mb-4 ${
+                actionModal.balanceLoading ? 'bg-gray-50 dark:bg-gray-800' :
+                actionModal.balanceInfo?.hasActiveFunds ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' :
+                'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+              }`}>
+                {actionModal.balanceLoading ? (
+                  <div className="flex items-center gap-2 justify-center py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="text-sm text-gray-500">Chargement des soldes...</span>
+                  </div>
+                ) : actionModal.balanceInfo ? (
+                  <>
+                    {actionModal.balanceInfo.hasActiveFunds && (
+                      <div className="flex items-center gap-2 mb-3 text-amber-700 dark:text-amber-300">
+                        <AlertCircle className="w-5 h-5" />
+                        <span className="font-semibold text-sm">Ce chatter a des fonds actifs !</span>
+                      </div>
+                    )}
+                    {!actionModal.balanceInfo.hasActiveFunds && (
+                      <div className="flex items-center gap-2 mb-3 text-green-700 dark:text-green-300">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="font-semibold text-sm">Aucun fonds actif</span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Disponible:</span>
+                        <span className={`font-medium ${actionModal.balanceInfo.availableBalance > 0 ? 'text-green-600' : ''}`}>
+                          {formatAmount(actionModal.balanceInfo.availableBalance)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">En attente:</span>
+                        <span className={`font-medium ${actionModal.balanceInfo.pendingBalance > 0 ? 'text-yellow-600' : ''}`}>
+                          {formatAmount(actionModal.balanceInfo.pendingBalance)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Validé:</span>
+                        <span className="font-medium">{formatAmount(actionModal.balanceInfo.validatedBalance)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Total gagné:</span>
+                        <span className="font-medium">{formatAmount(actionModal.balanceInfo.totalEarned)}</span>
+                      </div>
+                      {actionModal.balanceInfo.piggyBankBalance > 0 && (
+                        <div className="flex justify-between col-span-2 pt-1 border-t border-gray-200 dark:border-gray-700">
+                          <span className="text-gray-500">Tirelire ({actionModal.balanceInfo.piggyBankIsUnlocked ? 'débloquée' : 'verrouillée'}):</span>
+                          <span className="font-medium text-purple-600">{formatAmount(actionModal.balanceInfo.piggyBankBalance)}</span>
+                        </div>
+                      )}
+                      {actionModal.balanceInfo.pendingWithdrawalsCount > 0 && (
+                        <div className="flex justify-between col-span-2 pt-1 border-t border-gray-200 dark:border-gray-700">
+                          <span className="text-gray-500">Retraits en cours ({actionModal.balanceInfo.pendingWithdrawalsCount}):</span>
+                          <span className="font-medium text-red-600">{formatAmount(actionModal.balanceInfo.pendingWithdrawals)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center">Impossible de charger les soldes</p>
+                )}
+              </div>
+
+              {/* Reason input */}
+              {['block', 'restrict', 'delete'].includes(actionModal.action) && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Raison *
+                  </label>
+                  <textarea
+                    value={actionModal.reason}
+                    onChange={(e) => setActionModal((prev) => ({ ...prev, reason: e.target.value }))}
+                    placeholder="Entrez la raison de cette action..."
+                    className={`${UI.input} min-h-[80px] resize-y`}
+                    rows={3}
+                  />
+                </div>
+              )}
+
+              {/* Delete confirmation */}
+              {actionModal.action === 'delete' && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                  <p className="text-sm text-red-700 dark:text-red-300 mb-2 font-medium">
+                    Cette action est irréversible ! Toutes les données du chatter seront supprimées :
+                    commissions, retraits, badges, liens de parrainage, compte Firebase Auth.
+                  </p>
+                  <label className="block text-sm font-medium text-red-700 dark:text-red-300 mb-1">
+                    Tapez <span className="font-bold">SUPPRIMER</span> pour confirmer :
+                  </label>
+                  <input
+                    type="text"
+                    value={actionModal.confirmText}
+                    onChange={(e) => setActionModal((prev) => ({ ...prev, confirmText: e.target.value }))}
+                    placeholder="SUPPRIMER"
+                    className={`${UI.input} border-red-300 dark:border-red-700`}
+                  />
+                </div>
+              )}
+
+              {/* Action description */}
+              {actionModal.action === 'block' && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Le chatter sera banni et son compte Firebase Auth désactivé. Il ne pourra plus se connecter.
+                </p>
+              )}
+              {actionModal.action === 'restrict' && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Le chatter sera suspendu temporairement. Ses commissions continueront d'être comptabilisées mais il ne pourra pas retirer.
+                </p>
+              )}
+              {actionModal.action === 'reactivate' && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Le chatter sera réactivé et pourra de nouveau se connecter et utiliser la plateforme.
+                </p>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button
+                onClick={() => setActionModal((prev) => ({ ...prev, isOpen: false }))}
+                className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                disabled={actionLoading}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={executeAction}
+                disabled={
+                  actionLoading ||
+                  actionModal.balanceLoading ||
+                  (['block', 'restrict', 'delete'].includes(actionModal.action) && !actionModal.reason.trim()) ||
+                  (actionModal.action === 'delete' && actionModal.confirmText !== 'SUPPRIMER')
+                }
+                className={`${
+                  actionModal.action === 'delete' ? UI.button.danger :
+                  actionModal.action === 'reactivate' ? UI.button.primary :
+                  UI.button.danger
+                } px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {actionModal.action === 'delete' && 'Supprimer définitivement'}
+                {actionModal.action === 'block' && 'Bloquer'}
+                {actionModal.action === 'restrict' && 'Suspendre'}
+                {actionModal.action === 'reactivate' && 'Réactiver'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       </div>
     </AdminLayout>

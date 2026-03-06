@@ -31,6 +31,7 @@ import { checkReferralFraud } from "../utils/fraudDetection";
 import { createCommission } from "../services/commissionService";
 import { CapturedRates, UserAffiliateFields } from "../types";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
+import { snapshotLockedRates } from "../../lib/planResolver";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -95,6 +96,7 @@ export async function handleAffiliateUserCreated(event: any) {
       });
 
       // 5. Capture current rates (frozen for life)
+      // 5a. Legacy capturedRates from affiliate_config (backward compat)
       const capturedRates: CapturedRates = {
         capturedAt: Timestamp.now(),
         configVersion: config.version.toString(),
@@ -105,6 +107,9 @@ export async function handleAffiliateUserCreated(event: any) {
         subscriptionFixedBonus: config.defaultRates.subscriptionFixedBonus,
         providerValidationBonus: config.defaultRates.providerValidationBonus,
       };
+
+      // 5b. Commission Plans lockedRates (Lifetime Rate Lock)
+      const planSnapshot = await snapshotLockedRates("affiliate");
 
       // 6. Resolve referrer if pending referral code
       let referredBy: string | null = null;
@@ -195,6 +200,13 @@ export async function handleAffiliateUserCreated(event: any) {
         referredByUserId,
         referredAt: referredBy ? Timestamp.now() : null,
         capturedRates,
+        // Commission Plans — Lifetime Rate Lock
+        ...(planSnapshot ? {
+          commissionPlanId: planSnapshot.commissionPlanId,
+          commissionPlanName: planSnapshot.commissionPlanName,
+          rateLockDate: planSnapshot.rateLockDate,
+          lockedRates: planSnapshot.lockedRates,
+        } : {}),
         totalEarned: 0,
         availableBalance: 0,
         pendingBalance: 0,
@@ -255,6 +267,13 @@ export async function handleAffiliateUserCreated(event: any) {
         logger.info("[affiliateOnUserCreated] Set groupAdmin-specific referral fields", {
           userId,
           groupAdminCode: referredBy,
+        });
+      } else if (actorType === "partner") {
+        (affiliateFields as any).partnerReferredBy = referredBy;
+        (affiliateFields as any).partnerReferredById = referredByUserId;
+        logger.info("[affiliateOnUserCreated] Set partner-specific referral fields", {
+          userId,
+          partnerCode: referredBy,
         });
       }
 

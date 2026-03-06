@@ -746,6 +746,8 @@ const Login: React.FC = () => {
         defaultDashboard = "/blogger/tableau-de-bord";
       } else if (user.role === "groupAdmin") {
         defaultDashboard = "/group-admin/tableau-de-bord";
+      } else if (user.role === "partner") {
+        defaultDashboard = "/partner/tableau-de-bord";
       }
 
       // FIX: If a provider was selected (user clicked "Réserver" before login),

@@ -3431,12 +3431,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     services: string[];
   } | null>(null);
 
-  // Réduction affiliée : GroupAdmin ($5 fixe) ou Influencer (5%)
+  // Réduction affiliée : GroupAdmin ($5 fixe), Influencer (5%), ou Partner (configurable)
   const [affiliateDiscount, setAffiliateDiscount] = useState<{
-    type: 'groupAdmin' | 'influencer';
+    type: 'groupAdmin' | 'influencer' | 'partner';
     discountType: 'fixed' | 'percentage';
-    discountValue: number; // 5 pour GroupAdmin ($5), 5 pour Influencer (5%)
+    discountValue: number; // en unité monétaire pour fixed, en % pour percentage
+    maxDiscountCents?: number; // cap max pour percentage partner
     affiliateCode: string;
+    label?: string;
   } | null>(null);
 
   // m4 FIX: Load promo code from sessionStorage and revalidate server-side
@@ -3501,6 +3503,29 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
             discountValue: 5,
             affiliateCode: String(userData.influencerReferredBy),
           });
+        } else if (userData?.partnerReferredById) {
+          // Partner : remise configurée par partenaire (fixe ou %)
+          try {
+            const partnerDoc = await getDoc(doc(db, 'partners', userData.partnerReferredById));
+            const partnerData = partnerDoc.data();
+            const dc = partnerData?.discountConfig;
+            if (dc?.isActive && partnerData?.status === 'active') {
+              // Vérifier l'expiration côté client (le backend re-vérifie)
+              const notExpired = !dc.expiresAt || dc.expiresAt.toMillis() > Date.now();
+              if (notExpired && dc.value > 0) {
+                setAffiliateDiscount({
+                  type: 'partner',
+                  discountType: dc.type,
+                  discountValue: dc.type === 'fixed' ? dc.value / 100 : dc.value,
+                  maxDiscountCents: dc.maxDiscountCents || undefined,
+                  affiliateCode: partnerData.affiliateCode || '',
+                  label: dc.label || undefined,
+                });
+              }
+            }
+          } catch (partnerErr) {
+            console.error('[CallCheckout] Partner discount lookup failed (non-blocking):', partnerErr);
+          }
         }
       } catch (err) {
         console.error('[CallCheckout] Affiliate discount lookup failed (non-blocking):', err);
@@ -3678,17 +3703,19 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       totalDiscountApplied += promoDiscount;
     }
 
-    // 2. Appliquer le discount affilié (GroupAdmin $5 fixe, Influencer 5%)
+    // 2. Appliquer le discount affilié (GroupAdmin $5 fixe, Influencer 5%, Partner configurable)
     // DOIT correspondre exactement au calcul backend dans createPaymentIntent.ts
     if (affiliateDiscount) {
       let afDiscount = 0;
       if (affiliateDiscount.discountType === 'fixed') {
         afDiscount = Math.min(affiliateDiscount.discountValue, currentTotal);
       } else {
-        afDiscount = Math.min(
-          Math.round((currentTotal * affiliateDiscount.discountValue / 100) * 100) / 100,
-          currentTotal
-        );
+        afDiscount = Math.round((currentTotal * affiliateDiscount.discountValue / 100) * 100) / 100;
+        // Partner percentage discount: apply max cap if set
+        if (affiliateDiscount.maxDiscountCents && affiliateDiscount.maxDiscountCents > 0) {
+          afDiscount = Math.min(afDiscount, affiliateDiscount.maxDiscountCents / 100);
+        }
+        afDiscount = Math.min(afDiscount, currentTotal);
       }
       afDiscount = Math.max(0, afDiscount);
       currentTotal = Math.max(0, Math.round((currentTotal - afDiscount) * 100) / 100);
@@ -4392,14 +4419,17 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                         )}{" "}({activePromo.code})
                       </div>
                     )}
-                    {/* Réduction affiliée GroupAdmin / Influencer */}
+                    {/* Réduction affiliée GroupAdmin / Influencer / Partner */}
                     {affiliateDiscount && (
                       <div className="text-green-600 font-medium">
                         -{affiliateDiscount.discountType === 'fixed'
                           ? formatCurrency(affiliateDiscount.discountValue, selectedCurrency.toUpperCase(), { language, minimumFractionDigits: 2 })
                           : `${affiliateDiscount.discountValue}%`
                         }{" "}
-                        ({affiliateDiscount.type === 'groupAdmin' ? '👥 Admin' : '📣 Influencer'})
+                        ({affiliateDiscount.type === 'groupAdmin' ? '👥 Admin'
+                          : affiliateDiscount.type === 'partner'
+                            ? (affiliateDiscount.label || '🤝 Partner')
+                            : '📣 Influencer'})
                       </div>
                     )}
                   </div>

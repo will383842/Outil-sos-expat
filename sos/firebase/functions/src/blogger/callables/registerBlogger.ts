@@ -28,13 +28,14 @@ import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
+import { snapshotLockedRates } from "../../lib/planResolver";
 
 // ============================================================================
 // VALIDATION
 // ============================================================================
 
 const SUPPORTED_LANGUAGES: SupportedBloggerLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh",
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi",
 ];
 
 const BLOG_THEMES: BlogTheme[] = [
@@ -340,6 +341,12 @@ export const registerBlogger = onCall(
       const { affiliateCodeClient, affiliateCodeRecruitment } =
         await generateBloggerAffiliateCodes(input.firstName);
 
+      // 7b. Resolve commission plan (Lifetime Rate Lock)
+      const planSnapshot = await snapshotLockedRates("blogger");
+      if (planSnapshot) {
+        logger.info("[registerBlogger] Commission plan locked:", { plan: planSnapshot.commissionPlanName });
+      }
+
       // 8. Create blogger profile
       const now = Timestamp.now();
       const currentMonth = new Date().toISOString().slice(0, 7);
@@ -414,6 +421,14 @@ export const registerBlogger = onCall(
         recruitedBy,
         recruitedByCode,
         recruitedAt: recruitedBy ? now : null,
+
+        // Commission Plan (Lifetime Rate Lock)
+        ...(planSnapshot ? {
+          commissionPlanId: planSnapshot.commissionPlanId,
+          commissionPlanName: planSnapshot.commissionPlanName,
+          rateLockDate: planSnapshot.rateLockDate,
+          lockedRates: planSnapshot.lockedRates,
+        } : {}),
 
         // Timestamps
         createdAt: now,

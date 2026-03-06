@@ -213,6 +213,17 @@ const GroupAdminLeaderboard = lazy(() => import('./pages/GroupAdmin/GroupAdminLe
 const GroupAdminProfile = lazy(() => import('./pages/GroupAdmin/GroupAdminProfile'));
 const GroupAdminSuspended = lazy(() => import('./pages/GroupAdmin/GroupAdminSuspended'));
 const GroupAdminDirectory = lazy(() => import('./pages/GroupAdmin/GroupAdminDirectory'));
+// Partner System (Commercial website partnerships)
+const PartnerDashboard = lazy(() => import('./pages/Partner/PartnerDashboard'));
+const PartnerEarnings = lazy(() => import('./pages/Partner/PartnerEarnings'));
+const PartnerClicks = lazy(() => import('./pages/Partner/PartnerClicks'));
+const PartnerWidgets = lazy(() => import('./pages/Partner/PartnerWidgets'));
+const PartnerProfile = lazy(() => import('./pages/Partner/PartnerProfile'));
+const PartnerPayments = lazy(() => import('./pages/Partner/PartnerPayments'));
+const PartnerSuspended = lazy(() => import('./pages/Partner/PartnerSuspended'));
+const PartnerLanding = lazy(() => import('./pages/Partners/PartnerLanding'));
+const PartnersPage = lazy(() => import('./pages/Partners/PartnersPage'));
+
 const InfluencerDirectory = lazy(() => import('./pages/Influencer/InfluencerDirectory'));
 const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
@@ -341,6 +352,10 @@ const routeConfigs: RouteConfig[] = [
   { path: "/nos-blogueurs", component: BloggerDirectory, translated: "blogger-directory" },
   { path: "/nos-chatters", component: ChatterDirectory, translated: "chatter-directory" },
 
+  // Partner public pages
+  { path: "/devenir-partenaire", component: PartnerLanding, translated: "partner-landing" },
+  { path: "/partenaires", component: PartnersPage, translated: "partners-page" },
+
   // Presse
   { path: "/presse", component: Press, alias: "/press", translated: "press" },
 ];
@@ -459,6 +474,15 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/group-admin/classement", component: GroupAdminLeaderboard, protected: true, role: 'groupAdmin', translated: "groupadmin-leaderboard" },
   { path: "/group-admin/profil", component: GroupAdminProfile, protected: true, role: 'groupAdmin', translated: "groupadmin-profile" },
   { path: "/group-admin/suspendu", component: GroupAdminSuspended, protected: true, role: 'groupAdmin', translated: "groupadmin-suspended" },
+
+  // Partner System Routes - Protected routes for commercial partners (NO public registration - admin creates accounts)
+  { path: "/partner/tableau-de-bord", component: PartnerDashboard, protected: true, role: 'partner', translated: "partner-dashboard" },
+  { path: "/partner/gains", component: PartnerEarnings, protected: true, role: 'partner', translated: "partner-earnings" },
+  { path: "/partner/statistiques", component: PartnerClicks, protected: true, role: 'partner', translated: "partner-clicks" },
+  { path: "/partner/widgets", component: PartnerWidgets, protected: true, role: 'partner', translated: "partner-widgets" },
+  { path: "/partner/profil", component: PartnerProfile, protected: true, role: 'partner', translated: "partner-profile" },
+  { path: "/partner/paiements", component: PartnerPayments, protected: true, role: 'partner', translated: "partner-payments" },
+  { path: "/partner/suspendu", component: PartnerSuspended, protected: true, role: 'partner', translated: "partner-suspended" },
 ];
 
 // ====================================

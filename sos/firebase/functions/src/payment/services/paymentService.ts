@@ -1574,6 +1574,8 @@ export class PaymentService {
         return COLLECTIONS.BLOGGERS;
       case 'group_admin':
         return COLLECTIONS.GROUP_ADMINS;
+      case 'partner':
+        return 'partners';
       default:
         throw new Error(`Unknown user type: ${userType}`);
     }

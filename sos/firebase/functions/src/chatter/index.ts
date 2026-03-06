@@ -85,6 +85,7 @@ export {
   adminGetChatterLeaderboard,
   adminExportChatters,
   adminBulkChatterAction,
+  adminManageChatter,
 } from "./callables/admin";
 
 // Public directory

@@ -4,7 +4,7 @@
  * Features:
  * - Calculates monthly rankings based on totalEarned during the month
  * - Awards CASH BONUSES to Top 3 performers
- * - Eligibility: minimum $200 in direct commissions (totalEarned)
+ * - Eligibility: minimum $200 in cumulated commissions (chatter + team, all types combined)
  * - Updates currentMonthRank on chatters for the new month
  * - Stores rankings history in chatter_monthly_rankings collection
  *
@@ -15,7 +15,7 @@
  * - Top 2: $100 (10000 cents)
  * - Top 3: $50 (5000 cents)
  *
- * Eligibility: Chatter must have >= $200 in total direct commissions
+ * Eligibility: Chatter must have >= $200 in totalEarned (all commissions combined: direct + team)
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -37,7 +37,7 @@ const MONTHLY_TOP3_CASH_BONUS: Record<number, number> = {
   3: 5000,  // $50
 };
 
-/** Minimum total direct commissions (in cents) to be eligible for Top 3 bonus */
+/** Minimum cumulated commissions (chatter + team, all types) in cents to be eligible for Top 3 bonus */
 const MONTHLY_TOP3_MIN_ELIGIBILITY = 20000; // $200
 
 // ============================================================================
@@ -180,8 +180,8 @@ async function calculateMonthlyRankings(monthId: string): Promise<MonthlyChatter
         monthlyClients += 1;
       }
 
-      // Count recruits (activation_bonus indicates a recruit activated)
-      if (commission.type === "activation_bonus" || commission.type === "recruitment") {
+      // Count recruits (activation_bonus, recruitment, n1_recruit_bonus)
+      if (commission.type === "activation_bonus" || commission.type === "recruitment" || commission.type === "n1_recruit_bonus") {
         monthlyRecruits += 1;
       }
     }
@@ -190,7 +190,7 @@ async function calculateMonthlyRankings(monthId: string): Promise<MonthlyChatter
     if (monthlyEarnings > 0) {
       chatterStats.push({
         chatterId,
-        chatterName: `${chatter.firstName} ${chatter.lastName}`,
+        chatterName: `${chatter.firstName} ${chatter.lastName.charAt(0)}.`,
         chatterCode: chatter.affiliateCodeClient,
         photoUrl: chatter.photoUrl,
         country: chatter.country,
@@ -221,7 +221,7 @@ async function calculateMonthlyRankings(monthId: string): Promise<MonthlyChatter
  * - Top 2: $100 cash bonus
  * - Top 3: $50 cash bonus
  *
- * Eligibility: chatter must have >= $200 total direct commissions
+ * Eligibility: chatter must have >= $200 cumulated commissions (all types combined)
  * Creates a bonus_top3 commission credited to availableBalance
  */
 async function awardTop3Bonuses(
@@ -255,7 +255,7 @@ async function awardTop3Bonuses(
 
     const chatter = chatterDoc.data() as Chatter;
 
-    // Check eligibility: minimum $200 in total direct commissions
+    // Check eligibility: minimum $200 in cumulated commissions (chatter + team, all types)
     if ((chatter.totalEarned || 0) < MONTHLY_TOP3_MIN_ELIGIBILITY) {
       logger.info("[awardTop3Bonuses] Chatter not eligible (totalEarned below minimum)", {
         rank,

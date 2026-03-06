@@ -66,7 +66,7 @@ export type BloggerResourceCategory = 'sos_expat' | 'ulixai' | 'founder';
 
 export type BloggerResourceType = 'logo' | 'image' | 'text' | 'data' | 'photo' | 'bio' | 'quote';
 
-export type SupportedBloggerLanguage = 'fr' | 'en' | 'es' | 'pt' | 'ar' | 'de' | 'it' | 'nl' | 'zh';
+export type SupportedBloggerLanguage = 'fr' | 'en' | 'es' | 'pt' | 'ar' | 'de' | 'zh' | 'ru' | 'hi';
 
 // ============================================================================
 // BLOGGER PROFILE
@@ -577,6 +577,12 @@ export interface BloggerDashboardData {
     commissionRecruitmentAmount: number;
     minimumWithdrawalAmount: number;
   };
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock?: boolean;
+  } | null;
   // Additional data for referrals page
   recruitedProviders?: Array<{
     providerId: string;

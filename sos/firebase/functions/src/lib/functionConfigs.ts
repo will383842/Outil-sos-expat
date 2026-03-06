@@ -187,6 +187,33 @@ export const heavyProcessingConfig = {
   cors: ALLOWED_ORIGINS,
 };
 
+/**
+ * Partner config — for partner user-facing callables (us-central1)
+ * Same region as other affiliates for Firestore latency optimization.
+ */
+export const partnerConfig = {
+  region: "us-central1" as const,
+  memory: "256MiB" as const,
+  cpu: 0.083,
+  maxInstances: 1,
+  minInstances: 0,
+  concurrency: 1,
+  cors: ALLOWED_ORIGINS,
+};
+
+/**
+ * Partner admin config — for admin functions managing partners (us-central1)
+ */
+export const partnerAdminConfig = {
+  region: "us-central1" as const,
+  memory: "256MiB" as const,
+  cpu: 0.083,
+  maxInstances: 1,
+  minInstances: 0,
+  concurrency: 1,
+  cors: ALLOWED_ORIGINS,
+};
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================

@@ -114,10 +114,10 @@ const SUPPORTED_LANGUAGES: { value: SupportedGroupAdminLanguage; label: string }
   { value: 'es', label: 'Espanol' },
   { value: 'pt', label: 'Portugues' },
   { value: 'de', label: 'Deutsch' },
-  { value: 'it', label: 'Italiano' },
   { value: 'ar', label: 'Arabic' },
-  { value: 'nl', label: 'Nederlands' },
   { value: 'zh', label: 'Chinese' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'hi', label: 'Hindi' },
 ];
 
 const GROUP_TYPES: GroupType[] = [

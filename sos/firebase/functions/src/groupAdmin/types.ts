@@ -8,7 +8,7 @@
  * - Activation bonus ($5 when recruit makes 2 referrals)
  * - Resources & ready-to-use posts
  * - Gamification (badges, leaderboard)
- * - 9 languages: fr, en, es, pt, ar, de, it, nl, zh (app navigation languages)
+ * - 9 languages: fr, en, es, pt, ar, de, zh, ru, hi (app navigation languages)
  */
 
 import { Timestamp } from "firebase-admin/firestore";
@@ -35,8 +35,6 @@ export type SupportedGroupAdminLanguage =
   | "pt"    // Portuguese
   | "ar"    // Arabic
   | "de"    // German
-  | "it"    // Italian
-  | "nl"    // Dutch
   | "zh"    // Chinese
   | "ru"    // Russian
   | "hi";   // Hindi
@@ -311,6 +309,17 @@ export interface GroupAdmin {
 
   /** Earned badges */
   badges: GroupAdminBadgeType[];
+
+  // ---- Commission Plan (Lifetime Rate Lock) ----
+
+  /** ID of the commission plan active at registration */
+  commissionPlanId?: string;
+  /** Name of the plan (denormalized for display) */
+  commissionPlanName?: string;
+  /** ISO date when rates were locked */
+  rateLockDate?: string;
+  /** Snapshot of commission rates frozen at registration (amounts in cents) */
+  lockedRates?: Record<string, number>;
 
   // ---- Recruitment (who recruited this GroupAdmin) ----
 
@@ -1320,6 +1329,23 @@ export interface GroupAdminDashboardResponse {
     groupAdminName: string;
     earnings: number;
   }[];
+  /** Commission rates (with lockedRates override) */
+  config?: {
+    commissionClientCallAmount?: number;
+    commissionClientAmountLawyer?: number;
+    commissionClientAmountExpat?: number;
+    commissionN1CallAmount: number;
+    commissionN2CallAmount: number;
+    commissionActivationBonusAmount: number;
+    commissionN1RecruitBonusAmount: number;
+  };
+  /** Commission Plan info (Lifetime Rate Lock) */
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock: boolean;
+  } | null;
 }
 
 /**

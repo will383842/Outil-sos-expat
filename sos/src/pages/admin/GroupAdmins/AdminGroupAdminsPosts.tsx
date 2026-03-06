@@ -51,9 +51,9 @@ const LANGUAGES = [
   { code: 'pt', name: 'Portuguese' },
   { code: 'de', name: 'German' },
   { code: 'ar', name: 'Arabic' },
-  { code: 'it', name: 'Italian' },
-  { code: 'nl', name: 'Dutch' },
   { code: 'zh', name: 'Chinese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'hi', name: 'Hindi' },
 ];
 
 interface Post {

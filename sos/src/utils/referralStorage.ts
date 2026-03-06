@@ -10,7 +10,7 @@
 // TYPES
 // ============================================================================
 
-export type ActorType = 'client' | 'influencer' | 'chatter' | 'blogger' | 'groupAdmin';
+export type ActorType = 'client' | 'influencer' | 'chatter' | 'blogger' | 'groupAdmin' | 'partner';
 export type ReferralCodeType = 'client' | 'recruitment';
 
 export interface StoredReferral {
@@ -160,7 +160,7 @@ export function clearStoredReferral(actorType: ActorType): void {
  */
 export function clearAllStoredReferrals(): void {
   if (typeof window === 'undefined') return;
-  const actorTypes: ActorType[] = ['client', 'influencer', 'chatter', 'blogger', 'groupAdmin'];
+  const actorTypes: ActorType[] = ['client', 'influencer', 'chatter', 'blogger', 'groupAdmin', 'partner'];
   actorTypes.forEach((type) => localStorage.removeItem(getStorageKey(type)));
 }
 

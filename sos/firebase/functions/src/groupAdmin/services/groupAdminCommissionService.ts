@@ -84,7 +84,8 @@ export async function createClientReferralCommission(
     }
 
     // Get commission amount (split by provider type)
-    let amount = await getClientCommissionAmount(providerType);
+    // Locked rates on the recipient's doc take priority (Lifetime Rate Lock)
+    let amount = await getClientCommissionAmount(providerType, groupAdmin.lockedRates);
 
     // Check for active promotions
     let promoId: string | undefined;
@@ -256,7 +257,7 @@ export async function createRecruitmentCommission(
     }
 
     // Get commission amount — use activation bonus amount ($5) as legacy fallback
-    const amount = await getActivationBonusAmount();
+    const amount = await getActivationBonusAmount(recruiter.lockedRates);
 
     // Create commission
     const commission = await createCommission(
@@ -363,7 +364,10 @@ async function checkAndPayActivationBonus(groupAdminId: string, _callId: string)
     // Threshold reached — pay activation bonus via transaction
     const recruitRef = recruitDoc.ref;
     const recruiterRef = getDb().collection("group_admins").doc(groupAdmin.recruitedBy);
-    const amount = await getActivationBonusAmount();
+    // Pre-read recruiter doc to get lockedRates for Lifetime Rate Lock
+    const recruiterPreSnap = await recruiterRef.get();
+    const recruiterLockedRates = recruiterPreSnap.exists ? (recruiterPreSnap.data() as GroupAdmin).lockedRates : undefined;
+    const amount = await getActivationBonusAmount(recruiterLockedRates);
 
     await getDb().runTransaction(async (tx) => {
       const freshRecruit = await tx.get(recruitRef);
@@ -441,7 +445,7 @@ async function checkAndPayActivationBonus(groupAdminId: string, _callId: string)
 export async function createN1CallCommission(
   recruitedAdminId: string,
   callId: string,
-  providerType?: 'lawyer' | 'expat'
+  _providerType?: 'lawyer' | 'expat'
 ): Promise<void> {
   try {
     const gaDoc = await getDb().collection("group_admins").doc(recruitedAdminId).get();
@@ -465,7 +469,7 @@ export async function createN1CallCommission(
     const recruiter = recruiterDoc.data() as GroupAdmin;
     if (recruiter.status !== "active") return;
 
-    const amount = await getN1CallAmount();
+    const amount = await getN1CallAmount(recruiter.lockedRates);
     const commissionRef = getDb().collection("group_admin_commissions").doc();
     const now = Timestamp.now();
     const currentMonth = new Date().toISOString().substring(0, 7);
@@ -515,7 +519,7 @@ export async function createN1CallCommission(
 export async function createN2CallCommission(
   recruitedAdminId: string,
   callId: string,
-  providerType?: 'lawyer' | 'expat'
+  _providerType?: 'lawyer' | 'expat'
 ): Promise<void> {
   try {
     const gaDoc = await getDb().collection("group_admins").doc(recruitedAdminId).get();
@@ -541,7 +545,7 @@ export async function createN2CallCommission(
     const n2 = n2Doc.data() as GroupAdmin;
     if (n2.status !== "active") return;
 
-    const amount = await getN2CallAmount();
+    const amount = await getN2CallAmount(n2.lockedRates);
     const commissionRef = getDb().collection("group_admin_commissions").doc();
     const now = Timestamp.now();
     const currentMonth = new Date().toISOString().substring(0, 7);
@@ -611,7 +615,7 @@ export async function createN1RecruitBonusCommission(
     const n2Doc = await getDb().collection("group_admins").doc(n2AdminId).get();
     const n2 = n2Doc.exists ? (n2Doc.data() as GroupAdmin) : null;
 
-    const amount = await getN1RecruitBonusAmount();
+    const amount = await getN1RecruitBonusAmount(n1.lockedRates);
     const commissionRef = getDb().collection("group_admin_commissions").doc();
     const now = Timestamp.now();
     const currentMonth = new Date().toISOString().substring(0, 7);

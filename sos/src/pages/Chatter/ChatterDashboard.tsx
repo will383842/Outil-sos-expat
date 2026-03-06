@@ -90,6 +90,7 @@ const NotificationBell = lazy(() =>
 );
 const QuickActionsMenu = lazy(() => import('@/components/Chatter/QuickActionsMenu'));
 const DashboardTour = lazy(() => import('@/components/Chatter/DashboardTour'));
+const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
 
 // Icons - imported synchronously as they're small and used everywhere
 import {
@@ -393,15 +394,7 @@ const ChatterDashboard: React.FC = () => {
     training: `/${getTranslatedRouteSlug('chatter-training' as RouteKey, langCode)}`,
   }), [langCode]);
 
-  // ============================================================================
-  // TELEGRAM ONBOARDING CHECK (mandatory step)
-  // ============================================================================
-  useEffect(() => {
-    // Redirect to Telegram onboarding if not completed
-    if (user && !user.telegramOnboardingCompleted) {
-      navigate(routes.telegram, { replace: true });
-    }
-  }, [user, navigate, routes.telegram]);
+  // Telegram is optional for dashboard access (required only for withdrawals)
 
   // Meta Pixel + Firebase Analytics - ViewContent on dashboard mount
   useEffect(() => {
@@ -942,6 +935,27 @@ const ChatterDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Telegram banner - show only if not linked */}
+        {!user?.telegramId && (
+          <button
+            onClick={() => navigate(routes.telegram)}
+            className="w-full flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-left"
+          >
+            <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Info className="w-5 h-5 text-blue-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm">
+                <FormattedMessage id="chatter.dashboard.telegramBanner.title" defaultMessage="Link your Telegram to withdraw your earnings" />
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+                <FormattedMessage id="chatter.dashboard.telegramBanner.subtitle" defaultMessage="Get a $50 bonus + instant notifications + secure withdrawal confirmations" />
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-blue-400 flex-shrink-0" />
+          </button>
+        )}
+
         {/* Team Alerts Section */}
         {inactiveMembers.length > 0 && (
           <div className={`${UI.card}p-4 sm:p-6 border-l-4`}>
@@ -1015,6 +1029,13 @@ const ChatterDashboard: React.FC = () => {
               onLearnMore={navigateToRefer}
               defaultExpanded={false}
             />
+          </Suspense>
+        )}
+
+        {/* Locked Commission Plan Banner */}
+        {dashboardData?.commissionPlan && (
+          <Suspense fallback={null}>
+            <LockedPlanBanner commissionPlan={dashboardData.commissionPlan} />
           </Suspense>
         )}
 

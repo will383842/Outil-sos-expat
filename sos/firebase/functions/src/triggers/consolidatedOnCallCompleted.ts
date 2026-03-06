@@ -147,6 +147,21 @@ export const consolidatedOnCallCompleted = onDocumentUpdated(
       });
     }
 
+    // 6. Partner handler
+    try {
+      const { handleCallCompleted: partnerHandler } = await import(
+        "../partner/triggers/onCallCompleted"
+      );
+      await partnerHandler(event);
+      results.partner = "ok";
+    } catch (error) {
+      results.partner = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnCallCompleted] Partner handler failed", {
+        sessionId,
+        error,
+      });
+    }
+
     logger.info("[consolidatedOnCallCompleted] All handlers completed", {
       sessionId,
       results,

@@ -24,10 +24,11 @@ import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
+import { snapshotLockedRates } from "../../lib/planResolver";
 
 // Supported languages validation (must match app navigation languages)
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
 // Valid group types
@@ -373,6 +374,12 @@ export const registerGroupAdmin = onCall(
       const affiliateCodeClient = generateAffiliateCode(input.firstName, userId, false);
       const affiliateCodeRecruitment = generateAffiliateCode(input.firstName, userId, true);
 
+      // 10b. Resolve commission plan (Lifetime Rate Lock)
+      const planSnapshot = await snapshotLockedRates("groupAdmin");
+      if (planSnapshot) {
+        logger.info("[registerGroupAdmin] Commission plan locked:", { plan: planSnapshot.commissionPlanName });
+      }
+
       // 11. Create GroupAdmin document
       const now = Timestamp.now();
       const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
@@ -428,6 +435,14 @@ export const registerGroupAdmin = onCall(
         recruitedBy,
         recruitedByCode,
         recruitedAt: recruitedBy ? now : null,
+
+        // Commission Plan (Lifetime Rate Lock)
+        ...(planSnapshot ? {
+          commissionPlanId: planSnapshot.commissionPlanId,
+          commissionPlanName: planSnapshot.commissionPlanName,
+          rateLockDate: planSnapshot.rateLockDate,
+          lockedRates: planSnapshot.lockedRates,
+        } : {}),
 
         preferredPaymentMethod: null,
         paymentDetails: null,

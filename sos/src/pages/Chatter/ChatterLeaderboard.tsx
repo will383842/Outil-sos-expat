@@ -7,7 +7,7 @@
  * - Ranking based on monthly earnings (commissions)
  * - Monthly countdown timer
  * - Motivational messages for climbing ranks
- * - $200 minimum eligibility requirement
+ * - $200 minimum eligibility (cumulated commissions: chatter + team, all types)
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -332,7 +332,7 @@ const ChatterLeaderboard: React.FC = () => {
               <Info className="w-3 h-3" />
               <FormattedMessage
                 id="chatter.leaderboard.eligibility"
-                defaultMessage="Éligibilité : minimum $200 de commissions totales cumulées"
+                defaultMessage="Éligibilité : minimum $200 de commissions cumulées (vous + votre équipe, toutes commissions confondues)"
               />
             </p>
           </div>

@@ -26,6 +26,7 @@ import {
 } from './lib/stripe';
 import { PAYMENT_FUNCTIONS_REGION } from './configs/callRegion';
 import { ALLOWED_ORIGINS } from './lib/functionConfigs';
+import { getPartnerDiscount } from './partner/services/partnerDiscountService';
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -982,6 +983,21 @@ export const createPaymentIntent = onCall(
               discountAmt,
               newExpected: expected,
             });
+          } else if (clientUserData.partnerReferredById) {
+            // Partner : remise fixe ou pourcentage (configurée par partenaire)
+            const partnerDiscountResult = await getPartnerDiscount(clientId, expected);
+            if (partnerDiscountResult.hasDiscount) {
+              affiliateDiscountApplied = partnerDiscountResult.discountAmount;
+              affiliateDiscountTypeApplied = 'partner';
+              expected = partnerDiscountResult.finalPrice;
+              logger.info('[createPaymentIntent] Partner affiliate discount applied', {
+                clientId: clientId?.substring(0, 10),
+                partnerId: partnerDiscountResult.partnerId,
+                partnerCode: partnerDiscountResult.partnerCode,
+                discountAmount: partnerDiscountResult.discountAmount,
+                newExpected: expected,
+              });
+            }
           }
         }
       } catch (affiliateErr) {

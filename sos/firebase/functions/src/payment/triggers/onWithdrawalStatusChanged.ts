@@ -433,6 +433,7 @@ function getUserCollection(userType: PaymentUserType): string {
     case 'blogger': return 'bloggers';
     case 'group_admin': return 'group_admins';
     case 'affiliate': return 'users'; // P1-1 FIX: affiliate balance lives on users/{userId}
+    case 'partner': return 'partners';
     default: return `${userType}s`;
   }
 }

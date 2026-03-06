@@ -470,16 +470,26 @@ export const getChatterDashboard = onCall(
         upcomingZoomMeeting,
         unreadNotifications,
         config: {
-          commissionClientAmount: config.commissionClientAmount,
-          commissionRecruitmentAmount: config.commissionRecruitmentAmount,
-          commissionClientCallAmount: config.commissionClientCallAmount,
-          commissionN1CallAmount: config.commissionN1CallAmount,
-          commissionN2CallAmount: config.commissionN2CallAmount,
+          // Use lockedRates (lifetime rate lock) when available, fallback to global config
+          commissionClientAmount: chatter.lockedRates?.commissionClientCallAmount ?? config.commissionClientAmount,
+          commissionRecruitmentAmount: chatter.lockedRates?.commissionProviderCallAmount ?? config.commissionRecruitmentAmount,
+          commissionClientCallAmount: chatter.lockedRates?.commissionClientCallAmount ?? config.commissionClientCallAmount,
+          commissionClientCallAmountLawyer: chatter.lockedRates?.commissionClientCallAmountLawyer ?? config.commissionClientCallAmountLawyer,
+          commissionClientCallAmountExpat: chatter.lockedRates?.commissionClientCallAmountExpat ?? config.commissionClientCallAmountExpat,
+          commissionN1CallAmount: chatter.lockedRates?.commissionN1CallAmount ?? config.commissionN1CallAmount,
+          commissionN2CallAmount: chatter.lockedRates?.commissionN2CallAmount ?? config.commissionN2CallAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           levelThresholds: config.levelThresholds,
           levelBonuses: config.levelBonuses,
           withdrawalFeeCents: await getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
         },
+        // Commission Plan info (for display on dashboard)
+        commissionPlan: chatter.commissionPlanId ? {
+          id: chatter.commissionPlanId,
+          name: chatter.commissionPlanName || "Plan personnalis\u00e9",
+          rateLockDate: chatter.rateLockDate,
+          isLifetimeLock: true,
+        } : null,
         // Referral system stats
         referralStats: {
           filleulsN1: chatter.totalRecruits,

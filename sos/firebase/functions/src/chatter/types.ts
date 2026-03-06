@@ -40,8 +40,6 @@ export type SupportedChatterLanguage =
   | "pt"    // Portuguese
   | "ar"    // Arabic
   | "de"    // German
-  | "it"    // Italian
-  | "nl"    // Dutch
   | "zh"    // Chinese
   | "ru"    // Russian
   | "hi";   // Hindi
@@ -497,6 +495,17 @@ export interface Chatter {
 
   /** Hashed IP at registration for multi-account fraud detection (P2-05) */
   registrationIpHash?: string;
+
+  // ---- Commission Plan (Lifetime Rate Lock) ----
+
+  /** ID of the commission plan active at registration */
+  commissionPlanId?: string;
+  /** Name of the plan (denormalized for display) */
+  commissionPlanName?: string;
+  /** ISO date when rates were locked */
+  rateLockDate?: string;
+  /** Snapshot of commission rates frozen at registration (amounts in cents) */
+  lockedRates?: Record<string, number>;
 }
 
 /**
@@ -2455,6 +2464,8 @@ export interface GetChatterDashboardResponse {
     | "commissionClientAmount"
     | "commissionRecruitmentAmount"
     | "commissionClientCallAmount"
+    | "commissionClientCallAmountLawyer"
+    | "commissionClientCallAmountExpat"
     | "commissionN1CallAmount"
     | "commissionN2CallAmount"
     | "minimumWithdrawalAmount"
@@ -2464,6 +2475,13 @@ export interface GetChatterDashboardResponse {
     /** Withdrawal fee in cents (from admin_config/fees) */
     withdrawalFeeCents: number;
   };
+  /** Commission Plan info (Lifetime Rate Lock) */
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock: boolean;
+  } | null;
 
   /** Referral system stats (2-level) */
   referralStats: {
@@ -2906,7 +2924,13 @@ export interface GetTrainingModulesResponse {
     id: string;
     order: number;
     title: string;
+    titleTranslations?: {
+      [key in SupportedChatterLanguage]?: string;
+    };
     description: string;
+    descriptionTranslations?: {
+      [key in SupportedChatterLanguage]?: string;
+    };
     category: ChatterTrainingCategory;
     coverImageUrl?: string;
     estimatedMinutes: number;

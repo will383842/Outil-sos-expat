@@ -108,7 +108,9 @@ service cloud.firestore {
                                    'freeTrialGrantedBy', 'stripeCustomerId',
                                    'payoutMode', 'aaaPayoutMode', 'isAAA',
                                    'affiliateCode', 'referredBy', 'referredByUserId',
-                                   'capturedRates', 'totalEarned', 'availableBalance',
+                                   'capturedRates', 'lockedRates',
+                                   'commissionPlanId', 'commissionPlanName', 'rateLockDate',
+                                   'totalEarned', 'availableBalance',
                                    'pendingBalance', 'affiliateStatus', 'affiliateStats',
                                    'linkedProviderIds', 'shareBusyStatus']))
                        || isAdmin() || isDev();
@@ -1953,6 +1955,46 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ================= PARTNER SYSTEM =================
+
+    // Partners : lecture par utilisateurs authentifiés (pour discount checkout)
+    // Écriture : Cloud Functions uniquement (admin callables)
+    match /partners/{partnerId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Partner commissions
+    match /partner_commissions/{commissionId} {
+      // Le partenaire peut lire ses propres commissions
+      allow read: if isAuthenticated() &&
+                  resource.data.partnerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Partner notifications
+    match /partner_notifications/{notifId} {
+      allow read: if isAuthenticated() &&
+                  resource.data.partnerId == request.auth.uid;
+      // Le partenaire peut marquer comme lue
+      allow update: if isAuthenticated() &&
+                    resource.data.partnerId == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+      allow create, delete: if false;
+    }
+
+    // Partner config (admin)
+    match /partner_config/{configId} {
+      allow read: if isAdmin() || isDev();
+      allow write: if false;
+    }
+
+    // Partner promo widgets
+    match /partner_promo_widgets/{widgetId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // ================= CHATTER SYSTEM =================
     // Système ambassadeurs/chatters avec gamification
 
@@ -1997,7 +2039,9 @@ service cloud.firestore {
                                    'role', 'captainPromotedAt', 'captainPromotedBy',
                                    'captainMonthlyTeamCalls', 'captainCurrentTier',
                                    'captainQualityBonusEnabled',
-                                   'captainAssignedCountries', 'captainAssignedLanguages']))
+                                   'captainAssignedCountries', 'captainAssignedLanguages',
+                                   'commissionPlanId', 'commissionPlanName',
+                                   'rateLockDate', 'lockedRates']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
 
@@ -2031,6 +2075,14 @@ service cloud.firestore {
       // Mise à jour: admin uniquement
       allow update: if isAdmin() || isDev();
       allow delete: if false;
+    }
+
+    // Commission Plans (Lifetime Rate Lock)
+    match /commission_plans/{planId} {
+      // Lecture: tout affilié authentifié ou admin (pour afficher les rates sur landing/dashboard)
+      allow read: if isAuthenticated();
+      // Écriture: admin uniquement (CRUD des plans)
+      allow write: if isAdmin() || isDev();
     }
 
     // Configuration du système chatter
@@ -2352,7 +2404,9 @@ service cloud.firestore {
                                    'totalEarned', 'availableBalance', 'pendingBalance',
                                    'validatedBalance', 'totalClients', 'totalRecruits',
                                    'totalCommissions', 'currentMonthStats',
-                                   'currentMonthRank', 'bestRank', 'adminNotes']))
+                                   'currentMonthRank', 'bestRank', 'adminNotes',
+                                   'commissionPlanId', 'commissionPlanName',
+                                   'rateLockDate', 'lockedRates']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
@@ -2487,7 +2541,9 @@ service cloud.firestore {
                                    'totalEarned', 'availableBalance', 'pendingBalance',
                                    'validatedBalance', 'totalClients', 'totalRecruits',
                                    'totalCommissions', 'currentMonthStats',
-                                   'currentMonthRank', 'bestRank', 'adminNotes']))
+                                   'currentMonthRank', 'bestRank', 'adminNotes',
+                                   'commissionPlanId', 'commissionPlanName',
+                                   'rateLockDate', 'lockedRates']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }
@@ -2657,7 +2713,9 @@ service cloud.firestore {
                                    'validatedBalance', 'totalWithdrawn', 'totalClients',
                                    'totalRecruits', 'totalCommissions', 'currentMonthStats',
                                    'currentMonthRank', 'bestRank', 'badges', 'adminNotes',
-                                   'isGroupVerified', 'groupVerifiedAt', 'suspensionReason']))
+                                   'isGroupVerified', 'groupVerifiedAt', 'suspensionReason',
+                                   'commissionPlanId', 'commissionPlanName',
+                                   'rateLockDate', 'lockedRates']))
                        || isAdmin() || isDev();
       allow delete: if isAdmin() || isDev();
     }

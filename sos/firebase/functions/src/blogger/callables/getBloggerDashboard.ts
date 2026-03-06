@@ -121,10 +121,20 @@ export const getBloggerDashboard = onCall(
         monthlyStats,
         unreadNotifications,
         config: {
-          commissionClientAmount: config.commissionClientAmount,
-          commissionRecruitmentAmount: config.commissionRecruitmentAmount,
+          // Use lockedRates (lifetime rate lock) when available, fallback to global config
+          commissionClientAmount: blogger.lockedRates?.commissionClientAmount ?? config.commissionClientAmount,
+          commissionClientAmountLawyer: blogger.lockedRates?.commissionClientAmountLawyer ?? config.commissionClientAmountLawyer,
+          commissionClientAmountExpat: blogger.lockedRates?.commissionClientAmountExpat ?? config.commissionClientAmountExpat,
+          commissionRecruitmentAmount: blogger.lockedRates?.commissionRecruitmentAmount ?? config.commissionRecruitmentAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
         },
+        // Commission Plan info (for display on dashboard)
+        commissionPlan: blogger.commissionPlanId ? {
+          id: blogger.commissionPlanId,
+          name: blogger.commissionPlanName || "Plan personnalis\u00e9",
+          rateLockDate: blogger.rateLockDate,
+          isLifetimeLock: true,
+        } : null,
       };
     } catch (error) {
       if (error instanceof HttpsError) {

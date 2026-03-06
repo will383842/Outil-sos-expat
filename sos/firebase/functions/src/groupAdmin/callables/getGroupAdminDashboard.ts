@@ -22,7 +22,7 @@ import {
   GroupAdminNotification,
   GroupAdminDashboardResponse,
 } from "../types";
-import { getLeaderboardSize } from "../groupAdminConfig";
+import { getLeaderboardSize, getGroupAdminConfig } from "../groupAdminConfig";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
@@ -167,6 +167,9 @@ export const getGroupAdminDashboard = onCall(
         lastLoginAt: Timestamp.now(),
       });
 
+      // Get global config and apply lockedRates override (Lifetime Rate Lock)
+      const gaConfig = await getGroupAdminConfig();
+
       return {
         profile,
         recentCommissions,
@@ -174,6 +177,22 @@ export const getGroupAdminDashboard = onCall(
         recentRecruits,
         notifications,
         leaderboard,
+        config: {
+          commissionClientCallAmount: profile.lockedRates?.commissionClientCallAmount ?? gaConfig.commissionClientCallAmount,
+          commissionClientAmountLawyer: profile.lockedRates?.commissionClientAmountLawyer ?? gaConfig.commissionClientAmountLawyer,
+          commissionClientAmountExpat: profile.lockedRates?.commissionClientAmountExpat ?? gaConfig.commissionClientAmountExpat,
+          commissionN1CallAmount: profile.lockedRates?.commissionN1CallAmount ?? gaConfig.commissionN1CallAmount,
+          commissionN2CallAmount: profile.lockedRates?.commissionN2CallAmount ?? gaConfig.commissionN2CallAmount,
+          commissionActivationBonusAmount: profile.lockedRates?.commissionActivationBonusAmount ?? gaConfig.commissionActivationBonusAmount,
+          commissionN1RecruitBonusAmount: profile.lockedRates?.commissionN1RecruitBonusAmount ?? gaConfig.commissionN1RecruitBonusAmount,
+        },
+        // Commission Plan info (for display on dashboard)
+        commissionPlan: profile.commissionPlanId ? {
+          id: profile.commissionPlanId,
+          name: profile.commissionPlanName || "Plan personnalis\u00e9",
+          rateLockDate: profile.rateLockDate,
+          isLifetimeLock: true,
+        } : null,
       };
     } catch (error) {
       if (error instanceof HttpsError) {

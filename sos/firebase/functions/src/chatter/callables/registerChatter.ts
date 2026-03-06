@@ -28,11 +28,12 @@ import {
 } from "../utils/chatterCodeGenerator";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { snapshotLockedRates } from "../../lib/planResolver";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedChatterLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
 // Valid platforms
@@ -455,6 +456,12 @@ export const registerChatter = onCall(
         userId, affiliateCodeClient, affiliateCodeRecruitment, elapsed: Date.now() - startTime,
       }));
 
+      // 10b. Resolve commission plan (Lifetime Rate Lock)
+      const planSnapshot = await snapshotLockedRates("chatter");
+      if (planSnapshot) {
+        console.log("[registerChatter] Commission plan locked:", planSnapshot.commissionPlanName);
+      }
+
       // 11. Create chatter document with ACTIVE status
       console.log("[registerChatter] STEP 11: Creating chatter object...");
       const chatter: Chatter = {
@@ -554,6 +561,14 @@ export const registerChatter = onCall(
 
         // P2-05 FIX: Store IP hash for multi-account fraud detection
         registrationIpHash: hashIP(request.rawRequest?.ip || "unknown"),
+
+        // Commission Plan (Lifetime Rate Lock)
+        ...(planSnapshot ? {
+          commissionPlanId: planSnapshot.commissionPlanId,
+          commissionPlanName: planSnapshot.commissionPlanName,
+          rateLockDate: planSnapshot.rateLockDate,
+          lockedRates: planSnapshot.lockedRates,
+        } : {}),
       };
 
       // 12. Create user document and chatter document in transaction
@@ -580,6 +595,8 @@ export const registerChatter = onCall(
             affiliateCodeClient,
             affiliateCodeRecruitment,
             telegramOnboardingCompleted: false,
+            ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
+            country: input.country.toUpperCase(),
             updatedAt: now,
           });
         } else {
@@ -594,6 +611,8 @@ export const registerChatter = onCall(
             affiliateCodeClient,
             affiliateCodeRecruitment,
             telegramOnboardingCompleted: false,
+            ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
+            country: input.country.toUpperCase(),
             createdAt: now,
             updatedAt: now,
           });

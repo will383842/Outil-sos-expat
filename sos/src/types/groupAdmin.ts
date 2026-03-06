@@ -12,7 +12,7 @@
 export type GroupAdminStatus = "active" | "suspended" | "banned";
 
 export type SupportedGroupAdminLanguage =
-  | "fr" | "en" | "es" | "pt" | "ar" | "de" | "it" | "nl" | "zh";
+  | "fr" | "en" | "es" | "pt" | "ar" | "de" | "zh" | "ru" | "hi";
 
 export type GroupType =
   | "travel"
@@ -432,6 +432,12 @@ export interface GroupAdminDashboardResponse {
   recentRecruits: GroupAdminRecruit[];
   notifications: GroupAdminNotification[];
   leaderboard: GroupAdminLeaderboardEntry[];
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock?: boolean;
+  } | null;
 }
 
 export interface GroupAdminLeaderboardResponse {

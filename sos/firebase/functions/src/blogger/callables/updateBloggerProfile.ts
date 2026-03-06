@@ -22,7 +22,7 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 // ============================================================================
 
 const SUPPORTED_LANGUAGES: SupportedBloggerLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh",
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi",
 ];
 
 const BLOG_THEMES: BlogTheme[] = [

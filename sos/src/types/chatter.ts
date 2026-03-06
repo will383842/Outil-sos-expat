@@ -22,8 +22,6 @@ export type SupportedChatterLanguage =
   | "pt"
   | "ar"
   | "de"
-  | "it"
-  | "nl"
   | "zh"
   | "ru"
   | "hi";
@@ -595,6 +593,13 @@ export interface ChatterDashboardData {
     endsAt: string;
   } | null;
 
+  /** Locked commission plan info */
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock?: boolean;
+  } | null;
   /** Piggy Bank - Bonus pending unlock */
   piggyBank: PiggyBankData;
   /** Weekly/monthly trend data for visualization */
@@ -768,7 +773,9 @@ export interface TrainingModuleListItem {
   id: string;
   order: number;
   title: string;
+  titleTranslations?: Record<string, string>;
   description: string;
+  descriptionTranslations?: Record<string, string>;
   category: ChatterTrainingCategory;
   coverImageUrl?: string;
   estimatedMinutes: number;

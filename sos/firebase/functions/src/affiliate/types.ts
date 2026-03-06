@@ -193,8 +193,19 @@ export interface UserAffiliateFields {
 
   // ---- Rates (frozen at signup) ----
 
-  /** Commission rates frozen at signup */
+  /** Commission rates frozen at signup (legacy) */
   capturedRates: CapturedRates;
+
+  // ---- Commission Plans — Lifetime Rate Lock ----
+
+  /** ID of the commission plan active at registration */
+  commissionPlanId?: string;
+  /** Name of the plan (denormalized) */
+  commissionPlanName?: string;
+  /** ISO date when rates were locked */
+  rateLockDate?: string;
+  /** Snapshot of plan rates — takes priority over capturedRates */
+  lockedRates?: Record<string, number>;
 
   // ---- Balances ----
 

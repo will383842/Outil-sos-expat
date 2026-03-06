@@ -153,9 +153,9 @@ const LANGUAGES = [
   { value: 'de', label: 'Deutsch' },
   { value: 'pt', label: 'Português' },
   { value: 'ar', label: 'العربية' },
-  { value: 'it', label: 'Italiano' },
-  { value: 'nl', label: 'Nederlands' },
   { value: 'zh', label: '中文' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'hi', label: 'हिन्दी' },
 ];
 
 // ============================================================================

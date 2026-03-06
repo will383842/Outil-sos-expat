@@ -61,6 +61,12 @@ async function getUserType(userId: string): Promise<PaymentUserType | null> {
     return 'blogger';
   }
 
+  // Check partners
+  const partnerDoc = await db.collection('partners').doc(userId).get();
+  if (partnerDoc.exists) {
+    return 'partner';
+  }
+
   return null;
 }
 

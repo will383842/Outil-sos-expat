@@ -191,8 +191,9 @@ export async function createCommission(
       }
     }
 
-    // 7. Get captured rates (frozen at signup)
+    // 7. Get captured rates (frozen at signup) and lockedRates (Commission Plans)
     const capturedRates: CapturedRates | undefined = referrerData.capturedRates;
+    const lockedRates: Record<string, number> | undefined = referrerData.lockedRates;
 
     // 8. Calculate commission amount
     let amount: number;
@@ -210,7 +211,7 @@ export async function createCommission(
       // Calculate based on rule (with provider type split)
       const baseAmountForCalc = getBaseAmountForRule(rule, input.amounts);
       const providerType = input.context?.providerType as 'lawyer' | 'expat' | undefined;
-      const calcResult = calculateCommission(rule, baseAmountForCalc, capturedRates, input.type, providerType);
+      const calcResult = calculateCommission(rule, baseAmountForCalc, capturedRates, input.type, providerType, lockedRates);
 
       if (!calcResult.success) {
         logger.warn("[CommissionService] Calculation failed", {

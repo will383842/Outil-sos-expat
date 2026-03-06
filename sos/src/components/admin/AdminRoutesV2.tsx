@@ -316,6 +316,9 @@ const AdminAffiliateConfig = lazy(
 const AdminCommissionRules = lazy(
   () => import("../../pages/admin/AdminCommissionRules")
 );
+const AdminCommissionPlans = lazy(
+  () => import("../../pages/admin/AdminCommissionPlans")
+);
 const AdminAffiliatePayouts = lazy(
   () => import("../../pages/admin/AdminAffiliatePayouts")
 );
@@ -404,6 +407,12 @@ const AdminInfluencersLeaderboard = lazy(
 const AdminInfluencersResources = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencersResources")
 );
+const AdminInfluencerAnalytics = lazy(
+  () => import("../../pages/admin/Influencer/AdminInfluencerAnalytics")
+);
+const AdminInfluencerFraud = lazy(
+  () => import("../../pages/admin/Influencer/AdminInfluencerFraud")
+);
 const AdminInfluencersPromotions = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencersPromotions")
 );
@@ -433,6 +442,12 @@ const AdminBloggersWidgets = lazy(
 const AdminBloggersArticles = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggersArticles")
 );
+const AdminBloggerAnalytics = lazy(
+  () => import("../../pages/admin/Blogger/AdminBloggerAnalytics")
+);
+const AdminBloggerFraud = lazy(
+  () => import("../../pages/admin/Blogger/AdminBloggerFraud")
+);
 
 // ===== LAZY IMPORTS - GROUPADMIN =====
 const AdminGroupAdminsList = lazy(
@@ -458,6 +473,12 @@ const AdminGroupAdminsRecruitments = lazy(
 );
 const AdminGroupAdminsPromotions = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPromotions")
+);
+const AdminGroupAdminAnalytics = lazy(
+  () => import("../../pages/admin/GroupAdmin/AdminGroupAdminAnalytics")
+);
+const AdminGroupAdminFraud = lazy(
+  () => import("../../pages/admin/GroupAdmin/AdminGroupAdminFraud")
 );
 
 // ===== LAZY IMPORTS - PARTNERS =====
@@ -1142,6 +1163,15 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      {/* Plans de commission à vie */}
+      <Route
+        path="affiliates/plans"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCommissionPlans />
+          </Suspense>
+        }
+      />
       {/* Règles de commission - accès direct au configurateur */}
       <Route
         path="affiliates/rules"
@@ -1443,6 +1473,22 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="influencers/analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencerAnalytics />
+          </Suspense>
+        }
+      />
+      <Route
+        path="influencers/fraud"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInfluencerFraud />
+          </Suspense>
+        }
+      />
 
       {/* 📝 BLOGGERS */}
       <Route
@@ -1509,6 +1555,22 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="bloggers/analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggerAnalytics />
+          </Suspense>
+        }
+      />
+      <Route
+        path="bloggers/fraud"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggerFraud />
+          </Suspense>
+        }
+      />
 
       {/* 👥 GROUP-ADMINS (Facebook Group Administrators) */}
       <Route
@@ -1572,6 +1634,22 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGroupAdminsPromotions />
+          </Suspense>
+        }
+      />
+      <Route
+        path="group-admins/analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminAnalytics />
+          </Suspense>
+        }
+      />
+      <Route
+        path="group-admins/fraud"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminFraud />
           </Suspense>
         }
       />
@@ -2081,6 +2159,7 @@ export const useAdminRouteValidation = () => {
       "/admin/affiliates/dashboard",
       "/admin/affiliates/:affiliateId",
       "/admin/affiliates/config",
+      "/admin/affiliates/plans",
       "/admin/affiliates/rules",
       "/admin/affiliates/commissions",
       "/admin/affiliates/payouts",

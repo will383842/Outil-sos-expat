@@ -68,9 +68,9 @@ const LANGUAGES: { code: string; label: string; flag: string }[] = [
   { code: "pt", label: "Português",  flag: "🇵🇹" },
   { code: "ar", label: "عربي",       flag: "🇸🇦" },
   { code: "de", label: "Deutsch",    flag: "🇩🇪" },
-  { code: "it", label: "Italiano",   flag: "🇮🇹" },
-  { code: "nl", label: "Nederlands", flag: "🇳🇱" },
   { code: "zh", label: "中文",        flag: "🇨🇳" },
+  { code: "ru", label: "Русский",    flag: "🇷🇺" },
+  { code: "hi", label: "हिन्दी",      flag: "🇮🇳" },
 ];
 
 const BLOG_THEMES: { code: BlogTheme; label: string; emoji: string }[] = [

@@ -71,14 +71,9 @@ const InfluencerRegister: React.FC = () => {
   // useEffect fires and navigates to dashboard BEFORE registerInfluencer() Cloud Function is called
   useEffect(() => {
     if (authInitialized && !authLoading && !isRegistering && isAlreadyInfluencer) {
-      // Harmonized with ChatterRegister: redirect to Telegram if not completed
-      if (!user?.telegramOnboardingCompleted) {
-        navigate(telegramRoute, { replace: true });
-      } else {
-        navigate(dashboardRoute, { replace: true });
-      }
+      navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, isRegistering, isAlreadyInfluencer, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute]);
+  }, [authInitialized, authLoading, isRegistering, isAlreadyInfluencer, navigate, dashboardRoute]);
 
   // Role conflict
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyInfluencer) {

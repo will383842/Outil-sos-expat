@@ -91,13 +91,7 @@ interface PaymentStatsResponse {
     flutterwave: { count: number; amount: number };
     manual: { count: number; amount: number };
   };
-  byUserType: {
-    chatter: { count: number; amount: number };
-    influencer: { count: number; amount: number };
-    blogger: { count: number; amount: number };
-    group_admin: { count: number; amount: number };
-    affiliate: { count: number; amount: number };
-  };
+  byUserType: Record<string, { count: number; amount: number }>;
   trends: {
     completedToday: number;
     completedThisWeek: number;
@@ -219,12 +213,13 @@ export const adminGetPaymentStats = onCall(
         manual: { count: 0, amount: 0 },
       };
 
-      const byUserType = {
+      const byUserType: Record<string, { count: number; amount: number }> = {
         chatter: { count: 0, amount: 0 },
         influencer: { count: 0, amount: 0 },
         blogger: { count: 0, amount: 0 },
         group_admin: { count: 0, amount: 0 },
         affiliate: { count: 0, amount: 0 },
+        partner: { count: 0, amount: 0 },
       };
 
       let totalAmount = 0;

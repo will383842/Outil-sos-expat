@@ -452,7 +452,7 @@ function MonthlyCompetitionSection({
       )}
 
       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2">
-        <FormattedMessage id="chatter.howToEarn.competition.eligibility" defaultMessage="Minimum $200 de commissions totales pour être éligible" />
+        <FormattedMessage id="chatter.howToEarn.competition.eligibility" defaultMessage="Minimum $200 de commissions cumulées (vous + votre équipe) pour être éligible" />
       </p>
     </div>
   );

@@ -28,6 +28,7 @@ import {
   hashIP,
   captureCurrentRates,
 } from "../utils";
+import { snapshotLockedRates } from "../../lib/planResolver";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
@@ -35,7 +36,7 @@ import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
 // Valid platforms
@@ -351,6 +352,12 @@ export const registerInfluencer = onCall(
       // 8. V2: Capture current rates (frozen at registration)
       const capturedRates = captureCurrentRates(config);
 
+      // 8b. Resolve commission plan (Lifetime Rate Lock)
+      const planSnapshot = await snapshotLockedRates("influencer");
+      if (planSnapshot) {
+        logger.info("[registerInfluencer] Commission plan locked:", { plan: planSnapshot.commissionPlanName });
+      }
+
       // 9. Create influencer document
       const now = Timestamp.now();
       const currentMonth = now.toDate().toISOString().substring(0, 7);
@@ -410,9 +417,17 @@ export const registerInfluencer = onCall(
         recruitedByCode,
         recruitedAt: recruitedBy ? now : null,
 
-        // V2: Captured rates (frozen at registration)
+        // V2: Captured rates (frozen at registration) — LEGACY
         capturedRates,
         totalWithdrawn: 0,
+
+        // Commission Plan (Lifetime Rate Lock)
+        ...(planSnapshot ? {
+          commissionPlanId: planSnapshot.commissionPlanId,
+          commissionPlanName: planSnapshot.commissionPlanName,
+          rateLockDate: planSnapshot.rateLockDate,
+          lockedRates: planSnapshot.lockedRates,
+        } : {}),
 
         createdAt: now,
         updatedAt: now,

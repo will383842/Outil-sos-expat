@@ -892,6 +892,8 @@ export { sendContactReply } from "./sendContactReplyFunction";
 export * from "./notificationPipeline/worker";
 export * from "./admin/callables";
 export { adminResetFAQs } from "./admin/resetFAQsCallable";
+export { manageCommissionPlans } from "./admin/manageCommissionPlans";
+export { getActiveCommissionPlan } from "./lib/getActiveCommissionPlan";
 // Provider bulk management actions (hide, block, suspend, delete)
 export * from "./admin/providerActions";
 

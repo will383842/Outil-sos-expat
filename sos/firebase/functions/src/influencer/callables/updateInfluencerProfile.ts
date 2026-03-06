@@ -27,7 +27,7 @@ function ensureInitialized() {
 
 // Validation constants
 const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
 const VALID_PLATFORMS: InfluencerPlatform[] = [

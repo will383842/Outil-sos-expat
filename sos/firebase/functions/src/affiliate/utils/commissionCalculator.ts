@@ -52,7 +52,8 @@ export function calculateCommission(
   baseAmountCents: number,
   capturedRates?: CapturedRates,
   actionType?: CommissionActionType,
-  providerType?: 'lawyer' | 'expat'
+  providerType?: 'lawyer' | 'expat',
+  lockedRates?: Record<string, number> | null
 ): CommissionCalculationResult {
   if (!rule.enabled) {
     return {
@@ -95,8 +96,8 @@ export function calculateCommission(
     let amount = 0;
     let calculationDetails = "";
 
-    // Get rate to apply (use captured rates if available, otherwise use rule defaults)
-    const effectiveRate = getEffectiveRate(rule, capturedRates, actionType);
+    // Get rate to apply: lockedRates (plan) > capturedRates (legacy) > rule defaults
+    const effectiveRate = getEffectiveRate(rule, capturedRates, actionType, lockedRates);
 
     switch (rule.type) {
       case "fixed":
@@ -183,51 +184,50 @@ export function calculateCommission(
 }
 
 /**
- * Get effective rate (captured rates override rule defaults)
+ * Get effective rate: lockedRates (plan) > capturedRates (legacy) > rule defaults
  */
 function getEffectiveRate(
   rule: CommissionRule,
   capturedRates?: CapturedRates,
-  actionType?: CommissionActionType
+  actionType?: CommissionActionType,
+  lockedRates?: Record<string, number> | null
 ): { fixedAmount: number; percentageRate: number } {
-  // If no captured rates, use rule defaults
-  if (!capturedRates || !actionType) {
+  if (!actionType) {
     return {
       fixedAmount: rule.fixedAmount,
       percentageRate: rule.percentageRate,
     };
   }
 
-  // Map action type to captured rate fields
+  // Map action type to rate keys
   switch (actionType) {
     case "referral_signup":
       return {
-        fixedAmount: capturedRates.signupBonus,
+        fixedAmount: lockedRates?.signupBonus ?? capturedRates?.signupBonus ?? rule.fixedAmount,
         percentageRate: 0,
       };
 
     case "referral_first_call":
     case "referral_recurring_call":
       return {
-        fixedAmount: capturedRates.callFixedBonus,
-        percentageRate: capturedRates.callCommissionRate,
+        fixedAmount: lockedRates?.callFixedBonus ?? capturedRates?.callFixedBonus ?? rule.fixedAmount,
+        percentageRate: lockedRates?.callCommissionRate ?? capturedRates?.callCommissionRate ?? rule.percentageRate,
       };
 
     case "referral_subscription":
     case "referral_subscription_renewal":
       return {
-        fixedAmount: capturedRates.subscriptionFixedBonus,
-        percentageRate: capturedRates.subscriptionRate,
+        fixedAmount: lockedRates?.subscriptionFixedBonus ?? capturedRates?.subscriptionFixedBonus ?? rule.fixedAmount,
+        percentageRate: lockedRates?.subscriptionRate ?? capturedRates?.subscriptionRate ?? rule.percentageRate,
       };
 
     case "referral_provider_validated":
       return {
-        fixedAmount: capturedRates.providerValidationBonus,
+        fixedAmount: lockedRates?.providerValidationBonus ?? capturedRates?.providerValidationBonus ?? rule.fixedAmount,
         percentageRate: 0,
       };
 
     case "manual_adjustment":
-      // Manual adjustments use rule values directly
       return {
         fixedAmount: rule.fixedAmount,
         percentageRate: rule.percentageRate,

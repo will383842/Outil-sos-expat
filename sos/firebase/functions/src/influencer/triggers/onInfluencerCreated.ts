@@ -126,14 +126,50 @@ export const influencerOnInfluencerCreated = onDocumentCreated(
         });
       }
 
-      // 4. Handle recruitment - increment recruiter's totalRecruits
+      // 4. Handle recruitment - increment recruiter's totalRecruits + notify recruiter
       if (influencer.recruitedBy) {
         try {
           await db.collection("influencers").doc(influencer.recruitedBy).update({
             totalRecruits: FieldValue.increment(1),
             updatedAt: Timestamp.now(),
           });
-          logger.info("[onInfluencerCreated] Recruiter totalRecruits incremented", {
+
+          // Notify recruiter about new recruit (aligned with Chatter behavior)
+          const recruiterNotifRef = db.collection("influencer_notifications").doc();
+          await recruiterNotifRef.set({
+            id: recruiterNotifRef.id,
+            influencerId: influencer.recruitedBy,
+            type: "system",
+            title: "Nouvel influenceur recruté !",
+            titleTranslations: {
+              fr: "Nouvel influenceur recruté !",
+              en: "New influencer recruited!",
+              es: "¡Nuevo influencer reclutado!",
+              de: "Neuer Influencer rekrutiert!",
+              pt: "Novo influenciador recrutado!",
+              ru: "Новый инфлюенсер привлечён!",
+              hi: "नया इन्फ्लुएंसर भर्ती हुआ!",
+              zh: "新影响者已招募！",
+              ar: "تم تجنيد مؤثر جديد!",
+            },
+            message: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. s'est inscrit avec votre lien de recrutement.`,
+            messageTranslations: {
+              fr: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. s'est inscrit avec votre lien de recrutement.`,
+              en: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. signed up with your recruitment link.`,
+              es: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. se registró con tu enlace de reclutamiento.`,
+              de: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. hat sich über Ihren Rekrutierungslink registriert.`,
+              pt: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. inscreveu-se com o seu link de recrutamento.`,
+              ru: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. зарегистрировался по вашей ссылке.`,
+              hi: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. आपके रिक्रूटमेंट लिंक से साइन अप किया।`,
+              zh: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. 通过您的招募链接注册。`,
+              ar: `${influencer.firstName} ${(influencer.lastName || "").charAt(0)}. سجّل عبر رابط التجنيد الخاص بك.`,
+            },
+            isRead: false,
+            emailSent: false,
+            createdAt: Timestamp.now(),
+          });
+
+          logger.info("[onInfluencerCreated] Recruiter totalRecruits incremented + notified", {
             influencerId,
             recruiterId: influencer.recruitedBy,
           });

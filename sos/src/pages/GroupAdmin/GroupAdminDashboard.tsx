@@ -39,6 +39,7 @@ import {
 const NotificationBell = lazy(() =>
   import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
+const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
 
 // ============================================================================
 // SKELETON COMPONENTS
@@ -67,6 +68,7 @@ const GroupAdminDashboard: React.FC = () => {
     recentRecruits,
     notifications,
     leaderboard,
+    commissionPlan,
     isLoading: loading,
     error,
     refresh: fetchDashboard,
@@ -78,12 +80,7 @@ const GroupAdminDashboard: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const telegramRoute = `/${getTranslatedRouteSlug('groupadmin-telegram' as RouteKey, langCode)}`;
 
-  // Telegram onboarding check (mandatory for withdrawals)
-  useEffect(() => {
-    if (user && !user.telegramOnboardingCompleted) {
-      navigate(telegramRoute, { replace: true });
-    }
-  }, [user, navigate, telegramRoute]);
+  // Telegram is optional for dashboard access (required only for withdrawals)
 
   // Meta Pixel - ViewContent on dashboard mount
   useEffect(() => {
@@ -224,6 +221,13 @@ const GroupAdminDashboard: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {/* Locked Commission Plan */}
+          {commissionPlan && (
+            <Suspense fallback={null}>
+              <LockedPlanBanner commissionPlan={commissionPlan} />
+            </Suspense>
+          )}
 
           {/* Affiliate Links */}
           <div className="bg-white dark:bg-white/5 rounded-xl p-4 sm:p-6 shadow-sm dark:shadow-none dark:border mb-8">

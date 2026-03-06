@@ -45,8 +45,6 @@ export type SupportedBloggerLanguage =
   | "pt"    // Portuguese
   | "ar"    // Arabic
   | "de"    // German
-  | "it"    // Italian
-  | "nl"    // Dutch
   | "zh"    // Chinese
   | "ru"    // Russian
   | "hi";   // Hindi
@@ -296,6 +294,17 @@ export interface Blogger {
 
   /** Earned badges */
   badges: BloggerBadgeType[];
+
+  // ---- Commission Plan (Lifetime Rate Lock) ----
+
+  /** ID of the commission plan active at registration */
+  commissionPlanId?: string;
+  /** Name of the plan (denormalized for display) */
+  commissionPlanName?: string;
+  /** ISO date when rates were locked */
+  rateLockDate?: string;
+  /** Snapshot of commission rates frozen at registration (amounts in cents) */
+  lockedRates?: Record<string, number>;
 
   // ---- Recruitment (who recruited this blogger) ----
 
@@ -1468,7 +1477,17 @@ export interface GetBloggerDashboardResponse {
     | "commissionClientAmount"
     | "commissionRecruitmentAmount"
     | "minimumWithdrawalAmount"
-  >;
+  > & {
+    commissionClientAmountLawyer?: number;
+    commissionClientAmountExpat?: number;
+  };
+  /** Commission Plan info (Lifetime Rate Lock) */
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock: boolean;
+  } | null;
 }
 
 /**

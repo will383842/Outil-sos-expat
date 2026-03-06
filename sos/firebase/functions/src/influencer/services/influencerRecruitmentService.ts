@@ -85,7 +85,10 @@ export async function checkAndPayRecruitmentCommission(influencerId: string): Pr
     // 5. Atomic transaction: mark recruit as paid + create commission
     const recruitRef = recruitDoc.ref;
     const recruiterRef = db.collection("influencers").doc(influencer.recruitedBy);
-    const amount = config.recruitmentCommissionAmount ?? 500; // from config, fallback $5
+    // Pre-read recruiter to get lockedRates (Lifetime Rate Lock)
+    const recruiterPreSnap = await recruiterRef.get();
+    const recruiterLockedRates = recruiterPreSnap.exists ? (recruiterPreSnap.data() as Influencer).lockedRates : undefined;
+    const amount = recruiterLockedRates?.commissionRecruitmentAmount ?? config.recruitmentCommissionAmount ?? 500;
 
     await db.runTransaction(async (tx) => {
       // Re-read inside transaction to guard against concurrent writes

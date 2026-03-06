@@ -24,12 +24,29 @@ import {
   BloggerCommission,
   BloggerCommissionType,
   BloggerBadgeType,
+  BloggerConfig,
 } from "../types";
 import {
   getBloggerConfigCached,
   getValidationDelayMs,
   getReleaseDelayMs,
 } from "../utils/bloggerConfigService";
+
+// ============================================================================
+// HELPERS: Config amount resolution (used when no lockedRates)
+// ============================================================================
+
+function getClientAmountFromConfig(config: BloggerConfig, providerType?: 'lawyer' | 'expat'): number {
+  if (providerType === 'lawyer' && config.commissionClientAmountLawyer != null) return config.commissionClientAmountLawyer;
+  if (providerType === 'expat' && config.commissionClientAmountExpat != null) return config.commissionClientAmountExpat;
+  return config.commissionClientAmount;
+}
+
+function getRecruitmentAmountFromConfig(config: BloggerConfig, providerType?: 'lawyer' | 'expat'): number {
+  if (providerType === 'lawyer' && config.commissionRecruitmentAmountLawyer != null) return config.commissionRecruitmentAmountLawyer;
+  if (providerType === 'expat' && config.commissionRecruitmentAmountExpat != null) return config.commissionRecruitmentAmountExpat;
+  return config.commissionRecruitmentAmount;
+}
 
 // ============================================================================
 // TYPES
@@ -110,6 +127,8 @@ export async function createBloggerCommission(
     }
 
     // 4. Calculate amount (FIXED - NO BONUSES)
+    // Locked rates (Lifetime Rate Lock) take priority over config
+    const locked = blogger.lockedRates;
     let amount: number;
 
     if (inputBaseAmount !== undefined) {
@@ -117,21 +136,33 @@ export async function createBloggerCommission(
     } else {
       switch (type) {
         case "client_referral":
-          if (providerType === 'lawyer' && config.commissionClientAmountLawyer != null) {
-            amount = config.commissionClientAmountLawyer;
-          } else if (providerType === 'expat' && config.commissionClientAmountExpat != null) {
-            amount = config.commissionClientAmountExpat;
+          if (locked) {
+            if (providerType === 'lawyer' && locked.commissionClientAmountLawyer != null) {
+              amount = locked.commissionClientAmountLawyer;
+            } else if (providerType === 'expat' && locked.commissionClientAmountExpat != null) {
+              amount = locked.commissionClientAmountExpat;
+            } else if (locked.commissionClientAmount != null) {
+              amount = locked.commissionClientAmount;
+            } else {
+              amount = getClientAmountFromConfig(config, providerType);
+            }
           } else {
-            amount = config.commissionClientAmount;
+            amount = getClientAmountFromConfig(config, providerType);
           }
           break;
         case "recruitment":
-          if (providerType === 'lawyer' && config.commissionRecruitmentAmountLawyer != null) {
-            amount = config.commissionRecruitmentAmountLawyer;
-          } else if (providerType === 'expat' && config.commissionRecruitmentAmountExpat != null) {
-            amount = config.commissionRecruitmentAmountExpat;
+          if (locked) {
+            if (providerType === 'lawyer' && locked.commissionRecruitmentAmountLawyer != null) {
+              amount = locked.commissionRecruitmentAmountLawyer;
+            } else if (providerType === 'expat' && locked.commissionRecruitmentAmountExpat != null) {
+              amount = locked.commissionRecruitmentAmountExpat;
+            } else if (locked.commissionRecruitmentAmount != null) {
+              amount = locked.commissionRecruitmentAmount;
+            } else {
+              amount = getRecruitmentAmountFromConfig(config, providerType);
+            }
           } else {
-            amount = config.commissionRecruitmentAmount;
+            amount = getRecruitmentAmountFromConfig(config, providerType);
           }
           break;
         case "manual_adjustment":

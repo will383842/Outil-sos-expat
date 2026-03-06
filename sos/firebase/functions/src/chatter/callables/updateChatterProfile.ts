@@ -28,7 +28,7 @@ function ensureInitialized() {
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedChatterLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
 // Valid platforms

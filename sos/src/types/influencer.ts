@@ -508,6 +508,12 @@ export interface InfluencerDashboardData {
     totalParticipants: number;
     earnings: number;
   };
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock?: boolean;
+  } | null;
 }
 
 // ============================================================================

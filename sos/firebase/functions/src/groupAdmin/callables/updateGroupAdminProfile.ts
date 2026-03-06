@@ -29,7 +29,7 @@ function ensureInitialized() {
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
-  "fr", "en", "es", "pt", "ar", "de", "it", "nl", "zh"
+  "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
 // Valid group types

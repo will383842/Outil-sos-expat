@@ -175,7 +175,7 @@ export async function handleCallCompleted(
       // 1. DIRECT CLIENT CALL COMMISSION ($10)
       // ========================================================================
 
-      const clientCallAmount = getClientCallCommission(config, session.providerType);
+      const clientCallAmount = getClientCallCommission(config, session.providerType, chatter.lockedRates);
 
       const clientCallResult = await createCommission({
         chatterId,
@@ -307,7 +307,10 @@ export async function handleCallCompleted(
       // ========================================================================
 
       if (activationResult.shouldPayActivationBonus && activationResult.recruitedBy) {
-        const activationBonusAmount = getActivationBonusAmount(config);
+        // Read recruiter doc to get their lockedRates for the bonus amount
+        const recruiterDocForBonus = await db.collection("chatters").doc(activationResult.recruitedBy).get();
+        const recruiterLockedRates = recruiterDocForBonus.exists ? (recruiterDocForBonus.data() as Chatter).lockedRates : undefined;
+        const activationBonusAmount = getActivationBonusAmount(config, recruiterLockedRates);
         const chatterData = activationResult.chatterData!;
 
         const bonusResult = await createCommission({
@@ -364,7 +367,10 @@ export async function handleCallCompleted(
             const n1RecruitBonusPaid = activatedChatterData?.n1RecruitBonusPaid === true;
 
             if (recruiter.recruitedBy && !n1RecruitBonusPaid) {
-              const n1RecruitBonusAmount = getN1RecruitBonusAmount(config);
+              // Use recruiter's recruiter (grand-parrain) lockedRates if available
+              const grandParrainDoc = await db.collection("chatters").doc(recruiter.recruitedBy).get();
+              const grandParrainLockedRates = grandParrainDoc.exists ? (grandParrainDoc.data() as Chatter).lockedRates : undefined;
+              const n1RecruitBonusAmount = getN1RecruitBonusAmount(config, grandParrainLockedRates);
 
               const n1RecruitResult = await createCommission({
                 chatterId: recruiter.recruitedBy,
@@ -427,7 +433,7 @@ export async function handleCallCompleted(
 
         if (n1IsCaptain) {
           // Captain gets captain_call INSTEAD of n1_call
-          const captainN1Amount = getCaptainCallCommission(config, session.providerType);
+          const captainN1Amount = getCaptainCallCommission(config, session.providerType, n1Data?.lockedRates);
 
           const captainN1Result = await createCommission({
             chatterId: chatter.recruitedBy,
@@ -479,8 +485,8 @@ export async function handleCallCompleted(
             await updateChatterChallengeScore(chatter.recruitedBy, "captain_call");
           }
         } else {
-          // Standard n1_call commission
-          const n1CallAmount = getN1CallCommission(config);
+          // Standard n1_call commission — use N1's lockedRates
+          const n1CallAmount = getN1CallCommission(config, n1Data?.lockedRates);
 
           const n1Result = await createCommission({
             chatterId: chatter.recruitedBy,
@@ -537,7 +543,7 @@ export async function handleCallCompleted(
 
           if (n2IsCaptain) {
             // Captain gets captain_call INSTEAD of n2_call
-            const captainN2Amount = getCaptainCallCommission(config, session.providerType);
+            const captainN2Amount = getCaptainCallCommission(config, session.providerType, n2Data?.lockedRates);
 
             const captainN2Result = await createCommission({
               chatterId: chatter.parrainNiveau2Id,
@@ -588,8 +594,8 @@ export async function handleCallCompleted(
               await updateChatterChallengeScore(chatter.parrainNiveau2Id, "captain_call");
             }
           } else {
-            // Standard n2_call commission
-            const n2CallAmount = getN2CallCommission(config);
+            // Standard n2_call commission — use N2's lockedRates
+            const n2CallAmount = getN2CallCommission(config, n2Data?.lockedRates);
 
             const n2Result = await createCommission({
               chatterId: chatter.parrainNiveau2Id,
@@ -745,8 +751,8 @@ async function processProviderRecruitmentCommission(
         (30 * 24 * 60 * 60 * 1000)
       );
 
-      // Create commission
-      const providerCallAmount = getProviderCallCommission(config, session.providerType);
+      // Create commission — use recruiter's lockedRates
+      const providerCallAmount = getProviderCallCommission(config, session.providerType, recruiter.lockedRates);
 
       const providerCallResult = await createCommission({
         chatterId: recruiterChatterId,
@@ -873,8 +879,8 @@ async function processProviderRecruitmentCommissionLegacy(
   const recruiter = recruiterDoc.data() as Chatter;
   if (recruiter.status !== "active") return;
 
-  // Create commission
-  const providerCallAmount = getProviderCallCommission(config, session.providerType);
+  // Create commission — use recruiter's lockedRates
+  const providerCallAmount = getProviderCallCommission(config, session.providerType, recruiter.lockedRates);
 
   const providerCallResult = await createCommission({
     chatterId: recruiterChatterId,

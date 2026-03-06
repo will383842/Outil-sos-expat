@@ -97,7 +97,9 @@ export const getChatterTrainingModules = onCall(
           id: doc.id,
           order: module.order,
           title: module.title,
+          titleTranslations: module.titleTranslations,
           description: module.description,
+          descriptionTranslations: module.descriptionTranslations,
           category: module.category,
           coverImageUrl: module.coverImageUrl,
           estimatedMinutes: module.estimatedMinutes,
@@ -146,6 +148,7 @@ export const getChatterTrainingModules = onCall(
         },
       };
     } catch (error) {
+      if (error instanceof HttpsError) throw error;
       logger.error("[getChatterTrainingModules] Error", { userId, error });
       throw new HttpsError("internal", "Failed to get training modules");
     }
@@ -368,6 +371,7 @@ export const updateChatterTrainingProgress = onCall(
 
       return { success: true };
     } catch (error) {
+      if (error instanceof HttpsError) throw error;
       logger.error("[updateChatterTrainingProgress] Error", {
         userId,
         moduleId,

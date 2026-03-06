@@ -74,14 +74,9 @@ const GroupAdminRegister: React.FC = () => {
 
   useEffect(() => {
     if (authInitialized && !authLoading && !loading && isAlreadyGroupAdmin && !success) {
-      // Harmonized with ChatterRegister: redirect to Telegram if not completed
-      if (!user?.telegramOnboardingCompleted) {
-        navigate(telegramRoute, { replace: true });
-      } else {
-        navigate(dashboardRoute, { replace: true });
-      }
+      navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, loading, isAlreadyGroupAdmin, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
+  }, [authInitialized, authLoading, loading, isAlreadyGroupAdmin, navigate, dashboardRoute, success]);
 
   // Meta Pixel: Track StartRegistration on mount
   useEffect(() => {
@@ -157,6 +152,8 @@ const GroupAdminRegister: React.FC = () => {
           termsVersion: data.termsVersion,
           termsType: data.termsType,
           termsAcceptanceMeta: data.termsAcceptanceMeta,
+          // Phone number stored in users doc (used by Telegram admin notification)
+          ...(data.phone?.trim() && { phone: data.phone.trim() }),
           // Meta Pixel/CAPI tracking identifiers (filter undefined to avoid Firestore error)
           ...(metaIds.fbp && { fbp: metaIds.fbp }),
           ...(metaIds.fbc && { fbc: metaIds.fbc }),

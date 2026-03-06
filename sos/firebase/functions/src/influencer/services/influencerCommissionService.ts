@@ -92,7 +92,22 @@ export function calculateCommissionAmount(
   config: InfluencerConfig,
   providerType?: 'lawyer' | 'expat'
 ): number {
-  // Split by provider type: override with specific amounts if defined
+  // PRIORITY 1: Locked rates (Lifetime Rate Lock — takes absolute precedence)
+  if (influencer.lockedRates) {
+    const locked = influencer.lockedRates;
+    if (type === 'client_referral') {
+      if (providerType === 'lawyer' && locked.commissionClientAmountLawyer != null) return locked.commissionClientAmountLawyer;
+      if (providerType === 'expat' && locked.commissionClientAmountExpat != null) return locked.commissionClientAmountExpat;
+      if (locked.commissionClientAmount != null) return locked.commissionClientAmount;
+    }
+    if (type === 'recruitment') {
+      if (providerType === 'lawyer' && locked.commissionRecruitmentAmountLawyer != null) return locked.commissionRecruitmentAmountLawyer;
+      if (providerType === 'expat' && locked.commissionRecruitmentAmountExpat != null) return locked.commissionRecruitmentAmountExpat;
+      if (locked.commissionRecruitmentAmount != null) return locked.commissionRecruitmentAmount;
+    }
+  }
+
+  // PRIORITY 2: Config overrides by provider type
   if (providerType === 'lawyer') {
     if (type === 'client_referral' && config.commissionClientAmountLawyer != null) return config.commissionClientAmountLawyer;
     if (type === 'recruitment' && config.commissionRecruitmentAmountLawyer != null) return config.commissionRecruitmentAmountLawyer;
@@ -102,7 +117,7 @@ export function calculateCommissionAmount(
     if (type === 'recruitment' && config.commissionRecruitmentAmountExpat != null) return config.commissionRecruitmentAmountExpat;
   }
 
-  // V2: Use captured rates if available (frozen at registration)
+  // PRIORITY 3: Legacy captured rates (V2 system, kept for backward compat)
   if (influencer.capturedRates && influencer.capturedRates.rules[type]) {
     const capturedRule = influencer.capturedRates.rules[type]!;
     return calculateByType(
@@ -257,34 +272,14 @@ export async function createCommission(
       // Promotion service unavailable — proceed without promo
     }
 
-    // 5c. Apply level/streak/top3 bonuses (only for client_referral)
+    // 5c. P1-1 FIX: Multipliers DISABLED — aligned with Chatter/Blogger/GroupAdmin (2026-03-06)
+    // All commissions are now fixed amounts only. Level/top3/streak bonuses removed.
     let commissionAmount = baseCommissionAmount;
-    let levelBonusMultiplier = 1.0;
-    let top3BonusMultiplier = 1.0;
-    let streakBonusMultiplier = 1.0;
-    let monthlyTopMult = influencer.monthlyTopMultiplier ?? 1.0;
-    let calculationDetails = "";
-
-    if (type === "client_referral") {
-      // Calculate level (self-healing: use totalEarned if level field missing)
-      const levelInfo = calculateLevelFromEarnings(influencer.totalEarned || 0, config);
-      const effectiveLevel = influencer.level || levelInfo.level;
-
-      levelBonusMultiplier = getLevelBonus(effectiveLevel, config);
-      top3BonusMultiplier = getTop3Bonus(influencer.currentMonthRank, config);
-      streakBonusMultiplier = getStreakBonusMultiplier(influencer.currentStreak || 0, config);
-
-      const bonusResult = calculateCommissionWithBonuses(
-        baseCommissionAmount,
-        levelBonusMultiplier,
-        top3BonusMultiplier,
-        streakBonusMultiplier,
-        monthlyTopMult
-      );
-
-      commissionAmount = bonusResult.amount;
-      calculationDetails = bonusResult.details;
-    }
+    const levelBonusMultiplier = 1.0;
+    const top3BonusMultiplier = 1.0;
+    const streakBonusMultiplier = 1.0;
+    const monthlyTopMult = 1.0;
+    let calculationDetails = `Base: ${baseCommissionAmount} (fixed, no multipliers)`;
 
     // 5d. Apply promotion multiplier
     if (promoMultiplier > 1.0) {

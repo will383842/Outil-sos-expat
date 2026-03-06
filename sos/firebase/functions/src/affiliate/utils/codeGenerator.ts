@@ -90,6 +90,17 @@ async function isCodeTaken(code: string): Promise<boolean> {
     return true;
   }
 
+  // Check partners collection
+  const partnerSnap = await db
+    .collection("partners")
+    .where("affiliateCode", "==", code)
+    .limit(1)
+    .get();
+
+  if (!partnerSnap.empty) {
+    return true;
+  }
+
   return false;
 }
 
@@ -245,6 +256,25 @@ export async function resolveAffiliateCode(
       userId: doc.id,
       email: data.email || "",
       actorType: `${role}_recruitment`, // "blogger_recruitment", etc.
+    };
+  }
+
+  // 4. Fourth try: partners.affiliateCode
+  const partnerSnap = await db
+    .collection("partners")
+    .where("affiliateCode", "==", normalizedCode)
+    .where("status", "==", "active")
+    .limit(1)
+    .get();
+
+  if (!partnerSnap.empty) {
+    const partnerDoc = partnerSnap.docs[0];
+    const partnerData = partnerDoc.data();
+    logger.info(`[AffiliateCode] Code resolved (partner): ${normalizedCode}`);
+    return {
+      userId: partnerDoc.id,
+      email: partnerData.email || "",
+      actorType: "partner",
     };
   }
 

@@ -90,6 +90,18 @@ async function getUserTypeAndProfile(
     };
   }
 
+  // Check partners
+  const partnerDoc = await db.collection('partners').doc(userId).get();
+  if (partnerDoc.exists) {
+    const data = partnerDoc.data()!;
+    return {
+      userType: 'partner',
+      email: data.email || '',
+      displayName: `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
+      status: data.status || 'inactive',
+    };
+  }
+
   return null;
 }
 

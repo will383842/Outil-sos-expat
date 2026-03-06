@@ -64,7 +64,6 @@ const ChatterRegister: React.FC = () => {
 
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;
-  const telegramRoute = `/${getTranslatedRouteSlug('chatter-telegram' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
@@ -75,20 +74,13 @@ const ChatterRegister: React.FC = () => {
   const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'lawyer', 'expat', 'client'].includes(userRole);
   const isAlreadyChatter = userRole === 'chatter';
 
-  // Redirect chatters appropriately:
-  // - If Telegram onboarding not completed → go to Telegram page
-  // - Otherwise → go to Dashboard
+  // Redirect chatters to dashboard (Telegram is optional, required only for withdrawals)
   // IMPORTANT: Also check !loading to avoid redirecting during registration process
   useEffect(() => {
     if (authInitialized && !authLoading && !loading && isAlreadyChatter && !success) {
-      // Check if Telegram onboarding is complete
-      if (!user?.telegramOnboardingCompleted) {
-        navigate(telegramRoute, { replace: true });
-      } else {
-        navigate(dashboardRoute, { replace: true });
-      }
+      navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, loading, isAlreadyChatter, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
+  }, [authInitialized, authLoading, loading, isAlreadyChatter, navigate, dashboardRoute, success]);
 
   // Meta Pixel + Firebase Analytics: Track StartRegistration on mount
   useEffect(() => {
@@ -152,14 +144,19 @@ const ChatterRegister: React.FC = () => {
       const metaEventId = generateEventIdForType('registration');
       const metaIds = getMetaIdentifiers();
 
-      // Step 1: Create Firebase Auth account with role 'chatter'
-      // This creates the user in Firebase Auth AND in Firestore users collection
+      // Build full phone number (country code + number)
+      const fullPhone = data.whatsappNumber?.trim()
+        ? `${data.whatsappCountryCode || ''}${data.whatsappNumber.replace(/\D/g, '')}`
+        : undefined;
+
       await register(
         {
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
           role: 'chatter',
+          // Phone number stored in users doc (used by Telegram admin notification)
+          ...(fullPhone && { phone: fullPhone }),
           // Include terms acceptance data
           termsAccepted: data.acceptTerms,
           termsAcceptedAt: data.termsAcceptedAt,
@@ -185,10 +182,8 @@ const ChatterRegister: React.FC = () => {
           email: data.email,
           country: data.country,
           interventionCountries: data.interventionCountries,
-          // WhatsApp: combine country code + number into full international format
-          ...(data.whatsappNumber?.trim() ? {
-            whatsapp: `${data.whatsappCountryCode || ''}${data.whatsappNumber.replace(/\D/g, '')}`,
-          } : {}),
+          // Phone: combine country code + number into full international format
+          ...(fullPhone && { phone: fullPhone }),
           language: data.language,
           additionalLanguages: data.additionalLanguages,
           recruitmentCode: data.referralCode || undefined,
@@ -245,9 +240,9 @@ const ChatterRegister: React.FC = () => {
       await setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'chatter_registration', country: data.country });
 
-      // Redirect to Telegram onboarding after short delay (mandatory step)
+      // Redirect to dashboard after short delay (Telegram is optional, required only for withdrawals)
       setTimeout(() => {
-        navigate(telegramRoute, { replace: true });
+        navigate(dashboardRoute, { replace: true });
       }, 2000);
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
@@ -364,7 +359,7 @@ const ChatterRegister: React.FC = () => {
             <div className="w-20 h-20 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
             <p className="text-lg text-gray-300 mb-2">Votre compte Chatter a été créé avec succès.</p>
-            <p className="text-sm text-gray-400">Redirection vers l'activation Telegram...</p>
+            <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
           </div>
         </div>
       ) : (
@@ -406,7 +401,7 @@ const ChatterRegister: React.FC = () => {
                 <FormattedMessage id="chatter.register.success.title" defaultMessage="Inscription réussie !" />
               </h2>
               <p className="text-gray-400 mb-4">
-                <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers la configuration Telegram..." />
+                <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers votre tableau de bord..." />
               </p>
               <div className="w-6 h-6 mx-auto border-2 rounded-full animate-spin" />
             </div>

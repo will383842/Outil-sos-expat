@@ -86,115 +86,26 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     const userId = event.params.userId;
     const results: Record<string, "ok" | "skipped" | string> = {};
 
-    // Run all 9 handlers independently with try/catch isolation.
+    // Run all 11 handlers independently with try/catch isolation.
     // Dynamic imports keep cold-start overhead minimal.
+    // ORDER: Telegram FIRST (lightweight, admin-visible), then critical handlers, then tracking.
 
-    // 1. Affiliate handler (generates affiliate code, resolves referrer, fraud detection)
+    // 1. Telegram admin notification (PRIORITY - lightweight, must not be starved by other handlers)
     try {
-      const { handleAffiliateUserCreated } = await import(
-        "../affiliate/triggers/onUserCreated"
+      const { handleTelegramUserRegistration } = await import(
+        "../telegram/triggers/onUserRegistration"
       );
-      await handleAffiliateUserCreated(event);
-      results.affiliate = "ok";
+      await handleTelegramUserRegistration(event);
+      results.telegram = "ok";
     } catch (error) {
-      results.affiliate = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Affiliate handler failed", {
+      results.telegram = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Telegram handler failed", {
         userId,
         error,
       });
     }
 
-    // 2. Chatter - provider recruited (links provider to recruiting chatter)
-    try {
-      const { handleChatterProviderRegistered } = await import(
-        "../chatter/triggers/onProviderRegistered"
-      );
-      await handleChatterProviderRegistered(event);
-      results.chatterProvider = "ok";
-    } catch (error) {
-      results.chatterProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Chatter provider handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 3. Chatter - client referred (links client to referring chatter)
-    try {
-      const { handleChatterClientRegistered } = await import(
-        "../chatter/triggers/onProviderRegistered"
-      );
-      await handleChatterClientRegistered(event);
-      results.chatterClient = "ok";
-    } catch (error) {
-      results.chatterClient = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Chatter client handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 4. Influencer - provider recruited (creates referral tracking)
-    try {
-      const { handleInfluencerProviderRegistered } = await import(
-        "../influencer/triggers/onProviderRegistered"
-      );
-      await handleInfluencerProviderRegistered(event);
-      results.influencer = "ok";
-    } catch (error) {
-      results.influencer = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Influencer handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 5b. Blogger - provider recruited (creates recruitment tracking in blogger_recruited_providers)
-    try {
-      const { handleBloggerProviderRegistered } = await import(
-        "../blogger/triggers/onProviderRegistered"
-      );
-      await handleBloggerProviderRegistered(event);
-      results.bloggerProvider = "ok";
-    } catch (error) {
-      results.bloggerProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Blogger provider handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 5c. GroupAdmin - provider recruited (creates recruitment tracking in group_admin_recruited_providers)
-    try {
-      const { handleGroupAdminProviderRegistered } = await import(
-        "../groupAdmin/triggers/onProviderRegistered"
-      );
-      await handleGroupAdminProviderRegistered(event);
-      results.groupAdminProvider = "ok";
-    } catch (error) {
-      results.groupAdminProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] GroupAdmin provider handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 5. Email Marketing - MailWizz subscriber + welcome email
-    try {
-      const { handleEmailMarketingRegistration } = await import(
-        "../emailMarketing/functions/userLifecycle"
-      );
-      await handleEmailMarketingRegistration(event);
-      results.emailMarketing = "ok";
-    } catch (error) {
-      results.emailMarketing = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Email marketing handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 6. Sync Role Claims (CRITICAL - sets Firebase Custom Claims for auth)
+    // 2. Sync Role Claims (CRITICAL - sets Firebase Custom Claims for auth)
     try {
       const { handleSyncClaimsCreated } = await import(
         "./syncRoleClaims"
@@ -209,7 +120,112 @@ export const consolidatedOnUserCreated = onDocumentCreated(
       });
     }
 
-    // 7. Google Ads SignUp tracking
+    // 3. Affiliate handler (generates affiliate code, resolves referrer, fraud detection)
+    try {
+      const { handleAffiliateUserCreated } = await import(
+        "../affiliate/triggers/onUserCreated"
+      );
+      await handleAffiliateUserCreated(event);
+      results.affiliate = "ok";
+    } catch (error) {
+      results.affiliate = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Affiliate handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 4. Chatter - provider recruited (links provider to recruiting chatter)
+    try {
+      const { handleChatterProviderRegistered } = await import(
+        "../chatter/triggers/onProviderRegistered"
+      );
+      await handleChatterProviderRegistered(event);
+      results.chatterProvider = "ok";
+    } catch (error) {
+      results.chatterProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Chatter provider handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 5. Chatter - client referred (links client to referring chatter)
+    try {
+      const { handleChatterClientRegistered } = await import(
+        "../chatter/triggers/onProviderRegistered"
+      );
+      await handleChatterClientRegistered(event);
+      results.chatterClient = "ok";
+    } catch (error) {
+      results.chatterClient = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Chatter client handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 6. Influencer - provider recruited (creates referral tracking)
+    try {
+      const { handleInfluencerProviderRegistered } = await import(
+        "../influencer/triggers/onProviderRegistered"
+      );
+      await handleInfluencerProviderRegistered(event);
+      results.influencer = "ok";
+    } catch (error) {
+      results.influencer = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Influencer handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 7. Blogger - provider recruited (creates recruitment tracking in blogger_recruited_providers)
+    try {
+      const { handleBloggerProviderRegistered } = await import(
+        "../blogger/triggers/onProviderRegistered"
+      );
+      await handleBloggerProviderRegistered(event);
+      results.bloggerProvider = "ok";
+    } catch (error) {
+      results.bloggerProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Blogger provider handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 8. GroupAdmin - provider recruited (creates recruitment tracking in group_admin_recruited_providers)
+    try {
+      const { handleGroupAdminProviderRegistered } = await import(
+        "../groupAdmin/triggers/onProviderRegistered"
+      );
+      await handleGroupAdminProviderRegistered(event);
+      results.groupAdminProvider = "ok";
+    } catch (error) {
+      results.groupAdminProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] GroupAdmin provider handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 9. Email Marketing - MailWizz subscriber + welcome email
+    try {
+      const { handleEmailMarketingRegistration } = await import(
+        "../emailMarketing/functions/userLifecycle"
+      );
+      await handleEmailMarketingRegistration(event);
+      results.emailMarketing = "ok";
+    } catch (error) {
+      results.emailMarketing = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Email marketing handler failed", {
+        userId,
+        error,
+      });
+    }
+
+    // 10. Google Ads SignUp tracking
     try {
       const { handleGoogleAdsSignUp } = await import(
         "./googleAdsTracking"
@@ -224,7 +240,7 @@ export const consolidatedOnUserCreated = onDocumentCreated(
       });
     }
 
-    // 8. Meta CAPI Registration tracking
+    // 11. Meta CAPI Registration tracking
     try {
       const { handleCAPIRegistration } = await import(
         "./capiTracking"
@@ -234,21 +250,6 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     } catch (error) {
       results.metaCAPI = `error: ${error instanceof Error ? error.message : String(error)}`;
       logger.error("[consolidatedOnUserCreated] Meta CAPI handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 9. Telegram admin notification
-    try {
-      const { handleTelegramUserRegistration } = await import(
-        "../telegram/triggers/onUserRegistration"
-      );
-      await handleTelegramUserRegistration(event);
-      results.telegram = "ok";
-    } catch (error) {
-      results.telegram = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Telegram handler failed", {
         userId,
         error,
       });

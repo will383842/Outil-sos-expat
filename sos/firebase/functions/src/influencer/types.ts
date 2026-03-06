@@ -43,8 +43,6 @@ export type SupportedInfluencerLanguage =
   | "pt"    // Portuguese
   | "ar"    // Arabic
   | "de"    // German
-  | "it"    // Italian
-  | "nl"    // Dutch
   | "zh"    // Chinese
   | "ru"    // Russian
   | "hi";   // Hindi
@@ -283,10 +281,21 @@ export interface Influencer {
   /** Current pending withdrawal ID */
   pendingWithdrawalId: string | null;
 
-  // ---- V2: Captured Rates ----
+  // ---- V2: Captured Rates (LEGACY — replaced by lockedRates) ----
 
-  /** Commission rates frozen at registration */
+  /** @deprecated Use lockedRates instead. Kept for backward compatibility. */
   capturedRates?: InfluencerCapturedRates;
+
+  // ---- Commission Plan (Lifetime Rate Lock) ----
+
+  /** ID of the commission plan active at registration */
+  commissionPlanId?: string;
+  /** Name of the plan (denormalized for display) */
+  commissionPlanName?: string;
+  /** ISO date when rates were locked */
+  rateLockDate?: string;
+  /** Snapshot of commission rates frozen at registration (amounts in cents) */
+  lockedRates?: Record<string, number>;
 
   /** Total amount withdrawn all time */
   totalWithdrawn: number;
@@ -1627,7 +1636,17 @@ export interface GetInfluencerDashboardResponse {
     | "minimumWithdrawalAmount"
     | "levelThresholds"
     | "levelBonuses"
-  >;
+  > & {
+    commissionClientAmountLawyer?: number;
+    commissionClientAmountExpat?: number;
+  };
+  /** Commission Plan info (Lifetime Rate Lock) */
+  commissionPlan?: {
+    id: string;
+    name: string;
+    rateLockDate?: string;
+    isLifetimeLock: boolean;
+  } | null;
 }
 
 export interface RequestInfluencerWithdrawalInput {

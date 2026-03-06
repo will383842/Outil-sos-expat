@@ -42,9 +42,9 @@ export async function seedDefaultResources(): Promise<void> {
         pt: "Anúncio de boas-vindas",
         de: "Willkommensankündigung",
         ar: "إعلان ترحيبي",
-        it: "Annuncio di benvenuto",
-        nl: "Welkomsaankondiging",
         zh: "欢迎公告",
+        ru: "Приветственное объявление",
+        hi: "स्वागत घोषणा",
       },
       description: "Post to pin for introducing the SOS-Expat partnership",
       content: `🌍 OFFICIAL PARTNER ANNOUNCEMENT 🌍

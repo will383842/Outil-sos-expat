@@ -361,6 +361,15 @@ export type RouteKey =
   | "blogger-directory"   // /nos-blogueurs -> /our-bloggers, etc.
   | "chatter-directory"  // /nos-chatters -> /our-chatters, etc.
   | "captain-landing"    // /devenir-capitaine -> /become-captain, etc.
+  | "partner-landing"    // /devenir-partenaire -> /become-partner, etc.
+  | "partners-page"      // /partenaires -> /partners, etc.
+  | "partner-dashboard"  // /partner/tableau-de-bord -> /partner/dashboard, etc.
+  | "partner-earnings"   // /partner/gains -> /partner/earnings, etc.
+  | "partner-clicks"     // /partner/statistiques -> /partner/statistics, etc.
+  | "partner-widgets"    // /partner/widgets -> /partner/widgets, etc.
+  | "partner-profile"    // /partner/profil -> /partner/profile, etc.
+  | "partner-payments"   // /partner/paiements -> /partner/payments, etc.
+  | "partner-suspended"  // /partner/suspendu -> /partner/suspended, etc.
   | "press";             // /presse -> /press, /prensa, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
@@ -1500,6 +1509,105 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "xinwen",
     hi: "press",
     ar: "صحافة",
+  },
+  "partner-landing": {
+    fr: "devenir-partenaire",
+    en: "become-partner",
+    es: "ser-socio",
+    de: "partner-werden",
+    ru: "stat-partnerom",
+    pt: "tornar-se-parceiro",
+    ch: "chengwei-hezuohuoban",
+    hi: "partner-bane",
+    ar: "كن-شريكا",
+  },
+  "partners-page": {
+    fr: "partenaires",
+    en: "partners",
+    es: "socios",
+    de: "partner",
+    ru: "partnery",
+    pt: "parceiros",
+    ch: "hezuohuoban",
+    hi: "saajhedar",
+    ar: "شركاء",
+  },
+  "partner-dashboard": {
+    fr: "partner/tableau-de-bord",
+    en: "partner/dashboard",
+    es: "partner/panel",
+    de: "partner/dashboard",
+    ru: "partner/panel",
+    pt: "partner/painel",
+    ch: "partner/yibiaopan",
+    hi: "partner/dashboard",
+    ar: "partner/لوحة-التحكم",
+  },
+  "partner-earnings": {
+    fr: "partner/gains",
+    en: "partner/earnings",
+    es: "partner/ganancias",
+    de: "partner/einnahmen",
+    ru: "partner/zarabotok",
+    pt: "partner/ganhos",
+    ch: "partner/shouyi",
+    hi: "partner/kamai",
+    ar: "partner/الأرباح",
+  },
+  "partner-clicks": {
+    fr: "partner/statistiques",
+    en: "partner/statistics",
+    es: "partner/estadisticas",
+    de: "partner/statistiken",
+    ru: "partner/statistika",
+    pt: "partner/estatisticas",
+    ch: "partner/tongji",
+    hi: "partner/sankhyiki",
+    ar: "partner/إحصائيات",
+  },
+  "partner-widgets": {
+    fr: "partner/widgets",
+    en: "partner/widgets",
+    es: "partner/widgets",
+    de: "partner/widgets",
+    ru: "partner/vidzhety",
+    pt: "partner/widgets",
+    ch: "partner/xiaozujian",
+    hi: "partner/widgets",
+    ar: "partner/أدوات",
+  },
+  "partner-profile": {
+    fr: "partner/profil",
+    en: "partner/profile",
+    es: "partner/perfil",
+    de: "partner/profil",
+    ru: "partner/profil",
+    pt: "partner/perfil",
+    ch: "partner/ziliao",
+    hi: "partner/profile",
+    ar: "partner/الملف-الشخصي",
+  },
+  "partner-payments": {
+    fr: "partner/paiements",
+    en: "partner/payments",
+    es: "partner/pagos",
+    de: "partner/zahlungen",
+    ru: "partner/platezhi",
+    pt: "partner/pagamentos",
+    ch: "partner/zhifu",
+    hi: "partner/bhugtan",
+    ar: "partner/المدفوعات",
+  },
+  "partner-suspended": {
+    fr: "partner/suspendu",
+    en: "partner/suspended",
+    es: "partner/suspendido",
+    de: "partner/gesperrt",
+    ru: "partner/priostanovlen",
+    pt: "partner/suspenso",
+    ch: "partner/tingzhi",
+    hi: "partner/nilambit",
+    ar: "partner/معلق",
   },
   "groupadmin-register": {
     fr: "groupadmin/inscription",

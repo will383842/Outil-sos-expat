@@ -28,6 +28,7 @@ import {
 const NotificationBell = lazy(() =>
   import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
+const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
 
 const BloggerDashboard: React.FC = () => {
   const intl = useIntl();
@@ -54,12 +55,7 @@ const BloggerDashboard: React.FC = () => {
 
   const telegramRoute = `/${getTranslatedRouteSlug('blogger-telegram' as RouteKey, langCode)}`;
 
-  // Telegram onboarding check (mandatory for withdrawals)
-  useEffect(() => {
-    if (user && !user.telegramOnboardingCompleted) {
-      navigate(telegramRoute, { replace: true });
-    }
-  }, [user, navigate, telegramRoute]);
+  // Telegram is optional for dashboard access (required only for withdrawals)
 
   // Redirect if not a blogger
   useEffect(() => {
@@ -229,6 +225,13 @@ const BloggerDashboard: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Locked Commission Plan */}
+        {dashboardData?.commissionPlan && (
+          <Suspense fallback={null}>
+            <LockedPlanBanner commissionPlan={dashboardData.commissionPlan} />
+          </Suspense>
+        )}
 
         {/* Affiliate Links - Mobile optimized with 48px touch targets */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">

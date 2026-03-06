@@ -149,10 +149,10 @@ const LANGUAGES: { value: SupportedBloggerLanguage; label: string }[] = [
   { value: 'es', label: 'Español' },
   { value: 'pt', label: 'Português' },
   { value: 'de', label: 'Deutsch' },
-  { value: 'it', label: 'Italiano' },
   { value: 'ar', label: 'العربية' },
-  { value: 'nl', label: 'Nederlands' },
   { value: 'zh', label: '中文' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'hi', label: 'हिन्दी' },
 ];
 
 interface BloggerFormData {
@@ -253,14 +253,9 @@ const BloggerRegister: React.FC = () => {
   // useEffect fires and navigates to dashboard BEFORE registerBlogger() Cloud Function is called
   useEffect(() => {
     if (authInitialized && !authLoading && !isSubmitting && isAlreadyBlogger && !success) {
-      // Harmonized with ChatterRegister: redirect to Telegram if not completed
-      if (!user?.telegramOnboardingCompleted) {
-        navigate(telegramRoute, { replace: true });
-      } else {
-        navigate(dashboardRoute, { replace: true });
-      }
+      navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, isSubmitting, isAlreadyBlogger, user?.telegramOnboardingCompleted, navigate, telegramRoute, dashboardRoute, success]);
+  }, [authInitialized, authLoading, isSubmitting, isAlreadyBlogger, navigate, dashboardRoute, success]);
 
   // Meta Pixel: Track StartRegistration on mount
   useEffect(() => {

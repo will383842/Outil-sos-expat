@@ -54,6 +54,7 @@ const NotificationBell = lazy(() =>
 const InfluencerAffiliateLinks = lazy(() =>
   import('@/components/Influencer/Links/InfluencerAffiliateLinks')
 );
+const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
 
 // Icons
 import {
@@ -327,12 +328,7 @@ const InfluencerDashboard: React.FC = () => {
   // EFFECTS
   // ============================================================================
 
-  // Telegram onboarding check (mandatory for withdrawals)
-  useEffect(() => {
-    if (user && !user.telegramOnboardingCompleted) {
-      navigate(routes.telegram, { replace: true });
-    }
-  }, [user, navigate, routes.telegram]);
+  // Telegram is optional for dashboard access (required only for withdrawals)
 
   // Initial load
   useEffect(() => {
@@ -518,6 +514,15 @@ const InfluencerDashboard: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* ================================================================ */}
+        {/* LOCKED COMMISSION PLAN BANNER */}
+        {/* ================================================================ */}
+        {dashboard?.commissionPlan && (
+          <Suspense fallback={null}>
+            <LockedPlanBanner commissionPlan={dashboard.commissionPlan} />
+          </Suspense>
+        )}
 
         {/* ================================================================ */}
         {/* AFFILIATE LINKS - Prominent position for easy access */}

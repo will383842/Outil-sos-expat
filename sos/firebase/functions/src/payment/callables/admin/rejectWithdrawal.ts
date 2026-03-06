@@ -66,6 +66,8 @@ function getUserCollectionName(userType: PaymentUserType): string {
       return 'bloggers';
     case 'group_admin':
       return 'group_admins';
+    case 'partner':
+      return 'partners';
     case 'affiliate':
       return 'users';
     default:

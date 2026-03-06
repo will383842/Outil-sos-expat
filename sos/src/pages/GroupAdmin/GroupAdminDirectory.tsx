@@ -69,9 +69,9 @@ const LANGUAGES: { code: SupportedGroupAdminLanguage; label: string; countryCode
   { code: "pt", label: "Portugues",  countryCode: "PT" },
   { code: "ar", label: "Arabe",      countryCode: "SA" },
   { code: "de", label: "Deutsch",    countryCode: "DE" },
-  { code: "it", label: "Italiano",   countryCode: "IT" },
-  { code: "nl", label: "Nederlands", countryCode: "NL" },
   { code: "zh", label: "Chinois",    countryCode: "CN" },
+  { code: "ru", label: "Russe",      countryCode: "RU" },
+  { code: "hi", label: "Hindi",      countryCode: "IN" },
 ];
 
 const COUNTRIES: { code: string; name: string }[] = [

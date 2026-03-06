@@ -41,6 +41,7 @@ interface UseGroupAdminReturn {
   recentRecruits: GroupAdminRecruit[];
   notifications: BaseNotification[];
   leaderboard: GroupAdminLeaderboardEntry[];
+  commissionPlan: GroupAdminDashboardResponse['commissionPlan'];
   isLoading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -57,6 +58,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
   const [recentRecruits, setRecentRecruits] = useState<GroupAdminRecruit[]>([]);
   const [notifications, setNotifications] = useState<BaseNotification[]>([]);
   const [leaderboard, setLeaderboard] = useState<GroupAdminLeaderboardEntry[]>([]);
+  const [commissionPlan, setCommissionPlan] = useState<GroupAdminDashboardResponse['commissionPlan']>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +81,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
       setRecentCommissions(data.recentCommissions);
       setRecentRecruits(data.recentRecruits);
       setLeaderboard(data.leaderboard);
+      setCommissionPlan(data.commissionPlan ?? null);
     } catch (err: unknown) {
       const error = err as { message?: string };
       setError(error.message || 'Failed to load dashboard');
@@ -189,6 +192,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     recentRecruits,
     notifications,
     leaderboard,
+    commissionPlan,
     isLoading,
     error,
     refresh: fetchDashboard,
