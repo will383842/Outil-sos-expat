@@ -120,6 +120,17 @@
     })();
   </script>
 
+  <!-- GA4 - ALWAYS LOADED (Consent Mode V2 handles what data is collected) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XZTJK0L3RK"></script>
+  <script>
+    gtag('js', new Date());
+    gtag('config', 'G-XZTJK0L3RK', {
+      anonymize_ip: true,
+      send_page_view: true,
+      cookie_domain: 'auto'
+    });
+  </script>
+
   <!-- ✅✅✅ META PIXEL (Facebook) — DIFFÉRÉ POUR PERFORMANCE -->
   <script>
     // Meta Pixel chargé après le rendu initial pour ne pas bloquer FCP

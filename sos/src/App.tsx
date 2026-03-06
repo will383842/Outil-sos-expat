@@ -11,7 +11,7 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
-import { trackEvent, hasAnalyticsConsent } from './utils/ga4';
+import { trackEvent } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
 import { setMetaPixelUserData, applyMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
 import { captureTrafficSource } from './utils/trafficSource';
@@ -595,17 +595,22 @@ type Locale = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 // --------------------------------------------
 const PageViewTracker: React.FC = () => {
   const location = useLocation();
+  const isFirstRender = React.useRef(true);
 
   useEffect(() => {
-    // Only track if consent is granted
-    if (hasAnalyticsConsent()) {
-      trackEvent('page_view', {
-        page_location: window.location.href,
-        page_path: location.pathname,
-        page_title: document.title,
-      });
-      devLog('📊 GA4: Page view tracked for:', location.pathname);
+    // Skip initial render — index.html already sends the first page_view
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
+
+    // Consent Mode V2 handles what data is collected — always send events
+    trackEvent('page_view', {
+      page_location: window.location.href,
+      page_path: location.pathname,
+      page_title: document.title,
+    });
+    devLog('📊 GA4: Page view tracked for:', location.pathname);
   }, [location]);
 
   return null;

@@ -373,6 +373,7 @@ export const updateGA4Consent = (
     window.gtag('config', GA4_MEASUREMENT_ID, {
       allow_google_signals: marketing,
       allow_ad_personalization_signals: marketing,
+      send_page_view: false, // Prevent duplicate page_view on config update
     });
   }
 
@@ -386,11 +387,12 @@ export const trackEvent = (
   eventName: string,
   eventParams?: Record<string, unknown>
 ): void => {
-  if (typeof window === 'undefined' || !window.gtag || !hasAnalyticsConsent()) {
+  if (typeof window === 'undefined' || !window.gtag) {
     return;
   }
 
   try {
+    // Consent Mode V2 handles what data is collected — always push events
     window.gtag('event', eventName, eventParams);
   } catch (error) {
     console.error('Error tracking GA4 event:', error);
@@ -401,7 +403,7 @@ export const trackEvent = (
  * Set user properties
  */
 export const setUserProperties = (properties: Record<string, unknown>): void => {
-  if (typeof window === 'undefined' || !window.gtag || !hasAnalyticsConsent()) {
+  if (typeof window === 'undefined' || !window.gtag) {
     return;
   }
 
@@ -416,13 +418,14 @@ export const setUserProperties = (properties: Record<string, unknown>): void => 
  * Set user ID
  */
 export const setUserId = (userId: string): void => {
-  if (typeof window === 'undefined' || !window.gtag || !hasAnalyticsConsent()) {
+  if (typeof window === 'undefined' || !window.gtag) {
     return;
   }
 
   try {
     window.gtag('config', GA4_MEASUREMENT_ID, {
       user_id: userId,
+      send_page_view: false, // Prevent duplicate page_view on config call
     });
   } catch (error) {
     console.error('Error setting GA4 user ID:', error);

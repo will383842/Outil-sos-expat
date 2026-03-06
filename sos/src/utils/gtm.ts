@@ -122,10 +122,10 @@ export const initializeGTM = (): Promise<boolean> => {
 const initializeFallbackGA4 = (): void => {
   if (!GA4_ID || typeof window === 'undefined') return;
 
-  // Check if GA4 script already exists
-  const existingScript = document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${GA4_ID}"]`);
+  // Check if ANY GA4 script already exists (including the one from index.html)
+  const existingScript = document.querySelector(`script[src*="googletagmanager.com/gtag/js"]`);
   if (existingScript) {
-    console.log('📊 GA4: Fallback script already exists');
+    console.log('📊 GA4: Script already loaded (from index.html), skipping fallback');
     return;
   }
 
@@ -136,10 +136,9 @@ const initializeFallbackGA4 = (): void => {
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`;
 
   script.onload = () => {
-    // Configure GA4
     window.gtag('js', new Date());
     window.gtag('config', GA4_ID, {
-      send_page_view: false, // We'll send manually
+      send_page_view: false,
       anonymize_ip: true,
     });
     console.log('✅ GA4: Fallback initialized');

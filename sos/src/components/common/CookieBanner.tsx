@@ -5,7 +5,7 @@ import { Cookie, Settings, Shield, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { updateGA4Consent } from '../../utils/ga4';
-import { initializeGTM, updateConsentFromPreferences } from '../../utils/gtm';
+import { updateConsentFromPreferences } from '../../utils/gtm';
 import { updateMetaPixelNativeConsent } from '../../utils/metaPixel';
 import { updateGoogleAdsConsent, initializeGoogleAds } from '../../utils/googleAds';
 
@@ -178,10 +178,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({
     // Update Google Ads consent via Consent Mode v2
     updateGoogleAdsConsent(prefs.marketing);
 
-    // Initialize GTM/GA4 if analytics is granted
-    if (prefs.analytics) {
-      initializeGTM().catch(console.error);
-    }
+    // GTM/GA4 already loaded in index.html - Consent Mode V2 handles data collection
+    // No need to conditionally initialize, consent update above is sufficient
 
     // Initialize Google Ads if marketing is granted
     if (prefs.marketing) {

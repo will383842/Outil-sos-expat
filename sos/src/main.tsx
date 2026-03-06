@@ -12,8 +12,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { initSentry } from './config/sentry';
 initSentry();
 
-// Initialize GTM/GA4 if user has already consented
-import { hasAnalyticsConsent } from './utils/ga4';
+// Initialize GTM (always - Consent Mode V2 handles data collection)
 import { initializeGTM } from './utils/gtm';
 
 // Initialize Google Ads if user has already consented to marketing
@@ -22,10 +21,8 @@ import { initializeGoogleAds, hasMarketingConsent } from './utils/googleAds';
 // Initialiser la capture d'erreurs globale
 setupGlobalErrorLogging();
 
-// Initialize GTM/GA4 if consent was already given
-if (hasAnalyticsConsent()) {
-  initializeGTM().catch(console.error);
-}
+// Always initialize GTM - Consent Mode V2 in index.html controls what data is collected
+initializeGTM().catch(console.error);
 
 // Initialize Google Ads if marketing consent was already given
 if (hasMarketingConsent()) {
