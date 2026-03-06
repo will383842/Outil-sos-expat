@@ -44,6 +44,15 @@ export const MAILWIZZ_CUSTOMER_ID = defineString("MAILWIZZ_CUSTOMER_ID", {
   default: process.env.MAILWIZZ_CUSTOMER_ID || "1",
 });
 
+// Chatter MailWizz Lists
+export const MAILWIZZ_LIST_CHATTER_RECRUTEMENT = defineString("MAILWIZZ_LIST_CHATTER_RECRUTEMENT", {
+  default: process.env.MAILWIZZ_LIST_CHATTER_RECRUTEMENT || "",
+});
+
+export const MAILWIZZ_LIST_CHATTER_ONBOARDING = defineString("MAILWIZZ_LIST_CHATTER_ONBOARDING", {
+  default: process.env.MAILWIZZ_LIST_CHATTER_ONBOARDING || "",
+});
+
 // // GA4 Configuration
 export const GA4_MEASUREMENT_ID = defineString("GA4_MEASUREMENT_ID", {
   default: "",

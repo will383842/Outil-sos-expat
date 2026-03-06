@@ -2102,6 +2102,8 @@ export { handleMilestoneReached, handleBadgeUnlocked } from './emailMarketing/fu
 // Scheduled stats emails
 export { sendWeeklyStats, sendMonthlyStats } from './emailMarketing/functions/statsEmails';
 // sendAnniversaryEmails — CONSOLIDATED into consolidatedDailyEmails
+// Chatter MailWizz lifecycle (Campagne A recrutement + Campagne B onboarding)
+export { chatterMailwizzOnRegistered, detectInactiveChattersCron } from './emailMarketing/functions/chatterLifecycle';
 
 // ============================================
 // SUBSCRIPTION FUNCTIONS
@@ -2947,6 +2949,7 @@ export {
   adminGetChatterLeaderboard,
   adminExportChatters,
   adminBulkChatterAction,
+  adminManageChatter,
   // Admin Country Rotation
   adminAdvanceCycleV2, // Renamed from adminAdvanceCycle (old Cloud Run service stuck in deletion)
   adminUpdateCycleThreshold,
@@ -3273,6 +3276,43 @@ export {
   // validatePendingGroupAdminCommissions,  // → consolidatedValidateCommissions
   // releaseValidatedGroupAdminCommissions,  // → consolidatedReleaseCommissions
 } from './groupAdmin';
+
+// ========== PARTNER SYSTEM ==========
+// Commercial partner program (expat.com, etc.) with custom negotiated commissions
+// Admin-only account creation, partner dashboard, click tracking, promo widgets
+export {
+  // Partner self-access callables
+  createPartner,
+  getPartnerDashboard,
+  updatePartnerProfile,
+  getPartnerCommissions,
+  getPartnerClicks,
+  getPartnerWidgets,
+  getPartnerNotifications,
+  markPartnerNotificationRead,
+  partnerRequestWithdrawal,
+  // Public callables
+  trackPartnerClick,
+  submitPartnerApplication,
+  // Admin callables
+  adminPartnersList,
+  adminPartnerDetail,
+  adminUpdatePartnerConfig,
+  adminUpdatePartnerCommissionConfig,
+  adminTogglePartnerVisibility,
+  adminTogglePartnerStatus,
+  adminIssueManualCommission as adminIssuePartnerManualCommission,
+  adminGetPartnerStats,
+  adminManagePartnerWidgets,
+  adminPartnerApplicationsList,
+  adminUpdatePartnerApplication,
+  adminConvertApplicationToPartner,
+  // Triggers
+  onPartnerCreated,
+  // Scheduled
+  releasePartnerPendingCommissions,
+  updatePartnerMonthlyStats,
+} from './partner';
 
 // ========== TELEGRAM NOTIFICATIONS ==========
 // export { telegramOnUserRegistration } from './telegram/triggers/onUserRegistration';  // → consolidatedOnUserCreated

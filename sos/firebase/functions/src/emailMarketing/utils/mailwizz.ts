@@ -203,8 +203,34 @@ async function isEmailDeliverableForMailWizz(email: string): Promise<boolean> {
 export class MailwizzAPI {
   private config: MailwizzConfig;
 
-  constructor() {
-    this.config = validateMailWizzConfig();
+  /**
+   * @param listUidOverride Optional — override the default list UID (e.g. for chatter lists).
+   *   Passing no argument is 100% backward compatible with existing callers.
+   */
+  constructor(listUidOverride?: string) {
+    const config = validateMailWizzConfig();
+    this.config = listUidOverride
+      ? { ...config, listUid: listUidOverride }
+      : config;
+  }
+
+  /**
+   * Search for a subscriber by email in the configured list.
+   * Returns the subscriber_uid string, or null if not found.
+   */
+  async searchSubscriberByEmail(email: string): Promise<string | null> {
+    try {
+      const response = await axios.get(
+        `${this.config.apiUrl}/lists/${this.config.listUid}/subscribers/search?EMAIL=${encodeURIComponent(email)}`,
+        { headers: this.headers, timeout: 10000 }
+      );
+      return response.data?.data?.subscriber_uid || null;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      if ((axiosError.response?.status ?? 0) === 404) return null;
+      console.error(`❌ Error searching subscriber by email:`, axiosError.response?.data || axiosError.message);
+      return null;
+    }
   }
 
   /**
