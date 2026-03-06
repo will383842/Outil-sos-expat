@@ -13,7 +13,7 @@ import { ALLOWED_ORIGINS } from "./functionConfigs";
 export const getActiveCommissionPlan = onCall(
   {
     region: "europe-west1",
-    memory: "128MiB",
+    memory: "256MiB",
     cors: ALLOWED_ORIGINS,
   },
   async () => {
