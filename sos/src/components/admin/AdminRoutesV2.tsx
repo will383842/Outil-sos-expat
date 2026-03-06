@@ -460,6 +460,32 @@ const AdminGroupAdminsPromotions = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPromotions")
 );
 
+// ===== LAZY IMPORTS - PARTNERS =====
+const AdminPartnersList = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersList")
+);
+const AdminPartnerCreate = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnerCreate")
+);
+const AdminPartnerDetail = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnerDetail")
+);
+const AdminPartnersPayments = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersPayments")
+);
+const AdminPartnersConfig = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersConfig")
+);
+const AdminPartnersWidgets = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersWidgets")
+);
+const AdminPartnersStats = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersStats")
+);
+const AdminPartnerApplications = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnerApplications")
+);
+
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
 const AdminPaymentsDashboard = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentsDashboard")
@@ -1549,6 +1575,16 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+
+      {/* PARTNERS */}
+      <Route path="partners" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersList /></Suspense>} />
+      <Route path="partners/create" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerCreate /></Suspense>} />
+      <Route path="partners/:partnerId" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerDetail /></Suspense>} />
+      <Route path="partners/payments" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersPayments /></Suspense>} />
+      <Route path="partners/config" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersConfig /></Suspense>} />
+      <Route path="partners/widgets" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersWidgets /></Suspense>} />
+      <Route path="partners/stats" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersStats /></Suspense>} />
+      <Route path="partners/applications" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerApplications /></Suspense>} />
 
       {/* 📚 TRAINING MODULES */}
       <Route

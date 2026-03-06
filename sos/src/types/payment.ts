@@ -13,7 +13,7 @@
 
 export type PaymentProvider = 'wise' | 'flutterwave' | 'manual';
 export type PaymentMethodType = 'bank_transfer' | 'mobile_money' | 'wise';
-export type PaymentUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate';
+export type PaymentUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate' | 'partner';
 
 export type WithdrawalStatus =
   | 'pending'

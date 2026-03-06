@@ -44,7 +44,7 @@ export interface GenericCommission {
 
 export interface CommissionsHistoryTabProps {
   commissions: GenericCommission[];
-  role: 'chatter' | 'influencer' | 'blogger';
+  role: 'chatter' | 'influencer' | 'blogger' | 'partner';
   currency?: string;
   isLoading?: boolean;
 }

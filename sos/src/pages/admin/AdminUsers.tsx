@@ -64,7 +64,7 @@ import Modal from '../../components/common/Modal';
 import { logError } from '../../utils/logging';
 import { getCountryName, getCountryFlag } from '../../utils/formatters';
 
-type Role = 'client' | 'lawyer' | 'expat' | 'admin' | 'chatter' | 'influencer' | 'blogger' | 'groupAdmin';
+type Role = 'client' | 'lawyer' | 'expat' | 'admin' | 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'partner';
 type Availability = 'available' | 'offline';
 
 type FirestoreUser = {
@@ -336,6 +336,7 @@ const AdminUsers: React.FC = () => {
       influencer: 'Influenceur',
       blogger: 'Blogueur',
       groupAdmin: 'Groupe Admin',
+      partner: 'Partenaire',
     };
     return roleLabels[role] || role;
   };
@@ -350,6 +351,7 @@ const AdminUsers: React.FC = () => {
       influencer: 'bg-orange-100 text-orange-800',
       blogger: 'bg-teal-100 text-teal-800',
       groupAdmin: 'bg-indigo-100 text-indigo-800',
+      partner: 'bg-cyan-100 text-cyan-800',
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
   };

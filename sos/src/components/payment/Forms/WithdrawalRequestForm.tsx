@@ -145,7 +145,7 @@ interface WithdrawalRequestFormProps {
   /** Optional: default payment method ID */
   defaultPaymentMethodId?: string | null;
   /** User role for Telegram connection */
-  role?: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin';
+  role?: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'partner';
   /** Whether user has Telegram connected */
   telegramConnected?: boolean;
   /** Called when user connects Telegram */

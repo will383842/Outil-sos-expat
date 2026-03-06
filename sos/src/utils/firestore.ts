@@ -837,8 +837,8 @@ export const updatePaymentRecord = async (
 // };
 
 export const createReviewRecord = async (reviewData: Partial<Review>) => {
-  // Auto-publication de TOUS les avis (toutes notes confondues)
-  const auto = true;
+  // Auto-publish reviews with rating >= 3; moderate negative reviews (1-2 stars)
+  const auto = !reviewData.rating || reviewData.rating >= 3;
   const currentUser = auth.currentUser;
 
   // Check authentication first

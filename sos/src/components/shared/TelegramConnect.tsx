@@ -23,7 +23,7 @@ import {
 // ============================================================================
 
 interface TelegramConnectProps {
-  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate';
+  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate' | 'partner';
   onConnected: () => void;
 }
 

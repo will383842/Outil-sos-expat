@@ -355,14 +355,27 @@ const pickDescription = (
   preferredLang?: string,
   intl?: any
 ): string => {
-  const chain = [
-    getFirstString(p.description, preferredLang),
-    getFirstString(p.bio, preferredLang),
-    getFirstString(p.professionalDescription, preferredLang),
-    getFirstString(p.experienceDescription, preferredLang),
+  // Try preferred language first, then 'en' fallback, then 'fr' fallback, then any available
+  const langs = [preferredLang, 'en', 'fr'].filter(Boolean) as string[];
+  for (const lang of langs) {
+    const chain = [
+      getFirstString(p.description, lang),
+      getFirstString(p.bio, lang),
+      getFirstString(p.professionalDescription, lang),
+      getFirstString(p.experienceDescription, lang),
+    ];
+    const found = chain.find(Boolean);
+    if (found) return found;
+  }
+  // Last resort: try without language preference (picks first available key)
+  const anyChain = [
+    getFirstString(p.description, undefined),
+    getFirstString(p.bio, undefined),
+    getFirstString(p.professionalDescription, undefined),
+    getFirstString(p.experienceDescription, undefined),
   ];
   return (
-    chain.find(Boolean) ||
+    anyChain.find(Boolean) ||
     (intl ? intl.formatMessage({ id: "providerProfile.noDescriptionAvailable" }) : "")
   );
 };

@@ -455,9 +455,9 @@ const provider: Provider = {
         isAdmin: data.isAdmin === true,
         avatar: String(data.profilePhoto || data.photoURL || data.avatar || DEFAULT_AVATAR),
         description: String(data.bio || data.description || 
-          (typeRaw === 'lawyer' 
-            ? `Expert juridique en ${country} avec ${Number(data.yearsOfExperience) || 0} ans d'expérience`
-            : `Expert expatriation en ${country} avec ${Number(data.yearsAsExpat) || 0} ans d'expérience`
+          (typeRaw === 'lawyer'
+            ? intl.formatMessage({ id: 'card.defaultDescription.lawyer' }, { country, years: Number(data.yearsOfExperience) || 0 })
+            : intl.formatMessage({ id: 'card.defaultDescription.expat' }, { country, years: Number(data.yearsAsExpat) || 0 })
           )),
         price: Math.max(1, Number(data.price) || (typeRaw === 'lawyer' ? 49 : 19)),
         duration: Math.max(1, Number(data.duration) || (typeRaw === 'lawyer' ? 20 : 30)),
@@ -530,11 +530,11 @@ const provider: Provider = {
       setIsLoading(false);
 
       if (validProviders.length === 0) {
-        setError('Aucun prestataire trouvé');
+        setError(intl.formatMessage({ id: 'card.noResults.title' }));
       }
     } catch (firebaseError) {
       console.error('[ProfileCards] Firebase error:', firebaseError);
-      setError('Erreur de chargement des prestataires');
+      setError(intl.formatMessage({ id: 'card.error.loading' }));
       setProviders([]);
       setIsLoading(false);
     }
@@ -1083,7 +1083,7 @@ filtered = filtered.filter(p => {
                 {provider.name}
               </h3>
               <div className="flex items-center justify-between text-sm sm:text-base text-gray-600">
-                <span>{provider.yearsOfExperience} ans d'expérience</span>
+                <span>{intl.formatMessage({ id: 'card.yearsExperience' }, { years: provider.yearsOfExperience })}</span>
                 <div className="flex items-center gap-1">
                   <span className="text-yellow-500">★</span>
                   <span className="font-medium">({provider.reviewCount})</span>
@@ -1098,7 +1098,7 @@ filtered = filtered.filter(p => {
                   <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-base">🗣️</span>
                   </div>
-                  <span className="text-sm sm:text-base font-semibold text-gray-700">Langues parlées</span>
+                  <span className="text-sm sm:text-base font-semibold text-gray-700">{intl.formatMessage({ id: 'dashboard.languagesSpoken' })}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {provider.languages && provider.languages.length > 0 ? (
@@ -1112,7 +1112,7 @@ filtered = filtered.filter(p => {
                     ))
                   ) : (
                     <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm sm:text-base rounded-full">
-                      Non spécifié
+                      {intl.formatMessage({ id: 'common.notSpecified' })}
                     </span>
                   )}
                   {provider.languages && provider.languages.length > (isCarousel ? 2 : 3) && (
@@ -1129,7 +1129,7 @@ filtered = filtered.filter(p => {
                   <div className="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center">
                     <MapPin className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="text-sm sm:text-base font-semibold text-gray-700">Pays d'intervention</span>
+                  <span className="text-sm sm:text-base font-semibold text-gray-700">{intl.formatMessage({ id: 'providerProfile.operatingCountries' })}</span>
                 </div>
                 <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-50 to-green-100 text-green-700 text-sm sm:text-base font-medium rounded-full border border-green-200/50">
                   🌍 {getCountryName(provider.country, language)}
@@ -1152,7 +1152,7 @@ filtered = filtered.filter(p => {
                 } hover:shadow-2xl`}
               >
                 <span className="text-xl">👤</span>
-                <span>Voir le profil</span>
+                <span>{intl.formatMessage({ id: 'card.viewProfile' })}</span>
               </button>
             </div>
           </div>
@@ -1300,13 +1300,13 @@ filtered = filtered.filter(p => {
               e.stopPropagation();
               handleViewProfile(provider);
             }}
-            aria-label={provider.isOnline 
-              ? `Contacter ${provider.name} maintenant` 
-              : `Voir le profil de ${provider.name}`
+            aria-label={provider.isOnline
+              ? intl.formatMessage({ id: 'action.contactNow' }) + ' ' + provider.name
+              : intl.formatMessage({ id: 'card.viewProfile' }) + ' ' + provider.name
             }
           >
             <Phone size={18} aria-hidden="true" />
-            {provider.isOnline ? 'Contacter maintenant' : 'Voir le profil'}
+            {provider.isOnline ? intl.formatMessage({ id: 'action.contactNow' }) : intl.formatMessage({ id: 'card.viewProfile' })}
           </button>
         </div>
       </article>
@@ -1339,7 +1339,7 @@ filtered = filtered.filter(p => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-1">
               <label htmlFor="expert-type" className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-                Type
+                {intl.formatMessage({ id: 'card.filters.type' })}
               </label>
               <div className="relative">
                 <select
@@ -1367,18 +1367,18 @@ filtered = filtered.filter(p => {
                   onChange={(e) => handleCountryChange(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all appearance-none text-sm"
                 >
-                  <option value="all">Tous les pays</option>
+                  <option value="all">{intl.formatMessage({ id: 'card.filters.allCountries' })}</option>
                   {COUNTRY_OPTIONS.map(country => (
                     <option key={country} value={country}>{country}</option>
                   ))}
-                  <option value="Autre">Autre</option>
+                  <option value="Autre">{intl.formatMessage({ id: 'card.filters.other' })}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" aria-hidden="true" />
               </div>
               {showCustomCountry && (
                 <input
                   type="text"
-                  placeholder="Nom du pays"
+                  placeholder={intl.formatMessage({ id: 'card.filters.countryName' })}
                   value={customCountry}
                   onChange={(e) => setCustomCountry(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm mt-2"
@@ -1388,7 +1388,7 @@ filtered = filtered.filter(p => {
 
             <div className="space-y-1">
               <label htmlFor="language-filter" className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-                Langue
+                {intl.formatMessage({ id: 'card.filters.language' })}
               </label>
               <div className="relative">
                 <select
@@ -1397,18 +1397,18 @@ filtered = filtered.filter(p => {
                   onChange={(e) => handleLanguageChange(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all appearance-none text-sm"
                 >
-                  <option value="all">Toutes</option>
+                  <option value="all">{intl.formatMessage({ id: 'card.filters.allLanguages' })}</option>
                   {LANGUAGE_OPTIONS.map(lang => (
                     <option key={lang} value={lang}>{lang}</option>
                   ))}
-                  <option value="Autre">Autre</option>
+                  <option value="Autre">{intl.formatMessage({ id: 'card.filters.other' })}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" aria-hidden="true" />
               </div>
               {showCustomLanguage && (
                 <input
                   type="text"
-                  placeholder="Langue"
+                  placeholder={intl.formatMessage({ id: 'card.filters.language' })}
                   value={customLanguage}
                   onChange={(e) => setCustomLanguage(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm mt-2"
@@ -1418,7 +1418,7 @@ filtered = filtered.filter(p => {
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-                Statut
+                {intl.formatMessage({ id: 'card.filters.status' })}
               </label>
               <div className="flex items-center h-10">
                 <label className="flex items-center cursor-pointer">
@@ -1434,8 +1434,8 @@ filtered = filtered.filter(p => {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-medium text-transparent">
-                Action
+              <label className="block text-xs font-medium text-transparent" aria-hidden="true">
+                {intl.formatMessage({ id: 'action.reset' })}
               </label>
               <button
                 onClick={resetFilters}
@@ -1455,9 +1455,9 @@ filtered = filtered.filter(p => {
 
     // Standard filters
     return (
-      <div className="filters-container bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8" role="search" aria-label="Filtrer les prestataires">
+      <div className="filters-container bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8" role="search" aria-label={intl.formatMessage({ id: 'card.filters.ariaLabel' })}>
         <div className="primary-filters mb-6">
-          <div role="tablist" aria-label="Types de prestataires" className="flex gap-2 justify-center flex-wrap">
+          <div role="tablist" aria-label={intl.formatMessage({ id: 'card.filters.providerTypes' })} className="flex gap-2 justify-center flex-wrap">
             <button
               role="tab"
               aria-selected={activeFilter === 'all'}
@@ -1469,7 +1469,7 @@ filtered = filtered.filter(p => {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Tous
+              {intl.formatMessage({ id: 'sosCall.filters.type.all' })}
             </button>
             <button
               role="tab"
@@ -1477,8 +1477,8 @@ filtered = filtered.filter(p => {
               aria-controls="providers-list"
               onClick={() => setActiveFilter('lawyer')}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                activeFilter === 'lawyer' 
-                  ? 'bg-red-600 text-white shadow-lg' 
+                activeFilter === 'lawyer'
+                  ? 'bg-red-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -1490,25 +1490,25 @@ filtered = filtered.filter(p => {
               aria-controls="providers-list"
               onClick={() => setActiveFilter('expat')}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                activeFilter === 'expat' 
-                  ? 'bg-red-600 text-white shadow-lg' 
+                activeFilter === 'expat'
+                  ? 'bg-red-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Experts
+              {intl.formatMessage({ id: 'sosCall.filters.type.expat' })}
             </button>
           </div>
         </div>
 
-        <div className="advanced-filters grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" role="toolbar" aria-label="Filtres avancés">
+        <div className="advanced-filters grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" role="toolbar" aria-label={intl.formatMessage({ id: 'card.filters.advanced' })}>
           <div className="search-container relative">
             <Search size={20} aria-hidden="true" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="search"
-              placeholder="Rechercher un prestataire..."
+              placeholder={intl.formatMessage({ id: 'card.search.placeholder' })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              aria-label="Rechercher des prestataires"
+              aria-label={intl.formatMessage({ id: 'card.search.placeholder' })}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
               autoComplete="off"
               spellCheck="false"
@@ -1518,10 +1518,10 @@ filtered = filtered.filter(p => {
           <select
             value={selectedCountry}
             onChange={(e) => setSelectedCountry(e.target.value)}
-            aria-label="Filtrer par pays"
+            aria-label={intl.formatMessage({ id: 'card.filters.countryName' })}
             className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all appearance-none bg-white"
           >
-            <option value="all">Tous les pays</option>
+            <option value="all">{intl.formatMessage({ id: 'card.filters.allCountries' })}</option>
             {availableCountries.map(country => (
               <option key={country} value={country}>{country}</option>
             ))}
@@ -1530,10 +1530,10 @@ filtered = filtered.filter(p => {
           <select
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
-            aria-label="Filtrer par langue"
+            aria-label={intl.formatMessage({ id: 'card.filters.language' })}
             className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all appearance-none bg-white"
           >
-            <option value="all">Toutes les langues</option>
+            <option value="all">{intl.formatMessage({ id: 'card.filters.allLanguages' })}</option>
             {availableLanguages.map(lang => (
               <option key={lang} value={lang}>{getLanguageLabel(lang, language as SupportedLocale)}</option>
             ))}
@@ -1557,16 +1557,16 @@ filtered = filtered.filter(p => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'rating' | 'price' | 'experience')}
-              aria-label="Trier par"
+              aria-label={intl.formatMessage({ id: 'card.sortBy.label' })}
               className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm appearance-none bg-white"
             >
-              <option value="rating">Trier par note</option>
-              <option value="price">Trier par prix</option>
-              <option value="experience">Trier par expérience</option>
+              <option value="rating">{intl.formatMessage({ id: 'card.sortBy.rating' })}</option>
+              <option value="price">{intl.formatMessage({ id: 'card.sortBy.price' })}</option>
+              <option value="experience">{intl.formatMessage({ id: 'card.sortBy.experience' })}</option>
             </select>
             <button
               onClick={toggleSortOrder}
-              aria-label={`Ordre de tri: ${sortOrder === 'asc' ? 'croissant' : 'décroissant'}`}
+              aria-label={`${intl.formatMessage({ id: sortOrder === 'asc' ? 'card.sortOrder.asc' : 'card.sortOrder.desc' })}`}
               className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               {sortOrder === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
@@ -1576,9 +1576,9 @@ filtered = filtered.filter(p => {
           <button
             onClick={resetFilters}
             className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-            aria-label="Réinitialiser tous les filtres"
+            aria-label={intl.formatMessage({ id: 'action.reset' })}
           >
-            Réinitialiser
+            {intl.formatMessage({ id: 'action.reset' })}
           </button>
         </div>
       </div>
@@ -1591,7 +1591,7 @@ filtered = filtered.filter(p => {
       <Suspense fallback={<LoadingSkeleton />}>
         <section 
           className={className}
-          aria-label={ariaLabel || 'Liste des prestataires SOS disponibles'}
+          aria-label={ariaLabel || intl.formatMessage({ id: 'card.aria.providersList' })}
           data-testid={testId || 'sos-providers'}
           role="main"
         >
@@ -1605,7 +1605,7 @@ filtered = filtered.filter(p => {
                   onClick={loadProviders}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
                 >
-                  Réessayer
+                  {intl.formatMessage({ id: 'action.retry' })}
                 </button>
               </div>
             </div>
@@ -1674,16 +1674,16 @@ filtered = filtered.filter(p => {
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Aucun expert trouvé
+                  {intl.formatMessage({ id: 'card.noResults.experts.title' })}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Aucun expert ne correspond à vos critères de recherche actuels.
+                  {intl.formatMessage({ id: 'card.noResults.experts.description' })}
                 </p>
                 <button
                   onClick={resetFilters}
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold rounded-xl transition-colors"
                 >
-                  Réinitialiser les filtres
+                  {intl.formatMessage({ id: 'action.resetFilters' })}
                 </button>
               </div>
             </div>
@@ -1699,7 +1699,7 @@ filtered = filtered.filter(p => {
       <Suspense fallback={<LoadingSkeleton />}>
         <section 
           className={className}
-          aria-label={ariaLabel || 'Liste des prestataires disponibles'}
+          aria-label={ariaLabel || intl.formatMessage({ id: 'card.aria.providersList' })}
           data-testid={testId || 'providers-grid'}
           role="main"
         >
@@ -1712,7 +1712,7 @@ filtered = filtered.filter(p => {
                 onClick={loadProviders}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
               >
-                Réessayer
+                {intl.formatMessage({ id: 'action.retry' })}
               </button>
             </div>
           )}
@@ -1750,16 +1750,16 @@ filtered = filtered.filter(p => {
                     <Search className="w-8 h-8 text-gray-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Aucun prestataire trouvé
+                    {intl.formatMessage({ id: 'card.noResults.title' })}
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Aucun prestataire ne correspond à vos critères de recherche.
+                    {intl.formatMessage({ id: 'card.noResults.description' })}
                   </p>
-                  <button 
+                  <button
                     onClick={resetFilters}
                     className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
                   >
-                    Réinitialiser les filtres
+                    {intl.formatMessage({ id: 'action.resetFilters' })}
                   </button>
                 </div>
               </div>
@@ -1769,13 +1769,13 @@ filtered = filtered.filter(p => {
           {/* Enhanced pagination */}
           {totalPages > 1 && (
             <nav 
-              aria-label="Navigation des pages de prestataires" 
+              aria-label={intl.formatMessage({ id: 'card.pagination.ariaLabel' })} 
               role="navigation"
               className="flex items-center justify-between mt-8 px-4 py-3 bg-white border border-gray-200 rounded-lg"
             >
               <div className="flex items-center text-sm text-gray-500">
                 <span>
-                  Affichage {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredProviders.length)} sur {filteredProviders.length} prestataires
+                  {intl.formatMessage({ id: 'card.pagination.showing' }, { from: ((currentPage - 1) * itemsPerPage) + 1, to: Math.min(currentPage * itemsPerPage, filteredProviders.length), total: filteredProviders.length })}
                 </span>
               </div>
               
@@ -1783,7 +1783,7 @@ filtered = filtered.filter(p => {
                 <button
                   onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  aria-label="Page précédente"
+                  aria-label={intl.formatMessage({ id: 'card.pagination.previous' })}
                   className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft size={20} />
@@ -1822,7 +1822,7 @@ filtered = filtered.filter(p => {
                 <button
                   onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  aria-label="Page suivante"
+                  aria-label={intl.formatMessage({ id: 'card.pagination.next' })}
                   className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRight size={20} />
@@ -1840,13 +1840,13 @@ filtered = filtered.filter(p => {
     <Suspense fallback={<LoadingSkeleton count={3} />}>
       <section 
         className={className}
-        aria-label={ariaLabel || 'Carrousel des prestataires disponibles'}
+        aria-label={ariaLabel || intl.formatMessage({ id: 'card.aria.carousel' })}
         data-testid={testId || 'providers-carousel'}
         role="region"
       >
         {showFilters && (
           <div className="carousel-filters mb-8">
-            <div role="tablist" aria-label="Types de prestataires" className="flex gap-2 justify-center">
+            <div role="tablist" aria-label={intl.formatMessage({ id: 'card.filters.providerTypes' })} className="flex gap-2 justify-center">
               <button
                 role="tab"
                 aria-selected={activeFilter === 'all'}
@@ -1857,14 +1857,14 @@ filtered = filtered.filter(p => {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Tous
+                {intl.formatMessage({ id: 'sosCall.filters.type.all' })}
               </button>
               <button
                 role="tab"
                 aria-selected={activeFilter === 'lawyer'}
                 onClick={() => setActiveFilter('lawyer')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeFilter === 'lawyer' 
+                  activeFilter === 'lawyer'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
@@ -1891,12 +1891,12 @@ filtered = filtered.filter(p => {
           <div role="alert" aria-live="polite" className="text-center py-8">
             <p className="text-red-600 mb-4">{error}</p>
             <button onClick={loadProviders} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
-              Réessayer
+              {intl.formatMessage({ id: 'action.retry' })}
             </button>
           </div>
         )}
 
-        <div className="carousel-container relative overflow-hidden" role="region" aria-label="Carrousel des prestataires">
+        <div className="carousel-container relative overflow-hidden" role="region" aria-label={intl.formatMessage({ id: 'card.aria.carousel' })}>
           <div
             className="carousel-track flex transition-transform duration-300 ease-out"
             style={{ 
@@ -1917,7 +1917,7 @@ filtered = filtered.filter(p => {
                   key={provider.id} 
                   className="carousel-item flex-shrink-0" 
                   style={{ width: `${100 / CAROUSEL_VISIBLE_ITEMS}%` }}
-                  aria-label={`Prestataire ${index + 1} sur ${displayProviders.length}`}
+                  aria-label={intl.formatMessage({ id: 'card.carousel.itemNumber' }, { number: index + 1, total: displayProviders.length })}
                 >
                   <div className="mx-2">
                     <ProviderCard 
@@ -1930,9 +1930,9 @@ filtered = filtered.filter(p => {
             ) : (
               <div className="flex items-center justify-center w-full py-12">
                 <div className="text-center">
-                  <p className="text-gray-600 mb-4">Aucun prestataire trouvé</p>
+                  <p className="text-gray-600 mb-4">{intl.formatMessage({ id: 'card.noResults.title' })}</p>
                   <button onClick={resetFilters} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                    Réinitialiser les filtres
+                    {intl.formatMessage({ id: 'action.resetFilters' })}
                   </button>
                 </div>
               </div>
@@ -1943,7 +1943,7 @@ filtered = filtered.filter(p => {
             <>
               <button
                 onClick={handlePrev}
-                aria-label="Voir les prestataires précédents"
+                aria-label={intl.formatMessage({ id: 'card.carousel.previous' })}
                 className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors z-10"
               >
                 <ChevronLeft size={24} />
@@ -1951,13 +1951,13 @@ filtered = filtered.filter(p => {
                 
               <button
                 onClick={handleNext}
-                aria-label="Voir les prestataires suivants"
+                aria-label={intl.formatMessage({ id: 'card.carousel.next' })}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors z-10"
               >
                 <ChevronRight size={24} />
               </button>
 
-              <div className="flex justify-center mt-6 gap-2" role="tablist" aria-label="Indicateurs du carrousel">
+              <div className="flex justify-center mt-6 gap-2" role="tablist" aria-label={intl.formatMessage({ id: 'card.carousel.indicators' })}>
                 {Array.from({ 
                   length: Math.max(1, Math.ceil(displayProviders.length - CAROUSEL_VISIBLE_ITEMS + 1)) 
                 }, (_, i) => (
@@ -1965,7 +1965,7 @@ filtered = filtered.filter(p => {
                     key={i}
                     role="tab"
                     aria-selected={currentIndex === i}
-                    aria-label={`Aller à la page ${i + 1} du carrousel`}
+                    aria-label={intl.formatMessage({ id: 'card.carousel.goToPage' }, { page: i + 1 })}
                     onClick={() => setCurrentIndex(i)}
                     className={`w-2 h-2 rounded-full transition-colors ${
                       currentIndex === i ? 'bg-blue-600' : 'bg-gray-300'
@@ -1978,7 +1978,7 @@ filtered = filtered.filter(p => {
         </div>
 
         <div className="sr-only" aria-live="polite">
-          Affichage de {Math.min(CAROUSEL_VISIBLE_ITEMS, displayProviders.length)} prestataires sur {displayProviders.length}
+          {intl.formatMessage({ id: 'card.pagination.showing' }, { from: 1, to: Math.min(CAROUSEL_VISIBLE_ITEMS, displayProviders.length), total: displayProviders.length })}
         </div>
       </section>
     </Suspense>

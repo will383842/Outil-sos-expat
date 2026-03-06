@@ -59,7 +59,7 @@ export type MobileMoneyProvider =
 /**
  * User type for payment context
  */
-export type PaymentUserType = "chatter" | "influencer" | "blogger";
+export type PaymentUserType = "chatter" | "influencer" | "blogger" | "partner";
 
 // ============================================================================
 // PAYMENT DETAILS TYPES
