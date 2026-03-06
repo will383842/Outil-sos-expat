@@ -109,6 +109,23 @@
 /es-us /es-es 301
 /de-us /de-de 301
 /de-fr /de-de 301
+/ch-us/* /zh-cn/:splat 301
+/ch-us /zh-cn 301
+/ch-fr/* /zh-cn/:splat 301
+/ch-fr /zh-cn 301
+/de-br/* /de-de/:splat 301
+/de-br /de-de 301
+/es-fr /es-es 301
+/ru-fr /ru-ru 301
+/ru-us /ru-ru 301
+/pt-us /pt-pt 301
+/pt-fr /pt-pt 301
+/hi-fr /hi-in 301
+/hi-us /hi-in 301
+/ar-fr /ar-sa 301
+/ar-us /ar-sa 301
+/zh-fr /zh-cn 301
+/zh-us /zh-cn 301
 
 # =============================================
 # Legacy blog/external URLs
@@ -133,6 +150,15 @@
 /sos-appel /fr-fr/sos-appel 301
 /pricing /en-us/pricing 301
 /help-center /en-us/help-center 301
+/terms-clients /en-us/terms-clients 301
+/terms-lawyers /en-us/terms-lawyers 301
+/terms-expats /en-us/terms-expats 301
+/how-it-works /en-us/how-it-works 301
+/testimonials /en-us/testimonials 301
+/password-reset /en-us/password-reset 301
+/privacy-policy /en-us/privacy-policy 301
+/cookies /fr-fr/cookies 301
+/register-expat /fr-fr/inscription/expatrie 301
 
 # =============================================
 # SPA fallback - MUST be last

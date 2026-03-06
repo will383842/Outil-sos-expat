@@ -86,6 +86,18 @@ function getHreflangCode(lang: string): string {
 }
 
 /**
+ * Détecte si un slug a un préfixe de langue interne (ex: "ch-setting-prices" -> "ch")
+ * Utilisé pour n'indexer les articles non-traduits que dans leur langue native
+ */
+function detectSlugLangPrefix(slug: string): string | null {
+  const match = slug.match(/^([a-z]{2})-/);
+  if (match && LANGUAGES.includes(match[1])) {
+    return match[1];
+  }
+  return null;
+}
+
+/**
  * Escape les caractères spéciaux XML
  */
 function escapeXml(str: string): string {
@@ -155,6 +167,15 @@ export const sitemapProfiles = onRequest(
               // ❌ Locale invalide détectée (ex: es-FR, zh-HR)
               console.warn(`⚠️ Slug invalide ignoré (${doc.id}, ${lang}): ${slug} (locale: ${slugLocale || 'none'})`);
               return; // Exclure du sitemap
+            }
+
+            // ✅ VALIDATION: Vérifier que la locale du slug correspond à la langue
+            // Ex: slugs['en'] ne doit pas contenir "fr-fr/avocat/..." (contamination cross-langue)
+            const expectedUrlLang = lang === 'ch' ? 'zh' : lang;
+            const slugLangPart = slugLocale.split('-')[0];
+            if (slugLangPart !== expectedUrlLang) {
+              console.warn(`⚠️ Slug cross-langue ignoré (${doc.id}, ${lang}): locale ${slugLocale} != expected ${expectedUrlLang}`);
+              return;
             }
 
             // Le slug contient déjà le chemin complet avec locale
@@ -334,16 +355,6 @@ export const sitemapHelp = onRequest(
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
-      // Détecte si un slug a un préfixe de langue interne (ex: "ch-setting-prices" → "ch")
-      // Utilisé pour n'indexer les articles non-traduits que dans leur langue native
-      const detectSlugLangPrefix = (slug: string): string | null => {
-        const match = slug.match(/^([a-z]{2})-/);
-        if (match && LANGUAGES.includes(match[1])) {
-          return match[1];
-        }
-        return null;
-      };
-
       // Évite les URLs dupliquées dans le sitemap
       const seenUrls = new Set<string>();
 
@@ -370,6 +381,16 @@ export const sitemapHelp = onRequest(
           // Si le slug a un préfixe de langue (ex: "ch-"), n'inclure que pour cette langue
           // Évite d'indexer /fr-fr/centre-aide/ch-guide avec un slug chinois
           if (nativeLang && nativeLang !== lang) return;
+
+          // FIX: Pour les slugs multilingues, vérifier que le slug résolu
+          // n'a pas un préfixe de langue différent (contamination cross-langue)
+          // Ex: slug objet { fr: "ch-response-times-...", en: "ch-response-times-..." }
+          // → le slug "ch-response-times" ne doit apparaître que sous la langue "ch"
+          if (!nativeLang && isMultilingualSlug) {
+            const resolvedSlug = getSlug(lang);
+            const resolvedLangPrefix = detectSlugLangPrefix(resolvedSlug);
+            if (resolvedLangPrefix && resolvedLangPrefix !== lang) return;
+          }
 
           const slug = getSlug(lang);
           const routeSlug = helpCenterSlug[lang] || 'help-center';
@@ -464,7 +485,13 @@ export const sitemapLanding = onRequest(
         const page = doc.data();
         const slug = page.slug || doc.id;
 
+        // Détecter si le slug a un préfixe de langue (ex: "en-guide-...")
+        const slugNativeLang = detectSlugLangPrefix(slug);
+
         LANGUAGES.forEach(lang => {
+          // Si le slug a un préfixe de langue, n'inclure que pour cette langue
+          if (slugNativeLang && slugNativeLang !== lang) return;
+
           // Use locale format: lang-country (e.g., "hi-in", "fr-fr")
           const locale = getLocaleString(lang);
           const url = `${SITE_URL}/${locale}/${slug}`;
@@ -568,7 +595,23 @@ export const sitemapFaq = onRequest(
           return doc.id;
         };
 
+        // Pour les slugs string unique, détecter la langue native
+        const baseSlugFaq = typeof slugs === 'string' ? slugs : null;
+        const nativeLangFaq = baseSlugFaq ? detectSlugLangPrefix(baseSlugFaq) : null;
+
         LANGUAGES.forEach(lang => {
+          // Si slug string avec préfixe de langue, n'inclure que pour cette langue
+          if (nativeLangFaq && nativeLangFaq !== lang) return;
+
+          // FIX: Pour les slugs multilingues, vérifier la contamination cross-langue
+          // Ex: FAQ avec slug { fr: "cuales-son-las-tarifas", zh: "cuales-son-las-tarifas" }
+          // → slug espagnol ne doit pas apparaître sous locale chinoise
+          if (!nativeLangFaq && hasSlugs) {
+            const resolvedSlug = getSlug(lang);
+            const resolvedLangPrefix = detectSlugLangPrefix(resolvedSlug);
+            if (resolvedLangPrefix && resolvedLangPrefix !== lang) return;
+          }
+
           const slug = getSlug(lang);
           // Use locale format: lang-country (e.g., "hi-in", "fr-fr")
           const locale = getLocaleString(lang);

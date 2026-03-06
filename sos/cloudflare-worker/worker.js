@@ -928,6 +928,96 @@ async function handleRequest(request, env, ctx) {
     // Fall through to normal handling if fetch fails
   }
 
+  // =========================================================================
+  // LOCALE VALIDATION (BOTS ONLY): Redirect invalid locale combos BEFORE SSR
+  // Prevents 5xx errors when SSR receives URLs like /ar-sa/centr-pomoshi/ru-...
+  // Only applies to bots — regular users use frontend LocaleRouter which
+  // accepts any valid lang + geolocation country (e.g., de-br is valid for users)
+  // =========================================================================
+  const isBotForLocaleCheck = isBot(userAgent);
+  const localeMatch = pathname.match(/^\/([a-z]{2})-([a-z]{2})(\/.*)?$/i);
+  if (isBotForLocaleCheck && localeMatch) {
+    const urlLang = localeMatch[1].toLowerCase();
+    const urlCountry = localeMatch[2].toLowerCase();
+    const restPath = localeMatch[3] || '';
+
+    // Map URL language to default country
+    const LANG_TO_DEFAULT_COUNTRY = {
+      fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru',
+      pt: 'pt', zh: 'cn', ch: 'cn', hi: 'in', ar: 'sa',
+    };
+    // Valid languages (includes 'ch' which is internal code for Chinese, mapped to zh-cn)
+    const VALID_LANGS = new Set(['fr', 'en', 'es', 'de', 'ru', 'pt', 'zh', 'ch', 'hi', 'ar']);
+    // Valid locale combos (language-country pairs that make sense)
+    const VALID_LOCALE_SET = new Set([
+      'fr-fr', 'fr-ca', 'fr-be', 'fr-ch',
+      'en-us', 'en-gb', 'en-ca', 'en-au',
+      'es-es', 'es-mx', 'es-ar',
+      'de-de', 'de-at', 'de-ch',
+      'pt-pt', 'pt-br',
+      'ru-ru',
+      'zh-cn', 'zh-tw',
+      'ar-sa',
+      'hi-in',
+    ]);
+
+    const locale = `${urlLang}-${urlCountry}`;
+
+    if (VALID_LANGS.has(urlLang) && !VALID_LOCALE_SET.has(locale)) {
+      // Invalid locale combo (e.g., fr-us, de-br, ch-us) -> redirect to default
+      // 'ch' is internal code for Chinese, URL should use 'zh'
+      const canonicalLang = urlLang === 'ch' ? 'zh' : urlLang;
+      const defaultCountry = LANG_TO_DEFAULT_COUNTRY[urlLang] || urlLang;
+      const correctLocale = `${canonicalLang}-${defaultCountry}`;
+      const redirectUrl = `${url.origin}/${correctLocale}${restPath}${url.search}`;
+      console.log(`[WORKER] Invalid locale redirect: ${pathname} -> /${correctLocale}${restPath}`);
+      return new Response(null, {
+        status: 301,
+        headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true' },
+      });
+    }
+
+    // Check if slug in URL matches a DIFFERENT language than the locale
+    // e.g., /ar-sa/centr-pomoshi/... (Russian slug under Arabic locale)
+    // Covers: help-center routes, FAQ routes (both romanized and Unicode)
+    const SLUG_TO_LANG = {
+      // Help Center slugs
+      'centre-aide': 'fr', 'help-center': 'en', 'centro-ayuda': 'es',
+      'hilfezentrum': 'de', 'tsentr-pomoshchi': 'ru', 'centr-pomoshi': 'ru',
+      'centro-ajuda': 'pt', 'bangzhu-zhongxin': 'zh', 'sahayata-kendra': 'hi',
+      '\u0645\u0631\u0643\u0632-\u0627\u0644\u0645\u0633\u0627\u0639\u062F\u0629': 'ar', // مركز-المساعدة
+      'markaz-almusaeada': 'ar', // romanized Arabic help center
+      // FAQ slugs
+      'faq': null, // multi-lang, skip
+      'changjian-wenti': 'zh', 'preguntas-frecuentes': 'es',
+      'perguntas-frequentes': 'pt', 'voprosy-otvety': 'ru',
+      'aksar-puche-jaane-wale-sawal': 'hi',
+      '\u0627\u0644\u0623\u0633\u0626\u0644\u0629-\u0627\u0644\u0634\u0627\u0626\u0639\u0629': 'ar', // الأسئلة-الشائعة
+    };
+
+    if (restPath) {
+      let firstSlug;
+      try {
+        firstSlug = decodeURIComponent(restPath.split('/').filter(Boolean)[0] || '');
+      } catch (_e) {
+        firstSlug = restPath.split('/').filter(Boolean)[0];
+      }
+      if (firstSlug && SLUG_TO_LANG[firstSlug] !== undefined) {
+        const slugLang = SLUG_TO_LANG[firstSlug];
+        if (slugLang && slugLang !== urlLang) {
+          // Slug belongs to a different language -> redirect to correct locale
+          const correctCountry = LANG_TO_DEFAULT_COUNTRY[slugLang] || slugLang;
+          const redirectUrl = `${url.origin}/${slugLang}-${correctCountry}${restPath}${url.search}`;
+          console.log(`[WORKER] Cross-lang slug redirect: ${pathname} -> /${slugLang}-${correctCountry}${restPath}`);
+          return new Response(null, {
+            status: 301,
+            headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true' },
+          });
+        }
+      }
+    }
+  }
+
   // Check if this is a bot AND visiting a page that needs prerendering
   const botDetected = isBot(userAgent);
   const needsSSR = needsPrerendering(pathname);
@@ -1009,8 +1099,31 @@ async function handleRequest(request, env, ctx) {
     const originResponse = await fetch(pagesUrl.toString(), {
       method: request.method,
       headers: request.headers,
-      redirect: 'follow',
+      redirect: 'manual', // Don't follow redirects — pass 301s to client/bot for proper SEO
     });
+
+    // If Pages returned a redirect (301/302 from _redirects), pass it through
+    // This ensures bots (Googlebot) see the proper 301 redirect and update their index
+    if (originResponse.status >= 300 && originResponse.status < 400) {
+      const location = originResponse.headers.get('Location');
+      if (location) {
+        // Convert relative Location to absolute URL
+        const absoluteLocation = location.startsWith('/')
+          ? `${url.origin}${location}`
+          : location;
+        console.log(`[WORKER] Passing through ${originResponse.status} redirect: ${pathname} -> ${absoluteLocation}`);
+        return new Response(null, {
+          status: originResponse.status,
+          headers: {
+            'Location': absoluteLocation,
+            'X-Worker-Active': 'true',
+            'X-Worker-Redirect': 'from-pages',
+            'Cache-Control': 'public, max-age=86400',
+          },
+        });
+      }
+    }
+
     const newHeaders = new Headers(originResponse.headers);
     newHeaders.set('X-Worker-Active', 'true');
     newHeaders.set('X-Worker-Bot-Detected', botDetected ? 'true' : 'false');
