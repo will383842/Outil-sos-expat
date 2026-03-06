@@ -148,7 +148,7 @@ export const adminGetInfluencersList = onCall(
           id: string; email: string; firstName: string; lastName: string;
           country: string; status: InfluencerStatus; totalEarned: number;
           totalClients: number; totalRecruits: number; currentMonthRank: number | null;
-          createdAt: string; isVisible: boolean; photoUrl?: string; isFeatured: boolean;
+          createdAt: string; lastLoginAt: string | null; isVisible: boolean; photoUrl?: string; isFeatured: boolean;
         } = {
           id: data.id,
           email: data.email,
@@ -161,6 +161,7 @@ export const adminGetInfluencersList = onCall(
           totalRecruits: data.totalRecruits,
           currentMonthRank: data.currentMonthRank,
           createdAt: data.createdAt.toDate().toISOString(),
+          lastLoginAt: data.lastLoginAt?.toDate?.()?.toISOString() || null,
           isVisible: data.isVisible ?? false,
           isFeatured: featuredMap[doc.id] ?? false,
         };

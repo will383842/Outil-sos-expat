@@ -297,7 +297,7 @@ function YourNextGoal({
       { id: 'chatter.howToEarn.nextGoal.nextLevel', defaultMessage: 'Continuez — niveau {level} à portée ({progress}%)' },
       { level: nextLevel, progress: chatter?.levelProgress || 0 }
     );
-    goalReward = `Niv. ${nextLevel}`;
+    goalReward = intl.formatMessage({ id: 'chatter.howToEarn.nextGoal.levelShort', defaultMessage: 'Niv. {level}' }, { level: nextLevel });
     goalIcon = <Star className="h-5 w-5" />;
     progressPercent = chatter?.levelProgress || 0;
   }
@@ -438,7 +438,9 @@ function MonthlyCompetitionSection({
         {prizes.map(({ position, amount, color, bg }) => (
           <div key={position} className={`p-4 rounded-xl border-2 text-center ${bg}`}>
             <Trophy className={`h-6 w-6 mx-auto ${color}`} />
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">Top {position}</div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+              <FormattedMessage id="chatter.howToEarn.competition.topRank" defaultMessage="Top {rank}" values={{ rank: position }} />
+            </div>
             <div className={`text-2xl font-black ${color} mt-1`}>{amount}</div>
           </div>
         ))}
@@ -530,7 +532,9 @@ function CaptainTierProgress({
             >
               <div className="flex justify-center">{CAPTAIN_TIER_ICONS[t.name] || <Shield className="h-5 w-5" />}</div>
               <div className="font-bold text-sm mt-1">{t.name}</div>
-              <div className="text-[10px] opacity-70">{t.minCalls}+ appels</div>
+              <div className="text-[10px] opacity-70">
+                <FormattedMessage id="chatter.howToEarn.captain.minCalls" defaultMessage="{count}+ appels" values={{ count: t.minCalls }} />
+              </div>
               <div className="font-black text-sm mt-1">{formatCents(t.bonus)}</div>
             </div>
           );
@@ -869,7 +873,9 @@ function ChatterHowToEarn() {
               >
                 {isReached && <CheckCircle className="h-4 w-4 mx-auto mb-1 text-green-500" />}
                 <div className="font-black text-lg">{tier.bonus}</div>
-                <div className="text-[10px] font-medium">{tier.count} recrues</div>
+                <div className="text-[10px] font-medium">
+                  <FormattedMessage id="chatter.howToEarn.tiers.recruitCount" defaultMessage="{count} recrues" values={{ count: tier.count }} />
+                </div>
               </div>
             );
           })}
@@ -921,7 +927,11 @@ function ChatterHowToEarn() {
                   <FormattedMessage id="chatter.howToEarn.captain.qualityBonus.title" defaultMessage="Bonus qualité" />
                 </span>
                 <span className="ml-auto text-lg font-black text-purple-600 dark:text-purple-400">
-                  {formatCents(captainData.qualityBonusStatus.bonusAmount)}<span className="text-xs font-medium">/mois</span>
+                  <FormattedMessage
+                    id="chatter.howToEarn.captain.qualityBonus.amountPerMonth"
+                    defaultMessage="{amount}/mois"
+                    values={{ amount: formatCents(captainData.qualityBonusStatus.bonusAmount) }}
+                  />
                 </span>
               </div>
               <div className="space-y-1.5">

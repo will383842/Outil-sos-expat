@@ -12,6 +12,7 @@ import {
   Ban,
   X,
 } from 'lucide-react';
+import { useIntl } from 'react-intl';
 import { cn } from '@/lib/utils';
 import type { WithdrawalStatus } from '@/types/payment';
 
@@ -170,18 +171,18 @@ const StatusIcon: React.FC<{ status: WithdrawalStatus; className?: string }> = (
   }
 };
 
-// Status display labels
-const statusLabels: Record<WithdrawalStatus, string> = {
-  pending: 'En attente',
-  validating: 'Validation',
-  approved: 'Approuve',
-  queued: 'En file',
-  processing: 'Traitement',
-  sent: 'Envoye',
-  completed: 'Complete',
-  failed: 'Echoue',
-  rejected: 'Rejete',
-  cancelled: 'Annule',
+// Status label i18n keys
+const statusLabelKeys: Record<WithdrawalStatus, string> = {
+  pending: 'payment.status.pending',
+  validating: 'payment.status.validating',
+  approved: 'payment.status.approved',
+  queued: 'payment.status.queued',
+  processing: 'payment.status.processing',
+  sent: 'payment.status.sent',
+  completed: 'payment.status.completed',
+  failed: 'payment.status.failed',
+  rejected: 'payment.status.rejected',
+  cancelled: 'payment.status.cancelled',
 };
 
 // Statuses that should animate
@@ -204,10 +205,11 @@ export const WithdrawalStatusBadge: React.FC<WithdrawalStatusBadgeProps> = ({
   animated = true,
   className,
 }) => {
+  const intl = useIntl();
   const colors = statusColors[status];
   const sizes = sizeClasses[size];
   const shouldAnimate = animated && animatedStatuses.includes(status);
-  const label = statusLabels[status];
+  const label = intl.formatMessage({ id: statusLabelKeys[status], defaultMessage: status });
 
   return (
     <span
@@ -255,8 +257,8 @@ export const WithdrawalStatusBadge: React.FC<WithdrawalStatusBadgeProps> = ({
   );
 };
 
-// Export status labels for external use
-export { statusLabels as withdrawalStatusLabels };
+// Export status label keys for external use
+export { statusLabelKeys as withdrawalStatusLabelKeys };
 
 // Helper to check if status is terminal
 export const isTerminalWithdrawalStatus = (status: WithdrawalStatus): boolean => {

@@ -154,6 +154,7 @@ interface Chatter {
   country?: string;
   language?: string;
   createdAt: string;
+  lastLoginAt?: string | null;
   isFeatured?: boolean;
   isVisible?: boolean;
 }
@@ -774,6 +775,9 @@ const AdminChattersList: React.FC = () => {
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                         <FormattedMessage id="admin.chatters.col.conversions" defaultMessage="Conv." />
                       </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                        <FormattedMessage id="admin.chatters.col.lastLogin" defaultMessage="Dernière connexion" />
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Répertoire</th>
                       <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
@@ -845,6 +849,13 @@ const AdminChattersList: React.FC = () => {
                             <span className="text-gray-400 mx-1">/</span>
                             <span className="text-gray-600 dark:text-gray-400">{chatter.totalRecruits}</span>
                           </div>
+                        </td>
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                            {chatter.lastLoginAt
+                              ? new Date(chatter.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })
+                              : '—'}
+                          </span>
                         </td>
                         <td className="px-4 py-3">
                           {visibilityLoading.get(chatter.id) ? (

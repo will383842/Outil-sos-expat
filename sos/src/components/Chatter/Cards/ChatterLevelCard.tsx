@@ -38,13 +38,13 @@ const UI = {
   `,
 } as const;
 
-// Level configurations
+// Level configurations (thresholds in cents)
 const LEVEL_CONFIG = {
-  1: { name: 'Bronze', color: 'from-amber-600 to-amber-700', icon: Star, minEarned: 0 },
-  2: { name: 'Silver', color: 'from-gray-400 to-gray-500', icon: Star, minEarned: 10000 },
-  3: { name: 'Gold', color: 'from-yellow-400 to-yellow-500', icon: Trophy, minEarned: 50000 },
-  4: { name: 'Platinum', color: 'from-cyan-400 to-cyan-500', icon: Trophy, minEarned: 200000 },
-  5: { name: 'Diamond', color: 'from-red-400 to-pink-400', icon: Zap, minEarned: 500000 },
+  1: { color: 'from-amber-600 to-amber-700', icon: Star, minEarned: 0 },
+  2: { color: 'from-gray-400 to-gray-500', icon: Star, minEarned: 10000 },
+  3: { color: 'from-yellow-400 to-yellow-500', icon: Trophy, minEarned: 50000 },
+  4: { color: 'from-cyan-400 to-cyan-500', icon: Trophy, minEarned: 200000 },
+  5: { color: 'from-red-400 to-pink-400', icon: Zap, minEarned: 500000 },
 } as const;
 
 // Level bonus percentages
@@ -156,7 +156,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
               `}
               style={{ animationDelay: `${animationDelay + 200}ms` }}
             >
-              {levelConfig.name}
+              {intl.formatMessage({ id: `chatter.level.${level}`, defaultMessage: `Level ${level}` })}
             </span>
           </h3>
           <p className="text-xs dark:text-gray-400 sm:text-sm">
@@ -203,7 +203,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
                 defaultMessage="Encore {amount} pour atteindre {level}"
                 values={{
                   amount: formatAmount(amountToNextLevel),
-                  level: nextLevel.name
+                  level: intl.formatMessage({ id: `chatter.level.${(level + 1)}`, defaultMessage: `Level ${level + 1}` })
                 }}
               />
             </span>

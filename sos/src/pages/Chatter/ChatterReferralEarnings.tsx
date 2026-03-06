@@ -206,7 +206,7 @@ export default function ChatterReferralEarnings() {
                               {getTypeLabel(type)}
                             </p>
                             <p className="text-xs">
-                              {data.count} commission{data.count > 1 ? "s" : ""}
+                              {t("chatter.referrals.commissionCount", { count: data.count })}
                             </p>
                           </div>
                           <div className="ml-auto text-right">

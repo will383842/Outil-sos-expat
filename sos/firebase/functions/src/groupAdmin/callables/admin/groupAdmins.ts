@@ -75,6 +75,7 @@ interface GroupAdminListItem {
   totalClients: number;
   totalRecruits: number;
   createdAt: Timestamp;
+  lastLoginAt: string | null;
   isFeatured?: boolean;
 }
 
@@ -166,6 +167,7 @@ export const adminGetGroupAdminsList = onCall(
           totalClients: data.totalClients,
           totalRecruits: data.totalRecruits,
           createdAt: data.createdAt,
+          lastLoginAt: data.lastLoginAt?.toDate?.()?.toISOString() || null,
           isFeatured: featuredMap[doc.id] ?? false,
         };
       });

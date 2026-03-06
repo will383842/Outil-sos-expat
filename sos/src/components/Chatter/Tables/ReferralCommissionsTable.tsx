@@ -37,44 +37,20 @@ interface ReferralCommissionsTableProps {
 }
 
 // Get commission type display info
-function getCommissionTypeInfo(type: ChatterCommissionType) {
+function getCommissionTypeColor(type: ChatterCommissionType) {
   switch (type) {
     case "threshold_10":
-      return {
-        label: "Seuil $10",
-        color: "bg-blue-100 text-blue-800",
-        icon: TrendingUp,
-      };
+      return { color: "bg-blue-100 text-blue-800", icon: TrendingUp };
     case "threshold_50":
-      return {
-        label: "Seuil $50 (N1)",
-        color: "bg-green-100 text-green-800",
-        icon: TrendingUp,
-      };
+      return { color: "bg-green-100 text-green-800", icon: TrendingUp };
     case "threshold_50_n2":
-      return {
-        label: "Seuil $50 (N2)",
-        color: "bg-red-100 text-red-800",
-        icon: Users,
-      };
+      return { color: "bg-red-100 text-red-800", icon: Users };
     case "recurring_5pct":
-      return {
-        label: "Recurrent 5%",
-        color: "bg-orange-100 text-orange-800",
-        icon: Calendar,
-      };
+      return { color: "bg-orange-100 text-orange-800", icon: Calendar };
     case "tier_bonus":
-      return {
-        label: "Bonus Palier",
-        color: "bg-yellow-100 text-yellow-800",
-        icon: Trophy,
-      };
+      return { color: "bg-yellow-100 text-yellow-800", icon: Trophy };
     default:
-      return {
-        label: type,
-        color: "bg-gray-100 text-gray-800",
-        icon: DollarSign,
-      };
+      return { color: "bg-gray-100 text-gray-800", icon: DollarSign };
   }
 }
 
@@ -154,15 +130,16 @@ export function ReferralCommissionsTable({
             </TableHeader>
             <TableBody>
               {paginatedItems.map((commission) => {
-                const typeInfo = getCommissionTypeInfo(commission.type);
+                const typeInfo = getCommissionTypeColor(commission.type);
                 const TypeIcon = typeInfo.icon;
+                const typeLabel = t(`chatter.referrals.type_${commission.type}`) || commission.type;
 
                 return (
                   <TableRow key={commission.id}>
                     <TableCell>
                       <Badge className={`${typeInfo.color} gap-1`}>
                         <TypeIcon className="h-3 w-3" />
-                        {typeInfo.label}
+                        {typeLabel}
                       </Badge>
                     </TableCell>
                     <TableCell>

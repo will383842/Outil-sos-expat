@@ -38,12 +38,12 @@ export function PromoAlertCard({ promotion, onDismiss }: PromoAlertCardProps) {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (days > 0) {
-      return `${days}j ${hours}h`;
+      return t("chatter.referrals.timeRemaining.days", { days, hours });
     }
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return t("chatter.referrals.timeRemaining.hours", { hours, minutes });
     }
-    return `${minutes}m`;
+    return t("chatter.referrals.timeRemaining.minutes", { minutes });
   };
 
   const multiplierDisplay = `x${promotion.multiplier}`;

@@ -405,7 +405,7 @@ const AdminAffiliatesList: React.FC = () => {
 
   // Export to CSV
   const exportToCsv = () => {
-    const headers = ["Email", "Nom", "Code", "Statut", "Gains totaux", "Solde disponible", "Filleuls", "Date creation"];
+    const headers = ["Email", "Nom", "Code", "Statut", "Gains totaux", "Solde disponible", "Filleuls", "Date creation", "Dernière connexion"];
     const rows = filteredAffiliates.map((a) => [
       a.email,
       a.displayName,
@@ -415,6 +415,7 @@ const AdminAffiliatesList: React.FC = () => {
       (a.availableBalance / 100).toFixed(2),
       a.affiliateStats.totalReferrals,
       a.createdAt ? new Date(a.createdAt).toLocaleDateString("fr-FR") : "",
+      a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleDateString("fr-FR") : "",
     ]);
 
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -572,6 +573,9 @@ const AdminAffiliatesList: React.FC = () => {
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Disponible
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                    Dernière connexion
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
@@ -580,14 +584,14 @@ const AdminAffiliatesList: React.FC = () => {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {isLoading && affiliates.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center">
+                    <td colSpan={8} className="px-4 py-12 text-center">
                       <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
                       <p className="text-sm text-gray-500 mt-2">Chargement...</p>
                     </td>
                   </tr>
                 ) : filteredAffiliates.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center">
+                    <td colSpan={8} className="px-4 py-12 text-center">
                       <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-sm text-gray-500">Aucun affilié trouvé</p>
                     </td>
@@ -651,6 +655,13 @@ const AdminAffiliatesList: React.FC = () => {
                             : "text-gray-500"
                         }`}>
                           {formatCents(affiliate.availableBalance)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 hidden xl:table-cell">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {affiliate.lastLoginAt
+                            ? new Date(affiliate.lastLoginAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+                            : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right">

@@ -47,13 +47,13 @@ const UI = {
   `,
 } as const;
 
-// Level configurations (matching ChatterLevelCard)
+// Level configurations (thresholds in cents)
 const LEVEL_CONFIG = {
-  1: { name: 'Bronze', minEarned: 0 },
-  2: { name: 'Silver', minEarned: 10000 },
-  3: { name: 'Gold', minEarned: 50000 },
-  4: { name: 'Platinum', minEarned: 200000 },
-  5: { name: 'Diamond', minEarned: 500000 },
+  1: { minEarned: 0 },
+  2: { minEarned: 10000 },
+  3: { minEarned: 50000 },
+  4: { minEarned: 200000 },
+  5: { minEarned: 500000 },
 } as const;
 
 // Tier bonuses (in cents)
@@ -261,8 +261,11 @@ const ForecastCard = memo(function ForecastCard({
               />
             </p>
             <p className="text-sm dark:text-gray-300 font-medium">
-              ~{formatAmountWhole(projections.dailyAverage)}
-              <span className="text-xs dark:text-gray-400">/jour</span>
+              <FormattedMessage
+                id="chatter.forecast.dailyRate"
+                defaultMessage="~{amount}/jour"
+                values={{ amount: formatAmountWhole(projections.dailyAverage) }}
+              />
             </p>
           </div>
         </div>
@@ -284,7 +287,7 @@ const ForecastCard = memo(function ForecastCard({
           {projections.nextLevelConfig ? (
             <>
               <p className="text-sm dark:text-white font-semibold">
-                {projections.nextLevelConfig.name}
+                {intl.formatMessage({ id: `chatter.level.${projections.nextLevelNum}`, defaultMessage: `Level ${projections.nextLevelNum}` })}
               </p>
               {projections.daysToNextLevel !== null ? (
                 <p className="text-[10px] dark:text-gray-400 sm:text-xs">

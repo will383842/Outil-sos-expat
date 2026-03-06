@@ -158,7 +158,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
               {isMobileMoney
                 ? providerName
                 : (method.details.type === 'bank_transfer' && method.details.bankName)
-                  || 'Virement bancaire'
+                  || intl.formatMessage({ id: 'payment.method.bankTransfer', defaultMessage: 'Virement bancaire' })
               }
             </p>
 
@@ -175,7 +175,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
             {method.isDefault && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
                 <Star className="w-3 h-3 mr-1 fill-amber-500" />
-                Par defaut
+                {intl.formatMessage({ id: 'payment.method.default', defaultMessage: 'Par défaut' })}
               </span>
             )}
 
@@ -183,7 +183,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
             {method.isVerified && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
-                Verifie
+                {intl.formatMessage({ id: 'payment.method.verified', defaultMessage: 'Vérifié' })}
               </span>
             )}
           </div>

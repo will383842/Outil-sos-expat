@@ -59,7 +59,7 @@ export type MobileMoneyProvider =
 /**
  * User type for payment context
  */
-export type PaymentUserType = "chatter" | "influencer" | "blogger" | "partner";
+export type PaymentUserType = "chatter" | "influencer" | "blogger" | "group_admin" | "partner";
 
 // ============================================================================
 // PAYMENT DETAILS TYPES
@@ -1186,7 +1186,7 @@ interface UsePendingWithdrawalReturn {
 
 export function usePendingWithdrawal(): UsePendingWithdrawalReturn {
   const { withdrawals, loading } = useWithdrawals({
-    status: ["pending", "approved", "processing"],
+    status: ["pending", "validating", "approved", "queued", "processing", "sent"],
     limit: 1,
   });
 

@@ -778,6 +778,111 @@ Earn karma first by participating normally. A brand new account posting links = 
       },
       {
         order: 4,
+        type: "tips",
+        title: "Canaux avancés : Quora, Twitter/X, YouTube & Discord 🚀",
+        titleTranslations: { en: "Advanced Channels: Quora, Twitter/X, YouTube & Discord 🚀" },
+        content: `Au-delà de Facebook et WhatsApp, il existe des mines d'or encore peu exploitées !
+
+**📚 Quora / Quora Spaces**
+Questions sur visa, droit du travail, permis de résidence, fiscalité internationale...
+- Rédige des réponses longues et détaillées (= trafic durable des mois après)
+- Place ton lien naturellement à la fin de ta réponse
+- ⭐ Avantage : une bonne réponse Quora peut générer des visites pendant des années
+
+**🐦 Twitter / X**
+- Cherche les hashtags : #expat #expatlife #visaproblems #immigration #relocation
+- Réponds aux tweets de personnes en galère ("besoin d'aide pour mon visa...")
+- Règle : apporte de la valeur dans ta réponse, lien seulement si ça s'y prête naturellement
+
+**▶️ YouTube — Commentaires**
+- Va sous les vidéos "s'expatrier en [pays]", "vivre à [ville]", "visa [pays]"
+- L'audience est ULTRA-qualifiée : des gens en phase active de recherche
+- Réponds aux questions dans les commentaires, glisse ton lien dans le contexte
+- Ex : vidéo "vivre au Canada" → "Pour les questions admin/juridiques, il y a un service qui met en contact avec un avocat en 5 min..."
+
+**💬 Discord**
+- Serveurs digital nomads, remote workers, expatriés par ville ou pays
+- Cherche : "Nomad List Discord", "Remote Work Discord", "expats [pays] Discord"
+- Présente-toi, participe aux discussions, reste discret avec les liens
+
+**📱 TikTok / Instagram**
+- Commente sous les vidéos/posts de créateurs expat ("comment tu as fait pour ton visa ?")
+- Quand quelqu'un pose une question dans les commentaires, réponds avec de la valeur + lien
+- Cible : créateurs lifestyle expat, vlogs déménagement, vies à l'étranger
+
+**🗺️ Forums bonus**
+- Angloinfo.com (par pays, audience anglophone)
+- Lepetitjournal.com (forums par ville, communautés francophones à l'étranger)
+- Internations.org (réseau mondial, très actif)
+
+**🎯 Priorité recommandée :**
+1. Facebook Groups / WhatsApp / Telegram (conversion rapide)
+2. Reddit / Forums / Expat.com (trafic durable)
+3. YouTube / TikTok commentaires (qualifié, peu de concurrence)
+4. Quora (long terme, evergreen)
+5. Twitter/X, Discord (bonus)`,
+        contentTranslations: {
+          en: `Beyond Facebook and WhatsApp, there are goldmines still rarely exploited!
+
+**📚 Quora / Quora Spaces**
+Questions on visa, employment law, residence permits, international taxes...
+- Write long, detailed answers (= durable traffic for months after)
+- Place your link naturally at the end of your answer
+- ⭐ Advantage: a good Quora answer can bring traffic for years
+
+**🐦 Twitter / X**
+- Search hashtags: #expat #expatlife #visaproblems #immigration #relocation
+- Reply to tweets from people struggling ("need help with my visa...")
+- Rule: bring value in your reply, link only if it fits naturally
+
+**▶️ YouTube — Comments**
+- Go to videos "living in [country]", "expat life [city]", "visa [country]"
+- The audience is ULTRA-qualified: people actively looking for answers
+- Reply to questions in comments, slide your link into context
+- Ex: video "living in Canada" → "For admin/legal questions, there's a service connecting you with a lawyer in 5 min..."
+
+**💬 Discord**
+- Digital nomad, remote worker, expat servers by city or country
+- Search: "Nomad List Discord", "Remote Work Discord", "expats [country] Discord"
+- Introduce yourself, participate, be discreet with links
+
+**📱 TikTok / Instagram**
+- Comment under expat creator videos ("how did you handle your visa?")
+- When someone asks a question in comments, reply with value + link
+- Target: expat lifestyle creators, moving abroad vlogs, life abroad content
+
+**🗺️ Bonus Forums**
+- Angloinfo.com (by country, English-speaking audience)
+- Internations.org (global network, very active)
+
+**🎯 Recommended priority:**
+1. Facebook Groups / WhatsApp / Telegram (fast conversion)
+2. Reddit / Forums / Expat.com (durable traffic)
+3. YouTube / TikTok comments (qualified, low competition)
+4. Quora (long term, evergreen)
+5. Twitter/X, Discord (bonus)`,
+        },
+        tips: [
+          {
+            text: "Quora : karma d'abord — réponds à 10 questions sans lien avant de commencer à placer tes liens.",
+            textTranslations: { en: "Quora: karma first — answer 10 questions without a link before starting to place links." },
+          },
+          {
+            text: "YouTube : ne spam pas les commentaires du même créateur. Varie les chaînes.",
+            textTranslations: { en: "YouTube: don't spam comments of the same creator. Vary the channels." },
+          },
+          {
+            text: "Twitter/X : un compte avec quelques tweets normaux d'abord, sinon tu seras perçu comme un bot.",
+            textTranslations: { en: "Twitter/X: a few normal tweets first, otherwise you'll be seen as a bot." },
+          },
+          {
+            text: "Discord : les serveurs actifs ont des règles strictes. Lis les règles AVANT de poster.",
+            textTranslations: { en: "Discord: active servers have strict rules. Read the rules BEFORE posting." },
+          },
+        ],
+      },
+      {
+        order: 5,
         type: "text",
         title: "Organisation de ta journée 📅",
         titleTranslations: { en: "Organizing your day 📅" },
@@ -845,12 +950,12 @@ Earn karma first by participating normally. A brand new account posting links = 
         options: [
           { id: "a", text: "Les sites de rencontres 💕", textTranslations: { en: "Dating sites 💕" } },
           { id: "b", text: "Les groupes Facebook, WhatsApp et forums d'expatriés 🎯", textTranslations: { en: "Facebook groups, WhatsApp and expat forums 🎯" } },
-          { id: "c", text: "Les commentaires YouTube", textTranslations: { en: "YouTube comments" } },
-          { id: "d", text: "Les jeux vidéo en ligne", textTranslations: { en: "Online video games" } },
+          { id: "c", text: "Les publicités TV et radio 📺", textTranslations: { en: "TV and radio ads 📺" } },
+          { id: "d", text: "Les jeux vidéo en ligne 🎮", textTranslations: { en: "Online video games 🎮" } },
         ],
         correctAnswerId: "b",
-        explanation: "Les groupes d'expatriés sur Facebook, WhatsApp et les forums = ton terrain de jeu ! C'est là que les gens posent leurs questions 🎯",
-        explanationTranslations: { en: "Expat groups on Facebook, WhatsApp and forums = your playground! That's where people ask their questions 🎯" },
+        explanation: "Les groupes d'expatriés sur Facebook, WhatsApp, Telegram, les forums (Reddit, Expat.com...) et même les commentaires YouTube = tes terrains de jeu ! La clé : être là où les gens posent leurs vraies questions 🎯",
+        explanationTranslations: { en: "Expat groups on Facebook, WhatsApp, Telegram, forums (Reddit, Expat.com...) and even YouTube comments = your playgrounds! The key: be where people ask their real questions 🎯" },
       },
       {
         id: "m3_q2",
@@ -2623,6 +2728,357 @@ You're not responsible if the person doesn't call — you opened the door, that'
         correctAnswerId: "b",
         explanation: "Exact ! Mentionner le prix filtre naturellement les curieux et rassure ceux qui ont un vrai problème. Cacher le prix = mauvaises surprises = mauvaise expérience. 🎯",
         explanationTranslations: { en: "Exactly! Mentioning the price naturally filters curious people and reassures those with a real problem. Hiding the price = bad surprises = bad experience. 🎯" },
+      },
+    ],
+  },
+  // ============================================================================
+  // MODULE 10: Construire sa présence long terme 🌱
+  // ============================================================================
+  {
+    order: 10,
+    title: "Construire sa présence long terme 🌱",
+    titleTranslations: {
+      en: "Building a Long-Term Presence 🌱",
+      es: "Construir una presencia a largo plazo 🌱",
+    },
+    description: "Deviens LA référence expat dans ta communauté. Trafic evergreen, crédibilité durable, revenus passifs. 📈",
+    descriptionTranslations: {
+      en: "Become THE expat reference in your community. Evergreen traffic, lasting credibility, passive income. 📈",
+    },
+    category: "best_practices",
+    coverImageUrl: "https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=800",
+    estimatedMinutes: 5,
+    isRequired: false,
+    prerequisites: [],
+    status: "published",
+    passingScore: 70,
+    slides: [
+      {
+        order: 1,
+        type: "text",
+        title: "LinkedIn : devenir LA référence expat 💼",
+        titleTranslations: { en: "LinkedIn: Becoming THE Expat Reference 💼" },
+        content: `LinkedIn n'est pas fait pour vendre directement — c'est fait pour devenir une référence.
+
+**La stratégie : 1 post par semaine, ça suffit**
+
+Chaque semaine, poste un cas concret anonymisé :
+"Un expat au Japon avait ce problème avec son visa... voici comment il l'a résolu."
+
+Sans nommer le client. Sans faire de pub directe. Juste de la valeur.
+
+**Pourquoi ça marche ?**
+- Les gens partagent les posts utiles
+- Tu builds de la crédibilité sans avoir un grand réseau
+- Les gens qui ont un problème similaire te contactent spontanément
+
+**Types de posts qui performent :**
+- "Les 3 erreurs que font les expats français au Canada avec leurs impôts"
+- "Pourquoi votre visa a été refusé (et comment l'éviter)"
+- "Ce que personne ne vous dit sur les contrats de travail à l'étranger"
+
+**Format gagnant :**
+1. Accroche forte (1 phrase percutante)
+2. Histoire/cas concret (2-3 paragraphes)
+3. Leçon clé (bullet points)
+4. Question pour engager les commentaires
+5. Lien en commentaire (jamais dans le post — l'algo pénalise)
+
+**Commentaires LinkedIn :**
+- Surveille les posts d'actualité sur l'expatriation
+- Laisse des commentaires à valeur ajoutée (pas "super post !")
+- Ton profil vu = trafic vers ton lien`,
+        contentTranslations: {
+          en: `LinkedIn is not for direct selling — it's for becoming a reference.
+
+**The strategy: 1 post per week, that's enough**
+
+Each week, post a concrete anonymized case:
+"An expat in Japan had this visa problem... here's how they resolved it."
+
+No naming clients. No direct ads. Just value.
+
+**Why it works:**
+- People share useful posts
+- You build credibility without a big network
+- People with similar problems contact you spontaneously
+
+**Post types that perform:**
+- "The 3 mistakes French expats make with their taxes in Canada"
+- "Why your visa was rejected (and how to avoid it)"
+- "What nobody tells you about employment contracts abroad"
+
+**Winning format:**
+1. Strong hook (1 punchy sentence)
+2. Story/concrete case (2-3 paragraphs)
+3. Key lesson (bullet points)
+4. Question to engage comments
+5. Link in comments (never in the post — algo penalizes it)`,
+        },
+      },
+      {
+        order: 2,
+        type: "checklist",
+        title: "Quora : trafic evergreen qui dure des années 📚",
+        titleTranslations: { en: "Quora: Evergreen Traffic That Lasts Years 📚" },
+        content: `Quora est une machine à trafic passif. Une bonne réponse aujourd'hui = des visites dans 2 ans.
+
+**Comment bien démarrer :**
+Construis d'abord ta crédibilité. Réponds à 10-15 questions sans mettre de lien. Ensuite tu peux en placer progressivement.
+
+**Les meilleures questions à cibler :**
+- "Comment obtenir un visa travail en [pays] ?"
+- "Quels sont les droits des expats en cas de licenciement ?"
+- "Comment gérer ses impôts quand on vit à l'étranger ?"
+- "Que faire si mon propriétaire ne respecte pas mon contrat ?"
+
+**Format d'une bonne réponse Quora :**
+1. Réponse directe et honnête (pas de teasing)
+2. Explications détaillées avec exemples concrets
+3. Mise en garde sur les limites des conseils généraux
+4. Lien SOS-Expat naturellement intégré à la fin
+
+**⭐ Le truc magique de Quora :**
+Tes réponses apparaissent dans Google ! Optimise-les avec les mots-clés exacts des questions.`,
+        contentTranslations: {
+          en: `Quora is a passive traffic machine. A good answer today = visits in 2 years.
+
+**How to start well:**
+Build credibility first. Answer 10-15 questions without links. Then place them gradually.
+
+**Best questions to target:**
+- "How to get a work visa in [country]?"
+- "What are expat rights in case of dismissal?"
+- "How to handle taxes when living abroad?"
+- "What to do if my landlord doesn't respect my contract?"
+
+**⭐ Quora's magic trick:**
+Your answers appear in Google! Optimize them with the exact keywords from the questions.`,
+        },
+        checklistItems: [
+          {
+            text: "Créer un profil Quora complet avec photo et bio (mention ton expertise expat)",
+            textTranslations: { en: "Create a complete Quora profile with photo and bio (mention your expat expertise)" },
+          },
+          {
+            text: "Répondre à 10 questions sans lien pour construire la crédibilité",
+            textTranslations: { en: "Answer 10 questions without links to build credibility" },
+          },
+          {
+            text: "Cibler les questions avec beaucoup de vues (indicateur visible sous chaque question)",
+            textTranslations: { en: "Target questions with many views (indicator visible under each question)" },
+          },
+          {
+            text: "Placer le lien SOS-Expat en fin de réponse, pas au début",
+            textTranslations: { en: "Place the SOS-Expat link at the end of the answer, not the beginning" },
+          },
+          {
+            text: "Suivre les Quora Spaces thématiques : 'Expat Life', 'Immigration', 'Living Abroad'",
+            textTranslations: { en: "Follow thematic Quora Spaces: 'Expat Life', 'Immigration', 'Living Abroad'" },
+          },
+        ],
+      },
+      {
+        order: 3,
+        type: "tips",
+        title: "YouTube & TikTok : commentaires ultra-qualifiés 🎬",
+        titleTranslations: { en: "YouTube & TikTok: Ultra-Qualified Comments 🎬" },
+        content: `Les commentaires sous les vidéos d'expatriation, c'est de l'or. L'audience cherche ACTIVEMENT des solutions.
+
+**YouTube — Comment faire :**
+1. Cherche "s'expatrier en [pays]", "vivre à [ville]", "visa [pays] 2024"
+2. Trie par "Vues" pour trouver les vidéos populaires
+3. Lis les commentaires — repère les questions sans réponse
+4. Réponds avec de la valeur + glisse ton lien si pertinent
+
+**Exemples de commentaires qui convertissent :**
+"Super vidéo ! J'ajoute que pour les questions juridiques et administratives, les gens peuvent aussi appeler un avocat spécialisé expat en 5 min via [lien] — ça aide beaucoup pour les cas complexes."
+
+**TikTok — Comment faire :**
+1. Hashtags : #expat #expatlife #vivreau[pays] #sexpat
+2. Commente sous les vidéos populaires (100k+ vues)
+3. Réponds aux questions dans les commentaires
+4. Évite les commentaires trop commerciaux — garde le ton naturel
+
+**⚠️ Règles importantes :**
+- Ne spam pas le même créateur
+- Varie les chaînes et créateurs
+- Ton commentaire doit apporter de la valeur MÊME sans le lien`,
+        contentTranslations: {
+          en: `Comments under expatriation videos are gold. The audience is ACTIVELY looking for solutions.
+
+**YouTube — How to do it:**
+1. Search "expat life in [country]", "living in [city]", "visa [country] 2024"
+2. Sort by "Views" to find popular videos
+3. Read comments — spot unanswered questions
+4. Reply with value + slide your link if relevant
+
+**TikTok — How to do it:**
+1. Hashtags: #expat #expatlife #livingin[country]
+2. Comment under popular videos (100k+ views)
+3. Reply to questions in comments
+4. Avoid overly commercial comments — keep a natural tone
+
+**⚠️ Important rules:**
+- Don't spam the same creator
+- Vary channels and creators
+- Your comment must bring value EVEN without the link`,
+        },
+        tips: [
+          {
+            text: "YouTube : les commentaires sur des vidéos de 6-18 mois sont souvent pleins de questions sans réponses = opportunité parfaite.",
+            textTranslations: { en: "YouTube: comments on 6-18 month old videos are often full of unanswered questions = perfect opportunity." },
+          },
+          {
+            text: "TikTok : active les notifications d'un créateur expat populaire. Sois parmi les premiers à commenter = plus de visibilité.",
+            textTranslations: { en: "TikTok: turn on notifications for a popular expat creator. Be among the first to comment = more visibility." },
+          },
+          {
+            text: "Instagram : les stories avec questions-réponses sont aussi une mine. Réponds en DM si quelqu'un partage une galère.",
+            textTranslations: { en: "Instagram: Q&A stories are also a goldmine. Reply via DM if someone shares a struggle." },
+          },
+        ],
+      },
+      {
+        order: 4,
+        type: "text",
+        title: "Twitter/X & Discord : les communautés de niche 🐦",
+        titleTranslations: { en: "Twitter/X & Discord: Niche Communities 🐦" },
+        content: `Deux canaux souvent oubliés, mais avec des communautés très engagées.
+
+**Twitter / X**
+
+La méthode :
+1. Cherche : #expat #expatlife #visaproblems #immigration #digitalnomad
+2. Filtre par "Récents" pour voir les vrais problèmes en temps réel
+3. Réponds directement et utilement
+4. Ton profil doit avoir une bio claire + quelques tweets normaux (sinon = bot perçu)
+
+**Exemples de hashtags à surveiller :**
+#expat #expatfrance #frenchexpat #livingabroad #visaproblems #immigrationlaw #reloadvice
+
+**Discord**
+
+Serveurs à rejoindre :
+- "Nomad List" — digital nomads actifs, beaucoup de questions pratiques
+- "Remote Work" — travailleurs à distance, souvent en situation d'expat
+- "French Expats [pays]" — cherche sur Discord.gg
+- Serveurs par pays et ville (r/paris Discord, Dubai expats Discord...)
+
+**La règle Discord :**
+- Lis les règles (#rules) avant de poster quoi que ce soit
+- Présente-toi dans #intro
+- Participe 1-2 semaines avant de placer ton premier lien
+- Certains serveurs ont un canal #ressources où tu peux partager ton lien directement`,
+        contentTranslations: {
+          en: `Two often-forgotten channels, but with very engaged communities.
+
+**Twitter / X**
+
+The method:
+1. Search: #expat #expatlife #visaproblems #immigration #digitalnomad
+2. Filter by "Recent" to see real problems in real time
+3. Reply directly and helpfully
+4. Your profile needs a clear bio + some normal tweets (otherwise = perceived as bot)
+
+**Discord**
+
+Servers to join:
+- "Nomad List" — active digital nomads, lots of practical questions
+- "Remote Work" — remote workers, often in expat situations
+- "French Expats [country]" — search on Discord.gg
+- Country and city servers
+
+**The Discord rule:**
+- Read rules (#rules) before posting anything
+- Introduce yourself in #intro
+- Participate 1-2 weeks before placing your first link
+- Some servers have a #resources channel where you can share your link directly`,
+        },
+      },
+      {
+        order: 5,
+        type: "checklist",
+        title: "Ton plan d'action long terme 🗓️",
+        titleTranslations: { en: "Your Long-Term Action Plan 🗓️" },
+        content: `La présence long terme se construit sur 3 mois. Voici le plan semaine par semaine.`,
+        contentTranslations: {
+          en: `Long-term presence is built over 3 months. Here's the week-by-week plan.`,
+        },
+        checklistItems: [
+          {
+            text: "Semaine 1-2 : Maîtrise Facebook, WhatsApp, Telegram (les bases, conversion rapide)",
+            textTranslations: { en: "Week 1-2: Master Facebook, WhatsApp, Telegram (basics, fast conversion)" },
+          },
+          {
+            text: "Semaine 3-4 : Ajoute Reddit et les forums Expat.com, Internations à ta routine",
+            textTranslations: { en: "Week 3-4: Add Reddit and forums Expat.com, Internations to your routine" },
+          },
+          {
+            text: "Mois 2 : Lance Quora (10 réponses sans lien d'abord) + 1er post LinkedIn",
+            textTranslations: { en: "Month 2: Launch Quora (10 answers without links first) + 1st LinkedIn post" },
+          },
+          {
+            text: "Mois 2 : Commence les commentaires YouTube (2-3 vidéos par semaine)",
+            textTranslations: { en: "Month 2: Start YouTube comments (2-3 videos per week)" },
+          },
+          {
+            text: "Mois 3 : Rejoins 1-2 serveurs Discord, active-toi pendant 2 semaines avant de poster",
+            textTranslations: { en: "Month 3: Join 1-2 Discord servers, be active for 2 weeks before posting" },
+          },
+          {
+            text: "En continu : 1 post LinkedIn par semaine, 1 réponse Quora par semaine",
+            textTranslations: { en: "Ongoing: 1 LinkedIn post per week, 1 Quora answer per week" },
+          },
+          {
+            text: "Objectif mois 3 : avoir des sources de trafic passif (Quora + YouTube) qui travaillent sans toi",
+            textTranslations: { en: "Month 3 goal: have passive traffic sources (Quora + YouTube) working without you" },
+          },
+        ],
+      },
+    ],
+    quizQuestions: [
+      {
+        id: "m10_q1",
+        question: "Pourquoi Quora est-il un excellent canal pour les Chatters ? 📚",
+        questionTranslations: { en: "Why is Quora an excellent channel for Chatters? 📚" },
+        options: [
+          { id: "a", text: "Parce que les réponses disparaissent au bout de 24h", textTranslations: { en: "Because answers disappear after 24h" } },
+          { id: "b", text: "Parce qu'une bonne réponse génère du trafic pendant des années et apparaît dans Google 🌱", textTranslations: { en: "Because a good answer generates traffic for years and appears in Google 🌱" } },
+          { id: "c", text: "Parce que c'est le réseau social le plus populaire au monde", textTranslations: { en: "Because it's the most popular social network in the world" } },
+          { id: "d", text: "Parce qu'on peut y mettre des publicités payantes", textTranslations: { en: "Because you can put paid ads there" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "Exactement ! Quora = trafic evergreen. Une réponse bien rédigée aujourd'hui peut amener des clients dans 1 an. Et en bonus, les réponses apparaissent souvent dans les résultats Google 🌱",
+        explanationTranslations: { en: "Exactly! Quora = evergreen traffic. A well-written answer today can bring clients in 1 year. And as a bonus, answers often appear in Google search results 🌱" },
+      },
+      {
+        id: "m10_q2",
+        question: "Sur LinkedIn, où faut-il mettre son lien SOS-Expat ? 💼",
+        questionTranslations: { en: "On LinkedIn, where should you put your SOS-Expat link? 💼" },
+        options: [
+          { id: "a", text: "Dans le post directement pour plus de visibilité", textTranslations: { en: "Directly in the post for more visibility" } },
+          { id: "b", text: "Jamais — LinkedIn interdit les liens", textTranslations: { en: "Never — LinkedIn forbids links" } },
+          { id: "c", text: "Dans le premier commentaire sous le post (l'algorithme pénalise les liens dans le post) 🎯", textTranslations: { en: "In the first comment under the post (the algorithm penalizes links in the post) 🎯" } },
+          { id: "d", text: "Dans la bio uniquement", textTranslations: { en: "In the bio only" } },
+        ],
+        correctAnswerId: "c",
+        explanation: "L'algorithme LinkedIn pénalise les posts avec des liens externes (moins de portée). Astuce : poste sans lien, puis mets le lien dans le premier commentaire et mentionne-le dans le post ('lien en commentaire 👇'). 🎯",
+        explanationTranslations: { en: "LinkedIn's algorithm penalizes posts with external links (less reach). Tip: post without a link, then put the link in the first comment and mention it in the post ('link in comments 👇'). 🎯" },
+      },
+      {
+        id: "m10_q3",
+        question: "Sur Discord, quelle est la règle d'or avant de partager ton lien ? 💬",
+        questionTranslations: { en: "On Discord, what's the golden rule before sharing your link? 💬" },
+        options: [
+          { id: "a", text: "Partager le lien dès le premier message dans le serveur", textTranslations: { en: "Share the link in your very first message in the server" } },
+          { id: "b", text: "Participer activement 1-2 semaines pour s'intégrer avant de poster un lien 🤝", textTranslations: { en: "Participate actively for 1-2 weeks to integrate before posting a link 🤝" } },
+          { id: "c", text: "Envoyer le lien en DM à tous les membres", textTranslations: { en: "Send the link in DM to all members" } },
+          { id: "d", text: "Poster le lien dans tous les canaux du serveur", textTranslations: { en: "Post the link in every channel of the server" } },
+        ],
+        correctAnswerId: "b",
+        explanation: "Discord, c'est une communauté. On s'intègre d'abord, on partage ensuite. Arriver et coller son lien direct = ban immédiat. Participe, aide, crée du lien — et ton lien sera bien reçu 🤝",
+        explanationTranslations: { en: "Discord is a community. You integrate first, then share. Showing up and pasting your link immediately = instant ban. Participate, help, build rapport — and your link will be well received 🤝" },
       },
     ],
   },

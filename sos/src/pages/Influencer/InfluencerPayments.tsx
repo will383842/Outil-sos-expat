@@ -366,7 +366,7 @@ const InfluencerPayments: React.FC = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Available Balance */}
           <div
-            className={`${UI.card}p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}
+            className={`${UI.card} p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
@@ -386,7 +386,7 @@ const InfluencerPayments: React.FC = () => {
 
           {/* Pending Balance */}
           <div
-            className={`${UI.card}p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}
+            className={`${UI.card} p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
@@ -403,7 +403,7 @@ const InfluencerPayments: React.FC = () => {
 
           {/* Validated Balance */}
           <div
-            className={`${UI.card}p-5 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20`}
+            className={`${UI.card} p-5 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
@@ -420,7 +420,7 @@ const InfluencerPayments: React.FC = () => {
 
           {/* Total Earned */}
           <div
-            className={`${UI.card}p-5 bg-gradient-to-br from-purple-50 dark:from-purple-900/20 to-pink-50 dark:to-pink-900/20`}
+            className={`${UI.card} p-5 bg-gradient-to-br from-purple-50 dark:from-purple-900/20 to-pink-50 dark:to-pink-900/20`}
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
@@ -439,7 +439,7 @@ const InfluencerPayments: React.FC = () => {
         {/* Pending Withdrawal Alert */}
         {hasPendingWithdrawal && pendingWithdrawal && (
           <div
-            className={`${UI.card}p-4 bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20 border-l-4`}
+            className={`${UI.card} p-4 bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20 border-l-4`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -665,10 +665,10 @@ const InfluencerPayments: React.FC = () => {
                             </div>
                             <p className="text-sm dark:text-gray-700">
                               {method.methodType === 'mobile_money'
-                                ? 'Mobile Money'
+                                ? intl.formatMessage({ id: 'payment.method.mobileMoney', defaultMessage: 'Mobile Money' })
                                 : method.methodType === 'wise'
                                 ? 'Wise'
-                                : 'Virement bancaire'}
+                                : intl.formatMessage({ id: 'payment.method.bankTransfer', defaultMessage: 'Virement bancaire' })}
                               {'country' in method.details && method.details.country && ` - ${method.details.country}`}
                             </p>
                           </div>

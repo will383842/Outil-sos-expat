@@ -5,7 +5,7 @@
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import {
   GetBloggerDashboardResponse,
@@ -98,7 +98,12 @@ export const getBloggerDashboard = onCall(
         };
       }
 
-      // 7. Build response (exclude sensitive fields)
+      // 7. Update last login
+      await db.collection("bloggers").doc(uid).update({
+        lastLoginAt: Timestamp.now(),
+      });
+
+      // 8. Build response (exclude sensitive fields)
       const { paymentDetails, adminNotes, ...bloggerPublic } = blogger;
 
       // Convert Timestamps to strings for JSON serialization

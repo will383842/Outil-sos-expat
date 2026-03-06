@@ -1927,9 +1927,13 @@ export class TwilioCallManager {
             const providerDoc = await this.db.collection('sos_profiles').doc(providerId).get();
             const providerData = providerDoc.data();
             const isAaaProfile = providerId.startsWith('aaa_') || providerData?.isAAA === true;
+            // Julien Valentine (julienvalentine1@gmail.com) gère son statut manuellement
+            const isManualStatusOnly = providerId === 'DfDbWASBaeaVEZrqg6Wlcd3zpYX2';
 
             if (isAaaProfile) {
               logger.info(`📴 [handleCallFailure] ⏭️ SKIP: Provider ${providerId} is AAA profile - will NOT be set offline for no_answer`);
+            } else if (isManualStatusOnly) {
+              logger.info(`📴 [handleCallFailure] ⏭️ SKIP: Provider ${providerId} manages status manually - will NOT be set offline for no_answer`);
             } else {
               logger.info(`📴 [handleCallFailure] Attempting to set provider ${providerId} OFFLINE (provider_no_answer)`);
 

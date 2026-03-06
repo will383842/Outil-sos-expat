@@ -958,7 +958,7 @@ const ChatterDashboard: React.FC = () => {
 
         {/* Team Alerts Section */}
         {inactiveMembers.length > 0 && (
-          <div className={`${UI.card}p-4 sm:p-6 border-l-4`}>
+          <div className={`${UI.card} p-4 sm:p-6 border-l-4`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
                 <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -1040,7 +1040,7 @@ const ChatterDashboard: React.FC = () => {
         )}
 
         {/* Commission Rates Info Banner */}
-        <div className={`${UI.card}p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
+        <div className={`${UI.card} p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -1083,7 +1083,7 @@ const ChatterDashboard: React.FC = () => {
         <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
           {/* This Month - Most Prominent */}
           <div
-            className={`${UI.card}p-4 sm:p-5 min-h-[140px] bg-gradient-to-br from-green-500/10 dark:from-green-500/20 to-emerald-500/10 dark:to-emerald-500/20 border-green-300 dark:border-green-700/50 opacity-0 animate-fade-in-up transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1`}
+            className={`${UI.card} p-4 sm:p-5 min-h-[140px] bg-gradient-to-br from-green-500/10 dark:from-green-500/20 to-emerald-500/10 dark:to-emerald-500/20 border-green-300 dark:border-green-700/50 opacity-0 animate-fade-in-up transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1`}
             style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}
           >
             <div className="flex items-start justify-between">
@@ -1170,7 +1170,7 @@ const ChatterDashboard: React.FC = () => {
 
         {/* Tier Progress Card */}
         {nextTier && (
-          <div className={`${UI.card}p-4 sm:p-5 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
+          <div className={`${UI.card} p-4 sm:p-5 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">

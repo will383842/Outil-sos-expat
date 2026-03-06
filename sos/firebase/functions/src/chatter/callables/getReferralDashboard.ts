@@ -51,7 +51,8 @@ export const getReferralDashboard = onCall(
     const db = getFirestore();
 
     try {
-      // Get chatter data
+      // Step 1: Get chatter data
+      logger.info("[getReferralDashboard] Step 1: Get chatter", { chatterId });
       const chatterDoc = await db.collection("chatters").doc(chatterId).get();
 
       if (!chatterDoc.exists) {
@@ -60,7 +61,8 @@ export const getReferralDashboard = onCall(
 
       const chatter = chatterDoc.data() as Chatter;
 
-      // Get N1 filleuls
+      // Step 2: Get N1 filleuls
+      logger.info("[getReferralDashboard] Step 2: Get N1 filleuls");
       const filleulsN1Query = await db
         .collection("chatters")
         .where("recruitedBy", "==", chatterId)
@@ -71,27 +73,26 @@ export const getReferralDashboard = onCall(
         const filleul = doc.data() as Chatter;
         const clientEarnings = getClientEarnings(filleul);
 
-        // Check if filleul was active this month (earned $20+)
-        const isActive = filleul.totalEarned > 0; // Simplified - actual check would need monthly data
+        const isActive = (filleul.totalEarned || 0) > 0;
 
         return {
           id: doc.id,
-          name: `${filleul.firstName} ${filleul.lastName}`,
-          email: filleul.email,
+          name: `${filleul.firstName || ""} ${filleul.lastName || ""}`.trim() || "Unknown",
+          email: filleul.email || "",
           clientEarnings,
           threshold10Reached: filleul.threshold10Reached || false,
           threshold50Reached: filleul.threshold50Reached || false,
           isActive,
-          joinedAt: filleul.createdAt?.toDate().toISOString() || "",
+          joinedAt: filleul.createdAt?.toDate?.()?.toISOString?.() || "",
         };
       });
 
-      // Get N2 filleuls (filleuls of filleuls)
+      // Step 3: Get N2 filleuls (filleuls of filleuls)
+      logger.info("[getReferralDashboard] Step 3: Get N2 filleuls");
       const filleulsN1Ids = filleulsN1Query.docs.map((doc) => doc.id);
       let filleulsN2: GetReferralDashboardResponse["filleulsN2"] = [];
 
       if (filleulsN1Ids.length > 0) {
-        // Batch query in chunks of 10 (Firestore 'in' limit)
         const chunks = [];
         for (let i = 0; i < filleulsN1Ids.length; i += 10) {
           chunks.push(filleulsN1Ids.slice(i, i + 10));
@@ -109,20 +110,19 @@ export const getReferralDashboard = onCall(
 
             filleulsN2.push({
               id: doc.id,
-              name: `${filleul.firstName} ${filleul.lastName}`,
+              name: `${filleul.firstName || ""} ${filleul.lastName || ""}`.trim() || "Unknown",
               parrainN1Name: parrainN1?.name || "Unknown",
               threshold50Reached: filleul.threshold50Reached || false,
-              joinedAt: filleul.createdAt?.toDate().toISOString() || "",
+              joinedAt: filleul.createdAt?.toDate?.()?.toISOString?.() || "",
             });
           }
         }
       }
 
-      // Get recent referral commissions from chatter_commissions (new system)
-      // Referral-related types: n1_call, n2_call, activation_bonus, n1_recruit_bonus, tier_bonus
+      // Step 4: Get recent referral commissions
+      logger.info("[getReferralDashboard] Step 4: Get recent commissions");
       const REFERRAL_COMMISSION_TYPES = [
         "n1_call", "n2_call", "activation_bonus", "n1_recruit_bonus", "tier_bonus",
-        // Legacy types for backward compatibility
         "threshold_10", "threshold_50", "threshold_50_n2", "recurring_5pct",
       ];
 
@@ -140,12 +140,13 @@ export const getReferralDashboard = onCall(
           id: doc.id,
           type: data.type,
           filleulName: data.description || "",
-          amount: data.amount,
-          createdAt: data.createdAt?.toDate().toISOString() || "",
+          amount: data.amount || 0,
+          createdAt: data.createdAt?.toDate?.()?.toISOString?.() || "",
         };
       });
 
-      // Calculate monthly earnings (current month)
+      // Step 5: Monthly earnings
+      logger.info("[getReferralDashboard] Step 5: Monthly earnings");
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthlyCommissionsQuery = await db
@@ -160,28 +161,39 @@ export const getReferralDashboard = onCall(
         monthlyReferralEarnings += doc.data().amount || 0;
       }
 
-      // Get tier progress
+      // Step 6: Tier progress
+      logger.info("[getReferralDashboard] Step 6: Tier progress");
       const nextTier = getNextTierBonus(chatter);
 
-      // Get active promotion
+      // Step 7: Active promotions (has its own error handling)
+      logger.info("[getReferralDashboard] Step 7: Active promotions");
       const activePromos = await getActivePromotions(
         chatterId,
-        chatter.country,
-        "threshold_50" // Check for referral-type promotions
+        chatter.country || "",
+        "threshold_50"
       );
 
       const activePromotion =
         activePromos.length > 0
           ? {
-              id: activePromos[0].id,
-              name: activePromos[0].name,
-              multiplier: activePromos[0].multiplier,
-              endsAt: activePromos[0].endDate?.toDate().toISOString() || "",
+              id: activePromos[0].id || "",
+              name: activePromos[0].name || "",
+              multiplier: activePromos[0].multiplier || 1,
+              endsAt: activePromos[0].endDate?.toDate?.()?.toISOString?.() || "",
             }
           : null;
 
       // Calculate qualified N1 count
       const qualifiedFilleulsN1 = filleulsN1.filter((f) => f.threshold50Reached).length;
+
+      const paidTiers = chatter.tierBonusesPaid || [];
+
+      logger.info("[getReferralDashboard] Success", {
+        chatterId,
+        n1Count: filleulsN1.length,
+        n2Count: filleulsN2.length,
+        qualifiedN1: qualifiedFilleulsN1,
+      });
 
       return {
         stats: {
@@ -196,21 +208,27 @@ export const getReferralDashboard = onCall(
         filleulsN2,
         tierProgress: nextTier
           ? {
-              currentTier: chatter.tierBonusesPaid?.slice(-1)[0] || null,
+              currentTier: paidTiers.length > 0 ? paidTiers[paidTiers.length - 1] : null,
               nextTier: nextTier.tier,
               filleulsNeeded: nextTier.filleulsNeeded,
               bonusAmount: nextTier.bonusAmount,
             }
           : {
-              currentTier: 500, // Max tier achieved
+              currentTier: paidTiers.length > 0 ? paidTiers[paidTiers.length - 1] : 500,
               nextTier: null,
               filleulsNeeded: 0,
               bonusAmount: 0,
             },
         activePromotion,
       };
-    } catch (error) {
-      logger.error("[getReferralDashboard] Error", { chatterId, error });
+    } catch (error: any) {
+      logger.error("[getReferralDashboard] Error", {
+        chatterId,
+        errorMessage: error?.message || "unknown",
+        errorCode: error?.code || "unknown",
+        errorStack: error?.stack?.substring(0, 500) || "",
+      });
+      if (error instanceof HttpsError) throw error;
       throw new HttpsError("internal", "Failed to get referral dashboard");
     }
   }

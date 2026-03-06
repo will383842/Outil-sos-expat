@@ -147,6 +147,7 @@ export const adminGetChattersList = onCall(
           totalRecruits: data.totalRecruits,
           currentStreak: data.currentStreak,
           createdAt: data.createdAt.toDate().toISOString(),
+          lastLoginAt: data.lastLoginAt?.toDate?.()?.toISOString() || null,
           isFeatured: featuredMap[doc.id] ?? false,
           isVisible: data.isVisible ?? false,
           photoUrl: data.photoUrl,

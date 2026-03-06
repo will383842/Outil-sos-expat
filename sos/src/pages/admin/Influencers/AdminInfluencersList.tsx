@@ -96,6 +96,7 @@ interface Influencer {
   platforms?: string[];
   communitySize?: number;
   createdAt: string;
+  lastLoginAt?: string | null;
   isFeatured?: boolean;
   isVisible?: boolean;
 }
@@ -630,6 +631,9 @@ const AdminInfluencersList: React.FC = () => {
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                           <FormattedMessage id="admin.influencers.col.referrals" defaultMessage="Réf." />
                         </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                          <FormattedMessage id="admin.influencers.col.lastLogin" defaultMessage="Dernière connexion" />
+                        </th>
                         <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Actions
                         </th>
@@ -695,6 +699,13 @@ const AdminInfluencersList: React.FC = () => {
                               <span className="text-gray-400 mx-1">/</span>
                               <span className="text-gray-600 dark:text-gray-400">{influencer.totalProvidersRecruited}</span>
                             </div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell">
+                            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                              {influencer.lastLoginAt
+                                ? new Date(influencer.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })
+                                : '—'}
+                            </span>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">

@@ -9,6 +9,10 @@ import { FIRESTORE_BATCH_SAFE_LIMIT } from '../lib/constants';
 // to give the Cloud Task a chance to fire first
 const BUSY_FALLBACK_TIMEOUT_MS = 15 * 60 * 1000;
 
+// Prestataires qui gèrent leur statut manuellement — jamais déconnectés automatiquement
+// Julien Valentine (julienvalentine1@gmail.com)
+const MANUAL_STATUS_ONLY_IDS = ['DfDbWASBaeaVEZrqg6Wlcd3zpYX2'];
+
 export const checkProviderInactivity = scheduler.onSchedule(
   {
     // 2026-01-19: Toutes les 15 minutes pour mettre hors ligne les prestataires inactifs
@@ -39,6 +43,7 @@ export const checkProviderInactivity = scheduler.onSchedule(
 
       // Filtrer uniquement les prestataires (lawyers et expats) en mémoire
       // ✅ EXEMPTION AAA: Les profils AAA ne doivent JAMAIS être mis hors ligne automatiquement
+      // ✅ EXEMPTION MANUAL_STATUS_ONLY_IDS: Julien Valentine gère son statut manuellement
       const providerDocs = onlineProvidersSnapshot.docs.filter(doc => {
         const data = doc.data();
         const type = data.type;
@@ -46,6 +51,11 @@ export const checkProviderInactivity = scheduler.onSchedule(
 
         // Skip les profils AAA - ils restent en ligne jusqu'à mise hors ligne manuelle
         if (isAAA) {
+          return false;
+        }
+
+        // Skip les prestataires qui gèrent leur statut manuellement
+        if (MANUAL_STATUS_ONLY_IDS.includes(doc.id)) {
           return false;
         }
 
@@ -191,6 +201,10 @@ async function releaseStuckBusyProviders(db: admin.firestore.Firestore): Promise
       if (isAAA) {
         continue;
       }
+
+      // Note: MANUAL_STATUS_ONLY_IDS (Julien Valentine) n'est PAS skipé ici car
+      // cette fonction remet en "available" (pas offline) — nécessaire pour débloquer
+      // un état "busy" orphelin après un appel manqué
 
       // Check how long they've been busy
       const busySince = data.busySince?.toMillis?.() || data.lastStatusChange?.toMillis?.() || 0;

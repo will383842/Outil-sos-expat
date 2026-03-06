@@ -530,8 +530,8 @@ export interface PaymentConfig {
 export const DEFAULT_PAYMENT_CONFIG: Omit<PaymentConfig, 'updatedAt' | 'updatedBy'> = {
   id: 'payment_config',
 
-  // Mode: Start with manual for safety
-  paymentMode: 'hybrid',
+  // Mode: Manual until Wise/Flutterwave accounts are connected
+  paymentMode: 'manual',
   autoPaymentThreshold: 50000, // $500 - auto below, manual above
 
   // Limits (in cents)

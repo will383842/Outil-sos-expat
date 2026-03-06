@@ -44,7 +44,7 @@ export interface GenericCommission {
 
 export interface CommissionsHistoryTabProps {
   commissions: GenericCommission[];
-  role: 'chatter' | 'influencer' | 'blogger' | 'partner';
+  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'partner';
   currency?: string;
   isLoading?: boolean;
 }
@@ -55,14 +55,7 @@ export interface CommissionsHistoryTabProps {
 
 const PAGE_SIZE = 10;
 
-const STATUS_FILTERS = [
-  { value: 'all', label: 'Tout' },
-  { value: 'pending', label: 'En attente' },
-  { value: 'validated', label: 'Validé' },
-  { value: 'available', label: 'Disponible' },
-  { value: 'paid', label: 'Payé' },
-  { value: 'cancelled', label: 'Annulé' },
-] as const;
+const STATUS_FILTER_KEYS = ['all', 'pending', 'validated', 'available', 'paid', 'cancelled'] as const;
 
 // ============================================================================
 // HELPERS
@@ -101,16 +94,7 @@ function getStatusIcon(status: CommissionStatus) {
   }
 }
 
-function getStatusLabel(status: CommissionStatus): string {
-  const labels: Record<CommissionStatus, string> = {
-    pending: 'En attente',
-    validated: 'Validé',
-    available: 'Disponible',
-    paid: 'Payé',
-    cancelled: 'Annulé',
-  };
-  return labels[status] || status;
-}
+// getStatusLabel is now handled via intl in the component
 
 // P1-4 FIX: Use browser locale instead of hardcoded 'fr-FR'
 function formatAmountUSD(cents: number): string {
@@ -132,13 +116,13 @@ function formatDate(dateStr: string): string {
 
 function commissionsToCsv(commissions: GenericCommission[]): string {
   const BOM = '\uFEFF';
-  const headers = ['Date', 'Type', 'Description', 'Montant (USD)', 'Statut'];
+  const headers = ['Date', 'Type', 'Description', 'Amount (USD)', 'Status'];
   const rows = commissions.map((c) => [
     formatDate(c.createdAt),
     c.type,
     `"${c.description.replace(/"/g, '""')}"`,
     (c.amount / 100).toFixed(2),
-    getStatusLabel(c.status),
+    c.status,
   ]);
   return BOM + [headers, ...rows].map((r) => r.join(';')).join('\n');
 }
@@ -163,8 +147,18 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
   currency = 'USD',
   isLoading = false,
 }) => {
+  const intl = useIntl();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
+
+  const statusLabels: Record<string, string> = useMemo(() => ({
+    all: intl.formatMessage({ id: 'commission.filter.all', defaultMessage: 'Tout' }),
+    pending: intl.formatMessage({ id: 'commission.status.pending', defaultMessage: 'En attente' }),
+    validated: intl.formatMessage({ id: 'commission.status.validated', defaultMessage: 'Validé' }),
+    available: intl.formatMessage({ id: 'commission.status.available', defaultMessage: 'Disponible' }),
+    paid: intl.formatMessage({ id: 'commission.status.paid', defaultMessage: 'Payé' }),
+    cancelled: intl.formatMessage({ id: 'commission.status.cancelled', defaultMessage: 'Annulé' }),
+  }), [intl]);
 
   const filtered = useMemo(() => {
     if (statusFilter === 'all') return commissions;
@@ -214,11 +208,11 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total gagné</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'commission.stats.totalEarned', defaultMessage: 'Total gagné' })}</p>
           <p className="text-xl font-bold text-gray-900 dark:text-white">{formatAmountUSD(totalEarned)}</p>
         </div>
         <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Disponible</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'commission.stats.available', defaultMessage: 'Disponible' })}</p>
           <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatAmountUSD(available)}</p>
         </div>
       </div>
@@ -232,14 +226,14 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
             onChange={(e) => handleFilterChange(e.target.value)}
             className="text-sm border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400"
           >
-            {STATUS_FILTERS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
+            {STATUS_FILTER_KEYS.map((value) => (
+              <option key={value} value={value}>
+                {statusLabels[value] || value}
               </option>
             ))}
           </select>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+            {intl.formatMessage({ id: 'commission.filter.results', defaultMessage: '{count} résultat(s)' }, { count: filtered.length })}
           </span>
         </div>
         {filtered.length > 0 && (
@@ -248,7 +242,7 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
             className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
           >
             <Download className="w-4 h-4" />
-            Exporter CSV
+            {intl.formatMessage({ id: 'commission.export.csv', defaultMessage: 'Exporter CSV' })}
           </button>
         )}
       </div>
@@ -257,17 +251,17 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
       {filtered.length === 0 ? (
         <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-10 text-center">
           <TrendingUp className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-          <p className="text-gray-500 dark:text-gray-400">Aucune commission trouvée</p>
+          <p className="text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'commission.empty', defaultMessage: 'Aucune commission trouvée' })}</p>
         </div>
       ) : (
         <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl overflow-hidden">
           {/* Header */}
           <div className="hidden sm:grid grid-cols-[1fr_2fr_3fr_auto_auto] gap-3 px-4 py-2 bg-gray-50 dark:bg-white/5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-white/5">
-            <span>Date</span>
-            <span>Type</span>
-            <span>Description</span>
-            <span className="text-right">Montant</span>
-            <span className="text-right">Statut</span>
+            <span>{intl.formatMessage({ id: 'commission.header.date', defaultMessage: 'Date' })}</span>
+            <span>{intl.formatMessage({ id: 'commission.header.type', defaultMessage: 'Type' })}</span>
+            <span>{intl.formatMessage({ id: 'commission.header.description', defaultMessage: 'Description' })}</span>
+            <span className="text-right">{intl.formatMessage({ id: 'commission.header.amount', defaultMessage: 'Montant' })}</span>
+            <span className="text-right">{intl.formatMessage({ id: 'commission.header.status', defaultMessage: 'Statut' })}</span>
           </div>
 
           <div className="divide-y divide-gray-100 dark:divide-white/5">
@@ -300,7 +294,7 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
                 <div className="flex items-center gap-1 sm:justify-end">
                   {getStatusIcon(commission.status)}
                   <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(commission.status)}`}>
-                    {getStatusLabel(commission.status)}
+                    {statusLabels[commission.status] || commission.status}
                   </span>
                 </div>
               </div>

@@ -87,6 +87,7 @@ interface GroupAdmin {
   groupCountry?: string;
   isGroupVerified: boolean;
   createdAt: string;
+  lastLoginAt?: string | null;
   isFeatured?: boolean;
   isVisible?: boolean;
 }
@@ -420,6 +421,7 @@ const AdminGroupAdminsList: React.FC = () => {
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.clients' })}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.earnings' })}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.lastLogin', defaultMessage: 'Dernière connexion' })}</th>
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
@@ -471,6 +473,13 @@ const AdminGroupAdminsList: React.FC = () => {
                         </td>
                         <td className="px-4 py-4"><p className="font-medium text-gray-900 dark:text-white">{admin.totalClients}</p></td>
                         <td className="px-4 py-4"><p className="font-medium text-green-600">{formatAmount(admin.totalEarned)}</p></td>
+                        <td className="px-4 py-4 hidden xl:table-cell">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {admin.lastLoginAt
+                              ? new Date(admin.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })
+                              : '—'}
+                          </span>
+                        </td>
                         <td className="px-4 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button

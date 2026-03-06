@@ -14,6 +14,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { type Partner, PARTNER_CONSTANTS } from "../types";
 import { getPartnerConfig } from "../services/partnerConfigService";
 import { getPaymentService } from "../../payment/services/paymentService";
+import { getWithdrawalFee } from "../../services/feeCalculationService";
 import { partnerConfig } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
@@ -60,7 +61,8 @@ export const partnerRequestWithdrawal = onCall(
       }
 
       const minimumAmount = config.minimumWithdrawalAmount || PARTNER_CONSTANTS.MIN_WITHDRAWAL_AMOUNT;
-      const withdrawalFee = PARTNER_CONSTANTS.SOS_WITHDRAWAL_FEE_CENTS;
+      const feeConfig = await getWithdrawalFee();
+      const withdrawalFee = feeConfig.fixedFee * 100; // Convert dollars to cents
 
       if (input.amount < minimumAmount) {
         throw new HttpsError(

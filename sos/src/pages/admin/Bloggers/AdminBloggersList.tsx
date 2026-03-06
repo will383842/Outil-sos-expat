@@ -98,6 +98,7 @@ interface Blogger {
   blogCountry?: string;
   blogTraffic?: string;
   createdAt: string;
+  lastLoginAt?: string | null;
   isFeatured?: boolean;
   isVisible?: boolean;
 }
@@ -645,6 +646,9 @@ const AdminBloggersList: React.FC = () => {
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                           <FormattedMessage id="admin.bloggers.col.referrals" defaultMessage="Réf." />
                         </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                          <FormattedMessage id="admin.bloggers.col.lastLogin" defaultMessage="Dernière connexion" />
+                        </th>
                         <th className="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Répertoire
                         </th>
@@ -724,6 +728,13 @@ const AdminBloggersList: React.FC = () => {
                               <span className="text-gray-400 mx-1">/</span>
                               <span className="text-gray-600 dark:text-gray-400">{blogger.totalProvidersRecruited}</span>
                             </div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell">
+                            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                              {blogger.lastLoginAt
+                                ? new Date(blogger.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })
+                                : '—'}
+                            </span>
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                             <button

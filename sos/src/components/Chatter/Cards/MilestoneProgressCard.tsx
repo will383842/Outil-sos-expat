@@ -23,12 +23,12 @@ interface MilestoneProgressCardProps {
 }
 
 const TIER_INFO = [
-  { tier: 5, bonus: 1500, label: "Bronze" },       // $15
-  { tier: 10, bonus: 3500, label: "Silver" },      // $35
-  { tier: 20, bonus: 7500, label: "Gold" },        // $75
-  { tier: 50, bonus: 25000, label: "Platinum" },   // $250
-  { tier: 100, bonus: 60000, label: "Diamond" },   // $600
-  { tier: 500, bonus: 400000, label: "Legend" },    // $4,000
+  { tier: 5, bonus: 1500, labelKey: "chatter.referrals.tier.bronze" },
+  { tier: 10, bonus: 3500, labelKey: "chatter.referrals.tier.silver" },
+  { tier: 20, bonus: 7500, labelKey: "chatter.referrals.tier.gold" },
+  { tier: 50, bonus: 25000, labelKey: "chatter.referrals.tier.platinum" },
+  { tier: 100, bonus: 60000, labelKey: "chatter.referrals.tier.diamond" },
+  { tier: 500, bonus: 400000, labelKey: "chatter.referrals.tier.legend" },
 ];
 
 export function MilestoneProgressCard({
@@ -138,7 +138,7 @@ export function MilestoneProgressCard({
                   }`}
                 />
                 <span className="text-xs font-bold">{tier.tier}</span>
-                <span className="text-[10px]">{tier.label}</span>
+                <span className="text-[10px]">{t(tier.labelKey)}</span>
                 <Badge
                   variant="secondary"
                   className={`text-[10px] mt-1 ${

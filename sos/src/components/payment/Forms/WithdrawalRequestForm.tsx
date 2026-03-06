@@ -549,10 +549,10 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
                     </span>
                   )}
                   {selectedMethod.methodType === 'mobile_money'
-                    ? 'Mobile Money'
+                    ? intl.formatMessage({ id: 'payment.method.mobileMoney', defaultMessage: 'Mobile Money' })
                     : selectedMethod.methodType === 'wise'
                       ? 'Wise'
-                      : 'Virement bancaire'}
+                      : intl.formatMessage({ id: 'payment.method.bankTransfer', defaultMessage: 'Virement bancaire' })}
                 </p>
               </div>
             </div>
@@ -607,13 +607,15 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {method.isDefault && (
-                        <span className="text-green-500">Par defaut - </span>
+                        <span className="text-green-500">
+                          <FormattedMessage id="payment.method.default" defaultMessage="Par défaut" />{' - '}
+                        </span>
                       )}
                       {method.methodType === 'mobile_money'
-                        ? 'Mobile Money'
+                        ? intl.formatMessage({ id: 'payment.method.mobileMoney', defaultMessage: 'Mobile Money' })
                         : method.methodType === 'wise'
                           ? 'Wise'
-                          : 'Virement bancaire'}
+                          : intl.formatMessage({ id: 'payment.method.bankTransfer', defaultMessage: 'Virement bancaire' })}
                     </p>
                   </div>
                   {isSelected && <CheckCircle className="w-5 h-5 text-red-500" />}

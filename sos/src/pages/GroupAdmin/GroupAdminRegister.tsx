@@ -187,6 +187,8 @@ const GroupAdminRegister: React.FC = () => {
           termsVersion: data.termsVersion,
           termsType: data.termsType,
           termsAcceptanceMeta: data.termsAcceptanceMeta,
+          termsAffiliateVersion: data.termsAffiliateVersion || '1.0',
+          termsAffiliateType: data.termsAffiliateType || 'terms_affiliate',
         });
       } catch (cfError) {
         // CRITICAL: If Cloud Function fails, delete the orphaned Firebase Auth user

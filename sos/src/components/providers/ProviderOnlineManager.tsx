@@ -19,7 +19,9 @@ const ProviderOnlineManager: React.FC<ProviderOnlineManagerProps> = ({ children 
   // ni être mis hors ligne automatiquement - ils restent en ligne jusqu'à action manuelle
   // SECURITY: Only trust isAAA field from Firestore (admin-controlled), not UID prefix
   const isAaaProfile = user?.isAAA === true;
-  const shouldTrack = Boolean(user && isProvider && isOnline && !isAaaProfile);
+  // Julien Valentine (julienvalentine1@gmail.com) gère son statut manuellement — pas de popup ni auto-offline
+  const isManualStatusOnly = user?.uid === 'DfDbWASBaeaVEZrqg6Wlcd3zpYX2';
+  const shouldTrack = Boolean(user && isProvider && isOnline && !isAaaProfile && !isManualStatusOnly);
 
   // Hook de tracking d'activité - toujours appelé mais désactivé si pas prestataire
   const { lastActivity } = useProviderActivityTracker({

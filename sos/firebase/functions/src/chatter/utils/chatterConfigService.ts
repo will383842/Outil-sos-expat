@@ -425,6 +425,9 @@ function getCaptainCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'ex
   } else if (providerType === 'expat' && config.commissionCaptainCallAmountExpat != null) {
     return config.commissionCaptainCallAmountExpat;
   }
+  if (providerType === 'expat') {
+    return config.commissionCaptainCallAmountExpat ?? 200;
+  }
   return config.commissionCaptainCallAmountLawyer ?? 300;
 }
 

@@ -251,12 +251,18 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
                 <TrendingUp className="w-3 h-3 rotate-180" />
               )}
               <span>{monthlyGrowth >= 0 ? '+' : ''}{monthlyGrowth}%</span>
-              <span className="text-gray-600 dark:text-gray-400">vs mois dernier</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                <FormattedMessage id="chatter.motivation.vsLastMonth" defaultMessage="vs mois dernier" />
+              </span>
             </div>
           )}
           {/* Daily average */}
           <p className="text-xs dark:text-gray-400 mt-1">
-            ~{formatAmount(dailyAverage)}/jour
+            <FormattedMessage
+              id="chatter.motivation.dailyAverage"
+              defaultMessage="~{amount}/jour"
+              values={{ amount: formatAmount(dailyAverage) }}
+            />
           </p>
         </div>
 
@@ -282,14 +288,22 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
             <div className="flex items-center gap-1 mt-1">
               <span className="text-sm">{currentMilestone.emoji}</span>
               <span className="text-xs dark:text-green-400 font-medium">
-                {currentMilestone.label} atteint !
+                <FormattedMessage
+                  id="chatter.motivation.milestoneReached"
+                  defaultMessage="{amount} atteint !"
+                  values={{ amount: currentMilestone.label }}
+                />
               </span>
             </div>
           )}
           {/* Member since */}
           {membershipDays > 0 && (
             <p className="text-xs dark:text-gray-400 mt-1">
-              Depuis {membershipDays} jours
+              <FormattedMessage
+                id="chatter.motivation.memberSince"
+                defaultMessage="Depuis {days} jours"
+                values={{ days: membershipDays }}
+              />
             </p>
           )}
         </div>
