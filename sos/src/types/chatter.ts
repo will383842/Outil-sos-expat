@@ -236,6 +236,10 @@ export interface ChatterData {
   recruitedByCode: string | null;
   recruitedAt: string | null;
 
+  // Captain assignment (admin-assigned, independent of recruitment chain)
+  captainId?: string | null;
+  captainName?: string | null;
+
   // Referral N2 (2-level system)
   parrainNiveau2Id: string | null;
 
@@ -467,6 +471,12 @@ export interface ChatterConfig {
   commissionN1CallAmount: number;
   /** Commission for N2 referral call (cents) — e.g. 50 = $0.50 */
   commissionN2CallAmount: number;
+  /** Activation bonus (cents) — e.g. 500 = $5 */
+  commissionActivationBonusAmount?: number;
+  /** N1 recruit bonus (cents) — e.g. 100 = $1 */
+  commissionN1RecruitBonusAmount?: number;
+  /** Provider recruitment call commission (cents) — e.g. 500 = $5 */
+  commissionProviderCallAmount?: number;
   minimumWithdrawalAmount: number;
   /** SOS withdrawal fee in cents (from admin_config/fees) — e.g. 300 = $3 */
   withdrawalFeeCents: number;
@@ -483,6 +493,10 @@ export interface ChatterConfig {
     level4: number;
     level5: number;
   };
+  /** Bonus milestones for reaching X active recruits (cents) */
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
+  /** Fixed prizes for monthly Top 3 competition (cents) */
+  monthlyCompetitionPrizes?: { first: number; second: number; third: number };
 }
 
 // ============================================================================
@@ -1042,4 +1056,38 @@ export function getChatterRecruitmentLink(affiliateCode: string): string {
  */
 export function formatChatterAmount(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+// ============================================================================
+// RESOURCES
+// ============================================================================
+
+export type ChatterResourceCategory = 'sos_expat' | 'ulixai' | 'founder';
+
+export interface ChatterResourceFile {
+  id: string;
+  category: ChatterResourceCategory;
+  type: string;
+  name: string;
+  description?: string;
+  fileUrl?: string;
+  previewUrl?: string;
+  downloadUrl?: string;
+  format?: string;
+  size?: number;
+  sizeFormatted?: string;
+  dimensions?: { width: number; height: number };
+}
+
+export interface ChatterResourceText {
+  id: string;
+  category: ChatterResourceCategory;
+  type: string;
+  title: string;
+  content: string;
+}
+
+export interface ChatterResourcesData {
+  files: ChatterResourceFile[];
+  texts: ChatterResourceText[];
 }

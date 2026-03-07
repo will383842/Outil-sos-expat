@@ -7,7 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { useChatter } from '@/hooks/useChatter';
 import { useAuth } from '@/contexts/useAuth';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
-import { User, Globe, Settings, Trophy, CreditCard, Badge, Camera, Loader2, CheckCircle } from 'lucide-react';
+import { User, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { storage, functionsAffiliate } from '@/config/firebase';
@@ -74,7 +74,7 @@ const ChatterProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <ChatterDashboardLayout>
+      <ChatterDashboardLayout activeKey="profile">
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="w-8 h-8 animate-spin text-red-500" />
         </div>
@@ -85,21 +85,21 @@ const ChatterProfile: React.FC = () => {
   if (!chatter) return null;
 
   return (
-    <ChatterDashboardLayout>
-      <div className="space-y-6">
+    <ChatterDashboardLayout activeKey="profile">
+      <div className="space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl dark:text-white font-bold">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
             <FormattedMessage id="chatter.profile.title" defaultMessage="Mon profil" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
             <FormattedMessage id="chatter.profile.subtitle" defaultMessage="Vos informations personnelles et statistiques" />
           </p>
         </div>
 
         {/* Photo upload card */}
-        <div className={`${UI.card} p-6`}>
+        <div className={`${UI.card} p-4 sm:p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <Camera className="w-5 h-5 text-red-500" />
             <h2 className="text-lg dark:text-white font-semibold">
@@ -162,7 +162,7 @@ const ChatterProfile: React.FC = () => {
         </div>
 
         {/* Personal Info */}
-        <div className={`${UI.card} p-6`}>
+        <div className={`${UI.card} p-4 sm:p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <User className="w-5 h-5 text-red-500" />
             <h2 className="text-lg dark:text-white font-semibold">

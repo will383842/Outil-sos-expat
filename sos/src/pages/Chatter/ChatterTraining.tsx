@@ -91,7 +91,7 @@ function getSlideIcon(type: TrainingSlide['type']) {
 function TrainingSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-3" />
         <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full w-full" />
       </div>
@@ -489,7 +489,7 @@ function ModuleModal({
               )}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label="Close">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -676,22 +676,24 @@ function ChatterTraining() {
   // --------------------------------------------------
   // Loading
   // --------------------------------------------------
-  if (isLoading) return <TrainingSkeleton />;
+  if (isLoading) return <ChatterDashboardLayout activeKey="training"><TrainingSkeleton /></ChatterDashboardLayout>;
 
   // --------------------------------------------------
   // Error
   // --------------------------------------------------
   if (error && modules.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-          <BookOpen className="h-8 w-8 text-red-500" />
+      <ChatterDashboardLayout activeKey="training">
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <BookOpen className="h-8 w-8 text-red-500" />
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">{error}</p>
+          <button onClick={() => loadModules()} className={`${UI.button.primary} px-6 py-2.5`}>
+            <FormattedMessage id="chatter.training.retry" defaultMessage="Réessayer" />
+          </button>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">{error}</p>
-        <button onClick={() => loadModules()} className={`${UI.button.primary} px-6 py-2.5`}>
-          <FormattedMessage id="chatter.training.retry" defaultMessage="Réessayer" />
-        </button>
-      </div>
+      </ChatterDashboardLayout>
     );
   }
 
@@ -700,38 +702,40 @@ function ChatterTraining() {
   // --------------------------------------------------
   if (modules.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-          <BookOpen className="h-8 w-8 text-gray-400" />
+      <ChatterDashboardLayout activeKey="training">
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+            <BookOpen className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400">
+            <FormattedMessage id="chatter.training.empty" defaultMessage="Aucun module de formation disponible pour le moment." />
+          </p>
         </div>
-        <p className="text-gray-500 dark:text-gray-400">
-          <FormattedMessage id="chatter.training.empty" defaultMessage="Aucun module de formation disponible pour le moment." />
-        </p>
-      </div>
+      </ChatterDashboardLayout>
     );
   }
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
               <FormattedMessage id="chatter.training.title" defaultMessage="Formation" />
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               <FormattedMessage id="chatter.training.subtitle" defaultMessage="Apprenez les meilleures techniques pour maximiser vos gains" />
             </p>
           </div>
-          <button onClick={() => loadModules()} className={`${UI.button.secondary} p-2.5`}>
+          <button onClick={() => loadModules()} className={`${UI.button.secondary} p-2.5`} aria-label={intl.formatMessage({ id: 'common.refresh', defaultMessage: 'Refresh' })}>
             <RefreshCw className="h-5 w-5" />
           </button>
         </div>
 
         {/* Overall Progress */}
         {overallProgress && (
-          <div className={`${UI.card} p-6`}>
+          <div className={`${UI.card} p-4 sm:p-6`}>
             <div className="flex items-center justify-between gap-4 mb-3">
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">
@@ -784,7 +788,7 @@ function ChatterTraining() {
       {/* Loading overlay for module content */}
       {isLoadingModule && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className={`${UI.card} p-6 flex items-center gap-3`}>
+          <div className={`${UI.card} p-4 sm:p-6 flex items-center gap-3`}>
             <Loader2 className="w-6 h-6 animate-spin text-red-500" />
             <span className="text-gray-900 dark:text-white font-medium">
               <FormattedMessage id="chatter.training.loadingModule" defaultMessage="Chargement du module..." />
@@ -818,7 +822,7 @@ function ChatterTraining() {
 
 export default function ChatterTrainingPage() {
   return (
-    <ChatterDashboardLayout>
+    <ChatterDashboardLayout activeKey="training">
       <ChatterTraining />
     </ChatterDashboardLayout>
   );

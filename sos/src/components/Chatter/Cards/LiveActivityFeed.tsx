@@ -389,7 +389,7 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                 >
                   {/* Icon */}
                   <div
-                    className={`w-9 h-9 rounded-xl${activity.config.bgColor}flex items-center justify-center`}
+                    className={`w-9 h-9 rounded-xl ${activity.config.bgColor} flex items-center justify-center`}
                   >
                     <Icon className={`w-4 h-4 ${activity.config.color}`} />
                   </div>

@@ -263,29 +263,17 @@ export function getReleaseDelayMs(config: ChatterConfig): number {
 // ============================================================================
 
 /**
- * Get the flash bonus multiplier (1.0 if not active or expired)
+ * Get the flash bonus multiplier — PERMANENTLY DISABLED (all multipliers removed)
+ * @deprecated All multipliers have been removed. Always returns 1.0.
  */
-export function getFlashBonusMultiplier(config: ChatterConfig): number {
-  if (!config.flashBonusActive) {
-    return 1.0;
-  }
-
-  // Check if flash bonus has expired
-  if (config.flashBonusEndsAt) {
-    const now = Date.now();
-    const endsAt = config.flashBonusEndsAt.toMillis();
-    if (now > endsAt) {
-      return 1.0;
-    }
-  }
-
-  return config.flashBonusMultiplier || 1.0;
+export function getFlashBonusMultiplier(_config: ChatterConfig): number {
+  return 1.0;
 }
 
 /**
  * Get commission amount for a direct client call
- * Applies flash bonus multiplier if active
  * lockedRates take absolute priority over config when present
+ * Note: All multipliers have been permanently removed.
  */
 export function getClientCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null): number {
   let base: number;
@@ -304,8 +292,7 @@ export function getClientCallCommission(config: ChatterConfig, providerType?: 'l
   } else {
     base = getClientCallBase(config, providerType);
   }
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 function getClientCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {
@@ -323,8 +310,7 @@ function getClientCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'exp
  */
 export function getN1CallCommission(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
   const base = lockedRates?.commissionN1CallAmount ?? config.commissionN1CallAmount ?? 100;
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 /**
@@ -333,8 +319,7 @@ export function getN1CallCommission(config: ChatterConfig, lockedRates?: Record<
  */
 export function getN2CallCommission(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
   const base = lockedRates?.commissionN2CallAmount ?? config.commissionN2CallAmount ?? 50;
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 /**
@@ -343,8 +328,7 @@ export function getN2CallCommission(config: ChatterConfig, lockedRates?: Record<
  */
 export function getActivationBonusAmount(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
   const base = lockedRates?.commissionActivationBonusAmount ?? config.commissionActivationBonusAmount ?? 500;
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 /**
@@ -353,8 +337,7 @@ export function getActivationBonusAmount(config: ChatterConfig, lockedRates?: Re
  */
 export function getN1RecruitBonusAmount(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
   const base = lockedRates?.commissionN1RecruitBonusAmount ?? config.commissionN1RecruitBonusAmount ?? 100;
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 /**
@@ -383,8 +366,7 @@ export function getProviderCallCommission(config: ChatterConfig, providerType?: 
   } else {
     base = getProviderCallBase(config, providerType);
   }
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 function getProviderCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {
@@ -415,8 +397,7 @@ export function getCaptainCallCommission(config: ChatterConfig, providerType?: '
   } else {
     base = getCaptainCallBase(config, providerType);
   }
-  const flashMultiplier = getFlashBonusMultiplier(config);
-  return Math.round(base * flashMultiplier);
+  return Math.round(base);
 }
 
 function getCaptainCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'expat'): number {

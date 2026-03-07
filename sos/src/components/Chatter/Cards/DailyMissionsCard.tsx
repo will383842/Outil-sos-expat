@@ -598,7 +598,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     >
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className={`w-14 h-14 rounded-xl${task.bgColor}flex items-center justify-center`}>
+        <div className={`w-14 h-14 rounded-xl ${task.bgColor} flex items-center justify-center`}>
           <Icon className={`w-7 h-7 ${task.color}`} />
         </div>
 
@@ -704,7 +704,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
     >
       {/* Checkbox / Status indicator */}
       <div
-        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all${
+        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${
           isCompleted
             ? 'bg-green-500 border-green-500'
             : 'border-gray-300 dark:border-gray-600'
@@ -725,7 +725,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
       </div>
 
       {/* Icon */}
-      <div className={`w-9 h-9 rounded-lg${task.bgColor}flex items-center justify-center`}>
+      <div className={`w-9 h-9 rounded-lg ${task.bgColor} flex items-center justify-center`}>
         <Icon className={`w-4.5 h-4.5 ${task.color}`} />
       </div>
 
@@ -754,7 +754,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
       </div>
 
       {/* XP Badge */}
-      <div className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1${
+      <div className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
         isCompleted
           ? 'bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-300'
           : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'

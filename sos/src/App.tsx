@@ -168,6 +168,7 @@ const ChatterProfile = lazy(() => import('./pages/Chatter/ChatterProfile'));
 const ChatterCaptainDashboard = lazy(() => import('./pages/Chatter/ChatterCaptainDashboard'));
 const ChatterProgression = lazy(() => import('./pages/Chatter/ChatterProgression'));
 const ChatterHowToEarn = lazy(() => import('./pages/Chatter/ChatterHowToEarn'));
+const ChatterResources = lazy(() => import('./pages/Chatter/ChatterResources'));
 // Influencer System
 const InfluencerLanding = lazy(() => import('./pages/Influencer/InfluencerLanding'));
 const InfluencerRegister = lazy(() => import('./pages/Influencer/InfluencerRegister'));
@@ -415,6 +416,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },
   { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, role: 'chatter', translated: "chatter-suspended" },
   { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
+  { path: "/chatter/ressources", component: ChatterResources, protected: true, role: 'chatter', translated: "chatter-resources" },
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
   { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
   { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer" },

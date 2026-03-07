@@ -571,39 +571,51 @@ const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
 
       {/* Country list */}
       <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-        {filteredCountries.map((country) => (
-          <button
-            key={country.code}
-            onClick={() => handleCountrySelect(country)}
-            className={`
-              w-full flex items-center gap-3 p-3 rounded-xl border-2
-              transition-all duration-200 text-left
-              hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20
-              ${selectedCountry?.code === country.code
-                ? 'border-red-500 bg-red-50 dark:bg-red-900/30'
-                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
-              }
-            `}
-          >
-            <span className="text-2xl">{country.flag}</span>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 dark:text-white truncate">
-                {country.name}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {country.currency} - {country.methodType === 'bank_transfer'
-                  ? intl.formatMessage({ id: 'payment.form.bankTransfer', defaultMessage: 'Virement bancaire' })
-                  : intl.formatMessage({ id: 'payment.form.mobileMoney', defaultMessage: 'Mobile Money' })
+        {filteredCountries.map((country) => {
+          const isMobileMoney = country.methodType === 'mobile_money';
+          return (
+            <button
+              key={country.code}
+              onClick={() => { if (!isMobileMoney) handleCountrySelect(country); }}
+              disabled={isMobileMoney}
+              className={`
+                w-full flex items-center gap-3 p-3 rounded-xl border-2
+                transition-all duration-200 text-left
+                ${isMobileMoney
+                  ? 'opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
+                  : `hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20
+                    ${selectedCountry?.code === country.code
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/30'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                    }`
                 }
-              </p>
-            </div>
-            {country.methodType === 'bank_transfer'
-              ? <Building2 className="w-5 h-5 text-gray-400" />
-              : <Smartphone className="w-5 h-5 text-gray-400" />
-            }
-            <ChevronRight className="w-5 h-5 text-gray-400" />
-          </button>
-        ))}
+              `}
+            >
+              <span className="text-2xl">{country.flag}</span>
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium truncate ${isMobileMoney ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                  {country.name}
+                  {isMobileMoney && (
+                    <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                      Bientôt
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {country.currency} - {isMobileMoney
+                    ? intl.formatMessage({ id: 'payment.form.mobileMoneyComingSoon', defaultMessage: 'Mobile Money (bientôt disponible)' })
+                    : intl.formatMessage({ id: 'payment.form.bankTransfer', defaultMessage: 'Virement bancaire' })
+                  }
+                </p>
+              </div>
+              {country.methodType === 'bank_transfer'
+                ? <Building2 className="w-5 h-5 text-gray-400" />
+                : <Smartphone className="w-5 h-5 text-gray-400" />
+              }
+              {!isMobileMoney && <ChevronRight className="w-5 h-5 text-gray-400" />}
+            </button>
+          );
+        })}
 
         {filteredCountries.length === 0 && (
           <div className="text-center py-8 text-gray-500">

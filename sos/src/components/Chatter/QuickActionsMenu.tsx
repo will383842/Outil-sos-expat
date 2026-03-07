@@ -284,7 +284,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="absolute bottom-16 right-0 flex items-end gap-2 mb-2"
+              className="absolute bottom-16 right-0 flex flex-col items-end gap-2 mb-2"
               initial="hidden"
               animate="visible"
               exit="hidden"
@@ -318,7 +318,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                   {/* Action Button */}
                   <button
                     onClick={item.onClick}
-                    className={`relative w-12 h-12 rounded-full shadow-lg flex items-center justify-center${item.bgColor}${item.color}hover:scale-110 active:scale-95 transition-transform duration-200 focus:outline-none focus:ring-2`}
+                    className={`relative w-12 h-12 rounded-full shadow-lg flex items-center justify-center ${item.bgColor} ${item.color} hover:scale-110 active:scale-95 transition-transform duration-200 focus:outline-none focus:ring-2`}
                     aria-label={intl.formatMessage({ id: item.labelId, defaultMessage: item.defaultLabel })}
                   >
                     {item.icon}
@@ -337,7 +337,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         {/* Main FAB Button */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className={`relative w-14 h-14 rounded-full shadow-xl bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500 flex items-center justify-center text-white hover:shadow-2xl active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2${!isOpen && showWithdrawalBadge ? 'animate-pulse-subtle' : ''}`}
+          className={`relative w-14 h-14 rounded-full shadow-xl bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500 flex items-center justify-center text-white hover:shadow-2xl active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 ${!isOpen && showWithdrawalBadge ? 'animate-pulse-subtle' : ''}`}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           aria-expanded={isOpen}

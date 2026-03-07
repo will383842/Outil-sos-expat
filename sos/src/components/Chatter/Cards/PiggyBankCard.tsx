@@ -179,7 +179,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
             </div>
 
             {/* Lock/Unlock indicator */}
-            <div className={`absolute -bottom-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg${
+            <div className={`absolute -bottom-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${
               isUnlocked
                 ? 'bg-green-500'
                 : 'bg-gray-400 dark:bg-gray-600'
@@ -267,7 +267,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
               />
             </p>
             <motion.p
-              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600"
+              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent"
               key={totalPending}
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}

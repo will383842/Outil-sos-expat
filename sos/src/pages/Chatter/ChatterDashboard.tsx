@@ -101,9 +101,7 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
-  Loader2,
   Share2,
-  Rocket,
   Target,
   DollarSign,
   AlertTriangle,
@@ -127,7 +125,7 @@ const CardSkeleton = memo<{ height?: string; className?: string }>(({
   className = '',
 }) => (
   <div
-    className={`bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse${height}${className}`}
+    className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse ${height} ${className}`}
   >
     <div className="p-4 sm:p-6 space-y-3">
       <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3" />
@@ -142,7 +140,7 @@ CardSkeleton.displayName = 'CardSkeleton';
  * Inline skeleton for small components like buttons and badges
  */
 const InlineSkeleton = memo<{ width?: string }>(({ width = 'w-24' }) => (
-  <div className={`h-10${width}bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse`} />
+  <div className={`h-10 ${width} bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse`} />
 ));
 InlineSkeleton.displayName = 'InlineSkeleton';
 
@@ -150,7 +148,7 @@ InlineSkeleton.displayName = 'InlineSkeleton';
  * Large card skeleton for team management and other heavy components
  */
 const LargeCardSkeleton = memo(() => (
-  <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse h-96">
+  <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse h-96">
     <div className="p-4 sm:p-6 space-y-4">
       <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/4" />
       <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
@@ -195,7 +193,7 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, lo
   return (
     <div className="px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/10 transition-colors min-h-[72px]">
       <div className="flex items-center gap-3">
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center${
+        <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
           commission.status === 'available'
             ? 'bg-green-100 dark:bg-green-900/30'
             : commission.status === 'pending'
@@ -286,7 +284,7 @@ InactiveMemberItem.displayName = 'InactiveMemberItem';
 
 // Design tokens
 const UI = {
-  card: "bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
+  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
 } as const;
 
 // Default level thresholds in cents (fallback when config not loaded)
@@ -512,7 +510,6 @@ const ChatterDashboard: React.FC = () => {
       clientReferrals: 0,
       teamRecruitment: 0,
       tierBonuses: 0,
-      streakBonuses: 0,
       recurringCommissions: 0,
     };
 
@@ -535,12 +532,6 @@ const ChatterDashboard: React.FC = () => {
         case 'tier_bonus':
         case 'bonus_top3':
           breakdown.tierBonuses += amount;
-          break;
-        // Streak bonuses: bonus_streak + bonus_level + bonus_zoom
-        case 'bonus_streak':
-        case 'bonus_level':
-        case 'bonus_zoom':
-          breakdown.streakBonuses += amount;
           break;
         // Recurring commissions: n1_call + n2_call + recurring_5pct
         case 'n1_call':
@@ -825,7 +816,7 @@ const ChatterDashboard: React.FC = () => {
       <ChatterDashboardLayout>
         <div className={`${UI.card} p-8 text-center`}>
           <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h2 className="text-xl dark:text-white font-bold mb-2">
+          <h2 className="text-base sm:text-xl dark:text-white font-bold mb-2">
             <FormattedMessage id="chatter.dashboard.notChatter.title" defaultMessage="Pas encore Chatter" />
           </h2>
           <p className="text-gray-500 dark:text-gray-400">
@@ -846,7 +837,7 @@ const ChatterDashboard: React.FC = () => {
     <ChatterDashboardLayout activeKey="dashboard">
       <div
         ref={containerRef}
-        className="space-y-3 sm:space-y-4 lg:space-y-6 pb-24 sm:pb-6"
+        className="space-y-4 sm:space-y-6"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -857,7 +848,7 @@ const ChatterDashboard: React.FC = () => {
             className="flex justify-center items-center transition-all duration-200 overflow-hidden"
             style={{ height: pullDistance > 0 ? `${pullDistance}px` : '0px' }}
           >
-            <div className={`flex items-center gap-2 text-gray-500 dark:text-gray-400${pullDistance > 60 ? 'text-red-500 dark:text-red-400' : ''}`}>
+            <div className={`flex items-center gap-2 text-gray-500 dark:text-gray-400 ${pullDistance > 60 ? 'text-red-500 dark:text-red-400' : ''}`}>
               <RefreshCw className={`w-5 h-5 ${pullDistance > 60 ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3.6}deg)` }} />
               <span className="text-sm">
                 {pullDistance > 60
@@ -869,69 +860,42 @@ const ChatterDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        {/* Header — compact welcome + notifications + refresh */}
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl dark:text-white sm:text-2xl lg:text-3xl font-bold flex items-center gap-2">
-              <Rocket className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 flex-shrink-0" />
-              <span className="truncate">
-                <FormattedMessage id="chatter.dashboard.title" defaultMessage="Tableau de bord" />
-              </span>
-            </h1>
-            <p className="mt-1 text-sm dark:text-gray-400 sm:text-base truncate">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
               <FormattedMessage
                 id="chatter.dashboard.welcome"
                 defaultMessage="Bienvenue, {name} !"
                 values={{ name: chatter.firstName }}
               />
-            </p>
-            {/* Refresh indicator */}
-            <div className="flex items-center gap-2 mt-1">
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="inline-flex items-center gap-1.5 text-xs dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 min-h-[32px] px-2 -ml-2 rounded-lg hover:bg-gray-100"
-                title={intl.formatMessage({ id: 'chatter.dashboard.refresh', defaultMessage: 'Refresh' })}
-                aria-label={intl.formatMessage({ id: 'chatter.dashboard.refreshDashboard', defaultMessage: 'Refresh dashboard' })}
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span>
-                  {intl.formatMessage(
-                    { id: 'chatter.dashboard.updatedAgo', defaultMessage: 'Updated {timeAgo}' },
-                    { timeAgo: formatTimeAgo(lastUpdated, intl) }
-                  )}
-                </span>
-              </button>
-              {isRefreshing && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  <FormattedMessage id="common.refreshing" defaultMessage="Actualisation..." />
-                </span>
-              )}
-            </div>
-          </div>
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            {/* Notification Bell - Lazy loaded with inline fallback */}
-            <div data-tour="notifications">
-              <Suspense fallback={<InlineSkeleton width="w-12" />}>
-                <NotificationBell
-                  notifications={notifications}
-                  unreadCount={unreadNotificationsCount}
-                  onMarkAsRead={markNotificationRead}
-                  onMarkAllAsRead={markAllNotificationsRead}
-                />
-              </Suspense>
-            </div>
-            {/* Refer button */}
+            </h1>
             <button
-              onClick={navigateToRefer}
-              className="flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:opacity-90 transition-all active:scale-[0.98] shadow-lg sm:flex-none"
-              aria-label={intl.formatMessage({ id: 'chatter.referrals.refer.aria', defaultMessage: 'Share referral links' })}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 min-h-[32px] px-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
+              title={intl.formatMessage({ id: 'chatter.dashboard.refresh', defaultMessage: 'Refresh' })}
+              aria-label={intl.formatMessage({ id: 'chatter.dashboard.refreshDashboard', defaultMessage: 'Refresh dashboard' })}
             >
-              <Share2 className="w-5 h-5" aria-hidden="true" />
-              <FormattedMessage id="chatter.referrals.refer" defaultMessage="Parrainer" />
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>
+                {intl.formatMessage(
+                  { id: 'chatter.dashboard.updatedAgo', defaultMessage: 'Updated {timeAgo}' },
+                  { timeAgo: formatTimeAgo(lastUpdated, intl) }
+                )}
+              </span>
             </button>
+          </div>
+          {/* Notification Bell */}
+          <div data-tour="notifications">
+            <Suspense fallback={<InlineSkeleton width="w-12" />}>
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadNotificationsCount}
+                onMarkAsRead={markNotificationRead}
+                onMarkAllAsRead={markAllNotificationsRead}
+              />
+            </Suspense>
           </div>
         </div>
 
@@ -999,16 +963,42 @@ const ChatterDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Recruitment Banner - Lazy loaded */}
-        {teamSize < 10 && (
-          <Suspense fallback={<CardSkeleton height="h-32" />}>
-            <RecruitmentBanner
-              referralLink={recruitmentShareUrl}
-              referralCode={chatter.affiliateCodeRecruitment || ''}
-              onLearnMore={navigateToRefer}
-              defaultExpanded={false}
-            />
-          </Suspense>
+        {/* ============================================================ */}
+        {/* HERO — Balance card (full width, most important element)     */}
+        {/* ============================================================ */}
+        <div data-tour="balance-card">
+          <ChatterBalanceCard
+            availableBalance={chatter.availableBalance}
+            pendingBalance={chatter.pendingBalance}
+            validatedBalance={chatter.validatedBalance}
+            minimumWithdrawal={minimumWithdrawal}
+            canWithdraw={canWithdraw}
+            hasPendingWithdrawal={!!chatter.pendingWithdrawalId}
+            onWithdraw={navigateToPayments}
+            loading={isLoading}
+            animationDelay={0}
+          />
+        </div>
+
+        {/* Telegram banner — show only if not linked */}
+        {!user?.telegramId && (
+          <button
+            onClick={() => navigate(routes.telegram)}
+            className="w-full flex items-center gap-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-left"
+          >
+            <div className="w-9 h-9 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Info className="w-4 h-4 text-blue-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm">
+                <FormattedMessage id="chatter.dashboard.telegramBanner.title" defaultMessage="Link your Telegram to withdraw your earnings" />
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+                <FormattedMessage id="chatter.dashboard.telegramBanner.subtitle" defaultMessage="Get a $50 bonus + instant notifications + secure withdrawal confirmations" />
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-blue-400 flex-shrink-0" />
+          </button>
         )}
 
         {/* Locked Commission Plan Banner */}
@@ -1018,33 +1008,77 @@ const ChatterDashboard: React.FC = () => {
           </Suspense>
         )}
 
-        {/* Commission Rates Info Banner */}
-        <div className={`${UI.card} p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm dark:text-gray-300 font-medium">
+        {/* Commission Rates — responsive wrap for mobile */}
+        <div className={`${UI.card} p-3 sm:p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">
                 <FormattedMessage id="chatter.commissions.rates" defaultMessage="Vos commissions:" />
               </span>
             </div>
-            <div className="flex gap-3">
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full font-semibold">
-                <Phone className="w-3.5 h-3.5" />
-                <FormattedMessage id="chatter.commissions.clientCall" defaultMessage="Client = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 1000) }} />
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full text-xs sm:text-sm font-semibold">
+                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <FormattedMessage id="chatter.commissions.clientCall" defaultMessage="Client = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 300) }} />
               </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full font-semibold">
-                <Users className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full text-xs sm:text-sm font-semibold">
+                <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <FormattedMessage id="chatter.commissions.n1Call" defaultMessage="N1 = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionN1CallAmount ?? 100) }} />
               </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full font-semibold">
-                <Users className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full text-xs sm:text-sm font-semibold">
+                <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <FormattedMessage id="chatter.commissions.n2Call" defaultMessage="N2 = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionN2CallAmount ?? 50) }} />
               </span>
             </div>
           </div>
         </div>
 
-        {/* Affiliate Links - Prominent position for easy access */}
+        {/* Stats Grid — 3 KPIs compact, mobile-first */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <ChatterStatsCard
+            icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />}
+            label={intl.formatMessage({ id: 'chatter.stats.thisMonth', defaultMessage: 'Ce mois' })}
+            value={formatAmount(thisMonthTotal)}
+            subValue={commissionBreakdown.clientCalls > 0
+              ? intl.formatMessage(
+                  { id: 'chatter.dashboard.clientsCount', defaultMessage: '{count} clients ({rate}/ea)' },
+                  { count: commissionBreakdown.clientCalls, rate: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 300) }
+                )
+              : undefined
+            }
+            gradient="from-green-600 to-emerald-600"
+            iconBg="bg-green-100 dark:bg-green-900/30"
+            loading={isLoading}
+            animationDelay={50}
+          />
+
+          <ChatterStatsCard
+            icon={<Users className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />}
+            label={intl.formatMessage({ id: 'chatter.stats.conversions', defaultMessage: 'Conversions' })}
+            value={chatter.totalClients + chatter.totalRecruits}
+            subValue={intl.formatMessage(
+              { id: 'chatter.stats.breakdown', defaultMessage: '{clients} clients, {recruits} recrutés' },
+              { clients: chatter.totalClients, recruits: chatter.totalRecruits }
+            )}
+            gradient="from-red-600 to-pink-600"
+            iconBg="bg-red-100 dark:bg-red-900/30"
+            loading={isLoading}
+            animationDelay={100}
+          />
+
+          <ChatterStatsCard
+            icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />}
+            label={intl.formatMessage({ id: 'chatter.stats.totalEarned', defaultMessage: 'Total gagne' })}
+            value={formatAmount(chatter.totalEarned)}
+            gradient="from-emerald-600 to-teal-600"
+            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+            loading={isLoading}
+            animationDelay={150}
+          />
+        </div>
+
+        {/* Affiliate Links */}
         <div data-tour="affiliate-links">
           <Suspense fallback={<CardSkeleton height="h-48" />}>
             <ChatterAffiliateLinks
@@ -1058,112 +1092,35 @@ const ChatterDashboard: React.FC = () => {
           </Suspense>
         </div>
 
-        {/* Stats Grid - Critical above-fold, loaded synchronously */}
-        <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
-          {/* This Month - Most Prominent */}
-          <div
-            className={`${UI.card} p-4 sm:p-5 min-h-[140px] bg-gradient-to-br from-green-500/10 dark:from-green-500/20 to-emerald-500/10 dark:to-emerald-500/20 border-green-300 dark:border-green-700/50 opacity-0 animate-fade-in-up transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1`}
-            style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs dark:text-gray-400 sm:text-sm font-medium truncate">
-                  <FormattedMessage id="chatter.stats.thisMonth" defaultMessage="Ce mois" />
-                </p>
-                <div className="mt-1">
-                  <AnimatedNumber
-                    value={thisMonthTotal}
-                    isCurrency
-                    currencyCode="USD"
-                    duration={1500}
-                    delay={200}
-                    animateOnVisible
-                    className="text-3xl dark:text-green-400 sm:text-4xl font-bold"
-                  />
-                </div>
-                <div className="mt-2 flex gap-1">
-                  {commissionBreakdown.clientCalls > 0 && (
-                    <p className="text-xs dark:text-green-400">
-                      <FormattedMessage
-                        id="chatter.dashboard.clientsCount"
-                        defaultMessage="{count} clients ({rate}/ea)"
-                        values={{ count: commissionBreakdown.clientCalls, rate: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 1000) }}
-                      />
-                    </p>
-                  )}
-                  {teamPassiveIncome > 0 && (
-                    <p className="text-xs dark:text-red-400 font-medium">
-                      <FormattedMessage
-                        id="chatter.stats.passiveIncome"
-                        defaultMessage="Passif: {amount}"
-                        values={{ amount: formatAmount(teamPassiveIncome) }}
-                      />
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="p-2.5 sm:p-3 rounded-xl bg-green-100 dark:bg-green-900/30 flex-shrink-0 transition-transform duration-300 hover:scale-110">
-                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </div>
+        {/* Recruitment Banner - below fold */}
+        {teamSize < 10 && (
+          <Suspense fallback={<CardSkeleton height="h-32" />}>
+            <RecruitmentBanner
+              referralLink={recruitmentShareUrl}
+              referralCode={chatter.affiliateCodeRecruitment || ''}
+              onLearnMore={navigateToRefer}
+              defaultExpanded={false}
+            />
+          </Suspense>
+        )}
 
-          <ChatterStatsCard
-            icon={<Users className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />}
-            label={intl.formatMessage({ id: 'chatter.stats.conversions', defaultMessage: 'Conversions' })}
-            value={chatter.totalClients + chatter.totalRecruits}
-            subValue={intl.formatMessage(
-              { id: 'chatter.stats.breakdown', defaultMessage: '{clients} clients, {recruits} recrutés' },
-              { clients: chatter.totalClients, recruits: chatter.totalRecruits }
-            )}
-            gradient="from-red-600 to-pink-600"
-            iconBg="bg-red-100 dark:bg-red-900/30"
-            loading={isLoading}
-            animationDelay={50}
-          />
-
-          <ChatterStatsCard
-            icon={<Phone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />}
-            label={intl.formatMessage({ id: 'chatter.stats.commissions', defaultMessage: 'Total commissions' })}
-            value={commissions.length}
-            subValue={pendingCount > 0
-              ? intl.formatMessage({ id: 'chatter.stats.pending', defaultMessage: '{count} en attente' }, { count: pendingCount })
-              : undefined
-            }
-            gradient="from-blue-600 to-indigo-600"
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            loading={isLoading}
-            animationDelay={100}
-          />
-
-          <ChatterStatsCard
-            icon={<TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" />}
-            label={intl.formatMessage({ id: 'chatter.stats.totalEarned', defaultMessage: 'Total gagne' })}
-            value={formatAmount(chatter.totalEarned)}
-            gradient="from-emerald-600 to-teal-600"
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            loading={isLoading}
-            animationDelay={150}
-          />
-        </div>
-
-        {/* Tier Progress Card */}
+        {/* Tier Progress Card — compact mobile-first */}
         {nextTier && (
-          <div className={`${UI.card} p-4 sm:p-5 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
-                  <Award className="w-5 h-5 text-white" />
+          <div className={`${UI.card} p-3 sm:p-5 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
+            <div className="flex items-center justify-between gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                <div className="min-w-0">
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
                     <FormattedMessage
                       id="chatter.tier.progress"
                       defaultMessage="Prochain palier: {tier} filleuls"
                       values={{ tier: nextTier.tier }}
                     />
                   </h4>
-                  <p className="text-xs dark:text-gray-400">
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
                     <FormattedMessage
                       id="chatter.tier.needed"
                       defaultMessage="Plus que {needed} recrutements pour debloquer"
@@ -1172,21 +1129,21 @@ const ChatterDashboard: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl dark:text-amber-400 font-bold">{nextTier.bonus}</p>
-                <p className="text-xs dark:text-gray-400">
+              <div className="text-right flex-shrink-0">
+                <p className="text-xl sm:text-2xl text-amber-600 dark:text-amber-400 font-bold">{nextTier.bonus}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                   <FormattedMessage id="chatter.tier.bonus" defaultMessage="Bonus" />
                 </p>
               </div>
             </div>
-            <div className="mt-3">
-              <div className="h-2 bg-amber-200 dark:bg-amber-900/50 rounded-full overflow-hidden">
+            <div className="mt-2 sm:mt-3">
+              <div className="h-1.5 sm:h-2 bg-amber-200 dark:bg-amber-900/50 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, ((tierProgress?.qualifiedFilleulsCount || 0) / nextTier.tier) * 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between mt-1 text-xs dark:text-gray-400">
+              <div className="flex justify-between mt-1 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                 <span>
                   <FormattedMessage
                     id="chatter.dashboard.tierQualified"
@@ -1217,6 +1174,12 @@ const ChatterDashboard: React.FC = () => {
             paidTierBonuses={tierProgress?.paidTierBonuses || []}
             onRecruit={navigateToRefer}
             loading={isLoading || referralsLoading}
+            commissionRates={dashboardData?.config ? {
+              clientCallAmount: dashboardData.config.commissionClientCallAmount,
+              n1CallAmount: dashboardData.config.commissionN1CallAmount,
+              n2CallAmount: dashboardData.config.commissionN2CallAmount,
+              activationBonusAmount: dashboardData.config.commissionActivationBonusAmount,
+            } : undefined}
           />
         </Suspense>
 
@@ -1371,42 +1334,6 @@ const ChatterDashboard: React.FC = () => {
 
           {/* Right Column */}
           <div className="space-y-6">
-            {/* Telegram banner - show only if not linked, contextual near balance/withdrawal */}
-            {!user?.telegramId && (
-              <button
-                onClick={() => navigate(routes.telegram)}
-                className="w-full flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-left"
-              >
-                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Info className="w-5 h-5 text-blue-500" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm">
-                    <FormattedMessage id="chatter.dashboard.telegramBanner.title" defaultMessage="Link your Telegram to withdraw your earnings" />
-                  </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
-                    <FormattedMessage id="chatter.dashboard.telegramBanner.subtitle" defaultMessage="Get a $50 bonus + instant notifications + secure withdrawal confirmations" />
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-blue-400 flex-shrink-0" />
-              </button>
-            )}
-
-            {/* Balance Card - Critical, loaded synchronously */}
-            <div data-tour="balance-card">
-              <ChatterBalanceCard
-                availableBalance={chatter.availableBalance}
-                pendingBalance={chatter.pendingBalance}
-                validatedBalance={chatter.validatedBalance}
-                minimumWithdrawal={minimumWithdrawal}
-                canWithdraw={canWithdraw}
-                hasPendingWithdrawal={!!chatter.pendingWithdrawalId}
-                onWithdraw={navigateToPayments}
-                loading={isLoading}
-                animationDelay={200}
-              />
-            </div>
-
             {/* Earnings Motivation Card - Shows cumulative earnings & motivation */}
             <EarningsMotivationCard
               totalEarned={chatter.totalEarned}

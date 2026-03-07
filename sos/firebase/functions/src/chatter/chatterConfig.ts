@@ -386,10 +386,10 @@ export function isFlashBonusActive(config: ChatterConfigSettings): boolean {
  * @param config - The chatter config settings
  * @returns number - The multiplier (1 if no bonus, flashBonus.multiplier if active)
  */
-export function getCommissionMultiplier(config: ChatterConfigSettings): number {
-  if (isFlashBonusActive(config)) {
-    return config.flashBonus.multiplier;
-  }
+/**
+ * @deprecated All multipliers permanently removed. Always returns 1.
+ */
+export function getCommissionMultiplier(_config: ChatterConfigSettings): number {
   return 1;
 }
 

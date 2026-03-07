@@ -137,7 +137,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
       <div className="text-center">
         {/* Piggy Bank Icon with pulse when withdrawable */}
         <div
-          className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-red-100 dark:from-red-900/30 to-orange-100 dark:to-orange-900/30 flex items-center justify-center transition-all duration-500${canWithdraw ? 'animate-pulse-subtle shadow-lg shadow-red-500/20' : ''}`}
+          className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-red-100 dark:from-red-900/30 to-orange-100 dark:to-orange-900/30 flex items-center justify-center transition-all duration-500 ${canWithdraw ? 'animate-pulse-subtle shadow-lg shadow-red-500/20' : ''}`}
         >
           <PiggyBank className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" />
         </div>

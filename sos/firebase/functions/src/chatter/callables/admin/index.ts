@@ -301,8 +301,27 @@ export const adminGetChatterDetail = onCall(
         withdrawalsCount: withdrawals.length,
       });
 
+      // Get captain info if assigned
+      let captainInfo: { id: string; firstName: string; lastName: string; email: string } | null = null;
+      if (chatter.captainId) {
+        const captainDoc = await db.collection("chatters").doc(chatter.captainId).get();
+        if (captainDoc.exists) {
+          const captainData = captainDoc.data()!;
+          captainInfo = {
+            id: captainDoc.id,
+            firstName: captainData.firstName,
+            lastName: captainData.lastName,
+            email: captainData.email,
+          };
+        }
+      }
+
       return {
-        chatter,
+        chatter: {
+          ...chatter,
+          captainId: chatter.captainId || undefined,
+          captainInfo,
+        } as any,
         commissions: commissions as (ChatterCommission & { createdAt: string })[],
         withdrawals: withdrawals as (ChatterWithdrawal & { requestedAt: string })[],
         recruitmentLinks: recruitmentLinks as (ChatterRecruitmentLink & { createdAt: string })[],
@@ -801,6 +820,10 @@ export const adminUpdateChatterConfig = onCall(
         "activationCallsRequired",
         "commissionProviderCallAmount",
         "providerRecruitmentDurationMonths",
+        "recruitmentMilestones",
+        "monthlyCompetitionPrizes",
+        "trainingEnabled",
+        "isChatterListingPageVisible",
       ];
 
       const sanitizedUpdates: Record<string, unknown> = {};
@@ -848,6 +871,121 @@ export const adminUpdateChatterConfig = onCall(
     } catch (error) {
       logger.error("[adminUpdateChatterConfig] Error", { error });
       throw new HttpsError("internal", "Failed to update configuration");
+    }
+  }
+);
+
+// ============================================================================
+// UPDATE CHATTER LOCKED RATES (Admin override individual chatter rates)
+// ============================================================================
+
+/**
+ * Update lockedRates for a specific chatter.
+ * Allows admin to override commission rates for individual chatters.
+ *
+ * Input: { chatterId: string, lockedRates: Record<string, number> }
+ *
+ * Supported rate keys:
+ *   commissionClientCallAmount, commissionClientCallAmountLawyer,
+ *   commissionClientCallAmountExpat, commissionN1CallAmount,
+ *   commissionN2CallAmount, commissionActivationBonusAmount,
+ *   commissionN1RecruitBonusAmount, commissionProviderCallAmount,
+ *   commissionProviderCallAmountLawyer, commissionProviderCallAmountExpat,
+ *   commissionCaptainCallAmountLawyer, commissionCaptainCallAmountExpat
+ */
+export const adminUpdateChatterLockedRates = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request): Promise<{ success: boolean; updatedRates: Record<string, number> }> => {
+    const adminId = request.auth?.uid;
+    if (!adminId) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+
+    // Check admin role
+    const db = getFirestore();
+    const adminDoc = await db.collection("users").doc(adminId).get();
+    const adminRole = adminDoc.data()?.role;
+    if (!["admin", "superadmin"].includes(adminRole)) {
+      throw new HttpsError("permission-denied", "Admin access required");
+    }
+
+    const { chatterId, lockedRates } = request.data as {
+      chatterId: string;
+      lockedRates: Record<string, number>;
+    };
+
+    if (!chatterId || typeof chatterId !== "string") {
+      throw new HttpsError("invalid-argument", "chatterId is required");
+    }
+    if (!lockedRates || typeof lockedRates !== "object") {
+      throw new HttpsError("invalid-argument", "lockedRates object is required");
+    }
+
+    // Whitelist of allowed rate keys (all in cents)
+    const allowedKeys = [
+      "commissionClientCallAmount",
+      "commissionClientCallAmountLawyer",
+      "commissionClientCallAmountExpat",
+      "commissionN1CallAmount",
+      "commissionN2CallAmount",
+      "commissionActivationBonusAmount",
+      "commissionN1RecruitBonusAmount",
+      "commissionProviderCallAmount",
+      "commissionProviderCallAmountLawyer",
+      "commissionProviderCallAmountExpat",
+      "commissionCaptainCallAmountLawyer",
+      "commissionCaptainCallAmountExpat",
+    ];
+
+    // Sanitize input
+    const sanitizedRates: Record<string, number> = {};
+    for (const key of allowedKeys) {
+      if (lockedRates[key] !== undefined) {
+        const value = Number(lockedRates[key]);
+        if (isNaN(value) || value < 0 || value > 100000) {
+          throw new HttpsError("invalid-argument", `Invalid value for ${key}: ${lockedRates[key]}. Must be 0-100000 cents.`);
+        }
+        sanitizedRates[key] = Math.round(value);
+      }
+    }
+
+    if (Object.keys(sanitizedRates).length === 0) {
+      throw new HttpsError("invalid-argument", "No valid rate keys provided");
+    }
+
+    try {
+      const chatterRef = db.collection("chatters").doc(chatterId);
+      const chatterDoc = await chatterRef.get();
+
+      if (!chatterDoc.exists) {
+        throw new HttpsError("not-found", `Chatter ${chatterId} not found`);
+      }
+
+      const currentData = chatterDoc.data()!;
+      const currentRates = currentData.lockedRates || {};
+      const mergedRates = { ...currentRates, ...sanitizedRates };
+
+      await chatterRef.update({
+        lockedRates: mergedRates,
+        // Set plan metadata if not already present
+        ...(currentData.commissionPlanId ? {} : {
+          commissionPlanName: `Admin override by ${adminId}`,
+          rateLockDate: new Date().toISOString(),
+        }),
+      });
+
+      logger.info("[adminUpdateChatterLockedRates] Rates updated", {
+        chatterId,
+        adminId,
+        previousRates: currentRates,
+        newRates: mergedRates,
+      });
+
+      return { success: true, updatedRates: mergedRates };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error("[adminUpdateChatterLockedRates] Error", { error });
+      throw new HttpsError("internal", "Failed to update locked rates");
     }
   }
 );

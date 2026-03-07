@@ -25,7 +25,6 @@ import {
   Users,
   UserPlus,
   Award,
-  Flame,
   RefreshCw,
   TrendingUp,
   ChevronRight,
@@ -40,7 +39,6 @@ export interface EarningsByCategory {
   clientReferrals: number;
   teamRecruitment: number;
   tierBonuses: number;
-  streakBonuses: number;
   recurringCommissions: number;
 }
 
@@ -102,16 +100,6 @@ const SEGMENT_CONFIG: SegmentConfig[] = [
     textColor: 'text-red-600 dark:text-red-400',
     icon: Award,
     commissionTypes: ['tier_bonus', 'bonus_top3'],
-  },
-  {
-    key: 'streakBonuses',
-    labelKey: 'chatter.earnings.streakBonuses',
-    defaultLabel: 'Streak Bonuses',
-    color: '#F97316', // orange-500
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-    textColor: 'text-orange-600 dark:text-orange-400',
-    icon: Flame,
-    commissionTypes: ['bonus_streak', 'bonus_level', 'bonus_zoom'],
   },
   {
     key: 'recurringCommissions',
@@ -375,7 +363,7 @@ const LegendItem: React.FC<LegendItemProps> = ({
       whileTap={{ scale: 0.98 }}
     >
       <div
-        className={`w-8 h-8 rounded-lg${config.bgColor}flex items-center justify-center`}
+        className={`w-8 h-8 rounded-lg ${config.bgColor} flex items-center justify-center`}
       >
         <Icon className={`w-4 h-4 ${config.textColor}`} />
       </div>
@@ -589,7 +577,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
         <EmptyState />
       ) : (
         <div className="p-4 sm:p-6 pt-2">
-          <div className="flex lg:flex-row items-center gap-6">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
             {/* Donut Chart */}
             <div className="relative flex-shrink-0">
               <svg

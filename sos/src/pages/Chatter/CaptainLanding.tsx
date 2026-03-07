@@ -16,7 +16,7 @@ import { trackMetaViewContent } from '@/utils/metaPixel';
 import toast from 'react-hot-toast';
 import IntlPhoneInput from '@/components/forms-data/IntlPhoneInput';
 import { logAnalyticsEvent, db, storage } from '@/config/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
@@ -24,6 +24,7 @@ import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import {
   ArrowRight,
+  Calendar,
   Check,
   Users,
   ChevronDown,
@@ -126,6 +127,8 @@ const globalStyles = `
 
 // Currency: now dynamic via useCountryLandingConfig (see component body)
 
+const CALENDLY_URL = (import.meta.env as Record<string, string>).VITE_CALENDLY_CAPTAIN_URL || '';
+
 // ============================================================================
 // COMPOSANTS
 // ============================================================================
@@ -175,14 +178,22 @@ const ScrollIndicator: React.FC<{ label: string }> = ({ label }) => (
 );
 
 // ============================================================================
-// TIER DATA
+// TIER DATA — Visual styles only; calls/bonus come from admin config
 // ============================================================================
-const TIERS = [
-  { nameKey: 'captain.landing.tier.bronze', nameDefault: 'Bronze', calls: 20, bonus: 25, color: 'from-orange-700/30 to-orange-600/10', border: 'border-orange-600/30', text: 'text-orange-400', icon: '🥉' },
-  { nameKey: 'captain.landing.tier.silver', nameDefault: 'Argent', calls: 50, bonus: 50, color: 'from-gray-400/20 to-gray-300/10', border: 'border-gray-400/30', text: 'text-gray-300', icon: '🥈' },
-  { nameKey: 'captain.landing.tier.gold', nameDefault: 'Or', calls: 100, bonus: 100, color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-400', icon: '🥇' },
-  { nameKey: 'captain.landing.tier.platinum', nameDefault: 'Platine', calls: 200, bonus: 200, color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', icon: '💎' },
-  { nameKey: 'captain.landing.tier.diamond', nameDefault: 'Diamant', calls: 400, bonus: 400, color: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/30', text: 'text-purple-400', icon: '👑' },
+const TIER_STYLES = [
+  { nameKey: 'captain.landing.tier.bronze', nameDefault: 'Bronze', color: 'from-orange-700/30 to-orange-600/10', border: 'border-orange-600/30', text: 'text-orange-400', icon: '🥉' },
+  { nameKey: 'captain.landing.tier.silver', nameDefault: 'Argent', color: 'from-gray-400/20 to-gray-300/10', border: 'border-gray-400/30', text: 'text-gray-300', icon: '🥈' },
+  { nameKey: 'captain.landing.tier.gold', nameDefault: 'Or', color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/30', text: 'text-amber-400', icon: '🥇' },
+  { nameKey: 'captain.landing.tier.platinum', nameDefault: 'Platine', color: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400', icon: '💎' },
+  { nameKey: 'captain.landing.tier.diamond', nameDefault: 'Diamant', color: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/30', text: 'text-purple-400', icon: '👑' },
+];
+
+const DEFAULT_CAPTAIN_TIERS = [
+  { minCalls: 20, bonus: 2500 },
+  { minCalls: 50, bonus: 5000 },
+  { minCalls: 100, bonus: 10000 },
+  { minCalls: 200, bonus: 20000 },
+  { minCalls: 400, bonus: 40000 },
 ];
 
 // ============================================================================
@@ -217,9 +228,97 @@ const CaptainLanding: React.FC = () => {
   const [personalCalls, setPersonalCalls] = useState(20);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
+  // Captain config from admin (admin_config/chatter_config — publicly readable)
+  const [captainConfig, setCaptainConfig] = useState<{
+    lawyerAmt: number;
+    expatAmt: number;
+    tiers: Array<{ minCalls: number; bonus: number }>;
+    qualityBonusAmount: number;
+    qualityMinRecruits: number;
+    qualityMinCommissions: number;
+  } | null>(null);
+
+  useEffect(() => {
+    getDoc(doc(db, 'admin_config', 'chatter_config')).then(snap => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setCaptainConfig({
+        lawyerAmt: d.commissionCaptainCallAmountLawyer ?? 300,
+        expatAmt: d.commissionCaptainCallAmountExpat ?? 200,
+        tiers: d.captainTiers ?? DEFAULT_CAPTAIN_TIERS,
+        qualityBonusAmount: d.captainQualityBonusAmount ?? 10000,
+        qualityMinRecruits: d.captainQualityBonusMinRecruits ?? 10,
+        qualityMinCommissions: d.captainQualityBonusMinCommissions ?? 10000,
+      });
+    }).catch(() => {});
+  }, []);
+
+  // Derived captain prices (fallback to defaults when config not yet loaded)
+  const lawyerAmt = captainConfig?.lawyerAmt ?? 300;
+  const expatAmt = captainConfig?.expatAmt ?? 200;
+  const lawyerDollar = lawyerAmt / 100;
+  const expatDollar = expatAmt / 100;
+  const avgCallRate = (lawyerAmt + expatAmt) / 2 / 100;
+  const qualityBonusDollar = Math.round((captainConfig?.qualityBonusAmount ?? 10000) / 100);
+  const qualityMinRecruits = captainConfig?.qualityMinRecruits ?? 10;
+  const qualityMinCommissions = Math.round((captainConfig?.qualityMinCommissions ?? 10000) / 100);
+
+  const TIERS = (captainConfig?.tiers ?? DEFAULT_CAPTAIN_TIERS).map((t, i) => ({
+    ...(TIER_STYLES[i] ?? TIER_STYLES[TIER_STYLES.length - 1]),
+    calls: t.minCalls,
+    bonus: Math.round(t.bonus / 100),
+  }));
+
+  const maxTierBonus = TIERS[TIERS.length - 1]?.bonus ?? 400;
+  // Example section (30 chatters × 15 appels/mois)
+  const exTeamComm = Math.round(30 * 15 * avgCallRate);
+  const exTotal = exTeamComm + maxTierBonus + qualityBonusDollar;
+
   // Form
   const [form, setForm] = useState({ name: '', whatsapp: '', country: '', motivation: '' });
   const [formState, setFormState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [calendlyBooked, setCalendlyBooked] = useState(false);
+
+  // Load Calendly widget script + listen for booking event once form is sent
+  useEffect(() => {
+    if (formState !== 'sent' || !CALENDLY_URL) return;
+
+    if (!document.getElementById('calendly-widget-script')) {
+      const script = document.createElement('script');
+      script.id = 'calendly-widget-script';
+      script.src = 'https://assets.calendly.com/assets/external/widget.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
+    const handleMessage = async (e: MessageEvent) => {
+      if (e.origin !== 'https://calendly.com') return;
+      if (e.data?.event !== 'calendly.event_scheduled') return;
+      setCalendlyBooked(true);
+      if (applicationId) {
+        try {
+          await updateDoc(doc(db, 'captain_applications', applicationId), {
+            calendlyBooked: true,
+            calendlyBookedAt: serverTimestamp(),
+          });
+        } catch { /* silently fail — non-blocking */ }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [formState, applicationId]);
+
+  const handleCalendlyClick = () => {
+    if (!CALENDLY_URL) return;
+    const Calendly = (window as any).Calendly;
+    if (Calendly?.initPopupWidget) {
+      Calendly.initPopupWidget({ url: CALENDLY_URL });
+    } else {
+      window.open(CALENDLY_URL, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   // CV upload
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -298,11 +397,11 @@ const CaptainLanding: React.FC = () => {
 
   // Calculator
   const totalTeamCalls = teamSize * callsPerChatter;
-  const teamComm = totalTeamCalls * 2.5;
+  const teamComm = Math.round(totalTeamCalls * avgCallRate);
   const tier = TIERS.reduce((a, t) => totalTeamCalls >= t.calls ? t : a, TIERS[0]);
-  const qualityOk = teamSize >= 10 && teamComm >= 100;
-  const qualityBonus = qualityOk ? 100 : 0;
-  const persRev = personalCalls * 4;
+  const qualityOk = teamSize >= qualityMinRecruits && teamComm >= qualityMinCommissions;
+  const qualityBonus = qualityOk ? qualityBonusDollar : 0;
+  const persRev = Math.round(personalCalls * avgCallRate);
   const total = teamComm + tier.bonus + qualityBonus + persRev;
 
   // Submit to Firestore
@@ -320,9 +419,13 @@ const CaptainLanding: React.FC = () => {
       toast.error(intl.formatMessage({ id: 'captain.landing.form.country.required', defaultMessage: 'Veuillez indiquer votre pays.' }));
       return;
     }
+    if (!form.motivation || form.motivation.trim().length < 10) {
+      toast.error(intl.formatMessage({ id: 'captain.landing.form.motiv.required', defaultMessage: 'Veuillez écrire un message de motivation (min. 10 caractères).' }));
+      return;
+    }
     setFormState('sending');
     try {
-      await addDoc(collection(db, 'captain_applications'), {
+      const docRef = await addDoc(collection(db, 'captain_applications'), {
         name: form.name.trim(),
         whatsapp: form.whatsapp.trim(),
         country: form.country.trim(),
@@ -334,6 +437,7 @@ const CaptainLanding: React.FC = () => {
         language: langCode,
         createdAt: serverTimestamp(),
       });
+      setApplicationId(docRef.id);
       logAnalyticsEvent('captain_application', { country: form.country });
       setFormState('sent');
       setForm({ name: '', whatsapp: '', country: '', motivation: '' });
@@ -359,7 +463,7 @@ const CaptainLanding: React.FC = () => {
     },
     {
       q: intl.formatMessage({ id: 'captain.faq.q3', defaultMessage: "Comment sont calcules les revenus ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a3', defaultMessage: "2-3$ par appel de votre equipe + bonus palier mensuel (25-400$) + bonus qualite (100$/mois). Plus vos appels perso a 3-5$. Tout est cumule." }),
+      a: intl.formatMessage({ id: 'captain.faq.a3', defaultMessage: "2-3$ par appel de votre equipe + bonus palier mensuel (25-400$) + bonus qualite (100$/mois). Plus vos appels perso a 3-5$. Tout est cumule." }, { expatDollar, lawyerDollar, minTier: TIERS[0]?.bonus ?? 25, maxTier: maxTierBonus, qualityBonus: qualityBonusDollar }),
     },
     {
       q: intl.formatMessage({ id: 'captain.faq.q4', defaultMessage: "C'est vraiment evolutif ?" }),
@@ -369,7 +473,7 @@ const CaptainLanding: React.FC = () => {
       q: intl.formatMessage({ id: 'captain.faq.q5', defaultMessage: "Je dois investir quelque chose ?" }),
       a: intl.formatMessage({ id: 'captain.faq.a5', defaultMessage: "Zero. Pas d'investissement, pas de frais. Un smartphone et de la motivation suffisent." }),
     },
-  ], [intl]);
+  ], [intl, expatDollar, lawyerDollar, TIERS, maxTierBonus, qualityBonusDollar]);
 
   return (
     <Layout showFooter={false}>
@@ -437,17 +541,17 @@ const CaptainLanding: React.FC = () => {
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto">
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-black text-amber-400"><FormattedMessage id="captain.landing.hero.fact1" defaultMessage="2-3$/appel" /></p>
+                <p className="text-xs sm:text-sm font-black text-amber-400">{expatDollar}$-{lawyerDollar}$/appel</p>
                 <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact1b" defaultMessage="par call équipe" /></p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-black text-green-400"><FormattedMessage id="captain.landing.hero.fact2" defaultMessage="400$/mois" /></p>
+                <p className="text-xs sm:text-sm font-black text-green-400">{maxTierBonus}$/<FormattedMessage id="captain.landing.hero.permonth.short" defaultMessage="mois" /></p>
                 <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact2b" defaultMessage="bonus palier max" /></p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 text-center">
                 <Crown className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-black text-purple-400"><FormattedMessage id="captain.landing.hero.fact3" defaultMessage="+100$/mois" /></p>
+                <p className="text-xs sm:text-sm font-black text-purple-400">+{qualityBonusDollar}$/<FormattedMessage id="captain.landing.hero.permonth.short" defaultMessage="mois" /></p>
                 <p className="text-[10px] sm:text-xs text-white/50"><FormattedMessage id="captain.landing.hero.fact3b" defaultMessage="bonus qualité" /></p>
               </div>
             </div>
@@ -561,13 +665,13 @@ const CaptainLanding: React.FC = () => {
             <div className="grid sm:grid-cols-2 gap-3 mb-5">
               <div className="bg-gradient-to-br from-amber-500/15 to-yellow-500/5 border border-amber-500/20 rounded-2xl p-5 text-center">
                 <p className="text-xs text-white/50 mb-1"><FormattedMessage id="captain.landing.rev.lawyer" defaultMessage="Appel avocat" /></p>
-                <p className="text-3xl sm:text-4xl font-black text-amber-400">3$</p>
-                {localBlock(3) && <p className="text-sm text-amber-300/60">{localBlock(3)}</p>}
+                <p className="text-3xl sm:text-4xl font-black text-amber-400">{lawyerDollar}$</p>
+                {localBlock(lawyerDollar) && <p className="text-sm text-amber-300/60">{localBlock(lawyerDollar)}</p>}
               </div>
               <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/5 border border-green-500/20 rounded-2xl p-5 text-center">
                 <p className="text-xs text-white/50 mb-1"><FormattedMessage id="captain.landing.rev.expat" defaultMessage="Appel expatrie" /></p>
-                <p className="text-3xl sm:text-4xl font-black text-green-400">2$</p>
-                {localBlock(2) && <p className="text-sm text-green-300/60">{localBlock(2)}</p>}
+                <p className="text-3xl sm:text-4xl font-black text-green-400">{expatDollar}$</p>
+                {localBlock(expatDollar) && <p className="text-sm text-green-300/60">{localBlock(expatDollar)}</p>}
               </div>
             </div>
 
@@ -600,10 +704,10 @@ const CaptainLanding: React.FC = () => {
             <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-3 mb-5">
               <div className="text-center sm:text-left flex-1">
                 <p className="text-xs text-purple-300/70 font-bold uppercase"><FormattedMessage id="captain.landing.rev.quality" defaultMessage="Bonus qualite mensuel" /></p>
-                <p className="text-2xl font-black text-purple-400">100${local(100)}</p>
+                <p className="text-2xl font-black text-purple-400">{qualityBonusDollar}${local(qualityBonusDollar)}</p>
               </div>
               <p className="text-xs text-white/50 text-center sm:text-right">
-                <FormattedMessage id="captain.landing.rev.quality.cond" defaultMessage="Condition : 10 recrues actives + 100$ de commissions equipe" />
+                <FormattedMessage id="captain.landing.rev.quality.cond" defaultMessage="Condition : {minRecruits} recrues actives + {minComm}$ de commissions equipe" values={{ minRecruits: qualityMinRecruits, minComm: qualityMinCommissions }} />
               </p>
             </div>
 
@@ -611,15 +715,15 @@ const CaptainLanding: React.FC = () => {
             <div className="bg-gradient-to-r from-amber-500/10 to-green-500/10 border border-amber-500/20 rounded-2xl p-5 text-center">
               <p className="text-xs text-white/50 uppercase font-bold mb-3"><FormattedMessage id="captain.landing.rev.example" defaultMessage="Exemple : equipe de 30 chatters, 15 appels/mois chacun" /></p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.team" defaultMessage="Equipe" /></p><p className="font-black text-amber-400">1 125$</p></div>
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.tier" defaultMessage="Palier" /></p><p className="font-black text-green-400">400$</p></div>
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.quality" defaultMessage="Qualite" /></p><p className="font-black text-purple-400">100$</p></div>
-                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.total" defaultMessage="TOTAL" /></p><p className="font-black text-white">1 625$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.team" defaultMessage="Equipe" /></p><p className="font-black text-amber-400">{exTeamComm.toLocaleString()}$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.tier" defaultMessage="Palier" /></p><p className="font-black text-green-400">{maxTierBonus}$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.quality" defaultMessage="Qualite" /></p><p className="font-black text-purple-400">{qualityBonusDollar}$</p></div>
+                <div className="bg-black/30 rounded-lg p-2"><p className="text-[10px] text-white/40"><FormattedMessage id="captain.landing.rev.ex.total" defaultMessage="TOTAL" /></p><p className="font-black text-white">{exTotal.toLocaleString()}$</p></div>
               </div>
               <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-green-400">
-                = 1 625${local(1625)}/mois
+                = {exTotal.toLocaleString()}${local(exTotal)}/mois
               </p>
-              <p className="text-[10px] text-white/40 mt-1"><FormattedMessage id="captain.landing.rev.ex.note" defaultMessage="+ vos propres appels a 3-5$" /></p>
+              <p className="text-[10px] text-white/40 mt-1"><FormattedMessage id="captain.landing.rev.ex.note" defaultMessage="+ vos propres appels a {expatDollar}$-{lawyerDollar}$" values={{ expatDollar, lawyerDollar }} /></p>
             </div>
           </div>
         </section>
@@ -791,12 +895,56 @@ const CaptainLanding: React.FC = () => {
                 <h3 className="!text-2xl font-bold text-green-400 mb-2">
                   <FormattedMessage id="captain.landing.form.ok.title" defaultMessage="Candidature recue !" />
                 </h3>
-                <p className="text-sm text-white/70 mb-4">
+                <p className="text-sm text-white/70 mb-5">
                   <FormattedMessage id="captain.landing.form.ok.desc" defaultMessage="On revient vers vous tres vite sur WhatsApp pour organiser un echange. Impatients de vous rencontrer !" />
                 </p>
-                <CTAButton onClick={() => navigate('/')} className="mx-auto">
-                  <FormattedMessage id="captain.landing.form.ok.cta" defaultMessage="Decouvrir SOS-Expat" />
-                </CTAButton>
+
+                {/* Calendly block — optional, shown only if URL configured */}
+                {CALENDLY_URL && !calendlyBooked && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-5 text-left">
+                    <p className="text-sm font-bold text-amber-300 mb-1 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <FormattedMessage id="captain.landing.form.calendly.title" defaultMessage="Accélérez le processus" />
+                    </p>
+                    <p className="text-xs text-white/60 mb-4">
+                      <FormattedMessage id="captain.landing.form.calendly.desc" defaultMessage="Réservez directement un créneau de 15 min avec nous et sautez l'étape de coordination." />
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleCalendlyClick}
+                      className="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-black font-bold rounded-xl py-3 px-5 transition-colors min-h-[48px]"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <FormattedMessage id="captain.landing.form.calendly.cta" defaultMessage="Réserver mon créneau" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/')}
+                      className="w-full text-center text-xs text-white/30 hover:text-white/50 mt-3 transition-colors"
+                    >
+                      <FormattedMessage id="captain.landing.form.calendly.skip" defaultMessage="Passer pour l'instant" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Calendly booking confirmed */}
+                {calendlyBooked && (
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4 mb-5 text-center">
+                    <p className="text-base font-bold text-blue-300 mb-1">
+                      📅 <FormattedMessage id="captain.landing.form.calendly.booked.title" defaultMessage="Rendez-vous confirmé !" />
+                    </p>
+                    <p className="text-xs text-white/60">
+                      <FormattedMessage id="captain.landing.form.calendly.booked.desc" defaultMessage="Vous allez recevoir un email de confirmation. À très vite !" />
+                    </p>
+                  </div>
+                )}
+
+                {/* Show discover button when no Calendly or after booking */}
+                {(!CALENDLY_URL || calendlyBooked) && (
+                  <CTAButton onClick={() => navigate('/')} className="mx-auto">
+                    <FormattedMessage id="captain.landing.form.ok.cta" defaultMessage="Decouvrir SOS-Expat" />
+                  </CTAButton>
+                )}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-8 space-y-4">
@@ -897,9 +1045,9 @@ const CaptainLanding: React.FC = () => {
                 {/* Motivation */}
                 <div>
                   <label htmlFor="cap-motiv" className="text-sm font-medium text-white/80 block mb-1.5">
-                    <FormattedMessage id="captain.landing.form.motivation" defaultMessage="Message de motivation (optionnel)" />
+                    <FormattedMessage id="captain.landing.form.motivation" defaultMessage="Message de motivation" /> *
                   </label>
-                  <textarea id="cap-motiv" rows={3} value={form.motivation} onChange={e => setForm(p => ({ ...p, motivation: e.target.value }))}
+                  <textarea id="cap-motiv" rows={3} required value={form.motivation} onChange={e => setForm(p => ({ ...p, motivation: e.target.value }))}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 transition-colors resize-none min-h-[48px]"
                     placeholder={intl.formatMessage({ id: 'captain.landing.form.motiv.ph', defaultMessage: 'Votre experience, vos reseaux, votre motivation...' })} />
                 </div>

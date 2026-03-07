@@ -1072,7 +1072,7 @@ const ChatterLanding: React.FC = () => {
             {/* Payments */}
             <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center max-w-3xl mx-auto">
               <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
-                <FormattedMessage id="chatter.landing.payment.info" defaultMessage="Retrait dès 25$ • Reçu en 48h" />
+                <FormattedMessage id="chatter.landing.payment.info" defaultMessage="Retrait dès 30$ • Reçu en 48h" />
               </p>
               <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4">
                 {formatPaymentMethodDisplay(countryConfig.paymentMethods).map((m, i) => (
@@ -1129,7 +1129,7 @@ const ChatterLanding: React.FC = () => {
             </h2>
 
             {/* Recap */}
-            <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
               {[
                 'chatter.landing.recap.revenue',
                 'chatter.landing.recap.team',

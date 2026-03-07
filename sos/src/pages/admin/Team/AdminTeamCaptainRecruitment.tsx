@@ -51,6 +51,8 @@ interface CaptainApplication {
   source: string;
   language: string;
   createdAt: { seconds: number } | null;
+  calendlyBooked?: boolean;
+  calendlyBookedAt?: { seconds: number } | null;
 }
 
 const STATUS_STYLES: Record<ApplicationStatus, { bg: string; text: string; dot: string }> = {
@@ -220,7 +222,14 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{app.name}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-900">{app.name}</div>
+                        {app.calendlyBooked && (
+                          <span className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded-full">
+                            <Calendar className="w-2.5 h-2.5" /> <FormattedMessage id="admin.team.recruitment.calendlyBooked" defaultMessage="Apt. booked" />
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <a href={waLink(app.whatsapp)} target="_blank" rel="noopener noreferrer"
                           className="text-green-600 hover:text-green-800 underline">{app.whatsapp}</a>
@@ -318,7 +327,14 @@ const AdminTeamCaptainRecruitment: React.FC = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold text-gray-900 truncate">{app.name}</h3>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate">{app.name}</h3>
+                          {app.calendlyBooked && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded-full">
+                              <Calendar className="w-2.5 h-2.5" /> <FormattedMessage id="admin.team.recruitment.calendlyBooked" defaultMessage="Apt. booked" />
+                            </span>
+                          )}
+                        </div>
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_STYLES[app.status]?.bg} ${STATUS_STYLES[app.status]?.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLES[app.status]?.dot}`} />
                           {statusLabel(app.status)}

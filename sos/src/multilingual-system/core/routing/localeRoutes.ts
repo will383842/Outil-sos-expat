@@ -310,6 +310,7 @@ export type RouteKey =
   | "chatter-progression"  // /chatter/progression -> /chatter/progression, etc.
   | "chatter-how-to-earn"  // /chatter/comment-gagner -> /chatter/how-to-earn, etc.
   | "chatter-captain-team" // /chatter/mon-equipe -> /chatter/my-team, etc.
+  | "chatter-resources"    // /chatter/ressources -> /chatter/resources, etc.
   | "chatter-profile"      // /chatter/profil -> /chatter/profile, etc.
   | "pioneers"             // /pioneers -> /pioneers, etc.
   // Influencer routes
@@ -1055,6 +1056,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "chatter/peixun",
     hi: "chatter/prashikshan",
     ar: "مسوق/التدريب",
+  },
+  "chatter-resources": {
+    fr: "chatter/ressources",
+    en: "chatter/resources",
+    es: "chatter/recursos",
+    de: "chatter/ressourcen",
+    ru: "chatter/resursy",
+    pt: "chatter/recursos",
+    ch: "chatter/ziyuan",
+    hi: "chatter/sansaadhan",
+    ar: "مسوق/موارد",
   },
   "chatter-referrals": {
     fr: "chatter/filleuls",

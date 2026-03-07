@@ -354,13 +354,13 @@ const ChatterPayments: React.FC = () => {
 
   return (
     <ChatterDashboardLayout activeKey="payments">
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-4 sm:space-y-6">
+        {/* Header — compact mobile-first */}
         <div>
-          <h1 className="text-2xl dark:text-white sm:text-3xl font-bold">
+          <h1 className="text-lg sm:text-2xl dark:text-white font-bold">
             <FormattedMessage id="chatter.payments.title" defaultMessage="Mes paiements" />
           </h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             <FormattedMessage
               id="chatter.payments.subtitle"
               defaultMessage="Gerez vos gains et retraits"
@@ -368,58 +368,58 @@ const ChatterPayments: React.FC = () => {
           </p>
         </div>
 
-        {/* Balance Cards */}
-        <div className="grid sm:grid-cols-3 gap-4">
+        {/* Balance Cards — 3 cols, compact on mobile */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {/* Available Balance */}
           <div
-            className={`${UI.card} p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}
+            className={`${UI.card} p-3 sm:p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
+              <div className="p-1 sm:p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                <Wallet className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
               </div>
-              <span className="text-sm dark:text-gray-400 font-medium">
+              <span className="text-[10px] sm:text-sm dark:text-gray-400 font-medium truncate">
                 <FormattedMessage
                   id="chatter.payments.availableBalance"
                   defaultMessage="Disponible"
                 />
               </span>
             </div>
-            <p className="text-2xl dark:text-green-400 font-bold">
+            <p className="text-base sm:text-2xl dark:text-green-400 font-bold">
               {formatAmount(availableBalance)}
             </p>
           </div>
 
           {/* Pending Balance */}
           <div
-            className={`${UI.card} p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}
+            className={`${UI.card} p-3 sm:p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
-                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
+              <div className="p-1 sm:p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+                <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
               </div>
-              <span className="text-sm dark:text-gray-400 font-medium">
+              <span className="text-[10px] sm:text-sm dark:text-gray-400 font-medium truncate">
                 <FormattedMessage id="chatter.payments.pendingBalance" defaultMessage="En attente" />
               </span>
             </div>
-            <p className="text-2xl dark:text-amber-400 font-bold">
+            <p className="text-base sm:text-2xl dark:text-amber-400 font-bold">
               {formatAmount(pendingBalance)}
             </p>
           </div>
 
           {/* Validated Balance */}
           <div
-            className={`${UI.card} p-5 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20`}
+            className={`${UI.card} p-3 sm:p-5 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
+              <div className="p-1 sm:p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                <CheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <span className="text-sm dark:text-gray-400 font-medium">
+              <span className="text-[10px] sm:text-sm dark:text-gray-400 font-medium truncate">
                 <FormattedMessage id="chatter.payments.validatedBalance" defaultMessage="Valide" />
               </span>
             </div>
-            <p className="text-2xl dark:text-blue-400 font-bold">
+            <p className="text-base sm:text-2xl dark:text-blue-400 font-bold">
               {formatAmount(validatedBalance)}
             </p>
           </div>
@@ -502,58 +502,58 @@ const ChatterPayments: React.FC = () => {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-2 border-b dark:border-white/10 pb-2 overflow-x-auto">
+        {/* Tabs — scrollable chips */}
+        <div className="flex gap-1.5 sm:gap-2 pb-1 overflow-x-auto scrollbar-none -mx-1 px-1">
           <button
             onClick={() => setActiveTab('withdraw')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap touch-manipulation ${
               activeTab === 'withdraw'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15'
             }`}
           >
-            <Wallet className="w-4 h-4" />
+            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <FormattedMessage id="chatter.payments.tab.withdraw" defaultMessage="Retirer" />
           </button>
           <button
             onClick={() => setActiveTab('methods')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap touch-manipulation ${
               activeTab === 'methods'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15'
             }`}
           >
-            <CreditCard className="w-4 h-4" />
+            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <FormattedMessage id="chatter.payments.tab.methods" defaultMessage="Methodes" />
             {methods.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+              <span className="ml-0.5 px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-white/20">
                 {methods.length}
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap touch-manipulation ${
               activeTab === 'history'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15'
             }`}
           >
-            <History className="w-4 h-4" />
+            <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <FormattedMessage id="chatter.payments.tab.history" defaultMessage="Historique" />
           </button>
           <button
             onClick={() => setActiveTab('commissions')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap touch-manipulation ${
               activeTab === 'commissions'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15'
             }`}
           >
-            <ArrowUpRight className="w-4 h-4" />
+            <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <FormattedMessage id="chatter.payments.tab.commissions" defaultMessage="Commissions" />
             {commissions.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+              <span className="ml-0.5 px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-white/20">
                 {commissions.length}
               </span>
             )}
@@ -629,7 +629,7 @@ const ChatterPayments: React.FC = () => {
                 {/* Add Method Button */}
                 <button
                   onClick={() => setShowPaymentMethodForm(true)}
-                  className={`${UI.card}w-full p-4 border-2 dark:border-white/20 hover:border-red-400 dark:hover:border-red-400 transition-all flex items-center justify-center gap-3`}
+                  className={`${UI.card} w-full p-4 border-2 dark:border-white/20 hover:border-red-400 dark:hover:border-red-400 transition-all flex items-center justify-center gap-3`}
                 >
                   <Plus className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   <span className="font-medium text-gray-600 dark:text-gray-400">
@@ -771,7 +771,7 @@ const ChatterPayments: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className={`${UI.card}overflow-hidden divide-y dark:divide-white/5`}>
+                <div className={`${UI.card} overflow-hidden divide-y dark:divide-white/5`}>
                   {withdrawals.map((withdrawal) => (
                     <button
                       key={withdrawal.id}

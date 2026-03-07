@@ -3,7 +3,7 @@
  * Shows detailed info, commissions, withdrawals, and admin actions
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -30,6 +30,10 @@ import {
   RefreshCw,
   Crown,
   Shield,
+  UserPlus,
+  X,
+  Search,
+  ChevronDown,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import AdminErrorState from '@/components/admin/AdminErrorState';
@@ -47,6 +51,14 @@ const UI = {
   },
 } as const;
 
+interface CaptainOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  country: string;
+}
+
 interface ChatterDetail {
   id: string;
   firstName: string;
@@ -57,6 +69,10 @@ interface ChatterDetail {
   languages: string[];
   status: string;
   level: number;
+  role?: string;
+  captainId?: string | null;
+  captainInfo?: { id: string; firstName: string; lastName: string; email: string } | null;
+  captainQualityBonusEnabled?: boolean;
   totalEarned: number;
   availableBalance: number;
   pendingBalance: number;
@@ -74,7 +90,21 @@ interface ChatterDetail {
   quizPassedAt?: string;
   commissions: any[];
   withdrawals: any[];
+  lockedRates?: Record<string, number>;
+  commissionPlanName?: string;
+  rateLockDate?: string;
 }
+
+const RATE_FIELDS = [
+  { key: 'commissionClientCallAmount', label: 'Client (générique)', default: 300 },
+  { key: 'commissionClientCallAmountLawyer', label: 'Client (avocat)', default: 500 },
+  { key: 'commissionClientCallAmountExpat', label: 'Client (expat)', default: 300 },
+  { key: 'commissionN1CallAmount', label: 'N1 (filleul)', default: 100 },
+  { key: 'commissionN2CallAmount', label: 'N2 (filleul N2)', default: 50 },
+  { key: 'commissionActivationBonusAmount', label: 'Bonus activation', default: 500 },
+  { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1', default: 100 },
+  { key: 'commissionProviderCallAmount', label: 'Recrutement prestataire', default: 500 },
+] as const;
 
 const AdminChatterDetail: React.FC = () => {
   const intl = useIntl();
@@ -85,6 +115,30 @@ const AdminChatterDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [ratesEditing, setRatesEditing] = useState(false);
+  const [ratesForm, setRatesForm] = useState<Record<string, number>>({});
+  const [ratesSaving, setRatesSaving] = useState(false);
+
+  // Captain assignment state
+  const [captainDropdownOpen, setCaptainDropdownOpen] = useState(false);
+  const [captainSearch, setCaptainSearch] = useState('');
+  const [availableCaptains, setAvailableCaptains] = useState<CaptainOption[]>([]);
+  const [captainsLoading, setCaptainsLoading] = useState(false);
+  const [captainAssigning, setCaptainAssigning] = useState(false);
+  const captainDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Click-outside handler for captain dropdown
+  useEffect(() => {
+    if (!captainDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (captainDropdownRef.current && !captainDropdownRef.current.contains(e.target as Node)) {
+        setCaptainDropdownOpen(false);
+        setCaptainSearch('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [captainDropdownOpen]);
 
   // Fetch chatter detail
   const fetchChatter = async () => {
@@ -157,6 +211,85 @@ const AdminChatterDetail: React.FC = () => {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  // Fetch available captains for dropdown
+  const fetchAvailableCaptains = async () => {
+    setCaptainsLoading(true);
+    try {
+      const fn = httpsCallable<Record<string, never>, { captains: CaptainOption[] }>(
+        functionsAffiliate,
+        'adminGetAvailableCaptains'
+      );
+      const result = await fn({});
+      setAvailableCaptains(result.data.captains);
+    } catch (err: any) {
+      console.error('Error fetching captains:', err);
+    } finally {
+      setCaptainsLoading(false);
+    }
+  };
+
+  // Assign/unassign captain
+  const handleAssignCaptain = async (captainId: string | null) => {
+    if (!chatterId) return;
+    setCaptainAssigning(true);
+    try {
+      const fn = httpsCallable<{ chatterId: string; captainId: string | null }, { success: boolean; captainName: string | null }>(
+        functionsAffiliate,
+        'adminAssignChatterCaptain'
+      );
+      const result = await fn({ chatterId, captainId });
+      toast.success(
+        captainId
+          ? `Capitaine ${result.data.captainName} assigne`
+          : 'Capitaine retire'
+      );
+      setCaptainDropdownOpen(false);
+      setCaptainSearch('');
+      await fetchChatter();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l\'assignation');
+    } finally {
+      setCaptainAssigning(false);
+    }
+  };
+
+  // Open captain dropdown and load captains
+  const openCaptainDropdown = () => {
+    setCaptainDropdownOpen(true);
+    if (availableCaptains.length === 0) {
+      fetchAvailableCaptains();
+    }
+  };
+
+  // Handle locked rates save
+  const handleSaveRates = async () => {
+    if (!chatterId) return;
+    setRatesSaving(true);
+    try {
+      const fn = httpsCallable<{ chatterId: string; lockedRates: Record<string, number> }, { success: boolean }>(
+        functionsAffiliate,
+        'adminUpdateChatterLockedRates'
+      );
+      await fn({ chatterId, lockedRates: ratesForm });
+      toast.success('Taux mis à jour');
+      setRatesEditing(false);
+      await fetchChatter();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setRatesSaving(false);
+    }
+  };
+
+  const startEditRates = () => {
+    const currentRates: Record<string, number> = {};
+    for (const field of RATE_FIELDS) {
+      currentRates[field.key] = chatter?.lockedRates?.[field.key] ?? field.default;
+    }
+    setRatesForm(currentRates);
+    setRatesEditing(true);
   };
 
   // Map chatter status to StatusType for the unified StatusBadge
@@ -302,7 +435,7 @@ const AdminChatterDetail: React.FC = () => {
                 className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-xl transition-all px-4 py-2 flex items-center gap-2"
               >
                 <Crown className="w-4 h-4" />
-                <FormattedMessage id="admin.chatters.promoteCaptain" defaultMessage="Promouvoir Capitaine" />
+                <FormattedMessage id="admin.chatters.promoteCaptain" defaultMessage="Promote Captain" />
               </button>
             )}
 
@@ -341,7 +474,7 @@ const AdminChatterDetail: React.FC = () => {
                   className={`${UI.button.danger} px-4 py-2 flex items-center gap-2`}
                 >
                   <Crown className="w-4 h-4" />
-                  <FormattedMessage id="admin.chatters.revokeCaptain" defaultMessage="Révoquer Capitaine" />
+                  <FormattedMessage id="admin.chatters.revokeCaptain" defaultMessage="Revoke Captain" />
                 </button>
               </>
             )}
@@ -455,6 +588,244 @@ const AdminChatterDetail: React.FC = () => {
         {chatter.recruitedByCode && (
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
             Recruté par: <span className="font-medium">{chatter.recruitedByCode}</span>
+          </p>
+        )}
+      </div>
+
+      {/* Captain Assignment */}
+      <div className={`${UI.card} p-6`}>
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <Crown className="w-5 h-5 text-yellow-500" />
+          <FormattedMessage id="admin.chatters.captain.assigned" defaultMessage="Assigned Captain" />
+        </h3>
+
+        {/* Current captain display */}
+        {(chatter as any).captainInfo ? (
+          <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                {(chatter as any).captainInfo.firstName?.[0]}{(chatter as any).captainInfo.lastName?.[0]}
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {(chatter as any).captainInfo.firstName} {(chatter as any).captainInfo.lastName}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {(chatter as any).captainInfo.email}
+                </p>
+              </div>
+              <Crown className="w-4 h-4 text-yellow-500 ml-1" />
+            </div>
+            <button
+              onClick={() => handleAssignCaptain(null)}
+              disabled={captainAssigning}
+              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              title={intl.formatMessage({ id: 'admin.chatters.captain.remove', defaultMessage: 'Remove captain' })}
+            >
+              {captainAssigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+            </button>
+          </div>
+        ) : (chatter as any).captainId ? (
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl mb-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Capitaine ID: <span className="font-mono text-xs">{(chatter as any).captainId}</span>
+            </p>
+            <button
+              onClick={() => handleAssignCaptain(null)}
+              disabled={captainAssigning}
+              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              title={intl.formatMessage({ id: 'admin.chatters.captain.remove', defaultMessage: 'Remove captain' })}
+            >
+              {captainAssigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">
+            <FormattedMessage id="admin.chatters.captain.none" defaultMessage="No captain assigned" />
+          </p>
+        )}
+
+        {/* Captain selector dropdown */}
+        <div className="relative" ref={captainDropdownRef}>
+          <button
+            onClick={openCaptainDropdown}
+            className={`${UI.button.secondary} px-4 py-2.5 w-full flex items-center justify-between gap-2 text-sm`}
+          >
+            <span className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              {(chatter as any).captainInfo
+                ? intl.formatMessage({ id: 'admin.chatters.captain.change', defaultMessage: 'Change captain' })
+                : intl.formatMessage({ id: 'admin.chatters.captain.assign', defaultMessage: 'Assign a captain' })}
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${captainDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {captainDropdownOpen && (
+            <div className="absolute z-50 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden">
+              {/* Search input */}
+              <div className="p-3 border-b border-gray-100 dark:border-white/10">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={captainSearch}
+                    onChange={(e) => setCaptainSearch(e.target.value)}
+                    placeholder={intl.formatMessage({ id: 'admin.chatters.captain.search', defaultMessage: 'Search for a captain...' })}
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Options list */}
+              <div className="max-h-60 overflow-y-auto">
+                {captainsLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
+                  </div>
+                ) : (
+                  <>
+                    {availableCaptains
+                      .filter((c) => {
+                        if (!captainSearch) return true;
+                        const q = captainSearch.toLowerCase();
+                        return (
+                          c.firstName.toLowerCase().includes(q) ||
+                          c.lastName.toLowerCase().includes(q) ||
+                          c.email.toLowerCase().includes(q) ||
+                          c.country?.toLowerCase().includes(q)
+                        );
+                      })
+                      .filter((c) => c.id !== chatter.id) // Don't show self
+                      .map((captain) => {
+                        const isCurrentCaptain = (chatter as any).captainId === captain.id;
+                        return (
+                          <button
+                            key={captain.id}
+                            onClick={() => handleAssignCaptain(captain.id)}
+                            disabled={captainAssigning || isCurrentCaptain}
+                            className={`w-full px-4 py-3 flex items-center gap-3 text-left transition-colors ${
+                              isCurrentCaptain
+                                ? 'bg-yellow-50 dark:bg-yellow-900/20 cursor-default'
+                                : 'hover:bg-gray-50 dark:hover:bg-white/5'
+                            }`}
+                          >
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                              {captain.firstName?.[0]}{captain.lastName?.[0]}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                                {captain.firstName} {captain.lastName}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {captain.email} {captain.country ? `· ${captain.country}` : ''}
+                              </p>
+                            </div>
+                            {isCurrentCaptain && (
+                              <CheckCircle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                            )}
+                            {captainAssigning && !isCurrentCaptain && (
+                              <Loader2 className="w-4 h-4 text-gray-400 animate-spin flex-shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+
+                    {availableCaptains.length === 0 && !captainsLoading && (
+                      <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <FormattedMessage id="admin.chatters.captain.noneAvailable" defaultMessage="No captain available" />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Close button */}
+              <div className="p-2 border-t border-gray-100 dark:border-white/10">
+                <button
+                  onClick={() => { setCaptainDropdownOpen(false); setCaptainSearch(''); }}
+                  className="w-full px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-center"
+                >
+                  <FormattedMessage id="admin.chatters.captain.close" defaultMessage="Close" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Locked Rates (Commission Plan Override) */}
+      <div className={`${UI.card} p-6`}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <Wallet className="w-4 h-4" />
+            Taux de commission (lockedRates)
+          </h3>
+          {!ratesEditing ? (
+            <button
+              onClick={startEditRates}
+              className={`${UI.button.secondary} px-3 py-1.5 text-sm`}
+            >
+              Modifier
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRatesEditing(false)}
+                className={`${UI.button.secondary} px-3 py-1.5 text-sm`}
+                disabled={ratesSaving}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveRates}
+                className={`${UI.button.primary} px-3 py-1.5 text-sm`}
+                disabled={ratesSaving}
+              >
+                {ratesSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sauvegarder'}
+              </button>
+            </div>
+          )}
+        </div>
+        {chatter.commissionPlanName && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Plan: {chatter.commissionPlanName} {chatter.rateLockDate && `(verrouillé le ${new Date(chatter.rateLockDate).toLocaleDateString(intl.locale)})`}
+          </p>
+        )}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {RATE_FIELDS.map(field => {
+            const currentValue = chatter.lockedRates?.[field.key];
+            return (
+              <div key={field.key} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                <p className="text-[10px] uppercase font-medium text-gray-400 dark:text-gray-500 mb-1">{field.label}</p>
+                {ratesEditing ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-400">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={(ratesForm[field.key] / 100).toFixed(2)}
+                      onChange={(e) => setRatesForm(prev => ({
+                        ...prev,
+                        [field.key]: Math.round(parseFloat(e.target.value || '0') * 100),
+                      }))}
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <p className={`text-lg font-bold ${currentValue != null ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    {currentValue != null ? formatAmount(currentValue) : `(${formatAmount(field.default)})`}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {!chatter.lockedRates && !ratesEditing && (
+          <p className="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            Pas de taux verrouillés — utilise la config globale (entre parenthèses)
           </p>
         )}
       </div>

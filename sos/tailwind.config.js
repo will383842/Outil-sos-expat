@@ -50,6 +50,9 @@ export default {
 
         // Spin slow
         'spin-slow': 'spin 3s linear infinite',
+
+        // Slide in left (drawer)
+        'slide-in-left': 'slideInLeft 0.3s ease-out forwards',
       },
       keyframes: {
         // Fade in
@@ -245,6 +248,16 @@ export default {
           '100%': {
             opacity: '0',
             transform: 'translateY(100%)',
+          },
+        },
+
+        // Slide in from left (drawer)
+        slideInLeft: {
+          '0%': {
+            transform: 'translateX(-100%)',
+          },
+          '100%': {
+            transform: 'translateX(0)',
           },
         },
 

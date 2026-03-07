@@ -72,9 +72,9 @@ service firebase.storage {
     // CAPTAIN APPLICATIONS CV: Anonymous upload for captain recruitment
     // Security: Anonymous uploads allowed (candidates not authenticated)
     // - PDF/DOCX/images only, max 5MB
-    // - Read: authenticated users (admins reviewing applications)
+    // - Read: public (URLs contain tokens, not discoverable; stored in Firestore which requires auth)
     match /captain_applications_cv/{fileName} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isValidDocumentType() &&
                    request.resource != null &&
                    request.resource.size < 5 * 1024 * 1024;

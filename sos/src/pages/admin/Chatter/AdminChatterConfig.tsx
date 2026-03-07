@@ -52,24 +52,12 @@ interface ChatterConfig {
   commissionClientCallAmountExpat?: number;
   commissionProviderCallAmountLawyer?: number;
   commissionProviderCallAmountExpat?: number;
-  levelBonuses: {
-    level1: number;
-    level2: number;
-    level3: number;
-    level4: number;
-    level5: number;
-  };
   levelThresholds: {
     level2: number;
     level3: number;
     level4: number;
     level5: number;
   };
-  top1BonusMultiplier: number;
-  top2BonusMultiplier: number;
-  top3BonusMultiplier: number;
-  zoomBonusMultiplier: number;
-  zoomBonusDurationDays: number;
   recruitmentLinkDurationMonths: number;
   minimumWithdrawalAmount: number;
   validationHoldPeriodHours: number;
@@ -87,6 +75,10 @@ interface ChatterConfig {
   commissionCaptainCallAmountExpat?: number;
   captainTiers?: Array<{ name: string; minCalls: number; bonus: number }>;
   captainQualityBonusAmount?: number;
+  // Recruitment Milestones
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
+  // Monthly Competition Prizes
+  monthlyCompetitionPrizes?: { first: number; second: number; third: number };
 }
 
 const AdminChatterConfig: React.FC = () => {
@@ -142,7 +134,7 @@ const AdminChatterConfig: React.FC = () => {
 
   // Handle nested change (levelBonuses, levelThresholds)
   const handleNestedChange = (
-    parent: 'levelBonuses' | 'levelThresholds',
+    parent: 'levelThresholds',
     field: string,
     value: number
   ) => {
@@ -151,7 +143,7 @@ const AdminChatterConfig: React.FC = () => {
       [parent]: {
         ...(prev[parent] || config?.[parent]),
         [field]: value,
-      },
+      } as typeof prev[typeof parent],
     }));
     setHasChanges(true);
     setSuccess(null);
@@ -413,10 +405,10 @@ const AdminChatterConfig: React.FC = () => {
             </p>
           </div>
 
-          {/* Commission prestataire recruté — split avocat/expatrié */}
+          {/* Commission prestataire recruté — avocats uniquement (expat supprimé) */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.commission.providerByType" defaultMessage="Commission prestataire recruté (par type)" />
+              <FormattedMessage id="admin.commission.providerByType" defaultMessage="Commission prestataire recruté (avocats uniquement)" />
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -435,25 +427,14 @@ const AdminChatterConfig: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /> (cents)</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={formData.commissionProviderCallAmountExpat ?? config?.commissionProviderCallAmountExpat ?? 300}
-                    onChange={(e) => handleChange('commissionProviderCallAmountExpat', parseInt(e.target.value))}
-                    className={UI.input}
-                    min={0}
-                    step={100}
-                  />
-                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    = {formatCents(formData.commissionProviderCallAmountExpat ?? config?.commissionProviderCallAmountExpat ?? 300)}
-                  </span>
-                </div>
+              <div className="flex items-center">
+                <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+                  Pas de commission pour les expats aidants
+                </p>
               </div>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="admin.commission.providerByType.desc" defaultMessage="Commission pour chaque appel reçu par un partenaire recruté (6 mois)" />
+              <FormattedMessage id="admin.commission.providerByType.desc" defaultMessage="Commission pour chaque appel reçu par un avocat recruté (6 mois)" />
             </p>
           </div>
         </div>
@@ -541,6 +522,90 @@ const AdminChatterConfig: React.FC = () => {
                 />
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Recruitment Milestones */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+            <Users className="w-5 h-5 text-purple-500" />
+            <FormattedMessage id="admin.chatterConfig.recruitmentMilestones" defaultMessage="Bonus de recrutement (paliers)" />
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            <FormattedMessage id="admin.chatterConfig.recruitmentMilestones.desc" defaultMessage="Bonus versé au chatter quand il atteint X filleuls actifs (montants en cents)" />
+          </p>
+          <div className="space-y-2">
+            {(formData.recruitmentMilestones ?? config?.recruitmentMilestones ?? [
+              { count: 5, bonus: 1500 }, { count: 10, bonus: 3500 }, { count: 20, bonus: 7500 },
+              { count: 50, bonus: 25000 }, { count: 100, bonus: 60000 }, { count: 500, bonus: 400000 },
+            ]).map((milestone, idx) => {
+              const milestones = formData.recruitmentMilestones ?? config?.recruitmentMilestones ?? [];
+              return (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-1">
+                    <label className="text-xs text-gray-500 dark:text-gray-400 w-16 shrink-0">Recrues</label>
+                    <input
+                      type="number"
+                      value={milestone.count}
+                      onChange={(e) => {
+                        const updated = milestones.map((m, i) => i === idx ? { ...m, count: parseInt(e.target.value) || 0 } : m);
+                        handleChange('recruitmentMilestones', updated);
+                      }}
+                      className={UI.input}
+                      min={1}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 flex-1">
+                    <label className="text-xs text-gray-500 dark:text-gray-400 w-16 shrink-0">Bonus (¢)</label>
+                    <input
+                      type="number"
+                      value={milestone.bonus}
+                      onChange={(e) => {
+                        const updated = milestones.map((m, i) => i === idx ? { ...m, bonus: parseInt(e.target.value) || 0 } : m);
+                        handleChange('recruitmentMilestones', updated);
+                      }}
+                      className={UI.input}
+                      min={0}
+                      step={100}
+                    />
+                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">= {formatCents(milestone.bonus)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Monthly Competition Prizes */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <FormattedMessage id="admin.chatterConfig.competitionPrizes" defaultMessage="Prix compétition mensuelle Top 3" />
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            <FormattedMessage id="admin.chatterConfig.competitionPrizes.desc" defaultMessage="Montants fixes versés aux 3 premiers du classement mensuel (en cents)" />
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            {(['first', 'second', 'third'] as const).map((place, idx) => {
+              const labels = ['🥇 1ère place', '🥈 2ème place', '🥉 3ème place'];
+              const prizes = formData.monthlyCompetitionPrizes ?? config?.monthlyCompetitionPrizes ?? { first: 20000, second: 10000, third: 5000 };
+              return (
+                <div key={place}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{labels[idx]}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={prizes[place]}
+                      onChange={(e) => handleChange('monthlyCompetitionPrizes', { ...prizes, [place]: parseInt(e.target.value) || 0 })}
+                      className={UI.input}
+                      min={0}
+                      step={500}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">= {formatCents(prizes[place])}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -637,31 +702,8 @@ const AdminChatterConfig: React.FC = () => {
 
       {/* P1-1 FIX: Top 3 Bonuses REMOVED — multipliers are disabled (zero-percentage policy) */}
 
-      {/* Zoom & Quiz Settings */}
+      {/* Quiz Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Zoom Settings */}
-        <div className={`${UI.card} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Video className="w-5 h-5 text-blue-500" />
-            <FormattedMessage id="admin.chatterConfig.zoomSettings" defaultMessage="Bonus Zoom" />
-          </h2>
-          <div className="space-y-4">
-            {/* P1-1 FIX: Zoom bonus multiplier REMOVED — multipliers disabled */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.zoomDuration" defaultMessage="Durée du bonus (jours)" />
-              </label>
-              <input
-                type="number"
-                value={formData.zoomBonusDurationDays ?? config?.zoomBonusDurationDays ?? 7}
-                onChange={(e) => handleChange('zoomBonusDurationDays', parseInt(e.target.value))}
-                className={UI.input}
-                min={1}
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Quiz Settings */}
         <div className={`${UI.card} p-6`}>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">

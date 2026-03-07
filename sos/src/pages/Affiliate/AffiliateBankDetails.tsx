@@ -289,49 +289,26 @@ const AffiliateBankDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Money Section (Africa countries only) */}
+        {/* Mobile Money Section (Africa countries only) — currently manual, greyed out */}
         {isMobileMoneyCountry && (
-          <div className={`${UI.card} p-5`}>
+          <div className={`${UI.card} p-5 opacity-60`}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                <Smartphone className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <Smartphone className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Mobile Money disponible</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <h3 className="font-semibold text-gray-500 dark:text-gray-400">Mobile Money</h3>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
                   Orange Money, Wave, MTN MoMo, M-Pesa et plus encore
                 </p>
               </div>
+              <span className="ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                Bientôt disponible
+              </span>
             </div>
-            {mobileMoneySuccess ? (
-              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Méthode Mobile Money enregistrée !</span>
-              </div>
-            ) : showMobileMoneyForm ? (
-              <div className="space-y-4">
-                <PaymentMethodForm
-                  onSubmit={handleSaveMobileMoney}
-                  loading={savingMobileMoney}
-                  error={mobileMoneyError}
-                  initialCountry={userCountry}
-                />
-                <button
-                  onClick={() => setShowMobileMoneyForm(false)}
-                  className={`${UI.button.secondary} px-4 py-2 text-sm`}
-                >
-                  Annuler
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowMobileMoneyForm(true)}
-                className={`${UI.button.primary} px-4 py-2 text-sm flex items-center gap-2`}
-              >
-                <Smartphone className="w-4 h-4" />
-                Ajouter Mobile Money
-              </button>
-            )}
+            <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+              Le paiement automatique par Mobile Money sera disponible prochainement. En attendant, les retraits sont traités manuellement par virement.
+            </p>
           </div>
         )}
 

@@ -21,16 +21,6 @@ service cloud.firestore {
       );
     }
 
-    // SECURITE: Le role 'dev' est DESACTIVE en production
-    // Pour activer temporairement en dev, definir une variable d'environnement
-    // Cette fonction retourne TOUJOURS false en production
-    function isDev() {
-      // PRODUCTION: Toujours false - aucun acces dev en production
-      return false;
-      // Pour debug local uniquement, decommenter la ligne suivante:
-      // return request.auth != null && request.auth.token.role == 'dev';
-    }
-
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
@@ -90,7 +80,7 @@ service cloud.firestore {
                     // Roles autorisés: client, lawyer, expat, chatter, blogger, influencer, groupAdmin
                     (!request.resource.data.keys().hasAny(['role']) ||
                      request.resource.data.role in ['client', 'lawyer', 'expat', 'chatter', 'blogger', 'influencer', 'groupAdmin']))
-                    || isAdmin() || isDev();
+                    || isAdmin();
       // L'utilisateur peut modifier ses propres données SAUF:
       // - role, isApproved, approvalStatus: empêche l'escalade de privilèges
       // - isBanned, bannedAt, bannedReason: empêche la désactivation du ban
@@ -113,8 +103,8 @@ service cloud.firestore {
                                    'totalEarned', 'availableBalance',
                                    'pendingBalance', 'affiliateStatus', 'affiliateStats',
                                    'linkedProviderIds', 'shareBusyStatus']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= SOS_PROFILES COLLECTION =================
@@ -129,7 +119,7 @@ service cloud.firestore {
       // AJOUT 2026-02-12: Les agency_managers peuvent lire les profils de leurs providers liés
       allow read: if resource.data.isVisible == true
                   || (isAuthenticated() && request.auth.uid == profileId)
-                  || isAdmin() || isDev()
+                  || isAdmin()
                   || hasAgencyAccessToProvider(profileId);
 
       // Écriture : propriétaire ou admin
@@ -139,7 +129,7 @@ service cloud.firestore {
       // Admin/Dev peuvent créer des profils AAA (profils gérés en interne)
       allow create: if (isAuthenticated() && isOwner(profileId) &&
                     !request.resource.data.keys().hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId']))
-                    || isAdmin() || isDev();
+                    || isAdmin();
       // P0-1 SECURITY FIX: paypalEmailVerified et paypalEmailVerifiedAt sont protégés
       // pour empêcher un provider de se marquer comme vérifié sans validation email
       // P0 SECURITY: payoutMode, aaaPayoutMode et isAAA sont protégés (admin-only)
@@ -151,14 +141,14 @@ service cloud.firestore {
                                    'paypalEmailVerified', 'paypalEmailVerifiedAt',
                                    'payoutMode', 'aaaPayoutMode', 'isAAA',
                                    'isFeatured', 'featuredAt', 'featuredBy']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
 
       // Sous-collection reviews
       match /reviews/{reviewId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated();
-        allow update, delete: if isAdmin() || isDev();
+        allow update, delete: if isAdmin();
       }
     }
 
@@ -167,7 +157,7 @@ service cloud.firestore {
       // Lecture : tout le monde pour les avis publiés, admin/dev pour tous
       allow read: if resource.data.status == 'published' && resource.data.isPublic == true
                   || isAdmin()
-                  || isDev()
+                 
                   || (isAuthenticated() && resource.data.clientId == request.auth.uid)
                   || (isAuthenticated() && resource.data.providerId == request.auth.uid);
 
@@ -188,13 +178,13 @@ service cloud.firestore {
       // - Le prestataire peut modifier isPublic et status (pour show/hide)
       // - Admin peut tout modifier
       allow update: if isAdmin()
-                    || isDev()
+                   
                     || (isAuthenticated()
                         && resource.data.providerId == request.auth.uid
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPublic', 'status']));
 
       // Suppression : admin seulement
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
     }
 
     // ================= CALLS/CALL_SESSIONS COLLECTION =================
@@ -202,15 +192,15 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // P1 SECURITY FIX: Validate clientId matches authenticated user
       allow create: if isAuthenticated() &&
                     request.resource.data.clientId == request.auth.uid;
       allow update: if isAuthenticated() &&
                     (resource.data.clientId == request.auth.uid ||
                      resource.data.providerId == request.auth.uid ||
-                     isAdmin() || isDev());
-      allow delete: if isAdmin() || isDev();
+                     isAdmin());
+      allow delete: if isAdmin();
     }
 
     match /call_sessions/{sessionId} {
@@ -229,7 +219,7 @@ service cloud.firestore {
                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds.hasAny([resource.data.providerId])) ||
                    (resource.data.metadata.providerId != null &&
                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds.hasAny([resource.data.metadata.providerId])) ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Seul le client peut créer une session (validation de l'ownership)
       allow create: if isAuthenticated() &&
                     (request.resource.data.metadata.clientId == request.auth.uid ||
@@ -249,8 +239,8 @@ service cloud.firestore {
                                    'pricing', 'amount', 'totalAmount', 'connectionFee',
                                    'providerAmount', 'platformFee', 'refunded',
                                    'stripePaymentIntentId', 'paypalOrderId'])
-                     || isAdmin() || isDev());
-      allow delete: if isAdmin() || isDev();
+                     || isAdmin());
+      allow delete: if isAdmin();
     }
 
     // ================= CALL EXECUTION LOCKS =================
@@ -272,7 +262,7 @@ service cloud.firestore {
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // P0-7 FIX: SEULES les Cloud Functions (Admin SDK) peuvent créer des paiements
       // Anciennement: allow create avec validation côté client (VULNÉRABLE)
       // Les paiements doivent passer par createPaymentIntent/PayPal qui valident:
@@ -280,7 +270,7 @@ service cloud.firestore {
       allow create: if false;
       // Seules les Cloud Functions peuvent mettre à jour (via Admin SDK)
       allow update: if false;
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
     }
 
     // ================= REFUNDS COLLECTION =================
@@ -290,7 +280,7 @@ service cloud.firestore {
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
                    resource.data.userId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Seules les Cloud Functions peuvent écrire (via Admin SDK)
       allow write: if false;
     }
@@ -307,19 +297,19 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // P1 SECURITY FIX: Validate userId/clientId matches authenticated user
       allow create: if isAuthenticated() &&
                     (request.resource.data.userId == request.auth.uid ||
                      request.resource.data.clientId == request.auth.uid);
-      allow update: if isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= NOTIFICATIONS COLLECTION =================
     match /notifications/{notificationId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.userId == request.auth.uid || isAdmin());
       // P1-6 SECURITY FIX: Valider que userId correspond à l'utilisateur authentifié
       // Empêche la création de notifications pour d'autres utilisateurs
       allow create: if (isAuthenticated() && request.resource.data.userId == request.auth.uid)
@@ -327,129 +317,129 @@ service cloud.firestore {
       // SECURITY FIX: Users can only update isRead/readAt fields, not notification content
       allow update: if (isOwner(resource.data.userId) &&
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']))
-                    || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                    || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= FCM TOKENS COLLECTION (P0 Fix: multi-device sub-collection) =================
     match /fcm_tokens/{userId} {
-      allow read: if isOwner(userId) || isAdmin() || isDev();
+      allow read: if isOwner(userId) || isAdmin();
       allow create, update: if isOwner(userId);
-      allow delete: if isOwner(userId) || isAdmin() || isDev();
+      allow delete: if isOwner(userId) || isAdmin();
 
       match /tokens/{tokenId} {
-        allow read: if isOwner(userId) || isAdmin() || isDev();
+        allow read: if isOwner(userId) || isAdmin();
         allow create, update: if isOwner(userId);
-        allow delete: if isOwner(userId) || isAdmin() || isDev();
+        allow delete: if isOwner(userId) || isAdmin();
       }
     }
 
     // Legacy: keep old fcmTokens rule for backward compatibility during migration
     match /fcmTokens/{userId} {
-      allow read: if isOwner(userId) || isAdmin() || isDev();
+      allow read: if isOwner(userId) || isAdmin();
       allow create, update: if isOwner(userId);
-      allow delete: if isOwner(userId) || isAdmin() || isDev();
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // ================= IN-APP NOTIFICATIONS (P2 Security Fix) =================
     match /inapp_notifications/{notificationId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.uid == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.uid == request.auth.uid || isAdmin());
       allow create: if false; // Only Cloud Functions can create
       allow update: if isAuthenticated() && resource.data.uid == request.auth.uid &&
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
     }
 
     // ================= MESSAGE EVENTS (Cloud Functions only) =================
     match /message_events/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Only Cloud Functions
     }
 
     // ================= MESSAGE DELIVERIES (Cloud Functions only) =================
     match /message_deliveries/{deliveryId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Only Cloud Functions
     }
 
     // ================= NOTIFICATION LOGS (Cloud Functions only) =================
     match /notification_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Only Cloud Functions
     }
 
     // ================= FAVORITES COLLECTION =================
     match /favorites/{favoriteId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update: if isOwner(resource.data.userId) || isAdmin();
-      allow delete: if isOwner(resource.data.userId) || isAdmin() || isDev();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
     }
 
     // ================= FAQ COLLECTION =================
     match /faqs/{faqId} {
-      allow read: if resource.data.isActive == true || isAdmin() || isDev();
-      allow create, update, delete: if isAdmin() || isDev();
+      allow read: if resource.data.isActive == true || isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     // ================= HELP CENTER COLLECTION =================
     match /helpCenter/{articleId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || isDev();
+      allow create, update, delete: if isAdmin();
     }
 
     // ================= HELP CATEGORIES COLLECTION =================
     match /help_categories/{categoryId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || isDev();
+      allow create, update, delete: if isAdmin();
     }
 
     // ================= HELP ARTICLES COLLECTION (for SEO sitemaps) =================
     match /help_articles/{articleId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || isDev();
+      allow create, update, delete: if isAdmin();
     }
 
     // ================= LANDING PAGES COLLECTION (for SEO sitemaps) =================
     match /landing_pages/{pageId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || isDev();
+      allow create, update, delete: if isAdmin();
     }
 
     // ================= AAA USED CONTENT COLLECTION =================
     // Tracks which bio/review content has been used for AAA profile generation
     match /aaa_used_content/{documentId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAdmin() &&
                    request.resource.data.keys().hasAll(['type', 'langCode', 'usedAt']) &&
                    request.resource.data.type in ['bio', 'review'];
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= AAA_PROFILES COLLECTION =================
     match /aaa_profiles/{profileId} {
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // ================= UI_PROFILE_CARDS COLLECTION =================
     // Cards de profil pour l'affichage UI (carrousel, grille, etc.)
     // P1-3 FIX 2026-02-23: Restrict to visible profiles only (prevent scraping hidden/inactive profiles)
     match /ui_profile_cards/{profileId} {
-      allow read: if resource.data.isVisible == true || isAdmin() || isDev();
-      allow create, update: if isOwner(profileId) || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow read: if resource.data.isVisible == true || isAdmin();
+      allow create, update: if isOwner(profileId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= UI_PROFILE_CAROUSEL COLLECTION =================
     // Données pour le carrousel de profils
     // P1-3 FIX 2026-02-23: Restrict to visible profiles only
     match /ui_profile_carousel/{profileId} {
-      allow read: if resource.data.isVisible == true || isAdmin() || isDev();
-      allow create, update: if isOwner(profileId) || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow read: if resource.data.isVisible == true || isAdmin();
+      allow create, update: if isOwner(profileId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= PROVIDER MESSAGE ORDER CUSTOMERS =================
@@ -464,35 +454,35 @@ service cloud.firestore {
       allow read: if (isAuthenticated()
         && (request.auth.uid == resource.data.providerId
             || request.auth.uid == resource.data.senderId))
-        || isAdmin() || isDev();
+        || isAdmin();
 
       allow update: if isAuthenticated()
         && request.auth.uid == resource.data.providerId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
 
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
     }
 
     // ================= PROVIDERS TRANSLATIONS =================
     match /providers_translations/{providerId} {
-      allow read: if true;
-      allow create: if (isAuthenticated() && request.auth.uid == providerId) || isAdmin() || isDev();
-      allow update: if (isAuthenticated() && request.auth.uid == providerId) || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow read: if isAuthenticated();
+      allow create: if (isAuthenticated() && request.auth.uid == providerId) || isAdmin();
+      allow update: if (isAuthenticated() && request.auth.uid == providerId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= CONFIG COLLECTION =================
     match /config/{docId} {
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // ================= ADMIN CONFIG COLLECTION =================
-    // P0 FIX: Only pricing document is publicly readable (for public pricing pages)
+    // P0 FIX: pricing and chatter_config are publicly readable (public landing pages)
     // Other admin_config documents (aaa_payout, etc.) require admin access
     match /admin_config/{docId} {
-      allow read: if docId == 'pricing' || isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if docId == 'pricing' || docId == 'chatter_config' || isAdmin();
+      allow write: if isAdmin();
     }
 
     // ================= SETTINGS COLLECTION =================
@@ -500,16 +490,16 @@ service cloud.firestore {
     // Public settings should be moved to a dedicated 'public_config' collection
     match /settings/{docId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= DOCUMENTS COLLECTION =================
     match /documents/{documentId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update: if isOwner(resource.data.userId) || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= INVOICES COLLECTION =================
@@ -520,12 +510,12 @@ service cloud.firestore {
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Le client peut créer une facture dont il est le client
       allow create: if isAuthenticated() &&
                     request.resource.data.clientId == request.auth.uid;
       // Seuls admins peuvent modifier/supprimer
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= COUPONS COLLECTION =================
@@ -533,15 +523,15 @@ service cloud.firestore {
     // Les coupons sont validés via Cloud Functions (validateCoupon) qui utilise Admin SDK
     // Note: Admin peut lire pour la console admin, mais les utilisateurs normaux ne peuvent pas
     match /coupons/{couponId} {
-      allow read: if isAdmin() || isDev(); // Admin peut lire pour la console
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin(); // Admin peut lire pour la console
+      allow write: if isAdmin();
     }
 
     // ================= AUDIT LOGS COLLECTION =================
     // P1 SECURITY FIX: Only Cloud Functions can create audit logs (via Admin SDK)
     // This prevents users from creating fake audit entries
     match /auditLogs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if false; // Only Cloud Functions via Admin SDK
       allow update, delete: if false;
     }
@@ -558,10 +548,10 @@ service cloud.firestore {
     // P0 FIX: Permettre les mises à jour admin pour la gestion des litiges
     match /disputes/{disputeId} {
       // Only admins can read disputes (sensitive financial data)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // P0 FIX: Admin peut mettre à jour (notes, timeline, status, evidence, assignee)
       // Pour les actions critiques (submit evidence to Stripe), utiliser Cloud Functions
-      allow update: if (isAdmin() || isDev()) &&
+      allow update: if (isAdmin()) &&
                     request.resource.data.diff(resource.data).affectedKeys()
                       .hasOnly(['notes', 'timeline', 'updatedAt', 'isAcknowledged',
                                'internalNotes', 'adminAssignee', 'adminNotes',
@@ -575,16 +565,16 @@ service cloud.firestore {
 
     // ================= ADMIN ALERTS COLLECTION =================
     match /admin_alerts/{alertId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Admins can update (mark as read)
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
       // Only Cloud Functions can create
       allow create, delete: if false;
     }
 
     // ================= FINANCIAL EVENTS COLLECTION =================
     match /financial_events/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -593,7 +583,7 @@ service cloud.firestore {
     match /provider_balance_adjustments/{adjustmentId} {
       // Providers can read their own adjustments
       allow read: if isAuthenticated() &&
-                  (resource.data.providerId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.providerId == request.auth.uid || isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -601,7 +591,7 @@ service cloud.firestore {
     // ================= KYC REMINDERS LOG =================
     match /kyc_reminders_log/{logId} {
       // Only admins can read reminder logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -610,7 +600,7 @@ service cloud.firestore {
     match /paypal_reminder_queue/{providerId} {
       // Providers can read their own reminder status
       allow read: if isAuthenticated() &&
-                  (request.auth.uid == providerId || isAdmin() || isDev());
+                  (request.auth.uid == providerId || isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -619,7 +609,7 @@ service cloud.firestore {
     match /paypal_account_logs/{logId} {
       // Providers can read their own logs, admins can read all
       allow read: if isAuthenticated() &&
-                  (resource.data.providerId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.providerId == request.auth.uid || isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -635,7 +625,7 @@ service cloud.firestore {
     // ================= PAYPAL REMINDERS LOG =================
     match /paypal_reminders_log/{logId} {
       // Only admins can read reminder logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -643,7 +633,7 @@ service cloud.firestore {
     // ================= UNCLAIMED FUNDS =================
     match /unclaimed_funds/{fundId} {
       // Only admins can read unclaimed funds
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -651,7 +641,7 @@ service cloud.firestore {
     // ================= ADMIN ACTIONS LOG =================
     match /admin_actions_log/{logId} {
       // Only admins can read action logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -662,7 +652,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -672,7 +662,7 @@ service cloud.firestore {
       // Providers can read their own referrals, admins can read all
       allow read: if isAuthenticated() &&
                   (resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -680,7 +670,7 @@ service cloud.firestore {
     // ================= PAYPAL WEBHOOK EVENTS =================
     match /paypal_webhook_events/{eventId} {
       // Only admins can read webhook events
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -691,7 +681,7 @@ service cloud.firestore {
       // Providers can read their own payouts, admins can read all
       allow read: if isAuthenticated() &&
                   (resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -701,7 +691,7 @@ service cloud.firestore {
       // Providers can read their own payouts, admins can read all
       allow read: if isAuthenticated() &&
                   (resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -709,7 +699,7 @@ service cloud.firestore {
     // ================= PAYPAL PAYOUTS FAILED =================
     match /paypal_payouts_failed/{failedId} {
       // Only admins can read failed payouts
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -719,7 +709,7 @@ service cloud.firestore {
       // Providers can read their own transfers, admins can read all
       allow read: if isAuthenticated() &&
                   (resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -730,7 +720,7 @@ service cloud.firestore {
       // This allows them to see how much is pending until they complete KYC
       allow read: if isAuthenticated() &&
                   (resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -740,7 +730,7 @@ service cloud.firestore {
       // Providers can read their own failed payouts
       allow read: if isAuthenticated() &&
                   (resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -748,28 +738,28 @@ service cloud.firestore {
     // ================= AAA INTERNAL PAYOUTS =================
     // Logs for AAA profiles where money stays on platform
     match /aaa_internal_payouts/{payoutId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Only Cloud Functions
     }
 
     // ================= AAA EXTERNAL PAYOUTS =================
     // Logs for AAA profiles paid to consolidated external account
     match /aaa_external_payouts/{payoutId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Only Cloud Functions
     }
 
     // ================= KYC REMINDERS (tracking sent reminders) =================
     match /kyc_reminders/{reminderId} {
       // Only Cloud Functions and admins
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= ESCROW REPORTS (daily monitoring reports) =================
     match /escrow_reports/{reportId} {
       // Only admins can read escrow reports
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -777,7 +767,7 @@ service cloud.firestore {
     // ================= FAILED TRANSFERS LOG =================
     match /failed_transfers_log/{logId} {
       // Only admins can read failed transfer logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -785,7 +775,7 @@ service cloud.firestore {
     // ================= CALL RECORDINGS =================
     match /call_recordings/{recordingId} {
       // Only admins can access recordings
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Only Cloud Functions can write
       allow write: if false;
     }
@@ -793,16 +783,16 @@ service cloud.firestore {
     // ================= TECHNICAL ALERTS =================
     match /technical_alerts/{alertId} {
       // Only admins/devs can access
-      allow read: if isAdmin() || isDev();
-      allow update: if isAdmin() || isDev(); // To mark as resolved
+      allow read: if isAdmin();
+      allow update: if isAdmin(); // To mark as resolved
       allow create, delete: if false; // Only Cloud Functions
     }
 
     // ================= ADMIN NOTIFICATIONS =================
     match /admin_notifications/{notificationId} {
       // Only admins can access
-      allow read: if isAdmin() || isDev();
-      allow update: if isAdmin() || isDev(); // To mark as processed
+      allow read: if isAdmin();
+      allow update: if isAdmin(); // To mark as processed
       allow create, delete: if false; // Only Cloud Functions
     }
 
@@ -827,7 +817,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (
         request.auth.uid == providerId ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedProviderIds.hasAny([providerId]) ||
-        isAdmin() || isDev()
+        isAdmin()
       );
       // Seules les Cloud Functions peuvent écrire (via Admin SDK)
       allow write: if false;
@@ -836,7 +826,7 @@ service cloud.firestore {
     // ================= SUBSCRIPTIONS COLLECTION =================
     match /subscriptions/{providerId} {
       // Le provider peut lire son propre abonnement
-      allow read: if isOwner(providerId) || isAdmin() || isDev();
+      allow read: if isOwner(providerId) || isAdmin();
       // Seules les Cloud Functions peuvent écrire (via Admin SDK)
       allow write: if false;
     }
@@ -846,14 +836,14 @@ service cloud.firestore {
       // Lecture publique (pour afficher les prix)
       allow read: if true;
       // Seuls les admins peuvent modifier les plans
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= AI USAGE COLLECTION =================
     match /ai_usage/{userId} {
       // L'utilisateur peut lire son propre usage (providers et clients)
       // Note: Les clients n'auront pas de document, mais peuvent vérifier
-      allow read: if isOwner(userId) || isAdmin() || isDev();
+      allow read: if isOwner(userId) || isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -861,7 +851,7 @@ service cloud.firestore {
     // ================= SUBSCRIPTION LOGS COLLECTION =================
     match /subscription_logs/{logId} {
       // Seuls les admins peuvent lire les logs d'abonnement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -871,9 +861,9 @@ service cloud.firestore {
     // (upgrades, downgrades, cancellations, renewals, trials, etc.)
     match /subscription_events/{eventId} {
       // Lecture: Admin uniquement (données sensibles)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Admin peut mettre à jour (acknowledge, notes)
-      allow update: if (isAdmin() || isDev()) &&
+      allow update: if (isAdmin()) &&
                     request.resource.data.diff(resource.data).affectedKeys()
                       .hasOnly(['isAcknowledged', 'acknowledgedAt', 'acknowledgedBy',
                                'notes', 'internalNotes', 'updatedAt']);
@@ -884,7 +874,7 @@ service cloud.firestore {
     // ================= PROCESSED STRIPE EVENTS (Idempotency) =================
     match /processed_stripe_events/{eventId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -892,7 +882,7 @@ service cloud.firestore {
     // ================= QUOTA RESET LOGS =================
     match /quota_reset_logs/{logId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -900,7 +890,7 @@ service cloud.firestore {
     // ================= TRIAL EXPIRATION LOGS =================
     match /trial_expiration_logs/{logId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -908,7 +898,7 @@ service cloud.firestore {
     // ================= PROCESSED WEBHOOK EVENTS (Idempotency) =================
     match /processed_webhook_events/{eventId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -916,7 +906,7 @@ service cloud.firestore {
     // ================= RATE LIMITS (Anti-abuse) =================
     match /rate_limits/{limitId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -924,7 +914,7 @@ service cloud.firestore {
     // ================= ADMIN AUDIT LOGS (Compliance) =================
     match /admin_audit_logs/{logId} {
       // Seuls les admins peuvent lire les logs d'audit
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire (immuable)
       allow write: if false;
     }
@@ -932,7 +922,7 @@ service cloud.firestore {
     // ================= RESTORE OPERATIONS (Backup Restore Tracking) =================
     match /restore_operations/{operationId} {
       // Seuls les admins peuvent lire les opérations de restauration
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -943,33 +933,33 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Le client peut créer une facture dont il est le client
       // (sécurisé: on vérifie que clientId == uid de l'utilisateur)
       allow create: if isAuthenticated() &&
                     request.resource.data.clientId == request.auth.uid;
       // Seuls admins peuvent modifier/supprimer
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= ADMIN INVOICES (Console admin) =================
     // P1 SECURITY FIX: Only Cloud Functions can create admin invoices
     match /admin_invoices/{invoiceId} {
       // Seuls les admins peuvent accéder
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // P1 FIX: Only Cloud Functions via Admin SDK can create
       allow create: if false;
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= AUDIT LOGS (Facturation) =================
     // P1 SECURITY FIX: Only Cloud Functions can create audit logs
     match /audit_logs/{logId} {
       // Seuls les admins peuvent lire les logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // P1 FIX: Only Cloud Functions via Admin SDK can create (prevents log forgery)
       allow create: if false;
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= LEGAL DOCUMENTS COLLECTION =================
@@ -978,21 +968,21 @@ service cloud.firestore {
       // Lecture publique pour les pages légales
       allow read: if true;
       // Seuls les admins peuvent modifier
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= ADMIN SETTINGS COLLECTION =================
     // Paramètres d'administration
     match /admin_settings/{docId} {
       // Seuls les admins peuvent lire et écrire
-      allow read, write: if isAdmin() || isDev();
+      allow read, write: if isAdmin();
     }
 
     // ================= AUTH CLAIMS LOGS COLLECTION =================
     // Logs des changements de claims auth
     match /auth_claims_logs/{logId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -1003,7 +993,7 @@ service cloud.firestore {
       // Lecture publique pour charger les pays activés sur le frontend
       allow read: if true;
       // Seuls les admins peuvent modifier
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= BOOKING REQUESTS COLLECTION =================
@@ -1013,7 +1003,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev() ||
+                   isAdmin() ||
                    hasAgencyAccessToProvider(resource.data.providerId));
 
       // Création : client authentifié avec validation des champs requis
@@ -1027,19 +1017,19 @@ service cloud.firestore {
       allow update: if isAuthenticated() &&
                     (resource.data.clientId == request.auth.uid ||
                      resource.data.providerId == request.auth.uid ||
-                     isAdmin() || isDev());
+                     isAdmin());
 
       // Suppression : admin, dev, ou agency_manager pour ses providers liés
       // OPTIMISATION 2026-02-12: Utilisation de la fonction helper hasAgencyAccessToProvider
       allow delete: if isAuthenticated() &&
-                    (isAdmin() || isDev() ||
+                    (isAdmin() ||
                      hasAgencyAccessToProvider(resource.data.providerId));
     }
 
     // ================= AUTH LOGS COLLECTION =================
     match /auth_logs/{logId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Utilisateurs authentifiés peuvent créer leurs propres logs
       allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
       // Cloud Functions seules peuvent modifier/supprimer
@@ -1050,7 +1040,7 @@ service cloud.firestore {
     // Collection utilisée par logAuthEvent() dans AuthContext
     match /logs/{logId} {
       // Seuls les admins peuvent lire les logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Utilisateurs authentifiés peuvent créer des logs
       allow create: if isAuthenticated();
       // Cloud Functions seules peuvent modifier/supprimer
@@ -1060,7 +1050,7 @@ service cloud.firestore {
     // ================= ERROR LOGS COLLECTION =================
     match /error_logs/{logId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Utilisateurs authentifiés peuvent logger les erreurs
       allow create: if isAuthenticated();
       // Cloud Functions seules peuvent modifier/supprimer
@@ -1072,7 +1062,7 @@ service cloud.firestore {
     // (ex: temps de génération des factures, latence des appels, etc.)
     match /performance_metrics/{metricId} {
       // Seuls les admins peuvent lire les métriques
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Utilisateurs authentifiés peuvent créer des métriques
       allow create: if isAuthenticated();
       // Cloud Functions seules peuvent modifier/supprimer
@@ -1093,7 +1083,7 @@ service cloud.firestore {
     // P1-6 FIX: Dead Letter Queue pour les notifications échouées
     match /notification_dlq/{docId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Cloud Functions seules peuvent créer/modifier
       allow create, update, delete: if false;
     }
@@ -1101,7 +1091,7 @@ service cloud.firestore {
     // ================= SCHEDULING ERRORS COLLECTION =================
     // Logs des erreurs de planification d'appels
     match /scheduling_errors/{errorId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if false; // Cloud Functions only
       allow update, delete: if false;
     }
@@ -1109,7 +1099,7 @@ service cloud.firestore {
     // ================= ANALYTICS EVENTS COLLECTION =================
     match /analytics_events/{eventId} {
       // Seuls les admins peuvent lire
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Utilisateurs authentifiés peuvent créer des événements
       allow create: if isAuthenticated();
       // Cloud Functions seules peuvent modifier/supprimer
@@ -1118,35 +1108,35 @@ service cloud.firestore {
 
     // ================= ANALYTICS LANGUAGE MISMATCHES =================
     match /analytics_language_mismatches/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 
     // ================= ANALYTICS USER ACTIONS =================
     match /analytics_user_actions/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 
     // ================= ANALYTICS CONVERSIONS =================
     match /analytics_conversions/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 
     // ================= ANALYTICS ERRORS =================
     match /analytics_errors/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 
     // ================= ANALYTICS PERFORMANCE =================
     match /analytics_performance/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAuthenticated();
       allow update, delete: if false;
     }
@@ -1155,7 +1145,7 @@ service cloud.firestore {
     // P0 SECURITY FIX: Seules les Cloud Functions peuvent manipuler les compteurs
     // Empêche la manipulation des métriques par des utilisateurs malveillants
     match /analytics_counters/{counterId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions via Admin SDK peuvent écrire
       allow write: if false;
     }
@@ -1165,7 +1155,7 @@ service cloud.firestore {
     // (Facebook Ads, Google Ads, TikTok, etc.)
     match /ad_conversions/{conversionId} {
       // Seuls les admins peuvent lire les données d'attribution
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // SECURITY FIX: Require authentication + validate required fields to prevent denial-of-wallet abuse
       allow create: if request.auth != null &&
                     request.resource.data.keys().hasAll(['source', 'timestamp']) &&
@@ -1183,7 +1173,7 @@ service cloud.firestore {
       // Lecture publique pour les FAQ traduites
       allow read: if true;
       // Seuls les admins peuvent écrire
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= CONTACT MESSAGES COLLECTION =================
@@ -1191,15 +1181,15 @@ service cloud.firestore {
     // P0 SECURITY: Création via Cloud Function avec reCAPTCHA pour éviter le spam
     match /contact_messages/{messageId} {
       // Seuls les admins peuvent lire les messages de contact
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // P0 SECURITY: Création désactivée directement depuis le client
       // Utiliser la Cloud Function createContactMessage avec reCAPTCHA
       // Cette protection évite le spam et les attaques "denial of wallet"
       allow create: if false;
       // Seuls les admins peuvent mettre à jour (marquer comme lu, répondre)
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
       // Seuls les admins peuvent supprimer
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
     }
 
     // ================= USER REPORTS COLLECTION =================
@@ -1207,7 +1197,7 @@ service cloud.firestore {
     match /reports/{reportId} {
       // L'utilisateur peut lire ses propres signalements, admins peuvent tout lire
       allow read: if isAuthenticated() &&
-                  (resource.data.reporterId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.reporterId == request.auth.uid || isAdmin());
 
       // Utilisateurs authentifiés peuvent créer un signalement
       // - Doit être le reporter (pas d'usurpation)
@@ -1220,17 +1210,17 @@ service cloud.firestore {
                     request.resource.data.reason.size() >= 5;
 
       // Seuls les admins peuvent mettre à jour (résoudre, rejeter)
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
 
       // Seuls les admins peuvent supprimer
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
     }
 
     // ================= EMAIL LOGS COLLECTION =================
     // Logs des emails envoyés (pour traçabilité)
     match /email_logs/{logId} {
       // Seuls les admins peuvent lire les logs
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Seules les Cloud Functions peuvent écrire
       allow write: if false;
     }
@@ -1240,9 +1230,9 @@ service cloud.firestore {
     // NOTE: Aucun pays n'est blacklisté - détection basée sur comportements anormaux
     match /security_alerts/{alertId} {
       // Seuls les admins peuvent lire les alertes de sécurité
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Admins peuvent mettre à jour (acknowledge, resolve)
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
       // Seules les Cloud Functions peuvent créer/supprimer
       allow create, delete: if false;
     }
@@ -1250,7 +1240,7 @@ service cloud.firestore {
     // ================= ALERT RATE LIMITS =================
     // Rate limiting pour éviter le spam d'alertes
     match /alert_rate_limits/{limitId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions only
     }
 
@@ -1258,23 +1248,23 @@ service cloud.firestore {
     // Préférences de notification des admins
     match /admin_alert_preferences/{adminId} {
       // Admin peut lire/modifier ses propres préférences
-      allow read: if isOwner(adminId) || isAdmin() || isDev();
-      allow write: if isOwner(adminId) || isAdmin() || isDev();
+      allow read: if isOwner(adminId) || isAdmin();
+      allow write: if isOwner(adminId) || isAdmin();
     }
 
     // ================= THREAT SCORES =================
     // Scores de menace par utilisateur/IP
     match /threat_scores/{entityId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions only
     }
 
     // ================= BLOCKED ENTITIES =================
     // Entités bloquées (utilisateurs, IPs)
     match /blocked_entities/{entityId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Admins peuvent débloquer manuellement
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
       allow create: if false; // Cloud Functions only
     }
 
@@ -1282,35 +1272,35 @@ service cloud.firestore {
     // Profils géographiques des utilisateurs (pour détection anomalies)
     match /geo_profiles/{userId} {
       // L'utilisateur peut voir son propre profil, admins tout
-      allow read: if isOwner(userId) || isAdmin() || isDev();
+      allow read: if isOwner(userId) || isAdmin();
       allow write: if false; // Cloud Functions only
     }
 
     // ================= FRAUD PATTERNS =================
     // Patterns de fraude détectés
     match /fraud_patterns/{patternId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions only
     }
 
     // ================= API ABUSE LOGS =================
     // Logs d'abus API (scraping, injection, etc.)
     match /api_abuse_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions only
     }
 
     // ================= SECURITY EVENTS (raw events) =================
     // Événements de sécurité bruts avant traitement
     match /security_events/{eventId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions only
     }
 
     // ================= LOGIN ATTEMPTS =================
     // Tentatives de login (pour détection brute force)
     match /login_attempts/{attemptId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Les Cloud Functions créent les entrées lors des tentatives de connexion
       allow write: if false;
     }
@@ -1318,7 +1308,7 @@ service cloud.firestore {
     // ================= ADMIN SECURITY ACTIONS =================
     // Actions de sécurité prises par les admins (audit trail)
     match /admin_security_actions/{actionId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Admins peuvent créer des actions (avec leur uid)
       allow create: if isAdmin() && request.resource.data.adminId == request.auth.uid;
       allow update, delete: if false; // Immutable audit trail
@@ -1327,8 +1317,8 @@ service cloud.firestore {
     // ================= SECURITY ROUTING CONFIG =================
     // Configuration du routing des alertes de sécurité
     match /security_routing/{configId} {
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // =====================================================================
@@ -1565,7 +1555,7 @@ service cloud.firestore {
       // Lecture publique (pour afficher prix TTC, info paiement)
       allow read: if true;
       // Ecriture: Admin uniquement (Cloud Functions pour seed)
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= COUNTRY SUBDIVISIONS =================
@@ -1577,7 +1567,7 @@ service cloud.firestore {
       // Lecture publique (pour calculs de taxe)
       allow read: if true;
       // Ecriture: Admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= SYSTEM ALERTS =================
@@ -1756,7 +1746,7 @@ service cloud.firestore {
     // Usage: Console admin pour monitoring des couts et performances IA
     match /ai_call_logs/{logId} {
       // Lecture: Admin uniquement (donnees sensibles - couts, tokens)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Ecriture: Cloud Functions uniquement (via Admin SDK)
       allow write: if false;
     }
@@ -1766,7 +1756,7 @@ service cloud.firestore {
     // Usage: Console admin - onglet IA Analytics
     match /openai_usage_metrics/{metricId} {
       // Lecture: Admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Ecriture: Cloud Functions uniquement (via Admin SDK)
       allow write: if false;
     }
@@ -1776,9 +1766,9 @@ service cloud.firestore {
     // Usage: Console admin - widget alertes services
     match /service_alerts/{alertId} {
       // Lecture: Admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Mise a jour: Admin peut acquitter les alertes
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
       // Creation/Suppression: Cloud Functions uniquement
       allow create, delete: if false;
     }
@@ -1788,7 +1778,7 @@ service cloud.firestore {
     // Usage: Formulaire de signalement accessible à tous
     match /user_feedback/{feedbackId} {
       // Lecture: Admin uniquement (console admin)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Création: Tous (même non authentifiés) avec validation
       // - email requis et format valide
       // - type requis (bug, ux_friction, suggestion, other)
@@ -1804,7 +1794,7 @@ service cloud.firestore {
                     && request.resource.data.description.size() >= 10
                     && request.resource.data.description.size() <= 6000;
       // Mise à jour/Suppression: Admin uniquement
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= CAPI EVENTS (Meta Conversion API) =================
@@ -1812,7 +1802,7 @@ service cloud.firestore {
     // Utilisé par: AdminMetaAnalytics, useMetaAnalytics hook
     match /capi_events/{eventId} {
       // Lecture: Admin uniquement (données analytiques sensibles)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement via Admin SDK
       allow create, update, delete: if false;
     }
@@ -1822,7 +1812,7 @@ service cloud.firestore {
     // Utilisé par: AdminGoogleAdsAnalytics, useGoogleAdsAnalytics hook
     match /google_ads_events/{eventId} {
       // Lecture: Admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement via Admin SDK
       allow create, update, delete: if false;
     }
@@ -1832,7 +1822,7 @@ service cloud.firestore {
     // Utilisé par: AdminPromoCodes pour les statistiques
     match /coupon_usages/{usageId} {
       // Lecture: Admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement via Admin SDK
       allow create, update, delete: if false;
     }
@@ -1848,7 +1838,7 @@ service cloud.firestore {
     // Rapports planifiés pour Meta Analytics
     match /scheduled_reports/{reportId} {
       // Lecture/Écriture: Admin uniquement
-      allow read, write: if isAdmin() || isDev();
+      allow read, write: if isAdmin();
     }
 
     // ================= CONVERSATIONS (IA TOOL) =================
@@ -1858,7 +1848,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.clientId == request.auth.uid ||
                    resource.data.providerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
 
       // Création: le clientId doit correspondre à l'utilisateur authentifié
       // P1 SECURITY FIX: Empêche l'usurpation d'identité dans les conversations
@@ -1869,10 +1859,10 @@ service cloud.firestore {
       allow update: if isAuthenticated() &&
                     (resource.data.clientId == request.auth.uid ||
                      resource.data.providerId == request.auth.uid ||
-                     isAdmin() || isDev());
+                     isAdmin());
 
       // Suppression: admin seulement
-      allow delete: if isAdmin() || isDev();
+      allow delete: if isAdmin();
 
       // Sous-collection messages
       match /messages/{messageId} {
@@ -1880,16 +1870,16 @@ service cloud.firestore {
         allow read: if isAuthenticated() &&
                     (get(/databases/$(database)/documents/conversations/$(conversationId)).data.clientId == request.auth.uid ||
                      get(/databases/$(database)/documents/conversations/$(conversationId)).data.providerId == request.auth.uid ||
-                     isAdmin() || isDev());
+                     isAdmin());
 
         // Création: participants authentifiés
         allow create: if isAuthenticated() &&
                       (get(/databases/$(database)/documents/conversations/$(conversationId)).data.clientId == request.auth.uid ||
                        get(/databases/$(database)/documents/conversations/$(conversationId)).data.providerId == request.auth.uid ||
-                       isAdmin() || isDev());
+                       isAdmin());
 
         // Mise à jour/Suppression: admin seulement
-        allow update, delete: if isAdmin() || isDev();
+        allow update, delete: if isAdmin();
       }
     }
 
@@ -1899,7 +1889,7 @@ service cloud.firestore {
       // Lecture: tous les utilisateurs authentifiés (pour afficher les taux)
       allow read: if isAuthenticated();
       // Écriture: admin seulement (via console admin)
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Commissions d'affiliation
@@ -1907,7 +1897,7 @@ service cloud.firestore {
       // Lecture: le propriétaire (referrerId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.referrerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -1917,7 +1907,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.userId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -1925,14 +1915,14 @@ service cloud.firestore {
     // Alertes de fraude d'affiliation
     match /affiliate_fraud_alerts/{alertId} {
       // Lecture et écriture: admin uniquement
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // Statistiques quotidiennes d'affiliation
     match /affiliate_stats/{dateId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -1950,7 +1940,7 @@ service cloud.firestore {
       // Lecture: le referrer ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.referrerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -1985,7 +1975,7 @@ service cloud.firestore {
 
     // Partner config (admin)
     match /partner_config/{configId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
@@ -2021,7 +2011,7 @@ service cloud.firestore {
     // Profils des chatters
     match /chatters/{chatterId} {
       // Lecture: propriétaire ou admin
-      allow read: if isChatterOwner(chatterId) || isAdmin() || isDev();
+      allow read: if isChatterOwner(chatterId) || isAdmin();
       // Création: propriétaire uniquement (lors de l'inscription)
       allow create: if isChatterOwner(chatterId);
       // Mise à jour: propriétaire pour certains champs, admin pour tous
@@ -2042,14 +2032,14 @@ service cloud.firestore {
                                    'captainAssignedCountries', 'captainAssignedLanguages',
                                    'commissionPlanId', 'commissionPlanName',
                                    'rateLockDate', 'lockedRates']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
 
       // P0 FIX: Subcollection FCM tokens pour push notifications chatters
       match /fcmTokens/{tokenId} {
-        allow read: if isChatterOwner(chatterId) || isAdmin() || isDev();
+        allow read: if isChatterOwner(chatterId) || isAdmin();
         allow create, update: if isChatterOwner(chatterId);
-        allow delete: if isChatterOwner(chatterId) || isAdmin() || isDev();
+        allow delete: if isChatterOwner(chatterId) || isAdmin();
       }
     }
 
@@ -2058,7 +2048,7 @@ service cloud.firestore {
       // Lecture: le propriétaire (chatterId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2068,12 +2058,12 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Création: chatter actif pour son propre retrait
       allow create: if isChatter() &&
                     request.resource.data.chatterId == request.auth.uid;
       // Mise à jour: admin uniquement
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
       allow delete: if false;
     }
 
@@ -2082,23 +2072,23 @@ service cloud.firestore {
       // Lecture: tout affilié authentifié ou admin (pour afficher les rates sur landing/dashboard)
       allow read: if isAuthenticated();
       // Écriture: admin uniquement (CRUD des plans)
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Configuration du système chatter
     match /chatter_config/{docId} {
       // Lecture: chatters actifs ou admin (contient les paramètres de bonus)
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Questions du quiz chatter (legacy collection — quiz removed, kept for historical data)
     match /chatter_quiz_questions/{questionId} {
       // Lecture: chatters actifs ou admin
-      allow read: if hasChatterProfile() || isAdmin() || isDev();
+      allow read: if hasChatterProfile() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Tentatives de quiz
@@ -2106,7 +2096,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2116,7 +2106,7 @@ service cloud.firestore {
       // Lecture: tous les utilisateurs authentifiés
       allow read: if isAuthenticated();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Attribution des badges
@@ -2124,7 +2114,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2132,7 +2122,7 @@ service cloud.firestore {
     // Classements mensuels
     match /chatter_monthly_rankings/{monthId} {
       // Lecture: tous les chatters et admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2142,13 +2132,13 @@ service cloud.firestore {
       // Lecture: tous les utilisateurs authentifiés
       allow read: if isAuthenticated();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Tracking des clics affiliés
     match /chatter_affiliate_clicks/{clickId} {
       // Lecture: admin uniquement (données sensibles)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2158,7 +2148,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2168,7 +2158,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Mise à jour: le propriétaire peut marquer comme lu
       allow update: if isAuthenticated() &&
                     resource.data.chatterId == request.auth.uid &&
@@ -2180,9 +2170,9 @@ service cloud.firestore {
     // Réunions Zoom
     match /chatter_zoom_meetings/{meetingId} {
       // Lecture: chatters actifs et admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Présences Zoom
@@ -2190,7 +2180,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2200,43 +2190,43 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Création: chatter actif
       allow create: if isChatter() &&
                     request.resource.data.chatterId == request.auth.uid;
       // Mise à jour: admin uniquement (modération)
-      allow update: if isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Groupes/Forums des chatters
     match /chatter_groups/{groupId} {
       // Lecture: tous les chatters actifs ou admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Création: chatter actif uniquement
       allow create: if isChatter() &&
                     request.resource.data.submittedBy == request.auth.uid;
       // Mise à jour: admin uniquement (modération status)
-      allow update: if isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Activités dans les groupes chatters
     match /chatter_groups/{groupId}/activities/{activityId} {
       // Lecture: chatters ou admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Création: chatter qui rejoint le groupe
       allow create: if isChatter() &&
                     request.resource.data.chatterId == request.auth.uid;
       // Mise à jour/suppression: admin uniquement
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // Alertes de fraude des chatters
     match /chatter_fraud_alerts/{alertId} {
       // Lecture et écriture: admin uniquement
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // Commissions de parrainage des chatters (N1/N2)
@@ -2244,7 +2234,7 @@ service cloud.firestore {
       // Lecture: le propriétaire (parrainId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.parrainId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2254,7 +2244,7 @@ service cloud.firestore {
       // Lecture: le propriétaire (chatterId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2270,27 +2260,27 @@ service cloud.firestore {
     // Promotions et multiplicateurs
     match /chatter_promotions/{promoId} {
       // Lecture: tous les chatters actifs et admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Likes sociaux (anti-fraude, admin uniquement)
     match /chatter_social_likes/{likeId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // Défis hebdomadaires
     match /chatter_weekly_challenges/{challengeId} {
-      allow read: if isChatter() || isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
+      allow write: if isAdmin();
     }
 
     // P0 FIX: Compteurs d'appels chatters (anti-fraude, bonus activation)
     match /chatter_call_counts/{chatterId} {
       // Lecture: le propriétaire (pour voir son compteur) ou admin
-      allow read: if isChatterOwner(chatterId) || isAdmin() || isDev();
+      allow read: if isChatterOwner(chatterId) || isAdmin();
       // Écriture: Cloud Functions uniquement (triggers onCallCompleted)
       allow write: if false;
     }
@@ -2298,19 +2288,19 @@ service cloud.firestore {
     // P0 FIX: Reviews de fraude chatters (modération manuelle)
     match /chatter_fraud_reviews/{reviewId} {
       // Lecture: admin uniquement (données sensibles de fraude)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions pour créer, admin pour résoudre
       allow create: if false;
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
       allow delete: if false;
     }
 
     // P0 FIX: Modules de formation chatters
     match /chatter_training_modules/{moduleId} {
       // Lecture: chatters actifs (pour suivre la formation) ou admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Écriture: admin uniquement (gestion du contenu)
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // P0 FIX: Progression formation chatters
@@ -2318,7 +2308,7 @@ service cloud.firestore {
       // Lecture: le propriétaire (chatterId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Admin SDK (Cloud Functions) uniquement
       allow write: if false;
 
@@ -2326,7 +2316,7 @@ service cloud.firestore {
       match /modules/{moduleId} {
         // Lecture: l'utilisateur propriétaire (progressId == uid) ou admin
         allow read: if isAuthenticated() &&
-                    (progressId == request.auth.uid || isAdmin() || isDev());
+                    (progressId == request.auth.uid || isAdmin());
         // Écriture: Admin SDK (Cloud Functions) uniquement — les callables utilisent initializeApp()
         allow write: if false;
       }
@@ -2337,7 +2327,7 @@ service cloud.firestore {
       // Lecture: le propriétaire (chatterId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2345,7 +2335,7 @@ service cloud.firestore {
     // P0 FIX: Archives mensuelles Captain Chatter
     match /captain_monthly_archives/{archiveId} {
       // Lecture: admin uniquement (données agrégées)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement (cron mensuel)
       allow write: if false;
     }
@@ -2353,9 +2343,9 @@ service cloud.firestore {
     // P0 FIX: Messages drip chatters (onboarding Telegram)
     match /chatter_drip_messages/{messageId} {
       // Lecture: admin (gestion des templates)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: admin uniquement (configuration)
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // P0 FIX: Prestataires recrutés par chatters
@@ -2363,7 +2353,7 @@ service cloud.firestore {
       // Lecture: le chatter recruteur ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.chatterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement (trigger onProviderRegistered)
       allow write: if false;
     }
@@ -2393,7 +2383,7 @@ service cloud.firestore {
     // Profils des influenceurs
     match /influencers/{influencerId} {
       // Lecture: propriétaire ou admin
-      allow read: if isInfluencerOwner(influencerId) || isAdmin() || isDev();
+      allow read: if isInfluencerOwner(influencerId) || isAdmin();
       // Création: propriétaire uniquement (lors de l'inscription)
       allow create: if isInfluencerOwner(influencerId);
       // Mise à jour: propriétaire pour certains champs, admin pour tous
@@ -2407,8 +2397,8 @@ service cloud.firestore {
                                    'currentMonthRank', 'bestRank', 'adminNotes',
                                    'commissionPlanId', 'commissionPlanName',
                                    'rateLockDate', 'lockedRates']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Commissions influenceurs
@@ -2416,7 +2406,7 @@ service cloud.firestore {
       // Lecture: propriétaire de la commission ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.influencerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2426,13 +2416,13 @@ service cloud.firestore {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.influencerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Création: influenceur actif pour lui-même
       allow create: if isInfluencer() &&
                     request.resource.data.influencerId == request.auth.uid;
       // Mise à jour: admin uniquement (approbation/rejet)
-      allow update: if isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Filleuls/recrutements influenceurs (prestataires recrutés)
@@ -2440,7 +2430,7 @@ service cloud.firestore {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.influencerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2448,15 +2438,15 @@ service cloud.firestore {
     // Configuration du système influenceur
     match /influencer_config/{docId} {
       // Lecture: influenceurs actifs ou admin (contient les paramètres de commission)
-      allow read: if isInfluencer() || isAdmin() || isDev();
+      allow read: if isInfluencer() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Classement mensuel influenceurs
     match /influencer_monthly_rankings/{monthId} {
       // Lecture: tous les influenceurs et admin
-      allow read: if isInfluencer() || isAdmin() || isDev();
+      allow read: if isInfluencer() || isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2466,7 +2456,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.influencerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Mise à jour: le propriétaire peut marquer comme lu
       allow update: if isAuthenticated() &&
                     resource.data.influencerId == request.auth.uid &&
@@ -2478,7 +2468,7 @@ service cloud.firestore {
     // Clics affiliés influenceurs (tracking)
     match /influencer_affiliate_clicks/{clickId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2486,23 +2476,23 @@ service cloud.firestore {
     // Bannières widgets (outils promotionnels)
     match /widget_banners/{bannerId} {
       // Lecture: influenceurs actifs et admin
-      allow read: if isInfluencer() || isAdmin() || isDev();
+      allow read: if isInfluencer() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Textes promotionnels widgets
     match /widget_texts/{textId} {
       // Lecture: influenceurs actifs et admin
-      allow read: if isInfluencer() || isAdmin() || isDev();
+      allow read: if isInfluencer() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Ressources influenceurs (guides, templates, matériel promotionnel)
     match /influencer_resources/{resourceId} {
-      allow read: if isInfluencer() || isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isInfluencer() || isAdmin();
+      allow write: if isAdmin();
     }
 
     // ================= BLOGGERS (Programme Partenaire Blogueurs) =================
@@ -2530,7 +2520,7 @@ service cloud.firestore {
     // Profils des blogueurs
     match /bloggers/{bloggerId} {
       // Lecture: propriétaire ou admin
-      allow read: if isBloggerOwner(bloggerId) || isAdmin() || isDev();
+      allow read: if isBloggerOwner(bloggerId) || isAdmin();
       // Création: propriétaire uniquement (lors de l'inscription)
       allow create: if isBloggerOwner(bloggerId);
       // Mise à jour: propriétaire pour certains champs, admin pour tous
@@ -2544,8 +2534,8 @@ service cloud.firestore {
                                    'currentMonthRank', 'bestRank', 'adminNotes',
                                    'commissionPlanId', 'commissionPlanName',
                                    'rateLockDate', 'lockedRates']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Commissions blogueurs
@@ -2553,7 +2543,7 @@ service cloud.firestore {
       // Lecture: propriétaire de la commission ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.bloggerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2563,13 +2553,13 @@ service cloud.firestore {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.bloggerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Création: blogueur actif pour lui-même
       allow create: if isBlogger() &&
                     request.resource.data.bloggerId == request.auth.uid;
       // Mise à jour: admin uniquement (approbation/rejet)
-      allow update: if isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Prestataires recrutés par blogueurs
@@ -2577,7 +2567,7 @@ service cloud.firestore {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.bloggerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2585,15 +2575,15 @@ service cloud.firestore {
     // Configuration du système blogueur
     match /blogger_config/{docId} {
       // Lecture: blogueurs actifs ou admin (contient les paramètres de commission)
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Classement mensuel blogueurs
     match /blogger_monthly_rankings/{monthId} {
       // Lecture: tous les blogueurs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2603,7 +2593,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.bloggerId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Mise à jour: le propriétaire peut marquer comme lu
       allow update: if isAuthenticated() &&
                     resource.data.bloggerId == request.auth.uid &&
@@ -2615,7 +2605,7 @@ service cloud.firestore {
     // Clics affiliés blogueurs (tracking)
     match /blogger_clicks/{clickId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2623,55 +2613,55 @@ service cloud.firestore {
     // Badges blogueurs (définitions)
     match /blogger_badges/{badgeId} {
       // Lecture: blogueurs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Ressources blogueurs (fichiers - EXCLUSIF)
     match /blogger_resources/{resourceId} {
       // Lecture: blogueurs actifs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Ressources blogueurs (textes - EXCLUSIF)
     match /blogger_resource_texts/{textId} {
       // Lecture: blogueurs actifs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Guide blogueurs - Templates (EXCLUSIF)
     match /blogger_guide_templates/{templateId} {
       // Lecture: blogueurs actifs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Guide blogueurs - Textes à copier (EXCLUSIF)
     match /blogger_guide_copy_texts/{textId} {
       // Lecture: blogueurs actifs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Guide blogueurs - Bonnes pratiques (EXCLUSIF)
     match /blogger_guide_best_practices/{practiceId} {
       // Lecture: blogueurs actifs et admin
-      allow read: if isBlogger() || isAdmin() || isDev();
+      allow read: if isBlogger() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Logs d'utilisation blogueurs (tracking ressources/guide)
     match /blogger_usage_logs/{logId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2701,7 +2691,7 @@ service cloud.firestore {
     // Profils des GroupAdmins
     match /group_admins/{groupAdminId} {
       // Lecture: propriétaire ou admin
-      allow read: if isGroupAdminOwner(groupAdminId) || isAdmin() || isDev();
+      allow read: if isGroupAdminOwner(groupAdminId) || isAdmin();
       // Création: propriétaire uniquement (lors de l'inscription)
       allow create: if isGroupAdminOwner(groupAdminId);
       // Mise à jour: propriétaire pour certains champs, admin pour tous
@@ -2716,8 +2706,8 @@ service cloud.firestore {
                                    'isGroupVerified', 'groupVerifiedAt', 'suspensionReason',
                                    'commissionPlanId', 'commissionPlanName',
                                    'rateLockDate', 'lockedRates']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Commissions GroupAdmins
@@ -2725,7 +2715,7 @@ service cloud.firestore {
       // Lecture: propriétaire de la commission ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.groupAdminId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2735,13 +2725,13 @@ service cloud.firestore {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.groupAdminId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Création: GroupAdmin actif pour lui-même
       allow create: if isGroupAdmin() &&
                     request.resource.data.groupAdminId == request.auth.uid;
       // Mise à jour: admin uniquement (approbation/rejet)
-      allow update: if isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Admins recrutés par GroupAdmins
@@ -2749,7 +2739,7 @@ service cloud.firestore {
       // Lecture: propriétaire (recruteur) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.recruiterId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2759,7 +2749,7 @@ service cloud.firestore {
       // Lecture: propriétaire (groupAdminId) ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.groupAdminId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2767,7 +2757,7 @@ service cloud.firestore {
     // Tracking clics affiliés GroupAdmins
     match /group_admin_clicks/{clickId} {
       // Lecture: admin uniquement (données sensibles)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2777,7 +2767,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.groupAdminId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Mise à jour: le propriétaire peut marquer comme lu
       allow update: if isAuthenticated() &&
                     resource.data.groupAdminId == request.auth.uid &&
@@ -2789,33 +2779,33 @@ service cloud.firestore {
     // Ressources GroupAdmins (images, bannières, etc.)
     match /group_admin_resources/{resourceId} {
       // Lecture: GroupAdmins actifs et admin
-      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      allow read: if isGroupAdmin() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Textes des ressources GroupAdmins
     match /group_admin_resource_texts/{textId} {
       // Lecture: GroupAdmins actifs et admin
-      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      allow read: if isGroupAdmin() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Posts Facebook prêts à l'emploi
     match /group_admin_posts/{postId} {
       // Lecture: GroupAdmins actifs et admin
-      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      allow read: if isGroupAdmin() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Définitions des badges GroupAdmins
     match /group_admin_badges/{badgeId} {
       // Lecture: GroupAdmins et admin
-      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      allow read: if isGroupAdmin() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Attribution des badges GroupAdmins
@@ -2823,7 +2813,7 @@ service cloud.firestore {
       // Lecture: le propriétaire ou admin
       allow read: if isAuthenticated() &&
                   (resource.data.groupAdminId == request.auth.uid ||
-                   isAdmin() || isDev());
+                   isAdmin());
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2831,7 +2821,7 @@ service cloud.firestore {
     // Classements mensuels GroupAdmins
     match /group_admin_monthly_rankings/{monthId} {
       // Lecture: tous les GroupAdmins et admin
-      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      allow read: if isGroupAdmin() || isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2839,15 +2829,15 @@ service cloud.firestore {
     // Configuration du système GroupAdmin
     match /group_admin_config/{docId} {
       // Lecture: GroupAdmins actifs ou admin (contient les paramètres de commission)
-      allow read: if isGroupAdmin() || isAdmin() || isDev();
+      allow read: if isGroupAdmin() || isAdmin();
       // Écriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // Logs d'utilisation GroupAdmins (tracking ressources/posts)
     match /group_admin_usage_log/{logId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2855,31 +2845,31 @@ service cloud.firestore {
     // ================= LAWYERS COLLECTION =================
     // Collection utilisée par Stripe KYC (getAccountSession)
     match /lawyers/{lawyerId} {
-      allow read: if (isAuthenticated() && isOwner(lawyerId)) || isAdmin() || isDev();
+      allow read: if (isAuthenticated() && isOwner(lawyerId)) || isAdmin();
       allow create: if isAuthenticated() && isOwner(lawyerId);
       allow update: if (isOwner(lawyerId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['stripeAccountId', 'stripeAccountStatus']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= EXPATS COLLECTION =================
     // Collection utilisée par Stripe KYC (getAccountSession)
     match /expats/{expatId} {
-      allow read: if (isAuthenticated() && isOwner(expatId)) || isAdmin() || isDev();
+      allow read: if (isAuthenticated() && isOwner(expatId)) || isAdmin();
       allow create: if isAuthenticated() && isOwner(expatId);
       allow update: if (isOwner(expatId) &&
                         !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['stripeAccountId', 'stripeAccountStatus']))
-                       || isAdmin() || isDev();
-      allow delete: if isAdmin() || isDev();
+                       || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ================= BLOGGER PROMO WIDGETS =================
     match /blogger_promo_widgets/{widgetId} {
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // ================= REFUND REQUESTS =================
@@ -2887,45 +2877,45 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                   (resource.data.userId == request.auth.uid ||
                    resource.data.clientId == request.auth.uid ||
-                   isAdmin() || isDev());
-      allow write: if isAdmin() || isDev();
+                   isAdmin());
+      allow write: if isAdmin();
     }
 
     // ================= PLATFORM COSTS (Finance) =================
     match /platform_costs/{costId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions uniquement
     }
 
     // ================= TWILIO USAGE (Finance) =================
     match /twilio_usage/{usageId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions uniquement
     }
 
     // ================= FINANCE EXPORTS =================
     match /finance_exports/{exportId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAdmin();
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= RECONCILIATION LOGS =================
     match /reconciliation_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow create: if isAdmin();
       allow update, delete: if false;
     }
 
     // ================= AI USAGE LOGS =================
     match /ai_usage_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions uniquement
     }
 
     // ================= CALL ERRORS =================
     match /call_errors/{errorId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false; // Cloud Functions uniquement
     }
 
@@ -2933,16 +2923,16 @@ service cloud.firestore {
     // Parametres globaux de l'application (AdminSettings)
     match /app_settings/{docId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Ecriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= CALL LOGS =================
     // Logs des appels (audit et monitoring)
     match /call_logs/{logId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Creation: utilisateurs authentifies (logging)
       allow create: if isAuthenticated();
       // Modification/suppression: Cloud Functions uniquement
@@ -2953,18 +2943,18 @@ service cloud.firestore {
     // Signalements d'avis
     match /review_reports/{reportId} {
       // Lecture: admin uniquement
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Creation: utilisateurs authentifies
       allow create: if isAuthenticated();
       // Modification/suppression: admin uniquement
-      allow update, delete: if isAdmin() || isDev();
+      allow update, delete: if isAdmin();
     }
 
     // ================= CHATTER ACTIVITY FEED =================
     // Flux d'activite en temps reel des chatters
     match /chatter_activity_feed/{feedId} {
       // Lecture: chatters actifs et admin
-      allow read: if isChatter() || isAdmin() || isDev();
+      allow read: if isChatter() || isAdmin();
       // Ecriture: Cloud Functions uniquement
       allow write: if false;
     }
@@ -2975,7 +2965,7 @@ service cloud.firestore {
       // Lecture: utilisateurs authentifies (calculs de prix)
       allow read: if isAuthenticated();
       // Ecriture: admin uniquement
-      allow write: if isAdmin() || isDev();
+      allow write: if isAdmin();
     }
 
     // ================= TELEGRAM ONBOARDING LINKS =================
@@ -2983,7 +2973,7 @@ service cloud.firestore {
     match /telegram_onboarding_links/{linkId} {
       // Lecture: admin ou proprietaire du lien
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.userId == request.auth.uid || isAdmin());
       // Ecriture: Cloud Functions uniquement (via Admin SDK)
       allow write: if false;
     }
@@ -2998,12 +2988,12 @@ service cloud.firestore {
     // ================= MESSAGE TEMPLATES =================
     // Templates de messages pour l'admin comms UI
     match /message_templates/{locale} {
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
 
       match /items/{itemId} {
-        allow read: if isAdmin() || isDev();
-        allow write: if isAdmin() || isDev();
+        allow read: if isAdmin();
+        allow write: if isAdmin();
       }
     }
 
@@ -3012,7 +3002,7 @@ service cloud.firestore {
     match /payment_withdrawals/{withdrawalId} {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.userId == request.auth.uid || isAdmin());
       // Écriture: Cloud Functions uniquement (via Admin SDK)
       allow write: if false;
     }
@@ -3022,7 +3012,7 @@ service cloud.firestore {
     match /payment_methods/{methodId} {
       // Lecture: propriétaire ou admin
       allow read: if isAuthenticated() &&
-                  (resource.data.userId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.userId == request.auth.uid || isAdmin());
       // Écriture: Cloud Functions uniquement (via Admin SDK)
       allow write: if false;
     }
@@ -3030,14 +3020,14 @@ service cloud.firestore {
     // ================= PAYMENT WEBHOOK LOGS =================
     // Logs des webhooks de paiement (PayPal, Wise, etc.)
     match /payment_webhook_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= PAYMENT AUDIT LOGS =================
     // Logs d'audit des paiements
     match /payment_audit_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
@@ -3045,7 +3035,7 @@ service cloud.firestore {
     // Statistiques mensuelles des prestataires
     // AJOUT 2026-02-12: Les agency_managers peuvent lire les stats de leurs providers liés
     match /provider_stats/{statId} {
-      allow read: if isAdmin() || isDev() ||
+      allow read: if isAdmin() ||
                      hasAgencyAccessToProvider(resource.data.providerId);
       allow write: if false;
     }
@@ -3054,7 +3044,7 @@ service cloud.firestore {
     // Chatters recrutés par d'autres chatters (N1/N2)
     match /chatter_recruited_chatters/{recruitId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.recruiterId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.recruiterId == request.auth.uid || isAdmin());
       allow write: if false;
     }
 
@@ -3062,35 +3052,35 @@ service cloud.firestore {
     // Blogueurs recrutés par d'autres blogueurs
     match /blogger_recruited_bloggers/{recruitId} {
       allow read: if isAuthenticated() &&
-                  (resource.data.recruiterId == request.auth.uid || isAdmin() || isDev());
+                  (resource.data.recruiterId == request.auth.uid || isAdmin());
       allow write: if false;
     }
 
     // ================= CHATTER IP REGISTRY =================
     // Registre IP pour détection fraude chatters
     match /chatter_ip_registry/{registryId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= CHATTER REFERRAL FRAUD ALERTS =================
     // Alertes de fraude sur les parrainages chatters
     match /chatter_referral_fraud_alerts/{alertId} {
-      allow read: if isAdmin() || isDev();
-      allow write: if isAdmin() || isDev();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // ================= STRIPE SYNC LOGS =================
     // Logs de synchronisation Stripe
     match /stripe_sync_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= DUNNING RECORDS =================
     // Enregistrements de relance (dunning) pour paiements échoués
     match /dunning_records/{recordId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
@@ -3103,42 +3093,42 @@ service cloud.firestore {
     // ================= TELEGRAM RATE MONITOR =================
     // Compteurs journaliers d'envoi Telegram - admin lecture seule
     match /telegram_rate_monitor/{dateId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= TELEGRAM SUBSCRIBER STATS =================
     // Stats subscribers Telegram - admin lecture seule
     match /telegram_subscriber_stats/{docId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= TELEGRAM ADMIN CONFIG =================
     // Configuration admin du bot Telegram - admin lecture seule
     match /telegram_admin_config/{configId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= TELEGRAM ADMIN TEMPLATES =================
     // Templates de notification Telegram - admin lecture seule
     match /telegram_admin_templates/{templateId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= TELEGRAM ADMIN LOGS =================
     // Logs de notification Telegram - admin lecture seule
     match /telegram_admin_logs/{logId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
     // ================= TELEGRAM CAMPAIGNS =================
     // Campagnes Telegram - admin lecture seule
     match /telegram_campaigns/{campaignId} {
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       allow write: if false;
     }
 
@@ -3146,11 +3136,11 @@ service cloud.firestore {
     // Alertes de fraude centralisées (chatter, affiliate, referral)
     match /fraud_alerts/{alertId} {
       // Lecture: admin uniquement (données sensibles)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement (fraud detection system)
       // Admin peut résoudre (update status/resolution)
       allow create, delete: if false;
-      allow update: if isAdmin() || isDev();
+      allow update: if isAdmin();
     }
 
     // ================= P0 FIX: AGENT ORCHESTRATION (système interne) =================
@@ -3170,7 +3160,7 @@ service cloud.firestore {
     // Logs de restauration des rôles utilisateurs
     match /role_restoration_logs/{logId} {
       // Lecture: admin uniquement (audit trail)
-      allow read: if isAdmin() || isDev();
+      allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement (callable admin)
       allow write: if false;
     }

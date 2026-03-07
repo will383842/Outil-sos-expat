@@ -161,6 +161,9 @@ interface CaptainDetailData {
   // Recruits
   n1Recruits: Recruit[];
   n2Recruits: Recruit[];
+  // Admin-assigned chatters (via captainId)
+  assignedChatters?: (Recruit & { isAssigned?: boolean })[];
+  assignedCount?: number;
   // Monthly history
   monthlyCommissions: MonthlyCommission[];
   // Archives
@@ -170,7 +173,7 @@ interface CaptainDetailData {
   affiliateCodeRecruitment: string;
 }
 
-type TabId = 'n1' | 'n2' | 'commissions' | 'archives';
+type TabId = 'assigned' | 'n1' | 'n2' | 'commissions' | 'archives';
 
 // Helper function to get country flag emoji from ISO code
 function getFlagEmoji(countryCode: string): string {
@@ -189,7 +192,7 @@ const AdminCaptainDetail: React.FC = () => {
   const [captain, setCaptain] = useState<CaptainDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('n1');
+  const [activeTab, setActiveTab] = useState<TabId>('assigned');
   const [actionLoading, setActionLoading] = useState(false);
   const [qualityBonusLoading, setQualityBonusLoading] = useState(false);
   const [revokeConfirm, setRevokeConfirm] = useState(false);
@@ -372,6 +375,12 @@ const AdminCaptainDetail: React.FC = () => {
 
   // Tabs configuration
   const tabs: { id: TabId; label: string; icon: React.ReactNode; count?: number }[] = [
+    {
+      id: 'assigned',
+      label: intl.formatMessage({ id: 'admin.captainDetail.tab.assigned', defaultMessage: 'Assigned Chatters' }),
+      icon: <Crown className="w-4 h-4" />,
+      count: captain?.assignedCount || captain?.assignedChatters?.length || 0,
+    },
     {
       id: 'n1',
       label: intl.formatMessage({ id: 'admin.captainDetail.tab.n1', defaultMessage: 'Recrues N1' }),
@@ -954,6 +963,86 @@ const AdminCaptainDetail: React.FC = () => {
 
           {/* Tab Content */}
           <div className="p-4 sm:p-6">
+            {/* Assigned Chatters Tab */}
+            {activeTab === 'assigned' && (
+              <div>
+                {captain.assignedChatters && captain.assignedChatters.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-white/10">
+                          <th className="pb-3 pr-4">Chatter</th>
+                          <th className="pb-3 pr-4 hidden sm:table-cell">Pays</th>
+                          <th className="pb-3 pr-4">Statut</th>
+                          <th className="pb-3 pr-4 text-right hidden md:table-cell">Appels</th>
+                          <th className="pb-3 text-right">Total gagne</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                        {captain.assignedChatters.map((chatter) => (
+                          <tr
+                            key={chatter.id}
+                            className="hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                            onClick={() => navigate(`/admin/chatters/${chatter.id}`)}
+                          >
+                            <td className="py-3 pr-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs">
+                                  {chatter.firstName?.[0]}{chatter.lastName?.[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                                    {chatter.firstName} {chatter.lastName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {chatter.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 pr-4 hidden sm:table-cell">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {chatter.country || '-'}
+                              </span>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                chatter.status === 'active'
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400'
+                              }`}>
+                                {chatter.status}
+                              </span>
+                            </td>
+                            <td className="py-3 pr-4 text-right hidden md:table-cell">
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                {chatter.totalCalls || 0}
+                              </span>
+                            </td>
+                            <td className="py-3 text-right">
+                              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                ${((chatter.totalEarned || 0) / 100).toFixed(0)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Crown className="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      <FormattedMessage id="admin.captainDetail.assigned.empty" defaultMessage="No chatter assigned to this captain" />
+                    </p>
+                    <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+                      <FormattedMessage id="admin.captainDetail.assigned.hint" defaultMessage="Assign chatters from their detail page" />
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* N1 Recruits Tab */}
             {activeTab === 'n1' && (
               <div>

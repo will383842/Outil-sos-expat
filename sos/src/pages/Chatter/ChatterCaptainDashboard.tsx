@@ -207,7 +207,7 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       {/* Gauge skeleton */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
         <div className="h-6 bg-gray-200 dark:bg-white/10 rounded-full w-full mb-3" />
         <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
@@ -215,7 +215,7 @@ function DashboardSkeleton() {
       {/* Cards skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[1, 2].map((i) => (
-          <div key={i} className={`${UI.card} p-6`}>
+          <div key={i} className={`${UI.card} p-4 sm:p-6`}>
             <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
             <div className="space-y-3">
               {[1, 2, 3].map((j) => (
@@ -226,7 +226,7 @@ function DashboardSkeleton() {
         ))}
       </div>
       {/* Commission skeleton */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/4 mb-4" />
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
@@ -423,7 +423,7 @@ function ChatterCaptainDashboard() {
   // Loading state
   // --------------------------------------------------
   if (loading) {
-    return <DashboardSkeleton />;
+    return <ChatterDashboardLayout activeKey="captain-team"><DashboardSkeleton /></ChatterDashboardLayout>;
   }
 
   // --------------------------------------------------
@@ -431,33 +431,35 @@ function ChatterCaptainDashboard() {
   // --------------------------------------------------
   if (error && !data) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-          <Trophy className="h-8 w-8 text-red-500" />
+      <ChatterDashboardLayout activeKey="captain-team">
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <Trophy className="h-8 w-8 text-red-500" />
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+            {error}
+          </p>
+          <button
+            onClick={() => fetchDashboard()}
+            className={`${UI.button.primary} px-6 py-2.5`}
+          >
+            <FormattedMessage id="chatter.captain.retry" defaultMessage="Réessayer" />
+          </button>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-          {error}
-        </p>
-        <button
-          onClick={() => fetchDashboard()}
-          className={`${UI.button.primary} px-6 py-2.5`}
-        >
-          <FormattedMessage id="chatter.captain.retry" defaultMessage="Réessayer" />
-        </button>
-      </div>
+      </ChatterDashboardLayout>
     );
   }
 
   if (!data) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* ============================================================== */}
       {/* HEADER */}
       {/* ============================================================== */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
             <FormattedMessage id="chatter.captain.title" defaultMessage="Tableau de bord Capitaine" />
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 capitalize">
@@ -615,7 +617,7 @@ function ChatterCaptainDashboard() {
         {/* N1 count */}
         <div className={`${UI.card} p-4 text-center`}>
           <Users className="h-5 w-5 text-red-500 mx-auto mb-1" />
-          <p className="text-2xl font-black text-gray-900 dark:text-white">{data.n1Recruits.length}</p>
+          <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{data.n1Recruits.length}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             <FormattedMessage id="chatter.captain.n1Count" defaultMessage="Recrues N1" />
           </p>
@@ -623,7 +625,7 @@ function ChatterCaptainDashboard() {
         {/* N2 count */}
         <div className={`${UI.card} p-4 text-center`}>
           <Users className="h-5 w-5 text-orange-500 mx-auto mb-1" />
-          <p className="text-2xl font-black text-gray-900 dark:text-white">{data.n2Recruits.length}</p>
+          <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{data.n2Recruits.length}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             <FormattedMessage id="chatter.captain.n2Count" defaultMessage="Recrues N2" />
           </p>
@@ -631,7 +633,7 @@ function ChatterCaptainDashboard() {
         {/* Monthly commissions */}
         <div className={`${UI.card} p-4 text-center`}>
           <DollarSign className="h-5 w-5 text-green-500 mx-auto mb-1" />
-          <p className="text-2xl font-black text-green-600 dark:text-green-400">{formatCents(monthlyCommissionsTotal)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">{formatCents(monthlyCommissionsTotal)}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             <FormattedMessage id="chatter.captain.monthlyEarnings" defaultMessage="Gains ce mois" />
           </p>
@@ -639,7 +641,7 @@ function ChatterCaptainDashboard() {
         {/* Current tier bonus */}
         <div className={`${UI.card} p-4 text-center`}>
           <Trophy className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-          <p className="text-2xl font-black text-yellow-600 dark:text-yellow-400">
+          <p className="text-lg sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
             {currentTier ? formatCents(currentTier.bonus) : '$0'}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -1111,7 +1113,7 @@ function ChatterCaptainDashboard() {
 
 export default function ChatterCaptainDashboardPage() {
   return (
-    <ChatterDashboardLayout>
+    <ChatterDashboardLayout activeKey="captain-team">
       <ChatterCaptainDashboard />
     </ChatterDashboardLayout>
   );

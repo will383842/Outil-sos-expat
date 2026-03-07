@@ -28,10 +28,6 @@ import {
   getReleaseDelayMs,
   getCommissionRule,
   calculateLevelFromEarnings,
-  getLevelBonus,
-  getTop3Bonus,
-  getStreakBonusMultiplier,
-  calculateCommissionWithBonuses,
 } from "../utils/influencerConfigService";
 
 // ============================================================================

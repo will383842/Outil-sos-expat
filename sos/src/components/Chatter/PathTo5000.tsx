@@ -148,7 +148,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
   // Compact version for dashboard
   if (variant === 'compact') {
     return (
-      <div className={`bg-gradient-to-br from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-2xl p-4${className}`}>
+      <div className={`bg-gradient-to-br from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-2xl p-4 ${className}`}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
             <Rocket className="w-5 h-5 text-white" />
@@ -212,7 +212,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
             {MILESTONES.map((milestone, idx) => (
               <div
                 key={idx}
-                className={`flex items-center${
+                className={`flex items-center ${
                   currentEarnings >= milestone.amount ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
                 }`}
               >
@@ -283,7 +283,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
                   <div className="space-y-2 mb-4">
                     {path.steps.map((step, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br${path.color}flex items-center justify-center text-white`}>
+                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${path.color} flex items-center justify-center text-white`}>
                           {step.icon}
                         </div>
                         <span className="flex-1 text-gray-700 dark:text-gray-300">{step.action}</span>

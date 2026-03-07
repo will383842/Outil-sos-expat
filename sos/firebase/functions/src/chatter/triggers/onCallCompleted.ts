@@ -34,7 +34,6 @@ import {
   getActivationBonusAmount,
   getN1RecruitBonusAmount,
   getActivationCallsRequired,
-  getFlashBonusMultiplier,
   getProviderCallCommission,
   getProviderRecruitmentDurationMonths,
   getCaptainCallCommission,
@@ -124,8 +123,6 @@ export async function handleCallCompleted(
 
     const db = getFirestore();
     const config = await getChatterConfigCached();
-    const flashMultiplier = getFlashBonusMultiplier(config);
-
     try {
       // ========================================================================
       // PART A: PROVIDER RECRUITMENT COMMISSION ($5)
@@ -133,7 +130,7 @@ export async function handleCallCompleted(
       // When a recruited provider receives ANY call, their recruiter earns $5
       // ========================================================================
 
-      await processProviderRecruitmentCommission(db, session, config, sessionId, flashMultiplier);
+      await processProviderRecruitmentCommission(db, session, config, sessionId);
 
       // ========================================================================
       // PART B: CLIENT REFERRAL COMMISSIONS ($10, $1, $0.50, etc.)
@@ -192,7 +189,7 @@ export async function handleCallCompleted(
           },
         },
         baseAmount: clientCallAmount,
-        description: `Commission appel client${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+        description: `Commission appel client`,
       });
 
       if (clientCallResult.success) {
@@ -327,7 +324,7 @@ export async function handleCallCompleted(
             },
           },
           baseAmount: activationBonusAmount,
-          description: `Bonus activation filleul ${chatterData.firstName} ${chatterData.lastName.charAt(0)}.${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+          description: `Bonus activation filleul ${chatterData.firstName} ${chatterData.lastName.charAt(0)}.`,
           skipFraudCheck: true,
         });
 
@@ -386,7 +383,7 @@ export async function handleCallCompleted(
                   },
                 },
                 baseAmount: n1RecruitBonusAmount,
-                description: `Bonus recrutement N1${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+                description: `Bonus recrutement N1`,
                 skipFraudCheck: true,
               });
 
@@ -453,7 +450,7 @@ export async function handleCallCompleted(
               },
             },
             baseAmount: captainN1Amount,
-            description: `Commission capitaine \u2014 appel N1 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+            description: `Commission capitaine \u2014 appel N1 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
           });
 
           if (captainN1Result.success) {
@@ -504,7 +501,7 @@ export async function handleCallCompleted(
               },
             },
             baseAmount: n1CallAmount,
-            description: `Commission N1 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+            description: `Commission N1 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)`,
           });
 
           if (n1Result.success) {
@@ -563,7 +560,7 @@ export async function handleCallCompleted(
                 },
               },
               baseAmount: captainN2Amount,
-              description: `Commission capitaine \u2014 appel N2 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+              description: `Commission capitaine \u2014 appel N2 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
             });
 
             if (captainN2Result.success) {
@@ -613,7 +610,7 @@ export async function handleCallCompleted(
                 },
               },
               baseAmount: n2CallAmount,
-              description: `Commission N2 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+              description: `Commission N2 (appel de ${chatter.firstName} ${chatter.lastName.charAt(0)}.)`,
             });
 
             if (n2Result.success) {
@@ -642,6 +639,78 @@ export async function handleCallCompleted(
               );
 
               await updateChatterChallengeScore(chatter.parrainNiveau2Id, "n2_call");
+            }
+          }
+        }
+      }
+
+      // ========================================================================
+      // 7. CAPTAIN CALL via captainId (admin-assigned captain, independent of recruitment chain)
+      //    Only triggers if captainId is different from recruitedBy AND parrainNiveau2Id
+      //    (to avoid double captain_call when captain is also the recruiter)
+      // ========================================================================
+
+      if (chatter.captainId) {
+        const alreadyPaidAsCaptain =
+          (chatter.recruitedBy === chatter.captainId) ||
+          (chatter.parrainNiveau2Id === chatter.captainId);
+
+        if (!alreadyPaidAsCaptain) {
+          // Verify the assigned captain is still a valid captain
+          const assignedCaptainDoc = await db.collection("chatters").doc(chatter.captainId).get();
+          const assignedCaptainData = assignedCaptainDoc.exists ? assignedCaptainDoc.data() as Chatter : null;
+
+          if (assignedCaptainData?.role === 'captainChatter' && assignedCaptainData.status === 'active') {
+            const captainAssignedAmount = getCaptainCallCommission(config, session.providerType, assignedCaptainData.lockedRates);
+
+            const captainAssignedResult = await createCommission({
+              chatterId: chatter.captainId,
+              type: "captain_call",
+              source: {
+                id: sessionId,
+                type: "call_session",
+                details: {
+                  clientId: session.clientId,
+                  clientEmail: clientData.email,
+                  callSessionId: sessionId,
+                  callDuration: session.duration,
+                  providerId: chatterId,
+                  providerEmail: chatter.email,
+                  level: "assigned",
+                  providerType: session.providerType,
+                },
+              },
+              baseAmount: captainAssignedAmount,
+              description: `Commission capitaine \u2014 chatter assign\u00e9 ${session.providerType === 'lawyer' ? 'avocat' : 'expatri\u00e9'}`,
+            });
+
+            if (captainAssignedResult.success) {
+              logger.info("[chatterOnCallCompleted] Assigned captain commission created", {
+                sessionId,
+                captainId: chatter.captainId,
+                chatterId,
+                commissionId: captainAssignedResult.commissionId,
+                amount: captainAssignedResult.amount,
+              });
+
+              // Increment captain monthly counter
+              await db.collection("chatters").doc(chatter.captainId).update({
+                captainMonthlyTeamCalls: FieldValue.increment(1),
+                updatedAt: Timestamp.now(),
+              });
+
+              await createCommissionNotification(
+                db,
+                chatter.captainId,
+                "commission_earned",
+                "captain_commission",
+                "Commission Capitaine !",
+                `${chatter.firstName} ${chatter.lastName.charAt(0)}. (assign\u00e9) a g\u00e9n\u00e9r\u00e9 un appel ! +$${(captainAssignedAmount / 100).toFixed(2)}`,
+                captainAssignedResult.commissionId!,
+                captainAssignedResult.amount!
+              );
+
+              await updateChatterChallengeScore(chatter.captainId, "captain_call");
             }
           }
         }
@@ -684,7 +753,6 @@ async function processProviderRecruitmentCommission(
   session: CallSession,
   config: Awaited<ReturnType<typeof getChatterConfigCached>>,
   sessionId: string,
-  flashMultiplier: number
 ): Promise<void> {
   try {
     // 1. Find active recruitment records for this provider
@@ -698,7 +766,7 @@ async function processProviderRecruitmentCommission(
 
     if (recruitmentQuery.empty) {
       // Fallback: check legacy chatter_recruitment_links for pre-migration data
-      await processProviderRecruitmentCommissionLegacy(db, session, config, sessionId, flashMultiplier);
+      await processProviderRecruitmentCommissionLegacy(db, session, config, sessionId);
       return;
     }
 
@@ -711,6 +779,16 @@ async function processProviderRecruitmentCommission(
     }
 
     // 2. Award commission to each chatter who recruited this provider
+    // SKIP: No commission for expat providers (only lawyers generate provider_call commissions)
+    if (session.providerType === "expat") {
+      logger.info("[processProviderRecruitmentCommission] Skipping — expat providers do not generate provider_call commissions", {
+        sessionId,
+        providerId: session.providerId,
+        providerType: session.providerType,
+      });
+      return;
+    }
+
     for (const recruitmentDoc of recruitmentQuery.docs) {
       const recruitment = recruitmentDoc.data();
       const recruiterChatterId = recruitment.chatterId;
@@ -828,7 +906,6 @@ async function processProviderRecruitmentCommissionLegacy(
   session: CallSession,
   config: Awaited<ReturnType<typeof getChatterConfigCached>>,
   sessionId: string,
-  flashMultiplier: number
 ): Promise<void> {
   // Get provider data
   const providerDoc = await db.collection("users").doc(session.providerId).get();
@@ -898,7 +975,7 @@ async function processProviderRecruitmentCommissionLegacy(
       },
     },
     baseAmount: providerCallAmount,
-    description: `Commission prestataire recruté (${session.providerType === "lawyer" ? "avocat" : "aidant"})${flashMultiplier > 1 ? ` (x${flashMultiplier} Flash Bonus)` : ""}`,
+    description: `Commission prestataire recruté (${session.providerType === "lawyer" ? "avocat" : "aidant"})`,
     skipFraudCheck: true,
   });
 

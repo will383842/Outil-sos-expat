@@ -233,49 +233,29 @@ const ChatterLeaderboard: React.FC = () => {
 
   return (
     <ChatterDashboardLayout activeKey="leaderboard">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl dark:text-white sm:text-3xl font-bold flex items-center gap-3">
-              <Trophy className="w-8 h-8 text-red-500" />
-              <FormattedMessage id="chatter.leaderboard.title" defaultMessage="Classement" />
-            </h1>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">
-              <FormattedMessage
-                id="chatter.leaderboard.subtitle"
-                defaultMessage="Top performers du mois de {month}"
-                values={{ month: formatMonth(selectedMonth) }}
-              />
-            </p>
-          </div>
-
-          {/* Month Navigation & Time Remaining */}
-          <div className="flex items-end gap-2">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePreviousMonth}
-                disabled={availableMonths.indexOf(selectedMonth) === availableMonths.length - 1}
-                className={`${UI.button.secondary} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="px-4 py-2 text-sm dark:text-white font-medium min-w-[140px]">
-                {formatMonth(selectedMonth)}
-              </span>
-              <button
-                onClick={handleNextMonth}
-                disabled={availableMonths.indexOf(selectedMonth) === 0}
-                className={`${UI.button.secondary} p-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+      <div className="space-y-4 sm:space-y-6">
+        {/* Header — compact mobile-first */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl dark:text-white font-bold flex items-center gap-2">
+                <Trophy className="w-5 h-5 sm:w-7 sm:h-7 text-red-500 flex-shrink-0" />
+                <FormattedMessage id="chatter.leaderboard.title" defaultMessage="Classement" />
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                <FormattedMessage
+                  id="chatter.leaderboard.subtitle"
+                  defaultMessage="Top performers du mois de {month}"
+                  values={{ month: formatMonth(selectedMonth) }}
+                />
+              </p>
             </div>
+
             {/* Countdown Timer - only show for current month */}
             {isCurrentMonth && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-orange-100 dark:from-orange-900/30 to-red-100 dark:to-red-900/30 rounded-full">
-                <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                <span className="text-sm dark:text-orange-300 font-medium">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-orange-100 dark:from-orange-900/30 to-red-100 dark:to-red-900/30 rounded-full flex-shrink-0">
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600 dark:text-orange-400" />
+                <span className="text-xs sm:text-sm dark:text-orange-300 font-medium whitespace-nowrap">
                   <FormattedMessage
                     id="chatter.leaderboard.daysRemaining"
                     defaultMessage="Fin du mois dans {days} jours"
@@ -284,6 +264,27 @@ const ChatterLeaderboard: React.FC = () => {
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Month Navigation */}
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={handlePreviousMonth}
+              disabled={availableMonths.indexOf(selectedMonth) === availableMonths.length - 1}
+              className={`${UI.button.secondary} p-1.5 sm:p-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+            >
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <span className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm dark:text-white font-medium min-w-[120px] sm:min-w-[140px] text-center">
+              {formatMonth(selectedMonth)}
+            </span>
+            <button
+              onClick={handleNextMonth}
+              disabled={availableMonths.indexOf(selectedMonth) === 0}
+              className={`${UI.button.secondary} p-1.5 sm:p-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+            >
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
           </div>
         </div>
 

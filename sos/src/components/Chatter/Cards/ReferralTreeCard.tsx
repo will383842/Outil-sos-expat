@@ -189,7 +189,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-full bg-gradient-to-br${getNodeColors(node.level, node.isQualified, node.isActive).bg}flex items-center justify-center text-white font-bold shadow-lg`}>
+        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getNodeColors(node.level, node.isQualified, node.isActive).bg} flex items-center justify-center text-white font-bold shadow-lg`}>
           {getInitials(node.name)}
         </div>
         <div className="flex-1 min-w-0">
@@ -293,7 +293,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
       {/* Node */}
       <button
         onClick={(e) => onClick(e, node)}
-        className={`relative${nodeSize}rounded-full bg-gradient-to-br${colors.bg}flex items-center justify-center${colors.text}font-bold${fontSize}shadow-lg ring-2${colors.ring}ring-offset-2 dark:ring-offset-gray-900 transition-all duration-200 hover:scale-110 hover:shadow-xl cursor-pointer`}
+        className={`relative ${nodeSize} rounded-full bg-gradient-to-br ${colors.bg} flex items-center justify-center ${colors.text} font-bold ${fontSize} shadow-lg ring-2 ${colors.ring} ring-offset-2 dark:ring-offset-gray-900 transition-all duration-200 hover:scale-110 hover:shadow-xl cursor-pointer`}
       >
         {getInitials(node.name)}
 
@@ -305,7 +305,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         )}
 
         {/* Active indicator */}
-        <div className={`absolute -bottom-0.5 w-3.5 h-3.5 rounded-full border-2 dark:border-gray-900${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+        <div className={`absolute -bottom-0.5 w-3.5 h-3.5 rounded-full border-2 dark:border-gray-900 ${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
       </button>
 
       {/* Name label */}
@@ -358,14 +358,14 @@ const MobileCard: React.FC<MobileCardProps> = ({ node, onClick }) => {
     >
       <div className="flex items-center">
         {/* Avatar */}
-        <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br${colors.bg}flex items-center justify-center text-white font-bold shadow-lg mb-2`}>
+        <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${colors.bg} flex items-center justify-center text-white font-bold shadow-lg mb-2`}>
           {getInitials(node.name)}
           {node.isQualified && (
             <div className="absolute -top-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
               <Star className="w-2.5 h-2.5 text-yellow-800 fill-current" />
             </div>
           )}
-          <div className={`absolute -bottom-0.5 w-3 h-3 rounded-full border-2 dark:border-gray-800${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+          <div className={`absolute -bottom-0.5 w-3 h-3 rounded-full border-2 dark:border-gray-800 ${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
         </div>
 
         {/* Name */}

@@ -57,4 +57,25 @@ export {
   adminAssignCaptainCoverage,
   adminTransferChatters,
   adminGetCaptainCoverageMap,
+  adminAssignChatterCaptain,
+  adminBulkAssignChattersCaptain,
+  adminGetAvailableCaptains,
 } from "./admin/captain";
+
+// Resource Callables
+export {
+  getChatterResources,
+  downloadChatterResource,
+  copyChatterResourceText,
+} from "./resources";
+
+// Admin Resource Callables
+export {
+  adminGetChatterResources,
+  adminCreateChatterResource,
+  adminUpdateChatterResource,
+  adminDeleteChatterResource,
+  adminCreateChatterResourceText,
+  adminUpdateChatterResourceText,
+  adminDeleteChatterResourceText,
+} from "./admin/resources";

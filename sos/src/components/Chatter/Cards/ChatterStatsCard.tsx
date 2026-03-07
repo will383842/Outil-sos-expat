@@ -86,14 +86,14 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
   // Loading skeleton with shimmer effect
   if (loading) {
     return (
-      <div className={`${UI.card} p-4 sm:p-5 min-h-[120px]`}>
+      <div className={`${UI.card} p-3 sm:p-5 min-h-[90px] sm:min-h-[120px]`}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className={`${UI.skeleton} h-4 w-20 mb-3`} />
-            <div className={`${UI.skeleton} h-8 w-16 mb-2`} />
-            <div className={`${UI.skeleton} h-3 w-24`} />
+            <div className={`${UI.skeleton} h-3 sm:h-4 w-12 sm:w-20 mb-2 sm:mb-3`} />
+            <div className={`${UI.skeleton} h-6 sm:h-8 w-14 sm:w-16 mb-1 sm:mb-2`} />
+            <div className={`${UI.skeleton} h-3 w-16 sm:w-24 hidden sm:block`} />
           </div>
-          <div className={`${UI.skeleton} h-12 w-12 rounded-xl`} />
+          <div className={`${UI.skeleton} h-9 w-9 sm:h-12 sm:w-12 rounded-xl hidden sm:block`} />
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
 
   return (
     <div
-      className={`${UI.card} ${UI.cardHover} p-4 sm:p-5 min-h-[120px] opacity-0 animate-fade-in-up`}
+      className={`${UI.card} ${UI.cardHover} p-3 sm:p-5 min-h-[90px] sm:min-h-[120px] opacity-0 animate-fade-in-up`}
       style={{
         animationDelay: `${animationDelay}ms`,
         animationFillMode: 'forwards',
@@ -109,11 +109,11 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-xs dark:text-gray-400 sm:text-sm font-medium truncate">
+          <p className="text-[10px] sm:text-xs dark:text-gray-400 md:text-sm font-medium truncate">
             {label}
           </p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <p className={`text-2xl sm:text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+          <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+            <p className={`text-lg sm:text-2xl md:text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
               {animateValue && valueInfo.type === 'number' ? (
                 <AnimatedNumber
                   value={valueInfo.numericValue}
@@ -136,7 +136,7 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
             </p>
             {trend && (
               <span
-                className={`text-xs font-medium transition-all duration-300 ${
+                className={`text-[10px] sm:text-xs font-medium transition-all duration-300 ${
                   trend.isPositive ? 'text-green-500' : 'text-red-500'
                 }`}
               >
@@ -145,16 +145,17 @@ const ChatterStatsCard = memo(function ChatterStatsCard({
             )}
           </div>
           {subValue && (
-            <p className="mt-1 text-xs dark:text-gray-400 sm:text-sm truncate">
+            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs dark:text-gray-400 md:text-sm truncate">
               {subValue}
             </p>
           )}
         </div>
+        {/* Icon hidden on mobile to save space in 3-col grid */}
         <div
           className={`
-            p-2.5 sm:p-3 rounded-xl ${iconBg} flex-shrink-0
+            hidden sm:flex p-2.5 sm:p-3 rounded-xl ${iconBg} flex-shrink-0
             transition-transform duration-300
-            group-hover:scale-110
+            group-hover:scale-110 items-center justify-center
           `}
         >
           {icon}

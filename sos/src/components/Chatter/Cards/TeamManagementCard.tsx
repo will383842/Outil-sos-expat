@@ -377,7 +377,7 @@ const TeamTree: React.FC<TeamTreeProps> = ({ members, onViewMember }) => {
         ref={svgRef}
         width={dimensions.width}
         height={dimensions.height}
-        className="min-w-[300px]"
+        className="min-w-0 w-full"
       >
         <defs>
           {/* Gradient for connections */}
@@ -780,10 +780,10 @@ const MemberCard: React.FC<MemberCardProps> = ({
           </div>
         )}
         {/* Status dot */}
-        <div className={`absolute -bottom-0.5 w-4 h-4 rounded-full${config.dot}ring-2 dark:ring-gray-800`} />
+        <div className={`absolute -bottom-0.5 w-4 h-4 rounded-full ${config.dot} ring-2 dark:ring-gray-800`} />
 
         {/* Level badge */}
-        <div className={`absolute -top-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold${member.level === 1 ? 'bg-blue-500' : 'bg-red-500'}`}>
+        <div className={`absolute -top-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${member.level === 1 ? 'bg-blue-500' : 'bg-red-500'}`}>
           N{member.level}
         </div>
       </div>
@@ -823,7 +823,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         {onMessage && (
           <button
             onClick={onMessage}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
             title={intl.formatMessage({ id: 'team.action.message', defaultMessage: 'Message' })}
           >
             <MessageCircle className="w-4 h-4" />
@@ -840,7 +840,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         {onView && (
           <button
             onClick={onView}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
             title={intl.formatMessage({ id: 'team.action.viewProfile', defaultMessage: 'View profile' })}
           >
             <Eye className="w-4 h-4" />
@@ -909,7 +909,7 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
               className="absolute top-1/2 -translate-y-1/2"
               style={{ left: `${position}%` }}
             >
-              <div className={`w-3 h-3 rounded-full${isAchieved ? 'bg-green-500' : 'bg-white dark:bg-gray-600'}ring-2 dark:ring-gray-800`} />
+              <div className={`w-3 h-3 rounded-full ${isAchieved ? 'bg-green-500' : 'bg-white dark:bg-gray-600'} ring-2 dark:ring-gray-800`} />
             </div>
           );
         })}
@@ -922,7 +922,7 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ current, paidTiers, onCeleb
           const reward = MILESTONE_REWARDS[milestone as keyof typeof MILESTONE_REWARDS];
 
           return (
-            <div key={milestone} className={`flex items-center${isAchieved ? 'text-green-600 dark:text-green-400' : ''}`}>
+            <div key={milestone} className={`flex items-center ${isAchieved ? 'text-green-600 dark:text-green-400' : ''}`}>
               <span className="font-medium">{milestone}</span>
               <span className="text-[10px]">${reward.bonus}</span>
             </div>
@@ -1070,7 +1070,7 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
           return (
             <div
               key={alert.memberId}
-              className={`flex sm:flex-row sm:items-center gap-3 p-3 rounded-xl${config.bgColor}border${config.borderColor}`}
+              className={`flex sm:flex-row sm:items-center gap-3 p-3 rounded-xl ${config.bgColor} border ${config.borderColor}`}
             >
               {/* Alert Icon and Message */}
               <div className="flex items-center gap-2 min-w-0">
@@ -1085,7 +1085,7 @@ const UrgentActionsSection: React.FC<UrgentActionsSectionProps> = ({
                 {/* Message Button */}
                 <button
                   onClick={() => onMessageClick(alert.memberId, alert.messageStatus)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all active:scale-[0.98]${config.buttonColor}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all active:scale-[0.98] ${config.buttonColor}`}
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   {config.buttonLabel}
@@ -1205,9 +1205,9 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     return (
       <button
         onClick={() => onWhatsAppClick?.(memberId, whatsapp)}
-        className={`flex items-center gap-1.5${
+        className={`flex items-center gap-1.5 ${
           compact ? 'p-2' : 'px-3 py-1.5'
-        }text-xs font-medium bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]`}
+        } text-xs font-medium bg-green-500 hover:bg-green-600 rounded-lg transition-all active:scale-[0.98]`}
         title={intl.formatMessage({ id: 'team.action.whatsapp', defaultMessage: 'WhatsApp' })}
       >
         <Phone className="w-4 h-4" />
@@ -1219,9 +1219,9 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   return (
     <button
       onClick={() => onRequestWhatsApp?.(memberId)}
-      className={`flex items-center gap-1.5${
+      className={`flex items-center gap-1.5 ${
         compact ? 'p-2' : 'px-3 py-1.5'
-      }text-xs dark:text-gray-400 font-medium bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg transition-all active:scale-[0.98]`}
+      } text-xs dark:text-gray-400 font-medium bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg transition-all active:scale-[0.98]`}
       title={intl.formatMessage({ id: 'team.action.requestWhatsapp', defaultMessage: 'Demander WhatsApp' })}
     >
       <Phone className="w-4 h-4" />

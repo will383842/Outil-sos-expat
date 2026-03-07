@@ -1,7 +1,7 @@
 /**
  * ChatterDashboardLayout - Layout wrapper for Chatter dashboard pages
  * Provides sidebar navigation, user info, and chatter-specific features
- * Mobile-first: Bottom nav + drawer for mobile, sidebar for desktop
+ * Mobile-first: Bottom nav (5 items) + drawer for more, sidebar for desktop
  */
 
 import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
@@ -16,19 +16,15 @@ import {
   Users,
   Trophy,
   LogOut,
-  Copy,
-  CheckCircle,
   Share2,
-  Flame,
-  Star,
-  Menu,
   X,
-  Video,
   BookOpen,
   DollarSign,
   Crown,
   TrendingUp,
   Lightbulb,
+  FolderOpen,
+  MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -36,21 +32,7 @@ import { db } from '@/config/firebase';
 import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-
-// Design tokens
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  radiusSm: "rounded-lg",
-  radiusFull: "rounded-full",
-  textMuted: "text-gray-500 dark:text-gray-400",
-} as const;
-
-// Chatter-specific gradient theme
-const CHATTER_THEME = {
-  header: "bg-gradient-to-r from-red-500 via-orange-500 to-red-500 text-white",
-  accent: "from-red-500 to-orange-500",
-  accentBg: "bg-gradient-to-r from-red-500 to-orange-500",
-} as const;
+import { UI, CHATTER_THEME } from '@/components/Chatter/designTokens';
 
 interface ChatterDashboardLayoutProps {
   children: ReactNode;
@@ -65,7 +47,6 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   const { language } = useApp();
   const [loggingOut, setLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [isCaptain, setIsCaptain] = useState(false);
 
   // Check if chatter is a captain (load once)
@@ -105,6 +86,14 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     }
   }, [logout, navigate, loggingOut, loginRoute]);
 
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [isMobileMenuOpen]);
+
   // Translated routes for chatter
   const translatedRoutes = useMemo(() => {
     const dashboardSlug = getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode);
@@ -117,6 +106,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     const referSlug = getTranslatedRouteSlug('chatter-refer' as RouteKey, langCode);
     const progressionSlug = getTranslatedRouteSlug('chatter-progression' as RouteKey, langCode);
     const howToEarnSlug = getTranslatedRouteSlug('chatter-how-to-earn' as RouteKey, langCode);
+    const resourcesSlug = getTranslatedRouteSlug('chatter-resources' as RouteKey, langCode);
     const captainTeamSlug = getTranslatedRouteSlug('chatter-captain-team' as RouteKey, langCode);
     const profileSlug = getTranslatedRouteSlug('chatter-profile' as RouteKey, langCode);
 
@@ -131,6 +121,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       referrals: `/${referralsSlug}`,
       referralEarnings: `/${referralEarningsSlug}`,
       refer: `/${referSlug}`,
+      resources: `/${resourcesSlug}`,
       captainTeam: `/${captainTeamSlug}`,
       profile: `/${profileSlug}`,
     };
@@ -143,7 +134,7 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
         <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/20 dark:via-gray-950 to-white dark:to-black flex items-center justify-center">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 border-4 rounded-full animate-spin" />
-            <p className="text-sm dark:text-gray-600">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {intl.formatMessage({ id: 'common.loading', defaultMessage: 'Chargement...' })}
             </p>
           </div>
@@ -175,10 +166,10 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     if (path.includes('/payments') || path.includes('/paiements') || path.includes('/pagos') || path.includes('/zahlungen') || path.includes('/platezhi') || path.includes('/pagamentos') || path.includes('/fukuan') || path.includes('/bhugtaan')) return 'payments';
     if (path.includes('/zoom')) return 'zoom';
     if (path.includes('/training') || path.includes('/formation') || path.includes('/formacion') || path.includes('/schulung') || path.includes('/obuchenie') || path.includes('/formacao') || path.includes('/peixun') || path.includes('/prashikshan')) return 'training';
-    // Referral routes
     if (path.includes('/referral-earnings') || path.includes('/gains-parrainage')) return 'referral-earnings';
     if (path.includes('/referrals') || path.includes('/filleuls')) return 'referrals';
     if (path.includes('/refer') || path.includes('/parrainer')) return 'refer';
+    if (path.includes('/ressources') || path.includes('/resources') || path.includes('/recursos') || path.includes('/ressourcen') || path.includes('/resursy') || path.includes('/ziyuan') || path.includes('/sansaadhan') || path.includes('/موارد')) return 'resources';
     if (path.includes('/mon-equipe') || path.includes('/my-team')) return 'captain-team';
     if (path.includes('/profil') || path.includes('/profile')) return 'profile';
     return 'dashboard';
@@ -225,13 +216,6 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       route: translatedRoutes.payments,
       labels: { fr: "Mes paiements", en: "My payments", es: "Mis pagos", de: "Meine Zahlungen", ru: "Мои платежи", pt: "Meus pagamentos", ch: "我的付款", hi: "मेरे भुगतान", ar: "مدفوعاتي" },
     },
-    // DISABLED: Zoom bonus feature removed - not implemented
-    // {
-    //   key: "zoom",
-    //   icon: <Video className="mr-3 h-5 w-5" />,
-    //   route: translatedRoutes.zoom,
-    //   labels: { fr: "Réunions Zoom", en: "Zoom meetings", es: "Reuniones Zoom", de: "Zoom-Meetings", ru: "Zoom-встречи", pt: "Reuniões Zoom", ch: "Zoom会议", hi: "ज़ूम मीटिंग", ar: "اجتماعات زووم" },
-    // },
     {
       key: "training",
       icon: <BookOpen className="mr-3 h-5 w-5" />,
@@ -256,7 +240,12 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       route: translatedRoutes.refer,
       labels: { fr: "Parrainer", en: "Refer", es: "Referir", de: "Empfehlen", ru: "Пригласить", pt: "Indicar", ch: "推荐", hi: "रेफर करें", ar: "إحالة" },
     },
-    // Captain team menu item (conditional)
+    {
+      key: "resources",
+      icon: <FolderOpen className="mr-3 h-5 w-5" />,
+      route: translatedRoutes.resources,
+      labels: { fr: "Ressources", en: "Resources", es: "Recursos", de: "Ressourcen", ru: "Ресурсы", pt: "Recursos", ch: "资源", hi: "संसाधन", ar: "الموارد" },
+    },
     ...(isCaptain ? [{
       key: "captain-team",
       icon: <Crown className="mr-3 h-5 w-5" />,
@@ -271,16 +260,50 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
     },
   ];
 
-  // Copy affiliate link
-  const copyAffiliateLink = async (code: string) => {
-    const link = `${window.location.origin}?ref=${code}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
+  // ============================================================================
+  // BOTTOM NAV — 5 primary items for mobile (iPhone SE 375px first)
+  // ============================================================================
+  const bottomNavItems = [
+    {
+      key: "dashboard",
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      route: translatedRoutes.dashboard,
+      label: { fr: "Accueil", en: "Home", es: "Inicio", de: "Start", ru: "Главная", pt: "Início", ch: "首页", hi: "होम", ar: "الرئيسية" },
+    },
+    {
+      key: "payments",
+      icon: <Wallet className="w-5 h-5" />,
+      route: translatedRoutes.payments,
+      label: { fr: "Paiements", en: "Payments", es: "Pagos", de: "Zahlungen", ru: "Платежи", pt: "Pagamentos", ch: "付款", hi: "भुगतान", ar: "مدفوعات" },
+    },
+    {
+      key: "refer",
+      icon: <Share2 className="w-5 h-5" />,
+      route: translatedRoutes.refer,
+      label: { fr: "Parrainer", en: "Refer", es: "Referir", de: "Empfehlen", ru: "Пригласить", pt: "Indicar", ch: "推荐", hi: "रेफर", ar: "إحالة" },
+    },
+    {
+      key: "leaderboard",
+      icon: <Trophy className="w-5 h-5" />,
+      route: translatedRoutes.leaderboard,
+      label: { fr: "Classement", en: "Ranking", es: "Ranking", de: "Rangliste", ru: "Рейтинг", pt: "Ranking", ch: "排名", hi: "रैंकिंग", ar: "الترتيب" },
+    },
+    {
+      key: "_more",
+      icon: <MoreHorizontal className="w-5 h-5" />,
+      route: "",
+      label: { fr: "Plus", en: "More", es: "Más", de: "Mehr", ru: "Ещё", pt: "Mais", ch: "更多", hi: "अधिक", ar: "المزيد" },
+    },
+  ];
+
+  // Check if current page matches a bottom nav item (for highlighting)
+  const isBottomNavActive = (key: string) => {
+    if (key === "_more") {
+      // "More" is active if current page is NOT one of the 4 primary bottom nav keys
+      const primaryKeys = ["dashboard", "payments", "refer", "leaderboard"];
+      return !primaryKeys.includes(currentKey);
     }
+    return currentKey === key;
   };
 
   return (
@@ -288,37 +311,26 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
       <div className="min-h-screen bg-gradient-to-b from-gray-50 dark:from-gray-950 via-red-50/20 dark:via-gray-950 to-white dark:to-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
           <div className="grid lg:grid-cols-4 gap-6 lg:gap-8">
-            {/* MOBILE HEADER — hamburger + user name */}
-            <div className="lg:hidden col-span-full flex items-center justify-between">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-xl bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 shadow"
-                aria-label="Menu"
-              >
-                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate max-w-[200px]">
-                {getUserFirstName()}
-              </span>
-            </div>
 
-            {/* MOBILE DRAWER — slides in from left */}
+            {/* MOBILE DRAWER — "More" menu slides in from left */}
             {isMobileMenuOpen && (
               <>
                 {/* Backdrop */}
                 <div
-                  className="lg:hidden fixed inset-0 bg-black/40 z-40"
+                  className="lg:hidden fixed inset-0 bg-black/40 z-40 animate-fade-in"
                   onClick={() => setIsMobileMenuOpen(false)}
+                  role="presentation"
+                  aria-hidden="true"
                 />
                 {/* Drawer */}
-                <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto">
+                <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto animate-slide-in-left">
                   {/* Drawer header */}
-                  <div className={`p-5 ${CHATTER_THEME.header}`}>
+                  <div className={`p-3 sm:p-5 ${CHATTER_THEME.header}`}>
                     <div className="flex items-center justify-between mb-3">
                       <span className={`px-2.5 py-1 ${UI.radiusFull} text-xs font-semibold bg-white/20`}>
                         Chatter
                       </span>
-                      <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 rounded-lg bg-white/20">
+                      <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-white/20" aria-label={intl.formatMessage({ id: 'common.closeMenu', defaultMessage: 'Close menu' })}>
                         <X className="h-4 w-4 text-white" />
                       </button>
                     </div>
@@ -477,13 +489,53 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
             </div>
 
             {/* MAIN CONTENT */}
-            <div id="chatter-dashboard-content" className="lg:col-span-3">
+            <div id="chatter-dashboard-content" className="lg:col-span-3 pb-20 lg:pb-0">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
             </div>
           </div>
         </div>
+
+        {/* ============================================================ */}
+        {/* BOTTOM NAV — Mobile only, fixed at bottom, 5 items           */}
+        {/* iOS safe-area-inset-bottom handled via pb-safe               */}
+        {/* ============================================================ */}
+        <nav
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/10"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+            {bottomNavItems.map((item) => {
+              const active = isBottomNavActive(item.key);
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => {
+                    if (item.key === "_more") {
+                      setIsMobileMenuOpen(true);
+                    } else if (currentKey !== item.key) {
+                      navigate(item.route);
+                    }
+                  }}
+                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[48px] transition-colors touch-manipulation ${
+                    active
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <div className={`p-2 rounded-lg transition-colors ${active ? "bg-red-100 dark:bg-red-900/30" : ""}`}>
+                    {item.icon}
+                  </div>
+                  <span className={`text-[10px] font-medium leading-tight ${active ? "font-semibold" : ""}`}>
+                    {item.label[language as keyof typeof item.label] ?? item.label.en}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </Layout>
   );

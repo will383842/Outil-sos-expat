@@ -368,7 +368,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                 >
                   {/* Rank Badge */}
                   <div
-                    className={`w-8 h-8 rounded-full${config.bgColor}flex items-center justify-center`}
+                    className={`w-8 h-8 rounded-full ${config.bgColor} flex items-center justify-center`}
                   >
                     <PrizeIcon className={`w-4 h-4 ${config.color}`} />
                   </div>

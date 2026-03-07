@@ -42,6 +42,13 @@ interface RevenueCalculatorCardProps {
   paidTierBonuses: number[];
   onRecruit?: () => void;
   loading?: boolean;
+  /** Personalized commission rates from backend (cents). Overrides defaults. */
+  commissionRates?: {
+    clientCallAmount?: number;
+    n1CallAmount?: number;
+    n2CallAmount?: number;
+    activationBonusAmount?: number;
+  };
 }
 
 // ============================================================================
@@ -290,7 +297,7 @@ const GoalInput: React.FC<GoalInputProps> = ({ value, onChange }) => {
           /month
         </span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {presets.map((preset) => (
           <button
             key={preset}
@@ -394,7 +401,7 @@ const TierBonusIndicator: React.FC<TierBonusIndicatorProps> = ({
   paidTiers,
 }) => {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex flex-wrap items-center gap-1">
       {TIER_THRESHOLDS.map((tier) => {
         const isPaid = paidTiers.includes(tier);
         const willUnlock = !isPaid && simulatedCount >= tier;
@@ -438,8 +445,17 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   paidTierBonuses,
   onRecruit,
   loading = false,
+  commissionRates,
 }) => {
   const intl = useIntl();
+
+  // Effective rates: use personalized rates from backend, fallback to defaults
+  const rates: { CLIENT_CALL: number; N1_CALL: number; N2_CALL: number; ACTIVATION_BONUS: number } = useMemo(() => ({
+    CLIENT_CALL: commissionRates?.clientCallAmount ?? GAINS.CLIENT_CALL,
+    N1_CALL: commissionRates?.n1CallAmount ?? GAINS.N1_CALL,
+    N2_CALL: commissionRates?.n2CallAmount ?? GAINS.N2_CALL,
+    ACTIVATION_BONUS: commissionRates?.activationBonusAmount ?? GAINS.ACTIVATION_BONUS,
+  }), [commissionRates]);
 
   // State for sections
   const [expandedSections, setExpandedSections] = useState({
@@ -464,9 +480,9 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
 
   // Calculate current earnings
   const currentEarnings = useMemo(() => {
-    const ownCalls = currentCalls * GAINS.CLIENT_CALL;
-    const n1Earnings = n1TeamCalls * GAINS.N1_CALL;
-    const n2Earnings = n2TeamCalls * GAINS.N2_CALL;
+    const ownCalls = currentCalls * rates.CLIENT_CALL;
+    const n1Earnings = n1TeamCalls * rates.N1_CALL;
+    const n2Earnings = n2TeamCalls * rates.N2_CALL;
     const total = ownCalls + n1Earnings + n2Earnings;
 
     return {
@@ -480,7 +496,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   // Calculate simulation results
   const simulationResults = useMemo(() => {
     const newTeamSize = n1TeamSize + recruitSimulation;
-    const activationBonus = recruitSimulation * GAINS.ACTIVATION_BONUS;
+    const activationBonus = recruitSimulation * rates.ACTIVATION_BONUS;
 
     // Calculate tier bonuses that would be unlocked
     let tierBonusTotal = 0;
@@ -495,7 +511,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
 
     // Estimate new passive income (assuming each recruit does 5 calls/month average)
     const estimatedNewCalls = recruitSimulation * 5;
-    const newPassiveIncome = estimatedNewCalls * GAINS.N1_CALL;
+    const newPassiveIncome = estimatedNewCalls * rates.N1_CALL;
 
     // New total estimate
     const newMonthlyEstimate = currentEarnings.total + newPassiveIncome;
@@ -517,18 +533,18 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
     const goalCents = goalAmount * 100;
 
     // Option A: Solo (only own calls)
-    const soloCallsNeeded = Math.ceil(goalCents / GAINS.CLIENT_CALL);
+    const soloCallsNeeded = Math.ceil(goalCents / rates.CLIENT_CALL);
 
     // Option B: Small team (you + 5 active people)
     const smallTeamSize = 5;
-    const smallTeamPassive = smallTeamSize * 5 * GAINS.N1_CALL; // 5 calls each
-    const smallTeamOwnCalls = Math.ceil(Math.max(0, goalCents - smallTeamPassive) / GAINS.CLIENT_CALL);
+    const smallTeamPassive = smallTeamSize * 5 * rates.N1_CALL; // 5 calls each
+    const smallTeamOwnCalls = Math.ceil(Math.max(0, goalCents - smallTeamPassive) / rates.CLIENT_CALL);
 
     // Option C: Bigger team (mostly passive)
     const targetPassivePercent = 0.8;
     const targetPassive = goalCents * targetPassivePercent;
-    const teamNeeded = Math.ceil(targetPassive / (5 * GAINS.N1_CALL));
-    const bigTeamOwnCalls = Math.ceil((goalCents - targetPassive) / GAINS.CLIENT_CALL);
+    const teamNeeded = Math.ceil(targetPassive / (5 * rates.N1_CALL));
+    const bigTeamOwnCalls = Math.ceil((goalCents - targetPassive) / rates.CLIENT_CALL);
 
     return {
       solo: {
@@ -657,7 +673,12 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                   <div className="text-xs dark:text-blue-300">
                     <FormattedMessage
                       id="calculator.rates.info"
-                      defaultMessage="Rates: Your calls = $3-5 | N1 calls = $1 | N2 calls = $0.50"
+                      defaultMessage="Rates: Your calls = {clientRate} | N1 calls = {n1Rate} | N2 calls = {n2Rate}"
+                      values={{
+                        clientRate: `$${(rates.CLIENT_CALL / 100).toFixed(rates.CLIENT_CALL % 100 === 0 ? 0 : 2)}`,
+                        n1Rate: `$${(rates.N1_CALL / 100).toFixed(rates.N1_CALL % 100 === 0 ? 0 : 2)}`,
+                        n2Rate: `$${(rates.N2_CALL / 100).toFixed(rates.N2_CALL % 100 === 0 ? 0 : 2)}`,
+                      }}
                     />
                   </div>
                 </div>
@@ -750,7 +771,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     />
                   </span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600">
+                    <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
                       {formatCents(simulationResults.newMonthlyEstimate)}/month
                     </p>
                     {simulationResults.oneTimeBonus > 0 && (

@@ -392,10 +392,10 @@ const MotivationWidget = memo(function MotivationWidget({
               <div className="flex items-center justify-between mt-3">
                 <button
                   onClick={handlePrevTip}
-                  className="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
                   aria-label={intl.formatMessage({ id: 'chatter.motivation.previousTip', defaultMessage: 'Previous tip' })}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
 
                 <div className="flex items-center gap-1.5">
@@ -421,10 +421,10 @@ const MotivationWidget = memo(function MotivationWidget({
 
                 <button
                   onClick={handleNextTip}
-                  className="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400"
                   aria-label={intl.formatMessage({ id: 'chatter.motivation.nextTip', defaultMessage: 'Next tip' })}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -511,11 +511,11 @@ const MotivationWidget = memo(function MotivationWidget({
               <button
                 onClick={handleCopyLink}
                 disabled={!clientShareUrl && !recruitmentShareUrl}
-                className={`flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-all active:scale-[0.98] touch-manipulation${
+                className={`flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-all active:scale-[0.98] touch-manipulation ${
                   copied
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200'
-                }disabled:opacity-50 disabled:cursor-not-allowed`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {copied ? (
                   <CheckCircle className="w-5 h-5" />

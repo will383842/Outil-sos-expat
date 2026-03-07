@@ -2947,6 +2947,7 @@ export {
   adminGetPendingChatterWithdrawals,
   adminGetChatterConfig,
   adminUpdateChatterConfig,
+  adminUpdateChatterLockedRates,
   adminGetChatterConfigHistory,
   adminGetChatterLeaderboard,
   adminExportChatters,
@@ -3018,6 +3019,18 @@ export {
   chatter_sendDripMessage,
   chatter_getDripStats,
   chatter_previewDripMessage,
+  // Resource callables
+  getChatterResources,
+  downloadChatterResource,
+  copyChatterResourceText,
+  // Admin Resource callables
+  adminGetChatterResources,
+  adminCreateChatterResource,
+  adminUpdateChatterResource,
+  adminDeleteChatterResource,
+  adminCreateChatterResourceText,
+  adminUpdateChatterResourceText,
+  adminDeleteChatterResourceText,
 } from './chatter';
 
 // ========== INFLUENCER SYSTEM ==========
@@ -3473,6 +3486,9 @@ export {
   adminAssignCaptainCoverage,
   adminTransferChatters,
   adminGetCaptainCoverageMap,
+  adminAssignChatterCaptain,
+  adminBulkAssignChattersCaptain,
+  adminGetAvailableCaptains,
 } from './chatter';
 
 // getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)

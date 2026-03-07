@@ -81,12 +81,34 @@ export {
   adminGetPendingWithdrawals as adminGetPendingChatterWithdrawals,
   adminGetChatterConfig,
   adminUpdateChatterConfig,
+  adminUpdateChatterLockedRates,
   adminGetChatterConfigHistory,
   adminGetChatterLeaderboard,
   adminExportChatters,
   adminBulkChatterAction,
   adminManageChatter,
 } from "./callables/admin";
+
+// ============================================================================
+// RESOURCE CALLABLES
+// ============================================================================
+
+export {
+  getChatterResources,
+  downloadChatterResource,
+  copyChatterResourceText,
+} from "./callables/resources";
+
+// Admin Resource Callables
+export {
+  adminGetChatterResources,
+  adminCreateChatterResource,
+  adminUpdateChatterResource,
+  adminDeleteChatterResource,
+  adminCreateChatterResourceText,
+  adminUpdateChatterResourceText,
+  adminDeleteChatterResourceText,
+} from "./callables/admin/resources";
 
 // Public directory
 export { getChatterDirectory } from "./callables/public";
@@ -135,6 +157,9 @@ export {
   adminAssignCaptainCoverage,
   adminTransferChatters,
   adminGetCaptainCoverageMap,
+  adminAssignChatterCaptain,
+  adminBulkAssignChattersCaptain,
+  adminGetAvailableCaptains,
 } from "./callables/admin/captain";
 
 // Admin Commissions Tracker
@@ -410,6 +435,10 @@ export type {
   ChatterReferralFraudAlertType,
   ChatterReferralFraudAlertStatus,
   GetReferralDashboardResponse,
+  // Resource Types
+  ChatterResourceCategory,
+  ChatterResource,
+  ChatterResourceText,
   REFERRAL_CONFIG,
   // Weekly Challenges Types
   WeeklyChallengeType,

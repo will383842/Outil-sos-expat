@@ -151,7 +151,7 @@ function ProgressionSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       {/* Level skeleton */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-7 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
         <div className="flex gap-2 mb-4">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -163,7 +163,7 @@ function ProgressionSkeleton() {
       </div>
 
       {/* Recruitment skeleton */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-7 bg-gray-200 dark:bg-white/10 rounded w-2/5 mb-4" />
         <div className="h-4 bg-gray-200 dark:bg-white/10 rounded-full w-full mb-3" />
         <div className="flex justify-between">
@@ -174,7 +174,7 @@ function ProgressionSkeleton() {
       </div>
 
       {/* Stats grid skeleton */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-7 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -222,7 +222,7 @@ function LevelProgressionSection({
   }, [forecast?.estimatedNextLevel]);
 
   return (
-    <div className={`${UI.card} p-6`}>
+    <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-5">
         <TrendingUp className="h-5 w-5 text-red-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -317,7 +317,7 @@ function RecruitmentTierSection({
   const progressPercent = Math.min(100, (qualifiedCount / maxMilestone) * 100);
 
   return (
-    <div className={`${UI.card} p-6`}>
+    <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-1">
         <Users className="h-5 w-5 text-red-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -463,7 +463,7 @@ function OverallStatsSection({
   ];
 
   return (
-    <div className={`${UI.card} p-6`}>
+    <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-4">
         <Target className="h-5 w-5 text-red-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -538,7 +538,7 @@ function CaptainTierSection({
   const allTiers = useMemo(() => tiers || [], [tiers]);
 
   return (
-    <div className={`${UI.card} p-6`}>
+    <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-1">
         <Crown className="h-5 w-5 text-red-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -729,13 +729,13 @@ function ChatterProgression() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
+    <div className="space-y-4 sm:space-y-6">
+      {/* Page header — compact mobile-first */}
       <div>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white">
+        <h1 className="text-lg sm:text-2xl font-black text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.title" defaultMessage="Ma Progression" />
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
           <FormattedMessage id="chatter.progression.subtitle" defaultMessage="Suivez votre évolution et vos objectifs" />
         </p>
       </div>

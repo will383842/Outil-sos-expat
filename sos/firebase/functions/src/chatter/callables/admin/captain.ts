@@ -27,7 +27,7 @@
  *   Platine: 200 → $200 | Diamant: 400 → $400
  */
 
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -90,16 +90,25 @@ function getCaptainTierKey(tierName: string | null | undefined): string {
 // ADMIN AUTH HELPER
 // ============================================================================
 
-async function verifyAdmin(uid: string): Promise<void> {
+async function verifyAdmin(request: CallableRequest): Promise<string> {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required");
+  }
+  const uid = request.auth.uid;
+
+  // Check custom claims first (faster, no Firestore read)
+  const role = request.auth.token?.role as string | undefined;
+  if (role === "admin" || role === "superadmin") {
+    return uid;
+  }
+
+  // Fall back to Firestore check
   const db = getDb();
   const userDoc = await db.collection("users").doc(uid).get();
-  if (!userDoc.exists) {
-    throw new HttpsError("permission-denied", "User not found");
-  }
-  const userData = userDoc.data()!;
-  if (userData.role !== "admin" && userData.role !== "superadmin") {
+  if (!userDoc.exists || !["admin", "superadmin"].includes(userDoc.data()?.role)) {
     throw new HttpsError("permission-denied", "Admin access required");
   }
+  return uid;
 }
 
 // ============================================================================
@@ -109,10 +118,7 @@ async function verifyAdmin(uid: string): Promise<void> {
 export const adminPromoteToCaptain = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const data = request.data as { chatterId?: string; captainId?: string };
     const chatterId = data.chatterId || data.captainId;
@@ -148,7 +154,29 @@ export const adminPromoteToCaptain = onCall(
       chatterId,
       type: "captain_promoted",
       title: "Promotion Capitaine !",
+      titleTranslations: {
+        fr: "Promotion Capitaine !",
+        en: "Captain Promotion!",
+        es: "\u00a1Promoci\u00f3n a Capit\u00e1n!",
+        de: "Kapit\u00e4n-Bef\u00f6rderung!",
+        pt: "Promo\u00e7\u00e3o a Capit\u00e3o!",
+        ru: "\u041f\u043e\u0432\u044b\u0448\u0435\u043d\u0438\u0435 \u0434\u043e \u041a\u0430\u043f\u0438\u0442\u0430\u043d\u0430!",
+        hi: "\u0915\u0948\u092a\u094d\u091f\u0928 \u092a\u094d\u0930\u092e\u094b\u0936\u0928!",
+        zh: "\u961f\u957f\u664b\u5347\uff01",
+        ar: "\u062a\u0631\u0642\u064a\u0629 \u0625\u0644\u0649 \u0642\u0628\u0637\u0627\u0646!",
+      },
       message: "F\u00e9licitations ! Vous avez \u00e9t\u00e9 promu Capitaine Chatter. Vous recevrez des commissions sur les appels de votre \u00e9quipe.",
+      messageTranslations: {
+        fr: "F\u00e9licitations ! Vous avez \u00e9t\u00e9 promu Capitaine Chatter. Vous recevrez des commissions sur les appels de votre \u00e9quipe.",
+        en: "Congratulations! You have been promoted to Captain Chatter. You will earn commissions on your team's calls.",
+        es: "\u00a1Felicidades! Has sido promovido a Capit\u00e1n Chatter. Recibir\u00e1s comisiones por las llamadas de tu equipo.",
+        de: "Herzlichen Gl\u00fcckwunsch! Sie wurden zum Kapit\u00e4n Chatter bef\u00f6rdert. Sie erhalten Provisionen f\u00fcr die Anrufe Ihres Teams.",
+        pt: "Parab\u00e9ns! Voc\u00ea foi promovido a Capit\u00e3o Chatter. Receber\u00e1 comiss\u00f5es pelas chamadas da sua equipa.",
+        ru: "\u041f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u0435\u043c! \u0412\u044b \u043f\u043e\u0432\u044b\u0448\u0435\u043d\u044b \u0434\u043e \u041a\u0430\u043f\u0438\u0442\u0430\u043d\u0430. \u0412\u044b \u0431\u0443\u0434\u0435\u0442\u0435 \u043f\u043e\u043b\u0443\u0447\u0430\u0442\u044c \u043a\u043e\u043c\u0438\u0441\u0441\u0438\u044e \u0437\u0430 \u0437\u0432\u043e\u043d\u043a\u0438 \u0432\u0430\u0448\u0435\u0439 \u043a\u043e\u043c\u0430\u043d\u0434\u044b.",
+        hi: "\u092c\u0927\u093e\u0908! \u0906\u092a\u0915\u094b \u0915\u0948\u092a\u094d\u091f\u0928 \u091a\u0948\u091f\u0930 \u092e\u0947\u0902 \u092a\u094d\u0930\u092e\u094b\u091f \u0915\u093f\u092f\u093e \u0917\u092f\u093e \u0939\u0948\u0964 \u0906\u092a\u0915\u094b \u0905\u092a\u0928\u0940 \u091f\u0940\u092e \u0915\u0940 \u0915\u0949\u0932 \u092a\u0930 \u0915\u092e\u0940\u0936\u0928 \u092e\u093f\u0932\u0947\u0917\u093e\u0964",
+        zh: "\u606d\u559c\uff01\u60a8\u5df2\u88ab\u664b\u5347\u4e3a\u961f\u957f\u3002\u60a8\u5c06\u83b7\u5f97\u56e2\u961f\u901a\u8bdd\u7684\u4f63\u91d1\u3002",
+        ar: "\u062a\u0647\u0627\u0646\u064a\u0646\u0627! \u062a\u0645\u062a \u062a\u0631\u0642\u064a\u062a\u0643 \u0625\u0644\u0649 \u0642\u0628\u0637\u0627\u0646. \u0633\u062a\u062d\u0635\u0644 \u0639\u0644\u0649 \u0639\u0645\u0648\u0644\u0627\u062a \u0639\u0644\u0649 \u0645\u0643\u0627\u0644\u0645\u0627\u062a \u0641\u0631\u064a\u0642\u0643.",
+      },
       isRead: false,
       createdAt: Timestamp.now(),
     });
@@ -179,10 +207,7 @@ export const adminPromoteToCaptain = onCall(
 export const adminRevokeCaptain = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const data = request.data as { chatterId?: string; captainId?: string };
     const chatterId = data.chatterId || data.captainId;
@@ -240,12 +265,62 @@ export const adminRevokeCaptain = onCall(
       updatedAt: now,
     });
 
+    // Clean up stale captainId references on chatters assigned to this captain
+    const assignedChattersQuery = await db
+      .collection("chatters")
+      .where("captainId", "==", chatterId)
+      .get();
+
+    if (!assignedChattersQuery.empty) {
+      // Firestore batch limit is 500 ops — chunk if needed
+      const docs = assignedChattersQuery.docs;
+      for (let i = 0; i < docs.length; i += 500) {
+        const batch = db.batch();
+        const chunk = docs.slice(i, i + 500);
+        for (const assignedDoc of chunk) {
+          batch.update(assignedDoc.ref, {
+            captainId: FieldValue.delete(),
+            captainAssignedAt: FieldValue.delete(),
+            captainAssignedBy: FieldValue.delete(),
+            updatedAt: now,
+          });
+        }
+        await batch.commit();
+      }
+      logger.info("[adminRevokeCaptain] Cleaned up captainId references", {
+        captainId: chatterId,
+        chattersUnassigned: assignedChattersQuery.size,
+      });
+    }
+
     // Create notification
     await db.collection("chatter_notifications").add({
       chatterId,
       type: "captain_revoked",
       title: "Statut capitaine r\u00e9voqu\u00e9",
+      titleTranslations: {
+        fr: "Statut capitaine r\u00e9voqu\u00e9",
+        en: "Captain status revoked",
+        es: "Estado de capit\u00e1n revocado",
+        de: "Kapit\u00e4n-Status widerrufen",
+        pt: "Estatuto de capit\u00e3o revogado",
+        ru: "\u0421\u0442\u0430\u0442\u0443\u0441 \u043a\u0430\u043f\u0438\u0442\u0430\u043d\u0430 \u043e\u0442\u043e\u0437\u0432\u0430\u043d",
+        hi: "\u0915\u0948\u092a\u094d\u091f\u0928 \u0938\u094d\u0925\u093f\u0924\u093f \u0930\u0926\u094d\u0926",
+        zh: "\u961f\u957f\u8d44\u683c\u5df2\u64a4\u9500",
+        ar: "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0631\u062a\u0628\u0629 \u0627\u0644\u0642\u0628\u0637\u0627\u0646",
+      },
       message: "Votre statut de Capitaine Chatter a \u00e9t\u00e9 r\u00e9voqu\u00e9 par l'administration.",
+      messageTranslations: {
+        fr: "Votre statut de Capitaine Chatter a \u00e9t\u00e9 r\u00e9voqu\u00e9 par l'administration.",
+        en: "Your Captain Chatter status has been revoked by the administration.",
+        es: "Tu estado de Capit\u00e1n Chatter ha sido revocado por la administraci\u00f3n.",
+        de: "Ihr Kapit\u00e4n-Chatter-Status wurde von der Verwaltung widerrufen.",
+        pt: "O seu estatuto de Capit\u00e3o Chatter foi revogado pela administra\u00e7\u00e3o.",
+        ru: "\u0412\u0430\u0448 \u0441\u0442\u0430\u0442\u0443\u0441 \u041a\u0430\u043f\u0438\u0442\u0430\u043d\u0430 \u0431\u044b\u043b \u043e\u0442\u043e\u0437\u0432\u0430\u043d \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0435\u0439.",
+        hi: "\u0906\u092a\u0915\u0940 \u0915\u0948\u092a\u094d\u091f\u0928 \u0938\u094d\u0925\u093f\u0924\u093f \u092a\u094d\u0930\u0936\u093e\u0938\u0928 \u0926\u094d\u0935\u093e\u0930\u093e \u0930\u0926\u094d\u0926 \u0915\u0930 \u0926\u0940 \u0917\u0908 \u0939\u0948\u0964",
+        zh: "\u60a8\u7684\u961f\u957f\u8d44\u683c\u5df2\u88ab\u7ba1\u7406\u5458\u64a4\u9500\u3002",
+        ar: "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0631\u062a\u0628\u0629 \u0627\u0644\u0642\u0628\u0637\u0627\u0646 \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0643 \u0645\u0646 \u0642\u0628\u0644 \u0627\u0644\u0625\u062f\u0627\u0631\u0629.",
+      },
       isRead: false,
       createdAt: Timestamp.now(),
     });
@@ -276,10 +351,7 @@ export const adminRevokeCaptain = onCall(
 export const adminToggleCaptainQualityBonus = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const data = request.data as { chatterId?: string; captainId?: string; enabled: boolean };
     const chatterId = data.chatterId || data.captainId;
@@ -332,10 +404,7 @@ export const adminToggleCaptainQualityBonus = onCall(
 export const adminGetCaptainsList = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const {
       page = 1,
@@ -484,10 +553,7 @@ export const adminGetCaptainsList = onCall(
 export const adminGetCaptainDetail = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const { captainId } = request.data as { captainId: string };
     if (!captainId) {
@@ -505,6 +571,28 @@ export const adminGetCaptainDetail = onCall(
     if (captain.role !== "captainChatter") {
       throw new HttpsError("failed-precondition", "Chatter is not a captain");
     }
+
+    // Get chatters ASSIGNED to this captain via captainId (admin-assigned)
+    const assignedQuery = await db
+      .collection("chatters")
+      .where("captainId", "==", captainId)
+      .get();
+
+    const assignedChatters = assignedQuery.docs.map((doc) => {
+      const d = doc.data() as Chatter;
+      return {
+        id: doc.id,
+        firstName: d.firstName,
+        lastName: d.lastName,
+        email: d.email,
+        country: d.country,
+        status: d.status || "pending",
+        totalCalls: (d as any).totalCallCount || 0,
+        totalEarned: d.totalEarned || 0,
+        recruitedAt: timestampToString(d.captainAssignedAt || d.createdAt),
+        isAssigned: true,
+      };
+    });
 
     // Get ALL N1 recruits (any status) for count + active count
     const n1AllQuery = await db
@@ -674,6 +762,9 @@ export const adminGetCaptainDetail = onCall(
       // Recruits
       n1Recruits,
       n2Recruits,
+      // Admin-assigned chatters (via captainId)
+      assignedChatters,
+      assignedCount: assignedChatters.length,
       // Monthly history (aggregated)
       monthlyCommissions,
       // Coverage
@@ -695,10 +786,7 @@ export const adminGetCaptainDetail = onCall(
 export const adminExportCaptainCSV = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const db = getDb();
 
@@ -762,10 +850,7 @@ export const adminExportCaptainCSV = onCall(
 export const adminAssignCaptainCoverage = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const { captainId, countries, languages } = request.data as {
       captainId?: string;
@@ -830,10 +915,7 @@ export const adminAssignCaptainCoverage = onCall(
 export const adminTransferChatters = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const { chatterIds, fromCaptainId, toCaptainId } = request.data as {
       chatterIds: string[];
@@ -923,10 +1005,7 @@ export const adminTransferChatters = onCall(
 export const adminGetCaptainCoverageMap = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Authentication required");
-    }
-    await verifyAdmin(request.auth.uid);
+    await verifyAdmin(request);
 
     const db = getDb();
 
@@ -1027,5 +1106,239 @@ export const adminGetCaptainCoverageMap = onCall(
       coveredCountries: Object.keys(countryMap).length,
       coveredLanguages: Object.keys(languageMap).length,
     };
+  }
+);
+
+// ============================================================================
+// 10. ASSIGN CHATTER TO CAPTAIN (or unassign)
+// ============================================================================
+
+/**
+ * Assign a chatter to a captain (or remove assignment).
+ * This is independent of the recruitment chain (recruitedBy).
+ * A chatter's captainId determines which captain earns captain_call commissions.
+ *
+ * Input: { chatterId: string; captainId: string | null }
+ *   - captainId = string → assign to this captain
+ *   - captainId = null → unassign (remove captain)
+ */
+export const adminAssignChatterCaptain = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request) => {
+    await verifyAdmin(request);
+
+    const { chatterId, captainId } = request.data as {
+      chatterId: string;
+      captainId: string | null;
+    };
+
+    if (!chatterId) {
+      throw new HttpsError("invalid-argument", "chatterId is required");
+    }
+
+    const db = getDb();
+    const chatterRef = db.collection("chatters").doc(chatterId);
+    const chatterDoc = await chatterRef.get();
+
+    if (!chatterDoc.exists) {
+      throw new HttpsError("not-found", "Chatter not found");
+    }
+
+    const chatter = chatterDoc.data() as Chatter;
+
+    // Cannot assign a captain to themselves
+    if (captainId && captainId === chatterId) {
+      throw new HttpsError("invalid-argument", "Cannot assign a captain to themselves");
+    }
+
+    // If assigning, verify the target is actually a captain
+    let captainName = "";
+    if (captainId) {
+      const captainDoc = await db.collection("chatters").doc(captainId).get();
+      if (!captainDoc.exists) {
+        throw new HttpsError("not-found", "Captain not found");
+      }
+      const captainData = captainDoc.data() as Chatter;
+      if (captainData.role !== "captainChatter") {
+        throw new HttpsError("failed-precondition", "Target chatter is not a captain");
+      }
+      captainName = `${captainData.firstName} ${captainData.lastName}`;
+    }
+
+    const now = Timestamp.now();
+    const previousCaptainId = chatter.captainId || null;
+
+    if (captainId) {
+      // Assign captain
+      await chatterRef.update({
+        captainId,
+        captainAssignedAt: now,
+        captainAssignedBy: request.auth.uid,
+        updatedAt: now,
+      });
+    } else {
+      // Unassign captain
+      await chatterRef.update({
+        captainId: FieldValue.delete(),
+        captainAssignedAt: FieldValue.delete(),
+        captainAssignedBy: FieldValue.delete(),
+        updatedAt: now,
+      });
+    }
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: captainId ? "chatter_captain_assigned" : "chatter_captain_unassigned",
+      targetId: chatterId,
+      targetType: "chatter",
+      performedBy: request.auth.uid,
+      timestamp: now,
+      details: {
+        previousCaptainId,
+        newCaptainId: captainId,
+        captainName: captainName || null,
+      },
+    });
+
+    logger.info("[adminAssignChatterCaptain] Captain assignment updated", {
+      chatterId,
+      previousCaptainId,
+      newCaptainId: captainId,
+      updatedBy: request.auth.uid,
+    });
+
+    return {
+      success: true,
+      captainId: captainId || null,
+      captainName: captainName || null,
+      message: captainId
+        ? `Chatter assigned to captain ${captainName}`
+        : "Captain assignment removed",
+    };
+  }
+);
+
+// ============================================================================
+// 11. BULK ASSIGN CHATTERS TO CAPTAIN
+// ============================================================================
+
+/**
+ * Assign multiple chatters to a captain at once.
+ * Useful from the captain detail page to add team members.
+ */
+export const adminBulkAssignChattersCaptain = onCall(
+  { ...adminConfig, timeoutSeconds: 60 },
+  async (request) => {
+    await verifyAdmin(request);
+
+    const { chatterIds, captainId } = request.data as {
+      chatterIds: string[];
+      captainId: string;
+    };
+
+    if (!chatterIds?.length) {
+      throw new HttpsError("invalid-argument", "chatterIds array is required");
+    }
+    if (!captainId) {
+      throw new HttpsError("invalid-argument", "captainId is required");
+    }
+
+    const db = getDb();
+
+    // Verify captain exists and is a captain
+    const captainDoc = await db.collection("chatters").doc(captainId).get();
+    if (!captainDoc.exists) {
+      throw new HttpsError("not-found", "Captain not found");
+    }
+    const captainData = captainDoc.data() as Chatter;
+    if (captainData.role !== "captainChatter") {
+      throw new HttpsError("failed-precondition", "Target is not a captain");
+    }
+
+    const now = Timestamp.now();
+    let assigned = 0;
+    const errors: string[] = [];
+
+    for (const chatterId of chatterIds) {
+      try {
+        if (chatterId === captainId) {
+          errors.push(`${chatterId}: cannot assign captain to themselves`);
+          continue;
+        }
+        const chatterDoc = await db.collection("chatters").doc(chatterId).get();
+        if (!chatterDoc.exists) {
+          errors.push(`${chatterId}: not found`);
+          continue;
+        }
+
+        await db.collection("chatters").doc(chatterId).update({
+          captainId,
+          captainAssignedAt: now,
+          captainAssignedBy: request.auth.uid,
+          updatedAt: now,
+        });
+        assigned++;
+      } catch (err) {
+        errors.push(`${chatterId}: ${(err as Error).message}`);
+      }
+    }
+
+    // Audit trail
+    await db.collection("admin_audit_logs").add({
+      action: "chatters_bulk_captain_assigned",
+      targetId: captainId,
+      targetType: "chatter",
+      performedBy: request.auth.uid,
+      timestamp: now,
+      details: { chatterIds, assigned, errors },
+    });
+
+    logger.info("[adminBulkAssignChattersCaptain] Bulk assignment complete", {
+      captainId,
+      requested: chatterIds.length,
+      assigned,
+      errors: errors.length,
+    });
+
+    return { success: assigned > 0, assigned, errors };
+  }
+);
+
+// ============================================================================
+// 12. GET AVAILABLE CAPTAINS (lightweight list for dropdowns)
+// ============================================================================
+
+/**
+ * Returns a lightweight list of active captains for use in dropdowns/selectors.
+ */
+export const adminGetAvailableCaptains = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request) => {
+    await verifyAdmin(request);
+
+    const db = getDb();
+    const captainsQuery = await db
+      .collection("chatters")
+      .where("role", "==", "captainChatter")
+      .where("status", "==", "active")
+      .get();
+
+    const captains = captainsQuery.docs.map((doc) => {
+      const c = doc.data() as Chatter;
+      return {
+        id: doc.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        country: c.country || "",
+      };
+    });
+
+    // Sort by name
+    captains.sort((a, b) =>
+      `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+    );
+
+    return { captains };
   }
 );

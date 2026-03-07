@@ -1,16 +1,12 @@
 /**
  * MilestoneProgressCard
  *
- * Displays tier bonus progression:
- * - Current tier achieved
- * - Progress to next tier
- * - Bonus amounts
+ * Displays tier bonus progression with glassmorphism design.
+ * Mobile-first: compact tiers grid, responsive layout.
  */
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { Target, Trophy, Star, Check } from "lucide-react";
 import { ChatterTierProgress, REFERRAL_CONFIG } from "@/types/chatter";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -41,20 +37,16 @@ export function MilestoneProgressCard({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
-            {t("chatter.referrals.tierProgress")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Trophy className="h-5 w-5 text-yellow-500" />
+          <span className="font-semibold dark:text-white">{t("chatter.referrals.tierProgress")}</span>
+        </div>
+        <div className="space-y-3">
+          <div className="h-8 bg-gray-100 dark:bg-white/5 rounded-xl animate-pulse" />
+          <div className="h-20 bg-gray-100 dark:bg-white/5 rounded-xl animate-pulse" />
+        </div>
+      </div>
     );
   }
 
@@ -68,102 +60,105 @@ export function MilestoneProgressCard({
     : 100;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
-          {t("chatter.referrals.tierProgress")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Current progress */}
-        {nextTierInfo ? (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>
-                {qualifiedCount} / {nextTierInfo.tier}{" "}
+    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-5">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <Trophy className="h-5 w-5 text-yellow-500" />
+        <span className="font-semibold dark:text-white">{t("chatter.referrals.tierProgress")}</span>
+      </div>
+
+      {/* Current progress */}
+      {nextTierInfo ? (
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between items-baseline text-sm">
+            <span className="dark:text-gray-300">
+              <span className="font-bold text-base dark:text-white">{qualifiedCount}</span>
+              <span className="text-gray-400"> / {nextTierInfo.tier}</span>{" "}
+              <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
                 {t("chatter.referrals.qualifiedFilleuls")}
               </span>
-              <span className="font-bold text-green-600">
-                ${(nextTierInfo.bonus / 100).toFixed(0)}
-              </span>
-            </div>
-            <Progress value={progressPercent} className="h-3" />
-            <p className="text-sm">
-              {t("chatter.referrals.filleulsNeeded", {
-                count: nextTierInfo.tier - qualifiedCount,
-              })}
-            </p>
+            </span>
+            <span className="font-bold text-green-600 dark:text-green-400">
+              ${(nextTierInfo.bonus / 100).toFixed(0)}
+            </span>
           </div>
-        ) : (
-          <div className="text-center py-4">
-            <Trophy className="h-12 w-12 text-yellow-500 mx-auto mb-2" />
-            <p className="font-bold text-lg">
-              {t("chatter.referrals.allTiersAchieved")}
-            </p>
-          </div>
-        )}
+          <Progress value={progressPercent} className="h-2.5 sm:h-3" />
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("chatter.referrals.filleulsNeeded", {
+              count: nextTierInfo.tier - qualifiedCount,
+            })}
+          </p>
+        </div>
+      ) : (
+        <div className="text-center py-3 sm:py-4 mb-4">
+          <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-500 mx-auto mb-2" />
+          <p className="font-bold text-base sm:text-lg dark:text-white">
+            {t("chatter.referrals.allTiersAchieved")}
+          </p>
+        </div>
+      )}
 
-        {/* Tier milestones */}
-        <div className="grid sm:grid-cols-6 gap-2 mt-4">
-          {TIER_INFO.map((tier) => {
-            const isAchieved = paidTiers.includes(tier.tier);
-            const isCurrent =
-              !isAchieved && nextTierInfo?.tier === tier.tier;
+      {/* Tier milestones — 3 cols mobile, 6 cols desktop */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {TIER_INFO.map((tier) => {
+          const isAchieved = paidTiers.includes(tier.tier);
+          const isCurrent = !isAchieved && nextTierInfo?.tier === tier.tier;
 
-            return (
-              <div
-                key={tier.tier}
-                className={`relative flex items-center p-2 rounded-lg border-2 transition-all${
+          return (
+            <div
+              key={tier.tier}
+              className={`relative flex flex-col items-center p-2 rounded-xl border-2 transition-all ${
+                isAchieved
+                  ? "border-green-500 bg-green-50 dark:bg-green-900/20 dark:border-green-400"
+                  : isCurrent
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
+                  : "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 opacity-50"
+              }`}
+            >
+              {isAchieved && (
+                <div className="absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
+                </div>
+              )}
+
+              <Star
+                className={`h-4 w-4 sm:h-5 sm:w-5 mb-0.5 ${
                   isAchieved
-                    ? "border-green-500 bg-green-50"
+                    ? "text-green-600 dark:text-green-400"
                     : isCurrent
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 bg-gray-50 opacity-50"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-400 dark:text-gray-500"
+                }`}
+              />
+              <span className="text-xs font-bold dark:text-white">{tier.tier}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-full">
+                {t(tier.labelKey)}
+              </span>
+              <span
+                className={`text-[9px] sm:text-[10px] font-medium mt-0.5 px-1.5 py-0.5 rounded-full ${
+                  isAchieved
+                    ? "bg-green-200 dark:bg-green-800/50 text-green-800 dark:text-green-200"
+                    : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400"
                 }`}
               >
-                {isAchieved && (
-                  <div className="absolute -top-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <Check className="h-3 w-3 text-white" />
-                  </div>
-                )}
+                ${(tier.bonus / 100).toFixed(0)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
-                <Star
-                  className={`h-5 w-5 mb-1 ${
-                    isAchieved
-                      ? "text-green-600"
-                      : isCurrent
-                      ? "text-blue-600"
-                      : "text-gray-600 dark:text-gray-400"
-                  }`}
-                />
-                <span className="text-xs font-bold">{tier.tier}</span>
-                <span className="text-[10px]">{t(tier.labelKey)}</span>
-                <Badge
-                  variant="secondary"
-                  className={`text-[10px] mt-1 ${
-                    isAchieved ? "bg-green-200" : ""
-                  }`}
-                >
-                  ${(tier.bonus / 100).toFixed(0)}
-                </Badge>
-              </div>
-            );
-          })}
+      {/* Legend */}
+      <div className="flex justify-center gap-4 text-[10px] sm:text-xs mt-3 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1">
+          <div className="w-2.5 h-2.5 rounded bg-green-500" />
+          <span>{t("chatter.referrals.achieved")}</span>
         </div>
-
-        {/* Legend */}
-        <div className="flex justify-center gap-4 text-xs mt-2">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500"></div>
-            <span>{t("chatter.referrals.achieved")}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-500"></div>
-            <span>{t("chatter.referrals.current")}</span>
-          </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2.5 h-2.5 rounded bg-blue-500" />
+          <span>{t("chatter.referrals.current")}</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

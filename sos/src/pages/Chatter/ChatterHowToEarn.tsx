@@ -113,7 +113,7 @@ function formatCents(cents: number): string {
 function HowToEarnSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/2 mb-4" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -121,7 +121,7 @@ function HowToEarnSkeleton() {
           ))}
         </div>
       </div>
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
@@ -252,7 +252,7 @@ function YourNextGoal({
   let progressPercent: number | null = null;
 
   const config = dashboardData?.config;
-  const goalClientCallAmount = config?.commissionClientCallAmount || 1000;
+  const goalClientCallAmount = config?.commissionClientCallAmount || 300;
   const goalLawyerAmount = config?.commissionClientCallAmountLawyer || goalClientCallAmount;
   const goalExpatAmount = config?.commissionClientCallAmountExpat || goalClientCallAmount;
 
@@ -363,7 +363,7 @@ function ProviderRecruitmentSection({
   if (!recruitmentShareUrl) return null;
 
   return (
-    <div className={`${UI.card} p-6 border-l-4 border-green-500`}>
+    <div className={`${UI.card} p-4 sm:p-6 border-l-4 border-green-500`}>
       <div className="flex items-center gap-2 mb-1 flex-wrap">
         <Briefcase className="h-5 w-5 text-green-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -375,7 +375,7 @@ function ProviderRecruitmentSection({
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
-        <FormattedMessage id="chatter.howToEarn.provider.desc" defaultMessage="Recrutez des avocats ou experts expatriés sur la plateforme. Pour chaque appel payant qu'ils reçoivent, vous touchez {amount} pendant 6 mois." values={{ amount: formatCents(providerCallAmount) }} />
+        <FormattedMessage id="chatter.howToEarn.provider.desc" defaultMessage="Recrutez des avocats sur la plateforme. Pour chaque appel payant qu'ils reçoivent, vous touchez {amount} pendant 6 mois." values={{ amount: formatCents(providerCallAmount) }} />
       </p>
 
       {/* Concrete example */}
@@ -384,7 +384,7 @@ function ProviderRecruitmentSection({
           <FormattedMessage id="chatter.howToEarn.provider.example.title" defaultMessage="Exemple concret" />
         </p>
         <p className="text-sm font-semibold text-green-700 dark:text-green-400">
-          <FormattedMessage id="chatter.howToEarn.provider.example.text" defaultMessage="1 avocat × 3 appels/jour = {daily}/jour pour VOUS. Sur 6 mois = {total} !" values={{ daily: formatCents(providerCallAmount * 3), total: formatCents(providerCallAmount * 3 * 180) }} />
+          <FormattedMessage id="chatter.howToEarn.provider.example.text" defaultMessage="1 avocat recruté × 3 appels/jour = {daily}/jour pour VOUS. Sur 6 mois = {total} !" values={{ daily: formatCents(providerCallAmount * 3), total: formatCents(providerCallAmount * 3 * 180) }} />
         </p>
       </div>
 
@@ -414,8 +414,10 @@ function ProviderRecruitmentSection({
 
 function MonthlyCompetitionSection({
   currentMonthRank,
+  competitionPrizes,
 }: {
   currentMonthRank: number | null;
+  competitionPrizes?: { first: number; second: number; third: number };
 }) {
   const intl = useIntl();
 
@@ -423,14 +425,15 @@ function MonthlyCompetitionSection({
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysLeft = daysInMonth - now.getDate();
 
+  const p = competitionPrizes ?? { first: 20000, second: 10000, third: 5000 };
   const prizes = [
-    { position: 1, amount: '$200', color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700' },
-    { position: 2, amount: '$100', color: 'text-gray-400 dark:text-gray-300', bg: 'bg-gray-50 dark:bg-gray-800/30 border-gray-300 dark:border-gray-600' },
-    { position: 3, amount: '$50', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700' },
+    { position: 1, amount: `$${(p.first / 100).toFixed(0)}`, color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700' },
+    { position: 2, amount: `$${(p.second / 100).toFixed(0)}`, color: 'text-gray-400 dark:text-gray-300', bg: 'bg-gray-50 dark:bg-gray-800/30 border-gray-300 dark:border-gray-600' },
+    { position: 3, amount: `$${(p.third / 100).toFixed(0)}`, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700' },
   ];
 
   return (
-    <div className={`${UI.card} p-6`}>
+    <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
@@ -444,7 +447,7 @@ function MonthlyCompetitionSection({
       </div>
 
       {/* Prize grid */}
-      <div className="grid grid-cols-3 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         {prizes.map(({ position, amount, color, bg }) => (
           <div key={position} className={`p-4 rounded-xl border-2 text-center ${bg}`}>
             <Trophy className={`h-6 w-6 mx-auto ${color}`} />
@@ -483,7 +486,7 @@ function CaptainTierProgress({
   const { tierProgression, tiers, captainInfo } = captainData;
 
   return (
-    <div className={`${UI.card} p-6`}>
+    <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-1">
         <Crown className="h-5 w-5 text-orange-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -585,12 +588,14 @@ function ChatterHowToEarn() {
 
   // Config-based amounts (use lockedRates/config from backend, fallback to defaults)
   const config = dashboardData?.config;
-  const clientCallAmount = config?.commissionClientCallAmount || 1000;
+  const clientCallAmount = config?.commissionClientCallAmount || 300;
   const clientCallAmountLawyer = config?.commissionClientCallAmountLawyer || clientCallAmount;
   const clientCallAmountExpat = config?.commissionClientCallAmountExpat || clientCallAmount;
   const n1CallAmount = config?.commissionN1CallAmount || 100;
   const n2CallAmount = config?.commissionN2CallAmount || 50;
-  const providerCallAmount = config?.commissionRecruitmentAmount || 500;
+  const providerCallAmount = config?.commissionProviderCallAmount || config?.commissionRecruitmentAmount || 500;
+  const activationBonusAmount = config?.commissionActivationBonusAmount || 500;
+  const recruitBonusAmount = config?.commissionN1RecruitBonusAmount || 100;
 
   const handleCopy = useCallback(async () => {
     if (!clientShareUrl) return;
@@ -606,10 +611,10 @@ function ChatterHowToEarn() {
   const qualified = dashboardData?.referralStats?.qualifiedFilleulsN1 ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white">
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.howToEarn.title" defaultMessage="Comment gagner" />
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -627,7 +632,7 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       {/* SECTION 2: STEPS - 3 + 1 optional */}
       {/* ============================================================ */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex items-center gap-2 mb-5">
           <Zap className="h-5 w-5 text-orange-500" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -692,7 +697,7 @@ function ChatterHowToEarn() {
               number={4}
               icon={<Briefcase className="h-4 w-4" />}
               title={intl.formatMessage({ id: 'chatter.howToEarn.step4.title', defaultMessage: 'Recrutez un prestataire' })}
-              description={intl.formatMessage({ id: 'chatter.howToEarn.step4.desc', defaultMessage: 'Recrutez un avocat ou expert. Vous gagnez {amount} par appel qu\'il reçoit pendant 6 mois !' }, { amount: formatCents(providerCallAmount) })}
+              description={intl.formatMessage({ id: 'chatter.howToEarn.step4.desc', defaultMessage: 'Recrutez un avocat sur la plateforme. Vous gagnez {amount} par appel qu\'il reçoit pendant 6 mois !' }, { amount: formatCents(providerCallAmount) })}
               highlight={intl.formatMessage({ id: 'chatter.howToEarn.step4.highlight', defaultMessage: '{amount} par appel pendant 6 mois' }, { amount: formatCents(providerCallAmount) })}
               color="text-emerald-500"
             />
@@ -703,7 +708,7 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       {/* SECTION 3: ALL COMMISSIONS - grouped rows */}
       {/* ============================================================ */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex items-center gap-2 mb-5">
           <DollarSign className="h-5 w-5 text-green-500" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -779,14 +784,14 @@ function ChatterHowToEarn() {
               <CommissionRow
                 icon={<Target className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.activation', defaultMessage: 'Bonus activation' })}
-                amount="$5"
+                amount={formatCents(activationBonusAmount)}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.activationDesc', defaultMessage: 'filleul actif (2 appels)' })}
                 color="text-orange-600 dark:text-orange-400"
               />
               <CommissionRow
                 icon={<Share2 className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitBonus', defaultMessage: 'Bonus recrutement' })}
-                amount="$1"
+                amount={formatCents(recruitBonusAmount)}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitDesc', defaultMessage: 'filleul recrute qqun' })}
                 color="text-teal-600 dark:text-teal-400"
               />
@@ -816,7 +821,12 @@ function ChatterHowToEarn() {
               <CommissionRow
                 icon={<Trophy className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.top3', defaultMessage: 'Top 3 mensuel' })}
-                amount="$50→$200"
+                amount={(() => {
+                  const p = config?.monthlyCompetitionPrizes;
+                  return p
+                    ? `$${(p.third / 100).toFixed(0)}→$${(p.first / 100).toFixed(0)}`
+                    : '$50→$200';
+                })()}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.top3Desc', defaultMessage: 'prix chaque mois' })}
                 color="text-yellow-600 dark:text-yellow-400"
               />
@@ -840,12 +850,15 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       {/* SECTION 5: MONTHLY COMPETITION */}
       {/* ============================================================ */}
-      <MonthlyCompetitionSection currentMonthRank={dashboardData?.chatter?.currentMonthRank ?? null} />
+      <MonthlyCompetitionSection
+        currentMonthRank={dashboardData?.chatter?.currentMonthRank ?? null}
+        competitionPrizes={config?.monthlyCompetitionPrizes}
+      />
 
       {/* ============================================================ */}
       {/* SECTION 6: RECRUITMENT MILESTONES */}
       {/* ============================================================ */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex items-center gap-2 mb-4">
           <Users className="h-5 w-5 text-red-500" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -866,14 +879,10 @@ function ChatterHowToEarn() {
         </p>
 
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {[
-            { count: 5, bonus: '$15' },
-            { count: 10, bonus: '$35' },
-            { count: 20, bonus: '$75' },
-            { count: 50, bonus: '$250' },
-            { count: 100, bonus: '$600' },
-            { count: 500, bonus: '$4,000' },
-          ].map((tier) => {
+          {(config?.recruitmentMilestones ?? [
+            { count: 5, bonus: 1500 }, { count: 10, bonus: 3500 }, { count: 20, bonus: 7500 },
+            { count: 50, bonus: 25000 }, { count: 100, bonus: 60000 }, { count: 500, bonus: 400000 },
+          ]).map((tier) => {
             const isReached = qualified >= tier.count;
             return (
               <div
@@ -885,7 +894,7 @@ function ChatterHowToEarn() {
                 }`}
               >
                 {isReached && <CheckCircle className="h-4 w-4 mx-auto mb-1 text-green-500" />}
-                <div className="font-black text-lg">{tier.bonus}</div>
+                <div className="font-black text-lg">${(tier.bonus / 100).toLocaleString()}</div>
                 <div className="text-[10px] font-medium">
                   <FormattedMessage id="chatter.howToEarn.tiers.recruitCount" defaultMessage="{count} recrues" values={{ count: tier.count }} />
                 </div>
@@ -899,7 +908,7 @@ function ChatterHowToEarn() {
       {/* SECTION 7: CAPTAIN SECTION (conditional) */}
       {/* ============================================================ */}
       {isCaptain && (
-        <div className={`${UI.card} p-6 border-l-4 border-orange-500`}>
+        <div className={`${UI.card} p-4 sm:p-6 border-l-4 border-orange-500`}>
           <div className="flex items-center gap-2 mb-4">
             <Crown className="h-5 w-5 text-orange-500" />
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -914,7 +923,7 @@ function ChatterHowToEarn() {
             />
           </p>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             <CommissionCard
               icon={<Phone className="h-5 w-5" />}
               label={intl.formatMessage({ id: 'chatter.howToEarn.captain.perCallLawyer', defaultMessage: 'Par appel avocat' })}
@@ -1023,7 +1032,7 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       {/* SECTION 10: TIPS */}
       {/* ============================================================ */}
-      <div className={`${UI.card} p-6`}>
+      <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex items-center gap-2 mb-4">
           <Lightbulb className="h-5 w-5 text-yellow-500" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -1047,11 +1056,11 @@ function ChatterHowToEarn() {
             },
             {
               icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-              text: intl.formatMessage({ id: 'chatter.howToEarn.tip4', defaultMessage: 'Soyez actif régulièrement — les séries (streaks) montrent votre engagement' }),
+              text: intl.formatMessage({ id: 'chatter.howToEarn.tip4', defaultMessage: 'Soyez actif régulièrement — la régularité est la clé du succès' }),
             },
             {
               icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-              text: intl.formatMessage({ id: 'chatter.howToEarn.tip5', defaultMessage: 'Recrutez des avocats ou des experts expatriés — c\'est votre source de revenus passifs la plus puissante ({amount}/appel pendant 6 mois)' }, { amount: formatCents(providerCallAmount) }),
+              text: intl.formatMessage({ id: 'chatter.howToEarn.tip5', defaultMessage: 'Recrutez des avocats — c\'est votre source de revenus passifs la plus puissante ({amount}/appel pendant 6 mois)' }, { amount: formatCents(providerCallAmount) }),
             },
           ].map((tip, i) => (
             <div key={i} className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">

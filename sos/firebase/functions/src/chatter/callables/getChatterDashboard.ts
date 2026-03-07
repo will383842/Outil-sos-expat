@@ -23,6 +23,7 @@ import {
   ChatterZoomMeeting,
   GetChatterDashboardResponse,
   REFERRAL_CONFIG,
+  DEFAULT_CHATTER_CONFIG,
 } from "../types";
 import { getChatterConfigCached } from "../utils";
 import { getNextTierBonus, getClientEarnings } from "../services/chatterReferralService";
@@ -471,17 +472,23 @@ export const getChatterDashboard = onCall(
         unreadNotifications,
         config: {
           // Use lockedRates (lifetime rate lock) when available, fallback to global config
-          commissionClientAmount: chatter.lockedRates?.commissionClientCallAmount ?? config.commissionClientAmount,
-          commissionRecruitmentAmount: chatter.lockedRates?.commissionProviderCallAmount ?? config.commissionRecruitmentAmount,
-          commissionClientCallAmount: chatter.lockedRates?.commissionClientCallAmount ?? config.commissionClientCallAmount,
+          // Priority: lockedRates → new config field → deprecated config field
+          commissionClientAmount: chatter.lockedRates?.commissionClientCallAmount ?? config.commissionClientCallAmount ?? config.commissionClientAmount,
+          commissionRecruitmentAmount: chatter.lockedRates?.commissionProviderCallAmount ?? config.commissionProviderCallAmount ?? config.commissionRecruitmentAmount,
+          commissionClientCallAmount: chatter.lockedRates?.commissionClientCallAmount ?? config.commissionClientCallAmount ?? config.commissionClientAmount,
           commissionClientCallAmountLawyer: chatter.lockedRates?.commissionClientCallAmountLawyer ?? config.commissionClientCallAmountLawyer,
           commissionClientCallAmountExpat: chatter.lockedRates?.commissionClientCallAmountExpat ?? config.commissionClientCallAmountExpat,
           commissionN1CallAmount: chatter.lockedRates?.commissionN1CallAmount ?? config.commissionN1CallAmount,
           commissionN2CallAmount: chatter.lockedRates?.commissionN2CallAmount ?? config.commissionN2CallAmount,
+          commissionActivationBonusAmount: chatter.lockedRates?.commissionActivationBonusAmount ?? config.commissionActivationBonusAmount,
+          commissionN1RecruitBonusAmount: chatter.lockedRates?.commissionN1RecruitBonusAmount ?? config.commissionN1RecruitBonusAmount,
+          commissionProviderCallAmount: chatter.lockedRates?.commissionProviderCallAmount ?? config.commissionProviderCallAmount ?? config.commissionRecruitmentAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           levelThresholds: config.levelThresholds,
           levelBonuses: config.levelBonuses,
           withdrawalFeeCents: await getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
+          recruitmentMilestones: config.recruitmentMilestones ?? DEFAULT_CHATTER_CONFIG.recruitmentMilestones,
+          monthlyCompetitionPrizes: config.monthlyCompetitionPrizes ?? DEFAULT_CHATTER_CONFIG.monthlyCompetitionPrizes,
         },
         // Commission Plan info (for display on dashboard)
         commissionPlan: chatter.commissionPlanId ? {

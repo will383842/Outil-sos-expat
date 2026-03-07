@@ -398,6 +398,14 @@ export interface Chatter {
   // Lifecycle: Promotion = admin-only | Demotion = admin-only (no auto-demotion)
   // Monthly reset: calls→0, tier→null (but captain status stays)
   // See admin/captain.ts for full lifecycle docs
+
+  /** ID of the captain supervising this chatter (admin-assigned, independent of recruitment chain) */
+  captainId?: string;
+  /** When this chatter was assigned to a captain by admin */
+  captainAssignedAt?: Timestamp;
+  /** Admin UID who assigned this chatter to a captain */
+  captainAssignedBy?: string;
+
   /** Role: undefined = regular chatter, 'captainChatter' = captain (permanent until admin revoke) */
   role?: 'captainChatter';
   /** When promoted to captain */
@@ -1093,6 +1101,16 @@ export interface ChatterConfig {
   /** Countries where chatters can operate */
   supportedCountries: string[];
 
+  // ---- Recruitment Milestones ----
+
+  /** Bonus paid to chatter when they reach X active recruits (cents) */
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
+
+  // ---- Monthly Competition Prizes ----
+
+  /** Fixed dollar prizes for monthly Top 3 competition (cents) */
+  monthlyCompetitionPrizes?: { first: number; second: number; third: number };
+
   // ---- Directory ----
 
   /** Whether the public chatter directory page is visible */
@@ -1227,6 +1245,21 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   ],
 
   isChatterListingPageVisible: true,
+
+  recruitmentMilestones: [
+    { count: 5,   bonus: 1500 },   // $15
+    { count: 10,  bonus: 3500 },   // $35
+    { count: 20,  bonus: 7500 },   // $75
+    { count: 50,  bonus: 25000 },  // $250
+    { count: 100, bonus: 60000 },  // $600
+    { count: 500, bonus: 400000 }, // $4,000
+  ],
+
+  monthlyCompetitionPrizes: {
+    first:  20000, // $200
+    second: 10000, // $100
+    third:   5000, // $50
+  },
 
   version: 1,
 };
@@ -2468,9 +2501,14 @@ export interface GetChatterDashboardResponse {
     | "commissionClientCallAmountExpat"
     | "commissionN1CallAmount"
     | "commissionN2CallAmount"
+    | "commissionActivationBonusAmount"
+    | "commissionN1RecruitBonusAmount"
+    | "commissionProviderCallAmount"
     | "minimumWithdrawalAmount"
     | "levelThresholds"
     | "levelBonuses"
+    | "recruitmentMilestones"
+    | "monthlyCompetitionPrizes"
   > & {
     /** Withdrawal fee in cents (from admin_config/fees) */
     withdrawalFeeCents: number;
@@ -3099,4 +3137,49 @@ export interface GetCurrentChallengeResponse {
  */
 export interface GetChallengeHistoryResponse {
   challenges: WeeklyChallenge[];
+}
+
+// ============================================================================
+// RESOURCES
+// ============================================================================
+
+export type ChatterResourceCategory = "sos_expat" | "ulixai" | "founder";
+
+export type ChatterResourceType = "logo" | "image" | "text" | "data" | "photo" | "bio" | "quote";
+
+export interface ChatterResource {
+  id: string;
+  category: ChatterResourceCategory;
+  type: ChatterResourceType;
+  name: string;
+  nameTranslations?: { [key in SupportedChatterLanguage]?: string };
+  description?: string;
+  descriptionTranslations?: { [key in SupportedChatterLanguage]?: string };
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileSize?: number;
+  fileFormat?: string;
+  dimensions?: { width: number; height: number };
+  isActive: boolean;
+  order: number;
+  downloadCount: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  createdBy: string;
+}
+
+export interface ChatterResourceText {
+  id: string;
+  category: ChatterResourceCategory;
+  type: ChatterResourceType;
+  title: string;
+  titleTranslations?: { [key in SupportedChatterLanguage]?: string };
+  content: string;
+  contentTranslations?: { [key in SupportedChatterLanguage]?: string };
+  isActive: boolean;
+  order: number;
+  copyCount: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  createdBy: string;
 }
