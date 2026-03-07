@@ -59,9 +59,9 @@ export function EarningsRatioCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Affiliation earnings */}
+        {/* Affiliation earnings — direct client calls via your link */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium">
@@ -72,12 +72,15 @@ export function EarningsRatioCard({
               ${(affiliationEarnings / 100).toFixed(2)} ({affiliationPercent}%)
             </span>
           </div>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-2 ml-6">
+            {t("chatter.referrals.affiliationEarningsDesc")}
+          </p>
           <Progress value={affiliationPercent} className="h-2 bg-gray-100" />
         </div>
 
-        {/* Referral earnings */}
+        {/* Referral earnings — passive income from N1/N2 team calls */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium">
@@ -88,6 +91,9 @@ export function EarningsRatioCard({
               ${(referralEarnings / 100).toFixed(2)} ({referralPercent}%)
             </span>
           </div>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-2 ml-6">
+            {t("chatter.referrals.referralEarningsDesc")}
+          </p>
           <Progress
             value={referralPercent}
             className="h-2 bg-gray-100 [&>div]:bg-red-600"

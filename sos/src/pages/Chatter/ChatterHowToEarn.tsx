@@ -251,12 +251,20 @@ function YourNextGoal({
   let goalColor = 'text-orange-500';
   let progressPercent: number | null = null;
 
+  const config = dashboardData?.config;
+  const goalClientCallAmount = config?.commissionClientCallAmount || 1000;
+  const goalLawyerAmount = config?.commissionClientCallAmountLawyer || goalClientCallAmount;
+  const goalExpatAmount = config?.commissionClientCallAmountExpat || goalClientCallAmount;
+
   if (chatter?.totalClients === 0) {
+    const minAmount = formatCents(Math.min(goalLawyerAmount, goalExpatAmount));
+    const maxAmount = formatCents(Math.max(goalLawyerAmount, goalExpatAmount));
+    const amountRange = minAmount === maxAmount ? minAmount : `${minAmount}-${maxAmount}`;
     goalMessage = intl.formatMessage(
       { id: 'chatter.howToEarn.nextGoal.firstCall', defaultMessage: 'Partagez votre lien et gagnez vos premiers {amount} !' },
-      { amount: '$3-$5' }
+      { amount: amountRange }
     );
-    goalReward = '$3-$5';
+    goalReward = amountRange;
     goalIcon = <Phone className="h-5 w-5" />;
     goalColor = 'text-green-500';
   } else if (!chatter?.hasTelegram) {
@@ -336,8 +344,10 @@ function YourNextGoal({
 
 function ProviderRecruitmentSection({
   recruitmentShareUrl,
+  providerCallAmount = 500,
 }: {
   recruitmentShareUrl: string;
+  providerCallAmount?: number;
 }) {
   const intl = useIntl();
   const [copied, setCopied] = useState(false);
@@ -365,7 +375,7 @@ function ProviderRecruitmentSection({
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
-        <FormattedMessage id="chatter.howToEarn.provider.desc" defaultMessage="Recrutez des avocats ou experts expatriés sur la plateforme. Pour chaque appel payant qu'ils reçoivent, vous touchez $5 pendant 6 mois." />
+        <FormattedMessage id="chatter.howToEarn.provider.desc" defaultMessage="Recrutez des avocats ou experts expatriés sur la plateforme. Pour chaque appel payant qu'ils reçoivent, vous touchez {amount} pendant 6 mois." values={{ amount: formatCents(providerCallAmount) }} />
       </p>
 
       {/* Concrete example */}
@@ -374,7 +384,7 @@ function ProviderRecruitmentSection({
           <FormattedMessage id="chatter.howToEarn.provider.example.title" defaultMessage="Exemple concret" />
         </p>
         <p className="text-sm font-semibold text-green-700 dark:text-green-400">
-          <FormattedMessage id="chatter.howToEarn.provider.example.text" defaultMessage="1 avocat × 3 appels/jour = $15/jour pour VOUS. Sur 6 mois = $2,700 !" />
+          <FormattedMessage id="chatter.howToEarn.provider.example.text" defaultMessage="1 avocat × 3 appels/jour = {daily}/jour pour VOUS. Sur 6 mois = {total} !" values={{ daily: formatCents(providerCallAmount * 3), total: formatCents(providerCallAmount * 3 * 180) }} />
         </p>
       </div>
 
@@ -573,11 +583,14 @@ function ChatterHowToEarn() {
     callable().then((r) => setCaptainData(r.data)).catch(() => {});
   }, [isCaptain]);
 
-  // Config-based amounts
+  // Config-based amounts (use lockedRates/config from backend, fallback to defaults)
   const config = dashboardData?.config;
-  const clientCallAmount = config?.commissionClientCallAmount || 300;
+  const clientCallAmount = config?.commissionClientCallAmount || 1000;
+  const clientCallAmountLawyer = config?.commissionClientCallAmountLawyer || clientCallAmount;
+  const clientCallAmountExpat = config?.commissionClientCallAmountExpat || clientCallAmount;
   const n1CallAmount = config?.commissionN1CallAmount || 100;
   const n2CallAmount = config?.commissionN2CallAmount || 50;
+  const providerCallAmount = config?.commissionRecruitmentAmount || 500;
 
   const handleCopy = useCallback(async () => {
     if (!clientShareUrl) return;
@@ -679,8 +692,8 @@ function ChatterHowToEarn() {
               number={4}
               icon={<Briefcase className="h-4 w-4" />}
               title={intl.formatMessage({ id: 'chatter.howToEarn.step4.title', defaultMessage: 'Recrutez un prestataire' })}
-              description={intl.formatMessage({ id: 'chatter.howToEarn.step4.desc', defaultMessage: 'Recrutez un avocat ou expert. Vous gagnez $5 par appel qu\'il reçoit pendant 6 mois !' })}
-              highlight={intl.formatMessage({ id: 'chatter.howToEarn.step4.highlight', defaultMessage: '$5 par appel pendant 6 mois' })}
+              description={intl.formatMessage({ id: 'chatter.howToEarn.step4.desc', defaultMessage: 'Recrutez un avocat ou expert. Vous gagnez {amount} par appel qu\'il reçoit pendant 6 mois !' }, { amount: formatCents(providerCallAmount) })}
+              highlight={intl.formatMessage({ id: 'chatter.howToEarn.step4.highlight', defaultMessage: '{amount} par appel pendant 6 mois' }, { amount: formatCents(providerCallAmount) })}
               color="text-emerald-500"
             />
           )}
@@ -708,14 +721,14 @@ function ChatterHowToEarn() {
               <CommissionRow
                 icon={<Phone className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.clientCallLawyer', defaultMessage: 'Appel client (avocat)' })}
-                amount="$5"
+                amount={formatCents(clientCallAmountLawyer)}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.perCall', defaultMessage: 'par appel' })}
                 color="text-green-600 dark:text-green-400"
               />
               <CommissionRow
                 icon={<Phone className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.clientCallExpat', defaultMessage: 'Appel client (expatrié aidant)' })}
-                amount="$3"
+                amount={formatCents(clientCallAmountExpat)}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.perCall', defaultMessage: 'par appel' })}
                 color="text-green-600 dark:text-green-400"
               />
@@ -796,7 +809,7 @@ function ChatterHowToEarn() {
               <CommissionRow
                 icon={<Briefcase className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.providerCall', defaultMessage: 'Recrutement prestataire' })}
-                amount="$5"
+                amount={formatCents(providerCallAmount)}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.providerCallDesc', defaultMessage: 'par appel pendant 6 mois' })}
                 color="text-emerald-600 dark:text-emerald-400"
               />
@@ -822,7 +835,7 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       {/* SECTION 4: PROVIDER RECRUITMENT */}
       {/* ============================================================ */}
-      <ProviderRecruitmentSection recruitmentShareUrl={recruitmentShareUrl} />
+      <ProviderRecruitmentSection recruitmentShareUrl={recruitmentShareUrl} providerCallAmount={providerCallAmount} />
 
       {/* ============================================================ */}
       {/* SECTION 5: MONTHLY COMPETITION */}
@@ -1038,7 +1051,7 @@ function ChatterHowToEarn() {
             },
             {
               icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-              text: intl.formatMessage({ id: 'chatter.howToEarn.tip5', defaultMessage: 'Recrutez des avocats ou des experts expatriés — c\'est votre source de revenus passifs la plus puissante ($5/appel pendant 6 mois)' }),
+              text: intl.formatMessage({ id: 'chatter.howToEarn.tip5', defaultMessage: 'Recrutez des avocats ou des experts expatriés — c\'est votre source de revenus passifs la plus puissante ({amount}/appel pendant 6 mois)' }, { amount: formatCents(providerCallAmount) }),
             },
           ].map((tip, i) => (
             <div key={i} className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">

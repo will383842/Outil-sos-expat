@@ -324,9 +324,18 @@ function RecruitmentTierSection({
           <FormattedMessage id="chatter.progression.recruitment.title" defaultMessage="Paliers de Recrutement" />
         </h2>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
         <FormattedMessage id="chatter.progression.recruitment.subtitle" defaultMessage="Recrutez des chatters pour débloquer des bonus" />
       </p>
+      <div className="mb-4 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30">
+        <p className="text-xs text-amber-800 dark:text-amber-300">
+          <span className="font-semibold">
+            <FormattedMessage id="chatter.progression.recruitment.qualifiedInfo.label" defaultMessage="Filleul qualifié =" />
+          </span>
+          {' '}
+          <FormattedMessage id="chatter.progression.recruitment.qualifiedInfo.desc" defaultMessage="un chatter recruté par vous qui a généré au moins $20 de commissions directes (ventes clients)." />
+        </p>
+      </div>
 
       {/* Progress bar */}
       <div className="relative h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-3">

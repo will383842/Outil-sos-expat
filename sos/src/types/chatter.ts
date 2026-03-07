@@ -459,6 +459,10 @@ export interface ChatterConfig {
   commissionRecruitmentAmount: number;
   /** Commission for direct client call (cents) — e.g. 1000 = $10 */
   commissionClientCallAmount: number;
+  /** Commission for client call to a lawyer provider (cents) */
+  commissionClientCallAmountLawyer?: number;
+  /** Commission for client call to an expat provider (cents) */
+  commissionClientCallAmountExpat?: number;
   /** Commission for N1 referral call (cents) — e.g. 100 = $1 */
   commissionN1CallAmount: number;
   /** Commission for N2 referral call (cents) — e.g. 50 = $0.50 */
