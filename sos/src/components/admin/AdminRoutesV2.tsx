@@ -595,6 +595,9 @@ const AdminHelpCenter = lazy(() => import("../../pages/admin/AdminHelpCenter"));
 // ===== LAZY IMPORTS - AUTRES PAGES =====
 const AdminPromoCodes = lazy(() => import("../../pages/admin/AdminPromoCodes"));
 // const AdminDocuments = lazy(() => import("../../pages/admin/AdminDocuments"));
+const AdminInbox = lazy(
+  () => import("../../pages/admin/AdminInbox")
+);
 const AdminContactMessages = lazy(
   () => import("../../pages/admin/AdminContactMessages")
 );
@@ -1113,6 +1116,16 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminNotifications />
+          </Suspense>
+        }
+      />
+
+      {/* INBOX CENTRALISE */}
+      <Route
+        path="inbox"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminInbox />
           </Suspense>
         }
       />

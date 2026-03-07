@@ -108,6 +108,7 @@ interface NotificationSettingsUpdate {
   negativeReview?: boolean;
   securityAlert?: boolean;
   withdrawalRequest?: boolean;
+  captainApplication?: boolean;
 }
 
 /**
@@ -188,6 +189,7 @@ export const telegram_updateConfig = onCall(
         "negativeReview",
         "securityAlert",
         "withdrawalRequest",
+        "captainApplication",
       ];
 
       for (const key of validKeys) {
@@ -224,6 +226,7 @@ export const telegram_updateConfig = onCall(
           negativeReview: true,
           securityAlert: true,
           withdrawalRequest: true,
+          captainApplication: true,
           ...notifications,
         },
         updatedAt: Timestamp.now(),
@@ -281,6 +284,7 @@ export const telegram_getConfig = onCall(
             negativeReview: true,
             securityAlert: true,
             withdrawalRequest: true,
+            captainApplication: true,
           },
         },
       };
@@ -303,6 +307,7 @@ export const telegram_getConfig = onCall(
           negativeReview: true,
           securityAlert: true,
           withdrawalRequest: true,
+          captainApplication: true,
         },
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
         updatedBy: data.updatedBy || null,
@@ -473,6 +478,7 @@ export const telegram_updateTemplate = onCall(
       "negative_review",
       "security_alert",
       "withdrawal_request",
+      "captain_application",
     ];
 
     if (!eventId || !validEventIds.includes(eventId)) {
@@ -604,6 +610,7 @@ export const telegram_getTemplates = onCall(
       "negative_review",
       "security_alert",
       "withdrawal_request",
+      "captain_application",
     ];
 
     for (const eventId of allEventIds) {

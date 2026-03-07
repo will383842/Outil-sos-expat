@@ -1,6 +1,6 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// ====== FORCE REDEPLOY 2026-01-15 - AMD pending fix ======
+// ====== FORCE REDEPLOY 2026-03-07 - Fix broken Cloud Run revisions ======
 
 // ====== DEPLOYMENT ANALYSIS FIX 2026-02-12 ======
 // DISABLED: process.exit() is detected as error by Firebase CLI
@@ -3207,6 +3207,7 @@ export {
   paymentCancelWithdrawal,
   paymentGetStatus,
   paymentGetHistory,
+  paymentGetConfig,
   // Admin callables
   paymentAdminGetConfig,
   paymentAdminUpdateConfig,
@@ -3339,6 +3340,7 @@ export { telegramOnNewContactMessage } from './telegram/triggers/onNewContactMes
 export { telegramOnSecurityAlert } from './telegram/triggers/onSecurityAlert';
 export { telegramOnNegativeReview } from './telegram/triggers/onNegativeReview';
 export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalRequest';
+export { telegramOnNewCaptainApplication } from './telegram/triggers/onNewCaptainApplication';
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';
 export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
 export {

@@ -509,6 +509,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.landingPages.description",
       },
       {
+        id: "inbox",
+        labelKey: "admin.menu.inbox",
+        path: "/admin/inbox",
+        icon: Inbox,
+        badge: "NEW",
+        descriptionKey: "admin.menu.inbox.description",
+      },
+      {
         id: "notifications",
         labelKey: "admin.menu.notifications",
         path: "/admin/comms/notifications",
@@ -527,7 +535,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         labelKey: "admin.menu.userFeedback",
         path: "/admin/feedback",
         icon: MessageSquare,
-        badge: "NEW",
         descriptionKey: "admin.menu.userFeedback.description",
       },
     ],

@@ -26,7 +26,8 @@ export type TelegramEventType =
   | 'new_contact_message'
   | 'negative_review'
   | 'security_alert'
-  | 'withdrawal_request';
+  | 'withdrawal_request'
+  | 'captain_application';
 
 /**
  * Roles utilisateur supportes dans le systeme
@@ -89,6 +90,8 @@ export interface NotificationSettings {
   securityAlert: boolean;
   /** Notifier lors d'une demande de retrait */
   withdrawalRequest: boolean;
+  /** Notifier lors d'une candidature Captain Chatter */
+  captainApplication: boolean;
 }
 
 /**
@@ -341,6 +344,27 @@ export interface WithdrawalRequestVars {
 }
 
 /**
+ * Variables disponibles pour le template captain_application
+ * Nouvelle candidature Captain Chatter
+ */
+export interface CaptainApplicationVars {
+  /** Nom du candidat */
+  CANDIDATE_NAME: string;
+  /** Numero WhatsApp */
+  WHATSAPP: string;
+  /** Pays du candidat */
+  COUNTRY: string;
+  /** Apercu de la motivation (tronque) */
+  MOTIVATION_PREVIEW: string;
+  /** Si un CV a ete joint */
+  HAS_CV: string;
+  /** Date (format DD/MM/YYYY) */
+  DATE: string;
+  /** Heure (format HH:MM) */
+  TIME: string;
+}
+
+/**
  * Union type de toutes les variables de templates
  */
 export type TemplateVariables =
@@ -352,7 +376,8 @@ export type TemplateVariables =
   | NewContactMessageVars
   | NegativeReviewVars
   | SecurityAlertVars
-  | WithdrawalRequestVars;
+  | WithdrawalRequestVars
+  | CaptainApplicationVars;
 
 /**
  * Mapping des types d'evenements vers leurs interfaces de variables
@@ -367,6 +392,7 @@ export interface TemplateVariablesMap {
   negative_review: NegativeReviewVars;
   security_alert: SecurityAlertVars;
   withdrawal_request: WithdrawalRequestVars;
+  captain_application: CaptainApplicationVars;
 }
 
 // ============================================================================

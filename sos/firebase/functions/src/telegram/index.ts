@@ -8,6 +8,7 @@ export { telegramOnNewContactMessage } from "./triggers/onNewContactMessage";
 export { telegramOnSecurityAlert } from "./triggers/onSecurityAlert";
 export { telegramOnNegativeReview } from "./triggers/onNegativeReview";
 export { telegramOnWithdrawalRequest } from "./triggers/onWithdrawalRequest";
+export { telegramOnNewCaptainApplication } from "./triggers/onNewCaptainApplication";
 
 // Scheduled
 export { telegramDailyReport } from "./scheduled/dailyReport";

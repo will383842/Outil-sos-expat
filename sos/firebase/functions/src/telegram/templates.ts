@@ -20,7 +20,8 @@ export type TelegramEventType =
   | 'new_contact_message'
   | 'negative_review'
   | 'security_alert'
-  | 'withdrawal_request';
+  | 'withdrawal_request'
+  | 'captain_application';
 
 export type SupportedLanguage = 'fr' | 'en' | 'es' | 'de' | 'pt' | 'ru' | 'zh' | 'hi' | 'ar';
 
@@ -156,6 +157,19 @@ export const I18N_TEMPLATES: I18nTemplates = {
 📅 {{DATE}} à {{TIME}}`,
       description: 'Notification lors d\'une demande de retrait',
     },
+    captain_application: {
+      template: `\u{1F451} *Candidature Captain Chatter*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} Pays: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} \u00e0 {{TIME}}`,
+      description: 'Notification lors d\'une candidature Captain Chatter',
+    },
   },
 
   // ==================== ENGLISH ====================
@@ -260,6 +274,19 @@ export const I18N_TEMPLATES: I18nTemplates = {
 
 📅 {{DATE}} at {{TIME}}`,
       description: 'Notification when a withdrawal is requested',
+    },
+    captain_application: {
+      template: `\u{1F451} *Captain Chatter Application*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} Country: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} at {{TIME}}`,
+      description: 'Notification when a Captain Chatter application is received',
     },
   },
 
@@ -366,6 +393,19 @@ export const I18N_TEMPLATES: I18nTemplates = {
 📅 {{DATE}} a las {{TIME}}`,
       description: 'Notificación de solicitud de retiro',
     },
+    captain_application: {
+      template: `\u{1F451} *Candidatura Captain Chatter*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} Pa\u00eds: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} a las {{TIME}}`,
+      description: 'Notificaci\u00f3n de candidatura Captain Chatter',
+    },
   },
 
   // ==================== GERMAN ====================
@@ -471,6 +511,19 @@ export const I18N_TEMPLATES: I18nTemplates = {
 📅 {{DATE}} um {{TIME}}`,
       description: 'Benachrichtigung bei Auszahlungsantrag',
     },
+    captain_application: {
+      template: `\u{1F451} *Captain Chatter Bewerbung*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} Land: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} um {{TIME}}`,
+      description: 'Benachrichtigung bei Captain Chatter Bewerbung',
+    },
   },
 
   // ==================== PORTUGUESE ====================
@@ -574,7 +627,20 @@ export const I18N_TEMPLATES: I18nTemplates = {
 🏦 Via: {{PAYMENT_METHOD}}
 
 📅 {{DATE}} às {{TIME}}`,
-      description: 'Notificação de pedido de saque',
+      description: 'Notifica\u00e7\u00e3o de pedido de saque',
+    },
+    captain_application: {
+      template: `\u{1F451} *Candidatura Captain Chatter*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} Pa\u00eds: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} \u00e0s {{TIME}}`,
+      description: 'Notifica\u00e7\u00e3o de candidatura Captain Chatter',
     },
   },
 
@@ -679,7 +745,20 @@ export const I18N_TEMPLATES: I18nTemplates = {
 🏦 Через: {{PAYMENT_METHOD}}
 
 📅 {{DATE}} в {{TIME}}`,
-      description: 'Уведомление о запросе на вывод средств',
+      description: '\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0435 \u043e \u0437\u0430\u043f\u0440\u043e\u0441\u0435 \u043d\u0430 \u0432\u044b\u0432\u043e\u0434 \u0441\u0440\u0435\u0434\u0441\u0442\u0432',
+    },
+    captain_application: {
+      template: `\u{1F451} *\u0417\u0430\u044f\u0432\u043a\u0430 Captain Chatter*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} \u0421\u0442\u0440\u0430\u043d\u0430: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} \u0432 {{TIME}}`,
+      description: '\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0435 \u043e \u0437\u0430\u044f\u0432\u043a\u0435 Captain Chatter',
     },
   },
 
@@ -784,7 +863,20 @@ export const I18N_TEMPLATES: I18nTemplates = {
 🏦 通过: {{PAYMENT_METHOD}}
 
 📅 {{DATE}} {{TIME}}`,
-      description: '提现请求通知',
+      description: '\u63d0\u73b0\u8bf7\u6c42\u901a\u77e5',
+    },
+    captain_application: {
+      template: `\u{1F451} *Captain Chatter \u7533\u8bf7*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} \u56fd\u5bb6: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} {{TIME}}`,
+      description: 'Captain Chatter \u7533\u8bf7\u901a\u77e5',
     },
   },
 
@@ -889,7 +981,20 @@ export const I18N_TEMPLATES: I18nTemplates = {
 🏦 माध्यम: {{PAYMENT_METHOD}}
 
 📅 {{DATE}} {{TIME}} पर`,
-      description: 'निकासी अनुरोध की सूचना',
+      description: '\u0928\u093f\u0915\u093e\u0938\u0940 \u0905\u0928\u0941\u0930\u094b\u0927 \u0915\u0940 \u0938\u0942\u091a\u0928\u093e',
+    },
+    captain_application: {
+      template: `\u{1F451} *Captain Chatter \u0906\u0935\u0947\u0926\u0928*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} \u0926\u0947\u0936: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} {{TIME}} \u092a\u0930`,
+      description: 'Captain Chatter \u0906\u0935\u0947\u0926\u0928 \u0915\u0940 \u0938\u0942\u091a\u0928\u093e',
     },
   },
 
@@ -996,6 +1101,19 @@ export const I18N_TEMPLATES: I18nTemplates = {
 📅 {{DATE}} الساعة {{TIME}}`,
       description: 'إشعار طلب سحب',
     },
+    captain_application: {
+      template: `\u{1F451} *\u0637\u0644\u0628 Captain Chatter*
+
+\u{1F464} {{CANDIDATE_NAME}}
+\u{1F4F1} WhatsApp: {{WHATSAPP}}
+\u{1F30D} \u0627\u0644\u0628\u0644\u062f: {{COUNTRY}}
+\u{1F4CE} CV: {{HAS_CV}}
+
+\u{1F4AC} {{MOTIVATION_PREVIEW}}
+
+\u{1F4C5} {{DATE}} \u0627\u0644\u0633\u0627\u0639\u0629 {{TIME}}`,
+      description: '\u0625\u0634\u0639\u0627\u0631 \u0637\u0644\u0628 Captain Chatter',
+    },
   },
 };
 
@@ -1036,6 +1154,7 @@ export const TEMPLATE_VARIABLES: Record<TelegramEventType, string[]> = {
   negative_review: ['CLIENT_NAME', 'PROVIDER_NAME', 'RATING', 'COMMENT_PREVIEW', 'DATE', 'TIME'],
   security_alert: ['ALERT_TYPE', 'USER_EMAIL', 'IP_ADDRESS', 'COUNTRY', 'DETAILS', 'DATE', 'TIME'],
   withdrawal_request: ['USER_NAME', 'USER_TYPE', 'AMOUNT', 'PAYMENT_METHOD', 'DATE', 'TIME'],
+  captain_application: ['CANDIDATE_NAME', 'WHATSAPP', 'COUNTRY', 'MOTIVATION_PREVIEW', 'HAS_CV', 'DATE', 'TIME'],
 };
 
 // ============================================================================

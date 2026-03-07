@@ -557,7 +557,7 @@ const CaptainLanding: React.FC = () => {
             </div>
 
             <CTAButton onClick={scrollToForm} size="large" className="w-full sm:w-auto max-w-md mx-auto animate-pulse-glow" ariaLabel={ctaLabel}>
-              <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
+              <FormattedMessage id="captain.landing.cta.join" defaultMessage="Je postule" />
             </CTAButton>
 
             <p className="text-gray-400 mt-4 text-sm">
@@ -867,7 +867,7 @@ const CaptainLanding: React.FC = () => {
                 </div>
 
                 <CTAButton onClick={scrollToForm} className="w-full" ariaLabel={ctaLabel}>
-                  <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
+                  <FormattedMessage id="captain.landing.cta.join" defaultMessage="Je postule" />
                 </CTAButton>
               </div>
             </div>
@@ -1107,7 +1107,7 @@ const CaptainLanding: React.FC = () => {
               <FormattedMessage id="captain.landing.cta.desc" defaultMessage="Startup en pleine croissance. Equipe bienveillante. Poste evolutif. On vous attend." />
             </p>
             <CTAButton onClick={scrollToForm} size="large" className="w-full max-w-md mx-auto" ariaLabel={ctaLabel}>
-              <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
+              <FormattedMessage id="captain.landing.cta.join" defaultMessage="Je postule" />
             </CTAButton>
           </div>
         </section>
@@ -1121,7 +1121,7 @@ const CaptainLanding: React.FC = () => {
               <button type="button" onClick={scrollToForm} aria-label={ctaLabel}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform">
                 <Rocket className="w-5 h-5" aria-hidden="true" />
-                <FormattedMessage id="captain.landing.cta.join" defaultMessage="Rejoindre l'aventure" />
+                <FormattedMessage id="captain.landing.cta.join" defaultMessage="Je postule" />
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>

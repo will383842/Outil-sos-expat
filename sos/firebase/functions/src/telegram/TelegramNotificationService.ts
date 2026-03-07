@@ -472,6 +472,7 @@ class TelegramNotificationService {
       negative_review: 'negativeReview',
       security_alert: 'securityAlert',
       withdrawal_request: 'withdrawalRequest',
+      captain_application: 'captainApplication',
     };
     return mapping[eventId] || null;
   }
