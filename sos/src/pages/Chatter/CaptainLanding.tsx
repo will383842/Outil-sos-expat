@@ -281,15 +281,31 @@ const CaptainLanding: React.FC = () => {
   const [calendlyBooked, setCalendlyBooked] = useState(false);
 
   // Load Calendly widget script + listen for booking event once form is sent
+  const [calendlyReady, setCalendlyReady] = useState(false);
+
   useEffect(() => {
     if (formState !== 'sent' || !CALENDLY_URL) return;
 
-    if (!document.getElementById('calendly-widget-script')) {
+    const existing = document.getElementById('calendly-widget-script');
+    if (existing) {
+      // Script already loaded from a previous render
+      if ((window as any).Calendly) setCalendlyReady(true);
+    } else {
       const script = document.createElement('script');
       script.id = 'calendly-widget-script';
       script.src = 'https://assets.calendly.com/assets/external/widget.js';
       script.async = true;
+      script.onload = () => setCalendlyReady(true);
       document.head.appendChild(script);
+    }
+
+    // Also add Calendly CSS for popup widget
+    if (!document.getElementById('calendly-widget-css')) {
+      const link = document.createElement('link');
+      link.id = 'calendly-widget-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://assets.calendly.com/assets/external/widget.css';
+      document.head.appendChild(link);
     }
 
     const handleMessage = async (e: MessageEvent) => {
@@ -316,7 +332,8 @@ const CaptainLanding: React.FC = () => {
     if (Calendly?.initPopupWidget) {
       Calendly.initPopupWidget({ url: CALENDLY_URL });
     } else {
-      window.open(CALENDLY_URL, '_blank', 'noopener,noreferrer');
+      // Fallback: navigate directly (not window.open which gets blocked)
+      window.location.href = CALENDLY_URL;
     }
   };
 
