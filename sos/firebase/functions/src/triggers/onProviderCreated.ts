@@ -293,7 +293,7 @@ const COUNTRY_TRANSLATIONS: Record<string, Record<string, string>> = {
 };
 
 const DEFAULT_LOCALES: Record<string, string> = {
-  'fr': 'fr', 'en': 'us', 'es': 'es', 'de': 'de', 'pt': 'br',
+  'fr': 'fr', 'en': 'us', 'es': 'es', 'de': 'de', 'pt': 'pt',
   'ru': 'ru', 'zh': 'cn', 'ar': 'sa', 'hi': 'in'
 };
 

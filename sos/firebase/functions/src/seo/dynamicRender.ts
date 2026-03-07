@@ -25,6 +25,9 @@ let chromium: any = null;
 
 // Configuration
 const SITE_URL = 'https://sos-expat.com';
+// Cloudflare Pages origin — Puppeteer renders via this to bypass the Cloudflare Worker
+// and avoid the Worker→CF→Worker round-trip. Domain is replaced back to SITE_URL in the HTML.
+const PAGES_ORIGIN = 'https://sos-expat.pages.dev';
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const RENDER_TIMEOUT_MS = 30000; // 30 seconds for page load
 const WAIT_FOR_READY_TIMEOUT_MS = 10000; // 10 seconds to wait for React
@@ -167,7 +170,16 @@ function cacheHtml(path: string, html: string): void {
 }
 
 /**
- * Render a page using Puppeteer
+ * Render a page using Puppeteer.
+ *
+ * Navigates via Cloudflare Pages origin (PAGES_ORIGIN) to bypass the
+ * Cloudflare Worker entirely. This avoids:
+ *   - Worker→Puppeteer→Worker round-trip (was not a loop, but added latency)
+ *   - Any redirect logic in the Worker that could interfere
+ *
+ * After rendering, all references to the Pages origin domain are replaced
+ * with the public SITE_URL so that canonical, og:url, hreflang etc. point
+ * to the correct production domain.
  */
 async function renderPage(url: string): Promise<string> {
   // Lazy load puppeteer and chromium to avoid deployment timeout
@@ -210,8 +222,12 @@ async function renderPage(url: string): Promise<string> {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
-    // Navigate to the page - use networkidle2 to wait for async data loading
-    await page.goto(url, {
+    // Navigate via Pages origin to bypass the Cloudflare Worker.
+    // Replace the public domain with the Pages origin domain.
+    const renderUrl = url.replace(SITE_URL, PAGES_ORIGIN);
+    logger.info('Navigating Puppeteer to Pages origin', { original: url, renderUrl });
+
+    await page.goto(renderUrl, {
       waitUntil: 'networkidle2',
       timeout: RENDER_TIMEOUT_MS,
     });
@@ -233,7 +249,12 @@ async function renderPage(url: string): Promise<string> {
     }
 
     // Get the rendered HTML
-    const html = await page.content();
+    let html = await page.content();
+
+    // Replace Pages origin domain with the public domain in ALL rendered output.
+    // This ensures canonical, og:url, hreflang, JSON-LD @id, breadcrumbs etc.
+    // all point to the production domain (sos-expat.com) and not pages.dev.
+    html = html.split(PAGES_ORIGIN).join(SITE_URL);
 
     return html;
   } finally {
