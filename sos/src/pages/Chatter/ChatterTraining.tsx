@@ -676,24 +676,22 @@ function ChatterTraining() {
   // --------------------------------------------------
   // Loading
   // --------------------------------------------------
-  if (isLoading) return <ChatterDashboardLayout activeKey="training"><TrainingSkeleton /></ChatterDashboardLayout>;
+  if (isLoading) return <TrainingSkeleton />;
 
   // --------------------------------------------------
   // Error
   // --------------------------------------------------
   if (error && modules.length === 0) {
     return (
-      <ChatterDashboardLayout activeKey="training">
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <BookOpen className="h-8 w-8 text-red-500" />
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">{error}</p>
-          <button onClick={() => loadModules()} className={`${UI.button.primary} px-6 py-2.5`}>
-            <FormattedMessage id="chatter.training.retry" defaultMessage="Réessayer" />
-          </button>
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <BookOpen className="h-8 w-8 text-red-500" />
         </div>
-      </ChatterDashboardLayout>
+        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">{error}</p>
+        <button onClick={() => loadModules()} className={`${UI.button.primary} px-6 py-2.5`}>
+          <FormattedMessage id="chatter.training.retry" defaultMessage="Réessayer" />
+        </button>
+      </div>
     );
   }
 
@@ -702,16 +700,14 @@ function ChatterTraining() {
   // --------------------------------------------------
   if (modules.length === 0) {
     return (
-      <ChatterDashboardLayout activeKey="training">
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-            <BookOpen className="h-8 w-8 text-gray-400" />
-          </div>
-          <p className="text-gray-500 dark:text-gray-400">
-            <FormattedMessage id="chatter.training.empty" defaultMessage="Aucun module de formation disponible pour le moment." />
-          </p>
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+          <BookOpen className="h-8 w-8 text-gray-400" />
         </div>
-      </ChatterDashboardLayout>
+        <p className="text-gray-500 dark:text-gray-400">
+          <FormattedMessage id="chatter.training.empty" defaultMessage="Aucun module de formation disponible pour le moment." />
+        </p>
+      </div>
     );
   }
 
