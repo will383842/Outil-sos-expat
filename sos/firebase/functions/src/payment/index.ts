@@ -24,6 +24,7 @@ export {
   cancelWithdrawal as paymentCancelWithdrawal,
   getWithdrawalStatus as paymentGetStatus,
   getWithdrawalHistory as paymentGetHistory,
+  getPaymentConfig as paymentGetConfig,
 } from './callables';
 
 // ============================================================================

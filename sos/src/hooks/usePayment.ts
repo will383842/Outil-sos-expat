@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { httpsCallable } from "firebase/functions";
-import { functionsPayment, functions as functionsDefault } from "@/config/firebase";
+import { functionsPayment } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
 
 // ============================================================================
@@ -965,8 +965,8 @@ export function usePaymentConfig(): UsePaymentConfigReturn {
 
       try {
         const getPaymentConfigFn = httpsCallable<void, PaymentConfigResponse>(
-          functionsDefault,
-          "paymentAdminGetConfig"
+          functions,
+          "paymentGetConfig"
         );
 
         // Add 10 second timeout to prevent infinite loading

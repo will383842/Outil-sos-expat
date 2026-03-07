@@ -94,10 +94,20 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
 }: EarningsMotivationCardProps) {
   const intl = useIntl();
 
-  // Calculate membership duration
+  // Calculate membership duration — handles string, Date, and Firestore Timestamp objects
   const membershipDays = useMemo(() => {
     if (!memberSince) return 0;
-    const start = typeof memberSince === 'string' ? new Date(memberSince) : memberSince;
+    let start: Date;
+    if (typeof memberSince === 'string') {
+      start = new Date(memberSince);
+    } else if (memberSince instanceof Date) {
+      start = memberSince;
+    } else if (typeof memberSince === 'object' && '_seconds' in (memberSince as any)) {
+      start = new Date((memberSince as any)._seconds * 1000);
+    } else {
+      return 0;
+    }
+    if (isNaN(start.getTime())) return 0;
     const now = new Date();
     return Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   }, [memberSince]);

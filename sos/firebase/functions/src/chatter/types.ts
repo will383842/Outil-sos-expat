@@ -2471,7 +2471,14 @@ export interface RegisterChatterResponse {
 }
 
 export interface GetChatterDashboardResponse {
-  chatter: Omit<Chatter, "paymentDetails" | "adminNotes">;
+  chatter: Omit<Chatter, "paymentDetails" | "adminNotes" | "createdAt" | "updatedAt" | "lastLoginAt" | "lastZoomAttendance" | "recruitedAt" | "activatedAt"> & {
+    createdAt: string;
+    updatedAt: string;
+    lastLoginAt: string | null;
+    lastZoomAttendance: string | null;
+    recruitedAt: string | null;
+    activatedAt: string | null;
+  };
   recentCommissions: Array<{
     id: string;
     type: ChatterCommissionType;

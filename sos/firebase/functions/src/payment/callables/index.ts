@@ -27,6 +27,7 @@ export { requestWithdrawal } from './requestWithdrawal';
 export { cancelWithdrawal } from './cancelWithdrawal';
 export { getWithdrawalStatus } from './getWithdrawalStatus';
 export { getWithdrawalHistory } from './getWithdrawalHistory';
+export { getPaymentConfig } from './getPaymentConfig';
 
 // ============================================================================
 // ADMIN CALLABLES
