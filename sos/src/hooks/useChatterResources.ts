@@ -11,6 +11,7 @@ import {
   ChatterResourcesData,
   ChatterResourceCategory,
 } from '../types/chatter';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface UseChatterResourcesReturn {
   resources: ChatterResourcesData | null;
@@ -88,7 +89,7 @@ export function useChatterResources(): UseChatterResourcesReturn {
       const result = await copyChatterResourceText({ textId });
 
       if (result.data.content) {
-        await navigator.clipboard.writeText(result.data.content);
+        await copyToClipboard(result.data.content);
       }
 
       return {

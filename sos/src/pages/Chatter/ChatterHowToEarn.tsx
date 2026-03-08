@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { functionsAffiliate, db } from '@/config/firebase';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // DESIGN TOKENS
@@ -353,11 +354,11 @@ function ProviderRecruitmentSection({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(recruitmentShareUrl);
+    const success = await copyToClipboard(recruitmentShareUrl);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* ignore */ }
+    }
   }, [recruitmentShareUrl]);
 
   if (!recruitmentShareUrl) return null;
@@ -599,11 +600,11 @@ function ChatterHowToEarn() {
 
   const handleCopy = useCallback(async () => {
     if (!clientShareUrl) return;
-    try {
-      await navigator.clipboard.writeText(clientShareUrl);
+    const success = await copyToClipboard(clientShareUrl);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* ignore */ }
+    }
   }, [clientShareUrl]);
 
   if (isLoading && !dashboardData) return <HowToEarnSkeleton />;

@@ -11,6 +11,7 @@ import {  httpsCallable  } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import { Copy, CheckCircle, FileText, Filter, Loader2, AlertCircle, Clock, Pin } from 'lucide-react';
 import { GroupAdminPost, GroupAdminPostCategory, POST_CATEGORY_LABELS } from '@/types/groupAdmin';
+import { copyToClipboard } from '@/utils/clipboard';
 
 const GroupAdminPosts: React.FC = () => {
   const intl = useIntl();
@@ -51,14 +52,14 @@ const GroupAdminPosts: React.FC = () => {
       const getProcessedPost = httpsCallable(functionsAffiliate, 'getGroupAdminProcessedPost');
       const result = await getProcessedPost({ postId: post.id, language: user?.preferredLanguage || 'en' });
       const data = result.data as { content: string };
-      await navigator.clipboard.writeText(data.content);
+      await copyToClipboard(data.content);
       setCopiedId(post.id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       console.error('Failed to copy post:', err);
       // Fallback to raw content
       if (post.content) {
-        await navigator.clipboard.writeText(post.content);
+        await copyToClipboard(post.content);
         setCopiedId(post.id);
         setTimeout(() => setCopiedId(null), 2000);
       }

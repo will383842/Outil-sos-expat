@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInfluencer } from '@/hooks/useInfluencer';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import InfluencerAffiliateLinks from '@/components/Influencer/Links/InfluencerAffiliateLinks';
 import { Image, Code, QrCode, FileText, Copy, Check, Download } from 'lucide-react';
@@ -37,7 +38,7 @@ const InfluencerPromoTools: React.FC = () => {
   ];
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

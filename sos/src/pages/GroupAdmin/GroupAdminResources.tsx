@@ -26,6 +26,7 @@ import {
   GroupAdminResourceCategory,
   RESOURCE_CATEGORY_LABELS,
 } from '@/types/groupAdmin';
+import { copyToClipboard } from '@/utils/clipboard';
 
 const GroupAdminResources: React.FC = () => {
   const intl = useIntl();
@@ -88,39 +89,24 @@ const GroupAdminResources: React.FC = () => {
     // Clear any previous error
     setCopyError(null);
 
-    // Check if clipboard API is available
-    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch (err) {
-        console.error('Clipboard API failed:', err);
-        // Try fallback method
-        if (fallbackCopyToClipboard(text)) {
-          return true;
-        }
-        // Both methods failed
-        const errorMessage = intl.formatMessage({
-          id: 'groupAdmin.resources.copyError',
-          defaultMessage: 'Failed to copy. Please try selecting and copying manually.',
-        });
-        setCopyError(errorMessage);
-        setTimeout(() => setCopyError(null), 4000);
-        return false;
-      }
-    } else {
-      // No clipboard API, use fallback
-      if (fallbackCopyToClipboard(text)) {
-        return true;
-      }
-      const errorMessage = intl.formatMessage({
-        id: 'groupAdmin.resources.clipboardNotSupported',
-        defaultMessage: 'Clipboard not supported. Please copy manually.',
-      });
-      setCopyError(errorMessage);
-      setTimeout(() => setCopyError(null), 4000);
-      return false;
+    const success = await copyToClipboard(text);
+    if (success) {
+      return true;
     }
+
+    // copyToClipboard utility failed, try legacy fallback
+    if (fallbackCopyToClipboard(text)) {
+      return true;
+    }
+
+    // Both methods failed
+    const errorMessage = intl.formatMessage({
+      id: 'groupAdmin.resources.copyError',
+      defaultMessage: 'Failed to copy. Please try selecting and copying manually.',
+    });
+    setCopyError(errorMessage);
+    setTimeout(() => setCopyError(null), 4000);
+    return false;
   };
 
   const copyContent = async (resource: GroupAdminResource) => {

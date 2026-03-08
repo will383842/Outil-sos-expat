@@ -35,6 +35,7 @@ import {
   Eye,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // Design tokens - Purple theme for Bloggers
 const UI = {
@@ -184,7 +185,7 @@ const AdminBloggerDetail: React.FC = () => {
 
   // Copy to clipboard
   const copyToClipboard = (text: string, type: 'client' | 'recruit') => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     if (type === 'client') {
       setCopiedClient(true);
       setTimeout(() => setCopiedClient(false), 2000);

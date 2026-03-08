@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '../config/firebase';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   InfluencerResourcesData,
   InfluencerResourceCategory,
@@ -88,7 +89,7 @@ export function useInfluencerResources(): UseInfluencerResourcesReturn {
       const result = await copyInfluencerResourceText({ textId });
 
       if (result.data.content) {
-        await navigator.clipboard.writeText(result.data.content);
+        await copyToClipboard(result.data.content);
       }
 
       return {

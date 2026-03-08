@@ -14,6 +14,7 @@ import { useChatterMissions } from "@/hooks/useChatterMissions";
 import { ChatterViralKit } from "@/types/chatter";
 import { trackMetaCustomEvent } from "@/utils/metaPixel";
 import { logAnalyticsEvent } from "@/config/firebase";
+import { copyToClipboard as clipboardCopy } from "@/utils/clipboard";
 
 interface SharePlatform {
   id: string;
@@ -172,12 +173,10 @@ export function useViralKit(): UseViralKitReturn {
 
   // Copy to clipboard
   const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    const success = await clipboardCopy(text);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
     }
   };
 

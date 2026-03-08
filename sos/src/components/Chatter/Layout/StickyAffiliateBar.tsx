@@ -3,6 +3,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Copy, Check, Share2, Users, UserPlus, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useChatterData } from '@/contexts/ChatterDataContext';
+import { copyToClipboard } from '@/utils/clipboard';
 
 const StickyAffiliateBar: React.FC = () => {
   const intl = useIntl();
@@ -72,8 +73,8 @@ const StickyAffiliateBar: React.FC = () => {
   }, [tooltipOpen]);
 
   const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment') => {
-    try {
-      await navigator.clipboard.writeText(url);
+    const success = await copyToClipboard(url);
+    if (success) {
       if (type === 'client') {
         setCopiedClient(true);
         setTimeout(() => setCopiedClient(false), 2000);
@@ -86,7 +87,7 @@ const StickyAffiliateBar: React.FC = () => {
       toast.success(
         type === 'client' ? 'Lien client copie !' : 'Lien recrutement copie !'
       );
-    } catch {
+    } else {
       toast.error('Impossible de copier le lien');
     }
   }, []);

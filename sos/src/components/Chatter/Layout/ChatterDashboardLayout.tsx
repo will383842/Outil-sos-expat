@@ -36,6 +36,7 @@ import { CelebrationProvider } from '@/components/Chatter/Activation/Celebration
 import StickyAffiliateBar from './StickyAffiliateBar';
 import { UI, CHATTER_THEME } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface ChatterDashboardLayoutProps {
   children: ReactNode;
@@ -176,8 +177,8 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
         toast.success('Lien partage !');
       } catch { /* cancelled */ }
     } else {
-      navigator.clipboard.writeText(clientShareUrl).then(() => {
-        toast.success('Lien copie !');
+      copyToClipboard(clientShareUrl).then((success) => {
+        if (success) toast.success('Lien copie !');
       });
     }
   }, [clientShareUrl]);

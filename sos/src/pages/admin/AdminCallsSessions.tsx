@@ -49,6 +49,7 @@ import ErrorBoundary from "../../components/common/ErrorBoundary";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../utils/logging";
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // ============ COST CALCULATION CONSTANTS ============
 // Based on actual pricing from getCostMetrics.ts
@@ -891,9 +892,7 @@ const AdminCallsSessions: React.FC = () => {
   }, [sessions]);
 
   const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      // Could add a toast notification here
-    });
+    clipboardCopy(text);
   }, []);
 
   const formatDateTime = (timestamp: Timestamp) => {

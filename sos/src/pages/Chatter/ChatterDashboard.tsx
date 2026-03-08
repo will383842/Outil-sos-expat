@@ -33,6 +33,7 @@ import MicroObjectiveCard from '@/components/Chatter/Activation/MicroObjectiveCa
 import { CelebrationProvider } from '@/components/Chatter/Activation/CelebrationSystem';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // Below-fold: individual lazy wrappers that resolve named exports from the bundle
 
@@ -113,18 +114,19 @@ const ChatterDashboardContent: React.FC = () => {
   }, [refreshDashboard]);
 
   // Actions
-  const handleCopyLink = useCallback(() => {
+  const handleCopyLink = useCallback(async () => {
     if (!clientShareUrl) return;
-    navigator.clipboard.writeText(clientShareUrl).then(() => {
+    const success = await copyToClipboard(clientShareUrl);
+    if (success) {
       localStorage.setItem('chatter_link_copied', Date.now().toString());
       navigator.vibrate?.(50);
       toast.success(
         intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien copie ! Partagez-le sur WhatsApp, Telegram...' }),
         { duration: 3000 }
       );
-    }).catch(() => {
+    } else {
       toast.error(intl.formatMessage({ id: 'chatter.copyFailed', defaultMessage: 'Impossible de copier le lien' }));
-    });
+    }
   }, [clientShareUrl, intl]);
 
   const handleShareLink = useCallback(async () => {

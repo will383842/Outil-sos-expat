@@ -47,6 +47,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PaymentUserType, WithdrawalStatus } from '../../../types/payment';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -191,8 +192,8 @@ const PaymentDetailsCard: React.FC<{ method: string; details?: Record<string, un
     );
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopyToClipboard = (text: string) => {
+    copyToClipboard(text);
   };
 
   const renderField = (label: string, value: unknown, copyable = false) => {
@@ -651,7 +652,7 @@ const AdminPaymentDetail: React.FC = () => {
                   <p className="font-medium text-gray-900 flex items-center">
                     {withdrawal.userEmail}
                     <button
-                      onClick={() => navigator.clipboard.writeText(withdrawal.userEmail)}
+                      onClick={() => copyToClipboard(withdrawal.userEmail)}
                       className="ml-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
                     >
                       <Copy className="w-3.5 h-3.5" />

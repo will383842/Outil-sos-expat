@@ -45,6 +45,7 @@ import Button from "../../components/common/Button";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../utils/logging";
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // ============ TYPES ============
 interface ReceivedCall {
@@ -764,7 +765,7 @@ const AdminReceivedCalls: React.FC = () => {
   }, [calls, t]);
 
   const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
   }, []);
 
   const formatDuration = (seconds: number) => {

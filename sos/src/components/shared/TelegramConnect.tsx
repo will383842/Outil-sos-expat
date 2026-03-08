@@ -17,6 +17,7 @@ import {
   Download,
   Copy,
 } from 'lucide-react';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -129,12 +130,10 @@ const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) 
   // Copy link to clipboard
   const handleCopyLink = useCallback(async () => {
     if (!linkData?.deepLink) return;
-    try {
-      await navigator.clipboard.writeText(linkData.deepLink);
+    const success = await copyToClipboard(linkData.deepLink);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
     }
   }, [linkData]);
 

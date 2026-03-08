@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '../config/firebase';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   BloggerResourcesData,
   BloggerGuideData,
@@ -91,7 +92,7 @@ export function useBloggerResources(): UseBloggerResourcesReturn {
 
       // Copy to clipboard
       if (result.data.content) {
-        await navigator.clipboard.writeText(result.data.content);
+        await copyToClipboard(result.data.content);
       }
 
       return {
@@ -177,7 +178,7 @@ export function useBloggerGuide(): UseBloggerGuideReturn {
 
       // Copy to clipboard
       if (result.data.content) {
-        await navigator.clipboard.writeText(result.data.content);
+        await copyToClipboard(result.data.content);
       }
 
       return {
@@ -263,7 +264,7 @@ export function useBloggerArticles(): UseBloggerArticlesReturn {
       const result = await copyBloggerArticle({ articleId });
 
       if (result.data.content) {
-        await navigator.clipboard.writeText(result.data.content);
+        await copyToClipboard(result.data.content);
       }
 
       return {

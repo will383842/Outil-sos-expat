@@ -13,6 +13,7 @@ import { usePartner } from '@/hooks/usePartner';
 import Layout from '@/components/layout/Layout';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   LayoutDashboard,
   DollarSign,
@@ -101,10 +102,10 @@ const PartnerDashboardLayout: React.FC<PartnerDashboardLayoutProps> = ({ childre
 
   const copyAffiliateLink = async () => {
     if (!affiliateLink) return;
-    try {
-      await navigator.clipboard.writeText(affiliateLink);
+    const success = await copyToClipboard(affiliateLink);
+    if (success) {
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
-    } catch {
+    } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
     }
   };

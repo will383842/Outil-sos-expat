@@ -15,6 +15,7 @@ import { useBlogger } from '@/hooks/useBlogger';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   Users,
   DollarSign,
@@ -118,10 +119,10 @@ const BloggerBloggerRecruitment: React.FC = () => {
   };
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(recruitmentShareUrl);
+    const success = await copyToClipboard(recruitmentShareUrl);
+    if (success) {
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
-    } catch {
+    } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
     }
   };

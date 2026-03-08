@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // Design tokens (matching AffiliateDashboard)
 const UI = {
@@ -125,12 +126,10 @@ const AffiliateTools: React.FC = () => {
 
   // Copy to clipboard
   const copyToClipboard = useCallback(async (text: string, type: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    const success = await clipboardCopy(text);
+    if (success) {
       setCopiedLink(type);
       setTimeout(() => setCopiedLink(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
     }
   }, []);
 

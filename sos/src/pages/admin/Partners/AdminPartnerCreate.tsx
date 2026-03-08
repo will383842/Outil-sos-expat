@@ -27,6 +27,7 @@ import {
   Info,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // Design tokens
 const UI = {
@@ -274,7 +275,7 @@ const AdminPartnerCreate: React.FC = () => {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     toast.success(intl.formatMessage({ id: 'admin.partners.create.copied', defaultMessage: 'Copied to clipboard' }));
   };
 

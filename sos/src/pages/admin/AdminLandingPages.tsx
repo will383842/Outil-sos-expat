@@ -36,6 +36,7 @@ import {
   formatAmount,
 } from '@/country-landing/defaults';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { copyToClipboard } from '@/utils/clipboard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import {
   Globe,
@@ -360,7 +361,7 @@ const AdminLandingPages: React.FC = () => {
               ];
 
               const handleCopy = (url: string) => {
-                navigator.clipboard.writeText(url);
+                copyToClipboard(url);
                 setCopiedUrl(url);
                 setTimeout(() => setCopiedUrl(''), 2000);
               };

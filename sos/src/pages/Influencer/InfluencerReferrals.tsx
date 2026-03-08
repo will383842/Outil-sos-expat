@@ -14,6 +14,7 @@ import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import { useInfluencer } from '@/hooks/useInfluencer';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   Users,
   DollarSign,
@@ -100,7 +101,7 @@ const EmptyState: React.FC<{ recruitmentShareUrl: string }> = ({ recruitmentShar
 
   const handleCopy = async () => {
     if (recruitmentShareUrl) {
-      await navigator.clipboard.writeText(recruitmentShareUrl);
+      await copyToClipboard(recruitmentShareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -487,7 +488,7 @@ const InfluencerReferrals: React.FC = () => {
                   />
                   <button
                     onClick={async () => {
-                      await navigator.clipboard.writeText(recruitmentShareUrl);
+                      await copyToClipboard(recruitmentShareUrl);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
@@ -511,7 +512,7 @@ const InfluencerReferrals: React.FC = () => {
                   </a>
                   <button
                     onClick={async () => {
-                      await navigator.clipboard.writeText(recruitmentShareUrl);
+                      await copyToClipboard(recruitmentShareUrl);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}

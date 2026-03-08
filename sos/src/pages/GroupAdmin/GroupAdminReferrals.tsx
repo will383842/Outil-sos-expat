@@ -9,6 +9,7 @@ import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import { Users, Copy, CheckCircle, Loader2, ExternalLink, DollarSign, Clock, AlertTriangle, Info } from 'lucide-react';
+import { copyToClipboard } from '@/utils/clipboard';
 import { GroupAdminRecruit, getGroupAdminRecruitmentLink, formatGroupAdminAmount, FirebaseDate } from '@/types/groupAdmin';
 
 /**
@@ -58,7 +59,7 @@ const GroupAdminReferrals: React.FC = () => {
 
   const copyLink = async () => {
     const link = getGroupAdminRecruitmentLink(affiliateCode);
-    await navigator.clipboard.writeText(link);
+    await copyToClipboard(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

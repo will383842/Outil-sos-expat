@@ -5,6 +5,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
 import { Check, Link2, Mail, X } from 'lucide-react';
+import { copyToClipboard } from '@/utils/clipboard';
 import { getSpecialtyLabel, mapLanguageToLocale } from '../../utils/specialtyMapper';
 
 // ============================================================================
@@ -273,7 +274,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   const shareToInstagram = useCallback(() => {
     haptic();
     // Instagram doesn't have direct share - copy link for Stories
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    copyToClipboard(shareUrl).then(() => {
       setCopied(true);
       haptic('success');
       setTimeout(() => setCopied(false), 3000);
@@ -287,7 +288,7 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
   const shareToTikTok = useCallback(() => {
     haptic();
     // TikTok doesn't have direct share - copy link
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    copyToClipboard(shareUrl).then(() => {
       setCopied(true);
       haptic('success');
       setTimeout(() => setCopied(false), 3000);
@@ -298,20 +299,11 @@ export const ProviderSocialShare: React.FC<ProviderSocialShareProps> = ({
 
   const copyLink = useCallback(async () => {
     haptic();
-    try {
-      await navigator.clipboard.writeText(shareUrl);
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
       setCopied(true);
       haptic('success');
       onShare?.('copy', true);
-      setTimeout(() => setCopied(false), 3000);
-    } catch {
-      const input = document.createElement('input');
-      input.value = shareUrl;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy');
-      document.body.removeChild(input);
-      setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
   }, [shareUrl, onShare]);

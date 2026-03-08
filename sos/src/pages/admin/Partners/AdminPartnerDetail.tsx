@@ -49,6 +49,7 @@ import {
   Link2,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // ============================================================================
 // DESIGN TOKENS — Teal/Emerald theme for Partners (Premium 2026)
@@ -399,7 +400,7 @@ const AdminPartnerDetail: React.FC = () => {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };

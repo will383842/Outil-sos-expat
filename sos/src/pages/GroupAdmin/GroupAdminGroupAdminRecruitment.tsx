@@ -15,6 +15,7 @@ import SEOHead from '@/components/layout/SEOHead';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   Users,
   DollarSign,
@@ -124,12 +125,12 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
   };
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(recruitmentLink);
+    const success = await copyToClipboard(recruitmentLink);
+    if (success) {
       setCopied(true);
       toast.success(intl.formatMessage({ id: 'groupAdmin.groupAdminRecruitment.linkCopied' }));
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } else {
       toast.error(intl.formatMessage({ id: 'groupAdmin.groupAdminRecruitment.copyError' }));
     }
   };

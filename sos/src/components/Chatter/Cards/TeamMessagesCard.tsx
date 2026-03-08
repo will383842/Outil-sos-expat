@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useChatterMissions } from '@/hooks/useChatterMissions';
 import { UI } from '@/components/Chatter/designTokens';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -162,15 +163,13 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   const { trackMessageSent } = useChatterMissions();
 
   const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(message);
+    const success = await copyToClipboard(message);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       onSendMessage?.(message, 'copy');
       // Track message sent for daily missions
       trackMessageSent();
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   }, [message, onSendMessage, trackMessageSent]);
 

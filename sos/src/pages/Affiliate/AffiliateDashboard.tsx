@@ -26,6 +26,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import { formatCents, getCommissionStatusLabel, getStatusColor } from "@/types/affiliate";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { copyToClipboard } from '@/utils/clipboard';
 
 // Design tokens
 const UI = {
@@ -127,12 +128,10 @@ const AffiliateDashboard: React.FC = () => {
   // Copy share link with feedback
   const copyShareLink = async () => {
     if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
     }
   };
 

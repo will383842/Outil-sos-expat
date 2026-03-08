@@ -9,6 +9,7 @@ import { usePartner } from '@/hooks/usePartner';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 import {
   Code,
   Copy,
@@ -95,12 +96,12 @@ const PartnerWidgets: React.FC = () => {
 
     const htmlCode = widget.htmlTemplate.replace(/\{\{AFFILIATE_LINK\}\}/g, affiliateLink);
 
-    try {
-      await navigator.clipboard.writeText(htmlCode);
+    const success = await copyToClipboard(htmlCode);
+    if (success) {
       setCopiedId(widget.id);
       toast.success(intl.formatMessage({ id: 'partner.widgets.copiedToast', defaultMessage: 'Code HTML copi\u00e9 !' }));
       setTimeout(() => setCopiedId(null), 2000);
-    } catch {
+    } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
     }
   };

@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
 import toast from 'react-hot-toast';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import {
   DollarSign,
   Users,
@@ -70,10 +71,10 @@ const BloggerDashboard: React.FC = () => {
   }, []);
 
   const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    const success = await clipboardCopy(text);
+    if (success) {
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
-    } catch {
+    } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
     }
   };

@@ -59,6 +59,7 @@ import {
   PROMO_WIDGET_DIMENSIONS,
   PROMO_WIDGET_BUTTON_PRESETS,
 } from '@/types/blogger';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // UI STYLES
@@ -399,7 +400,7 @@ transition:all 0.2s ease;
       .replace(/\{\{widgetId\}\}/g, widget.trackingId)
       .replace(/\{\{affiliateCode\}\}/g, 'VOTRE_CODE');
 
-    navigator.clipboard.writeText(code);
+    copyToClipboard(code);
     setCopiedId(widget.id);
     setTimeout(() => setCopiedId(null), 2000);
   };

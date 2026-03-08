@@ -6,6 +6,7 @@
 // =============================================================================
 
 import React, { useRef, useEffect, useCallback } from 'react';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // Types
 interface DebugEvent {
@@ -591,8 +592,8 @@ class AdminDebugSystem {
     const json = JSON.stringify(data, null, 2);
     console.log('%c📁 Export JSON copié dans le presse-papier', 'color: #22c55e;');
     
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(json);
+    if (typeof navigator !== 'undefined') {
+      copyToClipboard(json);
     }
     
     return json;

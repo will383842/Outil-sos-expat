@@ -46,6 +46,7 @@ import {
   ArrowDown,
 } from 'lucide-react';
 import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // =============================================================================
 // TYPES
@@ -792,7 +793,7 @@ const Transactions: React.FC = () => {
 
   const handleCopyId = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(id);
+    copyToClipboard(id);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   }, []);

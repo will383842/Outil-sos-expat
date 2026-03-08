@@ -35,6 +35,7 @@ import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useAuth } from "../../contexts/AuthContext";
 import { formatCents, type AffiliateStatus } from "../../types/affiliate";
+import { copyToClipboard } from "@/utils/clipboard";
 
 // ============================================================================
 // STATUS MAPPING
@@ -397,10 +398,12 @@ const AdminAffiliatesList: React.FC = () => {
   };
 
   // Copy affiliate code
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
+  const copyCode = async (code: string) => {
+    const success = await copyToClipboard(code);
+    if (success) {
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }
   };
 
   // Export to CSV

@@ -44,6 +44,7 @@ import {
 import AdminLayout from "../../components/admin/AdminLayout";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
+import { copyToClipboard } from '@/utils/clipboard';
 
 /* ---------------------- i18n léger (aligné AdminReviews) ---------------------- */
 type Lang = "fr" | "en";
@@ -1017,7 +1018,7 @@ const AdminClients: React.FC = () => {
                               <button
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
-                                  await navigator.clipboard.writeText(client.email);
+                                  await copyToClipboard(client.email);
                                   toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}
@@ -1027,7 +1028,7 @@ const AdminClients: React.FC = () => {
                               <button
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
-                                  await navigator.clipboard.writeText(client.id);
+                                  await copyToClipboard(client.id);
                                   toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}

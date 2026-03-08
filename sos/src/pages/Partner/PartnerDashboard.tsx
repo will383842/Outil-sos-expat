@@ -7,6 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePartner } from '@/hooks/usePartner';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import {
   PartnerDashboardLayout,
   PartnerBalanceCard,
@@ -57,10 +58,10 @@ const PartnerDashboard: React.FC = () => {
   }, [isLoading, isPartner, navigate]);
 
   const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    const success = await clipboardCopy(text);
+    if (success) {
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
-    } catch {
+    } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
     }
   };

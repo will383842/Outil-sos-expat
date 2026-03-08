@@ -32,6 +32,7 @@ import {
   Facebook,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // Design tokens
 const UI = {
@@ -158,7 +159,7 @@ const AdminInfluencerDetail: React.FC = () => {
 
   // Copy to clipboard
   const copyToClipboard = (text: string, type: 'client' | 'recruit') => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     if (type === 'client') {
       setCopiedClient(true);
       setTimeout(() => setCopiedClient(false), 2000);

@@ -12,31 +12,49 @@ import { UI, SPACING } from '@/components/Chatter/designTokens';
 import ActivationChecklist from './ActivationChecklist';
 import OnboardingSpotlight from './OnboardingSpotlight';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface NewChatterDashboardProps {
   onNavigateToTelegram?: () => void;
 }
 
-const REVENUE_EXAMPLES = [
-  { calls: 5, weekly: true, monthly: 200 },
-  { calls: 10, weekly: true, monthly: 400 },
-  { calls: 20, weekly: true, monthly: 800 },
-];
-
 const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToTelegram }) => {
   const { clientShareUrl, dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
+  const config = dashboardData?.config;
   const [showOnboarding, setShowOnboarding] = useState(true);
 
-  const handleCopyLink = useCallback(() => {
+  // Dynamic commission range from config (cents → dollars)
+  const callAmountRange = useMemo(() => {
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const minAmt = Math.min(expatAmt, lawyerAmt);
+    const maxAmt = Math.max(expatAmt, lawyerAmt);
+    return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
+
+  // Dynamic revenue examples based on average commission
+  const revenueExamples = useMemo(() => {
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const avgAmount = (expatAmt + lawyerAmt) / 2;
+    return [
+      { calls: 5, weekly: true, monthly: Math.round(5 * 4 * avgAmount) },
+      { calls: 10, weekly: true, monthly: Math.round(10 * 4 * avgAmount) },
+      { calls: 20, weekly: true, monthly: Math.round(20 * 4 * avgAmount) },
+    ];
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
+
+  const handleCopyLink = useCallback(async () => {
     if (!clientShareUrl) return;
-    navigator.clipboard.writeText(clientShareUrl).then(() => {
+    const success = await copyToClipboard(clientShareUrl);
+    if (success) {
       localStorage.setItem('chatter_link_copied', Date.now().toString());
       navigator.vibrate?.(50);
       toast.success('Lien copie ! Partagez-le sur WhatsApp, Telegram...', { duration: 3000 });
-    }).catch(() => {
+    } else {
       toast.error('Impossible de copier le lien');
-    });
+    }
   }, [clientShareUrl]);
 
   const handleShareLink = useCallback(async () => {
@@ -50,7 +68,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           text: "Besoin d'aide juridique a l'etranger ? Appelez un avocat en 2 minutes !",
           url: clientShareUrl,
         });
-        toast.success('Lien partage ! Chaque appel = $3-5 pour vous');
+        toast.success(`Lien partage ! Chaque appel = ${callAmountRange} pour vous`);
       } catch {
         // User cancelled, no error
       }
@@ -80,7 +98,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
     if (daysSince >= 7 && linkCopied) {
       return {
-        text: "Votre lien est toujours actif ! Un seul appel = $3-5. Les meilleurs chatters ont commence exactement comme vous.",
+        text: `Votre lien est toujours actif ! Un seul appel = ${callAmountRange}. Les meilleurs chatters ont commence exactement comme vous.`,
         cta: 'Recommencer',
       };
     }
@@ -192,7 +210,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
             {[
               { icon: <Share2 className="w-4 h-4" />, num: '1', title: 'Partagez votre lien', color: 'bg-blue-500' },
               { icon: <Phone className="w-4 h-4" />, num: '2', title: 'Quelqu\'un appelle un avocat', color: 'bg-green-500' },
-              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: 'Vous gagnez $3-5 automatiquement', color: 'bg-yellow-500' },
+              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: `Vous gagnez ${callAmountRange} automatiquement`, color: 'bg-yellow-500' },
             ].map((step) => (
               <div key={step.num} className="flex items-center gap-3">
                 <div className={`flex-shrink-0 w-8 h-8 ${step.color} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
@@ -217,7 +235,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
             </h3>
           </div>
           <div className="space-y-2">
-            {REVENUE_EXAMPLES.map((ex) => (
+            {revenueExamples.map((ex) => (
               <div
                 key={ex.calls}
                 className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl"

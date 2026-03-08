@@ -3,9 +3,11 @@
  * Shows both client and recruitment affiliate links with copy/share functionality
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Copy, Share2, CheckCircle, Users, UserPlus, ExternalLink, QrCode } from 'lucide-react';
+import { useChatterData } from '@/contexts/ChatterDataContext';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // Design tokens
 const UI = {
@@ -34,13 +36,24 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
   totalRecruitmentConversions = 0,
 }) => {
   const intl = useIntl();
+  const { dashboardData } = useChatterData();
+  const config = dashboardData?.config;
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruitment, setCopiedRecruitment] = useState(false);
 
+  // Dynamic commission range from config (cents → dollars)
+  const callAmountRange = useMemo(() => {
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const minAmt = Math.min(expatAmt, lawyerAmt);
+    const maxAmt = Math.max(expatAmt, lawyerAmt);
+    return minAmt === maxAmt ? `${minAmt}$` : `${minAmt}-${maxAmt}$`;
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
+
   // Copy link to clipboard
   const copyLink = async (link: string, type: 'client' | 'recruitment') => {
-    try {
-      await navigator.clipboard.writeText(link);
+    const success = await copyToClipboard(link);
+    if (success) {
       if (type === 'client') {
         setCopiedClient(true);
         setTimeout(() => setCopiedClient(false), 2000);
@@ -48,8 +61,6 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         setCopiedRecruitment(true);
         setTimeout(() => setCopiedRecruitment(false), 2000);
       }
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   };
 
@@ -144,7 +155,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-sm dark:text-gray-400 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.client.commission"
-            defaultMessage="Commission : 3-5$ par appel payé"
+            defaultMessage={`Commission : ${callAmountRange} par appel payé`}
           />
         </p>
       </div>

@@ -19,6 +19,7 @@ import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useChatterTraining } from '@/hooks/useChatterTraining';
 import { useChatterResources } from '@/hooks/useChatterResources';
+import { copyToClipboard } from '@/utils/clipboard';
 import EmptyStateCard from '@/components/Chatter/Activation/EmptyStateCard';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
 import { useApp } from '@/contexts/AppContext';
@@ -77,11 +78,12 @@ function ChatterTrainingContent() {
   const [quizResult, setQuizResult] = useState<SubmitTrainingQuizResult | null>(null);
   const [revenueSlider, setRevenueSlider] = useState(2); // index in REVENUE_SCENARIOS
 
-  const handleCopyLink = useCallback(() => {
+  const handleCopyLink = useCallback(async () => {
     if (!clientShareUrl) return;
-    navigator.clipboard.writeText(clientShareUrl).then(() => {
+    const success = await copyToClipboard(clientShareUrl);
+    if (success) {
       toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien copie !' }));
-    });
+    }
   }, [clientShareUrl, intl]);
 
   // Open module viewer
@@ -357,9 +359,9 @@ function ChatterTrainingContent() {
                 )}
                 {resource.content && (
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(resource.content);
-                      toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copie !' }));
+                    onClick={async () => {
+                      const success = await copyToClipboard(resource.content);
+                      if (success) toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copie !' }));
                     }}
                     className={`${UI.button.secondary} px-3 py-1.5 text-xs flex-1`}
                   >

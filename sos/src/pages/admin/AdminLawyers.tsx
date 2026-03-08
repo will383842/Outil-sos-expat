@@ -47,6 +47,7 @@ import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import TranslationModal from "../../components/admin/TranslationModal";
 import { getCountryName, getCountryFlag } from "../../utils/formatters";
+import { copyToClipboard } from '@/utils/clipboard';
 /* -------------------------------------------------- */
 
 type UserStatus = "active" | "pending" | "blocked" | "suspended";
@@ -1725,7 +1726,7 @@ const AdminLawyers: React.FC = () => {
                               <button
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
-                                  await navigator.clipboard.writeText(l.email);
+                                  await copyToClipboard(l.email);
                                   toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}
@@ -1735,7 +1736,7 @@ const AdminLawyers: React.FC = () => {
                               <button
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                 onClick={async () => {
-                                  await navigator.clipboard.writeText(l.id);
+                                  await copyToClipboard(l.id);
                                   toast.success(t("copied"));
                                   setOpenMenuId(null);
                                 }}

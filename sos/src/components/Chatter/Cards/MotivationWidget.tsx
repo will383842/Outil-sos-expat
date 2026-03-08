@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { formatCurrencyLocale } from './currencyUtils';
 import { UI } from '@/components/Chatter/designTokens';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -258,13 +259,11 @@ const MotivationWidget = memo(function MotivationWidget({
     const linkToCopy = clientShareUrl || recruitmentShareUrl;
     if (!linkToCopy) return;
 
-    try {
-      await navigator.clipboard.writeText(linkToCopy);
+    const success = await copyToClipboard(linkToCopy);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       onCopyLink?.(linkToCopy);
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   };
 

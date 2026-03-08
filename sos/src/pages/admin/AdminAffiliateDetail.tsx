@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { getFirestore, doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, Timestamp } from "firebase/firestore";
 import AdminLayout from "../../components/admin/AdminLayout";
+import { copyToClipboard } from '@/utils/clipboard';
 import AdminErrorState from "../../components/admin/AdminErrorState";
 import { StatusBadge, type StatusType } from "../../components/admin/StatusBadge";
 import Button from "../../components/common/Button";
@@ -382,7 +383,7 @@ const AdminAffiliateDetail: React.FC = () => {
   // Copy code
   const copyCode = () => {
     if (affiliate?.affiliateCode) {
-      navigator.clipboard.writeText(affiliate.affiliateCode);
+      copyToClipboard(affiliate.affiliateCode);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     }

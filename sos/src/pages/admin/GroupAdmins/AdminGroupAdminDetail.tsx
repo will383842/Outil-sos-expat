@@ -32,6 +32,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
 const UI = {
@@ -222,7 +223,7 @@ const AdminGroupAdminDetail: React.FC = () => {
 
   // Copy to clipboard
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     setCopied(label);
     setTimeout(() => setCopied(null), 2000);
   };

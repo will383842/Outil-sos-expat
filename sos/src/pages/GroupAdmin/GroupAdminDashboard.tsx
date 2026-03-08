@@ -35,6 +35,7 @@ import {
   getGroupAdminRecruitmentLink,
   GROUP_ADMIN_BADGES,
 } from '@/types/groupAdmin';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 const NotificationBell = lazy(() =>
   import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
@@ -88,9 +89,11 @@ const GroupAdminDashboard: React.FC = () => {
   }, []);
 
   const copyToClipboard = async (text: string, type: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedCode(type);
-    setTimeout(() => setCopiedCode(null), 2000);
+    const success = await clipboardCopy(text);
+    if (success) {
+      setCopiedCode(type);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }
   };
 
   if (loading) {

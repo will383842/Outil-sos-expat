@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -386,13 +387,11 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
 
   const handleCopyLink = useCallback(async () => {
     const linkToCopy = referralLink || `https://sos-expat.com/devenir-chatter?ref=${referralCode || 'DEMO'}`;
-    try {
-      await navigator.clipboard.writeText(linkToCopy);
+    const success = await copyToClipboard(linkToCopy);
+    if (success) {
       setCopied(true);
       onCopyLink?.();
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   }, [referralLink, referralCode, onCopyLink]);
 

@@ -18,6 +18,7 @@ import { ReferralN2List } from '@/components/Chatter/Tables/ReferralN2List';
 import EmptyStateCard from '@/components/Chatter/Activation/EmptyStateCard';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // Lazy load heavier components
 const ShareButtons = lazy(() =>
@@ -60,12 +61,13 @@ function ChatterReferralsContent() {
   const paidTiers = (chatter as any)?.tierBonusesPaid || [];
   const totalRecruits = chatter?.totalRecruits || 0;
 
-  const handleCopyRecruitLink = useCallback(() => {
+  const handleCopyRecruitLink = useCallback(async () => {
     if (!recruitmentShareUrl) return;
-    navigator.clipboard.writeText(recruitmentShareUrl).then(() => {
+    const success = await copyToClipboard(recruitmentShareUrl);
+    if (success) {
       navigator.vibrate?.(50);
       toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien de recrutement copie !' }));
-    });
+    }
   }, [recruitmentShareUrl, intl]);
 
   const handleShareRecruitLink = useCallback(async () => {

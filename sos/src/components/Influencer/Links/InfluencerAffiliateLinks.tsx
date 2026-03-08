@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Copy, Check, ExternalLink, Percent, Users } from 'lucide-react';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 interface InfluencerAffiliateLinksProps {
   clientCode: string;
@@ -25,7 +26,7 @@ const InfluencerAffiliateLinks: React.FC<InfluencerAffiliateLinksProps> = ({
   const recruitLink = `https://sos-expat.com/rec/i/${recruitmentCode}`;
 
   const copyToClipboard = (text: string, type: 'client' | 'recruit') => {
-    navigator.clipboard.writeText(text);
+    clipboardCopy(text);
     if (type === 'client') {
       setCopiedClient(true);
       setTimeout(() => setCopiedClient(false), 2000);

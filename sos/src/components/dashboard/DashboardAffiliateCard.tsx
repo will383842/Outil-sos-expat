@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Copy, Share2, CheckCircle, Gift, ArrowRight, Users, DollarSign, Zap } from "lucide-react";
 import { useAffiliate } from "../../hooks/useAffiliate";
+import { copyToClipboard } from '@/utils/clipboard';
 import { formatCents } from "../../types/affiliate";
 import { useLocaleNavigate } from "../../multilingual-system/hooks/useLocaleNavigate";
 import { getTranslatedRouteSlug, type RouteKey } from "../../multilingual-system/core/routing/localeRoutes";
@@ -36,12 +37,10 @@ const DashboardAffiliateCard: React.FC = () => {
   const hasData = !!affiliateData && !error;
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
     }
   };
 

@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Edit3,
 } from 'lucide-react';
+import { copyToClipboard } from '@/utils/clipboard';
 
 /* ===================================================================== */
 /* TYPES & INTERFACES                                                    */
@@ -667,9 +668,11 @@ const ShareBottomSheet: React.FC<ShareBottomSheetProps> = ({
         const textToCopy = platform.id === 'copy'
           ? content.url
           : `${customMessage}\n\n${content.url}`;
-        await navigator.clipboard.writeText(textToCopy);
-        setCopiedPlatform(platform.id);
-        setTimeout(() => setCopiedPlatform(null), 2000);
+        const success = await copyToClipboard(textToCopy);
+        if (success) {
+          setCopiedPlatform(platform.id);
+          setTimeout(() => setCopiedPlatform(null), 2000);
+        }
       } catch (err) {
         console.error('Copy failed:', err);
       }
@@ -1030,7 +1033,7 @@ export const SocialShare: React.FC<SocialShareProps> = ({
         ? trackableUrl
         : `${updatedContent.description}\n\n${trackableUrl}`;
 
-      navigator.clipboard.writeText(textToCopy).then(() => {
+      copyToClipboard(textToCopy).then(() => {
         setCopiedPlatform(platform);
         setTimeout(() => setCopiedPlatform(null), 2000);
       });

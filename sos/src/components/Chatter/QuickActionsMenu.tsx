@@ -26,6 +26,7 @@ import {
   Check,
   Copy,
 } from 'lucide-react';
+import { copyToClipboard } from '@/utils/clipboard';
 
 // ============================================================================
 // TYPES
@@ -101,13 +102,11 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
   const handleCopyLink = useCallback(async () => {
     if (!affiliateLink) return;
 
-    try {
-      await navigator.clipboard.writeText(affiliateLink);
+    const success = await copyToClipboard(affiliateLink);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       onShareLink?.();
-    } catch (err) {
-      console.error('Failed to copy link:', err);
     }
   }, [affiliateLink, onShareLink]);
 
@@ -416,12 +415,10 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
       { link: affiliateLink }
     );
 
-    try {
-      await navigator.clipboard.writeText(message);
+    const success = await copyToClipboard(message);
+    if (success) {
       setCopiedId(template.id);
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy message:', err);
     }
   };
 

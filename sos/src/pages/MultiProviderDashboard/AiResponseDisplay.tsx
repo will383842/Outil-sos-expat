@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Bot, Copy, Check, Clock, Sparkles, ExternalLink } from 'lucide-react';
 import type { AiResponse } from '../../hooks/useMultiProviderDashboard';
 import { cn } from '../../utils/cn';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface AiResponseDisplayProps {
   aiResponse: AiResponse;
@@ -21,12 +22,10 @@ const AiResponseDisplay: React.FC<AiResponseDisplayProps> = ({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(aiResponse.content);
+    const success = await copyToClipboard(aiResponse.content);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   };
 

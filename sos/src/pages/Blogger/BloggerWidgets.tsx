@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
+import { copyToClipboard } from '@/utils/clipboard';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import {
@@ -103,12 +104,10 @@ const BloggerWidgets: React.FC = () => {
     const affiliateLink = `https://sos-expat.com/?ref=${blogger.affiliateCodeClient}`;
     const htmlCode = widget.htmlTemplate.replace(/\{\{AFFILIATE_LINK\}\}/g, affiliateLink);
 
-    try {
-      await navigator.clipboard.writeText(htmlCode);
+    const success = await copyToClipboard(htmlCode);
+    if (success) {
       setCopiedId(widget.id);
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   };
 
