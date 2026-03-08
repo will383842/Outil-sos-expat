@@ -382,6 +382,7 @@ const RegisterClient: React.FC = () => {
     await setPersistence(auth, browserLocalPersistence);
     await register(userData as Parameters<typeof register>[0], password);
     clearStoredReferral();
+    try { sessionStorage.removeItem('pendingReferralCode'); } catch { /* noop */ }
   }, [register]);
 
   // ===========================================================================
