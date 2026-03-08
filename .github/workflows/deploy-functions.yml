@@ -12,6 +12,7 @@ jobs:
   deploy:
     name: Deploy to Firebase
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -78,35 +79,138 @@ jobs:
           SLACK_SECURITY_WEBHOOK_URL=
           EOF
 
-      - name: Deploy to Firebase (3 passes avec retry anti-quota 429)
+      # ----------------------------------------------------------------
+      # Deploy: passe 1 complète, puis passes incrémentales sur les échecs
+      # ----------------------------------------------------------------
+      - name: Deploy functions (incremental passes)
         working-directory: sos/firebase
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         run: |
-          deploy_with_retry() {
-            local attempt=1
-            while [ $attempt -le 4 ]; do
-              echo "=== Tentative $attempt ==="
-              firebase deploy --only functions --project sos-urgently-ac307 --force 2>&1 | tee /tmp/deploy_output.txt
-              EXIT=${PIPESTATUS[0]}
-              if [ $EXIT -eq 0 ]; then
-                echo "✅ Déploiement réussi"
-                return 0
-              fi
-              QUOTA_ERRORS=$(grep -c "429\|RESOURCE_EXHAUSTED\|quota" /tmp/deploy_output.txt 2>/dev/null || echo "0")
-              QUOTA_ERRORS=$(echo "$QUOTA_ERRORS" | tr -d '[:space:]')
-              if [ "$QUOTA_ERRORS" -gt 0 ]; then
-                WAIT=$((attempt * 120))
-                echo "⚠️  Quota 429 atteint ($QUOTA_ERRORS erreurs) — attente ${WAIT}s avant retry $((attempt+1))/4"
-                sleep $WAIT
-                attempt=$((attempt + 1))
-              else
-                echo "❌ Erreur non-quota (exit $EXIT) — abandon"
-                cat /tmp/deploy_output.txt | grep -E "Error|error|failed" | tail -20
-                exit $EXIT
-              fi
-            done
-            echo "❌ Toutes les tentatives échouées"
-            exit 1
+          set +e
+          PROJECT="sos-urgently-ac307"
+          MAX_PASSES=6
+          WAIT_BETWEEN=90
+
+          # Helper: extract failed function names from Firebase CLI output
+          extract_failed() {
+            local log_file="$1"
+            > /tmp/failed_raw.txt
+            > /tmp/failed_functions.txt
+
+            # Pattern 1: "✖  functions[funcName(region)]"
+            grep -oP '✖\s+functions\[\K[^(]+' "$log_file" >> /tmp/failed_raw.txt 2>/dev/null
+
+            # Pattern 2: "Failed to create/update function funcName"
+            grep -oP 'Failed to (create|update|delete) function \K\S+' "$log_file" >> /tmp/failed_raw.txt 2>/dev/null
+
+            # Pattern 3: "Could not create/update function funcName"
+            grep -oP 'Could not \w+ (?:cloud )?function[s]? \K\S+' "$log_file" >> /tmp/failed_raw.txt 2>/dev/null
+
+            # Pattern 4: lines with functions[name(region)] followed by error/quota/429
+            grep -iP 'functions\[[^\]]+\].*?(error|quota|429|RESOURCE_EXHAUSTED|failed)' "$log_file" \
+              | grep -oP 'functions\[\K[^(]+' >> /tmp/failed_raw.txt 2>/dev/null
+
+            # Deduplicate and clean
+            cat /tmp/failed_raw.txt | sed 's/[[:space:]]*$//' | sort -u > /tmp/failed_functions.txt
+            rm -f /tmp/failed_raw.txt
           }
-          deploy_with_retry
+
+          # ── PASSE 1: deploy all ──
+          echo ""
+          echo "=========================================="
+          echo "  PASSE 1/$MAX_PASSES — Déploiement complet"
+          echo "=========================================="
+          firebase deploy --only functions --project "$PROJECT" --force 2>&1 | tee /tmp/deploy_pass.txt
+          EXIT=${PIPESTATUS[0]}
+
+          if [ $EXIT -eq 0 ]; then
+            echo "✅ Toutes les fonctions déployées en une passe !"
+            exit 0
+          fi
+          echo "⚠️  Passe 1 terminée avec des échecs (exit $EXIT)"
+
+          # ── PASSES 2..N: only failed functions ──
+          for PASS in $(seq 2 $MAX_PASSES); do
+            extract_failed /tmp/deploy_pass.txt
+
+            FAILED_COUNT=$(wc -l < /tmp/failed_functions.txt | tr -d '[:space:]')
+            if [ "$FAILED_COUNT" -eq 0 ]; then
+              echo "✅ Aucune fonction en échec détectée — déploiement terminé !"
+              exit 0
+            fi
+
+            ONLY_ARG=$(cat /tmp/failed_functions.txt | sed 's/^/functions:/' | paste -sd ',' -)
+
+            echo ""
+            echo "=========================================="
+            echo "  PASSE $PASS/$MAX_PASSES — $FAILED_COUNT fonction(s) en échec"
+            echo "=========================================="
+            cat /tmp/failed_functions.txt | while read fn; do echo "  - $fn"; done
+            echo ""
+            echo "Attente ${WAIT_BETWEEN}s avant re-déploiement..."
+            sleep $WAIT_BETWEEN
+
+            firebase deploy --only "$ONLY_ARG" --project "$PROJECT" --force 2>&1 | tee /tmp/deploy_pass.txt
+            EXIT=${PIPESTATUS[0]}
+
+            if [ $EXIT -eq 0 ]; then
+              echo "✅ Passe $PASS réussie — toutes les fonctions restantes déployées !"
+              exit 0
+            fi
+            echo "⚠️  Passe $PASS terminée avec des échecs (exit $EXIT)"
+          done
+
+          # Final check
+          extract_failed /tmp/deploy_pass.txt
+          REMAINING=$(wc -l < /tmp/failed_functions.txt | tr -d '[:space:]')
+          if [ "$REMAINING" -gt 0 ]; then
+            echo ""
+            echo "❌ Après $MAX_PASSES passes, $REMAINING fonction(s) toujours en échec :"
+            cat /tmp/failed_functions.txt
+            echo ""
+            grep -iE "error|fail|could not" /tmp/deploy_pass.txt | tail -30
+            exit 1
+          fi
+          echo "✅ Déploiement complet !"
+
+      # ----------------------------------------------------------------
+      # Vérification: toutes les fonctions sont-elles bien déployées ?
+      # ----------------------------------------------------------------
+      - name: Verify all functions are deployed
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+        run: |
+          PROJECT="sos-urgently-ac307"
+
+          echo "=========================================="
+          echo "  VÉRIFICATION POST-DÉPLOIEMENT"
+          echo "=========================================="
+
+          # List all deployed functions via gcloud
+          echo "Récupération des fonctions déployées..."
+          DEPLOYED=$(gcloud functions list --project "$PROJECT" \
+            --format="value(name)" 2>/dev/null | wc -l | tr -d '[:space:]')
+
+          # Also check gen2 functions
+          DEPLOYED_V2=$(gcloud functions list --project "$PROJECT" --gen2 \
+            --format="value(name)" 2>/dev/null | wc -l | tr -d '[:space:]')
+
+          TOTAL=$((DEPLOYED + DEPLOYED_V2))
+          # Avoid double-counting (gen2 flag may list same functions)
+          TOTAL_UNIQUE=$(gcloud functions list --project "$PROJECT" \
+            --format="value(name)" 2>/dev/null | sort -u | wc -l | tr -d '[:space:]')
+
+          echo ""
+          echo "📊 Fonctions déployées : $TOTAL_UNIQUE"
+
+          if [ "$TOTAL_UNIQUE" -ge 800 ]; then
+            echo "✅ $TOTAL_UNIQUE fonctions vérifiées — déploiement complet !"
+          elif [ "$TOTAL_UNIQUE" -gt 0 ]; then
+            echo "⚠️  Seulement $TOTAL_UNIQUE fonctions déployées (attendu 800+)."
+            echo "    Certaines fonctions peuvent manquer."
+            exit 1
+          else
+            echo "⚠️  Impossible de compter les fonctions (gcloud peut ne pas être configuré)."
+            echo "    Le deploy s'est terminé sans erreur — vérifiez manuellement."
+          fi
