@@ -112,9 +112,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      // ES2019 pour compatibilité avec react-snap (Puppeteer/Chromium ancien)
-      // Évite les erreurs "Unexpected token '.' " avec optional chaining (?.)
-      target: 'es2019',
+      // ES2020 pour supporter BigInt (IBAN validation) + optional chaining
+      target: 'es2020',
       // Minification avec terser pour réduire la taille du bundle
       minify: 'terser',
       terserOptions: {
