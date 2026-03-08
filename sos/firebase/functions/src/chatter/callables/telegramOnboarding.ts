@@ -367,8 +367,8 @@ async function sendTelegramMessage(
 export const generateTelegramLink = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",  // FIX: 256MiB caused OOM at startup
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 30,
     cors: ALLOWED_ORIGINS,
   },
@@ -468,8 +468,8 @@ export const generateTelegramLink = onCall(
 export const checkTelegramLinkStatus = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",  // FIX: 256MiB caused OOM at startup
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 15,
     cors: ALLOWED_ORIGINS,
   },
@@ -561,8 +561,8 @@ export const checkTelegramLinkStatus = onCall(
 export const telegramChatterBotWebhook = onRequest(
   {
     region: "europe-west3",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",  // FIX: 256MiB caused OOM with secrets loaded
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 30,
     // Allow unauthenticated access (Telegram servers need to call this)
     invoker: "public",
@@ -1075,8 +1075,8 @@ export const telegramChatterBotWebhook = onRequest(
 export const skipTelegramOnboarding = onCall(
   {
     region: "europe-west3",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",  // FIX: 256MiB caused OOM at startup
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 15,
     cors: ALLOWED_ORIGINS,
   },

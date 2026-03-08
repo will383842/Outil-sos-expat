@@ -90,8 +90,8 @@ function convertToPaymentMethodDetails(
 export const requestWithdrawal = onCall(
   {
     region: "us-central1",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",  // FIX: 256MiB caused OOM with secrets loaded
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 60,
     maxInstances: 1,
     cors: ALLOWED_ORIGINS,
