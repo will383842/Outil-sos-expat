@@ -29,6 +29,8 @@ import { useFCM } from './hooks/useFCM';
 import { useReferralCapture } from './hooks/useAffiliate';
 import { migrateFromLegacyStorage, storeReferralCode } from './utils/referralStorage';
 import type { ActorType, ReferralCodeType } from './utils/referralStorage';
+// AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
+import { captureAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -691,8 +693,13 @@ const TrafficSourceCapture: React.FC = () => {
 // AFFILIATE SYSTEM: Persists to localStorage for later use during signup
 // --------------------------------------------
 const ReferralCodeCapture: React.FC = () => {
-  // Hook handles all capture logic: reads URL, persists to localStorage, cleans URL
+  // Hook handles all capture logic: reads URL, persists to localStorage
   const { referralCode, referralTracking } = useReferralCapture();
+
+  // Capture affiliate ref to sessionStorage for URL persistence (AffiliateRefSync)
+  useEffect(() => {
+    captureAffiliateRef();
+  }, []);
 
   // Migrate legacy localStorage keys to new format (runs once)
   useEffect(() => {
@@ -999,6 +1006,8 @@ const App: React.FC = () => {
           <TrafficSourceCapture />
           {/* AFFILIATE: Capture referral codes (?ref=CODE) from URL */}
           <ReferralCodeCapture />
+          {/* AFFILIATE: Keep ?ref= visible in URL across ALL navigation */}
+          <AffiliateRefSync />
           <div className={`App ${isMobile ? "mobile-layout" : "desktop-layout"}`}>
             <DefaultHelmet pathname={location.pathname} />
 
