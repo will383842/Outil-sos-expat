@@ -49,7 +49,7 @@ const InfluencerRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('influencer') || '';
+    return getStoredReferralCode('influencer') || getStoredReferralCode('client') || '';
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('influencer-landing' as RouteKey, langCode)}`;

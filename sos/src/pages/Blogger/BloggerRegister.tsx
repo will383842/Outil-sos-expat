@@ -207,7 +207,7 @@ const BloggerRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('blogger') || '';
+    return getStoredReferralCode('blogger') || getStoredReferralCode('client') || '';
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('blogger-landing' as RouteKey, langCode)}`;

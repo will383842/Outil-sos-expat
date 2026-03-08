@@ -56,7 +56,7 @@ const GroupAdminRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('groupAdmin') || '';
+    return getStoredReferralCode('groupAdmin') || getStoredReferralCode('client') || '';
   }, [searchParams]);
 
   // Routes

@@ -59,7 +59,8 @@ const ChatterRegister: React.FC = () => {
     }
 
     // Fallback to localStorage (returns null if expired)
-    return getStoredReferralCode('chatter') || '';
+    // Check role-specific storage first, then generic 'client' (set by useReferralCapture on any page)
+    return getStoredReferralCode('chatter') || getStoredReferralCode('client') || '';
   }, [searchParams]);
 
   // Routes
