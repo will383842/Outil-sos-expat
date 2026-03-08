@@ -24,6 +24,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Link } from "react-router-dom";
 
 export default function ChatterReferralEarnings() {
+  return (
+    <ChatterDashboardLayout activeKey="referral-earnings">
+      <ChatterReferralEarningsContent />
+    </ChatterDashboardLayout>
+  );
+}
+
+function ChatterReferralEarningsContent() {
   const { t, locale } = useTranslation();
   const { dashboardData: chatterData } = useChatterData();
   const {
@@ -78,8 +86,7 @@ export default function ChatterReferralEarnings() {
   };
 
   return (
-    <ChatterDashboardLayout activeKey="referral-earnings">
-      <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
         {/* Header — compact, mobile-first */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -233,6 +240,5 @@ export default function ChatterReferralEarnings() {
           </>
         )}
       </div>
-    </ChatterDashboardLayout>
   );
 }

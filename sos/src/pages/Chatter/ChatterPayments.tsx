@@ -174,6 +174,14 @@ const LockedBonusBanner: React.FC<{
 // ============================================================================
 
 const ChatterPayments: React.FC = () => {
+  return (
+    <ChatterDashboardLayout activeKey="payments">
+      <ChatterPaymentsContent />
+    </ChatterDashboardLayout>
+  );
+};
+
+const ChatterPaymentsContent: React.FC = () => {
   const intl = useIntl();
   const { user, refreshUser } = useAuth();
 
@@ -804,24 +812,20 @@ const ChatterPayments: React.FC = () => {
 
   if (chatterLoading) {
     return (
-      <ChatterDashboardLayout activeKey="payments">
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
-        </div>
-      </ChatterDashboardLayout>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+      </div>
     );
   }
 
   if (chatterError) {
     return (
-      <ChatterDashboardLayout activeKey="payments">
-        <div className={`${UI.card} p-6`}>
-          <div className="flex items-center gap-3 text-red-500">
-            <AlertCircle className="w-6 h-6" />
-            <span>{chatterError}</span>
-          </div>
+      <div className={`${UI.card} p-6`}>
+        <div className="flex items-center gap-3 text-red-500">
+          <AlertCircle className="w-6 h-6" />
+          <span>{chatterError}</span>
         </div>
-      </ChatterDashboardLayout>
+      </div>
     );
   }
 
@@ -830,7 +834,6 @@ const ChatterPayments: React.FC = () => {
   // ============================================================================
 
   return (
-    <ChatterDashboardLayout activeKey="payments">
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
@@ -852,7 +855,6 @@ const ChatterPayments: React.FC = () => {
           onTabChange={setActiveTab}
         />
       </div>
-    </ChatterDashboardLayout>
   );
 };
 

@@ -27,6 +27,14 @@ const PRIZES = [
 ];
 
 export default function ChatterLeaderboard() {
+  return (
+    <ChatterDashboardLayout activeKey="leaderboard">
+      <ChatterLeaderboardContent />
+    </ChatterDashboardLayout>
+  );
+}
+
+function ChatterLeaderboardContent() {
   const intl = useIntl();
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
@@ -317,16 +325,14 @@ export default function ChatterLeaderboard() {
   ];
 
   return (
-    <ChatterDashboardLayout activeKey="leaderboard">
-      <div className="px-4 py-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="w-5 h-5 text-amber-500" />
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-            <FormattedMessage id="chatter.ranking.title" defaultMessage="Classement" />
-          </h1>
-        </div>
-        <SwipeTabContainer tabs={tabs} />
+    <div className="px-4 py-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Trophy className="w-5 h-5 text-amber-500" />
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+          <FormattedMessage id="chatter.ranking.title" defaultMessage="Classement" />
+        </h1>
       </div>
-    </ChatterDashboardLayout>
+      <SwipeTabContainer tabs={tabs} />
+    </div>
   );
 }

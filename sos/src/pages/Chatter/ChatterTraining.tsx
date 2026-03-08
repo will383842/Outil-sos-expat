@@ -40,6 +40,14 @@ const REVENUE_SCENARIOS = [
 ];
 
 export default function ChatterTraining() {
+  return (
+    <ChatterDashboardLayout activeKey="training">
+      <ChatterTrainingContent />
+    </ChatterDashboardLayout>
+  );
+}
+
+function ChatterTrainingContent() {
   const intl = useIntl();
   const { language } = useApp();
   const { dashboardData, clientShareUrl } = useChatterData();
@@ -393,17 +401,15 @@ export default function ChatterTraining() {
   ];
 
   return (
-    <ChatterDashboardLayout activeKey="training">
-      <div className="px-4 py-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Briefcase className="w-5 h-5 text-slate-400" />
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-            <FormattedMessage id="chatter.tools.title" defaultMessage="Outils" />
-          </h1>
-        </div>
-        <SwipeTabContainer tabs={tabs} />
+    <div className="px-4 py-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Briefcase className="w-5 h-5 text-slate-400" />
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+          <FormattedMessage id="chatter.tools.title" defaultMessage="Outils" />
+        </h1>
       </div>
-    </ChatterDashboardLayout>
+      <SwipeTabContainer tabs={tabs} />
+    </div>
   );
 }
 

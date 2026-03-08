@@ -14,6 +14,14 @@ import { storage, functionsAffiliate } from '@/config/firebase';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
 
 const ChatterProfile: React.FC = () => {
+  return (
+    <ChatterDashboardLayout activeKey="profile">
+      <ChatterProfileContent />
+    </ChatterDashboardLayout>
+  );
+};
+
+const ChatterProfileContent: React.FC = () => {
   const { dashboardData, isLoading } = useChatterData();
   const { user } = useAuth();
   const chatter = dashboardData?.chatter;
@@ -71,18 +79,15 @@ const ChatterProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <ChatterDashboardLayout activeKey="profile">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-red-500" />
-        </div>
-      </ChatterDashboardLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+      </div>
     );
   }
 
   if (!chatter) return null;
 
   return (
-    <ChatterDashboardLayout activeKey="profile">
       <div className={`${SPACING.pagePadding} py-4 space-y-4 sm:space-y-6`}>
 
         {/* Header */}
@@ -194,7 +199,6 @@ const ChatterProfile: React.FC = () => {
           </div>
         </div>
       </div>
-    </ChatterDashboardLayout>
   );
 };
 

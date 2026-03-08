@@ -34,6 +34,14 @@ const ReferralCommissionsTable = lazy(() =>
 );
 
 export default function ChatterReferrals() {
+  return (
+    <ChatterDashboardLayout activeKey="referrals">
+      <ChatterReferralsContent />
+    </ChatterDashboardLayout>
+  );
+}
+
+function ChatterReferralsContent() {
   const intl = useIntl();
   const { dashboardData: chatterDashboard, recruitmentShareUrl, clientShareUrl } = useChatterData();
   const {
@@ -276,37 +284,35 @@ export default function ChatterReferrals() {
   ];
 
   return (
-    <ChatterDashboardLayout activeKey="referrals">
-      <div className="px-4 py-4">
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              <FormattedMessage id="chatter.team.title" defaultMessage="Equipe" />
-            </h1>
-            {totalRecruits > 0 && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                <FormattedMessage
-                  id="chatter.team.socialProof"
-                  defaultMessage="Les chatters avec 10+ filleuls gagnent en moyenne $400/mois"
-                />
-              </p>
-            )}
-          </div>
-          <button
-            onClick={refreshDashboard}
-            disabled={isLoading}
-            className={`${UI.button.ghost} p-2 ${SPACING.touchTarget}`}
-            aria-label="Refresh"
-          >
-            <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
+    <div className="px-4 py-4">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            <FormattedMessage id="chatter.team.title" defaultMessage="Equipe" />
+          </h1>
+          {totalRecruits > 0 && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <FormattedMessage
+                id="chatter.team.socialProof"
+                defaultMessage="Les chatters avec 10+ filleuls gagnent en moyenne $400/mois"
+              />
+            </p>
+          )}
         </div>
-
-        {/* Tabs */}
-        <SwipeTabContainer tabs={tabs} />
+        <button
+          onClick={refreshDashboard}
+          disabled={isLoading}
+          className={`${UI.button.ghost} p-2 ${SPACING.touchTarget}`}
+          aria-label="Refresh"
+        >
+          <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
-    </ChatterDashboardLayout>
+
+      {/* Tabs */}
+      <SwipeTabContainer tabs={tabs} />
+    </div>
   );
 }
