@@ -70,6 +70,8 @@ jobs:
           MAILWIZZ_API_URL=https://mail.sos-expat.com/api/index.php
           MAILWIZZ_LIST_UID=yl089ehqpgb96
           MAILWIZZ_CUSTOMER_ID=2
+          MAILWIZZ_LIST_CHATTER_RECRUTEMENT=ye577s0s75c99
+          MAILWIZZ_LIST_CHATTER_ONBOARDING=yr810av4z5275
           OUTIL_INGEST_ENDPOINT=https://europe-west1-outils-sos-expat.cloudfunctions.net/ingestBooking
           EXECUTE_PAYOUT_RETRY_TASK_URL=
           EXECUTE_STRIPE_TRANSFER_RETRY_URL=
@@ -91,7 +93,8 @@ jobs:
                 echo "✅ Déploiement réussi"
                 return 0
               fi
-              QUOTA_ERRORS=$(grep -c "429\|RESOURCE_EXHAUSTED\|quota" /tmp/deploy_output.txt 2>/dev/null || echo 0)
+              QUOTA_ERRORS=$(grep -c "429\|RESOURCE_EXHAUSTED\|quota" /tmp/deploy_output.txt 2>/dev/null || echo "0")
+              QUOTA_ERRORS=$(echo "$QUOTA_ERRORS" | tr -d '[:space:]')
               if [ "$QUOTA_ERRORS" -gt 0 ]; then
                 WAIT=$((attempt * 120))
                 echo "⚠️  Quota 429 atteint ($QUOTA_ERRORS erreurs) — attente ${WAIT}s avant retry $((attempt+1))/4"
