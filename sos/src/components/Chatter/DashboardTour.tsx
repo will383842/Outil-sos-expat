@@ -11,9 +11,10 @@
  * - Confetti celebration on completion
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { useChatterData } from '@/contexts/ChatterDataContext';
 import {
   X,
   ChevronLeft,
@@ -102,8 +103,8 @@ const TOUR_STEPS: TourStep[] = [
     targetSelector: '[data-tour="affiliate-links"]',
     title: 'Your Affiliate Links',
     titleFr: 'Vos Liens d\'Affiliation',
-    description: 'Share these links on social media. You earn $3-5 for every client who books a call through your link!',
-    descriptionFr: 'Partagez ces liens sur les reseaux sociaux. Vous gagnez 3-5$ pour chaque client qui reserve un appel via votre lien !',
+    description: 'Share these links on social media. You earn {{callAmountRange}} for every client who books a call through your link!',
+    descriptionFr: 'Partagez ces liens sur les reseaux sociaux. Vous gagnez {{callAmountRange}} pour chaque client qui reserve un appel via votre lien !',
     icon: <Share2 className="w-6 h-6 text-blue-500" />,
     position: 'bottom',
   },
@@ -304,6 +305,7 @@ interface TourTooltipProps {
   totalSteps: number;
   targetRect: DOMRect | null;
   language: string;
+  callAmountRange: string;
   onNext: () => void;
   onPrev: () => void;
   onSkip: () => void;
@@ -317,6 +319,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   totalSteps,
   targetRect,
   language,
+  callAmountRange,
   onNext,
   onPrev,
   onSkip,
@@ -343,7 +346,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   }, [targetRect, step.position]);
 
   const title = isFrench ? step.titleFr : step.title;
-  const description = isFrench ? step.descriptionFr : step.description;
+  const description = (isFrench ? step.descriptionFr : step.description).replace(/\{\{callAmountRange\}\}/g, callAmountRange);
 
   // Arrow styles based on position
   const arrowStyles: Record<string, string> = {
@@ -552,6 +555,18 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
   forceShow = false,
 }) => {
   const intl = useIntl();
+  const { dashboardData } = useChatterData();
+  const configData = dashboardData?.config;
+
+  // Dynamic commission range from config (cents → dollars)
+  const callAmountRange = useMemo(() => {
+    const expatAmt = (configData?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (configData?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const minAmt = Math.min(expatAmt, lawyerAmt);
+    const maxAmt = Math.max(expatAmt, lawyerAmt);
+    return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
+  }, [configData?.commissionClientCallAmountExpat, configData?.commissionClientCallAmountLawyer]);
+
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -714,6 +729,7 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
               totalSteps={TOUR_STEPS.length}
               targetRect={targetRect}
               language={intl.locale}
+              callAmountRange={callAmountRange}
               onNext={handleNext}
               onPrev={handlePrev}
               onSkip={handleSkip}

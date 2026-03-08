@@ -3,10 +3,11 @@
  * Shows once only (localStorage), highlights: StickyBar → Checklist → Share buttons
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Copy, ArrowRight, X } from 'lucide-react';
 import { UI } from '@/components/Chatter/designTokens';
+import { useChatterData } from '@/contexts/ChatterDataContext';
 
 const ONBOARDING_KEY = 'chatter_onboarding_seen';
 
@@ -23,6 +24,17 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
 }) => {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
+  const { dashboardData } = useChatterData();
+  const config = dashboardData?.config;
+
+  // Dynamic commission range from config (cents → dollars)
+  const callAmountRange = useMemo(() => {
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const minAmt = Math.min(expatAmt, lawyerAmt);
+    const maxAmt = Math.max(expatAmt, lawyerAmt);
+    return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
 
   useEffect(() => {
     if (localStorage.getItem(ONBOARDING_KEY)) return;
@@ -51,7 +63,7 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
     {
       targetId: 'sticky-affiliate-bar',
       title: 'Voici vos liens de parrainage !',
-      description: 'Chaque personne qui appelle via ce lien = $3-5 pour vous. Copiez-le et partagez-le partout.',
+      description: `Chaque personne qui appelle via ce lien = ${callAmountRange} pour vous. Copiez-le et partagez-le partout.`,
       action: (
         <button
           onClick={() => { onCopyLink(); handleNext(); }}

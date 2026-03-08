@@ -116,7 +116,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
     }
 
     return null;
-  }, []);
+  }, [callAmountRange]);
 
   return (
     <div className={`space-y-4 ${SPACING.pagePadding} py-4`}>

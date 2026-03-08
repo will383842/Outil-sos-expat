@@ -42,6 +42,16 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
   const intl = useIntl();
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
+  const config = dashboardData?.config;
+
+  // Dynamic commission range from config (cents → dollars)
+  const callAmountRange = useMemo(() => {
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const minAmt = Math.min(expatAmt, lawyerAmt);
+    const maxAmt = Math.max(expatAmt, lawyerAmt);
+    return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
 
   // Step completion detection
   const steps = useMemo(() => {
@@ -222,7 +232,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           <FormattedMessage
                             id="chatter.activation.step4.subtitle"
-                            defaultMessage="$3-5 credites automatiquement"
+                            defaultMessage={`${callAmountRange} credites automatiquement`}
                           />
                         </p>
                       )}

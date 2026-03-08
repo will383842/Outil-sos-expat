@@ -116,50 +116,63 @@ export function useChatter(): UseChatterReturn {
       limit(30)
     );
 
-    const [commissionsSnap, withdrawalsSnap, notificationsSnap] = await Promise.all([
+    // Use allSettled so one failing query doesn't break the dashboard
+    const [commissionsResult, withdrawalsResult, notificationsResult] = await Promise.allSettled([
       getDocs(commissionsQuery),
       getDocs(withdrawalsQuery),
       getDocs(notificationsQuery),
     ]);
 
-    setCommissions(
-      commissionsSnap.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
-          validatedAt: data.validatedAt?.toDate?.()?.toISOString() || null,
-          availableAt: data.availableAt?.toDate?.()?.toISOString() || null,
-          paidAt: data.paidAt?.toDate?.()?.toISOString() || null,
-        } as ChatterCommission;
-      })
-    );
+    if (commissionsResult.status === "fulfilled") {
+      setCommissions(
+        commissionsResult.value.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+            validatedAt: data.validatedAt?.toDate?.()?.toISOString() || null,
+            availableAt: data.availableAt?.toDate?.()?.toISOString() || null,
+            paidAt: data.paidAt?.toDate?.()?.toISOString() || null,
+          } as ChatterCommission;
+        })
+      );
+    } else {
+      console.warn("[useChatter] Failed to fetch commissions:", commissionsResult.reason);
+    }
 
-    setWithdrawals(
-      withdrawalsSnap.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          requestedAt: data.requestedAt?.toDate?.()?.toISOString() || "",
-          processedAt: data.processedAt?.toDate?.()?.toISOString() || undefined,
-          completedAt: data.completedAt?.toDate?.()?.toISOString() || undefined,
-          failedAt: data.failedAt?.toDate?.()?.toISOString() || undefined,
-        } as ChatterWithdrawal;
-      })
-    );
+    if (withdrawalsResult.status === "fulfilled") {
+      setWithdrawals(
+        withdrawalsResult.value.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            requestedAt: data.requestedAt?.toDate?.()?.toISOString() || "",
+            processedAt: data.processedAt?.toDate?.()?.toISOString() || undefined,
+            completedAt: data.completedAt?.toDate?.()?.toISOString() || undefined,
+            failedAt: data.failedAt?.toDate?.()?.toISOString() || undefined,
+          } as ChatterWithdrawal;
+        })
+      );
+    } else {
+      console.warn("[useChatter] Failed to fetch withdrawals:", withdrawalsResult.reason);
+    }
 
-    setNotifications(
-      notificationsSnap.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
-        } as ChatterNotification;
-      })
-    );
+    if (notificationsResult.status === "fulfilled") {
+      setNotifications(
+        notificationsResult.value.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          } as ChatterNotification;
+        })
+      );
+    } else {
+      console.warn("[useChatter] Failed to fetch notifications:", notificationsResult.reason);
+    }
   }, [user?.uid, db]);
 
   // Fetch dashboard data + list data in parallel
