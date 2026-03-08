@@ -399,7 +399,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
   const handleGetLink = useCallback(() => {
     // If no link provided, this could navigate to registration
     if (!referralLink && !referralCode) {
-      window.location.href = '/devenir-chatter';
+      window.location.href = `/devenir-chatter${window.location.search || ''}`;
     } else {
       handleCopyLink();
     }

@@ -740,9 +740,10 @@ const AffiliatePathCapture: React.FC<{
   }
 
   const locale = getLocaleString(language);
-  const destination = redirectPath === '/'
+  const search = window.location.search || '';
+  const destination = (redirectPath === '/'
     ? `/${locale}`
-    : `/${locale}${redirectPath}`;
+    : `/${locale}${redirectPath}`) + search;
 
   return <Navigate to={destination} replace />;
 };
