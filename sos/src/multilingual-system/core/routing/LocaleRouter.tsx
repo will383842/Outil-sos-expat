@@ -252,9 +252,10 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
   // P0 FIX: If redirect is needed, render Navigate component INSTEAD of children
   // This is SYNCHRONOUS - no flash of 404
   if (redirectTo) {
-    console.log("🔷 [LocaleRouter] REDIRECTING to:", redirectTo, "from:", location.pathname);
-    // Use Navigate component for synchronous redirect
-    return <Navigate to={redirectTo} replace />;
+    // CRITICAL: Preserve query params (e.g., ?ref=CODE) during locale redirects
+    const redirectWithQuery = location.search ? `${redirectTo}${location.search}` : redirectTo;
+    console.log("🔷 [LocaleRouter] REDIRECTING to:", redirectWithQuery, "from:", location.pathname + location.search);
+    return <Navigate to={redirectWithQuery} replace />;
   }
 
   // During language sync, show loading briefly to prevent flash
