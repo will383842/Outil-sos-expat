@@ -54,7 +54,7 @@ import {
   CheckCircle,
   PenTool,
 } from 'lucide-react';
-import { storeReferralCode, getStoredReferralCode, clearStoredReferral } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
@@ -494,6 +494,7 @@ const BloggerRegister: React.FC = () => {
           blogDescription: formData.blogDescription,
           definitiveRoleAcknowledged: formData.definitiveRoleAcknowledged,
           recruitmentCode: formData.referralCode || undefined,
+          referralCapturedAt: getStoredReferral('blogger')?.capturedAt || new Date().toISOString(),
           termsAcceptedAt: new Date().toISOString(),
           termsVersion: "3.0",
           termsType: "terms_bloggers",

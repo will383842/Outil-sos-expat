@@ -534,6 +534,7 @@ export interface RegisterBloggerInput {
   blogDescription?: string;
   definitiveRoleAcknowledged: boolean;
   recruitmentCode?: string;
+  referralCapturedAt?: string;
   termsAcceptedAt?: string;
   termsVersion?: string;
   termsType?: string;

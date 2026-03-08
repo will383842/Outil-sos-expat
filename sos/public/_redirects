@@ -4,9 +4,10 @@
 
 # =============================================
 # Root redirect -> default locale (French)
-# Prevents Google from indexing "/" without a canonical
+# NOTE: Removed server-side 301 for "/" because it strips query params (?ref=CODE).
+# The SPA handles root redirect via RootLocaleRedirect in App.tsx,
+# which preserves query params and hash fragments.
 # =============================================
-/ /fr-fr 301
 
 # =============================================
 # Trailing slash normalization for localized homepages

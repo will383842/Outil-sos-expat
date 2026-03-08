@@ -554,6 +554,20 @@ export interface RegisterInfluencerInput {
   communitySize?: number;
   communityNiche?: string;
   socialLinks?: Record<string, string>;
+  recruitmentCode?: string;
+  referralCapturedAt?: string;
+  interventionCountries?: string[];
+  termsAcceptedAt?: string;
+  termsVersion?: string;
+  termsType?: string;
+  termsAffiliateVersion?: string;
+  termsAffiliateType?: string;
+  termsAcceptanceMeta?: {
+    userAgent: string;
+    language: string;
+    timestamp: number;
+    acceptanceMethod: string;
+  };
 }
 
 export interface UpdateInfluencerProfileInput {

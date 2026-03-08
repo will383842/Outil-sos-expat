@@ -35,7 +35,7 @@ import { useApp } from '@/contexts/AppContext';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
-import { clearStoredReferral } from '@/utils/referralStorage';
+import { clearStoredReferral, getStoredReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
@@ -545,6 +545,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
           communityNiche: formData.communityNiche || undefined,
           interventionCountries: formData.interventionCountries.length > 0 ? formData.interventionCountries : undefined,
           recruitmentCode: formData.referralCode || undefined,
+          referralCapturedAt: getStoredReferral('influencer')?.capturedAt || new Date().toISOString(),
           termsAcceptedAt: new Date().toISOString(),
           termsVersion: "3.0",
           termsType: "terms_influencers",

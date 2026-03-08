@@ -619,9 +619,18 @@ const CallCheckoutWrapper: React.FC = () => {
               onClick={() => {
                 try {
                   const affiliateRef = sessionStorage.getItem('sos_affiliate_ref');
+                  // Save all referral data from localStorage before clearing
+                  const referralKeys = ['sos_referral_client', 'sos_referral_influencer', 'sos_referral_chatter', 'sos_referral_blogger', 'sos_referral_groupAdmin', 'sos_referral_partner'];
+                  const savedReferrals: Record<string, string> = {};
+                  referralKeys.forEach(key => {
+                    const val = localStorage.getItem(key);
+                    if (val) savedReferrals[key] = val;
+                  });
                   sessionStorage.clear();
                   localStorage.clear();
                   if (affiliateRef) sessionStorage.setItem('sos_affiliate_ref', affiliateRef);
+                  // Restore referral data in localStorage
+                  Object.entries(savedReferrals).forEach(([key, val]) => localStorage.setItem(key, val));
                   console.log('🗑️ Cache vidé');
                 } catch { /* noop */ }
                 finally { window.location.reload(); }
