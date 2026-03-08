@@ -92,8 +92,8 @@ const VALID_STATUSES: WithdrawalStatus[] = [
 ];
 
 function validateInput(input: GetWithdrawalHistoryInput): void {
-  // Validate limit
-  if (input.limit !== undefined) {
+  // Validate limit (undefined/null from Firebase SDK serialization = no filter)
+  if (input.limit != null) {
     if (typeof input.limit !== 'number' || isNaN(input.limit)) {
       throw new HttpsError('invalid-argument', 'Limit must be a number');
     }
@@ -103,8 +103,8 @@ function validateInput(input: GetWithdrawalHistoryInput): void {
     }
   }
 
-  // Validate status filter
-  if (input.status !== undefined) {
+  // Validate status filter (undefined/null from Firebase SDK serialization = no filter)
+  if (input.status != null) {
     if (!Array.isArray(input.status)) {
       throw new HttpsError('invalid-argument', 'Status must be an array');
     }
