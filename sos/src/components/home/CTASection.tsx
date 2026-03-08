@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Rocket, Zap, CheckCircle, Award, ShieldCheck, Star } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
@@ -80,8 +81,8 @@ const CTASection: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12">
-            <a
-              href="/sos-appel"
+            <Link
+              to="/sos-appel"
               onClick={() => trackLead({ contentName: 'cta_start_now', contentCategory: 'general' })}
               className="group px-8 sm:px-10 py-4 sm:py-5 bg-white text-red-600 font-bold rounded-xl sm:rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all text-base sm:text-lg"
             >
@@ -92,7 +93,7 @@ const CTASection: React.FC = () => {
                 </span>
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
               </span>
-            </a>
+            </Link>
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-white/70 text-sm sm:text-base">

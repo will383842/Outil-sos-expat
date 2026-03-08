@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Scale, Users, Shield, CheckCircle, Phone, Globe, Clock } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useIntl } from 'react-intl';
@@ -99,12 +100,12 @@ const ServicesSection: React.FC = () => {
                     </div>
                   </div>
                   
-                  <a
-                    href={isLawyer ? '/sos-appel?type=lawyer' : '/sos-appel?type=expat'}
+                  <Link
+                    to={isLawyer ? '/sos-appel?type=lawyer' : '/sos-appel?type=expat'}
                     className={`w-full ${isLawyer ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white py-4 px-6 rounded-xl font-semibold text-lg transition-colors text-center block`}
                   >
                     {intl.formatMessage({ id: 'services.chooseService' })}
-                  </a>
+                  </Link>
                 </div>
               </div>
             );

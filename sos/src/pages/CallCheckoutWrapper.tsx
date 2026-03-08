@@ -617,9 +617,11 @@ const CallCheckoutWrapper: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                try { 
-                  sessionStorage.clear(); 
-                  localStorage.clear(); 
+                try {
+                  const affiliateRef = sessionStorage.getItem('sos_affiliate_ref');
+                  sessionStorage.clear();
+                  localStorage.clear();
+                  if (affiliateRef) sessionStorage.setItem('sos_affiliate_ref', affiliateRef);
                   console.log('🗑️ Cache vidé');
                 } catch { /* noop */ }
                 finally { window.location.reload(); }

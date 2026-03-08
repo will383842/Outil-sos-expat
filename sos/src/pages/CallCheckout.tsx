@@ -59,6 +59,8 @@ import { getStoredMetaIdentifiers } from "../utils/fbpCookie";
 import { trackMetaAddPaymentInfo, trackMetaInitiateCheckout } from "../utils/metaPixel";
 import { getOrCreateEventId } from "../utils/sharedEventId";
 import { getCurrentTrafficSource } from "../utils/trafficSource";
+import { getAffiliateRef } from "../hooks/useAffiliateTracking";
+import { getStoredReferralCode } from "../hooks/useAffiliate";
 
 /* -------------------------- Stripe singleton (HMR-safe) ------------------ */
 // Conserve la même Promise Stripe à travers les rechargements HMR.
@@ -110,6 +112,7 @@ interface User {
   email?: string;
   phone?: string;
   fullName?: string;
+  referredByUserId?: string;
 }
 
 interface PaymentIntentData {
@@ -1885,6 +1888,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           status: "pending",
           createdAt: serverTimestamp(),
           notifiedAt: null,
+          referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
         };
 
         const orderDoc = {
@@ -1922,6 +1926,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           // ✅ Add additional fields that might be useful
           totalSaved: 0, // Will calculate: original_standard_amount - amount
           appliedDiscounts: [], // Array of applied discounts
+          referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
         };
 
         // AUDIT-FIX C4: Removed 3 dead Firestore writes that always fail silently:
@@ -2198,6 +2203,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               timestamp: new Date().toISOString(),
               callSessionId: currentCallSessionId,
               paymentMethod: "apple_pay_google_pay",
+              affiliateRef: getAffiliateRef() || getStoredReferralCode() || "",
             },
           };
 
@@ -2430,6 +2436,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             requestTitle: bookingMeta?.title || "",
             timestamp: new Date().toISOString(),
             callSessionId: callSessionId,
+            affiliateRef: getAffiliateRef() || getStoredReferralCode() || "",
             // Meta CAPI identifiers for purchase attribution and deduplication
             ...(() => {
               const metaIds = getStoredMetaIdentifiers();
@@ -3967,6 +3974,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         status: "pending",
         createdAt: serverTimestamp(),
         callSessionId,
+        referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
       };
 
       const orderDoc = {
@@ -4005,6 +4013,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         } : null,
         totalSaved: 0,
         appliedDiscounts: [],
+        referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
       };
 
       try {

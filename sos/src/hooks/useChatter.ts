@@ -431,13 +431,8 @@ export function useChatterReferralCapture(): {
       setReferralCode(normalizedCode);
       setReferralType(type);
 
-      // Clean URL
-      urlParams.delete("ref");
-      urlParams.delete("code");
-      const newUrl = urlParams.toString()
-        ? `${window.location.pathname}?${urlParams.toString()}`
-        : window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
+      // KEEP ?ref= in URL — AffiliateRefSync ensures it persists across navigation
+      // Do NOT clean URL anymore, the ref must stay visible
     } else {
       // Check localStorage for existing code
       const storedCode = localStorage.getItem(CHATTER_CODE_KEY);
