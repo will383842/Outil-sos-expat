@@ -21,6 +21,7 @@ import {
   AlertCircle,
   MessageCircle,
 } from "lucide-react";
+import { UI, SPACING } from "@/components/Chatter/designTokens";
 
 // ============================================================================
 // TYPES
@@ -228,10 +229,10 @@ const ChatterDirectory: React.FC = () => {
       {!isPageVisible && !loading && (
         <div className="max-w-3xl mx-auto px-4 py-16 text-center">
           <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+          <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-2">
             Répertoire temporairement indisponible
           </h2>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-slate-500 dark:text-slate-400">
             Cette page sera bientôt disponible. Revenez plus tard.
           </p>
         </div>
@@ -249,7 +250,7 @@ const ChatterDirectory: React.FC = () => {
                 placeholder="Rechercher un chatter..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
               />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -262,7 +263,7 @@ const ChatterDirectory: React.FC = () => {
               className={`flex items-center gap-2 px-5 py-3 rounded-xl border font-medium transition-all ${
                 hasActiveFilters
                   ? "bg-red-600 text-white border-red-600"
-                  : "bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200"
+                  : "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200"
               }`}
             >
               <Globe className="w-4 h-4" />
@@ -287,13 +288,13 @@ const ChatterDirectory: React.FC = () => {
 
           {/* Filter panel */}
           {showFilters && (
-            <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`${UI.card} p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4`}>
               <div>
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Pays</label>
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Pays</label>
                 <select
                   value={selectedCountry}
                   onChange={e => setSelectedCountry(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
                 >
                   <option value="">Tous les pays</option>
                   {COUNTRIES.map(c => (
@@ -302,11 +303,11 @@ const ChatterDirectory: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Langue</label>
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Langue</label>
                 <select
                   value={selectedLanguage}
                   onChange={e => setSelectedLanguage(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
                 >
                   <option value="">Toutes les langues</option>
                   {LANGUAGES.map(l => (
@@ -315,11 +316,11 @@ const ChatterDirectory: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Plateforme</label>
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Plateforme</label>
                 <select
                   value={selectedPlatform}
                   onChange={e => setSelectedPlatform(e.target.value as ChatterPlatform | "")}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
                 >
                   <option value="">Toutes les plateformes</option>
                   {PLATFORMS.map(p => (
@@ -332,7 +333,7 @@ const ChatterDirectory: React.FC = () => {
 
           {/* Count */}
           {!loading && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
               {filtered.length} chatter{filtered.length !== 1 ? "s" : ""} trouvé{filtered.length !== 1 ? "s" : ""}
               {search && ` pour "${search}"`}
             </p>
@@ -349,7 +350,7 @@ const ChatterDirectory: React.FC = () => {
           {!loading && error && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">{error}</p>
+              <p className="text-slate-600 dark:text-slate-400">{error}</p>
               <button
                 onClick={fetchDirectory}
                 className="mt-4 px-5 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
@@ -363,7 +364,7 @@ const ChatterDirectory: React.FC = () => {
           {!loading && !error && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Users className="w-10 h-10 text-gray-300 mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-slate-500 dark:text-slate-400">
                 {hasActiveFilters || search
                   ? "Aucun chatter ne correspond à vos critères."
                   : "Aucun chatter disponible pour le moment."}
@@ -389,7 +390,7 @@ const ChatterDirectory: React.FC = () => {
                 return (
                   <div
                     key={chatter.id}
-                    className="bg-white dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-md hover:shadow-lg transition-all overflow-hidden"
+                    className={`${UI.card} ${UI.cardHover} overflow-hidden`}
                   >
                     {/* Top gradient bar */}
                     <div className="h-1.5 bg-gradient-to-r from-red-500 to-orange-500" />
@@ -409,10 +410,10 @@ const ChatterDirectory: React.FC = () => {
                           </div>
                         )}
                         <div className="min-w-0">
-                          <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                          <h3 className="font-semibold text-slate-900 dark:text-white truncate">
                             {chatter.firstName} {chatter.lastName}
                           </h3>
-                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                          <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                             <span>{countryFlag}</span>
                             <span>{langInfo ? `${langInfo.flag} ${langInfo.label}` : chatter.language}</span>
                           </div>
@@ -445,7 +446,7 @@ const ChatterDirectory: React.FC = () => {
 
                       {/* Bio */}
                       {chatter.bio && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
                           {chatter.bio}
                         </p>
                       )}

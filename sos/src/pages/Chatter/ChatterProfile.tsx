@@ -11,10 +11,7 @@ import { User, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { storage, functionsAffiliate } from '@/config/firebase';
-
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-} as const;
+import { UI, SPACING } from '@/components/Chatter/designTokens';
 
 const ChatterProfile: React.FC = () => {
   const { dashboardData, isLoading } = useChatterData();
@@ -86,23 +83,23 @@ const ChatterProfile: React.FC = () => {
 
   return (
     <ChatterDashboardLayout activeKey="profile">
-      <div className="space-y-4 sm:space-y-6">
+      <div className={`${SPACING.pagePadding} py-4 space-y-4 sm:space-y-6`}>
 
         {/* Header */}
         <div>
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
             <FormattedMessage id="chatter.profile.title" defaultMessage="Mon profil" />
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             <FormattedMessage id="chatter.profile.subtitle" defaultMessage="Vos informations personnelles et statistiques" />
           </p>
         </div>
 
         {/* Photo upload card */}
-        <div className={`${UI.card} p-4 sm:p-6`}>
+        <div className={`${UI.card} ${SPACING.cardPadding}`}>
           <div className="flex items-center gap-3 mb-4">
             <Camera className="w-5 h-5 text-red-500" />
-            <h2 className="text-lg dark:text-white font-semibold">
+            <h2 className="text-lg text-slate-900 dark:text-white font-semibold">
               <FormattedMessage id="chatter.profile.photo" defaultMessage="Photo de profil" />
             </h2>
           </div>
@@ -136,12 +133,12 @@ const ChatterProfile: React.FC = () => {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:from-red-600 hover:to-orange-600 transition-all disabled:opacity-50 flex items-center gap-2"
+                className={`${UI.button.primary} px-4 py-2 flex items-center gap-2`}
               >
                 <Camera className="w-4 h-4" />
                 <FormattedMessage id="chatter.profile.photo.change" defaultMessage="Changer la photo" />
               </button>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">JPG, PNG, WebP — max 5 MB</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">JPG, PNG, WebP — max 5 MB</p>
               {uploadSuccess && (
                 <div className="flex items-center gap-1 text-green-600 text-sm mt-1">
                   <CheckCircle className="w-4 h-4" />
@@ -153,7 +150,7 @@ const ChatterProfile: React.FC = () => {
               )}
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
             <FormattedMessage
               id="chatter.profile.photo.hint"
               defaultMessage="Cette photo sera visible dans le répertoire public des chatters si votre profil est activé."
@@ -162,37 +159,37 @@ const ChatterProfile: React.FC = () => {
         </div>
 
         {/* Personal Info */}
-        <div className={`${UI.card} p-4 sm:p-6`}>
+        <div className={`${UI.card} ${SPACING.cardPadding}`}>
           <div className="flex items-center gap-3 mb-4">
             <User className="w-5 h-5 text-red-500" />
-            <h2 className="text-lg dark:text-white font-semibold">
+            <h2 className="text-lg text-slate-900 dark:text-white font-semibold">
               <FormattedMessage id="chatter.profile.personal" defaultMessage="Informations personnelles" />
             </h2>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="text-sm text-slate-500 dark:text-slate-400 block mb-1">
                 <FormattedMessage id="chatter.profile.name" defaultMessage="Nom" />
               </label>
-              <p className="text-gray-900 dark:text-white">{chatter.firstName} {chatter.lastName}</p>
+              <p className="text-slate-900 dark:text-white">{chatter.firstName} {chatter.lastName}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="text-sm text-slate-500 dark:text-slate-400 block mb-1">
                 <FormattedMessage id="chatter.profile.email" defaultMessage="Email" />
               </label>
-              <p className="text-gray-900 dark:text-white">{chatter.email}</p>
+              <p className="text-slate-900 dark:text-white">{chatter.email}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="text-sm text-slate-500 dark:text-slate-400 block mb-1">
                 <FormattedMessage id="chatter.profile.country" defaultMessage="Pays" />
               </label>
-              <p className="text-gray-900 dark:text-white">{chatter.country}</p>
+              <p className="text-slate-900 dark:text-white">{chatter.country}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="text-sm text-slate-500 dark:text-slate-400 block mb-1">
                 <FormattedMessage id="chatter.profile.language" defaultMessage="Langue" />
               </label>
-              <p className="text-gray-900 dark:text-white">{chatter.language}</p>
+              <p className="text-slate-900 dark:text-white">{chatter.language}</p>
             </div>
           </div>
         </div>
