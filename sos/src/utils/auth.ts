@@ -69,6 +69,7 @@ const initRecaptcha = (elementId: string = "recaptcha-container") => {
 /*                               Register user                                */
 /* -------------------------------------------------------------------------- */
 
+/** @deprecated Use AuthContext.register() instead — this function only accepts client/lawyer/expat roles. */
 const registerUser = async (
   userData: Partial<User>,
   password: string

@@ -1044,6 +1044,7 @@ const SuccessPayment: React.FC = () => {
     const currency = orderCurrency || 'eur';
 
     if (amount > 0) {
+      const affiliateRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('sos_affiliate_ref') || '' : '';
       // Meta Pixel tracking - use same eventId as CallCheckout for CAPI deduplication
       const purchaseEventId = getOrCreateEventId(`purchase_${callId}`, 'purchase');
       trackMetaPurchase({
@@ -1054,6 +1055,7 @@ const SuccessPayment: React.FC = () => {
         content_id: callId || undefined,
         order_id: orderId || undefined,
         eventID: purchaseEventId,
+        ...(affiliateRef && { affiliate_ref: affiliateRef }),
       });
 
       // Advanced Matching - send user data for better attribution
@@ -1081,6 +1083,7 @@ const SuccessPayment: React.FC = () => {
           content_name: isLawyer ? 'lawyer_call' : 'expat_call',
           content_type: 'service',
           transaction_id: orderId || callId || undefined,
+          ...(affiliateRef && { affiliate_ref: affiliateRef }),
         });
       })();
 
@@ -1158,10 +1161,10 @@ const SuccessPayment: React.FC = () => {
               {/* {t.serviceNotFound} */}
               {intl.formatMessage({ id: "success.serviceNotFound" })}
             </h1>
-            <a href="/" className="text-red-400 hover:text-red-300">
+            <Link to="/" className="text-red-400 hover:text-red-300">
               {/* {t.backToHome} */}
               {intl.formatMessage({ id: "success.backToHome" })}
-            </a>
+            </Link>
           </div>
         </div>
       </Layout>

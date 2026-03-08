@@ -572,6 +572,7 @@ const createUserDocumentInFirestore = async (
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastLoginAt: serverTimestamp(),
+      affiliateCode: additionalData.affiliateCode || `SOS-${firebaseUser.uid.substring(0, 6).toUpperCase()}`,
       ...additionalData,
       ...approvalFields,
     });
@@ -1684,12 +1685,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
             // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
             try {
+              const pendingRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
               await createUserDocumentInFirestore(googleUser, {
                 role: 'client',
                 email: googleUser.email || '',
                 preferredLanguage: 'fr',
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+                ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
               });
               devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document créé via fallback Firestore direct");
             } catch (fallbackError) {
@@ -1953,12 +1956,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
             // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
             try {
+              const pendingRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
               await createUserDocumentInFirestore(googleUser, {
                 role: 'client',
                 email: googleUser.email || '',
                 preferredLanguage: 'fr',
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+                ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
               });
               devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé via fallback Firestore direct");
             } catch (fallbackError) {

@@ -1174,7 +1174,7 @@ const Testimonials: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <button
-                onClick={() => (window.location.href = "/sos-appel")}
+                onClick={() => (window.location.href = `/sos-appel${window.location.search || ''}`)}
                 className="group relative overflow-hidden bg-white text-red-600 hover:text-red-700 px-8 sm:px-12 py-4 sm:py-6 rounded-3xl font-black text-lg sm:text-xl transition-all duration-300 hover:scale-110 hover:shadow-2xl flex items-center gap-3 sm:gap-4 min-h-[56px] active:scale-95 touch-manipulation"
               >
                 <span>

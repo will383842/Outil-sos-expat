@@ -927,6 +927,12 @@ const App: React.FC = () => {
     });
   };
 
+  // Redirect root "/" to "/{locale}" preserving query params (?ref=, etc.)
+  const RootLocaleRedirect: React.FC = () => {
+    const loc = useLocation();
+    return <Navigate to={`/${getLocaleString(language)}${loc.search || ""}${loc.hash || ""}`} replace />;
+  };
+
   // New: Redirect any locale-prefixed admin path back to non-locale admin path
   const AdminLocaleStrip: React.FC = () => {
     const loc = useLocation();
@@ -1023,7 +1029,7 @@ const App: React.FC = () => {
                 {/* Root redirect to locale */}
                 <Route
                   path="/"
-                  element={<Navigate to={`/${getLocaleString(language)}`} replace />}
+                  element={<RootLocaleRedirect />}
                 />
 
                 {/* Routes with locale prefix - Home route first for root locale path */}

@@ -518,7 +518,7 @@ export async function cancelCommission(
     const commission = commissionDoc.data() as AffiliateCommission;
 
     // Only pending, validated, or available commissions can be cancelled
-    const cancellableStatuses: CommissionStatus[] = ["pending", "validated", "available"];
+    const cancellableStatuses: CommissionStatus[] = ["pending", "available"];
     if (!cancellableStatuses.includes(commission.status)) {
       return { success: false, error: `Cannot cancel commission with status: ${commission.status}` };
     }
@@ -545,9 +545,6 @@ export async function cancelCommission(
       switch (commission.status) {
         case "pending":
           balanceUpdate.pendingBalance = FieldValue.increment(-commission.amount);
-          break;
-        case "validated":
-          balanceUpdate.validatedBalance = FieldValue.increment(-commission.amount);
           break;
         case "available":
           balanceUpdate.availableBalance = FieldValue.increment(-commission.amount);

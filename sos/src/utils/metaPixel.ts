@@ -276,6 +276,7 @@ export const trackMetaPurchase = (params: {
   order_id?: string;
   country?: string;
   eventID?: string;
+  affiliate_ref?: string;
 }): string | undefined => {
   const eventID = params.eventID || generateEventID();
   const country = getCountryForTracking(params.country);
@@ -305,6 +306,7 @@ export const trackMetaPurchase = (params: {
       content_ids: params.content_id ? [params.content_id] : undefined,
       contents: country ? [{ id: country, quantity: 1 }] : undefined,
       num_items: 1,
+      ...(params.affiliate_ref && { affiliate_ref: params.affiliate_ref }),
     }, { eventID });
 
     // Marquer comme tracke pour eviter doublons

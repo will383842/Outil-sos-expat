@@ -404,7 +404,7 @@ const Register: React.FC = () => {
       intl.formatMessage({ id: "meta.register.og.description" }),
       true
     );
-    setMeta("og:url", window.location.href, true);
+    setMeta("og:url", window.location.origin + window.location.pathname, true);
     setMeta("og:site_name", "SOS Expats", true);
     setMeta("og:locale", language === "en" ? "en_US" : "fr_FR", true);
     setMeta("twitter:card", "summary_large_image");

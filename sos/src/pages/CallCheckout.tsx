@@ -1910,6 +1910,8 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             override_label: null, // Set to string if you have custom pricing labels
             original_standard_amount: adminPricing.totalAmount, // ✅ With underscores
             effective_base_amount: adminPricing.totalAmount, // ✅ With underscores
+            affiliateRef: getAffiliateRef() || "",
+            referredByUserId: (user as any).referredByUserId || "",
             // Meta CAPI identifiers for purchase attribution
             ...(() => {
               const metaIds = getStoredMetaIdentifiers();
@@ -2204,6 +2206,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               callSessionId: currentCallSessionId,
               paymentMethod: "apple_pay_google_pay",
               affiliateRef: getAffiliateRef() || getStoredReferralCode() || "",
+              referredByUserId: (currentUser as any).referredByUserId || "",
             },
           };
 
@@ -2437,6 +2440,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             timestamp: new Date().toISOString(),
             callSessionId: callSessionId,
             affiliateRef: getAffiliateRef() || getStoredReferralCode() || "",
+            referredByUserId: (user as any).referredByUserId || "",
             // Meta CAPI identifiers for purchase attribution and deduplication
             ...(() => {
               const metaIds = getStoredMetaIdentifiers();
@@ -3996,6 +4000,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
           override_label: null,
           original_standard_amount: adminPricing.totalAmount,
           effective_base_amount: adminPricing.totalAmount,
+          affiliateRef: getAffiliateRef() || "",
+          referredByUserId: (user as any).referredByUserId || "",
           // Meta CAPI identifiers for purchase attribution
           ...(() => {
             const metaIds = getStoredMetaIdentifiers();

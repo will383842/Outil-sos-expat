@@ -1731,7 +1731,7 @@ const ProviderProfile: React.FC = () => {
       updateOrCreateMeta("og:image", fullImageUrl);
       updateOrCreateMeta("og:image:width", "1200");
       updateOrCreateMeta("og:image:height", "630");
-      updateOrCreateMeta("og:url", window.location.href);
+      updateOrCreateMeta("og:url", window.location.origin + window.location.pathname);
       updateOrCreateMeta("og:type", "profile");
       updateOrCreateMeta("og:site_name", "SOS Expat & Travelers");
       updateOrCreateMeta(

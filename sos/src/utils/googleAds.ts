@@ -407,6 +407,7 @@ export const trackGoogleAdsPurchase = (params: {
   content_name?: string;
   content_type?: string;
   eventID?: string;
+  affiliate_ref?: string;
 }): string | undefined => {
   const eventID = params.eventID || generateEventID();
 
@@ -450,6 +451,7 @@ export const trackGoogleAdsPurchase = (params: {
         price: params.value,
         quantity: 1,
       }],
+      ...(params.affiliate_ref && { affiliate_ref: params.affiliate_ref }),
     });
 
     sessionStorage.setItem(purchaseKey, 'true');

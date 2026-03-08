@@ -148,11 +148,11 @@ const NotFound: React.FC = () => {
   }, [searchQuery, popularRoutes]);
 
   const handleGoHome = () => {
-    navigate(`/${currentLocale}`, { replace: true });
+    navigate(`/${currentLocale}${location.search || ''}`, { replace: true });
   };
 
   const handleSuggestionClick = (path: string) => {
-    navigate(path, { replace: true });
+    navigate(`${path}${location.search || ''}`, { replace: true });
   };
 
   return (
@@ -264,7 +264,7 @@ const NotFound: React.FC = () => {
               />
             </p>
             <a
-              href={`/${currentLocale}/contact`}
+              href={`/${currentLocale}/contact${location.search || ''}`}
               className="text-red-600 dark:text-red-400 hover:underline font-medium"
             >
               <FormattedMessage id="error.404.contactSupport" defaultMessage="Contact Support" />

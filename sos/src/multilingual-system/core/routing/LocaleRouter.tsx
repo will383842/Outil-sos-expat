@@ -253,7 +253,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
   // This is SYNCHRONOUS - no flash of 404
   if (redirectTo) {
     // CRITICAL: Preserve query params (e.g., ?ref=CODE) during locale redirects
-    const redirectWithQuery = location.search ? `${redirectTo}${location.search}` : redirectTo;
+    const redirectWithQuery = `${redirectTo}${location.search || ''}${location.hash || ''}`;
     console.log("🔷 [LocaleRouter] REDIRECTING to:", redirectWithQuery, "from:", location.pathname + location.search);
     return <Navigate to={redirectWithQuery} replace />;
   }

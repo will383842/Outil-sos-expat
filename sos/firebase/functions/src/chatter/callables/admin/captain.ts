@@ -118,7 +118,7 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
 export const adminPromoteToCaptain = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const data = request.data as { chatterId?: string; captainId?: string };
     const chatterId = data.chatterId || data.captainId;
@@ -142,7 +142,7 @@ export const adminPromoteToCaptain = onCall(
     await chatterRef.update({
       role: "captainChatter",
       captainPromotedAt: Timestamp.now(),
-      captainPromotedBy: request.auth.uid,
+      captainPromotedBy: adminUid,
       captainMonthlyTeamCalls: 0,
       captainCurrentTier: null,
       captainQualityBonusEnabled: false,
@@ -186,14 +186,14 @@ export const adminPromoteToCaptain = onCall(
       action: "captain_promoted",
       targetId: chatterId,
       targetType: "chatter",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: Timestamp.now(),
       details: { previousRole: chatter.role || "chatter" },
     });
 
     logger.info("[adminPromoteToCaptain] Chatter promoted to captain", {
       chatterId,
-      promotedBy: request.auth.uid,
+      promotedBy: adminUid,
     });
 
     return { success: true, message: "Chatter promoted to captain" };
@@ -207,7 +207,7 @@ export const adminPromoteToCaptain = onCall(
 export const adminRevokeCaptain = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const data = request.data as { chatterId?: string; captainId?: string };
     const chatterId = data.chatterId || data.captainId;
@@ -330,14 +330,14 @@ export const adminRevokeCaptain = onCall(
       action: "captain_revoked",
       targetId: chatterId,
       targetType: "chatter",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: Timestamp.now(),
       details: {},
     });
 
     logger.info("[adminRevokeCaptain] Captain status revoked", {
       chatterId,
-      revokedBy: request.auth.uid,
+      revokedBy: adminUid,
     });
 
     return { success: true, message: "Captain status revoked" };
@@ -351,7 +351,7 @@ export const adminRevokeCaptain = onCall(
 export const adminToggleCaptainQualityBonus = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const data = request.data as { chatterId?: string; captainId?: string; enabled: boolean };
     const chatterId = data.chatterId || data.captainId;
@@ -382,7 +382,7 @@ export const adminToggleCaptainQualityBonus = onCall(
       action: "captain_quality_bonus_toggled",
       targetId: chatterId,
       targetType: "chatter",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: Timestamp.now(),
       details: { enabled: data.enabled },
     });
@@ -390,7 +390,7 @@ export const adminToggleCaptainQualityBonus = onCall(
     logger.info("[adminToggleCaptainQualityBonus] Quality bonus toggled", {
       chatterId,
       enabled: data.enabled,
-      toggledBy: request.auth.uid,
+      toggledBy: adminUid,
     });
 
     return { success: true, enabled: data.enabled };
@@ -850,7 +850,7 @@ export const adminExportCaptainCSV = onCall(
 export const adminAssignCaptainCoverage = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const { captainId, countries, languages } = request.data as {
       captainId?: string;
@@ -892,7 +892,7 @@ export const adminAssignCaptainCoverage = onCall(
       action: "captain_coverage_updated",
       targetId: captainId,
       targetType: "chatter",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: Timestamp.now(),
       details: { countries, languages },
     });
@@ -901,7 +901,7 @@ export const adminAssignCaptainCoverage = onCall(
       captainId,
       countries,
       languages,
-      updatedBy: request.auth.uid,
+      updatedBy: adminUid,
     });
 
     return { success: true, countries, languages };
@@ -915,7 +915,7 @@ export const adminAssignCaptainCoverage = onCall(
 export const adminTransferChatters = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const { chatterIds, fromCaptainId, toCaptainId } = request.data as {
       chatterIds: string[];
@@ -975,7 +975,7 @@ export const adminTransferChatters = onCall(
     // Audit trail
     await db.collection("admin_audit_logs").add({
       action: "captain_chatters_transferred",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: now,
       details: {
         fromCaptainId,
@@ -1125,7 +1125,7 @@ export const adminGetCaptainCoverageMap = onCall(
 export const adminAssignChatterCaptain = onCall(
   { ...adminConfig, timeoutSeconds: 30 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const { chatterId, captainId } = request.data as {
       chatterId: string;
@@ -1173,7 +1173,7 @@ export const adminAssignChatterCaptain = onCall(
       await chatterRef.update({
         captainId,
         captainAssignedAt: now,
-        captainAssignedBy: request.auth.uid,
+        captainAssignedBy: adminUid,
         updatedAt: now,
       });
     } else {
@@ -1191,7 +1191,7 @@ export const adminAssignChatterCaptain = onCall(
       action: captainId ? "chatter_captain_assigned" : "chatter_captain_unassigned",
       targetId: chatterId,
       targetType: "chatter",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: now,
       details: {
         previousCaptainId,
@@ -1204,7 +1204,7 @@ export const adminAssignChatterCaptain = onCall(
       chatterId,
       previousCaptainId,
       newCaptainId: captainId,
-      updatedBy: request.auth.uid,
+      updatedBy: adminUid,
     });
 
     return {
@@ -1229,7 +1229,7 @@ export const adminAssignChatterCaptain = onCall(
 export const adminBulkAssignChattersCaptain = onCall(
   { ...adminConfig, timeoutSeconds: 60 },
   async (request) => {
-    await verifyAdmin(request);
+    const adminUid = await verifyAdmin(request);
 
     const { chatterIds, captainId } = request.data as {
       chatterIds: string[];
@@ -1274,7 +1274,7 @@ export const adminBulkAssignChattersCaptain = onCall(
         await db.collection("chatters").doc(chatterId).update({
           captainId,
           captainAssignedAt: now,
-          captainAssignedBy: request.auth.uid,
+          captainAssignedBy: adminUid,
           updatedAt: now,
         });
         assigned++;
@@ -1288,7 +1288,7 @@ export const adminBulkAssignChattersCaptain = onCall(
       action: "chatters_bulk_captain_assigned",
       targetId: captainId,
       targetType: "chatter",
-      performedBy: request.auth.uid,
+      performedBy: adminUid,
       timestamp: now,
       details: { chatterIds, assigned, errors },
     });

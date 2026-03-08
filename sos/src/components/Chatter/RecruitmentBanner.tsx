@@ -508,7 +508,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
             </PulsingButton>
 
             <PulsingButton
-              onClick={() => onLearnMore?.() || window.location.assign('/devenir-chatter')}
+              onClick={() => onLearnMore?.() || window.location.assign(`/devenir-chatter${window.location.search || ''}`)}
               variant="secondary"
               icon={<Info className="w-5 h-5" />}
             >
