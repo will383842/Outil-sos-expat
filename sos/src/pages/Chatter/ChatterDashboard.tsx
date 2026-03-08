@@ -241,7 +241,7 @@ const ChatterDashboardContent: React.FC = () => {
 
 /**
  * BelowFoldSection - Lazy-loaded below-fold cards
- * All imported from single BelowFoldBundle to minimize network requests
+ * Each card is its own lazy chunk for optimal loading
  */
 const BelowFoldSection: React.FC = () => {
   const { dashboardData, commissions } = useChatterData();
@@ -311,18 +311,10 @@ const BelowFoldSection: React.FC = () => {
   );
 };
 
-// Individual lazy wrappers that resolve named exports from the bundle
-const LazyDailyMissions = lazy(() =>
-  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.DailyMissionsCard }))
-);
-const LazyPiggyBank = lazy(() =>
-  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.PiggyBankCard }))
-);
-const LazyTrendsChart = lazy(() =>
-  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.TrendsChartCard }))
-);
-const LazyMotivation = lazy(() =>
-  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.MotivationWidget }))
-);
+// Individual lazy imports - each card is its own chunk (no more BelowFoldBundle)
+const LazyDailyMissions = lazy(() => import('@/components/Chatter/Cards/DailyMissionsCard'));
+const LazyPiggyBank = lazy(() => import('@/components/Chatter/Cards/PiggyBankCard'));
+const LazyTrendsChart = lazy(() => import('@/components/Chatter/Cards/TrendsChartCard'));
+const LazyMotivation = lazy(() => import('@/components/Chatter/Cards/MotivationWidget'));
 
 export default ChatterDashboard;

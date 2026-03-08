@@ -18,10 +18,11 @@ import {
   where,
   orderBy,
   limit,
-  onSnapshot,
+  getDocs,
 } from "firebase/firestore";
 import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
+import { storeReferralCode, getStoredReferral, clearStoredReferral } from "../utils/referralStorage";
 import {
   ChatterDashboardData,
   ChatterCommission,
@@ -89,7 +90,79 @@ export function useChatter(): UseChatterReturn {
     return !!dashboardData?.chatter?.status;
   }, [dashboardData]);
 
-  // Fetch dashboard data
+  // Fetch all list data (commissions, withdrawals, notifications) via getDocs
+  const fetchListData = useCallback(async () => {
+    if (!user?.uid) return;
+
+    const commissionsQuery = query(
+      collection(db, "chatter_commissions"),
+      where("chatterId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
+
+    const withdrawalsQuery = query(
+      collection(db, "payment_withdrawals"),
+      where("userId", "==", user.uid),
+      where("userType", "==", "chatter"),
+      orderBy("requestedAt", "desc"),
+      limit(20)
+    );
+
+    const notificationsQuery = query(
+      collection(db, "chatter_notifications"),
+      where("chatterId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(30)
+    );
+
+    const [commissionsSnap, withdrawalsSnap, notificationsSnap] = await Promise.all([
+      getDocs(commissionsQuery),
+      getDocs(withdrawalsQuery),
+      getDocs(notificationsQuery),
+    ]);
+
+    setCommissions(
+      commissionsSnap.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+          validatedAt: data.validatedAt?.toDate?.()?.toISOString() || null,
+          availableAt: data.availableAt?.toDate?.()?.toISOString() || null,
+          paidAt: data.paidAt?.toDate?.()?.toISOString() || null,
+        } as ChatterCommission;
+      })
+    );
+
+    setWithdrawals(
+      withdrawalsSnap.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          requestedAt: data.requestedAt?.toDate?.()?.toISOString() || "",
+          processedAt: data.processedAt?.toDate?.()?.toISOString() || undefined,
+          completedAt: data.completedAt?.toDate?.()?.toISOString() || undefined,
+          failedAt: data.failedAt?.toDate?.()?.toISOString() || undefined,
+        } as ChatterWithdrawal;
+      })
+    );
+
+    setNotifications(
+      notificationsSnap.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
+        } as ChatterNotification;
+      })
+    );
+  }, [user?.uid, db]);
+
+  // Fetch dashboard data + list data in parallel
   const refreshDashboard = useCallback(async () => {
     if (!user?.uid) {
       setDashboardData(null);
@@ -106,11 +179,15 @@ export function useChatter(): UseChatterReturn {
         "getChatterDashboard"
       );
 
-      const result = await getChatterDashboardFn();
+      // Fetch dashboard callable and list data in parallel
+      const [result] = await Promise.all([
+        getChatterDashboardFn(),
+        fetchListData(),
+      ]);
+
       setDashboardData(result.data);
     } catch (err) {
       console.error("[useChatter] Error fetching dashboard:", err);
-      // Check if error is "Chatter not found" - means user is not a chatter
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch chatter data";
       if (errorMessage.includes("not found")) {
         setDashboardData(null);
@@ -120,7 +197,7 @@ export function useChatter(): UseChatterReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functionsAffiliate]);
+  }, [user?.uid, functionsAffiliate, fetchListData]);
 
   // Request withdrawal
   const requestWithdrawal = useCallback(
@@ -221,109 +298,6 @@ export function useChatter(): UseChatterReturn {
     [user?.uid, db, notifications]
   );
 
-  // Subscribe to commissions
-  useEffect(() => {
-    if (!user?.uid || !isChatter) return;
-
-    const commissionsQuery = query(
-      collection(db, "chatter_commissions"),
-      where("chatterId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(50)
-    );
-
-    const unsubscribe = onSnapshot(
-      commissionsQuery,
-      (snapshot) => {
-        const items: ChatterCommission[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
-            validatedAt: data.validatedAt?.toDate?.()?.toISOString() || null,
-            availableAt: data.availableAt?.toDate?.()?.toISOString() || null,
-            paidAt: data.paidAt?.toDate?.()?.toISOString() || null,
-          } as ChatterCommission;
-        });
-        setCommissions(items);
-      },
-      (err) => {
-        console.error("[useChatter] Commissions subscription error:", err);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid, isChatter, db]);
-
-  // Subscribe to withdrawals
-  useEffect(() => {
-    if (!user?.uid || !isChatter) return;
-
-    const withdrawalsQuery = query(
-      collection(db, "payment_withdrawals"),
-      where("userId", "==", user.uid),
-      where("userType", "==", "chatter"),
-      orderBy("requestedAt", "desc"),
-      limit(20)
-    );
-
-    const unsubscribe = onSnapshot(
-      withdrawalsQuery,
-      (snapshot) => {
-        const items: ChatterWithdrawal[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            requestedAt: data.requestedAt?.toDate?.()?.toISOString() || "",
-            processedAt: data.processedAt?.toDate?.()?.toISOString() || undefined,
-            completedAt: data.completedAt?.toDate?.()?.toISOString() || undefined,
-            failedAt: data.failedAt?.toDate?.()?.toISOString() || undefined,
-          } as ChatterWithdrawal;
-        });
-        setWithdrawals(items);
-      },
-      (err) => {
-        console.error("[useChatter] Withdrawals subscription error:", err);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid, isChatter, db]);
-
-  // Subscribe to notifications
-  useEffect(() => {
-    if (!user?.uid || !isChatter) return;
-
-    const notificationsQuery = query(
-      collection(db, "chatter_notifications"),
-      where("chatterId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(30)
-    );
-
-    const unsubscribe = onSnapshot(
-      notificationsQuery,
-      (snapshot) => {
-        const items: ChatterNotification[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
-          } as ChatterNotification;
-        });
-        setNotifications(items);
-      },
-      (err) => {
-        console.error("[useChatter] Notifications subscription error:", err);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid, isChatter, db]);
-
   // Initial fetch
   useEffect(() => {
     refreshDashboard();
@@ -366,7 +340,10 @@ export function useChatter(): UseChatterReturn {
     return realtimeUnread || dashboardData?.unreadNotifications || 0;
   }, [notifications, dashboardData?.unreadNotifications]);
 
-  return {
+  // Memoize the return value to prevent unnecessary re-renders of context consumers.
+  // Without this, every isLoading toggle creates a new object reference,
+  // causing ALL context consumers to re-render even if they don't use isLoading.
+  return useMemo(() => ({
     dashboardData,
     commissions,
     withdrawals,
@@ -385,7 +362,26 @@ export function useChatter(): UseChatterReturn {
     minimumWithdrawal,
     totalBalance,
     unreadNotificationsCount,
-  };
+  }), [
+    dashboardData,
+    commissions,
+    withdrawals,
+    notifications,
+    isLoading,
+    error,
+    isChatter,
+    refreshDashboard,
+    requestWithdrawal,
+    updateProfile,
+    markNotificationRead,
+    markAllNotificationsRead,
+    clientShareUrl,
+    recruitmentShareUrl,
+    canWithdraw,
+    minimumWithdrawal,
+    totalBalance,
+    unreadNotificationsCount,
+  ]);
 }
 
 // ============================================================================
@@ -424,9 +420,8 @@ export function useChatterReferralCapture(): {
         ? "recruitment"
         : "client";
 
-      // Persist to localStorage
-      localStorage.setItem(CHATTER_CODE_KEY, normalizedCode);
-      localStorage.setItem(CHATTER_CODE_TYPE_KEY, type);
+      // Persist via referralStorage
+      storeReferralCode(normalizedCode, 'chatter', type, { landingPage: window.location.pathname });
 
       setReferralCode(normalizedCode);
       setReferralType(type);
@@ -434,20 +429,17 @@ export function useChatterReferralCapture(): {
       // KEEP ?ref= in URL — AffiliateRefSync ensures it persists across navigation
       // Do NOT clean URL anymore, the ref must stay visible
     } else {
-      // Check localStorage for existing code
-      const storedCode = localStorage.getItem(CHATTER_CODE_KEY);
-      const storedType = localStorage.getItem(CHATTER_CODE_TYPE_KEY);
-
-      if (storedCode) {
-        setReferralCode(storedCode);
-        setReferralType(storedType as "client" | "recruitment" || "client");
+      // Check referralStorage for existing code
+      const stored = getStoredReferral('chatter');
+      if (stored) {
+        setReferralCode(stored.code);
+        setReferralType(stored.codeType as "client" | "recruitment" || "client");
       }
     }
   }, []);
 
   const clearReferral = useCallback(() => {
-    localStorage.removeItem(CHATTER_CODE_KEY);
-    localStorage.removeItem(CHATTER_CODE_TYPE_KEY);
+    clearStoredReferral('chatter');
     setReferralCode(null);
     setReferralType(null);
   }, []);
@@ -469,9 +461,9 @@ export function getStoredChatterCode(): {
   if (typeof window === "undefined") {
     return { code: null, type: null };
   }
-  const code = localStorage.getItem(CHATTER_CODE_KEY);
-  const type = localStorage.getItem(CHATTER_CODE_TYPE_KEY) as "client" | "recruitment" | null;
-  return { code, type };
+  const stored = getStoredReferral('chatter');
+  if (!stored) return { code: null, type: null };
+  return { code: stored.code, type: (stored.codeType as "client" | "recruitment") || "client" };
 }
 
 /**
@@ -479,8 +471,7 @@ export function getStoredChatterCode(): {
  */
 export function clearStoredChatterCode(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(CHATTER_CODE_KEY);
-  localStorage.removeItem(CHATTER_CODE_TYPE_KEY);
+  clearStoredReferral('chatter');
 }
 
 export default useChatter;

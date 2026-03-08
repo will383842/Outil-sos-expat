@@ -137,15 +137,19 @@ export default defineConfig(({ mode }) => {
         output: {
           // Code splitting sécurisé - évite la duplication de React
           manualChunks: (id) => {
+            // Recharts - only used in admin pages, lazy-loaded separately
+            if (id.includes('recharts')) {
+              return 'vendor-recharts';
+            }
+
             // React et ses dépendances DOIVENT rester ensemble
-            // @emotion doit aussi être avec React car recharts et autres en dépendent
+            // @emotion doit aussi être avec React
             // Evite les dépendances circulaires entre chunks
             if (id.includes('node_modules/react') ||
                 id.includes('node_modules/react-dom') ||
                 id.includes('node_modules/scheduler') ||
                 id.includes('node_modules/react-router') ||
                 id.includes('node_modules/react-intl') ||
-                id.includes('recharts') ||
                 id.includes('@formatjs') ||
                 id.includes('@emotion')) {
               return 'vendor-react';
@@ -180,6 +184,11 @@ export default defineConfig(({ mode }) => {
             // PDF generation - chargé uniquement quand nécessaire
             if (id.includes('jspdf') || id.includes('html2canvas')) {
               return 'vendor-pdf';
+            }
+
+            // XLSX - only used in admin reports
+            if (id.includes('xlsx')) {
+              return 'vendor-xlsx';
             }
 
             // Phone number parsing - assez gros

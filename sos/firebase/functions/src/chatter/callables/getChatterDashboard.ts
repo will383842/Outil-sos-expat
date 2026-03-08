@@ -98,9 +98,9 @@ export const getChatterDashboard = onCall(
   {
     region: "us-central1",
     memory: "256MiB",
-    cpu: 0.083,
+    cpu: 1,
     timeoutSeconds: 30,
-    maxInstances: 1,
+    maxInstances: 20,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetChatterDashboardResponse> => {
@@ -124,22 +124,70 @@ export const getChatterDashboard = onCall(
 
       const chatter = chatterDoc.data() as Chatter;
 
-      // Update last login
-      await db.collection("chatters").doc(userId).update({
+      // Update last login (fire-and-forget, don't block the response)
+      db.collection("chatters").doc(userId).update({
         lastLoginAt: Timestamp.now(),
-      });
+      }).catch(() => {});
 
-      // 3. Get config
-      const config = await getChatterConfigCached();
+      // 3. Run all independent queries in parallel
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthKey = `${lastMonthStart.getFullYear()}-${String(lastMonthStart.getMonth() + 1).padStart(2, "0")}`;
+      const nowTimestamp = Timestamp.now();
 
-      // 4. Get recent commissions
-      const commissionsQuery = await db
-        .collection("chatter_commissions")
-        .where("chatterId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(10)
-        .get();
+      const [
+        config,
+        commissionsQuery,
+        historicalCommissionsQuery,
+        rankingDoc,
+        lastMonthRankingDoc,
+        zoomQuery,
+        notificationsQuery,
+        withdrawalFee,
+        activePromotions,
+      ] = await Promise.all([
+        // Config (cached)
+        getChatterConfigCached(),
+        // Recent commissions (limited to 10)
+        db.collection("chatter_commissions")
+          .where("chatterId", "==", userId)
+          .orderBy("createdAt", "desc")
+          .limit(10)
+          .get(),
+        // Historical commissions for trends (last 6 months, limited to 500)
+        db.collection("chatter_commissions")
+          .where("chatterId", "==", userId)
+          .where("createdAt", ">=", Timestamp.fromDate(sixMonthsAgo))
+          .orderBy("createdAt", "desc")
+          .limit(500)
+          .get(),
+        // Current month ranking
+        db.collection("chatter_monthly_rankings").doc(monthKey).get(),
+        // Last month ranking
+        db.collection("chatter_monthly_rankings").doc(lastMonthKey).get(),
+        // Upcoming Zoom meeting
+        db.collection("chatter_zoom_meetings")
+          .where("scheduledAt", ">=", nowTimestamp)
+          .where("hasEnded", "==", false)
+          .orderBy("scheduledAt", "asc")
+          .limit(1)
+          .get(),
+        // Unread notifications count
+        db.collection("chatter_notifications")
+          .where("chatterId", "==", userId)
+          .where("isRead", "==", false)
+          .count()
+          .get(),
+        // Withdrawal fee
+        getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
+        // Active promotions
+        getActivePromotions(userId, chatter.country),
+      ]);
 
+      // 4. Process recent commissions
       const recentCommissions = commissionsQuery.docs.map((doc) => {
         const data = doc.data() as ChatterCommission;
         return {
@@ -152,55 +200,12 @@ export const getChatterDashboard = onCall(
         };
       });
 
-      // 5. Calculate monthly stats
-      const now = new Date();
-      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthStart = Timestamp.fromDate(firstOfMonth);
-
-      const monthlyCommissionsQuery = await db
-        .collection("chatter_commissions")
-        .where("chatterId", "==", userId)
-        .where("createdAt", ">=", monthStart)
-        .get();
-
+      // 5. Calculate monthly stats from historical data (filter in memory)
       let monthlyEarnings = 0;
       let monthlyClients = 0;
       let monthlyRecruits = 0;
 
-      monthlyCommissionsQuery.docs.forEach((doc) => {
-        const data = doc.data() as ChatterCommission;
-        // Only count available/paid commissions for earnings
-        if (data.status === "available" || data.status === "paid") {
-          monthlyEarnings += data.amount;
-        }
-        if (data.type === "client_referral" || data.type === "client_call") {
-          monthlyClients++;
-        }
-        if (data.type === "recruitment" || data.type === "activation_bonus" || data.type === "n1_recruit_bonus") {
-          monthlyRecruits++;
-        }
-      });
-
-      // 6. Get current month rank
-      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const rankingDoc = await db.collection("chatter_monthly_rankings").doc(monthKey).get();
-
-      let monthlyRank: number | null = null;
-      if (rankingDoc.exists) {
-        const rankings = rankingDoc.data()?.rankings as Array<{ chatterId: string; rank: number }>;
-        const chatterRanking = rankings?.find((r) => r.chatterId === userId);
-        monthlyRank = chatterRanking?.rank || null;
-      }
-
-      // 6b. Calculate trends, comparison, and forecast
-      // Query historical data for last 6 months
-      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-      const historicalCommissionsQuery = await db
-        .collection("chatter_commissions")
-        .where("chatterId", "==", userId)
-        .where("createdAt", ">=", Timestamp.fromDate(sixMonthsAgo))
-        .get();
-
+      // 5b. Process historical commissions in a single pass for all stats
       const historicalCommissions = historicalCommissionsQuery.docs.map((doc) => {
         const data = doc.data() as ChatterCommission;
         return {
@@ -211,78 +216,69 @@ export const getChatterDashboard = onCall(
         };
       });
 
-      // Calculate weekly trends (last 4 weeks)
       const earningsWeekly: number[] = [0, 0, 0, 0];
       const clientsWeekly: number[] = [0, 0, 0, 0];
       const recruitsWeekly: number[] = [0, 0, 0, 0];
-
-      const currentWeekStart = getWeekStart(now);
-      for (const commission of historicalCommissions) {
-        const commissionWeekStart = getWeekStart(commission.createdAt);
-        const weeksDiff = Math.floor(
-          (currentWeekStart.getTime() - commissionWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)
-        );
-
-        if (weeksDiff >= 0 && weeksDiff < 4) {
-          const weekIndex = 3 - weeksDiff; // Index 3 = current week, 0 = oldest
-          if (commission.status === "available" || commission.status === "paid") {
-            earningsWeekly[weekIndex] += commission.amount;
-          }
-          if (commission.type === "client_referral" || commission.type === "client_call") {
-            clientsWeekly[weekIndex]++;
-          }
-          if (commission.type === "recruitment" || commission.type === "activation_bonus" || commission.type === "n1_recruit_bonus") {
-            recruitsWeekly[weekIndex]++;
-          }
-        }
-      }
-
-      // Calculate monthly trends (last 6 months)
       const earningsMonthly: number[] = [0, 0, 0, 0, 0, 0];
 
-      for (const commission of historicalCommissions) {
-        const commissionMonthStart = getMonthStart(commission.createdAt);
-        const currentMonthStart = getMonthStart(now);
-        const monthsDiff =
-          (currentMonthStart.getFullYear() - commissionMonthStart.getFullYear()) * 12 +
-          (currentMonthStart.getMonth() - commissionMonthStart.getMonth());
-
-        if (monthsDiff >= 0 && monthsDiff < 6) {
-          const monthIndex = 5 - monthsDiff; // Index 5 = current month, 0 = oldest
-          if (commission.status === "available" || commission.status === "paid") {
-            earningsMonthly[monthIndex] += commission.amount;
-          }
-        }
-      }
-
-      // Calculate previous month stats for comparison
-      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-
       let lastMonthEarnings = 0;
       let lastMonthClients = 0;
       let lastMonthRecruits = 0;
 
+      const currentWeekStart = getWeekStart(now);
+      const currentMonthStart = getMonthStart(now);
+
+      // Single pass over all historical commissions
       for (const commission of historicalCommissions) {
+        const isEarning = commission.status === "available" || commission.status === "paid";
+        const isClient = commission.type === "client_referral" || commission.type === "client_call";
+        const isRecruit = commission.type === "recruitment" || commission.type === "activation_bonus" || commission.type === "n1_recruit_bonus";
+
+        // Monthly stats (current month)
+        if (commission.createdAt >= firstOfMonth) {
+          if (isEarning) monthlyEarnings += commission.amount;
+          if (isClient) monthlyClients++;
+          if (isRecruit) monthlyRecruits++;
+        }
+
+        // Weekly trends (last 4 weeks)
+        const commissionWeekStart = getWeekStart(commission.createdAt);
+        const weeksDiff = Math.floor(
+          (currentWeekStart.getTime() - commissionWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)
+        );
+        if (weeksDiff >= 0 && weeksDiff < 4) {
+          const weekIndex = 3 - weeksDiff;
+          if (isEarning) earningsWeekly[weekIndex] += commission.amount;
+          if (isClient) clientsWeekly[weekIndex]++;
+          if (isRecruit) recruitsWeekly[weekIndex]++;
+        }
+
+        // Monthly trends (last 6 months)
+        const commissionMonthStart = getMonthStart(commission.createdAt);
+        const monthsDiff =
+          (currentMonthStart.getFullYear() - commissionMonthStart.getFullYear()) * 12 +
+          (currentMonthStart.getMonth() - commissionMonthStart.getMonth());
+        if (monthsDiff >= 0 && monthsDiff < 6) {
+          const monthIndex = 5 - monthsDiff;
+          if (isEarning) earningsMonthly[monthIndex] += commission.amount;
+        }
+
+        // Last month comparison
         if (commission.createdAt >= lastMonthStart && commission.createdAt <= lastMonthEnd) {
-          if (commission.status === "available" || commission.status === "paid") {
-            lastMonthEarnings += commission.amount;
-          }
-          if (commission.type === "client_referral" || commission.type === "client_call") {
-            lastMonthClients++;
-          }
-          if (commission.type === "recruitment" || commission.type === "activation_bonus" || commission.type === "n1_recruit_bonus") {
-            lastMonthRecruits++;
-          }
+          if (isEarning) lastMonthEarnings += commission.amount;
+          if (isClient) lastMonthClients++;
+          if (isRecruit) lastMonthRecruits++;
         }
       }
 
-      // Get last month rank for comparison
-      const lastMonthKey = `${lastMonthStart.getFullYear()}-${String(lastMonthStart.getMonth() + 1).padStart(2, "0")}`;
-      const lastMonthRankingDoc = await db
-        .collection("chatter_monthly_rankings")
-        .doc(lastMonthKey)
-        .get();
+      // 6. Process rankings (already fetched in parallel)
+      let monthlyRank: number | null = null;
+      if (rankingDoc.exists) {
+        const rankings = rankingDoc.data()?.rankings as Array<{ chatterId: string; rank: number }>;
+        const chatterRanking = rankings?.find((r) => r.chatterId === userId);
+        monthlyRank = chatterRanking?.rank || null;
+      }
 
       let lastMonthRank: number | null = null;
       if (lastMonthRankingDoc.exists) {
@@ -294,7 +290,7 @@ export const getChatterDashboard = onCall(
         lastMonthRank = chatterRanking?.rank || null;
       }
 
-      // Build trends object
+      // Build trends, comparison, forecast
       const trends: GetChatterDashboardResponse["trends"] = {
         earningsWeekly,
         earningsMonthly,
@@ -302,14 +298,13 @@ export const getChatterDashboard = onCall(
         recruitsWeekly,
       };
 
-      // Build comparison object
       const comparison: GetChatterDashboardResponse["comparison"] = {
         earningsVsLastMonth: calculatePercentChange(monthlyEarnings, lastMonthEarnings),
         clientsVsLastMonth: calculatePercentChange(monthlyClients, lastMonthClients),
         recruitsVsLastMonth: calculatePercentChange(monthlyRecruits, lastMonthRecruits),
         rankChange:
           monthlyRank !== null && lastMonthRank !== null
-            ? lastMonthRank - monthlyRank // Positive = improved (moved up in rank)
+            ? lastMonthRank - monthlyRank
             : 0,
         lastMonth: {
           earnings: lastMonthEarnings,
@@ -318,14 +313,11 @@ export const getChatterDashboard = onCall(
         },
       };
 
-      // Build forecast object
-      // Calculate estimated monthly earnings based on current pace
       const dayOfMonth = now.getDate();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const estimatedMonthlyEarnings =
         dayOfMonth > 0 ? Math.round((monthlyEarnings / dayOfMonth) * daysInMonth) : 0;
 
-      // Calculate time to next level
       const estimatedNextLevel = estimateTimeToNextLevel(
         chatter.level,
         chatter.totalEarned,
@@ -333,7 +325,6 @@ export const getChatterDashboard = onCall(
         config.levelThresholds
       );
 
-      // Get potential next tier bonus
       const nextTierBonusInfo = getNextTierBonus(chatter);
       const potentialBonus = nextTierBonusInfo?.bonusAmount || 0;
 
@@ -344,22 +335,11 @@ export const getChatterDashboard = onCall(
         currentDayOfMonth: dayOfMonth,
       };
 
-      // 7. Get upcoming Zoom meeting
+      // 7. Process Zoom meeting (already fetched in parallel)
       let upcomingZoomMeeting: GetChatterDashboardResponse["upcomingZoomMeeting"] = null;
-
-      const nowTimestamp = Timestamp.now();
-      const zoomQuery = await db
-        .collection("chatter_zoom_meetings")
-        .where("scheduledAt", ">=", nowTimestamp)
-        .where("hasEnded", "==", false)
-        .orderBy("scheduledAt", "asc")
-        .limit(1)
-        .get();
 
       if (!zoomQuery.empty) {
         const meeting = zoomQuery.docs[0].data() as ChatterZoomMeeting;
-
-        // Check if chatter is eligible for this meeting
         const isEligible =
           meeting.targetAudience === "all" ||
           (meeting.targetAudience === "new_chatters" && chatter.totalCommissions === 0) ||
@@ -379,14 +359,7 @@ export const getChatterDashboard = onCall(
         }
       }
 
-      // 8. Get unread notifications count
-      const notificationsQuery = await db
-        .collection("chatter_notifications")
-        .where("chatterId", "==", userId)
-        .where("isRead", "==", false)
-        .count()
-        .get();
-
+      // 8. Unread notifications (already fetched in parallel)
       const unreadNotifications = notificationsQuery.data().count;
 
       // 9. Build response
@@ -486,7 +459,7 @@ export const getChatterDashboard = onCall(
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           levelThresholds: config.levelThresholds,
           levelBonuses: config.levelBonuses,
-          withdrawalFeeCents: await getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
+          withdrawalFeeCents: withdrawalFee,
           recruitmentMilestones: config.recruitmentMilestones ?? DEFAULT_CHATTER_CONFIG.recruitmentMilestones,
           monthlyCompetitionPrizes: config.monthlyCompetitionPrizes ?? DEFAULT_CHATTER_CONFIG.monthlyCompetitionPrizes,
         },
@@ -517,11 +490,10 @@ export const getChatterDashboard = onCall(
             referralPercent: total > 0 ? Math.round((referralEarnings / total) * 100) : 0,
           };
         })(),
-        // Active promotion
-        activePromotion: await (async () => {
-          const promos = await getActivePromotions(userId, chatter.country);
-          if (promos.length === 0) return null;
-          const best = promos.reduce((a, b) => (a.multiplier > b.multiplier ? a : b));
+        // Active promotion (already fetched in parallel)
+        activePromotion: (() => {
+          if (activePromotions.length === 0) return null;
+          const best = activePromotions.reduce((a, b) => (a.multiplier > b.multiplier ? a : b));
           return {
             id: best.id,
             name: best.name,
@@ -529,34 +501,27 @@ export const getChatterDashboard = onCall(
             endsAt: best.endDate.toDate().toISOString(),
           };
         })(),
-        // Piggy Bank - Bonus pending unlock
-        piggyBank: await (async () => {
+        // Piggy Bank - Bonus pending unlock (sync calculation, no await needed)
+        piggyBank: (() => {
           const clientEarnings = getClientEarnings(chatter);
-          const unlockThreshold = REFERRAL_CONFIG.TELEGRAM_BONUS.UNLOCK_THRESHOLD; // $150
+          const unlockThreshold = REFERRAL_CONFIG.TELEGRAM_BONUS.UNLOCK_THRESHOLD;
 
-          // Telegram bonus ($50 when Telegram is linked, locked until threshold)
-          const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000; // $50
+          const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000;
           const hasTelegram = chatter.hasTelegram === true && chatter.telegramId;
           const telegramBonusPending = hasTelegram && !chatter.telegramBonusPaid ? telegramBonusAmount : 0;
 
-          // Calculate progress to unlock
           const progressPercent = Math.min(100, Math.round((clientEarnings / unlockThreshold) * 100));
           const amountToUnlock = Math.max(0, unlockThreshold - clientEarnings);
           const isUnlocked = clientEarnings >= unlockThreshold;
-
-          // Total pending = telegram bonus (locked until threshold)
           const totalPending = telegramBonusPending;
 
           return {
-            // Overall unlock status
             isUnlocked,
             clientEarnings,
             unlockThreshold,
             progressPercent,
             amountToUnlock,
-            // Total pending in piggy bank
             totalPending,
-            // Message for UI
             message: isUnlocked
               ? totalPending > 0
                 ? `${(totalPending / 100).toFixed(0)}$ de bonus en attente de paiement`
