@@ -38,7 +38,10 @@ export type MobileMoneyProvider =
   | 't_money'
   | 'flooz'
   | 'vodacom'
-  | 'mobilis';
+  | 'mobilis'
+  | 'ecocash'
+  | 'afrimoney'
+  | 'hormuud';
 
 // ============================================================================
 // PAYMENT DETAILS

@@ -575,60 +575,50 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
             {methods.map((method) => {
               const Icon = getMethodIcon(method.methodType);
               const isSelected = method.id === selectedMethodId;
-              const isMobileMoney = method.methodType === 'mobile_money';
               return (
                 <button
                   key={method.id}
                   onClick={() => {
-                    if (isMobileMoney) return; // Disabled — not yet automated
                     setSelectedMethodId(method.id);
                     setShowMethodList(false);
                   }}
-                  disabled={isMobileMoney}
                   className={`w-full p-4 rounded-xl flex items-center gap-3 transition-all ${
-                    isMobileMoney
-                      ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10'
-                      : isSelected
-                        ? 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
-                        : 'bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10'
+                    isSelected
+                      ? 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
+                      : 'bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10'
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      isSelected && !isMobileMoney
+                      isSelected
                         ? 'bg-red-100 dark:bg-red-900/30'
                         : 'bg-white dark:bg-white/10'
                     }`}
                   >
                     <Icon
-                      className={`w-5 h-5 ${isSelected && !isMobileMoney ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}
+                      className={`w-5 h-5 ${isSelected ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}
                     />
                   </div>
                   <div className="flex-1 text-left">
                     <p
-                      className={`font-medium ${isMobileMoney ? 'text-gray-400 dark:text-gray-500' : isSelected ? 'text-red-700 dark:text-red-300' : 'text-gray-900 dark:text-white'}`}
+                      className={`font-medium ${isSelected ? 'text-red-700 dark:text-red-300' : 'text-gray-900 dark:text-white'}`}
                     >
                       {method.displayName}
-                      {isMobileMoney && (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                          Bientôt
-                        </span>
-                      )}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {method.isDefault && !isMobileMoney && (
+                      {method.isDefault && (
                         <span className="text-green-500">
                           <FormattedMessage id="payment.method.default" defaultMessage="Par défaut" />{' - '}
                         </span>
                       )}
-                      {isMobileMoney
-                        ? intl.formatMessage({ id: 'payment.method.mobileMoneySoon', defaultMessage: 'Traitement automatique bientôt disponible' })
+                      {method.methodType === 'mobile_money'
+                        ? intl.formatMessage({ id: 'payment.method.mobileMoney', defaultMessage: 'Mobile Money' })
                         : method.methodType === 'wise'
                           ? 'Wise'
                           : intl.formatMessage({ id: 'payment.method.bankTransfer', defaultMessage: 'Virement bancaire' })}
                     </p>
                   </div>
-                  {isSelected && !isMobileMoney && <CheckCircle className="w-5 h-5 text-red-500" />}
+                  {isSelected && <CheckCircle className="w-5 h-5 text-red-500" />}
                 </button>
               );
             })}

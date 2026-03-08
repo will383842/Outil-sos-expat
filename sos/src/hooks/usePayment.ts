@@ -54,7 +54,10 @@ export type MobileMoneyProvider =
   | "t_money"
   | "flooz"
   | "vodacom"
-  | "mobilis";
+  | "mobilis"
+  | "ecocash"
+  | "afrimoney"
+  | "hormuud";
 
 /**
  * User type for payment context
@@ -873,6 +876,27 @@ const MOBILE_PROVIDER_DETAILS: Record<MobileMoneyProvider, Omit<MobileMoneyProvi
     name: "Mobilis",
     countries: ["DZ"],
     currencies: ["DZD"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 2 },
+  },
+  ecocash: {
+    name: "EcoCash",
+    countries: ["ZW"],
+    currencies: ["ZWL"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 1.5 },
+  },
+  afrimoney: {
+    name: "Afrimoney",
+    countries: ["GM", "SL"],
+    currencies: ["GMD", "SLL"],
+    processingTime: "Instant - 24h",
+    fees: { fixed: 0, percentage: 1.5 },
+  },
+  hormuud: {
+    name: "Hormuud",
+    countries: ["SO"],
+    currencies: ["SOS"],
     processingTime: "Instant - 24h",
     fees: { fixed: 0, percentage: 2 },
   },

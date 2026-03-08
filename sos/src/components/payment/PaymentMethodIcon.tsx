@@ -80,6 +80,21 @@ const mobileMoneyColors: Record<MobileMoneyProvider, { bg: string; icon: string;
     icon: 'text-white',
     gradient: 'from-green-600 to-green-700',
   },
+  ecocash: {
+    bg: 'bg-gradient-to-br from-blue-500 to-blue-600',
+    icon: 'text-white',
+    gradient: 'from-blue-500 to-blue-600',
+  },
+  afrimoney: {
+    bg: 'bg-gradient-to-br from-orange-500 to-yellow-500',
+    icon: 'text-white',
+    gradient: 'from-orange-500 to-yellow-500',
+  },
+  hormuud: {
+    bg: 'bg-gradient-to-br from-teal-500 to-teal-600',
+    icon: 'text-white',
+    gradient: 'from-teal-500 to-teal-600',
+  },
 };
 
 // Default color for mobile money when provider not specified
@@ -163,6 +178,9 @@ export const mobileMoneyProviderNames: Record<MobileMoneyProvider, string> = {
   flooz: 'Flooz',
   vodacom: 'Vodacom M-Pesa',
   mobilis: 'Mobilis',
+  ecocash: 'EcoCash',
+  afrimoney: 'Afrimoney',
+  hormuud: 'Hormuud',
 };
 
 export default PaymentMethodIcon;

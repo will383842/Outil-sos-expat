@@ -185,7 +185,6 @@ export const WISE_COUNTRIES: string[] = [
   'LT', // Lithuania
   'UA', // Ukraine
   'MD', // Moldova
-  'BY', // Belarus
   'GE', // Georgia
   'AM', // Armenia
   'AZ', // Azerbaijan
