@@ -1888,7 +1888,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           status: "pending",
           createdAt: serverTimestamp(),
           notifiedAt: null,
-          referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
+          referralBy: (user as any).referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
         };
 
         const orderDoc = {
@@ -1928,7 +1928,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           // ✅ Add additional fields that might be useful
           totalSaved: 0, // Will calculate: original_standard_amount - amount
           appliedDiscounts: [], // Array of applied discounts
-          referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
+          referralBy: (user as any).referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
         };
 
         // AUDIT-FIX C4: Removed 3 dead Firestore writes that always fail silently:
@@ -3978,7 +3978,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         status: "pending",
         createdAt: serverTimestamp(),
         callSessionId,
-        referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
+        referralBy: (user as any).referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
       };
 
       const orderDoc = {
@@ -4019,7 +4019,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         } : null,
         totalSaved: 0,
         appliedDiscounts: [],
-        referralBy: user.referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
+        referralBy: (user as any).referredByUserId || getAffiliateRef() || getStoredReferralCode() || null,
       };
 
       try {
