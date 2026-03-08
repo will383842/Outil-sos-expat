@@ -164,7 +164,8 @@ export const adminGetReferralStats = onCall(
 // ============================================================================
 
 interface GetReferralTreeInput {
-  chatterId: string;
+  chatterId?: string;
+  searchTerm?: string;
   maxDepth?: number;
 }
 
@@ -173,14 +174,17 @@ interface ReferralTreeNode {
   email: string;
   name: string;
   level: number;
+  totalEarned: number;
   clientEarnings: number;
   referralEarnings: number;
+  qualifiedReferralsCount: number;
   isQualified: boolean;
   filleuls: ReferralTreeNode[];
 }
 
 interface GetReferralTreeResponse {
-  root: ReferralTreeNode;
+  tree: ReferralTreeNode[];
+  root?: ReferralTreeNode;
   totalNodes: number;
 }
 
@@ -193,10 +197,7 @@ export const adminGetReferralTree = onCall(
     assertAdmin(request);
 
     const input = (request.data || {}) as GetReferralTreeInput;
-    if (!input.chatterId) {
-      throw new HttpsError("invalid-argument", "chatterId is required");
-    }
-    const maxDepth = input.maxDepth || 3;
+    const maxDepth = input.maxDepth || 2;
     const db = getFirestore();
 
     // Helper to build tree recursively
@@ -213,8 +214,10 @@ export const adminGetReferralTree = onCall(
         email: chatter.email,
         name: `${chatter.firstName} ${chatter.lastName}`,
         level: depth,
-        clientEarnings: chatter.totalEarned - (chatter.referralEarnings || 0),
+        totalEarned: chatter.totalEarned || 0,
+        clientEarnings: (chatter.totalEarned || 0) - (chatter.referralEarnings || 0),
         referralEarnings: chatter.referralEarnings || 0,
+        qualifiedReferralsCount: chatter.qualifiedReferralsCount || 0,
         isQualified: chatter.threshold50Reached || false,
         filleuls: [],
       };
@@ -241,14 +244,85 @@ export const adminGetReferralTree = onCall(
     };
 
     try {
-      const root = await buildTree(input.chatterId, 0);
-      if (!root) {
-        throw new HttpsError("not-found", "Chatter not found");
+      // Mode 1: Specific chatter tree
+      if (input.chatterId) {
+        const root = await buildTree(input.chatterId, 0);
+        if (!root) {
+          throw new HttpsError("not-found", "Chatter not found");
+        }
+        return {
+          tree: [root],
+          root,
+          totalNodes: countNodes(root),
+        };
       }
 
+      // Mode 2: List all top-level parrains (chatters who have filleuls)
+      // Get chatters who have recruited at least one person
+      let chattersQuery = db.collection("chatters")
+        .where("totalRecruits", ">", 0)
+        .orderBy("totalRecruits", "desc")
+        .limit(50) as FirebaseFirestore.Query;
+
+      const chattersSnap = await chattersQuery.get();
+
+      let trees: ReferralTreeNode[] = [];
+
+      for (const doc of chattersSnap.docs) {
+        const chatter = doc.data() as Chatter;
+
+        // Apply search filter
+        if (input.searchTerm) {
+          const q = input.searchTerm.toLowerCase();
+          const nameMatch = `${chatter.firstName} ${chatter.lastName}`.toLowerCase().includes(q);
+          const emailMatch = chatter.email.toLowerCase().includes(q);
+          if (!nameMatch && !emailMatch) continue;
+        }
+
+        // Only show top-level parrains (not recruited by someone else) or all if search
+        const isTopLevel = !chatter.recruitedBy || input.searchTerm;
+        if (!isTopLevel) continue;
+
+        const node = await buildTree(doc.id, 0);
+        if (node) {
+          trees.push(node);
+        }
+      }
+
+      // If search and no top-level results, also search among all chatters
+      if (input.searchTerm && trees.length === 0) {
+        const allSnap = await db.collection("chatters")
+          .orderBy("totalEarned", "desc")
+          .limit(100)
+          .get();
+
+        for (const doc of allSnap.docs) {
+          const chatter = doc.data() as Chatter;
+          const q = input.searchTerm.toLowerCase();
+          const nameMatch = `${chatter.firstName} ${chatter.lastName}`.toLowerCase().includes(q);
+          const emailMatch = chatter.email.toLowerCase().includes(q);
+          if (!nameMatch && !emailMatch) continue;
+
+          const node = await buildTree(doc.id, 0);
+          if (node) {
+            trees.push(node);
+          }
+          if (trees.length >= 20) break;
+        }
+      }
+
+      let totalNodes = 0;
+      trees.forEach((t) => { totalNodes += countNodes(t); });
+
+      logger.info("[adminGetReferralTree] Tree fetched", {
+        mode: input.chatterId ? "single" : "list",
+        topLevelNodes: trees.length,
+        totalNodes,
+      });
+
       return {
-        root,
-        totalNodes: countNodes(root),
+        tree: trees,
+        totalNodes,
       };
     } catch (error) {
       if (error instanceof HttpsError) throw error;

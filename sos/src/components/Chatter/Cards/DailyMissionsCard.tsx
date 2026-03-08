@@ -20,7 +20,6 @@
 
 import React, { memo, useState, useEffect, useRef, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import Confetti from 'react-confetti';
 import {
   Target,
@@ -129,7 +128,6 @@ const DAILY_TASKS: DailyTask[] = [
 ];
 
 const COMPLETION_BONUS_XP = 150;
-const SWIPE_THRESHOLD = 50;
 
 interface DailyMissionsCardProps {
   /** Current streak count */
@@ -244,18 +242,6 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
     }
   }, [allCompleted, onAllComplete]);
 
-  // Swipe handling for mobile
-  const x = useMotionValue(0);
-  const opacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
-
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -SWIPE_THRESHOLD && currentCardIndex < totalTasks - 1) {
-      setCurrentCardIndex(prev => prev + 1);
-    } else if (info.offset.x > SWIPE_THRESHOLD && currentCardIndex > 0) {
-      setCurrentCardIndex(prev => prev - 1);
-    }
-  };
-
   const goToCard = (index: number) => {
     setCurrentCardIndex(Math.max(0, Math.min(totalTasks - 1, index)));
   };
@@ -281,13 +267,10 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
   return (
     <>
       {/* Confetti Celebration Overlay */}
-      <AnimatePresence>
+      <>
         {showCelebration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none animate-fade-in"
           >
             <Confetti
               width={windowSize.width}
@@ -298,63 +281,43 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
               colors={['#ef4444', '#f97316', '#f43f5e', '#22c55e', '#3b82f6', '#a855f7', '#eab308']}
             />
 
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0, y: 50 }}
-              animate={{
-                scale: 1,
-                opacity: 1,
-                y: 0,
-                transition: { type: 'spring', damping: 15, stiffness: 300 },
-              }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-white dark:bg-gray-900 rounded-3xl p-8 mx-6 text-center shadow-2xl pointer-events-auto"
+            <div
+              className="bg-white dark:bg-gray-900 rounded-3xl p-8 mx-6 text-center shadow-2xl pointer-events-auto animate-fade-in"
             >
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.2, type: 'spring', damping: 10 }}
-                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg"
+              <div
+                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-fade-in"
               >
                 <Sparkles className="w-10 h-10 text-white" />
-              </motion.div>
+              </div>
 
-              <motion.h2
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-2xl dark:text-white font-bold mb-2"
+              <h2
+                className="text-2xl dark:text-white font-bold mb-2 animate-fade-in"
               >
                 <FormattedMessage
                   id="chatter.dailyMissions.allComplete.title"
                   defaultMessage="All Missions Complete!"
                 />
-              </motion.h2>
+              </h2>
 
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-gray-600 dark:text-gray-400 mb-4"
+              <p
+                className="text-gray-600 dark:text-gray-400 mb-4 animate-fade-in"
               >
                 <FormattedMessage
                   id="chatter.dailyMissions.allComplete.desc"
                   defaultMessage="You earned a bonus reward!"
                 />
-              </motion.p>
+              </p>
 
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: 'spring' }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-white font-bold"
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-white font-bold animate-fade-in"
               >
                 <Zap className="w-5 h-5" />
                 +{COMPLETION_BONUS_XP} XP
-              </motion.div>
-            </motion.div>
-          </motion.div>
+              </div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
 
       {/* Main Card */}
       <div className={`${UI.card} ${UI.cardHover} overflow-hidden`}>
@@ -414,11 +377,9 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
 
             {/* Progress Bar */}
             <div className="h-2.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
+              <div
+                className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progressPercent}%` }}
               />
             </div>
 
@@ -452,30 +413,18 @@ const DailyMissionsCard = memo(function DailyMissionsCard({
             ref={containerRef}
             className="relative overflow-hidden"
           >
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={handleDragEnd}
-              style={{ x, opacity }}
-              className="cursor-grab active:cursor-grabbing"
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentCardIndex}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <TaskCard
-                    task={DAILY_TASKS[currentCardIndex]}
-                    mission={missionMap.get(DAILY_TASKS[currentCardIndex].missionId)}
-                    intl={intl}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
+            <div>
+              <div
+                key={currentCardIndex}
+                className="animate-fade-in"
+              >
+                <TaskCard
+                  task={DAILY_TASKS[currentCardIndex]}
+                  mission={missionMap.get(DAILY_TASKS[currentCardIndex].missionId)}
+                  intl={intl}
+                />
+              </div>
+            </div>
 
             {/* Navigation Arrows - 44px minimum touch targets */}
             <button
@@ -589,7 +538,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const showProgress = target > 1;
 
   return (
-    <motion.div
+    <div
       className={`relative p-5 rounded-2xl border-2 transition-all ${
         isCompleted
           ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
@@ -650,13 +599,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
       >
         {isCompleted ? (
           <>
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', damping: 15 }}
-            >
+            <div className="animate-fade-in">
               <Check className="w-5 h-5" />
-            </motion.div>
+            </div>
             <FormattedMessage id="chatter.dailyMissions.completed" defaultMessage="Completed" />
           </>
         ) : (
@@ -669,7 +614,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -693,14 +638,12 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
   const showProgress = target > 1;
 
   return (
-    <motion.div
+    <div
       className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
         isCompleted
           ? 'bg-green-50 dark:bg-green-900/20'
           : 'bg-gray-50 dark:bg-white/5'
       }`}
-      animate={isCompleted ? { scale: [1, 1.02, 1] } : {}}
-      transition={{ duration: 0.3 }}
     >
       {/* Checkbox / Status indicator */}
       <div
@@ -710,18 +653,13 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
             : 'border-gray-300 dark:border-gray-600'
         }`}
       >
-        <AnimatePresence>
+        <>
           {isCompleted && (
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: 'spring', damping: 15 }}
-            >
+            <div className="animate-fade-in">
               <Check className="w-4 h-4 text-white" strokeWidth={3} />
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </>
       </div>
 
       {/* Icon */}
@@ -762,7 +700,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
         <Zap className="w-3 h-3" />
         {task.xp}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

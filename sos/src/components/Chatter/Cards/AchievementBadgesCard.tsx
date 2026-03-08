@@ -15,7 +15,6 @@
 
 import React, { memo, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award,
   Lock,
@@ -608,11 +607,8 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
 
         {/* Recent Badge Highlight */}
         {stats.recentBadge && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-4 p-3 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 rounded-xl border dark:border-amber-800/30"
+          <div
+            className="mb-4 p-3 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 rounded-xl border dark:border-amber-800/30 animate-fade-in"
           >
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -630,7 +626,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Next Badge to Earn */}
@@ -674,22 +670,20 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
             const BadgeIcon = badge.icon;
 
             return (
-              <motion.button
+              <button
                 key={badge.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
                 onClick={() => handleBadgeClick(badge)}
                 className={`
                   relative aspect-square rounded-xl p-2 sm:p-3
                   flex flex-col items-center justify-center
-                  transition-all duration-300
+                  transition-all duration-300 animate-fade-in
                   ${isEarned
                     ? `${badge.bgColor} shadow-lg ${badge.glowColor} hover:scale-110`
                     : 'bg-gray-100 dark:bg-white/10 opacity-50 hover:opacity-70 hover:scale-105'
                   }
                   group
                 `}
+                style={{ animationDelay: `${index * 50}ms` }}
                 title={intl.formatMessage({ id: badge.nameKey, defaultMessage: badge.defaultName })}
               >
                 {/* Badge Icon */}
@@ -733,7 +727,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                     'bg-gray-400'
                   } ${isEarned ? 'opacity-100' : 'opacity-30'}`}
                 />
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -761,20 +755,14 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
       </div>
 
       {/* Badge Detail Modal */}
-      <AnimatePresence>
+      <>
         {selectedBadge && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
             onClick={closeBadgeDetail}
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-2xl"
+            <div
+              className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-2xl animate-fade-in transition-all duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
@@ -853,10 +841,10 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                   </div>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
     </>
   );
 });

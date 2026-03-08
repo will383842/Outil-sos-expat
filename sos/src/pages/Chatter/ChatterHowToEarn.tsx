@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useChatter } from '@/hooks/useChatter';
+import { useChatterData } from '@/contexts/ChatterDataContext';
 import { functionsAffiliate, db } from '@/config/firebase';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 
@@ -564,7 +564,7 @@ function CaptainTierProgress({
 function ChatterHowToEarn() {
   const intl = useIntl();
   const { user } = useAuth();
-  const { dashboardData, isLoading, clientShareUrl, recruitmentShareUrl } = useChatter();
+  const { dashboardData, isLoading, clientShareUrl, recruitmentShareUrl } = useChatterData();
   const [copied, setCopied] = useState(false);
 
   // Captain state

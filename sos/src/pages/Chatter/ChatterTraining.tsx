@@ -1,35 +1,26 @@
 /**
- * ChatterTraining - Formation page for chatters
- *
- * Connected to backend via useChatterTraining hook:
- * - Module list with real progress from Firestore
- * - Slide viewer with progress tracking
- * - Quiz submission with scoring
- * - Certificate display on completion
+ * ChatterTraining - Unified Tools page (fusion Formation + Resources + How to Earn)
+ * 3 sub-tabs: Comment gagner | Formation | Ressources
+ * Uses useChatterData() Context + useChatterTraining() + useChatterResources()
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import toast from 'react-hot-toast';
 import {
-  BookOpen,
-  Video,
-  FileText,
-  CheckCircle,
-  ArrowRight,
-  ArrowLeft,
-  Award,
-  Loader2,
-  RefreshCw,
-  X,
-  ChevronRight,
-  ListChecks,
-  Lightbulb,
-  ImageIcon,
-  Lock,
+  Briefcase, BookOpen, FolderOpen, Lightbulb,
+  Share2, Phone, DollarSign, Crown, CheckCircle,
+  ArrowRight, ArrowLeft, Award, Loader2, RefreshCw,
+  X, ChevronRight, Lock, ImageIcon, FileText, Video,
+  Calculator, ListChecks,
 } from 'lucide-react';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
+import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
+import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useChatterTraining } from '@/hooks/useChatterTraining';
+import { useChatterResources } from '@/hooks/useChatterResources';
+import EmptyStateCard from '@/components/Chatter/Activation/EmptyStateCard';
+import { UI, SPACING } from '@/components/Chatter/designTokens';
 import { useApp } from '@/contexts/AppContext';
 import type {
   TrainingModuleListItem,
@@ -39,787 +30,506 @@ import type {
   SubmitTrainingQuizResult,
 } from '@/types/chatter';
 
-// ============================================================================
-// DESIGN TOKENS
-// ============================================================================
+// Revenue calculator simple
+const REVENUE_SCENARIOS = [
+  { calls: 2, label: '2', monthly: 80 },
+  { calls: 5, label: '5', monthly: 200 },
+  { calls: 10, label: '10', monthly: 400 },
+  { calls: 20, label: '20', monthly: 800 },
+  { calls: 50, label: '50', monthly: 2000 },
+];
 
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-    secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 rounded-xl transition-all",
-  },
-};
-
-const CATEGORY_COLORS: Record<string, { bg: string; text: string; icon: string }> = {
-  onboarding: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'text-green-500' },
-  promotion: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', icon: 'text-blue-500' },
-  conversion: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', icon: 'text-purple-500' },
-  recruitment: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400', icon: 'text-orange-500' },
-  best_practices: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', icon: 'text-yellow-500' },
-};
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-function getLocalizedText(
-  base: string,
-  translations?: Record<string, string>,
-  locale?: string
-): string {
-  if (translations && locale && translations[locale]) {
-    return translations[locale];
-  }
-  return base;
-}
-
-function getSlideIcon(type: TrainingSlide['type']) {
-  switch (type) {
-    case 'video': return <Video className="w-4 h-4" />;
-    case 'image': return <ImageIcon className="w-4 h-4" />;
-    case 'checklist': return <ListChecks className="w-4 h-4" />;
-    case 'tips': return <Lightbulb className="w-4 h-4" />;
-    default: return <FileText className="w-4 h-4" />;
-  }
-}
-
-// ============================================================================
-// SKELETON
-// ============================================================================
-
-function TrainingSkeleton() {
-  return (
-    <div className="space-y-6 animate-pulse">
-      <div className={`${UI.card} p-4 sm:p-6`}>
-        <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-3" />
-        <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full w-full" />
-      </div>
-      <div className="grid md:grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className={`${UI.card} p-5`}>
-            <div className="h-5 bg-gray-200 dark:bg-white/10 rounded w-2/3 mb-3" />
-            <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-full mb-2" />
-            <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// MODULE CARD
-// ============================================================================
-
-interface ModuleCardProps {
-  module: TrainingModuleListItem;
-  locale: string;
-  onOpen: (id: string) => void;
-  disabled?: boolean;
-}
-
-function ModuleCard({ module, locale, onOpen, disabled }: ModuleCardProps) {
-  const colors = CATEGORY_COLORS[module.category] || CATEGORY_COLORS.onboarding;
-  const isCompleted = module.progress?.isCompleted;
-  const isStarted = module.progress?.isStarted;
-  const progressPercent = module.progress
-    ? Math.min(100, Math.round((module.progress.currentSlideIndex / Math.max(1, module.progress.totalSlides)) * 100))
-    : 0;
-
-  return (
-    <button
-      type="button"
-      onClick={() => !disabled && onOpen(module.id)}
-      disabled={disabled}
-      className={`${UI.card} p-5 text-left w-full hover:shadow-xl transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-    >
-      <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-xl flex-shrink-0 ${isCompleted ? 'bg-green-100 dark:bg-green-900/30' : colors.bg}`}>
-          {isCompleted ? (
-            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-          ) : disabled ? (
-            <Lock className="w-6 h-6 text-gray-400" />
-          ) : (
-            <BookOpen className={`w-6 h-6 ${colors.icon}`} />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${colors.bg} ${colors.text}`}>
-              {module.category}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              ~{module.estimatedMinutes} min
-            </span>
-            {module.isRequired && (
-              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
-                <FormattedMessage id="chatter.training.required" defaultMessage="Requis" />
-              </span>
-            )}
-          </div>
-          <h4 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">
-            {getLocalizedText(module.title, module.titleTranslations, locale)}
-          </h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-            {getLocalizedText(module.description, module.descriptionTranslations, locale)}
-          </p>
-
-          {/* Progress bar for started modules */}
-          {isStarted && !isCompleted && (
-            <div className="mt-3">
-              <div className="h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
-                {module.progress!.currentSlideIndex}/{module.progress!.totalSlides} slides
-              </p>
-            </div>
-          )}
-
-          {/* CTA */}
-          <div className="flex items-center gap-1 mt-3 text-sm font-medium text-red-500 dark:text-red-400">
-            {isCompleted ? (
-              <FormattedMessage id="chatter.training.review" defaultMessage="Revoir" />
-            ) : isStarted ? (
-              <FormattedMessage id="chatter.training.continue" defaultMessage="Continuer" />
-            ) : (
-              <FormattedMessage id="chatter.training.start" defaultMessage="Commencer" />
-            )}
-            <ArrowRight className="w-4 h-4" />
-          </div>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-// ============================================================================
-// SLIDE VIEWER
-// ============================================================================
-
-interface SlideViewerProps {
-  slide: TrainingSlide;
-  locale: string;
-}
-
-function SlideViewer({ slide, locale }: SlideViewerProps) {
-  const title = getLocalizedText(slide.title, slide.titleTranslations, locale);
-  const content = getLocalizedText(slide.content, slide.contentTranslations, locale);
-
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        {getSlideIcon(slide.type)}
-        {title}
-      </h3>
-
-      {/* Media */}
-      {slide.mediaUrl && slide.type === 'video' && (
-        <div className="aspect-video rounded-xl overflow-hidden bg-black">
-          <iframe
-            src={slide.mediaUrl}
-            className="w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title={title}
-          />
-        </div>
-      )}
-      {slide.mediaUrl && slide.type === 'image' && (
-        <img
-          src={slide.mediaUrl}
-          alt={title}
-          className="w-full rounded-xl max-h-80 object-contain bg-gray-100 dark:bg-white/5"
-          loading="lazy"
-        />
-      )}
-
-      {/* Text content */}
-      <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-        {content}
-      </div>
-
-      {/* Checklist */}
-      {slide.type === 'checklist' && slide.checklistItems && (
-        <ul className="space-y-2">
-          {slide.checklistItems.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {getLocalizedText(item.text, item.textTranslations, locale)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Tips */}
-      {slide.type === 'tips' && slide.tips && (
-        <div className="space-y-2">
-          {slide.tips.map((tip, idx) => (
-            <div key={idx} className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-xl border border-yellow-200 dark:border-yellow-800/30">
-              <Lightbulb className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {getLocalizedText(tip.text, tip.textTranslations, locale)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// QUIZ VIEW
-// ============================================================================
-
-interface QuizViewProps {
-  questions: TrainingQuizQuestion[];
-  locale: string;
-  isSubmitting: boolean;
-  onSubmit: (answers: Array<{ questionId: string; answerId: string }>) => void;
-}
-
-function QuizView({ questions, locale, isSubmitting, onSubmit }: QuizViewProps) {
-  const intl = useIntl();
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  const allAnswered = questions.every(q => answers[q.id]);
-
-  const handleSubmit = () => {
-    const formattedAnswers = questions.map(q => ({
-      questionId: q.id,
-      answerId: answers[q.id] || '',
-    }));
-    onSubmit(formattedAnswers);
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Award className="w-6 h-6 text-red-500" />
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-          <FormattedMessage id="chatter.training.quiz.title" defaultMessage="Quiz de validation" />
-        </h3>
-      </div>
-
-      {questions.map((q, idx) => {
-        const questionText = getLocalizedText(q.question, q.questionTranslations, locale);
-        return (
-          <div key={q.id} className="space-y-3">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {idx + 1}. {questionText}
-            </p>
-            <div className="space-y-2">
-              {q.options?.map(opt => {
-                const optText = getLocalizedText(opt.text, opt.textTranslations, locale);
-                const isSelected = answers[q.id] === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt.id }))}
-                    className={`w-full text-left p-3 rounded-xl border-2 transition-all text-sm ${
-                      isSelected
-                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-500/60'
-                        : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'border-red-500 bg-red-500' : 'border-gray-300 dark:border-gray-600'
-                      }`}>
-                        {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                      </div>
-                      <span className={isSelected ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}>
-                        {optText}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-
-      <button
-        onClick={handleSubmit}
-        disabled={!allAnswered || isSubmitting}
-        className={`${UI.button.primary} w-full py-3 flex items-center justify-center gap-2`}
-      >
-        {isSubmitting ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
-        ) : (
-          <>
-            <Award className="w-5 h-5" />
-            <FormattedMessage id="chatter.training.quiz.submit" defaultMessage="Valider le quiz" />
-          </>
-        )}
-      </button>
-    </div>
-  );
-}
-
-// ============================================================================
-// QUIZ RESULTS
-// ============================================================================
-
-interface QuizResultsProps {
-  result: SubmitTrainingQuizResult;
-  onRetry: () => void;
-  onClose: () => void;
-}
-
-function QuizResults({ result, onRetry, onClose }: QuizResultsProps) {
-  return (
-    <div className="text-center space-y-4 py-4">
-      <div className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center ${
-        result.passed ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
-      }`}>
-        {result.passed ? (
-          <CheckCircle className="w-10 h-10 text-green-500" />
-        ) : (
-          <X className="w-10 h-10 text-red-500" />
-        )}
-      </div>
-
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-          {result.passed ? (
-            <FormattedMessage id="chatter.training.quiz.passed" defaultMessage="Félicitations !" />
-          ) : (
-            <FormattedMessage id="chatter.training.quiz.failed" defaultMessage="Pas encore..." />
-          )}
-        </h3>
-        <p className="text-3xl font-black mt-2 text-gray-900 dark:text-white">
-          {result.score}%
-        </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          <FormattedMessage
-            id="chatter.training.quiz.passingScore"
-            defaultMessage="Score requis : {score}%"
-            values={{ score: result.passingScore }}
-          />
-        </p>
-      </div>
-
-      {result.rewardGranted && (
-        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800/30">
-          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-            {result.rewardGranted.type === 'bonus'
-              ? <FormattedMessage
-                  id="chatter.training.quiz.bonusReward"
-                  defaultMessage="Bonus de ${amount} crédité !"
-                  values={{ amount: ((result.rewardGranted.bonusAmount || 0) / 100).toFixed(0) }}
-                />
-              : <FormattedMessage id="chatter.training.quiz.badgeReward" defaultMessage="Nouveau badge débloqué !" />
-            }
-          </p>
-        </div>
-      )}
-
-      <div className="flex gap-3 pt-2">
-        {!result.passed && (
-          <button onClick={onRetry} className={`${UI.button.secondary} flex-1 py-2.5`}>
-            <FormattedMessage id="chatter.training.quiz.retry" defaultMessage="Réessayer" />
-          </button>
-        )}
-        <button onClick={onClose} className={`${UI.button.primary} flex-1 py-2.5`}>
-          {result.passed ? (
-            <FormattedMessage id="chatter.training.quiz.continue" defaultMessage="Continuer" />
-          ) : (
-            <FormattedMessage id="common.close" defaultMessage="Fermer" />
-          )}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// MODULE DETAIL MODAL
-// ============================================================================
-
-interface ModuleModalProps {
-  module: ChatterTrainingModule;
-  slideIndex: number;
-  isSubmittingQuiz: boolean;
-  locale: string;
-  onClose: () => void;
-  onSlideChange: (index: number) => void;
-  onQuizSubmit: (answers: Array<{ questionId: string; answerId: string }>) => void;
-  quizResult: SubmitTrainingQuizResult | null;
-  onQuizRetry: () => void;
-  quizAttempt: number;
-}
-
-function ModuleModal({
-  module, slideIndex, isSubmittingQuiz, locale, onClose,
-  onSlideChange, onQuizSubmit, quizResult, onQuizRetry, quizAttempt,
-}: ModuleModalProps) {
-  const totalSlides = module.slides.length;
-  const hasQuiz = module.quizQuestions.length > 0;
-  const isOnQuiz = slideIndex >= totalSlides;
-  const isShowingResults = quizResult !== null;
-
-  const title = getLocalizedText(module.title, module.titleTranslations, locale);
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className={`${UI.card} w-full max-w-2xl max-h-[90vh] flex flex-col`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-white/10">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate">{title}</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {isOnQuiz ? (
-                <FormattedMessage id="chatter.training.quiz.title" defaultMessage="Quiz de validation" />
-              ) : (
-                <FormattedMessage
-                  id="chatter.training.slideOf"
-                  defaultMessage="Slide {current} / {total}"
-                  values={{ current: slideIndex + 1, total: totalSlides }}
-                />
-              )}
-            </p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors" aria-label="Close">
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-
-        {/* Progress dots */}
-        <div className="flex items-center gap-1 px-5 py-3 overflow-x-auto">
-          {module.slides.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => onSlideChange(idx)}
-              className={`w-2 h-2 rounded-full flex-shrink-0 transition-all ${
-                idx === slideIndex ? 'w-6 bg-red-500' :
-                idx < slideIndex ? 'bg-green-500' :
-                'bg-gray-300 dark:bg-white/20'
-              }`}
-              title={`Slide ${idx + 1}`}
-            />
-          ))}
-          {hasQuiz && (
-            <>
-              <div className="w-px h-3 bg-gray-300 dark:bg-white/20 mx-1 flex-shrink-0" />
-              <button
-                onClick={() => onSlideChange(totalSlides)}
-                className={`w-2 h-2 rounded-full flex-shrink-0 transition-all ${
-                  isOnQuiz ? 'w-6 bg-red-500' : 'bg-gray-300 dark:bg-white/20'
-                }`}
-                title="Quiz"
-              />
-            </>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {isShowingResults ? (
-            <QuizResults result={quizResult} onRetry={onQuizRetry} onClose={onClose} />
-          ) : isOnQuiz ? (
-            <QuizView
-              key={`quiz-${quizAttempt}`}
-              questions={module.quizQuestions}
-              locale={locale}
-              isSubmitting={isSubmittingQuiz}
-              onSubmit={onQuizSubmit}
-            />
-          ) : (
-            <SlideViewer slide={module.slides[slideIndex]} locale={locale} />
-          )}
-        </div>
-
-        {/* Navigation footer (only for slides, not quiz/results) */}
-        {!isOnQuiz && !isShowingResults && (
-          <div className="flex items-center justify-between p-5 border-t border-gray-200 dark:border-white/10">
-            <button
-              onClick={() => onSlideChange(slideIndex - 1)}
-              disabled={slideIndex === 0}
-              className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2 text-sm disabled:opacity-30`}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <FormattedMessage id="chatter.training.prev" defaultMessage="Précédent" />
-            </button>
-            <button
-              onClick={() => onSlideChange(slideIndex + 1)}
-              className={`${UI.button.primary} px-4 py-2 flex items-center gap-2 text-sm`}
-            >
-              {slideIndex === totalSlides - 1 && hasQuiz ? (
-                <>
-                  <Award className="w-4 h-4" />
-                  <FormattedMessage id="chatter.training.goToQuiz" defaultMessage="Passer le quiz" />
-                </>
-              ) : slideIndex === totalSlides - 1 ? (
-                <FormattedMessage id="chatter.training.finish" defaultMessage="Terminer" />
-              ) : (
-                <>
-                  <FormattedMessage id="chatter.training.next" defaultMessage="Suivant" />
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
-function ChatterTraining() {
+export default function ChatterTraining() {
   const intl = useIntl();
   const { language } = useApp();
-  const locale = language || 'fr';
+  const { dashboardData, clientShareUrl } = useChatterData();
+  const chatter = dashboardData?.chatter;
 
   const {
     modules,
-    overallProgress,
-    currentModule,
-    isLoading,
-    isLoadingModule,
-    isSubmittingQuiz,
-    error,
-    loadModules,
+    isLoading: trainingLoading,
     loadModuleContent,
-    updateProgress,
     submitQuiz,
+    currentModule,
+    loadModules,
   } = useChatterTraining();
 
-  const [showModal, setShowModal] = useState(false);
-  const [slideIndex, setSlideIndex] = useState(0);
+  const {
+    resources: resourcesData,
+    isLoading: resourcesLoading,
+    fetchResources,
+  } = useChatterResources();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  const [selectedSlide, setSelectedSlide] = useState(0);
+  const [viewingModule, setViewingModule] = useState<string | null>(null);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizResult, setQuizResult] = useState<SubmitTrainingQuizResult | null>(null);
-  const [quizAttempt, setQuizAttempt] = useState(0);
+  const [revenueSlider, setRevenueSlider] = useState(2); // index in REVENUE_SCENARIOS
 
-  // Open module
+  const handleCopyLink = useCallback(() => {
+    if (!clientShareUrl) return;
+    navigator.clipboard.writeText(clientShareUrl).then(() => {
+      toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien copie !' }));
+    });
+  }, [clientShareUrl, intl]);
+
+  // Open module viewer
   const handleOpenModule = useCallback(async (moduleId: string) => {
+    await loadModuleContent(moduleId);
+    setViewingModule(moduleId);
+    setSelectedSlide(0);
+    setQuizAnswers({});
     setQuizResult(null);
-    setSlideIndex(0);
-    setQuizAttempt(prev => prev + 1);
-    try {
-      await loadModuleContent(moduleId);
-      setShowModal(true);
-    } catch {
-      toast.error(intl.formatMessage({ id: 'chatter.training.loadError', defaultMessage: 'Impossible de charger le module.' }));
-    }
-  }, [loadModuleContent, intl]);
+  }, [loadModuleContent]);
 
-  // Close module
-  const handleCloseModal = useCallback(() => {
-    setShowModal(false);
-    setQuizResult(null);
-    setSlideIndex(0);
-  }, []);
-
-  // Navigate slides
-  const handleSlideChange = useCallback(async (newIndex: number) => {
-    if (!currentModule) return;
-    const totalSlides = currentModule.slides.length;
-    const hasQuiz = currentModule.quizQuestions.length > 0;
-
-    // Can't go past quiz
-    if (newIndex > totalSlides) return;
-    // If no quiz, close on "finish"
-    if (newIndex === totalSlides && !hasQuiz) {
-      handleCloseModal();
-      return;
-    }
-    // Clamp
-    if (newIndex < 0) return;
-
-    setSlideIndex(newIndex);
-
-    // Track progress if on a slide
-    if (newIndex < totalSlides) {
-      await updateProgress(currentModule.id, newIndex);
-    }
-  }, [currentModule, updateProgress, handleCloseModal]);
-
-  // Submit quiz
-  const handleQuizSubmit = useCallback(async (answers: Array<{ questionId: string; answerId: string }>) => {
-    if (!currentModule) return;
-    const result = await submitQuiz(currentModule.id, answers);
-    if (result) {
-      setQuizResult(result);
-      if (result.passed) {
-        toast.success(intl.formatMessage({ id: 'chatter.training.quiz.passedToast', defaultMessage: 'Module réussi !' }));
-      }
-    }
-  }, [currentModule, submitQuiz, intl]);
-
-  // Retry quiz
-  const handleQuizRetry = useCallback(() => {
-    setQuizResult(null);
-    setQuizAttempt(prev => prev + 1);
-  }, []);
-
-  // Sort modules by order
-  const sortedModules = [...modules].sort((a, b) => a.order - b.order);
-
-  // Check if module is accessible (prerequisites met)
-  const completedIds = new Set(
-    modules.filter(m => m.progress?.isCompleted).map(m => m.id)
-  );
-
-  // --------------------------------------------------
-  // Loading
-  // --------------------------------------------------
-  if (isLoading) return <TrainingSkeleton />;
-
-  // --------------------------------------------------
-  // Error
-  // --------------------------------------------------
-  if (error && modules.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-          <BookOpen className="h-8 w-8 text-red-500" />
+  // Tab 1: Comment gagner
+  const howToEarnTab = (
+    <div className="space-y-4">
+      {/* Timeline steps */}
+      <div className={`${UI.card} p-4 sm:p-5`}>
+        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+          <FormattedMessage id="chatter.tools.howItWorks" defaultMessage="Comment ca marche" />
+        </h3>
+        <div className="space-y-4">
+          {[
+            { num: 1, title: "Inscrivez-vous", desc: "C'est fait !", done: true, color: 'bg-green-500', icon: <CheckCircle className="w-4 h-4" /> },
+            { num: 2, title: "Partagez votre lien", desc: "Copiez et envoyez votre lien a des expatries", done: false, color: 'bg-blue-500', icon: <Share2 className="w-4 h-4" /> },
+            { num: 3, title: "Des clients appellent", desc: "$5 (avocat) ou $3 (expatrie) par appel", done: false, color: 'bg-green-500', icon: <Phone className="w-4 h-4" /> },
+            { num: 4, title: "Vous gagnez automatiquement", desc: "Commission creditee apres 48h de validation", done: false, color: 'bg-yellow-500', icon: <DollarSign className="w-4 h-4" /> },
+            { num: 5, title: "Devenez Captain", desc: "Gerez une equipe et gagnez des bonus mensuels", done: false, color: 'bg-purple-500', icon: <Crown className="w-4 h-4" /> },
+          ].map((step) => (
+            <div key={step.num} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <div className={`w-8 h-8 ${step.done ? 'bg-green-500' : step.color} text-white rounded-full flex items-center justify-center flex-shrink-0`}>
+                  {step.done ? <CheckCircle className="w-4 h-4" /> : <span className="text-sm font-bold">{step.num}</span>}
+                </div>
+                {step.num < 5 && <div className="w-0.5 h-full bg-slate-200 dark:bg-white/10 mt-1" />}
+              </div>
+              <div className="pb-4">
+                <p className={`text-sm font-medium ${step.done ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>
+                  {step.title}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{step.desc}</p>
+                {step.num === 2 && (
+                  <button onClick={handleCopyLink} className={`mt-2 ${UI.button.primary} px-3 py-1.5 text-xs`}>
+                    <FormattedMessage id="chatter.tools.copyLink" defaultMessage="Copier mon lien" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">{error}</p>
-        <button onClick={() => loadModules()} className={`${UI.button.primary} px-6 py-2.5`}>
-          <FormattedMessage id="chatter.training.retry" defaultMessage="Réessayer" />
-        </button>
       </div>
-    );
-  }
 
-  // --------------------------------------------------
-  // Empty
-  // --------------------------------------------------
-  if (modules.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-          <BookOpen className="h-8 w-8 text-gray-400" />
-        </div>
-        <p className="text-gray-500 dark:text-gray-400">
-          <FormattedMessage id="chatter.training.empty" defaultMessage="Aucun module de formation disponible pour le moment." />
+      {/* No spam notice */}
+      <div className={`${UI.card} p-4 bg-amber-50/50 dark:bg-amber-500/5 border-amber-200 dark:border-amber-500/20`}>
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">
+          <FormattedMessage id="chatter.tools.noSpam" defaultMessage="Partagez intelligemment, pas de spam" />
+        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-400">
+          <FormattedMessage id="chatter.tools.noSpamDesc" defaultMessage="Partagez dans des groupes pertinents, avec des personnes qui ont vraiment besoin d'aide. La qualite > la quantite." />
         </p>
       </div>
-    );
-  }
 
-  return (
-    <>
-      <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-              <FormattedMessage id="chatter.training.title" defaultMessage="Formation" />
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <FormattedMessage id="chatter.training.subtitle" defaultMessage="Apprenez les meilleures techniques pour maximiser vos gains" />
-            </p>
-          </div>
-          <button onClick={() => loadModules()} className={`${UI.button.secondary} p-2.5`} aria-label={intl.formatMessage({ id: 'common.refresh', defaultMessage: 'Refresh' })}>
-            <RefreshCw className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Overall Progress */}
-        {overallProgress && (
-          <div className={`${UI.card} p-4 sm:p-6`}>
-            <div className="flex items-center justify-between gap-4 mb-3">
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  <FormattedMessage id="chatter.training.progress.title" defaultMessage="Votre progression" />
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  <FormattedMessage
-                    id="chatter.training.progress.subtitle"
-                    defaultMessage="{completed} sur {total} modules complétés"
-                    values={{ completed: overallProgress.completedModules, total: overallProgress.totalModules }}
-                  />
-                </p>
-              </div>
-              <span className="text-3xl font-black text-red-500 dark:text-red-400">
-                {overallProgress.completionPercent}%
-              </span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500"
-                style={{ width: `${overallProgress.completionPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Modules Grid */}
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-red-500" />
-            <FormattedMessage id="chatter.training.modules.title" defaultMessage="Modules de formation" />
+      {/* Revenue calculator */}
+      <div className={`${UI.card} p-4 sm:p-5`}>
+        <div className="flex items-center gap-2 mb-3">
+          <Calculator className="w-5 h-5 text-slate-400" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <FormattedMessage id="chatter.tools.calculator" defaultMessage="Calculateur de revenus" />
           </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            {sortedModules.map(module => {
-              const prerequisitesMet = module.prerequisites.every(p => completedIds.has(p));
-              return (
-                <ModuleCard
-                  key={module.id}
-                  module={module}
-                  locale={locale}
-                  onOpen={handleOpenModule}
-                  disabled={!prerequisitesMet || isLoadingModule}
-                />
-              );
-            })}
-          </div>
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <FormattedMessage id="chatter.tools.calculatorDesc" defaultMessage="Si vous generez X appels par semaine :" />
+        </p>
+        {/* Slider */}
+        <input
+          type="range"
+          min={0}
+          max={REVENUE_SCENARIOS.length - 1}
+          value={revenueSlider}
+          onChange={(e) => setRevenueSlider(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-red-500"
+        />
+        <div className="flex justify-between text-[10px] text-slate-400 mt-1 mb-4">
+          {REVENUE_SCENARIOS.map((s) => <span key={s.calls}>{s.label}</span>)}
+        </div>
+        <div className="text-center p-4 bg-green-50 dark:bg-green-500/10 rounded-xl">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {REVENUE_SCENARIOS[revenueSlider].calls} appels/semaine =
+          </p>
+          <p className="text-3xl font-extrabold text-green-500 mt-1">
+            ~${REVENUE_SCENARIOS[revenueSlider].monthly}/mois
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            + revenus passifs de vos filleuls
+          </p>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Loading overlay for module content */}
-      {isLoadingModule && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className={`${UI.card} p-4 sm:p-6 flex items-center gap-3`}>
-            <Loader2 className="w-6 h-6 animate-spin text-red-500" />
-            <span className="text-gray-900 dark:text-white font-medium">
-              <FormattedMessage id="chatter.training.loadingModule" defaultMessage="Chargement du module..." />
-            </span>
-          </div>
+  // Tab 2: Formation
+  const trainingTab = (
+    <div className="space-y-4">
+      {trainingLoading && !modules?.length && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
         </div>
       )}
 
-      {/* Module Modal */}
-      {showModal && currentModule && (
-        <ModuleModal
-          module={currentModule}
-          slideIndex={slideIndex}
-          isSubmittingQuiz={isSubmittingQuiz}
-          locale={locale}
-          onClose={handleCloseModal}
-          onSlideChange={handleSlideChange}
-          onQuizSubmit={handleQuizSubmit}
-          quizResult={quizResult}
-          onQuizRetry={handleQuizRetry}
-          quizAttempt={quizAttempt}
+      {!trainingLoading && (!modules || modules.length === 0) && (
+        <EmptyStateCard
+          icon={<BookOpen className="w-7 h-7" />}
+          title={<FormattedMessage id="chatter.training.emptyTitle" defaultMessage="Apprenez les techniques des meilleurs chatters !" />}
+          description={<FormattedMessage id="chatter.training.emptyDesc" defaultMessage="15 minutes de formation = des gains multiplies. Les modules arrivent bientot !" />}
         />
       )}
-    </>
+
+      {/* Module cards grid */}
+      {modules && modules.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {modules.map((mod: TrainingModuleListItem) => (
+            <button
+              key={mod.id}
+              onClick={() => handleOpenModule(mod.id)}
+              disabled={mod.prerequisites.length > 0 && !mod.progress?.isStarted}
+              className={`${UI.card} p-4 text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span className="px-2 py-0.5 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 text-[10px] font-medium rounded-full uppercase">
+                  {mod.category || 'general'}
+                </span>
+                {mod.prerequisites.length > 0 && !mod.progress?.isStarted ? (
+                  <Lock className="w-4 h-4 text-slate-400" />
+                ) : mod.progress?.isCompleted ? (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                ) : null}
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{mod.title}</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {mod.progress?.totalSlides || 0} slides · {mod.estimatedMinutes || 5}min
+              </p>
+              {mod.progress && mod.progress.isStarted && !mod.progress.isCompleted && mod.progress.totalSlides > 0 && (
+                <div className="mt-2 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${(mod.progress.currentSlideIndex / mod.progress.totalSlides) * 100}%` }} />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Module viewer modal */}
+      {viewingModule && currentModule && (
+        <ModuleViewer
+          module={currentModule}
+          selectedSlide={selectedSlide}
+          onSlideChange={setSelectedSlide}
+          quizAnswers={quizAnswers}
+          onQuizAnswer={(qId, answer) => setQuizAnswers(prev => ({ ...prev, [qId]: answer }))}
+          quizResult={quizResult}
+          onSubmitQuiz={async () => {
+            const answersArray = Object.entries(quizAnswers).map(([questionId, answerId]) => ({ questionId, answerId }));
+            const result = await submitQuiz(viewingModule, answersArray);
+            if (result) setQuizResult(result);
+          }}
+          onClose={() => { setViewingModule(null); setQuizResult(null); }}
+        />
+      )}
+    </div>
   );
-}
 
-// ============================================================================
-// PAGE EXPORT
-// ============================================================================
+  // Derive filtered resources from resourcesData
+  const allResources = useMemo(() => {
+    if (!resourcesData) return [];
+    const files = (resourcesData.files || []).map((f: any) => ({ ...f, _kind: 'file' as const }));
+    const texts = (resourcesData.texts || []).map((t: any) => ({ ...t, _kind: 'text' as const }));
+    return [...files, ...texts];
+  }, [resourcesData]);
 
-export default function ChatterTrainingPage() {
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    allResources.forEach((r: any) => { if (r.category) cats.add(r.category); });
+    return Array.from(cats).sort();
+  }, [allResources]);
+
+  const filteredResources = useMemo(() => {
+    let items = allResources;
+    if (selectedCategory) items = items.filter((r: any) => r.category === selectedCategory);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter((r: any) =>
+        (r.title || '').toLowerCase().includes(q) ||
+        (r.description || '').toLowerCase().includes(q) ||
+        (r.content || '').toLowerCase().includes(q)
+      );
+    }
+    return items;
+  }, [allResources, selectedCategory, searchQuery]);
+
+  // Tab 3: Ressources
+  const resourcesTab = (
+    <div className="space-y-4">
+      {/* Search */}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder={intl.formatMessage({ id: 'chatter.resources.search', defaultMessage: 'Rechercher...' })}
+        className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-base text-slate-900 dark:text-white placeholder-slate-400"
+      />
+
+      {/* Category tabs */}
+      {categories.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          <button
+            onClick={() => setSelectedCategory('')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+              !selectedCategory ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+            }`}
+          >
+            <FormattedMessage id="common.all" defaultMessage="Tout" />
+          </button>
+          {categories.map((cat: string) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+                selectedCategory === cat ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Resource grid */}
+      {resourcesLoading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        </div>
+      )}
+
+      {filteredResources.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filteredResources.map((resource: any) => (
+            <div key={resource.id} className={`${UI.card} p-4`}>
+              {resource.type === 'image' && resource.thumbnailUrl && (
+                <img src={resource.thumbnailUrl} alt={resource.title} className="w-full h-32 object-cover rounded-lg mb-3" loading="lazy" />
+              )}
+              <div className="flex items-start gap-2">
+                <div className="flex-shrink-0 w-8 h-8 bg-slate-100 dark:bg-white/10 rounded-lg flex items-center justify-center">
+                  {resource._kind === 'text' ? <FileText className="w-4 h-4 text-slate-400" /> :
+                   resource.type === 'image' ? <ImageIcon className="w-4 h-4 text-slate-400" /> :
+                   resource.type === 'video' ? <Video className="w-4 h-4 text-slate-400" /> :
+                   <FileText className="w-4 h-4 text-slate-400" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-slate-900 dark:text-white truncate">{resource.title}</h4>
+                  {resource.description && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{resource.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                {resource.downloadUrl && (
+                  <a
+                    href={resource.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${UI.button.primary} px-3 py-1.5 text-xs flex-1 text-center`}
+                  >
+                    <FormattedMessage id="common.download" defaultMessage="Telecharger" />
+                  </a>
+                )}
+                {resource.content && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(resource.content);
+                      toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copie !' }));
+                    }}
+                    className={`${UI.button.secondary} px-3 py-1.5 text-xs flex-1`}
+                  >
+                    <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!resourcesLoading && filteredResources.length === 0 && (
+        <EmptyStateCard
+          icon={<FolderOpen className="w-7 h-7" />}
+          title={<FormattedMessage id="chatter.resources.emptyTitle" defaultMessage="Ressources a venir" />}
+          description={<FormattedMessage id="chatter.resources.emptyDesc" defaultMessage="Images, textes pre-ecrits et outils de partage arrivent bientot !" />}
+        />
+      )}
+    </div>
+  );
+
+  const tabs = [
+    {
+      key: 'how-to-earn',
+      label: <FormattedMessage id="chatter.tools.tab.howToEarn" defaultMessage="Comment gagner" />,
+      content: howToEarnTab,
+    },
+    {
+      key: 'training',
+      label: <FormattedMessage id="chatter.tools.tab.training" defaultMessage="Formation" />,
+      content: trainingTab,
+    },
+    {
+      key: 'resources',
+      label: <FormattedMessage id="chatter.tools.tab.resources" defaultMessage="Ressources" />,
+      content: resourcesTab,
+    },
+  ];
+
   return (
     <ChatterDashboardLayout activeKey="training">
-      <ChatterTraining />
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Briefcase className="w-5 h-5 text-slate-400" />
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+            <FormattedMessage id="chatter.tools.title" defaultMessage="Outils" />
+          </h1>
+        </div>
+        <SwipeTabContainer tabs={tabs} />
+      </div>
     </ChatterDashboardLayout>
   );
 }
+
+// ============================================================================
+// MODULE VIEWER (inline, full-screen on mobile)
+// ============================================================================
+
+interface ModuleViewerProps {
+  module: ChatterTrainingModule;
+  selectedSlide: number;
+  onSlideChange: (index: number) => void;
+  quizAnswers: Record<string, string>;
+  onQuizAnswer: (questionId: string, answer: string) => void;
+  quizResult: SubmitTrainingQuizResult | null;
+  onSubmitQuiz: () => void;
+  onClose: () => void;
+}
+
+const ModuleViewer: React.FC<ModuleViewerProps> = ({
+  module, selectedSlide, onSlideChange, quizAnswers, onQuizAnswer, quizResult, onSubmitQuiz, onClose,
+}) => {
+  const slides = module.slides || [];
+  const quiz = module.quizQuestions?.length > 0 ? module.quizQuestions : null;
+  const totalSteps = slides.length + (quiz ? 1 : 0);
+  const isQuizStep = selectedSlide >= slides.length;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-white dark:bg-slate-900 overflow-y-auto">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-white/10 px-4 py-3 flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">{module.title}</h3>
+          <p className="text-xs text-slate-400">{selectedSlide + 1}/{totalSteps}</p>
+        </div>
+        <button onClick={onClose} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <X className="w-5 h-5 text-slate-500" />
+        </button>
+      </div>
+
+      {/* Progress */}
+      <div className="h-1 bg-slate-200 dark:bg-white/10">
+        <div className="h-full bg-red-500 transition-all" style={{ width: `${((selectedSlide + 1) / totalSteps) * 100}%` }} />
+      </div>
+
+      {/* Content */}
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+        {!isQuizStep && slides[selectedSlide] && (
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{slides[selectedSlide].title}</h2>
+            {slides[selectedSlide].mediaUrl && (
+              <img src={slides[selectedSlide].mediaUrl} alt="" className="w-full rounded-xl mb-4" loading="lazy" />
+            )}
+            <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: slides[selectedSlide].content || '' }} />
+          </div>
+        )}
+
+        {isQuizStep && quiz && !quizResult && (
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Quiz</h2>
+            <div className="space-y-6">
+              {quiz.map((q: TrainingQuizQuestion, qi: number) => (
+                <div key={q.id}>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white mb-2">{qi + 1}. {q.question}</p>
+                  <div className="space-y-2">
+                    {q.options?.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => onQuizAnswer(q.id, opt.id)}
+                        className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors ${
+                          quizAnswers[q.id] === opt.id
+                            ? 'border-red-500 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400'
+                            : 'border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        {opt.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={onSubmitQuiz} className={`mt-6 w-full ${UI.button.primary} py-3 text-sm`}>
+              <FormattedMessage id="chatter.training.submitQuiz" defaultMessage="Valider le quiz" />
+            </button>
+          </div>
+        )}
+
+        {quizResult && (
+          <div className="text-center py-8">
+            <Award className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {quizResult.score >= 70 ? 'Felicitations !' : 'Essayez encore !'}
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400 mt-2">
+              Score: {quizResult.score}%
+            </p>
+            <button onClick={onClose} className={`mt-6 ${UI.button.primary} px-8 py-3 text-sm`}>
+              <FormattedMessage id="common.close" defaultMessage="Fermer" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-slate-200 dark:border-white/10 px-4 py-3 flex justify-between">
+        <button
+          onClick={() => onSlideChange(Math.max(0, selectedSlide - 1))}
+          disabled={selectedSlide === 0}
+          className={`${UI.button.secondary} px-4 py-2 text-sm disabled:opacity-30 inline-flex items-center gap-1`}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <FormattedMessage id="common.previous" defaultMessage="Precedent" />
+        </button>
+        <button
+          onClick={() => {
+            if (selectedSlide < totalSteps - 1) {
+              onSlideChange(selectedSlide + 1);
+            }
+          }}
+          disabled={selectedSlide >= totalSteps - 1}
+          className={`${UI.button.primary} px-4 py-2 text-sm disabled:opacity-30 inline-flex items-center gap-1`}
+        >
+          <FormattedMessage id="common.next" defaultMessage="Suivant" />
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};

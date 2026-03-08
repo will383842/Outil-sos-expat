@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useChatter } from '@/hooks/useChatter';
+import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useChatterReferrals, getNextTierInfo } from '@/hooks/useChatterReferrals';
 import { functionsAffiliate } from '@/config/firebase';
 import { db } from '@/config/firebase';
@@ -675,7 +675,7 @@ function CaptainPromoTeaser() {
 function ChatterProgression() {
   const intl = useIntl();
   const { user } = useAuth();
-  const { dashboardData, isLoading } = useChatter();
+  const { dashboardData, isLoading } = useChatterData();
   const { tierProgress } = useChatterReferrals();
 
   // Captain state

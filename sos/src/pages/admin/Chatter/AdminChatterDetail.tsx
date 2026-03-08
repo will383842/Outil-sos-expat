@@ -34,6 +34,9 @@ import {
   X,
   Search,
   ChevronDown,
+  Pencil,
+  Save,
+  MessageCircle,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import AdminErrorState from '@/components/admin/AdminErrorState';
@@ -65,7 +68,9 @@ interface ChatterDetail {
   lastName: string;
   email: string;
   phone: string;
+  whatsapp?: string;
   country: string;
+  language?: string;
   languages: string[];
   status: string;
   level: number;
@@ -77,6 +82,9 @@ interface ChatterDetail {
   availableBalance: number;
   pendingBalance: number;
   validatedBalance: number;
+  totalClients?: number;
+  totalRecruits?: number;
+  totalClientCalls?: number;
   totalClientConversions: number;
   totalRecruitmentConversions: number;
   currentStreak: number;
@@ -93,6 +101,10 @@ interface ChatterDetail {
   lockedRates?: Record<string, number>;
   commissionPlanName?: string;
   rateLockDate?: string;
+  bio?: string;
+  adminNotes?: string;
+  hasTelegram?: boolean;
+  telegramUsername?: string;
 }
 
 const RATE_FIELDS = [
@@ -118,6 +130,11 @@ const AdminChatterDetail: React.FC = () => {
   const [ratesEditing, setRatesEditing] = useState(false);
   const [ratesForm, setRatesForm] = useState<Record<string, number>>({});
   const [ratesSaving, setRatesSaving] = useState(false);
+
+  // Profile editing state
+  const [profileEditing, setProfileEditing] = useState(false);
+  const [profileForm, setProfileForm] = useState<Record<string, string>>({});
+  const [profileSaving, setProfileSaving] = useState(false);
 
   // Captain assignment state
   const [captainDropdownOpen, setCaptainDropdownOpen] = useState(false);
@@ -290,6 +307,60 @@ const AdminChatterDetail: React.FC = () => {
     }
     setRatesForm(currentRates);
     setRatesEditing(true);
+  };
+
+  // Profile editing
+  const startEditProfile = () => {
+    if (!chatter) return;
+    setProfileForm({
+      firstName: chatter.firstName || '',
+      lastName: chatter.lastName || '',
+      email: chatter.email || '',
+      phone: chatter.phone || '',
+      whatsapp: chatter.whatsapp || '',
+      country: chatter.country || '',
+      language: chatter.language || '',
+      bio: chatter.bio || '',
+      adminNotes: chatter.adminNotes || '',
+    });
+    setProfileEditing(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!chatterId || !chatter) return;
+    setProfileSaving(true);
+    try {
+      const fn = httpsCallable<Record<string, string>, { success: boolean; message: string }>(
+        functionsAffiliate,
+        'adminUpdateChatterProfile'
+      );
+
+      // Only send changed fields
+      const updates: Record<string, string> = { chatterId };
+      const editableFields = ['firstName', 'lastName', 'email', 'phone', 'whatsapp', 'country', 'language', 'bio', 'adminNotes'];
+      for (const field of editableFields) {
+        const original = (chatter as any)[field] || '';
+        if (profileForm[field] !== undefined && profileForm[field] !== original) {
+          updates[field] = profileForm[field];
+        }
+      }
+
+      if (Object.keys(updates).length <= 1) {
+        toast('Aucune modification');
+        setProfileEditing(false);
+        setProfileSaving(false);
+        return;
+      }
+
+      await fn(updates);
+      toast.success('Profil mis à jour');
+      setProfileEditing(false);
+      await fetchChatter();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   // Map chatter status to StatusType for the unified StatusBadge
@@ -486,29 +557,157 @@ const AdminChatterDetail: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Contact Info */}
         <div className={`${UI.card} p-6`}>
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-            <FormattedMessage id="admin.chatters.contact" defaultMessage="Contact" />
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300">{chatter.email}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300">{chatter.phone || '-'}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Globe className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300">{chatter.country}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300">
-                {new Date(chatter.createdAt).toLocaleDateString(intl.locale)}
-              </span>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white">
+              <FormattedMessage id="admin.chatters.contact" defaultMessage="Contact" />
+            </h3>
+            {!profileEditing ? (
+              <button onClick={startEditProfile} className={`${UI.button.secondary} px-2 py-1 text-xs flex items-center gap-1`}>
+                <Pencil className="w-3 h-3" /> Modifier
+              </button>
+            ) : (
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setProfileEditing(false)}
+                  className={`${UI.button.secondary} px-2 py-1 text-xs`}
+                  disabled={profileSaving}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSaveProfile}
+                  className={`${UI.button.primary} px-2 py-1 text-xs flex items-center gap-1`}
+                  disabled={profileSaving}
+                >
+                  {profileSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                  Sauver
+                </button>
+              </div>
+            )}
           </div>
+
+          {profileEditing ? (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Prénom</label>
+                <input
+                  type="text"
+                  value={profileForm.firstName || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Nom</label>
+                <input
+                  type="text"
+                  value={profileForm.lastName || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Email</label>
+                <input
+                  type="email"
+                  value={profileForm.email || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <Phone className="w-3 h-3" /> Téléphone
+                </label>
+                <input
+                  type="tel"
+                  value={profileForm.phone || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+33 6 12 34 56 78"
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" /> WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  value={profileForm.whatsapp || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  placeholder="+33 6 12 34 56 78"
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Pays</label>
+                <input
+                  type="text"
+                  value={profileForm.country || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, country: e.target.value }))}
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Langue</label>
+                <input
+                  type="text"
+                  value={profileForm.language || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, language: e.target.value }))}
+                  placeholder="fr, en, es..."
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400">Notes admin</label>
+                <textarea
+                  value={profileForm.adminNotes || ''}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, adminNotes: e.target.value }))}
+                  rows={3}
+                  className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg resize-none"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700 dark:text-gray-300">{chatter.email}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700 dark:text-gray-300">{chatter.phone || '-'}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <MessageCircle className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700 dark:text-gray-300">
+                  {chatter.whatsapp ? `WhatsApp: ${chatter.whatsapp}` : 'WhatsApp: -'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700 dark:text-gray-300">{chatter.country}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700 dark:text-gray-300">
+                  {new Date(chatter.createdAt).toLocaleDateString(intl.locale)}
+                </span>
+              </div>
+              {chatter.hasTelegram && chatter.telegramUsername && (
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161l-1.97 9.269c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.054 5.56-5.023c.242-.213-.054-.334-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.832.954z"/></svg>
+                  <span className="text-gray-700 dark:text-gray-300">@{chatter.telegramUsername}</span>
+                </div>
+              )}
+              {chatter.adminNotes && (
+                <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                  <p className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Notes admin</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{chatter.adminNotes}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Balance */}
@@ -545,11 +744,11 @@ const AdminChatterDetail: React.FC = () => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">Clients convertis</span>
-              <span className="font-semibold">{chatter.totalClientConversions}</span>
+              <span className="font-semibold">{chatter.totalClients || chatter.totalClientConversions || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">Partenaires</span>
-              <span className="font-semibold">{chatter.totalRecruitmentConversions}</span>
+              <span className="font-semibold">{chatter.totalRecruits || chatter.totalRecruitmentConversions || 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-500 dark:text-gray-400">Streak actuel</span>

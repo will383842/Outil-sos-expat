@@ -19,13 +19,13 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useChatterReferrals } from "@/hooks/useChatterReferrals";
-import { useChatter } from "@/hooks/useChatter";
+import { useChatterData } from "@/contexts/ChatterDataContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Link } from "react-router-dom";
 
 export default function ChatterReferralEarnings() {
   const { t, locale } = useTranslation();
-  const { dashboardData: chatterData } = useChatter();
+  const { dashboardData: chatterData } = useChatterData();
   const {
     dashboardData,
     stats,

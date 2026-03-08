@@ -12,7 +12,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign,
   UserPlus,
@@ -362,23 +361,15 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
       <div
         className={`${compact ? "max-h-64" : "max-h-96"} overflow-y-auto px-4 pb-4`}
       >
-        <AnimatePresence mode="popLayout">
+        <>
           {formattedActivities.map((activity, index) => {
             const Icon = activity.config.icon;
 
             return (
-              <motion.div
+              <div
                 key={activity.id}
-                initial={{ opacity: 0, x: -20, height: 0 }}
-                animate={{ opacity: 1, x: 0, height: "auto" }}
-                exit={{ opacity: 0, x: 20, height: 0 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 30,
-                  delay: index * 0.05,
-                }}
-                className="py-2 first:pt-0"
+                className="py-2 first:pt-0 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
@@ -413,10 +404,10 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                     {activity.relativeTime}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </AnimatePresence>
+        </>
       </div>
 
       {/* Footer */}

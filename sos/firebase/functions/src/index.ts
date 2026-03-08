@@ -2953,6 +2953,7 @@ export {
   adminExportChatters,
   adminBulkChatterAction,
   adminManageChatter,
+  adminUpdateChatterProfile,
   // Admin Country Rotation
   adminAdvanceCycleV2, // Renamed from adminAdvanceCycle (old Cloud Run service stuck in deletion)
   adminUpdateCycleThreshold,

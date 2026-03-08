@@ -9,7 +9,6 @@
 
 import React, { memo, useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Lock,
   Unlock,
@@ -110,19 +109,13 @@ const PiggyBankCard = memo(function PiggyBankCard({
   return (
     <div className={`${UI.card} ${UI.cardHover} overflow-hidden relative`}>
       {/* Celebration overlay */}
-      <AnimatePresence>
+      <>
         {showCelebration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-rose-500/20 z-10 flex items-center justify-center"
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-rose-500/20 z-10 flex items-center justify-center animate-fade-in"
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
-              transition={{ type: 'spring', damping: 10 }}
-              className="text-center"
+            <div
+              className="text-center animate-fade-in"
             >
               <PartyPopper className="w-12 h-12 text-pink-500 mx-auto mb-2" />
               <p className="text-lg dark:text-pink-400 font-bold">
@@ -131,10 +124,10 @@ const PiggyBankCard = memo(function PiggyBankCard({
                   defaultMessage="Unlocked!"
                 />
               </p>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
 
       <div className="p-4 sm:p-6">
         {/* Header */}
@@ -155,21 +148,17 @@ const PiggyBankCard = memo(function PiggyBankCard({
             {/* Background piggy shape */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-pink-100 dark:from-pink-900/30 to-rose-100 dark:to-rose-900/30 border-4 dark:border-pink-800/50 overflow-hidden">
               {/* Fill level animation */}
-              <motion.div
-                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-400 dark:from-pink-600 to-pink-300 dark:to-pink-500"
-                initial={{ height: 0 }}
-                animate={{ height: `${progressPercent}%` }}
-                transition={{ duration: 1, ease: 'easeOut' }}
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-400 dark:from-pink-600 to-pink-300 dark:to-pink-500 transition-all duration-1000 ease-out"
                 style={{
+                  height: `${progressPercent}%`,
                   borderRadius: '0 0 100% 100% / 0 0 50% 50%',
                 }}
               />
 
               {/* Shimmer effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-slide"
               />
             </div>
 
@@ -193,18 +182,15 @@ const PiggyBankCard = memo(function PiggyBankCard({
           </div>
 
           {/* Amount inside piggy */}
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5 }}
+          <div
+            className="absolute inset-0 flex items-center justify-center animate-fade-in"
           >
             <div className="bg-white/90 dark:bg-gray-900/90 px-3 py-1 rounded-full shadow-lg backdrop-blur-sm">
               <span className="text-sm dark:text-pink-400 font-bold">
                 {formatAmount(totalPending)}
               </span>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Progress bar to unlock */}
@@ -224,11 +210,9 @@ const PiggyBankCard = memo(function PiggyBankCard({
 
           {/* Progress bar */}
           <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden relative">
-            <motion.div
-              className="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 background-animate"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+            <div
+              className="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 background-animate transition-all duration-800 ease-out"
+              style={{ width: `${progressPercent}%` }}
             />
             {/* Threshold marker */}
             <div className="absolute top-0 bottom-0 right-0 w-0.5 bg-green-500" />
@@ -266,15 +250,11 @@ const PiggyBankCard = memo(function PiggyBankCard({
                 defaultMessage="Total available"
               />
             </p>
-            <motion.p
-              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent"
-              key={totalPending}
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', damping: 15 }}
+            <p
+              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent transition-transform duration-300"
             >
               {formatAmount(totalPending)}
-            </motion.p>
+            </p>
           </div>
         </div>
 
@@ -286,21 +266,17 @@ const PiggyBankCard = memo(function PiggyBankCard({
         )}
 
         {/* Claim Button */}
-        <motion.button
+        <button
           onClick={onClaim}
           disabled={!canClaim || claiming}
-          className={`w-full py-3 font-medium flex items-center justify-center gap-2 ${
-            canClaim ? UI.button.primary : UI.button.disabled
+          className={`w-full py-3 font-medium flex items-center justify-center gap-2 transition-transform ${
+            canClaim ? `${UI.button.primary} hover:scale-[1.02] active:scale-[0.98]` : UI.button.disabled
           }`}
-          whileHover={canClaim ? { scale: 1.02 } : {}}
-          whileTap={canClaim ? { scale: 0.98 } : {}}
         >
           {claiming ? (
             <>
-              <motion.div
-                className="w-5 h-5 border-2 rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              <div
+                className="w-5 h-5 border-2 rounded-full animate-spin"
               />
               <FormattedMessage
                 id="chatter.piggyBank.claiming"
@@ -329,7 +305,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
               />
             </>
           )}
-        </motion.button>
+        </button>
       </div>
 
       {/* Bottom gradient decoration */}
@@ -344,6 +320,14 @@ const PiggyBankCard = memo(function PiggyBankCard({
         @keyframes shimmer {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
+        }
+        @keyframes shimmerSlide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer-slide {
+          animation: shimmerSlide 2s ease-in-out infinite;
+          animation-delay: 3s;
         }
       `}</style>
     </div>

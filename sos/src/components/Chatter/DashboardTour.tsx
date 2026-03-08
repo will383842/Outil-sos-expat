@@ -14,7 +14,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   ChevronLeft,
@@ -356,14 +355,10 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   };
 
   return (
-    <motion.div
+    <div
       ref={tooltipRef}
-      className="fixed z-[10002] w-[90vw] max-w-[360px]"
+      className="fixed z-[10002] w-[90vw] max-w-[360px] animate-fade-in transition-all duration-300"
       style={{ top: position.top, left: position.left }}
-      initial={{ opacity: 0, scale: 0.9, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: 10 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 400 }}
     >
       {/* Tooltip Card */}
       <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border dark:border-gray-700 overflow-hidden">
@@ -462,7 +457,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -481,11 +476,8 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ targetRect, isVisib
   // For center/welcome steps, just show dark overlay
   if (!targetRect) {
     return (
-      <motion.div
-        className="fixed inset-0 z-[10000] bg-black/60"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+      <div
+        className="fixed inset-0 z-[10000] bg-black/60 animate-fade-in"
       />
     );
   }
@@ -495,11 +487,8 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ targetRect, isVisib
   const borderRadius = 16;
 
   return (
-    <motion.div
-      className="fixed inset-0 z-[10000] pointer-events-none"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <div
+      className="fixed inset-0 z-[10000] pointer-events-none animate-fade-in"
     >
       {/* Dark overlay with spotlight cutout using SVG */}
       <svg
@@ -531,31 +520,23 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ targetRect, isVisib
       </svg>
 
       {/* Animated border around spotlight */}
-      <motion.div
-        className="absolute border-2 rounded-2xl"
+      <div
+        className="absolute border-2 rounded-2xl animate-spotlight-pulse"
         style={{
           top: targetRect.top - padding,
           left: targetRect.left - padding,
           width: targetRect.width + padding * 2,
           height: targetRect.height + padding * 2,
         }}
-        initial={{ opacity: 0, scale: 1.1 }}
-        animate={{
-          opacity: [0.5, 1, 0.5],
-          scale: 1,
-          boxShadow: [
-            '0 0 0 0 rgba(239, 68, 68, 0.4)',
-            '0 0 0 8px rgba(239, 68, 68, 0)',
-            '0 0 0 0 rgba(239, 68, 68, 0.4)',
-          ],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
       />
-    </motion.div>
+      <style>{`
+        @keyframes spotlightPulse {
+          0%, 100% { opacity: 0.5; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+          50% { opacity: 1; box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+        .animate-spotlight-pulse { animation: spotlightPulse 2s ease-in-out infinite; }
+      `}</style>
+    </div>
   );
 };
 
@@ -716,7 +697,7 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
   // Render in portal
   return createPortal(
     <>
-      <AnimatePresence mode="wait">
+      <>
         {isActive && (
           <>
             {/* Spotlight overlay */}
@@ -741,7 +722,7 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
             />
           </>
         )}
-      </AnimatePresence>
+      </>
 
       {/* Confetti celebration */}
       <ConfettiCelebration show={showConfetti} pieces={300} duration={3000} />

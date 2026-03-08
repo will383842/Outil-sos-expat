@@ -19,7 +19,6 @@
 
 import React, { memo, useState, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   PieChart,
   Users,
@@ -237,36 +236,17 @@ const DonutSegment: React.FC<DonutSegmentProps> = ({
     endAngle
   );
 
-  // Animate the segment drawing
-  const pathLength = 1000; // Approximate path length for animation
-
   return (
-    <motion.path
+    <path
       d={path}
       fill={config.color}
       stroke="white"
       strokeWidth={2}
-      className="cursor-pointer"
+      className="cursor-pointer transition-all duration-300"
       style={{
         filter: isHovered || isSelected ? 'brightness(1.1)' : 'none',
         transformOrigin: `${CHART_CENTER}px ${CHART_CENTER}px`,
-      }}
-      initial={{
-        opacity: 0,
-        scale: 0.8,
-        strokeDasharray: pathLength,
-        strokeDashoffset: pathLength,
-      }}
-      animate={{
         opacity: 1,
-        scale: 1,
-        strokeDasharray: pathLength,
-        strokeDashoffset: 0,
-      }}
-      transition={{
-        duration: 0.6,
-        delay: index * 0.1,
-        ease: 'easeOut',
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -290,11 +270,8 @@ const Tooltip: React.FC<TooltipProps> = ({ config, value, percentage, position }
   const Icon = config.icon;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: 10 }}
-      className="absolute z-50 pointer-events-none"
+    <div
+      className="absolute z-50 pointer-events-none animate-fade-in"
       style={{
         left: position.x,
         top: position.y,
@@ -321,7 +298,7 @@ const Tooltip: React.FC<TooltipProps> = ({ config, value, percentage, position }
         {/* Arrow */}
         <div className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-800 rotate-45" />
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -349,18 +326,13 @@ const LegendItem: React.FC<LegendItemProps> = ({
   if (value === 0) return null;
 
   return (
-    <motion.button
+    <button
       onClick={onClick}
-      className={`flex items-center gap-3 p-2 rounded-xl transition-all w-full text-left ${
+      className={`flex items-center gap-3 p-2 rounded-xl transition-all w-full text-left hover:scale-[1.02] active:scale-[0.98] ${
         isSelected
           ? `${config.bgColor} ring-2 ring-offset-1`
           : 'hover:bg-gray-50 dark:hover:bg-white/5'
       }`}
-      style={{
-        // Ring color is handled via Tailwind classes
-      }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
     >
       <div
         className={`w-8 h-8 rounded-lg ${config.bgColor} flex items-center justify-center`}
@@ -381,7 +353,7 @@ const LegendItem: React.FC<LegendItemProps> = ({
       {isSelected && (
         <ChevronRight className={`w-4 h-4 ${config.textColor} flex-shrink-0`} />
       )}
-    </motion.button>
+    </button>
   );
 };
 
@@ -393,14 +365,11 @@ const EmptyState: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center py-8 px-4 text-center">
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 dark:from-gray-800 to-gray-200 dark:to-gray-700 flex items-center justify-center mb-4"
+      <div
+        className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 dark:from-gray-800 to-gray-200 dark:to-gray-700 flex items-center justify-center mb-4 animate-fade-in"
       >
         <PieChart className="w-10 h-10 text-gray-400 dark:text-gray-300" />
-      </motion.div>
+      </div>
       <h4 className="text-lg dark:text-gray-300 font-semibold mb-2">
         <FormattedMessage
           id="chatter.earnings.emptyTitle"
@@ -413,18 +382,15 @@ const EmptyState: React.FC = () => {
           defaultMessage="Start earning to see your breakdown. Share your link to get your first commission!"
         />
       </p>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="mt-4 flex items-center gap-2 text-sm dark:text-blue-400"
+      <div
+        className="mt-4 flex items-center gap-2 text-sm dark:text-blue-400 animate-fade-in"
       >
         <TrendingUp className="w-4 h-4" />
         <FormattedMessage
           id="chatter.earnings.startEarning"
           defaultMessage="Start earning today"
         />
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -618,11 +584,8 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
 
               {/* Center content */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-center"
+                <div
+                  className="text-center animate-fade-in"
                 >
                   <p className="text-xs dark:text-gray-400 uppercase tracking-wider">
                     <FormattedMessage
@@ -633,11 +596,11 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
                   <p className="text-2xl dark:text-white font-bold">
                     {formatCurrencyCompact(total)}
                   </p>
-                </motion.div>
+                </div>
               </div>
 
               {/* Tooltip */}
-              <AnimatePresence>
+              <>
                 {hoveredData && (
                   <Tooltip
                     config={hoveredData.config}
@@ -646,7 +609,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
                     position={tooltipPosition}
                   />
                 )}
-              </AnimatePresence>
+              </>
             </div>
 
             {/* Legend */}
@@ -665,13 +628,10 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
           </div>
 
           {/* Selected filter indicator */}
-          <AnimatePresence>
+          <>
             {selectedCategory && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 pt-4 border-t dark:border-white/10"
+              <div
+                className="mt-4 pt-4 border-t dark:border-white/10 animate-fade-in"
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm dark:text-gray-400">
@@ -690,9 +650,9 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
                     />
                   </button>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </>
         </div>
       )}
     </div>

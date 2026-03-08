@@ -236,9 +236,14 @@ export interface ChatterData {
   recruitedByCode: string | null;
   recruitedAt: string | null;
 
+  // Role
+  role?: 'chatter' | 'captainChatter';
+
   // Captain assignment (admin-assigned, independent of recruitment chain)
   captainId?: string | null;
   captainName?: string | null;
+  captainCurrentTier?: string | null;
+  captainMonthlyTeamCalls?: number;
 
   // Referral N2 (2-level system)
   parrainNiveau2Id: string | null;

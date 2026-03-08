@@ -211,6 +211,15 @@ export const adminGetChatterDetail = onCall(
 
       const chatter = chatterDoc.data() as Chatter;
 
+      // Helper to safely convert Timestamp to ISO string
+      const tsToISO = (ts: any): string | null => {
+        if (!ts) return null;
+        if (ts.toDate) return ts.toDate().toISOString();
+        if (ts instanceof Date) return ts.toISOString();
+        if (typeof ts === "string") return ts;
+        return null;
+      };
+
       // Get commissions
       const commissionsSnapshot = await db
         .collection("chatter_commissions")
@@ -219,10 +228,25 @@ export const adminGetChatterDetail = onCall(
         .limit(50)
         .get();
 
+      // Helper to recursively convert all Timestamp fields in an object
+      const sanitizeTimestamps = (obj: Record<string, any>): Record<string, any> => {
+        const result: Record<string, any> = {};
+        for (const [key, value] of Object.entries(obj)) {
+          if (value && typeof value === "object" && typeof value.toDate === "function") {
+            result[key] = value.toDate().toISOString();
+          } else if (value && typeof value === "object" && !Array.isArray(value) && !(value instanceof Date)) {
+            result[key] = sanitizeTimestamps(value);
+          } else {
+            result[key] = value;
+          }
+        }
+        return result;
+      };
+
       const commissions = commissionsSnapshot.docs.map((doc) => {
         const data = doc.data() as ChatterCommission;
         return {
-          ...data,
+          ...sanitizeTimestamps(data as any),
           id: doc.id,
           createdAt: data.createdAt.toDate().toISOString(),
         };
@@ -239,7 +263,7 @@ export const adminGetChatterDetail = onCall(
       const withdrawals = withdrawalsSnapshot.docs.map((doc) => {
         const data = doc.data() as ChatterWithdrawal;
         return {
-          ...data,
+          ...sanitizeTimestamps(data as any),
           id: doc.id,
           requestedAt: data.requestedAt.toDate().toISOString(),
         };
@@ -256,7 +280,7 @@ export const adminGetChatterDetail = onCall(
       const recruitmentLinks = linksSnapshot.docs.map((doc) => {
         const data = doc.data() as ChatterRecruitmentLink;
         return {
-          ...data,
+          ...sanitizeTimestamps(data as any),
           id: doc.id,
           createdAt: data.createdAt.toDate().toISOString(),
         };
@@ -272,7 +296,7 @@ export const adminGetChatterDetail = onCall(
       const badges = badgesSnapshot.docs.map((doc) => {
         const data = doc.data() as ChatterBadgeAward;
         return {
-          ...data,
+          ...sanitizeTimestamps(data as any),
           id: doc.id,
           awardedAt: data.awardedAt.toDate().toISOString(),
         };
@@ -289,16 +313,10 @@ export const adminGetChatterDetail = onCall(
       const quizAttempts = quizSnapshot.docs.map((doc) => {
         const data = doc.data() as ChatterQuizAttempt;
         return {
-          ...data,
+          ...sanitizeTimestamps(data as any),
           id: doc.id,
           completedAt: data.completedAt.toDate().toISOString(),
         };
-      });
-
-      logger.info("[adminGetChatterDetail] Detail fetched", {
-        chatterId,
-        commissionsCount: commissions.length,
-        withdrawalsCount: withdrawals.length,
       });
 
       // Get captain info if assigned
@@ -316,12 +334,86 @@ export const adminGetChatterDetail = onCall(
         }
       }
 
+      logger.info("[adminGetChatterDetail] Detail fetched", {
+        chatterId,
+        commissionsCount: commissions.length,
+        withdrawalsCount: withdrawals.length,
+      });
+
+      // Serialize chatter with all Timestamp fields converted to ISO strings
+      const serializedChatter = {
+        id: chatterDoc.id,
+        email: chatter.email,
+        firstName: chatter.firstName,
+        lastName: chatter.lastName,
+        phone: chatter.phone || "",
+        whatsapp: chatter.whatsapp || "",
+        photoUrl: chatter.photoUrl || null,
+        country: chatter.country,
+        interventionCountries: chatter.interventionCountries || [],
+        language: chatter.language,
+        additionalLanguages: chatter.additionalLanguages || [],
+        platforms: chatter.platforms || [],
+        bio: chatter.bio || "",
+        status: chatter.status,
+        isVisible: chatter.isVisible ?? false,
+        level: chatter.level,
+        levelProgress: chatter.levelProgress || 0,
+        adminNotes: chatter.adminNotes || "",
+        affiliateCodeClient: chatter.affiliateCodeClient,
+        affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
+        totalEarned: chatter.totalEarned || 0,
+        availableBalance: chatter.availableBalance || 0,
+        pendingBalance: chatter.pendingBalance || 0,
+        validatedBalance: chatter.validatedBalance || 0,
+        totalClients: chatter.totalClients || 0,
+        totalRecruits: chatter.totalRecruits || 0,
+        totalCommissions: chatter.totalCommissions || 0,
+        totalClientCalls: chatter.totalClientCalls || 0,
+        isActivated: chatter.isActivated ?? false,
+        currentStreak: chatter.currentStreak || 0,
+        bestStreak: chatter.bestStreak || 0,
+        lastActivityDate: chatter.lastActivityDate || null,
+        badges: chatter.badges || [],
+        currentMonthRank: chatter.currentMonthRank || null,
+        bestRank: chatter.bestRank || null,
+        recruitedBy: chatter.recruitedBy || null,
+        recruitedByCode: chatter.recruitedByCode || null,
+        parrainNiveau2Id: chatter.parrainNiveau2Id || null,
+        qualifiedReferralsCount: chatter.qualifiedReferralsCount || 0,
+        referralsN2Count: chatter.referralsN2Count || 0,
+        referralEarnings: chatter.referralEarnings || 0,
+        role: chatter.role || undefined,
+        captainId: chatter.captainId || null,
+        captainInfo,
+        captainQualityBonusEnabled: chatter.captainQualityBonusEnabled ?? false,
+        captainMonthlyTeamCalls: chatter.captainMonthlyTeamCalls || 0,
+        captainCurrentTier: chatter.captainCurrentTier || null,
+        captainAssignedCountries: chatter.captainAssignedCountries || [],
+        captainAssignedLanguages: chatter.captainAssignedLanguages || [],
+        hasTelegram: chatter.hasTelegram ?? false,
+        telegramId: chatter.telegramId || null,
+        telegramUsername: chatter.telegramUsername || null,
+        lockedRates: chatter.lockedRates || null,
+        commissionPlanName: chatter.commissionPlanName || null,
+        rateLockDate: chatter.rateLockDate || null,
+        preferredPaymentMethod: chatter.preferredPaymentMethod || null,
+        // Timestamp fields → ISO strings
+        createdAt: tsToISO(chatter.createdAt),
+        updatedAt: tsToISO(chatter.updatedAt),
+        lastLoginAt: tsToISO(chatter.lastLoginAt),
+        recruitedAt: tsToISO(chatter.recruitedAt),
+        activatedAt: tsToISO(chatter.activatedAt),
+        captainAssignedAt: tsToISO(chatter.captainAssignedAt),
+        captainPromotedAt: tsToISO(chatter.captainPromotedAt),
+        lastZoomAttendance: tsToISO(chatter.lastZoomAttendance),
+        telegramLinkedAt: tsToISO(chatter.telegramLinkedAt),
+        suspendedAt: tsToISO((chatter as any).suspendedAt),
+        suspendReason: (chatter as any).suspendReason || null,
+      };
+
       return {
-        chatter: {
-          ...chatter,
-          captainId: chatter.captainId || undefined,
-          captainInfo,
-        } as any,
+        chatter: serializedChatter as any,
         commissions: commissions as (ChatterCommission & { createdAt: string })[],
         withdrawals: withdrawals as (ChatterWithdrawal & { requestedAt: string })[],
         recruitmentLinks: recruitmentLinks as (ChatterRecruitmentLink & { createdAt: string })[],
@@ -1180,6 +1272,103 @@ export const adminGetChatterConfigHistory = onCall(
     } catch (error) {
       logger.error("[adminGetChatterConfigHistory] Error", { error });
       throw new HttpsError("internal", "Failed to fetch config history");
+    }
+  }
+);
+
+// ============================================================================
+// UPDATE CHATTER PROFILE (Admin edit)
+// ============================================================================
+
+interface AdminUpdateChatterProfileInput {
+  chatterId: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  country?: string;
+  language?: string;
+  bio?: string;
+  adminNotes?: string;
+}
+
+export const adminUpdateChatterProfile = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request): Promise<{ success: boolean; message: string }> => {
+    ensureInitialized();
+    const adminId = await assertAdmin(request);
+
+    const db = getFirestore();
+    const input = request.data as AdminUpdateChatterProfileInput;
+
+    if (!input.chatterId) {
+      throw new HttpsError("invalid-argument", "chatterId is required");
+    }
+
+    try {
+      const chatterRef = db.collection("chatters").doc(input.chatterId);
+      const chatterDoc = await chatterRef.get();
+
+      if (!chatterDoc.exists) {
+        throw new HttpsError("not-found", "Chatter not found");
+      }
+
+      const allowedFields: (keyof AdminUpdateChatterProfileInput)[] = [
+        "firstName", "lastName", "phone", "whatsapp",
+        "email", "country", "language", "bio", "adminNotes",
+      ];
+
+      const updates: Record<string, unknown> = {};
+      for (const field of allowedFields) {
+        if (input[field] !== undefined) {
+          updates[field] = input[field];
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        throw new HttpsError("invalid-argument", "No fields to update");
+      }
+
+      updates.updatedAt = Timestamp.now();
+
+      await chatterRef.update(updates);
+
+      // Also update user doc if email/name changed
+      const userUpdates: Record<string, unknown> = {};
+      if (updates.firstName) userUpdates.firstName = updates.firstName;
+      if (updates.lastName) userUpdates.lastName = updates.lastName;
+      if (updates.email) userUpdates.email = updates.email;
+      if (updates.phone) userUpdates.phone = updates.phone;
+      if (Object.keys(userUpdates).length > 0) {
+        userUpdates.updatedAt = Timestamp.now();
+        await db.collection("users").doc(input.chatterId).update(userUpdates);
+      }
+
+      // Audit log
+      await db.collection("admin_audit_logs").add({
+        action: "chatter_profile_updated",
+        targetId: input.chatterId,
+        targetType: "chatter",
+        performedBy: adminId,
+        timestamp: Timestamp.now(),
+        details: { updatedFields: Object.keys(updates).filter(k => k !== "updatedAt") },
+      });
+
+      logger.info("[adminUpdateChatterProfile] Profile updated", {
+        chatterId: input.chatterId,
+        updatedFields: Object.keys(updates),
+        adminId,
+      });
+
+      return {
+        success: true,
+        message: `Profile updated: ${Object.keys(updates).filter(k => k !== "updatedAt").join(", ")}`,
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error("[adminUpdateChatterProfile] Error", { chatterId: input.chatterId, error });
+      throw new HttpsError("internal", "Failed to update chatter profile");
     }
   }
 );

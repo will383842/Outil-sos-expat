@@ -14,7 +14,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   X,
@@ -269,51 +268,28 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
   return (
     <>
       {/* FAB Container */}
-      <motion.div
+      <div
         ref={menuRef}
-        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{
-          opacity: isVisible ? 1 : 0,
-          scale: isVisible ? 1 : 0.8,
-          y: isVisible ? 0 : 20,
-        }}
-        transition={{ duration: 0.2 }}
+        className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 transition-all duration-200 ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-[0.8] translate-y-5'}`}
       >
         {/* Menu Items */}
-        <AnimatePresence>
+        <>
           {isOpen && (
-            <motion.div
-              className="absolute bottom-16 right-0 flex flex-col items-end gap-2 mb-2"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-                },
-              }}
+            <div
+              className="absolute bottom-16 right-0 flex flex-col items-end gap-2 mb-2 animate-fade-in"
             >
-              {menuItems.map((item) => (
-                <motion.div
+              {menuItems.map((item, index) => (
+                <div
                   key={item.id}
-                  variants={{
-                    hidden: { opacity: 0, x: 20, scale: 0.8 },
-                    visible: { opacity: 1, x: 0, scale: 1 },
-                  }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Tooltip */}
-                  <motion.span
+                  <span
                     className="px-3 py-1.5 bg-gray-900 dark:bg-gray-800 text-white font-medium rounded-lg shadow-lg whitespace-nowrap"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
                   >
                     <FormattedMessage id={item.labelId} defaultMessage={item.defaultLabel} />
-                  </motion.span>
+                  </span>
 
                   {/* Action Button */}
                   <button
@@ -328,51 +304,46 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                       <span className="absolute -top-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
                     )}
                   </button>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </>
 
         {/* Main FAB Button */}
-        <motion.button
+        <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`relative w-14 h-14 rounded-full shadow-xl bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500 flex items-center justify-center text-white hover:shadow-2xl active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 ${!isOpen && showWithdrawalBadge ? 'animate-pulse-subtle' : ''}`}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className={`relative w-14 h-14 rounded-full shadow-xl bg-gradient-to-br from-pink-500 via-red-500 to-indigo-500 flex items-center justify-center text-white hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 ${!isOpen && showWithdrawalBadge ? 'animate-pulse-subtle' : ''}`}
           aria-expanded={isOpen}
           aria-label={isOpen ? intl.formatMessage({ id: 'chatter.quickActions.close', defaultMessage: 'Close quick actions' }) : intl.formatMessage({ id: 'chatter.quickActions.open', defaultMessage: 'Open quick actions' })}
         >
-          <motion.div
-            animate={{ rotate: isOpen ? 45 : 0 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          <div
+            className="transition-transform duration-200"
+            style={{ transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)' }}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-          </motion.div>
+          </div>
 
           {/* Badge for available withdrawal */}
           {!isOpen && showWithdrawalBadge && (
-            <motion.span
-              className="absolute -top-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold border-2 dark:border-gray-900"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            <span
+              className="absolute -top-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold border-2 dark:border-gray-900 animate-fade-in"
             >
               $
-            </motion.span>
+            </span>
           )}
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
 
       {/* Message Templates Modal */}
-      <AnimatePresence>
+      <>
         {showMessageModal && (
           <MessageTemplatesModal
             affiliateLink={affiliateLink}
             onClose={() => setShowMessageModal(false)}
           />
         )}
-      </AnimatePresence>
+      </>
 
       {/* Custom CSS for subtle pulse animation */}
       <style>{`
@@ -455,18 +426,12 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
-      <motion.div
-        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
+      <div
+        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden animate-fade-in transition-all duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -549,8 +514,8 @@ const MessageTemplatesModal: React.FC<MessageTemplatesModalProps> = ({
             />
           </p>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

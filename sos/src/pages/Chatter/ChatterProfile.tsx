@@ -4,7 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { useChatter } from '@/hooks/useChatter';
+import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useAuth } from '@/contexts/useAuth';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
 import { User, Camera, Loader2, CheckCircle } from 'lucide-react';
@@ -17,7 +17,7 @@ const UI = {
 } as const;
 
 const ChatterProfile: React.FC = () => {
-  const { dashboardData, isLoading } = useChatter();
+  const { dashboardData, isLoading } = useChatterData();
   const { user } = useAuth();
   const chatter = dashboardData?.chatter;
 

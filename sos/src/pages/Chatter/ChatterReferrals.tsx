@@ -1,151 +1,311 @@
 /**
- * ChatterReferrals Page
- *
- * Main referral dashboard showing filleuls N1/N2, progress, and stats.
- * Mobile-first: cards on mobile, table on desktop.
+ * ChatterReferrals - Unified Team page (fusion of Referrals + Refer + ReferralEarnings)
+ * 4 sub-tabs: Mon Reseau | Parrainer | Gains | Captain (if applicable)
+ * Uses useChatterData() Context + useChatterReferrals() + useViralKit()
  */
 
-import React from "react";
-import ChatterDashboardLayout from "@/components/Chatter/Layout/ChatterDashboardLayout";
-import { ReferralStatsCard } from "@/components/Chatter/Cards/ReferralStatsCard";
-import { MilestoneProgressCard } from "@/components/Chatter/Cards/MilestoneProgressCard";
-import { PromoAlertCard } from "@/components/Chatter/Cards/PromoAlertCard";
-import { ReferralN1Table } from "@/components/Chatter/Tables/ReferralN1Table";
-import { ReferralN2List } from "@/components/Chatter/Tables/ReferralN2List";
-import { ReferralLinkCard } from "@/components/Chatter/ViralKit/ReferralLinkCard";
-import { Users, RefreshCw, Share2, Info } from "lucide-react";
-import { useChatterReferrals } from "@/hooks/useChatterReferrals";
-import { useChatter } from "@/hooks/useChatter";
-import { useTranslation } from "@/hooks/useTranslation";
-import { Link } from "react-router-dom";
+import React, { useMemo, useCallback, lazy, Suspense } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { Users, Share2, DollarSign, Crown, UserPlus, RefreshCw } from 'lucide-react';
+import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
+import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
+import { useChatterData } from '@/contexts/ChatterDataContext';
+import { useChatterReferrals, getNextTierInfo, formatTierBonus } from '@/hooks/useChatterReferrals';
+import { ReferralStatsCard } from '@/components/Chatter/Cards/ReferralStatsCard';
+import { MilestoneProgressCard } from '@/components/Chatter/Cards/MilestoneProgressCard';
+import { ReferralN1Table } from '@/components/Chatter/Tables/ReferralN1Table';
+import { ReferralN2List } from '@/components/Chatter/Tables/ReferralN2List';
+import EmptyStateCard from '@/components/Chatter/Activation/EmptyStateCard';
+import { UI, SPACING } from '@/components/Chatter/designTokens';
+import toast from 'react-hot-toast';
+
+// Lazy load heavier components
+const ShareButtons = lazy(() =>
+  import('@/components/Chatter/ViralKit/ShareButtons').then(m => ({ default: m.ShareButtons }))
+);
+const ShareMessageSelector = lazy(() =>
+  import('@/components/Chatter/ViralKit/ShareMessageSelector').then(m => ({ default: m.ShareMessageSelector }))
+);
+const QRCodeDisplay = lazy(() =>
+  import('@/components/Chatter/ViralKit/QRCodeDisplay').then(m => ({ default: m.QRCodeDisplay }))
+);
+const ReferralCommissionsTable = lazy(() =>
+  import('@/components/Chatter/Tables/ReferralCommissionsTable').then(m => ({ default: m.ReferralCommissionsTable }))
+);
 
 export default function ChatterReferrals() {
-  const { t, locale } = useTranslation();
-  const { dashboardData: chatterData } = useChatter();
+  const intl = useIntl();
+  const { dashboardData: chatterDashboard, recruitmentShareUrl, clientShareUrl } = useChatterData();
   const {
-    dashboardData,
     stats,
     filleulsN1,
     filleulsN2,
+    recentCommissions,
     tierProgress,
-    activePromotion,
     isLoading,
-    error,
     refreshDashboard,
   } = useChatterReferrals();
 
-  const chatter = chatterData?.chatter;
-  const paidTiers = chatter?.tierBonusesPaid || [];
+  const chatter = chatterDashboard?.chatter;
+  const isCaptain = chatter?.role === 'captainChatter';
   const qualifiedCount = chatter?.qualifiedReferralsCount || 0;
+  const paidTiers = (chatter as any)?.tierBonusesPaid || [];
+  const totalRecruits = chatter?.totalRecruits || 0;
 
-  return (
-    <ChatterDashboardLayout activeKey="referrals">
-      <div className="space-y-4 sm:space-y-6">
-        {/* Header — compact, mobile-first */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 dark:text-white">
-              <Users className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
-              <span className="truncate">{t("chatter.referrals.title")}</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1 truncate">
-              {t("chatter.referrals.subtitle")}
-            </p>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
+  const handleCopyRecruitLink = useCallback(() => {
+    if (!recruitmentShareUrl) return;
+    navigator.clipboard.writeText(recruitmentShareUrl).then(() => {
+      navigator.vibrate?.(50);
+      toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien de recrutement copie !' }));
+    });
+  }, [recruitmentShareUrl, intl]);
+
+  const handleShareRecruitLink = useCallback(async () => {
+    if (!recruitmentShareUrl) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'SOS Expat - Devenir Chatter',
+          text: intl.formatMessage({ id: 'chatter.referrals.shareText', defaultMessage: 'Gagnez de l\'argent en partageant des liens ! Inscrivez-vous :' }),
+          url: recruitmentShareUrl,
+        });
+      } catch { /* cancelled */ }
+    } else {
+      handleCopyRecruitLink();
+    }
+  }, [recruitmentShareUrl, intl, handleCopyRecruitLink]);
+
+  // Next tier info
+  const nextTier = useMemo(
+    () => getNextTierInfo(qualifiedCount, paidTiers),
+    [qualifiedCount, paidTiers]
+  );
+
+  // Tab 1: Mon Reseau
+  const networkTab = (
+    <div className="space-y-4">
+      {totalRecruits === 0 ? (
+        <EmptyStateCard
+          icon={<Users className="w-7 h-7" />}
+          title={<FormattedMessage id="chatter.team.emptyTitle" defaultMessage="Doublez vos revenus avec le parrainage !" />}
+          description={
+            <FormattedMessage
+              id="chatter.team.emptyDesc"
+              defaultMessage="Chaque personne que vous recrutez genere $1 a chaque appel. C'est un revenu passif qui ne s'arrete JAMAIS. Exemple : 10 filleuls x 2 appels/semaine = $80/mois sans effort"
+            />
+          }
+          cta={{
+            label: <FormattedMessage id="chatter.team.inviteWhatsApp" defaultMessage="Inviter quelqu'un sur WhatsApp" />,
+            onClick: handleShareRecruitLink,
+          }}
+        />
+      ) : (
+        <>
+          {/* Stats row */}
+          <ReferralStatsCard stats={stats} isLoading={isLoading} />
+
+          {/* Milestone progress */}
+          <MilestoneProgressCard
+            qualifiedCount={qualifiedCount}
+            paidTiers={paidTiers}
+            tierProgress={tierProgress}
+          />
+
+          {/* "What if" projection */}
+          {totalRecruits > 0 && (
+            <div className={`${UI.card} p-4`}>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                <FormattedMessage
+                  id="chatter.team.projection"
+                  defaultMessage="Si chacun de vos {count} filleuls fait 2 appels/semaine :"
+                  values={{ count: totalRecruits }}
+                />
+              </p>
+              <p className="text-lg font-bold text-green-500 mt-1">
+                = ${((totalRecruits * 2 * 4 * 100) / 100).toFixed(0)}/mois
+                <span className="text-xs font-normal text-slate-400 ml-2">
+                  <FormattedMessage id="chatter.team.passive" defaultMessage="de revenus passifs" />
+                </span>
+              </p>
+            </div>
+          )}
+
+          {/* N1 Table */}
+          <ReferralN1Table filleuls={filleulsN1} isLoading={isLoading} />
+
+          {/* N2 List (collapsible) */}
+          {filleulsN2.length > 0 && (
+            <ReferralN2List filleuls={filleulsN2} />
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  // Tab 2: Parrainer (Viral Kit)
+  const sponsorTab = (
+    <div className="space-y-4">
+      <div className={`${UI.card} p-4 sm:p-5`}>
+        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+          <FormattedMessage id="chatter.sponsor.title" defaultMessage="Chaque personne recrutee = revenus passifs a VIE" />
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <FormattedMessage id="chatter.sponsor.subtitle" defaultMessage="Partagez votre lien de recrutement" />
+        </p>
+
+        {/* Recruitment link */}
+        <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-xl mb-4">
+          <p className="text-xs text-slate-400 mb-1">
+            <FormattedMessage id="chatter.sponsor.recruitLink" defaultMessage="Votre lien de recrutement" />
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-sm font-mono font-bold text-slate-700 dark:text-slate-300 truncate">
+              {chatter?.affiliateCodeRecruitment || '...'}
+            </code>
             <button
-              onClick={refreshDashboard}
-              disabled={isLoading}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 transition-all touch-manipulation"
-              aria-label={t("common.refresh")}
+              onClick={handleCopyRecruitLink}
+              className={`${UI.button.primary} px-3 py-1.5 text-sm flex-shrink-0`}
             >
-              <RefreshCw
-                className={`h-4 w-4 dark:text-gray-300 ${isLoading ? "animate-spin" : ""}`}
-              />
+              <FormattedMessage id="common.copy" defaultMessage="Copier" />
             </button>
-            <Link to={`/${locale}/chatter/parrainer`}>
-              <button className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 transition-all active:scale-[0.98] touch-manipulation flex items-center gap-1.5">
-                <Share2 className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm font-medium">{t("chatter.referrals.refer")}</span>
-              </button>
-            </Link>
           </div>
         </div>
 
-        {/* Error alert */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400 text-sm">
-            {error}
-          </div>
-        )}
+        {/* Share buttons */}
+        <Suspense fallback={<div className="h-24 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
+          <ShareButtons />
+        </Suspense>
+      </div>
 
-        {/* Loading state — skeleton */}
-        {isLoading && !dashboardData && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-20 sm:h-24 bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl animate-pulse" />
-              ))}
+      {/* Pre-written messages */}
+      <Suspense fallback={null}>
+        <ShareMessageSelector />
+      </Suspense>
+
+      {/* QR Code */}
+      <Suspense fallback={null}>
+        <QRCodeDisplay />
+      </Suspense>
+
+      {/* Commission rates reminder */}
+      <div className={`${UI.card} p-4`}>
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+          <FormattedMessage id="chatter.sponsor.rates" defaultMessage="Vos gains par recrutement" />
+        </h4>
+        <div className="space-y-2 text-sm">
+          {[
+            { label: 'Appel N1 (votre filleul)', amount: '$1' },
+            { label: 'Appel N2 (filleul de filleul)', amount: '$0.50' },
+            { label: 'Bonus activation N1', amount: '$5' },
+            { label: 'Bonus recrutement N1', amount: '$1' },
+          ].map((rate) => (
+            <div key={rate.label} className="flex items-center justify-between">
+              <span className="text-slate-600 dark:text-slate-400">{rate.label}</span>
+              <span className="font-bold text-green-500">{rate.amount}</span>
             </div>
-            <div className="h-32 bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Tab 3: Gains parrainage
+  const earningsTab = (
+    <div className="space-y-4">
+      {/* KPI cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total referral', value: stats ? `$${((stats.totalReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
+          { label: 'Ce mois', value: stats ? `$${((stats.monthlyReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
+          { label: 'Qualifies', value: String(qualifiedCount) },
+        ].map((kpi) => (
+          <div key={kpi.label} className={`${UI.card} p-3 text-center`}>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">{kpi.label}</p>
+            <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{kpi.value}</p>
           </div>
-        )}
+        ))}
+      </div>
 
-        {/* Content */}
-        {dashboardData && (
-          <>
-            {/* Active promotion alert */}
-            {activePromotion && (
-              <PromoAlertCard promotion={activePromotion} />
-            )}
+      {/* Referral commissions table */}
+      <Suspense fallback={<div className="h-48 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
+        <ReferralCommissionsTable commissions={recentCommissions} />
+      </Suspense>
+    </div>
+  );
 
-            {/* Stats grid — 2 cols on mobile, 4 on desktop */}
-            <ReferralStatsCard stats={stats} isLoading={isLoading} />
+  // Tab 4: Captain (conditional)
+  const captainTab = isCaptain ? (
+    <div className="space-y-4">
+      <div className={`${UI.card} p-4 text-center`}>
+        <Crown className="w-10 h-10 text-amber-500 mx-auto mb-2" />
+        <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          <FormattedMessage id="chatter.captain.title" defaultMessage="Captain Chatter" />
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <FormattedMessage id="chatter.captain.tierCurrent" defaultMessage="Tier actuel : {tier}" values={{ tier: chatter?.captainCurrentTier || 'Bronze' }} />
+        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          <FormattedMessage id="chatter.captain.teamCalls" defaultMessage="Appels equipe ce mois : {count}" values={{ count: chatter?.captainMonthlyTeamCalls || 0 }} />
+        </p>
+      </div>
+    </div>
+  ) : null;
 
-            {/* Milestone progress */}
-            <MilestoneProgressCard
-              tierProgress={tierProgress}
-              qualifiedCount={qualifiedCount}
-              paidTiers={paidTiers}
-              isLoading={isLoading}
-            />
+  // Build tabs
+  const tabs = [
+    {
+      key: 'network',
+      label: <FormattedMessage id="chatter.team.tab.network" defaultMessage="Mon Reseau" />,
+      content: networkTab,
+    },
+    {
+      key: 'sponsor',
+      label: <FormattedMessage id="chatter.team.tab.sponsor" defaultMessage="Parrainer" />,
+      content: sponsorTab,
+    },
+    {
+      key: 'earnings',
+      label: <FormattedMessage id="chatter.team.tab.earnings" defaultMessage="Gains" />,
+      content: earningsTab,
+    },
+    ...(isCaptain ? [{
+      key: 'captain',
+      label: <FormattedMessage id="chatter.team.tab.captain" defaultMessage="Captain" />,
+      content: captainTab!,
+    }] : []),
+  ];
 
-            {/* Referral link (compact) */}
-            <ReferralLinkCard variant="compact" />
-
-            {/* How it works — collapsible on mobile */}
-            <details className="group bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg">
-              <summary className="flex items-center gap-2 p-3 sm:p-4 cursor-pointer list-none touch-manipulation">
-                <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                <span className="text-sm font-medium dark:text-white">{t("chatter.referrals.howItWorks")}</span>
-                <svg className="ml-auto h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-              <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-                <ul className="list-disc ml-6 text-xs sm:text-sm space-y-1.5 text-gray-600 dark:text-gray-400">
-                  <li>{t("chatter.referrals.howItWorks1")}</li>
-                  <li>{t("chatter.referrals.howItWorks2")}</li>
-                  <li>{t("chatter.referrals.howItWorks3")}</li>
-                  <li>{t("chatter.referrals.howItWorks4")}</li>
-                </ul>
-              </div>
-            </details>
-
-            {/* Filleuls tables — stacked on mobile */}
-            <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-6">
-              <div className="lg:col-span-2">
-                <ReferralN1Table
-                  filleuls={filleulsN1}
-                  isLoading={isLoading}
+  return (
+    <ChatterDashboardLayout activeKey="referrals">
+      <div className="px-4 py-4">
+        {/* Page header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              <FormattedMessage id="chatter.team.title" defaultMessage="Equipe" />
+            </h1>
+            {totalRecruits > 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <FormattedMessage
+                  id="chatter.team.socialProof"
+                  defaultMessage="Les chatters avec 10+ filleuls gagnent en moyenne $400/mois"
                 />
-              </div>
-              <div>
-                <ReferralN2List filleuls={filleulsN2} isLoading={isLoading} />
-              </div>
-            </div>
-          </>
-        )}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={refreshDashboard}
+            disabled={isLoading}
+            className={`${UI.button.ghost} p-2 ${SPACING.touchTarget}`}
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <SwipeTabContainer tabs={tabs} />
       </div>
     </ChatterDashboardLayout>
   );

@@ -12,7 +12,6 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy,
   Clock,
@@ -355,12 +354,9 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
               const isCurrentUser = entry.chatterId === userId;
 
               return (
-                <motion.div
+                <div
                   key={entry.chatterId}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all animate-fade-in ${
                     isCurrentUser
                       ? "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-red-200 dark:border-red-800"
                       : "bg-gray-50 dark:bg-white/5"
@@ -425,7 +421,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                       {formatPrize(challenge.prizes[rank])}
                     </span>
                   </div>
-                </motion.div>
+                </div>
               );
             })
           ) : (

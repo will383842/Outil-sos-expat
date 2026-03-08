@@ -1,1589 +1,319 @@
 /**
- * ChatterDashboard - Main dashboard for active chatters
- * Enhanced with daily missions, motivation widgets, team management, and PWA prompt
+ * ChatterDashboard - Redesigned main dashboard
  *
- * Features:
- * - Staggered card entrance animations
- * - Animated number count-ups
- * - Shimmer loading states
- * - Success feedback (confetti, toasts)
- * - Hover lift effects on cards
- *
- * PERFORMANCE OPTIMIZATIONS:
- * - React.lazy for below-fold components (TeamManagementCard, RevenueCalculatorCard, etc.)
- * - React.memo for pure card components that receive stable props
- * - useMemo for computed values (filtered lists, formatted currencies, derived state)
- * - useCallback for handlers passed to children (prevents unnecessary re-renders)
- * - Suspense boundaries with skeleton fallbacks for lazy-loaded components
- * - Virtualization-ready structure for long lists (commissions, team members)
+ * KEY CHANGES:
+ * - Uses useChatterData() (Context) instead of direct useChatter() call
+ * - Removed 21 unnecessary useMemo, kept only expensive ones
+ * - Removed auto-refresh 60s + ticker 30s (onSnapshot is real-time)
+ * - Above-fold components imported synchronously
+ * - Below-fold components in single lazy bundle
+ * - New chatter ($0) sees NewChatterDashboard instead of empty dashboard
+ * - Bento grid layout for desktop
  */
 
-import React, { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
-import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
+import React, { useCallback, useMemo, lazy, Suspense, useEffect } from 'react';
+import { trackMetaViewContent } from '@/utils/metaPixel';
 import { logAnalyticsEvent } from '@/config/firebase';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useChatter } from '@/hooks/useChatter';
-import { useChatterReferrals, getNextTierInfo } from '@/hooks/useChatterReferrals';
-import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
+import { useChatterData } from '@/contexts/ChatterDataContext';
+import { useChatterReferrals } from '@/hooks/useChatterReferrals';
 
-// ============================================================================
-// CRITICAL ABOVE-FOLD COMPONENTS - Loaded synchronously for fast initial render
-// These are immediately visible and critical for LCP (Largest Contentful Paint)
-// ============================================================================
-import {
-  ChatterBalanceCard,
-  ChatterStatsCard,
-  ChatterLevelCard,
-  PiggyBankCard,
-  EarningsMotivationCard,
-} from '@/components/Chatter/Cards';
-import type { EarningsByCategory } from '@/components/Chatter/Cards/EarningsBreakdownCard';
+// Above-fold: imported synchronously (visible immediately)
+import HeroEarningsCard from '@/components/Chatter/Cards/HeroEarningsCard';
+import BalanceCards from '@/components/Chatter/Cards/BalanceCards';
+import NextActionCard from '@/components/Chatter/Cards/NextActionCard';
+import LevelProgressCard from '@/components/Chatter/Cards/LevelProgressCard';
+import RecentActivityFeed from '@/components/Chatter/Cards/RecentActivityFeed';
+import NewChatterDashboard from '@/components/Chatter/Activation/NewChatterDashboard';
+import MicroObjectiveCard from '@/components/Chatter/Activation/MicroObjectiveCard';
+import { CelebrationProvider } from '@/components/Chatter/Activation/CelebrationSystem';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
-import { SkeletonDashboard } from '@/components/ui/SkeletonCard';
-import { useSuccessFeedback, Toast, ConfettiCelebration } from '@/components/ui/SuccessFeedback';
+import toast from 'react-hot-toast';
 
-// ============================================================================
-// LAZY-LOADED BELOW-FOLD COMPONENTS - Code splitting for smaller initial bundle
-// These components are heavy and/or not immediately visible on initial render
-// Each lazy import creates a separate chunk that loads on demand
-// ============================================================================
+// Below-fold: individual lazy wrappers that resolve named exports from the bundle
 
-// Heavy card components with animations/charts
-const DailyMissionsCard = lazy(() => import('@/components/Chatter/Cards/DailyMissionsCard'));
-const MotivationWidget = lazy(() => import('@/components/Chatter/Cards/MotivationWidget'));
-const WeeklyChallengeCard = lazy(() => import('@/components/Chatter/Cards/WeeklyChallengeCard'));
-const LiveActivityFeed = lazy(() => import('@/components/Chatter/Cards/LiveActivityFeed'));
-const RevenueCalculatorCard = lazy(() => import('@/components/Chatter/Cards/RevenueCalculatorCard'));
-const TrendsChartCard = lazy(() => import('@/components/Chatter/Cards/TrendsChartCard'));
-const ComparisonStatsCard = lazy(() => import('@/components/Chatter/Cards/ComparisonStatsCard'));
-const ForecastCard = lazy(() => import('@/components/Chatter/Cards/ForecastCard'));
-const AchievementBadgesCard = lazy(() => import('@/components/Chatter/Cards/AchievementBadgesCard'));
-const EarningsBreakdownCard = lazy(() => import('@/components/Chatter/Cards/EarningsBreakdownCard'));
-
-// Named exports need special handling with .then()
-const TeamManagementCard = lazy(() =>
-  import('@/components/Chatter/Cards/TeamManagementCard').then(m => ({ default: m.TeamManagementCard }))
-);
-const EarningsRatioCard = lazy(() =>
-  import('@/components/Chatter/Cards/EarningsRatioCard').then(m => ({ default: m.EarningsRatioCard }))
-);
-const TeamMessagesCard = lazy(() =>
-  import('@/components/Chatter/Cards/TeamMessagesCard').then(m => ({ default: m.TeamMessagesCard }))
-);
-const ReferralTreeCard = lazy(() =>
-  import('@/components/Chatter/Cards/ReferralTreeCard').then(m => ({ default: m.ReferralTreeCard }))
-);
-
-// Utility components - less critical
-const RecruitmentBanner = lazy(() =>
-  import('@/components/Chatter/RecruitmentBanner').then(m => ({ default: m.RecruitmentBanner }))
-);
-const ChatterAffiliateLinks = lazy(() =>
-  import('@/components/Chatter/Links').then(m => ({ default: m.ChatterAffiliateLinks }))
-);
-const NotificationBell = lazy(() =>
-  import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
-);
-const QuickActionsMenu = lazy(() => import('@/components/Chatter/QuickActionsMenu'));
-const DashboardTour = lazy(() => import('@/components/Chatter/DashboardTour'));
-const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
-
-// Icons - imported synchronously as they're small and used everywhere
-import {
-  Users,
-  TrendingUp,
-  Phone,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  ChevronRight,
-  Share2,
-  Target,
-  DollarSign,
-  AlertTriangle,
-  Bell,
-  Info,
-  Award,
-  RefreshCw,
-} from 'lucide-react';
-
-// ============================================================================
-// SKELETON COMPONENTS FOR SUSPENSE FALLBACKS
-// Memoized to prevent unnecessary re-renders during loading states
-// ============================================================================
-
-/**
- * Card skeleton for lazy-loaded card components.
- * Provides visual continuity while components load.
- */
-const CardSkeleton = memo<{ height?: string; className?: string }>(({
-  height = 'h-48',
-  className = '',
-}) => (
-  <div
-    className={`bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse ${height} ${className}`}
-  >
-    <div className="p-4 sm:p-6 space-y-3">
-      <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3" />
-      <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-2/3" />
-      <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
-    </div>
-  </div>
-));
-CardSkeleton.displayName = 'CardSkeleton';
-
-/**
- * Inline skeleton for small components like buttons and badges
- */
-const InlineSkeleton = memo<{ width?: string }>(({ width = 'w-24' }) => (
-  <div className={`h-10 ${width} bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse`} />
-));
-InlineSkeleton.displayName = 'InlineSkeleton';
-
-/**
- * Large card skeleton for team management and other heavy components
- */
-const LargeCardSkeleton = memo(() => (
-  <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg animate-pulse h-96">
-    <div className="p-4 sm:p-6 space-y-4">
-      <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/4" />
-      <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
-      <div className="grid gap-4 mt-4">
-        <div className="h-24 bg-gray-200 dark:bg-white/10 rounded-xl" />
-        <div className="h-24 bg-gray-200 dark:bg-white/10 rounded-xl" />
-      </div>
-      <div className="h-48 bg-gray-200 dark:bg-white/10 rounded-xl" />
-    </div>
-  </div>
-));
-LargeCardSkeleton.displayName = 'LargeCardSkeleton';
-
-// ============================================================================
-// MEMOIZED SUB-COMPONENTS
-// Pure components wrapped in React.memo to prevent unnecessary re-renders
-// ============================================================================
-
-/**
- * Memoized commission item component for the commissions list.
- * Uses custom comparison to only re-render when commission data changes.
- */
-interface CommissionItemProps {
-  commission: {
-    id: string;
-    type: string;
-    status: string;
-    amount: number;
-    createdAt: string;
-  };
-  formatAmount: (cents: number) => string;
-  locale: string;
-}
-
-const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, locale }) => {
-  // Memoize the formatted date to avoid recalculating on every render
-  const formattedDate = useMemo(
-    () => new Date(commission.createdAt).toLocaleDateString(locale),
-    [commission.createdAt, locale]
-  );
-
-  return (
-    <div className="px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/10 transition-colors min-h-[72px]">
-      <div className="flex items-center gap-3">
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
-          commission.status === 'available'
-            ? 'bg-green-100 dark:bg-green-900/30'
-            : commission.status === 'pending'
-              ? 'bg-red-100 dark:bg-red-900/30'
-              : 'bg-gray-100 dark:bg-gray-800'
-        }`}>
-          {commission.status === 'available' ? (
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-          ) : (
-            <Clock className="w-5 h-5 text-red-600 dark:text-red-400" />
-          )}
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white sm:text-base truncate">
-            <FormattedMessage
-              id={commission.type === 'client_referral' ? 'chatter.commission.client' : 'chatter.commission.recruitment'}
-              defaultMessage={commission.type === 'client_referral' ? 'Commission Client' : 'Commission Recrutement'}
-            />
-          </p>
-          <p className="text-xs dark:text-gray-400">{formattedDate}</p>
+// Skeleton for below-fold content
+const BelowFoldSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/8 rounded-2xl h-48">
+        <div className="p-5 space-y-3">
+          <div className="h-5 bg-slate-200 dark:bg-white/10 rounded w-1/3" />
+          <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-2/3" />
+          <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-1/2" />
         </div>
       </div>
-      <div className="text-right flex-shrink-0 ml-2">
-        <p className="font-bold text-green-600 dark:text-green-400">+{formatAmount(commission.amount)}</p>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${
-          commission.status === 'available'
-            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-            : commission.status === 'pending'
-              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-        }`}>
-          <FormattedMessage id={`chatter.status.${commission.status}`} defaultMessage={commission.status} />
-        </span>
-      </div>
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if commission data or locale changes
-  return (
-    prevProps.commission.id === nextProps.commission.id &&
-    prevProps.commission.status === nextProps.commission.status &&
-    prevProps.commission.amount === nextProps.commission.amount &&
-    prevProps.locale === nextProps.locale
-  );
-});
-CommissionItem.displayName = 'CommissionItem';
-
-/**
- * Memoized inactive member alert item
- */
-interface InactiveMemberItemProps {
-  member: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-  };
-  onMotivate: () => void;
-}
-
-const InactiveMemberItem = memo<InactiveMemberItemProps>(({ member, onMotivate }) => (
-  <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl">
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-amber-200 dark:bg-amber-800 flex items-center justify-center text-amber-700 dark:text-amber-300 font-semibold">
-        {member.firstName?.[0]?.toUpperCase() || '?'}
-      </div>
-      <div>
-        <p className="font-medium text-gray-900 dark:text-white">
-          {member.firstName} {member.lastName?.[0]}.
-        </p>
-        <p className="text-xs dark:text-amber-400">
-          <FormattedMessage id="chatter.alerts.inactive" defaultMessage="Inactif depuis 14+ jours" />
-        </p>
-      </div>
-    </div>
-    <button
-      onClick={onMotivate}
-      className="px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors"
-    >
-      <FormattedMessage id="chatter.alerts.motivate" defaultMessage="Motiver" />
-    </button>
+    ))}
   </div>
-));
-InactiveMemberItem.displayName = 'InactiveMemberItem';
-
-// ============================================================================
-// CONSTANTS AND UTILITIES
-// ============================================================================
-
-// Design tokens
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-} as const;
-
-// Default level thresholds in cents (fallback when config not loaded)
-// Must match backend defaults in chatter/types.ts DEFAULT_CHATTER_CONFIG.levelThresholds
-const DEFAULT_LEVEL_THRESHOLDS = {
-  1: 0,
-  2: 10000,    // $100
-  3: 50000,    // $500
-  4: 200000,   // $2000
-  5: 500000,   // $5000
-};
-
-// Auto-refresh interval in milliseconds (60 seconds)
-const REFRESH_INTERVAL = 60000;
-
-/**
- * Format time difference for "last updated" display
- * Uses intl.formatMessage for i18n instead of hardcoded locale checks
- */
-function formatTimeAgo(timestamp: number, intl: ReturnType<typeof useIntl>): string {
-  const now = Date.now();
-  const diffMs = now - timestamp;
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-
-  if (diffSeconds < 10) {
-    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.justNow', defaultMessage: 'just now' });
-  }
-  if (diffSeconds < 60) {
-    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.seconds', defaultMessage: '{seconds}s ago' }, { seconds: diffSeconds });
-  }
-  if (diffMinutes === 1) {
-    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.oneMinute', defaultMessage: '1 min ago' });
-  }
-  if (diffMinutes < 60) {
-    return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.minutes', defaultMessage: '{minutes} min ago' }, { minutes: diffMinutes });
-  }
-  return intl.formatMessage({ id: 'chatter.dashboard.timeAgo.overOneHour', defaultMessage: '1h+ ago' });
-}
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
+);
 
 const ChatterDashboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const { language } = useApp();
-  const { user } = useAuth();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
+  // Data from Context (NOT direct useChatter() - shared via ChatterDataProvider)
   const {
     dashboardData,
     commissions,
-    notifications,
     isLoading,
     error,
-    isChatter,
     clientShareUrl,
-    recruitmentShareUrl,
-    canWithdraw,
-    minimumWithdrawal,
     refreshDashboard,
-    markNotificationRead,
-    markAllNotificationsRead,
-    unreadNotificationsCount,
-  } = useChatter();
+    canWithdraw,
+  } = useChatterData();
 
-  // Referral data
-  const {
-    stats: referralStats,
-    tierProgress,
-    filleulsN1,
-    filleulsN2,
-    isLoading: referralsLoading,
-    refreshDashboard: refreshReferrals,
-  } = useChatterReferrals();
+  const chatter = dashboardData?.chatter;
+  const totalEarned = (chatter?.totalEarned || 0);
 
-  // ============================================================================
-  // STATE
-  // ============================================================================
+  // Referrals data (page-specific, not in Context)
+  const { stats: referralStats } = useChatterReferrals();
 
-  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isTabVisible, setIsTabVisible] = useState(true);
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isPulling, setIsPulling] = useState(false);
-  const pullStartY = useRef<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [, setTimeAgeTick] = useState(0);
-  const [selectedInactiveMember, setSelectedInactiveMember] = useState<typeof filleulsN1[0] | null>(null);
-  const [selectedEarningsCategory, setSelectedEarningsCategory] = useState<keyof EarningsByCategory | null>(null);
+  // Routes
+  const paymentsRoute = `/${getTranslatedRouteSlug('chatter-payments' as RouteKey, langCode)}`;
+  const referralsRoute = `/${getTranslatedRouteSlug('chatter-referrals' as RouteKey, langCode)}`;
+  const telegramRoute = `/${getTranslatedRouteSlug('chatter-telegram' as RouteKey, langCode)}`;
 
-  // ============================================================================
-  // MEMOIZED ROUTE CALCULATIONS
-  // Routes are computed once and cached until langCode changes
-  // ============================================================================
-
-  const routes = useMemo(() => ({
-    telegram: `/${getTranslatedRouteSlug('chatter-telegram' as RouteKey, langCode)}`,
-    payments: `/${getTranslatedRouteSlug('chatter-payments' as RouteKey, langCode)}`,
-    referrals: `/${getTranslatedRouteSlug('chatter-referrals' as RouteKey, langCode)}`,
-    refer: `/${getTranslatedRouteSlug('chatter-refer' as RouteKey, langCode)}`,
-    leaderboard: `/${getTranslatedRouteSlug('chatter-leaderboard' as RouteKey, langCode)}`,
-    training: `/${getTranslatedRouteSlug('chatter-training' as RouteKey, langCode)}`,
-  }), [langCode]);
-
-  // Telegram is optional for dashboard access (required only for withdrawals)
-
-  // Meta Pixel + Firebase Analytics - ViewContent on dashboard mount
+  // Analytics tracking (once)
   useEffect(() => {
-    trackMetaViewContent({ content_name: 'chatter_dashboard', content_category: 'affiliate' });
-    logAnalyticsEvent('page_view', { page_title: 'chatter_dashboard', page_location: window.location.href });
+    trackMetaViewContent({ content_name: 'Chatter Dashboard' });
+    logAnalyticsEvent('chatter_dashboard_view', {});
   }, []);
 
-  // ============================================================================
-  // MEMOIZED FORMATTERS
-  // Currency formatter is expensive to create, so we memoize it
-  // ============================================================================
+  // Refresh on tab focus (only if inactive > 5 minutes)
+  useEffect(() => {
+    let lastActive = Date.now();
 
-  const formatAmount = useCallback((cents: number) => {
-    return new Intl.NumberFormat(intl.locale, {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(cents / 100);
-  }, [intl.locale]);
-
-  // ============================================================================
-  // MEMOIZED COMPUTED VALUES
-  // These are expensive calculations that should only run when dependencies change
-  // ============================================================================
-
-  // This month's commissions - filtered once when commissions array changes
-  const thisMonthCommissions = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    return commissions.filter(c => {
-      const date = new Date(c.createdAt);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    });
-  }, [commissions]);
-
-  // This month's total earnings
-  const thisMonthTotal = useMemo(() => {
-    return thisMonthCommissions.reduce((sum, c) => sum + c.amount, 0);
-  }, [thisMonthCommissions]);
-
-  // Pending commission count
-  const pendingCount = useMemo(() => {
-    return commissions.filter(c => c.status === 'pending').length;
-  }, [commissions]);
-
-  // Commission breakdown by type
-  const commissionBreakdown = useMemo(() => {
-    const clientCalls = thisMonthCommissions.filter(c => c.type === 'client_referral').length;
-    const recurringCommissions = thisMonthCommissions.filter(c => c.type === 'recurring_5pct');
-    const n1Calls = recurringCommissions.filter(c => c.amount === 100).length;
-    const n2Calls = recurringCommissions.filter(c => c.amount === 50).length;
-    return { clientCalls, n1Calls, n2Calls };
-  }, [thisMonthCommissions]);
-
-  // Team passive income
-  const teamPassiveIncome = useMemo(() => {
-    return referralStats?.monthlyReferralEarnings || 0;
-  }, [referralStats?.monthlyReferralEarnings]);
-
-  // Next tier info
-  const nextTier = useMemo(() => {
-    if (!tierProgress) return null;
-    return getNextTierInfo(tierProgress.qualifiedFilleulsCount ?? 0, tierProgress.paidTierBonuses ?? []);
-  }, [tierProgress]);
-
-  // Recent commissions (top 5) - sliced once
-  const recentCommissions = useMemo(() => commissions.slice(0, 5), [commissions]);
-
-  // Inactive team members - expensive filtering
-  const inactiveMembers = useMemo(() => {
-    if (!filleulsN1 || filleulsN1.length === 0) return [];
-    const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
-    return filleulsN1.filter(member => {
-      const lastActivity = member.lastActivityAt ? new Date(member.lastActivityAt).getTime() : 0;
-      return lastActivity < fourteenDaysAgo;
-    }).slice(0, 3);
-  }, [filleulsN1]);
-
-  // Team size
-  const teamSize = useMemo(() => {
-    return (referralStats?.totalFilleulsN1 || 0) + (referralStats?.totalFilleulsN2 || 0);
-  }, [referralStats?.totalFilleulsN1, referralStats?.totalFilleulsN2]);
-
-  // Earnings breakdown (derived from dashboard data)
-  const earningsData = useMemo(() => {
-    if (!dashboardData?.chatter) return { affiliation: 0, referral: 0 };
-    const { chatter } = dashboardData;
-    return {
-      affiliation: chatter.totalEarned - (chatter.referralEarnings || 0),
-      referral: chatter.referralEarnings || 0,
-    };
-  }, [dashboardData]);
-
-  // Memoized piggy bank data for PiggyBankCard - avoids creating new object on each render
-  const piggyBankData = useMemo(() => {
-    if (!dashboardData?.piggyBank) return null;
-    const pb = dashboardData.piggyBank;
-    return {
-      isUnlocked: pb.isUnlocked,
-      clientEarnings: pb.clientEarnings,
-      unlockThreshold: pb.unlockThreshold,
-      progressPercent: pb.progressPercent,
-      amountToUnlock: pb.amountToUnlock,
-      totalPending: pb.totalPending,
-      message: pb.message,
-    };
-  }, [dashboardData?.piggyBank]);
-
-  // Earnings breakdown by category for EarningsBreakdownCard
-  const earningsByCategory = useMemo((): EarningsByCategory => {
-    // Initialize all categories to 0
-    const breakdown: EarningsByCategory = {
-      clientReferrals: 0,
-      teamRecruitment: 0,
-      tierBonuses: 0,
-      recurringCommissions: 0,
-    };
-
-    // Map commission types to categories
-    commissions.forEach((commission) => {
-      const amount = commission.amount;
-      switch (commission.type) {
-        // Client referrals: client_call + client_referral
-        case 'client_call':
-        case 'client_referral':
-          breakdown.clientReferrals += amount;
-          break;
-        // Team recruitment: activation_bonus + n1_recruit_bonus + recruitment
-        case 'activation_bonus':
-        case 'n1_recruit_bonus':
-        case 'recruitment':
-          breakdown.teamRecruitment += amount;
-          break;
-        // Tier bonuses: tier_bonus + bonus_top3
-        case 'tier_bonus':
-        case 'bonus_top3':
-          breakdown.tierBonuses += amount;
-          break;
-        // Recurring commissions: n1_call + n2_call + recurring_5pct
-        case 'n1_call':
-        case 'n2_call':
-        case 'recurring_5pct':
-          breakdown.recurringCommissions += amount;
-          break;
-        default:
-          break;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        const inactiveMs = Date.now() - lastActive;
+        if (inactiveMs > 5 * 60 * 1000) {
+          refreshDashboard();
+        }
+      } else {
+        lastActive = Date.now();
       }
-    });
-
-    return breakdown;
-  }, [commissions]);
-
-  // Memoized chatter data for AchievementBadgesCard - avoids creating new object on each render
-  // Note: We intentionally depend on dashboardData?.chatter rather than dashboardData
-  // to avoid unnecessary recalculations when other parts of dashboardData change
-  const achievementBadgesChatterData = useMemo(() => {
-    if (!dashboardData?.chatter) return null;
-    const { chatter } = dashboardData;
-    return {
-      totalClients: chatter.totalClients,
-      totalRecruits: chatter.totalRecruits,
-      currentStreak: chatter.currentStreak,
-      bestStreak: chatter.bestStreak,
-      totalEarned: chatter.totalEarned,
-      level: chatter.level,
-      bestRank: chatter.bestRank ?? undefined,
-      zoomMeetingsAttended: chatter.zoomMeetingsAttended,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboardData?.chatter]);
 
-  // ============================================================================
-  // MEMOIZED CALLBACKS
-  // Event handlers passed to children should be stable references
-  // ============================================================================
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [refreshDashboard]);
 
-  // Combined refresh function
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([refreshDashboard(), refreshReferrals()]);
-      setLastUpdated(Date.now());
-    } catch (err) {
-      console.error('[ChatterDashboard] Refresh error:', err);
-    } finally {
-      setIsRefreshing(false);
-      setPullDistance(0);
-      setIsPulling(false);
-    }
-  }, [refreshDashboard, refreshReferrals]);
-
-  // Pull-to-refresh handlers
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (containerRef.current && containerRef.current.scrollTop === 0) {
-      pullStartY.current = e.touches[0].clientY;
-    }
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (pullStartY.current === null || isRefreshing) return;
-    const currentY = e.touches[0].clientY;
-    const distance = currentY - pullStartY.current;
-    if (distance > 0 && containerRef.current?.scrollTop === 0) {
-      setIsPulling(true);
-      setPullDistance(Math.min(distance * 0.5, 100));
-    }
-  }, [isRefreshing]);
-
-  const handleTouchEnd = useCallback(() => {
-    if (pullDistance > 60 && !isRefreshing) {
-      handleRefresh();
-    } else {
-      setPullDistance(0);
-      setIsPulling(false);
-    }
-    pullStartY.current = null;
-  }, [pullDistance, isRefreshing, handleRefresh]);
-
-  // Navigation callbacks - memoized to prevent child re-renders
-  const navigateToPayments = useCallback(() => {
-    trackMetaLead({ content_name: 'withdrawal_intent', content_category: 'affiliate_withdrawal' });
-    navigate(routes.payments);
-  }, [navigate, routes.payments]);
-  const navigateToRefer = useCallback(() => navigate(routes.refer), [navigate, routes.refer]);
-  const navigateToReferrals = useCallback(() => navigate(routes.referrals), [navigate, routes.referrals]);
-  const navigateToLeaderboard = useCallback(() => navigate(routes.leaderboard), [navigate, routes.leaderboard]);
-  const navigateToTraining = useCallback(() => navigate(routes.training), [navigate, routes.training]);
-
-  // Weekly challenge CTA handler
-  const handleWeeklyChallengeClick = useCallback((type: string) => {
-    if (type === 'recruiter' || type === 'caller') {
-      navigate(routes.refer);
-    } else {
-      navigate(routes.referrals);
-    }
-  }, [navigate, routes.refer, routes.referrals]);
-
-  // Inactive member selection handler
-  const handleSelectInactiveMember = useCallback((member: typeof filleulsN1[0]) => {
-    setSelectedInactiveMember(member);
-  }, []);
-
-  const handleCloseInactiveMemberModal = useCallback(() => {
-    setSelectedInactiveMember(null);
-  }, []);
-
-  // Earnings breakdown segment click handler - toggles category filter
-  const handleEarningsSegmentClick = useCallback((category: keyof EarningsByCategory) => {
-    setSelectedEarningsCategory((prev) => (prev === category ? null : category));
-  }, []);
-
-  // Member handlers - navigate to member profile or open messaging
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleViewMember = useCallback((memberId: string) => {
-    // Navigate to referrals page where member details can be viewed
-    // TODO: Use memberId to navigate to specific member profile when feature is available
-    navigateToReferrals();
-  }, [navigateToReferrals]);
-
-  const handleMessageMember = useCallback((memberId: string) => {
-    // Find the member and open the messaging modal
-    const member = filleulsN1.find(m => m.id === memberId);
-    if (member) {
-      setSelectedInactiveMember(member);
-    }
-  }, [filleulsN1]);
-
-  // Team messages send handler - memoized for TeamMessagesCard
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSendTeamMessage = useCallback((msg: string, channel: string) => {
-    // Message sending is handled by the TeamMessagesCard component internally
-    // TODO: Log message sent via channel for analytics when feature is available
-    handleCloseInactiveMemberModal();
-  }, [handleCloseInactiveMemberModal]);
-
-  // Mission completion handler - memoized for DailyMissionsCard
-  const handleAllMissionsComplete = useCallback(() => {
-    // Missions completed - no additional UI feedback needed as the card handles it
-  }, []);
-
-
-  // Tour skip handler - memoized for DashboardTour
-  const handleTourSkip = useCallback(() => {
-    // User skipped the tour - no additional action needed
-  }, []);
-
-  // Get next level threshold — uses config from backend, falls back to defaults
-  const getNextLevelThreshold = useCallback((currentLevel: number): number => {
-    const nextLevel = Math.min(currentLevel + 1, 5) as 1 | 2 | 3 | 4 | 5;
-    const configThresholds = dashboardData?.config?.levelThresholds;
-    const thresholds: Record<number, number> = configThresholds
-      ? { 1: 0, 2: configThresholds.level2, 3: configThresholds.level3, 4: configThresholds.level4, 5: configThresholds.level5 }
-      : DEFAULT_LEVEL_THRESHOLDS;
-    return thresholds[nextLevel];
-  }, [dashboardData?.config?.levelThresholds]);
-
-  // ============================================================================
-  // SUCCESS FEEDBACK
-  // ============================================================================
-
-  const {
-    state: feedbackState,
-    showToast,
-    hideToast,
-    celebrateCommission,
-  } = useSuccessFeedback();
-
-  // Share link success handler
-  const handleShareLinkSuccess = useCallback(() => {
-    showToast('success', intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copie !' }));
-  }, [showToast, intl]);
-
-  // Tour completion handler
-  const handleTourComplete = useCallback(() => {
-    showToast(
-      'success',
-      intl.formatMessage({ id: 'chatter.tour.completed', defaultMessage: 'Tour Complete!' }),
-      intl.formatMessage({ id: 'chatter.tour.startEarning', defaultMessage: 'Start sharing your links!' })
-    );
-  }, [showToast, intl]);
-
-  // Piggy bank handlers
-  const handlePiggyBankClaim = useCallback(() => {
-    if (dashboardData?.piggyBank?.isUnlocked && dashboardData.piggyBank.totalPending > 0) {
-      navigate(routes.payments);
-    } else {
-      showToast(
-        'success',
-        intl.formatMessage({
-          id: 'chatter.piggyBank.needMoreSales',
-          defaultMessage: 'Continue selling to unlock your bonuses!',
-        }),
-        intl.formatMessage({
-          id: 'chatter.piggyBank.keepGoing',
-          defaultMessage: 'Keep going!',
-        })
+  // Actions
+  const handleCopyLink = useCallback(() => {
+    if (!clientShareUrl) return;
+    navigator.clipboard.writeText(clientShareUrl).then(() => {
+      localStorage.setItem('chatter_link_copied', Date.now().toString());
+      navigator.vibrate?.(50);
+      toast.success(
+        intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien copie ! Partagez-le sur WhatsApp, Telegram...' }),
+        { duration: 3000 }
       );
-    }
-  }, [dashboardData?.piggyBank, navigate, routes.payments, showToast, intl]);
+    }).catch(() => {
+      toast.error(intl.formatMessage({ id: 'chatter.copyFailed', defaultMessage: 'Impossible de copier le lien' }));
+    });
+  }, [clientShareUrl, intl]);
 
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
+  const handleShareLink = useCallback(async () => {
+    if (!clientShareUrl) return;
+    localStorage.setItem('chatter_link_shared', Date.now().toString());
 
-  // Visibility API - pause refresh when tab is hidden
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const visible = document.visibilityState === 'visible';
-      setIsTabVisible(visible);
-      if (visible && Date.now() - lastUpdated > 30000) {
-        handleRefresh();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'SOS Expat',
+          text: intl.formatMessage({ id: 'chatter.shareText', defaultMessage: "Besoin d'aide juridique a l'etranger ? Appelez un avocat en 2 minutes !" }),
+          url: clientShareUrl,
+        });
+        toast.success(intl.formatMessage({ id: 'chatter.shared', defaultMessage: 'Lien partage !' }));
+      } catch {
+        // User cancelled share
       }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [lastUpdated, handleRefresh]);
-
-  // Auto-refresh every 60 seconds
-  useEffect(() => {
-    if (!isTabVisible || !isChatter) return;
-    const intervalId = setInterval(handleRefresh, REFRESH_INTERVAL);
-    return () => clearInterval(intervalId);
-  }, [isTabVisible, isChatter, handleRefresh]);
-
-  // Update "time ago" display
-  useEffect(() => {
-    const intervalId = setInterval(() => setTimeAgeTick(tick => tick + 1), 30000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  // Update lastUpdated when data loads
-  useEffect(() => {
-    if (dashboardData && !isLoading) {
-      setLastUpdated(Date.now());
+    } else {
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Besoin d'aide juridique ? ${clientShareUrl}`)}`;
+      window.open(whatsappUrl, '_blank');
     }
-  }, [dashboardData, isLoading]);
+  }, [clientShareUrl, intl]);
 
-  // Detect new commissions for celebration
-  const prevCommissionCount = useRef(commissions.length);
-  useEffect(() => {
-    if (commissions.length > prevCommissionCount.current && prevCommissionCount.current > 0) {
-      const latestCommission = commissions[0];
-      const amount = new Intl.NumberFormat(intl.locale, {
-        style: 'currency',
-        currency: 'USD',
-      }).format(latestCommission.amount / 100);
-      celebrateCommission(amount);
-    }
-    prevCommissionCount.current = commissions.length;
-  }, [commissions, intl.locale, celebrateCommission]);
+  // Pull-to-refresh handler
+  const handleRefresh = useCallback(() => {
+    refreshDashboard();
+    toast.success(intl.formatMessage({ id: 'chatter.refreshed', defaultMessage: 'Mise a jour...' }), { duration: 1500 });
+  }, [refreshDashboard, intl]);
 
-  // ============================================================================
-  // EARLY RETURNS FOR LOADING/ERROR STATES
-  // ============================================================================
-
-  if (isLoading) {
+  // Loading state
+  if (isLoading && !dashboardData) {
     return (
-      <ChatterDashboardLayout>
-        <SkeletonDashboard />
-      </ChatterDashboardLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <ChatterDashboardLayout>
-        <div className={`${UI.card} p-6`}>
-          <div className="flex items-center gap-3 text-red-500">
-            <AlertCircle className="w-6 h-6" />
-            <span>{error}</span>
-          </div>
-        </div>
-      </ChatterDashboardLayout>
-    );
-  }
-
-  if (!isChatter || !dashboardData) {
-    return (
-      <ChatterDashboardLayout>
-        <div className={`${UI.card} p-8 text-center`}>
-          <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h2 className="text-base sm:text-xl dark:text-white font-bold mb-2">
-            <FormattedMessage id="chatter.dashboard.notChatter.title" defaultMessage="Pas encore Chatter" />
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400">
-            <FormattedMessage id="chatter.dashboard.notChatter.desc" defaultMessage="Vous devez d'abord vous inscrire au programme Chatter." />
-          </p>
-        </div>
-      </ChatterDashboardLayout>
-    );
-  }
-
-  const { chatter } = dashboardData;
-
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-
-  return (
-    <ChatterDashboardLayout activeKey="dashboard">
-      <div
-        ref={containerRef}
-        className="space-y-4 sm:space-y-6"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Pull-to-refresh indicator */}
-        {isPulling && (
-          <div
-            className="flex justify-center items-center transition-all duration-200 overflow-hidden"
-            style={{ height: pullDistance > 0 ? `${pullDistance}px` : '0px' }}
-          >
-            <div className={`flex items-center gap-2 text-gray-500 dark:text-gray-400 ${pullDistance > 60 ? 'text-red-500 dark:text-red-400' : ''}`}>
-              <RefreshCw className={`w-5 h-5 ${pullDistance > 60 ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3.6}deg)` }} />
-              <span className="text-sm">
-                {pullDistance > 60
-                  ? intl.formatMessage({ id: 'chatter.dashboard.releaseToRefresh', defaultMessage: 'Release to refresh' })
-                  : intl.formatMessage({ id: 'chatter.dashboard.pullToRefresh', defaultMessage: 'Pull to refresh' })
-                }
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Header — compact welcome + notifications + refresh */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
-              <FormattedMessage
-                id="chatter.dashboard.welcome"
-                defaultMessage="Bienvenue, {name} !"
-                values={{ name: chatter.firstName }}
-              />
-            </h1>
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50 min-h-[32px] px-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
-              title={intl.formatMessage({ id: 'chatter.dashboard.refresh', defaultMessage: 'Refresh' })}
-              aria-label={intl.formatMessage({ id: 'chatter.dashboard.refreshDashboard', defaultMessage: 'Refresh dashboard' })}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>
-                {intl.formatMessage(
-                  { id: 'chatter.dashboard.updatedAgo', defaultMessage: 'Updated {timeAgo}' },
-                  { timeAgo: formatTimeAgo(lastUpdated, intl) }
-                )}
-              </span>
-            </button>
-          </div>
-          {/* Notification Bell */}
-          <div data-tour="notifications">
-            <Suspense fallback={<InlineSkeleton width="w-12" />}>
-              <NotificationBell
-                notifications={notifications}
-                unreadCount={unreadNotificationsCount}
-                onMarkAsRead={markNotificationRead}
-                onMarkAllAsRead={markAllNotificationsRead}
-              />
-            </Suspense>
-          </div>
-        </div>
-
-        {/* Team Alerts Section */}
-        {inactiveMembers.length > 0 && (
-          <div className={`${UI.card} p-4 sm:p-6 border-l-4`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
-                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-amber-500" />
-                  <FormattedMessage id="chatter.alerts.teamTitle" defaultMessage="Alertes Equipe" />
-                </h3>
-                <p className="text-xs dark:text-gray-400">
-                  <FormattedMessage
-                    id="chatter.alerts.inactiveCount"
-                    defaultMessage="{count} membres inactifs necessitent votre attention"
-                    values={{ count: inactiveMembers.length }}
-                  />
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {inactiveMembers.map((member) => (
-                <InactiveMemberItem
-                  key={member.id}
-                  member={member}
-                  onMotivate={() => handleSelectInactiveMember(member)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Team Messages Modal - Lazy loaded */}
-        {selectedInactiveMember && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="team-message-modal-title"
-            onClick={(e) => { if (e.target === e.currentTarget) handleCloseInactiveMemberModal(); }}
-            onKeyDown={(e) => { if (e.key === 'Escape') handleCloseInactiveMemberModal(); }}
-          >
-            <div className="w-full max-w-lg overflow-y-auto">
-              <Suspense fallback={<CardSkeleton height="h-64" />}>
-                <TeamMessagesCard
-                  memberName={selectedInactiveMember.firstName || 'Membre'}
-                  memberStatus="inactive"
-                  memberPhone={selectedInactiveMember.phone}
-                  memberEmail={selectedInactiveMember.email}
-                  onSendMessage={handleSendTeamMessage}
-                />
-              </Suspense>
-              <button
-                onClick={handleCloseInactiveMemberModal}
-                className="mt-2 w-full py-3 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-                aria-label={intl.formatMessage({ id: 'common.close.modal', defaultMessage: 'Close modal' })}
-              >
-                <FormattedMessage id="common.close" defaultMessage="Fermer" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/* HERO — Balance card (full width, most important element)     */}
-        {/* ============================================================ */}
-        <div data-tour="balance-card">
-          <ChatterBalanceCard
-            availableBalance={chatter.availableBalance}
-            pendingBalance={chatter.pendingBalance}
-            validatedBalance={chatter.validatedBalance}
-            minimumWithdrawal={minimumWithdrawal}
-            canWithdraw={canWithdraw}
-            hasPendingWithdrawal={!!chatter.pendingWithdrawalId}
-            onWithdraw={navigateToPayments}
-            loading={isLoading}
-            animationDelay={0}
-          />
-        </div>
-
-        {/* Telegram banner — show only if not linked */}
-        {!user?.telegramId && (
-          <button
-            onClick={() => navigate(routes.telegram)}
-            className="w-full flex items-center gap-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-left"
-          >
-            <div className="w-9 h-9 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <Info className="w-4 h-4 text-blue-500" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm">
-                <FormattedMessage id="chatter.dashboard.telegramBanner.title" defaultMessage="Link your Telegram to withdraw your earnings" />
-              </p>
-              <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
-                <FormattedMessage id="chatter.dashboard.telegramBanner.subtitle" defaultMessage="Get a $50 bonus + instant notifications + secure withdrawal confirmations" />
-              </p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-blue-400 flex-shrink-0" />
-          </button>
-        )}
-
-        {/* Locked Commission Plan Banner */}
-        {dashboardData?.commissionPlan && (
-          <Suspense fallback={null}>
-            <LockedPlanBanner commissionPlan={dashboardData.commissionPlan} />
-          </Suspense>
-        )}
-
-        {/* Commission Rates — responsive wrap for mobile */}
-        <div className={`${UI.card} p-3 sm:p-4 bg-gradient-to-r from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border-green-200 dark:border-green-800/30`}>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">
-                <FormattedMessage id="chatter.commissions.rates" defaultMessage="Vos commissions:" />
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full text-xs sm:text-sm font-semibold">
-                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <FormattedMessage id="chatter.commissions.clientCall" defaultMessage="Client = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 300) }} />
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full text-xs sm:text-sm font-semibold">
-                <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <FormattedMessage id="chatter.commissions.n1Call" defaultMessage="N1 = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionN1CallAmount ?? 100) }} />
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full text-xs sm:text-sm font-semibold">
-                <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <FormattedMessage id="chatter.commissions.n2Call" defaultMessage="N2 = {amount}" values={{ amount: formatAmount(dashboardData?.config?.commissionN2CallAmount ?? 50) }} />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid — 3 KPIs compact, mobile-first */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <ChatterStatsCard
-            icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />}
-            label={intl.formatMessage({ id: 'chatter.stats.thisMonth', defaultMessage: 'Ce mois' })}
-            value={formatAmount(thisMonthTotal)}
-            subValue={commissionBreakdown.clientCalls > 0
-              ? intl.formatMessage(
-                  { id: 'chatter.dashboard.clientsCount', defaultMessage: '{count} clients ({rate}/ea)' },
-                  { count: commissionBreakdown.clientCalls, rate: formatAmount(dashboardData?.config?.commissionClientCallAmount ?? 300) }
-                )
-              : undefined
-            }
-            gradient="from-green-600 to-emerald-600"
-            iconBg="bg-green-100 dark:bg-green-900/30"
-            loading={isLoading}
-            animationDelay={50}
-          />
-
-          <ChatterStatsCard
-            icon={<Users className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />}
-            label={intl.formatMessage({ id: 'chatter.stats.conversions', defaultMessage: 'Conversions' })}
-            value={chatter.totalClients + chatter.totalRecruits}
-            subValue={intl.formatMessage(
-              { id: 'chatter.stats.breakdown', defaultMessage: '{clients} clients, {recruits} recrutés' },
-              { clients: chatter.totalClients, recruits: chatter.totalRecruits }
-            )}
-            gradient="from-red-600 to-pink-600"
-            iconBg="bg-red-100 dark:bg-red-900/30"
-            loading={isLoading}
-            animationDelay={100}
-          />
-
-          <ChatterStatsCard
-            icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />}
-            label={intl.formatMessage({ id: 'chatter.stats.totalEarned', defaultMessage: 'Total gagne' })}
-            value={formatAmount(chatter.totalEarned)}
-            gradient="from-emerald-600 to-teal-600"
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            loading={isLoading}
-            animationDelay={150}
-          />
-        </div>
-
-        {/* Affiliate Links */}
-        <div data-tour="affiliate-links">
-          <Suspense fallback={<CardSkeleton height="h-48" />}>
-            <ChatterAffiliateLinks
-              affiliateCodeClient={chatter.affiliateCodeClient || ''}
-              affiliateCodeRecruitment={chatter.affiliateCodeRecruitment || ''}
-              clientLinkUrl={clientShareUrl}
-              recruitmentLinkUrl={recruitmentShareUrl}
-              totalClientConversions={chatter.totalClients}
-              totalRecruitmentConversions={chatter.totalRecruits}
-            />
-          </Suspense>
-        </div>
-
-        {/* Recruitment Banner - below fold */}
-        {teamSize < 10 && (
-          <Suspense fallback={<CardSkeleton height="h-32" />}>
-            <RecruitmentBanner
-              referralLink={recruitmentShareUrl}
-              referralCode={chatter.affiliateCodeRecruitment || ''}
-              onLearnMore={navigateToRefer}
-              defaultExpanded={false}
-            />
-          </Suspense>
-        )}
-
-        {/* Tier Progress Card — compact mobile-first */}
-        {nextTier && (
-          <div className={`${UI.card} p-3 sm:p-5 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30`}>
-            <div className="flex items-center justify-between gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
-                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
-                    <FormattedMessage
-                      id="chatter.tier.progress"
-                      defaultMessage="Prochain palier: {tier} filleuls"
-                      values={{ tier: nextTier.tier }}
-                    />
-                  </h4>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate">
-                    <FormattedMessage
-                      id="chatter.tier.needed"
-                      defaultMessage="Plus que {needed} recrutements pour debloquer"
-                      values={{ needed: nextTier.needed }}
-                    />
-                  </p>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-xl sm:text-2xl text-amber-600 dark:text-amber-400 font-bold">{nextTier.bonus}</p>
-                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                  <FormattedMessage id="chatter.tier.bonus" defaultMessage="Bonus" />
-                </p>
-              </div>
-            </div>
-            <div className="mt-2 sm:mt-3">
-              <div className="h-1.5 sm:h-2 bg-amber-200 dark:bg-amber-900/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, ((tierProgress?.qualifiedFilleulsCount || 0) / nextTier.tier) * 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-1 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                <span>
-                  <FormattedMessage
-                    id="chatter.dashboard.tierQualified"
-                    defaultMessage="{count} qualified"
-                    values={{ count: tierProgress?.qualifiedFilleulsCount || 0 }}
-                  />
-                </span>
-                <span>
-                  <FormattedMessage
-                    id="chatter.dashboard.tierRequired"
-                    defaultMessage="{count} required"
-                    values={{ count: nextTier.tier }}
-                  />
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Revenue Calculator Card - Lazy loaded */}
-        <Suspense fallback={<CardSkeleton height="h-64" />}>
-          <RevenueCalculatorCard
-            currentCalls={commissionBreakdown.clientCalls}
-            n1TeamSize={referralStats?.totalFilleulsN1 || 0}
-            n1TeamCalls={commissionBreakdown.n1Calls}
-            n2TeamSize={referralStats?.totalFilleulsN2 || 0}
-            n2TeamCalls={commissionBreakdown.n2Calls}
-            paidTierBonuses={tierProgress?.paidTierBonuses || []}
-            onRecruit={navigateToRefer}
-            loading={isLoading || referralsLoading}
-            commissionRates={dashboardData?.config ? {
-              clientCallAmount: dashboardData.config.commissionClientCallAmount,
-              n1CallAmount: dashboardData.config.commissionN1CallAmount,
-              n2CallAmount: dashboardData.config.commissionN2CallAmount,
-              activationBonusAmount: dashboardData.config.commissionActivationBonusAmount,
-            } : undefined}
-          />
-        </Suspense>
-
-        {/* Insights Section - Lazy loaded */}
-        {(dashboardData?.trends || dashboardData?.comparison || dashboardData?.forecast) && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-500" />
-              <h2 className="text-lg dark:text-white font-semibold">
-                <FormattedMessage id="chatter.insights.title" defaultMessage="Insights & Projections" />
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dashboardData?.trends && (
-                <Suspense fallback={<CardSkeleton height="h-48" />}>
-                  <TrendsChartCard
-                    thisWeekData={dashboardData.trends.earningsWeekly}
-                    lastWeekData={dashboardData.trends.earningsMonthly}
-                    loading={isLoading}
-                    animationDelay={200}
-                  />
-                </Suspense>
-              )}
-              {dashboardData?.comparison && dashboardData?.monthlyStats && (
-                <Suspense fallback={<CardSkeleton height="h-48" />}>
-                  <ComparisonStatsCard
-                    thisMonth={{
-                      earnings: dashboardData.monthlyStats.earnings,
-                      clients: dashboardData.monthlyStats.clients,
-                      recruits: dashboardData.monthlyStats.recruits,
-                    }}
-                    lastMonth={dashboardData.comparison.lastMonth}
-                    loading={isLoading}
-                    animationDelay={250}
-                  />
-                </Suspense>
-              )}
-              {dashboardData?.forecast && dashboardData?.monthlyStats && (
-                <Suspense fallback={<CardSkeleton height="h-48" />}>
-                  <ForecastCard
-                    currentMonthEarnings={dashboardData.monthlyStats.earnings}
-                    totalEarned={chatter.totalEarned}
-                    currentLevel={chatter.level as 1 | 2 | 3 | 4 | 5}
-                    qualifiedReferrals={tierProgress?.qualifiedFilleulsCount || 0}
-                    paidTierBonuses={tierProgress?.paidTierBonuses || []}
-                    currentDayOfMonth={dashboardData.forecast.currentDayOfMonth}
-                    loading={isLoading}
-                    animationDelay={300}
-                  />
-                </Suspense>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Daily Missions & Weekly Challenge - Lazy loaded */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div data-tour="missions-card">
-            <Suspense fallback={<CardSkeleton height="h-80" />}>
-              <DailyMissionsCard
-                streak={chatter.currentStreak}
-                bestStreak={chatter.bestStreak}
-                onAllComplete={handleAllMissionsComplete}
-                loading={isLoading}
-              />
-            </Suspense>
-          </div>
-          <div data-tour="leaderboard">
-            <Suspense fallback={<CardSkeleton height="h-80" />}>
-              <WeeklyChallengeCard
-                challenge={null}
-                myRank={chatter.currentMonthRank ?? null}
-                myScore={thisMonthCommissions.length}
-                userId={user?.uid || ''}
-                loading={isLoading}
-                onCtaClick={handleWeeklyChallengeClick}
-              />
-            </Suspense>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Motivation Widget - Lazy loaded */}
-            <Suspense fallback={<CardSkeleton height="h-64" />}>
-              <MotivationWidget
-                level={chatter.level}
-                totalEarned={chatter.totalEarned}
-                nextLevelThreshold={getNextLevelThreshold(chatter.level)}
-                monthlyRank={chatter.currentMonthRank ?? undefined}
-                currentStreak={chatter.currentStreak}
-                clientShareUrl={clientShareUrl}
-                recruitmentShareUrl={recruitmentShareUrl}
-                onViewLeaderboard={navigateToLeaderboard}
-                loading={isLoading}
-                defaultExpanded={true}
-              />
-            </Suspense>
-
-            {/* Recent Commissions - Using memoized items */}
-            <div className={`${UI.card} overflow-hidden`}>
-              <div className="px-4 sm:px-6 py-4 border-b dark:border-white/10 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-gray-400" />
-                  <FormattedMessage id="chatter.dashboard.recentCommissions" defaultMessage="Commissions récentes" />
-                </h3>
-                <button
-                  onClick={navigateToPayments}
-                  className="text-sm dark:text-red-400 hover:text-red-700 flex items-center gap-1 min-h-[44px] px-3 -mr-3 active:opacity-70"
-                  aria-label={intl.formatMessage({ id: 'chatter.dashboard.viewAllCommissions', defaultMessage: 'View all commissions' })}
-                >
-                  <FormattedMessage id="common.viewAll" defaultMessage="Voir tout" />
-                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                </button>
-              </div>
-              {recentCommissions.length === 0 ? (
-                <div className="p-8 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Target className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-                  </div>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="chatter.dashboard.noCommissions" defaultMessage="Aucune commission pour l'instant" />
-                  </p>
-                  <p className="text-sm dark:text-gray-500 mt-1">
-                    <FormattedMessage id="chatter.dashboard.shareLinks" defaultMessage="Partagez vos liens pour commencer à gagner" />
-                  </p>
-                  <button
-                    onClick={navigateToRefer}
-                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-                    aria-label={intl.formatMessage({ id: 'chatter.dashboard.startSharing.aria', defaultMessage: 'Start sharing referral links' })}
-                  >
-                    <Share2 className="w-4 h-4" aria-hidden="true" />
-                    <FormattedMessage id="chatter.dashboard.startSharing" defaultMessage="Commencer à partager" />
-                  </button>
-                </div>
-              ) : (
-                <div className="divide-y dark:divide-white/5">
-                  {recentCommissions.map((commission) => (
-                    <CommissionItem
-                      key={commission.id}
-                      commission={commission}
-                      formatAmount={formatAmount}
-                      locale={intl.locale}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Earnings Motivation Card - Shows cumulative earnings & motivation */}
-            <EarningsMotivationCard
-              totalEarned={chatter.totalEarned}
-              monthlyEarnings={dashboardData?.monthlyStats?.earnings || 0}
-              lastMonthEarnings={dashboardData?.comparison?.lastMonth?.earnings}
-              currentStreak={chatter.currentStreak}
-              totalClients={chatter.totalClients}
-              totalRecruits={chatter.totalRecruits}
-              memberSince={chatter.createdAt}
-              monthlyRank={chatter.currentMonthRank}
-              onViewLeaderboard={navigateToLeaderboard}
-              loading={isLoading}
-              animationDelay={250}
-            />
-
-            {/* Earnings Breakdown Card - Shows earnings sources with donut chart */}
-            {chatter.totalEarned > 0 && (
-              <Suspense fallback={<CardSkeleton height="h-80" />}>
-                <EarningsBreakdownCard
-                  earnings={earningsByCategory}
-                  totalEarnings={chatter.totalEarned}
-                  onSegmentClick={handleEarningsSegmentClick}
-                  selectedCategory={selectedEarningsCategory}
-                  loading={isLoading}
-                />
-              </Suspense>
-            )}
-
-            {/* Piggy Bank Card - Critical, loaded synchronously */}
-            {piggyBankData && (
-              <div data-tour="piggy-bank">
-                <PiggyBankCard
-                  piggyBank={piggyBankData}
-                  onClaim={handlePiggyBankClaim}
-                  loading={isLoading}
-                />
-              </div>
-            )}
-
-            {/* Level Card - Critical, loaded synchronously */}
-            <ChatterLevelCard
-              level={chatter.level as 1 | 2 | 3 | 4 | 5}
-              totalEarned={chatter.totalEarned}
-              currentStreak={chatter.currentStreak}
-              bestStreak={chatter.bestStreak}
-              monthlyRank={chatter.currentMonthRank ?? undefined}
-              loading={isLoading}
-              animationDelay={300}
-            />
-
-            {/* Achievement Badges - Lazy loaded */}
-            {achievementBadgesChatterData && (
-              <Suspense fallback={<CardSkeleton height="h-48" />}>
-                <AchievementBadgesCard
-                  earnedBadges={chatter.badges || []}
-                  chatter={achievementBadgesChatterData}
-                  loading={isLoading}
-                  animationDelay={350}
-                  variant="compact"
-                />
-              </Suspense>
-            )}
-
-            {/* Live Activity Feed - Lazy loaded */}
-            <Suspense fallback={<CardSkeleton height="h-64" />}>
-              <LiveActivityFeed
-                maxItems={5}
-                showHeader={true}
-                compact={true}
-                loading={isLoading}
-              />
-            </Suspense>
-
-            {/* Earnings Ratio Card - Lazy loaded */}
-            {(earningsData.affiliation > 0 || earningsData.referral > 0) && (
-              <Suspense fallback={<CardSkeleton height="h-32" />}>
-                <EarningsRatioCard
-                  affiliationEarnings={earningsData.affiliation}
-                  referralEarnings={earningsData.referral}
-                  isLoading={isLoading || referralsLoading}
-                />
-              </Suspense>
-            )}
-
-            {/* Team Quick Stats */}
-            {referralStats && (
-              <div data-tour="team-card" className={`${UI.card} p-4 sm:p-6`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-red-500" />
-                    <FormattedMessage id="chatter.referrals.myTeam" defaultMessage="Mon Equipe" />
-                  </h3>
-                  <button
-                    onClick={navigateToReferrals}
-                    className="text-sm dark:text-red-400 hover:text-red-700 flex items-center gap-1 min-h-[44px] px-2 -mr-2 active:opacity-70"
-                    aria-label={intl.formatMessage({ id: 'chatter.referrals.manageTeam', defaultMessage: 'Manage team' })}
-                  >
-                    <FormattedMessage id="common.manage" defaultMessage="Gerer" />
-                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                </div>
-                {teamSize === 0 ? (
-                  <div className="text-center py-4">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-red-500" />
-                    </div>
-                    <p className="text-sm dark:text-gray-400 mb-3">
-                      <FormattedMessage id="chatter.referrals.noTeamYet" defaultMessage="Pas encore d'equipe" />
-                    </p>
-                    <button
-                      onClick={navigateToRefer}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-                      aria-label={intl.formatMessage({ id: 'chatter.referrals.recruitFirst.aria', defaultMessage: 'Recruit your first team member' })}
-                    >
-                      <Share2 className="w-4 h-4" aria-hidden="true" />
-                      <FormattedMessage id="chatter.referrals.recruitFirst" defaultMessage="Recruter mon premier chatter" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid gap-3">
-                      <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                        <p className="text-2xl dark:text-red-400 sm:text-3xl font-bold">
-                          {referralStats.totalFilleulsN1}
-                        </p>
-                        <p className="text-xs dark:text-gray-400 mt-1">
-                          <FormattedMessage id="chatter.referrals.directN1" defaultMessage="Directs (N1)" />
-                        </p>
-                        <p className="text-xs dark:text-red-400 font-medium mt-0.5">
-                          <FormattedMessage id="chatter.dashboard.n1RatePerCall" defaultMessage="{amount}/call" values={{ amount: formatAmount(dashboardData?.config?.commissionN1CallAmount ?? 100) }} />
-                        </p>
-                      </div>
-                      <div className="text-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
-                        <p className="text-2xl dark:text-pink-400 sm:text-3xl font-bold">
-                          {referralStats.totalFilleulsN2}
-                        </p>
-                        <p className="text-xs dark:text-gray-400 mt-1">
-                          <FormattedMessage id="chatter.referrals.indirectN2" defaultMessage="Indirects (N2)" />
-                        </p>
-                        <p className="text-xs dark:text-pink-400 font-medium mt-0.5">
-                          <FormattedMessage id="chatter.dashboard.n2RatePerCall" defaultMessage="{amount}/call" values={{ amount: formatAmount(dashboardData?.config?.commissionN2CallAmount ?? 50) }} />
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl border dark:border-red-800/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-red-500" />
-                          <p className="text-sm dark:text-gray-300 font-medium">
-                            <FormattedMessage id="chatter.referrals.passiveIncome" defaultMessage="Revenus passifs" />
-                          </p>
-                        </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full font-medium">
-                          <TrendingUp className="w-3 h-3" />
-                          <FormattedMessage id="chatter.referrals.recurring" defaultMessage="Recurrent" />
-                        </span>
-                      </div>
-                      <p className="text-2xl dark:text-red-400 font-bold">
-                        +{formatAmount(referralStats.monthlyReferralEarnings || 0)}
-                      </p>
-                      <p className="text-xs dark:text-gray-400 mt-1">
-                        <FormattedMessage id="chatter.referrals.passiveDesc" defaultMessage="Ce mois, sans rien faire de plus" />
-                      </p>
-                    </div>
-                    <div className="mt-3 p-3 bg-gray-50 dark:bg-white/10 rounded-lg">
-                      <p className="text-xs dark:text-gray-400 flex items-center gap-1">
-                        <Info className="w-3.5 h-3.5" />
-                        <FormattedMessage id="chatter.referrals.ratesReminder" defaultMessage="Chaque appel de votre equipe vous rapporte automatiquement !" />
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Referral Tree Card - Lazy loaded, heavy visualization */}
-        {teamSize > 0 && (
-          <Suspense fallback={<LargeCardSkeleton />}>
-            <ReferralTreeCard
-              stats={referralStats}
-              filleulsN1={filleulsN1}
-              filleulsN2={filleulsN2}
-              isLoading={referralsLoading}
-              onRefresh={refreshReferrals}
-              onViewMember={handleViewMember}
-            />
-          </Suspense>
-        )}
-
-        {/* Team Management Card - Lazy loaded, very heavy component */}
-        {teamSize > 0 && (
-          <Suspense fallback={<LargeCardSkeleton />}>
-            <TeamManagementCard
-              stats={referralStats}
-              filleulsN1={filleulsN1}
-              filleulsN2={filleulsN2}
-              qualifiedCount={tierProgress?.qualifiedFilleulsCount || 0}
-              paidTiers={tierProgress?.paidTierBonuses || []}
-              isLoading={referralsLoading}
-              onInvite={navigateToRefer}
-              onViewMember={handleViewMember}
-              onMessageMember={handleMessageMember}
-              onRefresh={refreshReferrals}
-            />
-          </Suspense>
-        )}
+      <div className="space-y-4 px-4 py-4">
+        <BelowFoldSkeleton />
       </div>
+    );
+  }
 
-      {/* Success Feedback */}
-      <ConfettiCelebration show={feedbackState.confetti} />
-      <Toast
-        show={feedbackState.toast.show}
-        type={feedbackState.toast.type}
-        title={feedbackState.toast.title}
-        message={feedbackState.toast.message}
-        amount={feedbackState.toast.amount}
-        onClose={hideToast}
-      />
-
-      {/* Quick Actions FAB - Lazy loaded */}
-      <div data-tour="quick-actions">
-        <Suspense fallback={null}>
-          <QuickActionsMenu
-            affiliateLink={clientShareUrl}
-            canWithdraw={canWithdraw}
-            availableBalance={chatter.availableBalance}
-            minimumWithdrawal={minimumWithdrawal}
-            hasIncompleteTraining={false}
-            onShareLink={handleShareLinkSuccess}
-            onViewEarnings={navigateToPayments}
-            onInviteTeam={navigateToRefer}
-            onContinueTraining={navigateToTraining}
-            onRequestWithdrawal={navigateToPayments}
-          />
-        </Suspense>
+  // Error state
+  if (error && !dashboardData) {
+    return (
+      <div className="px-4 py-8 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button onClick={handleRefresh} className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-xl">
+          <FormattedMessage id="common.retry" defaultMessage="Reessayer" />
+        </button>
       </div>
+    );
+  }
 
-      {/* Dashboard Tour - Lazy loaded */}
-      <Suspense fallback={null}>
-        <DashboardTour
-          isNewChatter={chatter.totalCommissions === 0}
-          totalCommissions={chatter.totalCommissions}
-          onComplete={handleTourComplete}
-          onSkip={handleTourSkip}
+  // NEW CHATTER ($0) - Alternative dashboard
+  if (totalEarned === 0) {
+    return (
+      <>
+        <CelebrationProvider />
+        <NewChatterDashboard
+          onNavigateToTelegram={() => navigate(telegramRoute)}
         />
-      </Suspense>
-    </ChatterDashboardLayout>
+      </>
+    );
+  }
+
+  // ACTIVE CHATTER - Full dashboard with Bento layout
+  return (
+    <>
+      <CelebrationProvider />
+
+      <div className="px-4 py-4 space-y-4">
+        {/* === ABOVE THE FOLD === */}
+
+        {/* Hero Earnings Card */}
+        <HeroEarningsCard />
+
+        {/* 3 Balance Cards */}
+        <BalanceCards onNavigateToWithdraw={() => navigate(paymentsRoute)} />
+
+        {/* Next Action / Micro Objective */}
+        <MicroObjectiveCard
+          onShareLink={handleShareLink}
+          onNavigateToWithdraw={() => navigate(paymentsRoute)}
+          onNavigateToRecruit={() => navigate(referralsRoute)}
+          onNavigateToTelegram={() => navigate(telegramRoute)}
+        />
+
+        {/* Level Progress + Streak */}
+        <LevelProgressCard />
+
+        {/* Desktop: 2-column layout for secondary cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Activity Feed */}
+          <RecentActivityFeed
+            onViewAll={() => navigate(paymentsRoute)}
+          />
+
+          {/* Next Action Card (desktop secondary position) */}
+          <div className="hidden lg:block">
+            <NextActionCard
+              onCopyLink={handleCopyLink}
+              onShareLink={handleShareLink}
+              onNavigateToRecruit={() => navigate(referralsRoute)}
+              onNavigateToTelegram={() => navigate(telegramRoute)}
+            />
+          </div>
+        </div>
+
+        {/* === BELOW THE FOLD (lazy loaded) === */}
+        <Suspense fallback={<BelowFoldSkeleton />}>
+          <BelowFoldSection />
+        </Suspense>
+      </div>
+    </>
   );
 };
+
+/**
+ * BelowFoldSection - Lazy-loaded below-fold cards
+ * All imported from single BelowFoldBundle to minimize network requests
+ */
+const BelowFoldSection: React.FC = () => {
+  const { dashboardData, commissions } = useChatterData();
+  const chatter = dashboardData?.chatter;
+
+  // Only render cards that have relevant data
+  const showPiggyBank = chatter?.telegramOnboardingCompleted && (chatter?.totalEarned || 0) > 0;
+
+  // Compute piggy bank data from chatter
+  const piggyBankData = useMemo(() => {
+    if (!chatter) return null;
+    const clientEarnings = (chatter.commissionsByType?.client_call?.amount || 0);
+    const unlockThreshold = 15000; // $150 in cents
+    const progressPercent = unlockThreshold > 0 ? Math.min((clientEarnings / unlockThreshold) * 100, 100) : 0;
+    return {
+      isUnlocked: clientEarnings >= unlockThreshold,
+      clientEarnings,
+      unlockThreshold,
+      progressPercent,
+      amountToUnlock: Math.max(unlockThreshold - clientEarnings, 0),
+      totalPending: 5000, // $50 bonus in cents
+      message: clientEarnings >= unlockThreshold ? 'Debloques !' : `Encore $${((unlockThreshold - clientEarnings) / 100).toFixed(0)}`,
+    };
+  }, [chatter]);
+
+  // Compute weekly trends from commissions
+  const { thisWeekData, lastWeekData } = useMemo(() => {
+    const now = new Date();
+    const thisWeek: number[] = Array(7).fill(0);
+    const lastWeek: number[] = Array(7).fill(0);
+    commissions.forEach((c) => {
+      if (!c.createdAt || c.status === 'cancelled') return;
+      const d = new Date(c.createdAt);
+      const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+      if (diff >= 0 && diff < 7) thisWeek[6 - diff] += (c.amount || 0);
+      else if (diff >= 7 && diff < 14) lastWeek[6 - (diff - 7)] += (c.amount || 0);
+    });
+    return { thisWeekData: thisWeek, lastWeekData: lastWeek };
+  }, [commissions]);
+
+  return (
+    <div className="space-y-4">
+      {/* Daily Missions */}
+      <Suspense fallback={null}>
+        <LazyDailyMissions />
+      </Suspense>
+
+      {/* Piggy Bank */}
+      {showPiggyBank && piggyBankData && (
+        <Suspense fallback={null}>
+          <LazyPiggyBank piggyBank={piggyBankData} />
+        </Suspense>
+      )}
+
+      {/* Trends Chart */}
+      {commissions.length >= 3 && (
+        <Suspense fallback={null}>
+          <LazyTrendsChart thisWeekData={thisWeekData} lastWeekData={lastWeekData} />
+        </Suspense>
+      )}
+
+      {/* Motivation Widget */}
+      <Suspense fallback={null}>
+        <LazyMotivation />
+      </Suspense>
+    </div>
+  );
+};
+
+// Individual lazy wrappers that resolve named exports from the bundle
+const LazyDailyMissions = lazy(() =>
+  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.DailyMissionsCard }))
+);
+const LazyPiggyBank = lazy(() =>
+  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.PiggyBankCard }))
+);
+const LazyTrendsChart = lazy(() =>
+  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.TrendsChartCard }))
+);
+const LazyMotivation = lazy(() =>
+  import('@/components/Chatter/Cards/BelowFoldBundle').then(m => ({ default: m.MotivationWidget }))
+);
 
 export default ChatterDashboard;
