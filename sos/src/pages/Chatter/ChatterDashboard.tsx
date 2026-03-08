@@ -20,6 +20,7 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useChatterReferrals } from '@/hooks/useChatterReferrals';
+import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 
 // Above-fold: imported synchronously (visible immediately)
 import HeroEarningsCard from '@/components/Chatter/Cards/HeroEarningsCard';
@@ -51,6 +52,14 @@ const BelowFoldSkeleton = () => (
 );
 
 const ChatterDashboard: React.FC = () => {
+  return (
+    <ChatterDashboardLayout activeKey="home">
+      <ChatterDashboardContent />
+    </ChatterDashboardLayout>
+  );
+};
+
+const ChatterDashboardContent: React.FC = () => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
   const { language } = useApp();
