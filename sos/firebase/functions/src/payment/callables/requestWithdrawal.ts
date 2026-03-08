@@ -152,8 +152,9 @@ function validateInput(input: RequestWithdrawalInput): void {
 export const requestWithdrawal = onCall(
   {
     region: PAYMENT_FUNCTIONS_REGION,
-    memory: '256MiB',
-    cpu: 0.083,
+    memory: '512MiB',  // FIX: 256MiB caused OOM with secrets loaded
+    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
+    maxInstances: 3,
     timeoutSeconds: 60,
     cors: ALLOWED_ORIGINS,
     secrets: [...TELEGRAM_SECRETS],
