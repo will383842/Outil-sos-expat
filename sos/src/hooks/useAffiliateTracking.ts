@@ -15,6 +15,7 @@
 
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getStoredReferralCode } from "../utils/referralStorage";
 
 const AFFILIATE_STORAGE_KEY = "sos_affiliate_ref";
 const AFFILIATE_PARAM = "ref";
@@ -45,15 +46,28 @@ function setAffiliateRef(ref: string): void {
 
 /**
  * Capture affiliate ref from the current URL and store it.
+ * Falls back to localStorage (30-day persistence) if sessionStorage is empty.
+ * This handles the case where user closes tab and comes back later.
  * Call this once at app init (synchronous, safe).
  */
 export function captureAffiliateRef(): void {
   if (typeof window === "undefined") return;
   try {
+    // Priority 1: URL param (fresh visit with ?ref=)
     const params = new URLSearchParams(window.location.search);
     const ref = params.get(AFFILIATE_PARAM);
     if (ref) {
       setAffiliateRef(ref);
+      return;
+    }
+
+    // Priority 2: sessionStorage already has it (same tab session)
+    if (sessionStorage.getItem(AFFILIATE_STORAGE_KEY)) return;
+
+    // Priority 3: Restore from localStorage (user closed tab, came back within 30 days)
+    const storedCode = getStoredReferralCode("client");
+    if (storedCode) {
+      setAffiliateRef(storedCode);
     }
   } catch {
     // Silently fail if URL parsing fails
