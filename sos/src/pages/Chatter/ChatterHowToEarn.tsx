@@ -1080,7 +1080,7 @@ function ChatterHowToEarn() {
 
 export default function ChatterHowToEarnPage() {
   return (
-    <ChatterDashboardLayout activeKey="how-to-earn">
+    <ChatterDashboardLayout activeKey="howToEarn">
       <ChatterHowToEarn />
     </ChatterDashboardLayout>
   );

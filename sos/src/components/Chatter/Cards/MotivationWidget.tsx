@@ -26,16 +26,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { formatCurrencyLocale } from './currencyUtils';
-
-// Design tokens - consistent with other Chatter components
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl transition-shadow duration-300",
-  button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
-    secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
-  },
-} as const;
+import { UI } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES

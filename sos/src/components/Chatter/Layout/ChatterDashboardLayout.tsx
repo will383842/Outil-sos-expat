@@ -2,7 +2,7 @@
  * ChatterDashboardLayout - Redesigned layout with:
  * - ChatterDataProvider (single useChatter() for all pages)
  * - StickyAffiliateBar (persistent affiliate links)
- * - 6-tab navigation (simplified from 12+)
+ * - 7-tab navigation (simplified from 12+)
  * - Mobile bottom nav with FAB share button
  * - Desktop sidebar (collapsible)
  * - No more getDoc() for captain check (uses Context data)
@@ -15,6 +15,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import {
   Home,
+  Lightbulb,
   DollarSign,
   Users,
   Trophy,
@@ -114,7 +115,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   if (!user || !authInitialized) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -138,21 +139,23 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     if (path.includes('/paiements') || path.includes('/payments') || path.includes('/pagos') || path.includes('/zahlungen') || path.includes('/platezhi') || path.includes('/pagamentos') || path.includes('/fukuan') || path.includes('/bhugtaan')) return 'payments';
     if (path.includes('/filleuls') || path.includes('/referrals') || path.includes('/referral') || path.includes('/parrainer') || path.includes('/refer') || path.includes('/gains-parrainage')) return 'team';
     if (path.includes('/classement') || path.includes('/leaderboard') || path.includes('/progression') || path.includes('/progress')) return 'ranking';
-    if (path.includes('/formation') || path.includes('/training') || path.includes('/ressources') || path.includes('/resources') || path.includes('/comment-gagner') || path.includes('/how-to-earn')) return 'tools';
+    if (path.includes('/comment-gagner') || path.includes('/how-to-earn')) return 'howToEarn';
+    if (path.includes('/formation') || path.includes('/training') || path.includes('/ressources') || path.includes('/resources')) return 'tools';
     if (path.includes('/profil') || path.includes('/profile')) return 'profile';
     if (path.includes('/mon-equipe') || path.includes('/my-team')) return 'captain';
     return 'home';
   })();
 
-  // 6 main nav items
+  // 7 main nav items
   type NavItem = { key: string; icon: React.ReactNode; route: string; labels: Record<string, string> };
 
   const mainNavItems: NavItem[] = [
     { key: 'home', icon: <Home className="w-5 h-5" />, route: routes.dashboard, labels: { fr: 'Accueil', en: 'Home', es: 'Inicio', de: 'Start', ru: 'Главная', pt: 'Início', ch: '首页', hi: 'होम', ar: 'الرئيسية' } },
+    { key: 'howToEarn', icon: <Lightbulb className="w-5 h-5" />, route: routes.howToEarn, labels: { fr: 'Gagner', en: 'Earn', es: 'Ganar', de: 'Verdienen', ru: 'Заработок', pt: 'Ganhar', ch: '赚钱', hi: 'कमाएँ', ar: 'اكسب' } },
     { key: 'payments', icon: <DollarSign className="w-5 h-5" />, route: routes.payments, labels: { fr: 'Gains', en: 'Earnings', es: 'Ganancias', de: 'Einnahmen', ru: 'Доходы', pt: 'Ganhos', ch: '收益', hi: 'कमाई', ar: 'الأرباح' } },
     { key: 'team', icon: <Users className="w-5 h-5" />, route: routes.referrals, labels: { fr: 'Equipe', en: 'Team', es: 'Equipo', de: 'Team', ru: 'Команда', pt: 'Equipe', ch: '团队', hi: 'टीम', ar: 'الفريق' } },
     { key: 'ranking', icon: <Trophy className="w-5 h-5" />, route: routes.leaderboard, labels: { fr: 'Classement', en: 'Ranking', es: 'Ranking', de: 'Rangliste', ru: 'Рейтинг', pt: 'Ranking', ch: '排名', hi: 'रैंकिंग', ar: 'الترتيب' } },
-    { key: 'tools', icon: <Briefcase className="w-5 h-5" />, route: routes.training, labels: { fr: 'Outils', en: 'Tools', es: 'Herramientas', de: 'Werkzeuge', ru: 'Инструменты', pt: 'Ferramentas', ch: '工具', hi: 'उपकरण', ar: 'أدوات' } },
+    { key: 'tools', icon: <Briefcase className="w-5 h-5" />, route: routes.training, labels: { fr: 'Formation', en: 'Training', es: 'Formación', de: 'Schulung', ru: 'Обучение', pt: 'Formação', ch: '培训', hi: 'प्रशिक्षण', ar: 'التدريب' } },
     { key: 'profile', icon: <User className="w-5 h-5" />, route: routes.profile, labels: { fr: 'Profil', en: 'Profile', es: 'Perfil', de: 'Profil', ru: 'Профиль', pt: 'Perfil', ch: '个人资料', hi: 'प्रोफ़ाइल', ar: 'الملف الشخصي' } },
   ];
 
@@ -183,7 +186,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         {/* Sticky Affiliate Bar */}
         <StickyAffiliateBar />
 
@@ -340,12 +343,12 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
               active={currentKey === 'home'}
               onClick={() => currentKey !== 'home' && navigate(routes.dashboard)}
             />
-            {/* Gains */}
+            {/* Gagner */}
             <BottomNavItem
-              icon={<DollarSign className="w-5 h-5" />}
-              label={mainNavItems[1].labels[language] ?? 'Earnings'}
-              active={currentKey === 'payments'}
-              onClick={() => currentKey !== 'payments' && navigate(routes.payments)}
+              icon={<Lightbulb className="w-5 h-5" />}
+              label={mainNavItems[1].labels[language] ?? 'Earn'}
+              active={currentKey === 'howToEarn'}
+              onClick={() => currentKey !== 'howToEarn' && navigate(routes.howToEarn)}
             />
 
             {/* FAB - Central Share button */}
@@ -359,12 +362,12 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
               </button>
             </div>
 
-            {/* Classement */}
+            {/* Gains */}
             <BottomNavItem
-              icon={<Trophy className="w-5 h-5" />}
-              label={mainNavItems[3].labels[language] ?? 'Ranking'}
-              active={currentKey === 'ranking'}
-              onClick={() => currentKey !== 'ranking' && navigate(routes.leaderboard)}
+              icon={<DollarSign className="w-5 h-5" />}
+              label={mainNavItems[2].labels[language] ?? 'Earnings'}
+              active={currentKey === 'payments'}
+              onClick={() => currentKey !== 'payments' && navigate(routes.payments)}
             />
             {/* Menu */}
             <BottomNavItem

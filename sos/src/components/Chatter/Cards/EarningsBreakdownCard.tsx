@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { ChatterCommissionType } from '@/types/chatter';
+import { UI } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -112,12 +113,7 @@ const SEGMENT_CONFIG: SegmentConfig[] = [
   },
 ];
 
-// Design tokens
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl transition-shadow duration-300",
-  skeleton: "animate-pulse bg-gray-200 dark:bg-white/10 rounded",
-} as const;
+// UI design tokens imported from designTokens.ts
 
 // Chart dimensions
 const CHART_SIZE = 200;

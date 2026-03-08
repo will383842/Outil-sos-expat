@@ -50,7 +50,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           text: "Besoin d'aide juridique a l'etranger ? Appelez un avocat en 2 minutes !",
           url: clientShareUrl,
         });
-        toast.success('Lien partage ! Chaque appel = $5-10 pour vous');
+        toast.success('Lien partage ! Chaque appel = $3-5 pour vous');
       } catch {
         // User cancelled, no error
       }
@@ -80,7 +80,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
     if (daysSince >= 7 && linkCopied) {
       return {
-        text: "Votre lien est toujours actif ! Un seul appel = $5-10. Les meilleurs chatters ont commence exactement comme vous.",
+        text: "Votre lien est toujours actif ! Un seul appel = $3-5. Les meilleurs chatters ont commence exactement comme vous.",
         cta: 'Recommencer',
       };
     }
@@ -192,7 +192,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
             {[
               { icon: <Share2 className="w-4 h-4" />, num: '1', title: 'Partagez votre lien', color: 'bg-blue-500' },
               { icon: <Phone className="w-4 h-4" />, num: '2', title: 'Quelqu\'un appelle un avocat', color: 'bg-green-500' },
-              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: 'Vous gagnez $5-10 automatiquement', color: 'bg-yellow-500' },
+              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: 'Vous gagnez $3-5 automatiquement', color: 'bg-yellow-500' },
             ].map((step) => (
               <div key={step.num} className="flex items-center gap-3">
                 <div className={`flex-shrink-0 w-8 h-8 ${step.color} text-white rounded-full flex items-center justify-center text-sm font-bold`}>

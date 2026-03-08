@@ -24,13 +24,7 @@ import {
 } from 'lucide-react';
 import { formatCurrencyLocale } from './currencyUtils';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
-
-// Design tokens
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
-  skeleton: "animate-pulse bg-gray-200 dark:bg-white/10 rounded",
-} as const;
+import { UI } from '@/components/Chatter/designTokens';
 
 // Milestones for motivation
 const EARNING_MILESTONES = [

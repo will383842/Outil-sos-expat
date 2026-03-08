@@ -26,6 +26,7 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
 }) => {
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
+  const config = dashboardData?.config;
 
   const action = useMemo(() => {
     if (!chatter) return null;
@@ -38,12 +39,36 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
     const totalEarned = (chatter.totalEarned || 0) / 100;
     const isCaptain = chatter.role === 'captainChatter';
 
+    // Dynamic commission amounts from config (cents → dollars)
+    const minCallAmount = Math.min(
+      (config?.commissionClientCallAmountExpat ?? 300),
+      (config?.commissionClientCallAmountLawyer ?? 500)
+    ) / 100;
+    const maxCallAmount = Math.max(
+      (config?.commissionClientCallAmountExpat ?? 300),
+      (config?.commissionClientCallAmountLawyer ?? 500)
+    ) / 100;
+    const callAmountRange = minCallAmount === maxCallAmount
+      ? `$${minCallAmount}`
+      : `$${minCallAmount}-${maxCallAmount}`;
+    const n1CallAmount = (config?.commissionN1CallAmount ?? 100) / 100;
+
+    // Get first tier bonus from recruitmentMilestones
+    const milestones = config?.recruitmentMilestones ?? [
+      { count: 5, bonus: 1500 }, { count: 10, bonus: 3500 },
+    ];
+    const firstTierBonus = milestones.length > 0 ? milestones[0].bonus / 100 : 15;
+    const firstTierCount = milestones.length > 0 ? milestones[0].count : 5;
+
+    // Telegram bonus from piggy bank data
+    const telegramBonusAmount = (dashboardData?.piggyBank?.totalPending ?? 5000) / 100;
+
     // Priority cascade
     if (totalClients === 0) {
       return {
         icon: <Share2 className="w-5 h-5" />,
         title: 'Partagez votre lien client',
-        subtitle: 'pour gagner $5-10 par appel !',
+        subtitle: `pour gagner ${callAmountRange} par appel !`,
         ctaLabel: 'Copier mon lien',
         ctaAction: onCopyLink,
         borderColor: 'border-l-green-500',
@@ -55,7 +80,7 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
       return {
         icon: <Users className="w-5 h-5" />,
         title: 'Recrutez votre premier affilie',
-        subtitle: 'et gagnez $1 a chaque appel qu\'il genere !',
+        subtitle: `et gagnez $${n1CallAmount} a chaque appel qu'il genere !`,
         ctaLabel: 'Inviter quelqu\'un',
         ctaAction: onNavigateToRecruit || onShareLink,
         borderColor: 'border-l-blue-500',
@@ -63,12 +88,12 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
       };
     }
 
-    if (qualifiedReferrals < 5) {
-      const remaining = 5 - qualifiedReferrals;
+    if (qualifiedReferrals < firstTierCount) {
+      const remaining = firstTierCount - qualifiedReferrals;
       return {
         icon: <Users className="w-5 h-5" />,
         title: `Plus que ${remaining} filleul${remaining > 1 ? 's' : ''} qualifie${remaining > 1 ? 's' : ''}`,
-        subtitle: 'pour debloquer $15 de bonus !',
+        subtitle: `pour debloquer $${firstTierBonus} de bonus !`,
         ctaLabel: 'Recruter plus',
         ctaAction: onNavigateToRecruit || onShareLink,
         borderColor: 'border-l-blue-500',
@@ -80,7 +105,7 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
       return {
         icon: <Send className="w-5 h-5" />,
         title: 'Liez Telegram',
-        subtitle: 'et debloquez $50 de bonus !',
+        subtitle: `et debloquez $${telegramBonusAmount} de bonus !`,
         ctaLabel: 'Lier maintenant',
         ctaAction: onNavigateToTelegram || onShareLink,
         borderColor: 'border-l-indigo-500',
@@ -88,12 +113,13 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
       };
     }
 
-    // Level progression
+    // Level progression (thresholds from config, in cents → dollars)
+    const lt = config?.levelThresholds ?? { level2: 10000, level3: 50000, level4: 200000, level5: 500000 };
     const levelThresholds: Record<number, { target: number; name: string; bonus: string }> = {
-      1: { target: 100, name: 'Intermediaire', bonus: '+10%' },
-      2: { target: 500, name: 'Avance', bonus: '+20%' },
-      3: { target: 2000, name: 'Expert', bonus: '+35%' },
-      4: { target: 5000, name: 'Elite', bonus: '+50%' },
+      1: { target: lt.level2 / 100, name: 'Intermediaire', bonus: '+10%' },
+      2: { target: lt.level3 / 100, name: 'Avance', bonus: '+20%' },
+      3: { target: lt.level4 / 100, name: 'Expert', bonus: '+35%' },
+      4: { target: lt.level5 / 100, name: 'Elite', bonus: '+50%' },
     };
 
     const nextLevel = levelThresholds[level];
@@ -127,13 +153,13 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
     return {
       icon: <Sparkles className="w-5 h-5" />,
       title: 'Continuez a partager !',
-      subtitle: 'Chaque appel = $5-10 dans votre poche',
+      subtitle: `Chaque appel = ${callAmountRange} dans votre poche`,
       ctaLabel: 'Partager mon lien',
       ctaAction: onShareLink,
       borderColor: 'border-l-green-500',
       iconColor: 'text-green-500',
     };
-  }, [chatter, onCopyLink, onShareLink, onNavigateToRecruit, onNavigateToTelegram]);
+  }, [chatter, config, dashboardData?.piggyBank, onCopyLink, onShareLink, onNavigateToRecruit, onNavigateToTelegram]);
 
   if (!action) return null;
 

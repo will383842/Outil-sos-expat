@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { ChatterFilleulN1, ChatterFilleulN2, ChatterReferralStats } from '@/types/chatter';
 import { TeamMessagesCard, TeamMessagesCardProps } from './TeamMessagesCard';
+import { UI } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -1526,7 +1527,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-6">
+      <div className={`${UI.card} p-6`}>
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
           <div className="grid gap-4">
@@ -1561,7 +1562,7 @@ export const TeamManagementCard: React.FC<TeamManagementCardProps> = ({
         />
       )}
 
-      <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg overflow-hidden">
+      <div className={`${UI.card} overflow-hidden`}>
         {/* Header */}
         <div className="p-4 sm:p-6 border-b dark:border-white/10">
           <div className="flex sm:flex-row sm:items-center justify-between gap-4">

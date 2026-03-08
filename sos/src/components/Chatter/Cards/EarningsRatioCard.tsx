@@ -8,6 +8,7 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Users, DollarSign } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { UI } from '@/components/Chatter/designTokens';
 
 interface EarningsRatioCardProps {
   affiliationEarnings: number; // in cents
@@ -30,7 +31,7 @@ export function EarningsRatioCard({
 
   if (isLoading) {
     return (
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-5">
+      <div className={`${UI.card} p-3 sm:p-5`}>
         <div className="flex items-center gap-2 mb-3">
           <PieChart className="h-5 w-5 dark:text-white" />
           <span className="font-semibold dark:text-white">{t("chatter.referrals.earningsRatio")}</span>
@@ -44,7 +45,7 @@ export function EarningsRatioCard({
   }
 
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-5">
+    <div className={`${UI.card} p-3 sm:p-5`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-3 sm:mb-4">
         <PieChart className="h-5 w-5 dark:text-white" />

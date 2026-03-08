@@ -29,13 +29,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../../../config/firebase";
-
-// Design tokens - matching existing Chatter card styles
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl transition-shadow duration-300",
-  skeleton: "animate-pulse bg-gray-200 dark:bg-white/10 rounded",
-} as const;
+import { UI } from '@/components/Chatter/designTokens';
 
 /**
  * Activity types

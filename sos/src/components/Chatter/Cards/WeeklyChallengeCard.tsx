@@ -26,17 +26,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Design tokens - matching existing Chatter card styles
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl transition-shadow duration-300",
-  skeleton: "animate-pulse bg-gray-200 dark:bg-white/10 rounded",
-  button: {
-    primary:
-      "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
-  },
-} as const;
+import { UI } from '@/components/Chatter/designTokens';
 
 // Challenge types
 type WeeklyChallengeType = "recruiter" | "caller" | "team";

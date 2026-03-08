@@ -17,15 +17,12 @@ import {
   PartyPopper,
 } from 'lucide-react';
 
-// Design tokens - matching existing Chatter card styles
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: "hover:shadow-xl transition-shadow duration-300",
-  skeleton: "animate-pulse bg-gray-200 dark:bg-white/10 rounded",
-  button: {
-    primary: "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-xl transition-all",
-    disabled: "bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500 cursor-not-allowed rounded-xl",
-  },
+import { UI } from '@/components/Chatter/designTokens';
+
+// PiggyBank-specific button overrides (pink theme)
+const PIGGY_BUTTON = {
+  primary: "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-xl transition-all",
+  disabled: "bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500 cursor-not-allowed rounded-xl",
 } as const;
 
 // Types
@@ -270,7 +267,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
           onClick={onClaim}
           disabled={!canClaim || claiming}
           className={`w-full py-3 font-medium flex items-center justify-center gap-2 transition-transform ${
-            canClaim ? `${UI.button.primary} hover:scale-[1.02] active:scale-[0.98]` : UI.button.disabled
+            canClaim ? `${PIGGY_BUTTON.primary} hover:scale-[1.02] active:scale-[0.98]` : PIGGY_BUTTON.disabled
           }`}
         >
           {claiming ? (

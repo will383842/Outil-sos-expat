@@ -10,6 +10,7 @@ import React from "react";
 import { Users, UserCheck, DollarSign, TrendingUp } from "lucide-react";
 import { ChatterReferralStats } from "@/types/chatter";
 import { useTranslation } from "@/hooks/useTranslation";
+import { UI } from '@/components/Chatter/designTokens';
 
 interface ReferralStatsCardProps {
   stats: ChatterReferralStats | null;
@@ -25,7 +26,7 @@ export function ReferralStatsCard({ stats, isLoading }: ReferralStatsCardProps) 
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-4 animate-pulse"
+            className={`${UI.card} p-3 sm:p-4 animate-pulse`}
           >
             <div className="h-3 w-16 bg-gray-200 dark:bg-white/10 rounded mb-2" />
             <div className="h-6 w-12 bg-gray-200 dark:bg-white/10 rounded" />
@@ -76,7 +77,7 @@ export function ReferralStatsCard({ stats, isLoading }: ReferralStatsCardProps) 
       {statItems.map((item, index) => (
         <div
           key={index}
-          className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 opacity-0 animate-fade-in-up"
+          className={`${UI.card} ${UI.cardHover} p-3 sm:p-4 opacity-0 animate-fade-in-up`}
           style={{
             animationDelay: `${index * 80}ms`,
             animationFillMode: 'forwards',

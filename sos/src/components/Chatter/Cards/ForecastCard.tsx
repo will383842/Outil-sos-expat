@@ -24,28 +24,7 @@ import {
 } from 'lucide-react';
 import { formatCurrencyLocale, formatCurrencyLocaleWhole } from './currencyUtils';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
-
-// Design tokens matching other cards
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  cardHover: `
-    transition-all duration-300 ease-out
-    hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-white/5
-    hover:-translate-y-1
-  `,
-  skeleton: `
-    relative overflow-hidden
-    bg-gray-200 dark:bg-white/10 rounded
-    before:absolute before:inset-0
-    before:-translate-x-full
-    before:animate-shimmer
-    before:bg-gradient-to-r
-    before:from-transparent
-    before:via-white/20
-    before:to-transparent
-    dark:before:via-white/10
-  `,
-} as const;
+import { UI } from '@/components/Chatter/designTokens';
 
 // Level configurations (thresholds in cents)
 const LEVEL_CONFIG = {

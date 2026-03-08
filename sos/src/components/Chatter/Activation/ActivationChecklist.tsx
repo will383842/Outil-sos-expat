@@ -222,7 +222,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           <FormattedMessage
                             id="chatter.activation.step4.subtitle"
-                            defaultMessage="$5-10 credites automatiquement"
+                            defaultMessage="$3-5 credites automatiquement"
                           />
                         </p>
                       )}

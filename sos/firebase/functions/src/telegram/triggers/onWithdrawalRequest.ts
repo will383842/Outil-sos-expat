@@ -44,6 +44,8 @@ const USER_TYPE_TRANSLATIONS_FR: Record<string, string> = {
   affiliate: "Affilié",
   influencer: "Influenceur",
   blogger: "Blogueur",
+  group_admin: "Admin Groupe",
+  partner: "Partenaire",
 };
 
 // ============================================================================
@@ -77,6 +79,7 @@ interface WithdrawalDocument {
     accountName?: string;
     bankName?: string;
     phoneNumber?: string;
+    country?: string;
   };
   /** Timestamp when the request was created */
   requestedAt?: string;
@@ -183,6 +186,38 @@ function getPaymentMethodDescription(withdrawal: WithdrawalDocument): string {
 }
 
 /**
+ * Get detailed payment information (account number, phone, bank name)
+ * @param withdrawal - Withdrawal document data
+ * @returns Detailed payment info string
+ */
+function getPaymentDetails(withdrawal: WithdrawalDocument): string {
+  const details = withdrawal.paymentDetails;
+  if (!details) return "N/A";
+
+  const parts: string[] = [];
+
+  // Bank name
+  if (details.bankName) {
+    parts.push(details.bankName);
+  }
+
+  // Account holder name
+  if (details.accountHolderName || details.accountName) {
+    parts.push(details.accountHolderName || details.accountName || "");
+  }
+
+  // Phone number (mobile money)
+  if (details.phoneNumber) {
+    parts.push(details.phoneNumber);
+  }
+
+  return parts.length > 0 ? parts.join(" | ") : "N/A";
+}
+
+/** Admin console URL for payments */
+const ADMIN_CONSOLE_URL = "https://sos-expat.com/admin/payments/withdrawals";
+
+/**
  * Fetch user name from users collection if not available in withdrawal
  * @param userId - User ID to fetch
  * @param userType - Type of user (to determine collection)
@@ -287,6 +322,12 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
       // 4. Get payment method description
       const paymentMethod = getPaymentMethodDescription(withdrawalData);
 
+      // 4b. Get payment details (bank name, phone number, account holder)
+      const paymentDetails = getPaymentDetails(withdrawalData);
+
+      // 4c. Get country info
+      const country = withdrawalData.paymentDetails?.country || "Non spécifié";
+
       // 5. Get date/time in Paris timezone
       const requestDate = withdrawalData.requestedAt
         ? new Date(withdrawalData.requestedAt)
@@ -299,6 +340,9 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
         USER_TYPE_FR: userTypeFr, // backward compat
         AMOUNT: formattedAmount,
         PAYMENT_METHOD: paymentMethod,
+        PAYMENT_DETAILS: paymentDetails,
+        COUNTRY: country,
+        ADMIN_URL: ADMIN_CONSOLE_URL,
         DATE: formatDateParis(requestDate),
         TIME: formatTimeParis(requestDate),
       };

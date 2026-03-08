@@ -151,10 +151,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *Demande de retrait*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 Montant: {{AMOUNT}}€
+💰 Montant: {{AMOUNT}} $
 🏦 Via: {{PAYMENT_METHOD}}
+📋 Détails: {{PAYMENT_DETAILS}}
+🌍 Pays: {{COUNTRY}}
 
-📅 {{DATE}} à {{TIME}}`,
+📅 {{DATE}} à {{TIME}}
+
+🔗 [Voir dans la console admin]({{ADMIN_URL}})`,
       description: 'Notification lors d\'une demande de retrait',
     },
     captain_application: {
@@ -269,10 +273,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *Withdrawal Request*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 Amount: {{AMOUNT}}€
+💰 Amount: {{AMOUNT}} $
 🏦 Via: {{PAYMENT_METHOD}}
+📋 Details: {{PAYMENT_DETAILS}}
+🌍 Country: {{COUNTRY}}
 
-📅 {{DATE}} at {{TIME}}`,
+📅 {{DATE}} at {{TIME}}
+
+🔗 [View in admin console]({{ADMIN_URL}})`,
       description: 'Notification when a withdrawal is requested',
     },
     captain_application: {
@@ -387,10 +395,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *Solicitud de retiro*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 Monto: {{AMOUNT}}€
+💰 Monto: {{AMOUNT}} $
 🏦 Vía: {{PAYMENT_METHOD}}
+📋 Detalles: {{PAYMENT_DETAILS}}
+🌍 País: {{COUNTRY}}
 
-📅 {{DATE}} a las {{TIME}}`,
+📅 {{DATE}} a las {{TIME}}
+
+🔗 [Ver en consola admin]({{ADMIN_URL}})`,
       description: 'Notificación de solicitud de retiro',
     },
     captain_application: {
@@ -505,10 +517,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *Auszahlungsantrag*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 Betrag: {{AMOUNT}}€
+💰 Betrag: {{AMOUNT}} $
 🏦 Über: {{PAYMENT_METHOD}}
+📋 Details: {{PAYMENT_DETAILS}}
+🌍 Land: {{COUNTRY}}
 
-📅 {{DATE}} um {{TIME}}`,
+📅 {{DATE}} um {{TIME}}
+
+🔗 [In der Admin-Konsole ansehen]({{ADMIN_URL}})`,
       description: 'Benachrichtigung bei Auszahlungsantrag',
     },
     captain_application: {
@@ -623,10 +639,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *Pedido de saque*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 Valor: {{AMOUNT}}€
+💰 Valor: {{AMOUNT}} $
 🏦 Via: {{PAYMENT_METHOD}}
+📋 Detalhes: {{PAYMENT_DETAILS}}
+🌍 País: {{COUNTRY}}
 
-📅 {{DATE}} às {{TIME}}`,
+📅 {{DATE}} às {{TIME}}
+
+🔗 [Ver no console admin]({{ADMIN_URL}})`,
       description: 'Notifica\u00e7\u00e3o de pedido de saque',
     },
     captain_application: {
@@ -741,10 +761,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *Запрос на вывод*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 Сумма: {{AMOUNT}}€
+💰 Сумма: {{AMOUNT}} $
 🏦 Через: {{PAYMENT_METHOD}}
+📋 Детали: {{PAYMENT_DETAILS}}
+🌍 Страна: {{COUNTRY}}
 
-📅 {{DATE}} в {{TIME}}`,
+📅 {{DATE}} в {{TIME}}
+
+🔗 [Открыть в консоли админа]({{ADMIN_URL}})`,
       description: '\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0435 \u043e \u0437\u0430\u043f\u0440\u043e\u0441\u0435 \u043d\u0430 \u0432\u044b\u0432\u043e\u0434 \u0441\u0440\u0435\u0434\u0441\u0442\u0432',
     },
     captain_application: {
@@ -859,10 +883,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *提现请求*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 金额: {{AMOUNT}}€
+💰 金额: {{AMOUNT}} $
 🏦 通过: {{PAYMENT_METHOD}}
+📋 详情: {{PAYMENT_DETAILS}}
+🌍 国家: {{COUNTRY}}
 
-📅 {{DATE}} {{TIME}}`,
+📅 {{DATE}} {{TIME}}
+
+🔗 [在管理控制台中查看]({{ADMIN_URL}})`,
       description: '\u63d0\u73b0\u8bf7\u6c42\u901a\u77e5',
     },
     captain_application: {
@@ -977,10 +1005,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *निकासी अनुरोध*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 राशि: {{AMOUNT}}€
+💰 राशि: {{AMOUNT}} $
 🏦 माध्यम: {{PAYMENT_METHOD}}
+📋 विवरण: {{PAYMENT_DETAILS}}
+🌍 देश: {{COUNTRY}}
 
-📅 {{DATE}} {{TIME}} पर`,
+📅 {{DATE}} {{TIME}} पर
+
+🔗 [एडमिन कंसोल में देखें]({{ADMIN_URL}})`,
       description: '\u0928\u093f\u0915\u093e\u0938\u0940 \u0905\u0928\u0941\u0930\u094b\u0927 \u0915\u0940 \u0938\u0942\u091a\u0928\u093e',
     },
     captain_application: {
@@ -1095,10 +1127,14 @@ export const I18N_TEMPLATES: I18nTemplates = {
       template: `💳 *طلب سحب*
 
 👤 {{USER_NAME}} ({{USER_TYPE}})
-💰 المبلغ: {{AMOUNT}}€
+💰 المبلغ: {{AMOUNT}} $
 🏦 عبر: {{PAYMENT_METHOD}}
+📋 التفاصيل: {{PAYMENT_DETAILS}}
+🌍 البلد: {{COUNTRY}}
 
-📅 {{DATE}} الساعة {{TIME}}`,
+📅 {{DATE}} الساعة {{TIME}}
+
+🔗 [عرض في لوحة الإدارة]({{ADMIN_URL}})`,
       description: 'إشعار طلب سحب',
     },
     captain_application: {
@@ -1153,7 +1189,7 @@ export const TEMPLATE_VARIABLES: Record<TelegramEventType, string[]> = {
   new_contact_message: ['SENDER_NAME', 'SENDER_EMAIL', 'SUBJECT', 'MESSAGE_PREVIEW', 'DATE', 'TIME'],
   negative_review: ['CLIENT_NAME', 'PROVIDER_NAME', 'RATING', 'COMMENT_PREVIEW', 'DATE', 'TIME'],
   security_alert: ['ALERT_TYPE', 'USER_EMAIL', 'IP_ADDRESS', 'COUNTRY', 'DETAILS', 'DATE', 'TIME'],
-  withdrawal_request: ['USER_NAME', 'USER_TYPE', 'AMOUNT', 'PAYMENT_METHOD', 'DATE', 'TIME'],
+  withdrawal_request: ['USER_NAME', 'USER_TYPE', 'AMOUNT', 'PAYMENT_METHOD', 'PAYMENT_DETAILS', 'COUNTRY', 'ADMIN_URL', 'DATE', 'TIME'],
   captain_application: ['CANDIDATE_NAME', 'WHATSAPP', 'COUNTRY', 'MOTIVATION_PREVIEW', 'HAS_CV', 'DATE', 'TIME'],
 };
 

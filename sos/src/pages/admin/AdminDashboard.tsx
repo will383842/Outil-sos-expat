@@ -20,6 +20,8 @@ import {
   UserCheck,
   Cog,
   Crown,
+  CreditCard,
+  ArrowRight,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import ProfessionalDashboard from "../../components/admin/ProfessionalDashboard";
@@ -82,11 +84,27 @@ const AdminDashboard: React.FC = () => {
     skipped: number;
   } | null>(null);
   const [pendingCaptainCount, setPendingCaptainCount] = useState(0);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<{ count: number; totalCents: number }>({ count: 0, totalCents: 0 });
 
   // Fetch pending captain applications count
   useEffect(() => {
     getDocs(query(collection(db, 'captain_applications'), where('status', '==', 'pending')))
       .then((snap) => { if (mountedRef.current) setPendingCaptainCount(snap.size); })
+      .catch(() => {});
+  }, []);
+
+  // Fetch pending withdrawals count and total
+  useEffect(() => {
+    getDocs(query(collection(db, 'payment_withdrawals'), where('status', '==', 'pending')))
+      .then((snap) => {
+        if (!mountedRef.current) return;
+        let totalCents = 0;
+        snap.forEach((doc) => {
+          const data = doc.data();
+          totalCents += (data.amount || 0);
+        });
+        setPendingWithdrawals({ count: snap.size, totalCents });
+      })
       .catch(() => {});
   }, []);
 
@@ -398,6 +416,47 @@ const AdminDashboard: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* Pending Withdrawals Alert Card */}
+            {pendingWithdrawals.count > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border border-orange-200 p-5 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg">
+                      <CreditCard className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {intl.formatMessage(
+                          { id: 'admin.dashboard.pendingWithdrawals.title', defaultMessage: 'Retraits en attente' }
+                        )}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {intl.formatMessage(
+                          { id: 'admin.dashboard.pendingWithdrawals.count', defaultMessage: '{count} retraits à traiter' },
+                          { count: pendingWithdrawals.count }
+                        )}
+                      </p>
+                      <p className="text-sm font-medium text-orange-700 mt-0.5">
+                        {intl.formatMessage(
+                          { id: 'admin.dashboard.pendingWithdrawals.total', defaultMessage: 'Total : ${amount}' },
+                          { amount: (pendingWithdrawals.totalCents / 100).toFixed(2) }
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/admin/payments/withdrawals")}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
+                  >
+                    {intl.formatMessage(
+                      { id: 'admin.dashboard.pendingWithdrawals.viewAll', defaultMessage: 'Voir les retraits' }
+                    )}
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Professional Dashboard with comprehensive business metrics */}
             <ProfessionalDashboard />

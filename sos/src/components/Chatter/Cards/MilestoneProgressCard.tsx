@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Target, Trophy, Star, Check } from "lucide-react";
 import { ChatterTierProgress, REFERRAL_CONFIG } from "@/types/chatter";
 import { useTranslation } from "@/hooks/useTranslation";
+import { UI } from '@/components/Chatter/designTokens';
 
 interface MilestoneProgressCardProps {
   tierProgress: ChatterTierProgress | null;
@@ -37,7 +38,7 @@ export function MilestoneProgressCard({
 
   if (isLoading) {
     return (
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-5">
+      <div className={`${UI.card} p-3 sm:p-5`}>
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <Trophy className="h-5 w-5 text-yellow-500" />
           <span className="font-semibold dark:text-white">{t("chatter.referrals.tierProgress")}</span>
@@ -60,7 +61,7 @@ export function MilestoneProgressCard({
     : 100;
 
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg p-3 sm:p-5">
+    <div className={`${UI.card} p-3 sm:p-5`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-3 sm:mb-4">
         <Trophy className="h-5 w-5 text-yellow-500" />

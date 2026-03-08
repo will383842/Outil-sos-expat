@@ -19,7 +19,9 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-import { adminMenuTree, buildBreadcrumb, getFinalMenu, type AdminMenuItem } from '../../config/adminMenu';
+import { buildBreadcrumb, getFinalMenu, type AdminMenuItem } from '../../config/adminMenu';
+import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import SidebarItem from './sidebar/SidebarItem';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -179,11 +181,42 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [loggingOut, setLoggingOut] = useState(false);
 
   // =========================================================================
+  // PENDING WITHDRAWAL BADGE
+  // =========================================================================
+  const [pendingWithdrawalCount, setPendingWithdrawalCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || (user.role !== 'admin' && user.role !== 'accountant')) return;
+    const q = query(collection(db, 'payment_withdrawals'), where('status', '==', 'pending'));
+    getCountFromServer(q)
+      .then((snap) => setPendingWithdrawalCount(snap.data().count))
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // =========================================================================
   // MENU FILTRE PAR ROLE
   // =========================================================================
   const filteredMenu = useMemo(() => {
-    return getFinalMenu(user?.role || 'admin');
-  }, [user?.role]);
+    const menu = getFinalMenu(user?.role || 'admin');
+
+    // Inject pending withdrawal badge into the payments-withdrawals menu item
+    if (pendingWithdrawalCount > 0) {
+      const injectBadge = (items: AdminMenuItem[]): AdminMenuItem[] =>
+        items.map((item) => {
+          if (item.id === 'finance-withdrawals' || item.id === 'payments-withdrawals') {
+            return { ...item, badge: `${pendingWithdrawalCount}`, children: item.children ? injectBadge(item.children) : undefined };
+          }
+          if (item.children) {
+            return { ...item, children: injectBadge(item.children) };
+          }
+          return item;
+        });
+      return injectBadge(menu);
+    }
+
+    return menu;
+  }, [user?.role, pendingWithdrawalCount]);
 
   // =========================================================================
   // EFFECTS

@@ -40,6 +40,7 @@ import {
   ChatterFilleulN2,
   ChatterReferralStats,
 } from '@/types/chatter';
+import { UI } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -81,9 +82,7 @@ interface ReferralTreeCardProps {
 // CONSTANTS
 // ============================================================================
 
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-} as const;
+// UI design tokens imported from designTokens.ts
 
 const NODE_COLORS = {
   you: {

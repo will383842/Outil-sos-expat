@@ -297,17 +297,15 @@ export const WISE_COUNTRIES: string[] = [
 
 /**
  * Sanctioned or unsupported countries
+ * Only truly sanctioned countries where banking is impossible
  */
 export const UNSUPPORTED_COUNTRIES: string[] = [
-  'IR', // Iran
-  'KP', // North Korea
-  'CU', // Cuba
-  'SY', // Syria
-  'SD', // Sudan
-  'VE', // Venezuela (limited)
-  'MM', // Myanmar (limited)
-  'RU', // Russia (sanctions)
-  'BY', // Belarus (sanctions)
+  'IR', // Iran (international sanctions)
+  'KP', // North Korea (international sanctions)
+  'CU', // Cuba (US/EU sanctions)
+  'SY', // Syria (international sanctions)
+  'RU', // Russia (banking sanctions)
+  'BY', // Belarus (banking sanctions)
 ];
 
 // ============================================================================
@@ -1075,19 +1073,22 @@ export function getAvailableMethodsForCountry(countryCode: string): MobileMoneyP
 /**
  * Check if a country is supported by the payment system
  *
+ * Since payments are processed manually by admin, all countries
+ * are supported EXCEPT truly sanctioned ones.
+ *
  * @param countryCode - ISO 3166-1 alpha-2 country code
  * @returns True if the country is supported
  */
 export function isCountrySupported(countryCode: string): boolean {
   const code = countryCode.toUpperCase();
 
-  // Check if explicitly unsupported
+  // Only block truly sanctioned countries
   if (UNSUPPORTED_COUNTRIES.includes(code)) {
     return false;
   }
 
-  // Check if we have a config for it
-  return COUNTRIES_CONFIG.has(code);
+  // All other countries are supported (manual processing)
+  return true;
 }
 
 /**

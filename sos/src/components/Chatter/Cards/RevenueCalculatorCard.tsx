@@ -28,6 +28,7 @@ import {
   ArrowRight,
   Lightbulb,
 } from 'lucide-react';
+import { UI } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -49,6 +50,8 @@ interface RevenueCalculatorCardProps {
     n2CallAmount?: number;
     activationBonusAmount?: number;
   };
+  /** Recruitment milestone bonuses from config. Overrides default GAINS.TIER_BONUSES. */
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
 }
 
 // ============================================================================
@@ -393,16 +396,20 @@ interface TierBonusIndicatorProps {
   currentCount: number;
   simulatedCount: number;
   paidTiers: number[];
+  tierThresholds?: number[];
+  tierBonuses?: Record<number, number>;
 }
 
 const TierBonusIndicator: React.FC<TierBonusIndicatorProps> = ({
   currentCount,
   simulatedCount,
   paidTiers,
+  tierThresholds = TIER_THRESHOLDS,
+  tierBonuses = GAINS.TIER_BONUSES as unknown as Record<number, number>,
 }) => {
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {TIER_THRESHOLDS.map((tier) => {
+      {tierThresholds.map((tier) => {
         const isPaid = paidTiers.includes(tier);
         const willUnlock = !isPaid && simulatedCount >= tier;
         const isNext = !isPaid && currentCount < tier && simulatedCount < tier;
@@ -423,7 +430,7 @@ const TierBonusIndicator: React.FC<TierBonusIndicatorProps> = ({
             {willUnlock && <Gift className="w-3 h-3" />}
             <span>{tier}</span>
             <span className="opacity-75">
-              {formatCentsShort(GAINS.TIER_BONUSES[tier])}
+              {formatCentsShort(tierBonuses[tier] || 0)}
             </span>
           </div>
         );
@@ -446,6 +453,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   onRecruit,
   loading = false,
   commissionRates,
+  recruitmentMilestones,
 }) => {
   const intl = useIntl();
 
@@ -456,6 +464,23 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
     N2_CALL: commissionRates?.n2CallAmount ?? GAINS.N2_CALL,
     ACTIVATION_BONUS: commissionRates?.activationBonusAmount ?? GAINS.ACTIVATION_BONUS,
   }), [commissionRates]);
+
+  // Effective tier bonuses: use config milestones if provided, fallback to defaults
+  const effectiveTierBonuses: Record<number, number> = useMemo(() => {
+    if (recruitmentMilestones && recruitmentMilestones.length > 0) {
+      const bonuses: Record<number, number> = {};
+      recruitmentMilestones.forEach((m) => { bonuses[m.count] = m.bonus; });
+      return bonuses;
+    }
+    return GAINS.TIER_BONUSES as unknown as Record<number, number>;
+  }, [recruitmentMilestones]);
+
+  const effectiveTierThresholds: number[] = useMemo(() => {
+    if (recruitmentMilestones && recruitmentMilestones.length > 0) {
+      return recruitmentMilestones.map((m) => m.count).sort((a, b) => a - b);
+    }
+    return TIER_THRESHOLDS;
+  }, [recruitmentMilestones]);
 
   // State for sections
   const [expandedSections, setExpandedSections] = useState({
@@ -502,9 +527,9 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
     let tierBonusTotal = 0;
     const unlockedTiers: number[] = [];
 
-    TIER_THRESHOLDS.forEach((tier) => {
+    effectiveTierThresholds.forEach((tier) => {
       if (!paidTierBonuses.includes(tier) && newTeamSize >= tier && n1TeamSize < tier) {
-        tierBonusTotal += GAINS.TIER_BONUSES[tier];
+        tierBonusTotal += effectiveTierBonuses[tier] || 0;
         unlockedTiers.push(tier);
       }
     });
@@ -526,7 +551,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
       newMonthlyEstimate,
       oneTimeBonus,
     };
-  }, [recruitSimulation, n1TeamSize, paidTierBonuses, currentEarnings.total]);
+  }, [recruitSimulation, n1TeamSize, paidTierBonuses, currentEarnings.total, effectiveTierThresholds, effectiveTierBonuses, rates.ACTIVATION_BONUS, rates.N1_CALL]);
 
   // Calculate goal options
   const goalOptions = useMemo(() => {
@@ -567,13 +592,13 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg p-6">
+      <div className={`${UI.card} p-6`}>
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+          <div className={`h-8 ${UI.skeleton} w-1/3`} />
           <div className="space-y-3">
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className={`h-12 ${UI.skeleton}`} />
+            <div className={`h-12 ${UI.skeleton}`} />
+            <div className={`h-12 ${UI.skeleton}`} />
           </div>
         </div>
       </div>
@@ -581,7 +606,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
   }
 
   return (
-    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border dark:border-white/10 rounded-2xl shadow-lg overflow-hidden">
+    <div className={`${UI.card} overflow-hidden`}>
       {/* Header */}
       <div className="p-4 sm:p-6 border-b dark:border-white/10">
         <div className="flex items-center gap-3">
@@ -725,7 +750,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                       defaultMessage="Activation bonus"
                     />
                   }
-                  value={`${recruitSimulation} x $5 = ${formatCents(simulationResults.activationBonus)}`}
+                  value={`${recruitSimulation} x $${(rates.ACTIVATION_BONUS / 100).toFixed(0)} = ${formatCents(simulationResults.activationBonus)}`}
                   icon={<Gift className="w-4 h-4 text-red-500" />}
                 />
 
@@ -742,6 +767,8 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     currentCount={n1TeamSize}
                     simulatedCount={simulationResults.newTeamSize}
                     paidTiers={paidTierBonuses}
+                    tierThresholds={effectiveTierThresholds}
+                    tierBonuses={effectiveTierBonuses}
                   />
                   {simulationResults.tierBonusTotal > 0 && (
                     <p className="text-sm dark:text-green-400 font-semibold">
@@ -882,7 +909,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
         {onRecruit && (
           <button
             onClick={onRecruit}
-            className="w-full flex items-center justify-center gap-2 sm:gap-3 min-h-[56px] p-4 bg-gradient-to-r from-blue-500 via-red-500 to-pink-500 text-white rounded-2xl font-bold sm:text-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all touch-manipulation group"
+            className={`w-full flex items-center justify-center gap-2 sm:gap-3 min-h-[56px] p-4 ${UI.button.primary} font-bold sm:text-lg shadow-lg hover:shadow-xl touch-manipulation group`}
           >
             <Rocket className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-bounce flex-shrink-0" />
             <span className="truncate">

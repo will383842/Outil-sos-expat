@@ -339,6 +339,9 @@ export interface WithdrawalRequestVars {
   USER_TYPE_FR: string;
   AMOUNT: string;
   PAYMENT_METHOD: string;
+  PAYMENT_DETAILS: string;
+  COUNTRY: string;
+  ADMIN_URL: string;
   DATE: string;
   TIME: string;
 }

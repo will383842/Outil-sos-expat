@@ -32,7 +32,7 @@ export type PayoutStatus =
 
 export type AffiliateStatus = "active" | "suspended" | "flagged";
 
-export type BankAccountType = "iban" | "uk_sort_code" | "us_aba" | "other";
+export type BankAccountType = "iban" | "uk_sort_code" | "us_aba" | "bsb" | "ifsc" | "mobile_money" | "other_payment" | "other";
 
 // ============================================================================
 // CAPTURED RATES
@@ -199,6 +199,15 @@ export interface BankDetailsInput {
   sortCode?: string;
   routingNumber?: string;
   swiftBic?: string;
+  bsbNumber?: string;
+  ifscCode?: string;
+  // Mobile Money fields
+  mobileMoneyOperator?: string;
+  mobileMoneyPhone?: string;
+  // Other payment method fields
+  otherPaymentType?: string;
+  otherPaymentEmail?: string;
+  otherPaymentInstructions?: string;
   address?: {
     street: string;
     city: string;

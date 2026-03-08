@@ -51,7 +51,7 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
     {
       targetId: 'sticky-affiliate-bar',
       title: 'Voici vos liens de parrainage !',
-      description: 'Chaque personne qui appelle via ce lien = $5-10 pour vous. Copiez-le et partagez-le partout.',
+      description: 'Chaque personne qui appelle via ce lien = $3-5 pour vous. Copiez-le et partagez-le partout.',
       action: (
         <button
           onClick={() => { onCopyLink(); handleNext(); }}

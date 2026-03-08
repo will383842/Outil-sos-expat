@@ -147,8 +147,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // Rendu du badge si présent
   const renderBadge = () => {
     if (!node.badge) return null;
-    const badgeStyles =
-      "ml-2 px-2 py-0.5 text-xs bg-gray-600 text-gray-200 rounded-full font-medium";
+    // Use red badge for numeric badges (e.g. pending counts), gray for static labels
+    const isNumeric = /^\d+$/.test(node.badge);
+    const badgeStyles = isNumeric
+      ? "ml-2 px-2 py-0.5 text-xs bg-red-600 text-white rounded-full font-medium animate-pulse"
+      : "ml-2 px-2 py-0.5 text-xs bg-gray-600 text-gray-200 rounded-full font-medium";
     return <span className={badgeStyles}>{node.badge}</span>;
   };
 

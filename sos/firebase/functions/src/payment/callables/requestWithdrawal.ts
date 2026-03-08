@@ -227,6 +227,9 @@ export const requestWithdrawal = onCall(
         chatter: 'chatter',
         influencer: 'influencer',
         blogger: 'blogger',
+        groupAdmin: 'groupAdmin',
+        group_admin: 'groupAdmin',
+        affiliate: 'affiliate',
       };
 
       // Resolve human-readable payment method label
