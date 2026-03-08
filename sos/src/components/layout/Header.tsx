@@ -872,7 +872,7 @@ const LanguageDropdown = memo<LanguageDropdownProps>(function LanguageDropdown({
 
       // Only navigate if the path actually changed
       if (newPath !== decodedPathname) {
-        navigate(newPath, { replace: true });
+        navigate(`${newPath}${location.search}${location.hash}`, { replace: true });
       }
 
       window.gtag?.("event", "language_change", {
