@@ -144,14 +144,6 @@ export interface ChatterRegistrationData {
     acceptanceMethod: string;
     ipAddress?: string;
   };
-  _securityMeta?: {
-    formFillTime: number;
-    mouseMovements: number;
-    keystrokes: number;
-    userAgent: string;
-    timestamp: number;
-    recaptchaToken?: string | null;
-  };
 }
 
 interface ChatterRegisterFormProps {
@@ -550,10 +542,22 @@ const ChatterRegisterForm: React.FC<ChatterRegisterFormProps> = ({
         timestamp: Date.now(),
         acceptanceMethod: "checkbox_click",
       },
-      _securityMeta: botCheck.securityMeta,
     };
 
     await onSubmit(dataWithTerms);
+
+    // Log anti-bot metadata separately (not stored in user document for security)
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('@/config/firebase');
+      await addDoc(collection(db, 'logs'), {
+        type: 'registration_antibot',
+        role: 'chatter',
+        email: formData.email,
+        ...(botCheck.securityMeta || {}),
+        timestamp: serverTimestamp(),
+      });
+    } catch { /* best-effort logging */ }
   };
 
   // Success state

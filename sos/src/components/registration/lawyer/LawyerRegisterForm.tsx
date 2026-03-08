@@ -32,7 +32,7 @@ import { LocaleLink } from '../../../multilingual-system';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { generateEventIdForType } from '@/utils/sharedEventId';
-import { getStoredReferralCode } from '@/utils/referralStorage';
+import { getStoredReferralCode, clearStoredReferral } from '@/utils/referralStorage';
 
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
@@ -407,14 +407,6 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         rating: 4.5,
         reviewCount: 0,
         preferredLanguage: form.preferredLanguage,
-        _securityMeta: {
-          recaptchaToken: botCheck.recaptchaToken,
-          formFillTime: stats.timeSpent,
-          mouseMovements: stats.mouseMovements,
-          keystrokes: stats.keystrokes,
-          userAgent: navigator.userAgent,
-          timestamp: Date.now(),
-        },
         termsAccepted: form.acceptTerms,
         termsAcceptedAt: new Date().toISOString(),
         termsVersion: '3.0',
@@ -427,7 +419,6 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         },
         ...(referralCode && {
           pendingReferralCode: referralCode.toUpperCase().trim(),
-          providerRecruitedByChatter: referralCode.toUpperCase().trim(),
         }),
         ...(() => {
           const bloggerCode = getStoredReferralCode('blogger');
@@ -447,7 +438,19 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         })(),
         ...(() => {
           const tracking = getStoredReferralTracking();
-          return tracking ? { referralTracking: tracking } : {};
+          if (tracking) {
+            const result: Record<string, unknown> = { referralTracking: tracking };
+            if (referralCode && (tracking as { capturedAt?: string }).capturedAt) {
+              result.referralCapturedAt = (tracking as { capturedAt?: string }).capturedAt;
+            } else if (referralCode) {
+              result.referralCapturedAt = new Date().toISOString();
+            }
+            return result;
+          }
+          if (referralCode) {
+            return { referralCapturedAt: new Date().toISOString() };
+          }
+          return {};
         })(),
         ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
         ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
@@ -464,12 +467,28 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         country: userData.currentCountry,
         specialtiesCount: userData.specialties.length,
         languagesCount: userData.languages.length,
-        hasRecaptchaToken: !!userData._securityMeta.recaptchaToken,
+        hasRecaptchaToken: !!botCheck.recaptchaToken,
         dataKeys: Object.keys(userData).filter(k => !k.startsWith('_')),
         elapsedSinceStart: Date.now() - startTime
       });
 
       await onRegister(userData, form.password);
+
+      // Log anti-bot metadata separately (not stored in user document for security)
+      try {
+        const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+        const { db } = await import('@/config/firebase');
+        await addDoc(collection(db, 'logs'), {
+          type: 'registration_antibot',
+          role: 'lawyer',
+          email: userData.email,
+          recaptchaToken: botCheck.recaptchaToken,
+          formFillTime: stats.timeSpent,
+          mouseMovements: stats.mouseMovements,
+          keystrokes: stats.keystrokes,
+          timestamp: serverTimestamp(),
+        });
+      } catch { /* best-effort logging */ }
 
       console.log('[LawyerRegisterForm] ✅ BACKEND OK - onRegister réussi', {
         timestamp: new Date().toISOString(),
@@ -487,6 +506,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: fn, lastName: ln, country: form.currentCountry });
         await setGoogleAdsUserData({ email: form.email, firstName: fn, lastName: ln, country: form.currentCountry });
         trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
+        clearStoredReferral('client');
 
         // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
         setTimeout(() => {
@@ -530,6 +550,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       setMetaPixelUserData({ email: sanitizeEmail(form.email), firstName: fn, lastName: ln, country: form.currentCountry });
       setGoogleAdsUserData({ email: form.email, firstName: fn, lastName: ln, country: form.currentCountry });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
+      clearStoredReferral('client');
 
       // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
       setTimeout(() => {
