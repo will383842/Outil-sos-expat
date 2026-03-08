@@ -32,7 +32,7 @@ export const getPaymentConfig = onCall(
     region: PAYMENT_FUNCTIONS_REGION,
     memory: '512MiB',  // FIX: 256MiB caused OOM at startup (firebase-admin overhead)
     cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
-    maxInstances: 3,  // Limit vCPU usage in europe-west3
+    maxInstances: 1,  // Limit vCPU usage in europe-west3
     timeoutSeconds: 15,
     cors: ALLOWED_ORIGINS,
   },
