@@ -26,8 +26,8 @@ import { formatCurrencyLocale, formatCurrencyLocaleWhole } from './currencyUtils
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import { UI } from '@/components/Chatter/designTokens';
 
-// Level configurations (thresholds in cents)
-const LEVEL_CONFIG = {
+// Default level configurations (thresholds in cents) — overridden by backend config
+const DEFAULT_LEVEL_CONFIG = {
   1: { minEarned: 0 },
   2: { minEarned: 10000 },
   3: { minEarned: 50000 },
@@ -35,8 +35,8 @@ const LEVEL_CONFIG = {
   5: { minEarned: 500000 },
 } as const;
 
-// Tier bonuses (in cents)
-const TIER_BONUSES: Record<number, number> = {
+// Default tier bonuses (in cents) — overridden by backend config
+const DEFAULT_TIER_BONUSES: Record<number, number> = {
   5: 1500,      // $15
   10: 3500,     // $35
   20: 7500,     // $75
@@ -62,6 +62,10 @@ interface ForecastCardProps {
   loading?: boolean;
   /** Animation delay for staggered entrance (in ms) */
   animationDelay?: number;
+  /** Level thresholds from backend config (cents) */
+  levelThresholds?: { level2: number; level3: number; level4: number; level5: number };
+  /** Recruitment milestone bonuses from backend config */
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
 }
 
 type PerformanceLevel = 'excellent' | 'good' | 'average' | 'slow' | 'starting';
@@ -75,8 +79,28 @@ const ForecastCard = memo(function ForecastCard({
   currentDayOfMonth,
   loading,
   animationDelay = 0,
+  levelThresholds,
+  recruitmentMilestones,
 }: ForecastCardProps) {
   const intl = useIntl();
+
+  // Build effective configs from backend or defaults
+  const LEVEL_CONFIG = useMemo(() => ({
+    1: { minEarned: 0 },
+    2: { minEarned: levelThresholds?.level2 ?? DEFAULT_LEVEL_CONFIG[2].minEarned },
+    3: { minEarned: levelThresholds?.level3 ?? DEFAULT_LEVEL_CONFIG[3].minEarned },
+    4: { minEarned: levelThresholds?.level4 ?? DEFAULT_LEVEL_CONFIG[4].minEarned },
+    5: { minEarned: levelThresholds?.level5 ?? DEFAULT_LEVEL_CONFIG[5].minEarned },
+  }), [levelThresholds]);
+
+  const TIER_BONUSES: Record<number, number> = useMemo(() => {
+    if (recruitmentMilestones && recruitmentMilestones.length > 0) {
+      const bonuses: Record<number, number> = {};
+      recruitmentMilestones.forEach((m) => { bonuses[m.count] = m.bonus; });
+      return bonuses;
+    }
+    return DEFAULT_TIER_BONUSES;
+  }, [recruitmentMilestones]);
 
   // Calculate projections
   const projections = useMemo(() => {

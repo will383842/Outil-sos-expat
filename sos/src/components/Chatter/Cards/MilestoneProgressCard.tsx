@@ -17,9 +17,21 @@ interface MilestoneProgressCardProps {
   qualifiedCount: number;
   paidTiers: number[];
   isLoading?: boolean;
+  /** Recruitment milestone bonuses from backend config — overrides defaults */
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
 }
 
-const TIER_INFO = [
+// Default tier labels
+const TIER_LABELS: Record<number, string> = {
+  5: "chatter.referrals.tier.bronze",
+  10: "chatter.referrals.tier.silver",
+  20: "chatter.referrals.tier.gold",
+  50: "chatter.referrals.tier.platinum",
+  100: "chatter.referrals.tier.diamond",
+  500: "chatter.referrals.tier.legend",
+};
+
+const DEFAULT_TIER_INFO = [
   { tier: 5, bonus: 1500, labelKey: "chatter.referrals.tier.bronze" },
   { tier: 10, bonus: 3500, labelKey: "chatter.referrals.tier.silver" },
   { tier: 20, bonus: 7500, labelKey: "chatter.referrals.tier.gold" },
@@ -33,6 +45,7 @@ export function MilestoneProgressCard({
   qualifiedCount,
   paidTiers = [],
   isLoading,
+  recruitmentMilestones,
 }: MilestoneProgressCardProps) {
   const { t } = useTranslation();
 
@@ -50,6 +63,15 @@ export function MilestoneProgressCard({
       </div>
     );
   }
+
+  // Build effective tier info from backend config or defaults
+  const TIER_INFO = recruitmentMilestones && recruitmentMilestones.length > 0
+    ? recruitmentMilestones.map((m) => ({
+        tier: m.count,
+        bonus: m.bonus,
+        labelKey: TIER_LABELS[m.count] || `chatter.referrals.tier.${m.count}`,
+      }))
+    : DEFAULT_TIER_INFO;
 
   // Calculate progress percentage to next tier
   const currentTier = paidTiers.length > 0 ? Math.max(...paidTiers) : 0;

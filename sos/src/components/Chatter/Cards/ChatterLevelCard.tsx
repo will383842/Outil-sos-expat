@@ -17,8 +17,8 @@ import { formatCurrencyLocale } from './currencyUtils';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import { UI } from '@/components/Chatter/designTokens';
 
-// Level configurations (thresholds in cents)
-const LEVEL_CONFIG = {
+// Default level configurations (thresholds in cents) — overridden by backend config
+const DEFAULT_LEVEL_CONFIG = {
   1: { color: 'from-amber-600 to-amber-700', icon: Star, minEarned: 0 },
   2: { color: 'from-gray-400 to-gray-500', icon: Star, minEarned: 10000 },
   3: { color: 'from-yellow-400 to-yellow-500', icon: Trophy, minEarned: 50000 },
@@ -26,8 +26,8 @@ const LEVEL_CONFIG = {
   5: { color: 'from-red-400 to-pink-400', icon: Zap, minEarned: 500000 },
 } as const;
 
-// Level bonus percentages
-const LEVEL_BONUS_PERCENT: Record<number, number> = {
+// Default level bonus percentages — overridden by backend config
+const DEFAULT_LEVEL_BONUS_PERCENT: Record<number, number> = {
   1: 0, 2: 10, 3: 20, 4: 35, 5: 50
 };
 
@@ -40,6 +40,10 @@ interface ChatterLevelCardProps {
   loading?: boolean;
   /** Animation delay for staggered entrance (in ms) */
   animationDelay?: number;
+  /** Level thresholds from backend config (cents) */
+  levelThresholds?: { level2: number; level3: number; level4: number; level5: number };
+  /** Level bonus percentages from backend config */
+  levelBonuses?: { level1: number; level2: number; level3: number; level4: number; level5: number };
 }
 
 const ChatterLevelCard = memo(function ChatterLevelCard({
@@ -50,6 +54,8 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
   monthlyRank,
   loading,
   animationDelay = 0,
+  levelThresholds,
+  levelBonuses,
 }: ChatterLevelCardProps) {
   const intl = useIntl();
   const [progressAnimated, setProgressAnimated] = useState(false);
@@ -66,6 +72,18 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
   const formatAmount = (cents: number) => {
     return formatCurrencyLocale(cents, intl.locale);
   };
+
+  // Build effective config from backend or defaults
+  const LEVEL_CONFIG = {
+    1: { ...DEFAULT_LEVEL_CONFIG[1] },
+    2: { ...DEFAULT_LEVEL_CONFIG[2], minEarned: levelThresholds?.level2 ?? DEFAULT_LEVEL_CONFIG[2].minEarned },
+    3: { ...DEFAULT_LEVEL_CONFIG[3], minEarned: levelThresholds?.level3 ?? DEFAULT_LEVEL_CONFIG[3].minEarned },
+    4: { ...DEFAULT_LEVEL_CONFIG[4], minEarned: levelThresholds?.level4 ?? DEFAULT_LEVEL_CONFIG[4].minEarned },
+    5: { ...DEFAULT_LEVEL_CONFIG[5], minEarned: levelThresholds?.level5 ?? DEFAULT_LEVEL_CONFIG[5].minEarned },
+  };
+  const LEVEL_BONUS_PERCENT: Record<number, number> = levelBonuses
+    ? { 1: levelBonuses.level1, 2: levelBonuses.level2, 3: levelBonuses.level3, 4: levelBonuses.level4, 5: levelBonuses.level5 }
+    : DEFAULT_LEVEL_BONUS_PERCENT;
 
   const levelConfig = LEVEL_CONFIG[level];
   const nextLevel = level < 5 ? LEVEL_CONFIG[(level + 1) as keyof typeof LEVEL_CONFIG] : null;

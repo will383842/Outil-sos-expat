@@ -89,10 +89,8 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
 
   // Lock body scroll when drawer is open
   useEffect(() => {
-    if (isDrawerOpen) {
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
-    }
+    document.body.style.overflow = isDrawerOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [isDrawerOpen]);
 
   // Translated routes (6 main + captain + extras)

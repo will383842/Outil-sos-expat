@@ -112,6 +112,22 @@ const PLATFORMS: SharePlatform[] = [
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
   },
   {
+    id: "reddit",
+    name: "Reddit",
+    icon: "Globe",
+    color: "#FF4500",
+    getShareUrl: (text, url) =>
+      `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`,
+  },
+  {
+    id: "quora",
+    name: "Quora",
+    icon: "HelpCircle",
+    color: "#B92B27",
+    getShareUrl: (text, url) =>
+      `https://www.quora.com/share?url=${encodeURIComponent(url)}`,
+  },
+  {
     id: "email",
     name: "Email",
     icon: "Mail",

@@ -13,7 +13,8 @@ interface LevelProgressCardProps {
   className?: string;
 }
 
-const LEVEL_THRESHOLDS: Record<number, number> = {
+// Default thresholds in dollars — overridden by backend config (which stores cents)
+const DEFAULT_LEVEL_THRESHOLDS: Record<number, number> = {
   1: 100,    // $100 to reach level 2
   2: 500,    // $500 to reach level 3
   3: 2000,   // $2000 to reach level 4
@@ -31,6 +32,17 @@ const LEVEL_NAMES: Record<number, string> = {
 const LevelProgressCard: React.FC<LevelProgressCardProps> = ({ className = '' }) => {
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
+  const config = dashboardData?.config;
+
+  // Use backend config thresholds (cents→dollars) or fallback to defaults
+  const LEVEL_THRESHOLDS: Record<number, number> = config?.levelThresholds
+    ? {
+        1: config.levelThresholds.level2 / 100,
+        2: config.levelThresholds.level3 / 100,
+        3: config.levelThresholds.level4 / 100,
+        4: config.levelThresholds.level5 / 100,
+      }
+    : DEFAULT_LEVEL_THRESHOLDS;
 
   const level = chatter?.level || 1;
   const levelProgress = chatter?.levelProgress || 0;

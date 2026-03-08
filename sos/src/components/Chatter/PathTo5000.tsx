@@ -29,8 +29,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-// Commission constants (in cents)
-const COMMISSIONS = {
+// Default commission constants (in cents) — overridden by backend config
+const DEFAULT_COMMISSIONS = {
   CLIENT_CALL: 400,         // ~$3-5 average (lawyer=$5, expat=$3)
   N1_CALL: 100,             // $1
   N2_CALL: 50,              // $0.50
@@ -44,7 +44,7 @@ const COMMISSIONS = {
 };
 
 // Milestones to $5000 (500000 cents)
-const MILESTONES = [
+const DEFAULT_MILESTONES = [
   { amount: 10000, label: '$100', emoji: '🎯', description: '10 clients' },
   { amount: 50000, label: '$500', emoji: '🔥', description: '50 clients ou 5 filleuls actifs' },
   { amount: 100000, label: '$1,000', emoji: '⭐', description: '100 clients ou 10 filleuls actifs' },
@@ -58,6 +58,15 @@ interface PathTo5000Props {
   currentClients?: number;
   currentRecruits?: number;
   onCTAClick?: () => void;
+  /** Commission rates from backend config (cents) */
+  commissionRates?: {
+    clientCallAmount?: number;
+    n1CallAmount?: number;
+    n2CallAmount?: number;
+    activationBonusAmount?: number;
+  };
+  /** Recruitment milestone bonuses from backend config */
+  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
   className?: string;
 }
 
@@ -67,11 +76,39 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
   currentClients = 0,
   currentRecruits = 0,
   onCTAClick,
+  commissionRates,
+  recruitmentMilestones,
   className = '',
 }) => {
   const intl = useIntl();
   const [expandedPath, setExpandedPath] = useState<'solo' | 'small' | 'big' | null>('small');
   const [showAllMilestones, setShowAllMilestones] = useState(false);
+
+  // Build effective commissions from backend config or defaults
+  const COMMISSIONS = {
+    CLIENT_CALL: commissionRates?.clientCallAmount ?? DEFAULT_COMMISSIONS.CLIENT_CALL,
+    N1_CALL: commissionRates?.n1CallAmount ?? DEFAULT_COMMISSIONS.N1_CALL,
+    N2_CALL: commissionRates?.n2CallAmount ?? DEFAULT_COMMISSIONS.N2_CALL,
+    ACTIVATION_BONUS: commissionRates?.activationBonusAmount ?? DEFAULT_COMMISSIONS.ACTIVATION_BONUS,
+    TIER_5: DEFAULT_COMMISSIONS.TIER_5,
+    TIER_10: DEFAULT_COMMISSIONS.TIER_10,
+    TIER_20: DEFAULT_COMMISSIONS.TIER_20,
+    TIER_50: DEFAULT_COMMISSIONS.TIER_50,
+    TIER_100: DEFAULT_COMMISSIONS.TIER_100,
+    TIER_500: DEFAULT_COMMISSIONS.TIER_500,
+  };
+
+  // Override tier bonuses from backend if available
+  if (recruitmentMilestones && recruitmentMilestones.length > 0) {
+    for (const m of recruitmentMilestones) {
+      const key = `TIER_${m.count}` as keyof typeof COMMISSIONS;
+      if (key in COMMISSIONS) {
+        (COMMISSIONS as Record<string, number>)[key] = m.bonus;
+      }
+    }
+  }
+
+  const MILESTONES = DEFAULT_MILESTONES;
 
   // Calculate progress
   const progressPercent = Math.min(100, (currentEarnings / 500000) * 100);

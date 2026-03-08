@@ -22,48 +22,61 @@ import {
 import { useChatterReferrals } from "@/hooks/useChatterReferrals";
 import { useTranslation } from "@/hooks/useTranslation";
 import { REFERRAL_CONFIG } from "@/types/chatter";
+import { useChatterData } from "@/contexts/ChatterDataContext";
 
 export default function ChatterRefer() {
   const { t } = useTranslation();
   const { stats } = useChatterReferrals();
+  const { dashboardData } = useChatterData();
+  const config = dashboardData?.config;
+
+  // Use backend config values, fallback to hardcoded REFERRAL_CONFIG defaults
+  const n1CallAmount = config?.commissionN1CallAmount ?? REFERRAL_CONFIG.COMMISSIONS.N1_PER_CALL;
+  const n2CallAmount = config?.commissionN2CallAmount ?? REFERRAL_CONFIG.COMMISSIONS.N2_PER_CALL;
 
   const commissionAmounts = [
     {
       label: t("chatter.referrals.when10"),
-      amount: REFERRAL_CONFIG.COMMISSIONS.THRESHOLD_10_AMOUNT / 100,
+      amount: (config?.commissionN1CallAmount ?? REFERRAL_CONFIG.COMMISSIONS.THRESHOLD_10_AMOUNT) / 100,
       icon: TrendingUp,
       color: "text-blue-600 dark:text-blue-400",
       bg: "bg-blue-100 dark:bg-blue-900/30",
     },
     {
       label: t("chatter.referrals.when50N1"),
-      amount: REFERRAL_CONFIG.COMMISSIONS.THRESHOLD_50_N1_AMOUNT / 100,
+      amount: n1CallAmount / 100,
       icon: DollarSign,
       color: "text-green-600 dark:text-green-400",
       bg: "bg-green-100 dark:bg-green-900/30",
     },
     {
       label: t("chatter.referrals.when50N2"),
-      amount: REFERRAL_CONFIG.COMMISSIONS.THRESHOLD_50_N2_AMOUNT / 100,
+      amount: n2CallAmount / 100,
       icon: Users,
       color: "text-red-600 dark:text-red-400",
       bg: "bg-red-100 dark:bg-red-900/30",
     },
     {
       label: t("chatter.referrals.perCallN1"),
-      amount: REFERRAL_CONFIG.COMMISSIONS.N1_PER_CALL / 100,
+      amount: n1CallAmount / 100,
       icon: TrendingUp,
       color: "text-orange-600 dark:text-orange-400",
       bg: "bg-orange-100 dark:bg-orange-900/30",
     },
   ];
 
-  const tierBonuses = Object.entries(REFERRAL_CONFIG.TIER_BONUSES).map(
-    ([filleuls, bonus]) => ({
-      filleuls: parseInt(filleuls),
-      bonus: bonus / 100,
-    })
-  );
+  // Use backend recruitment milestones or fallback to hardcoded REFERRAL_CONFIG
+  const tierBonuses = config?.recruitmentMilestones && config.recruitmentMilestones.length > 0
+    ? config.recruitmentMilestones.map((m) => ({
+        filleuls: m.count,
+        bonus: m.bonus / 100,
+      }))
+    : Object.entries(REFERRAL_CONFIG.TIER_BONUSES).map(
+        ([filleuls, bonus]) => ({
+          filleuls: parseInt(filleuls),
+          bonus: (bonus as number) / 100,
+        })
+      );
 
   return (
     <ChatterDashboardLayout activeKey="refer">

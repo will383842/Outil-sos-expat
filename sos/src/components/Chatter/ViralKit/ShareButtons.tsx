@@ -13,6 +13,8 @@ import {
   Twitter,
   Linkedin,
   Mail,
+  Globe,
+  HelpCircle,
   Share2,
 } from "lucide-react";
 import { useViralKit } from "@/hooks/useViralKit";
@@ -25,6 +27,8 @@ const PLATFORM_ICONS: Record<string, React.ElementType> = {
   facebook: Facebook,
   twitter: Twitter,
   linkedin: Linkedin,
+  reddit: Globe,
+  quora: HelpCircle,
   email: Mail,
 };
 

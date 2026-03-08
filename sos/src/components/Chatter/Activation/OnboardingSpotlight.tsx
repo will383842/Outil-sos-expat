@@ -79,7 +79,7 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
     {
       targetId: 'share-buttons-section',
       title: 'Partagez votre lien maintenant !',
-      description: 'WhatsApp et Telegram sont les plus efficaces. Plus vous partagez, plus vous gagnez.',
+      description: 'WhatsApp, Telegram, groupes Facebook, forums d\'expats, Reddit, Quora... Plus vous partagez, plus vous gagnez.',
       action: (
         <button
           onClick={() => { onShareLink(); handleClose(); }}
