@@ -33,8 +33,9 @@ const StickyAffiliateBar: React.FC = () => {
     const maxAmt = Math.max(expatAmt, lawyerAmt);
     const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
     const n1Amt = (config?.commissionN1CallAmount ?? 100) / 100;
-    return { callAmountRange: range, n1CallAmount: n1Amt };
-  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer, config?.commissionN1CallAmount]);
+    const providerAmt = (config?.commissionProviderCallAmount ?? 500) / 100;
+    return { callAmountRange: range, n1CallAmount: n1Amt, providerCallAmount: providerAmt };
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer, config?.commissionN1CallAmount, config?.commissionProviderCallAmount]);
 
   // Stop pulse animation after 3s
   useEffect(() => {
@@ -143,7 +144,7 @@ const StickyAffiliateBar: React.FC = () => {
           <button
             onClick={() => handleCopy(recruitmentShareUrl ?? '', 'recruitment')}
             className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-xs font-medium hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors"
-            title={`Partagez ce lien aux prestataires. Quand ils s'inscrivent et re\u00e7oivent des appels, vous gagnez $${n1CallAmount} par appel pendant 6 mois.`}
+            title={`Partagez ce lien aux prestataires. Quand ils s'inscrivent et re\u00e7oivent des appels, vous gagnez $${providerCallAmount} par appel pendant 6 mois.`}
           >
             <UserPlus className="w-3.5 h-3.5" />
             {copiedRecruitment ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -151,7 +152,7 @@ const StickyAffiliateBar: React.FC = () => {
               <FormattedMessage id="chatter.bar.recruitmentLinkMobile" defaultMessage="Recruter" />
             </span>
             <span className="hidden sm:inline">
-              {`Recrutement \u2014 Gagnez $${n1CallAmount}/appel 6 mois`}
+              {`Recrutement avocat/expat \u2014 Gagnez $${providerCallAmount}/appel 6 mois`}
             </span>
           </button>
         </div>
@@ -229,7 +230,7 @@ const StickyAffiliateBar: React.FC = () => {
               <div className="flex items-center gap-1.5 shrink-0">
                 <UserPlus className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                 <span className="text-xs text-violet-700 dark:text-violet-300 font-medium hidden sm:inline">
-                  {`Recrutement \u2014 Gagnez $${n1CallAmount}/appel 6 mois`}
+                  {`Recrutement avocat/expat \u2014 Gagnez $${providerCallAmount}/appel 6 mois`}
                 </span>
                 <span className="text-xs text-violet-700 dark:text-violet-300 font-medium sm:hidden">
                   <FormattedMessage id="chatter.bar.recruitmentLinkMobile" defaultMessage="Recruter" />
@@ -269,12 +270,12 @@ const StickyAffiliateBar: React.FC = () => {
             </div>
             {/* Mobile badge */}
             <div className="sm:hidden mt-0.5 ml-5.5">
-              <span className="text-[10px] text-violet-600/80 dark:text-violet-400/70 font-medium">{`~$${n1CallAmount}/appel recrut\u00e9`}</span>
+              <span className="text-[10px] text-violet-600/80 dark:text-violet-400/70 font-medium">{`~$${providerCallAmount}/appel recrut\u00e9`}</span>
             </div>
             {/* Tooltip */}
             {tooltipOpen === 'recruitment' && (
               <div className="mt-2 p-2.5 rounded-lg bg-violet-100/80 dark:bg-violet-900/40 text-xs text-violet-800 dark:text-violet-200 leading-relaxed">
-                {`Partagez ce lien aux prestataires (avocats, expatri\u00e9s). Quand ils s'inscrivent et re\u00e7oivent des appels, vous gagnez $${n1CallAmount} par appel pendant 6 mois.`}
+                {`Partagez ce lien aux prestataires (avocats, expatri\u00e9s). Quand ils s'inscrivent et re\u00e7oivent des appels, vous gagnez $${providerCallAmount} par appel pendant 6 mois.`}
               </div>
             )}
           </div>

@@ -161,7 +161,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                 <FormattedMessage id="chatter.links.recruitment.title" defaultMessage="Lien Recrutement" />
               </h3>
               <p className="text-sm dark:text-gray-400">
-                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez des prestataires, gagnez pendant 6 mois" />
+                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez des avocats ou expatriés et gagnez $5/appel pendant 6 mois" />
               </p>
             </div>
           </div>
