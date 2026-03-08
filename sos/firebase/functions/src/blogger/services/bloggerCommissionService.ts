@@ -234,6 +234,20 @@ export async function createBloggerCommission(
         throw new Error("Blogger not found in transaction");
       }
 
+      // Double-check for duplicates inside transaction (race condition safety net)
+      if (source.id) {
+        const txDuplicateCheck = await transaction.get(
+          db.collection("blogger_commissions")
+            .where("bloggerId", "==", bloggerId)
+            .where("type", "==", type)
+            .where("sourceId", "==", source.id)
+            .limit(1)
+        );
+        if (!txDuplicateCheck.empty) {
+          throw new Error("Commission already exists for this action");
+        }
+      }
+
       const currentData = freshBlogger.data() as Blogger;
 
       // Calculate new stats

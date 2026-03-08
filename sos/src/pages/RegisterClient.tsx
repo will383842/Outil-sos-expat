@@ -297,9 +297,12 @@ const RegisterClient: React.FC = () => {
     }
   }, [location.state]);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (but NOT during active registration)
+  // FIX: Track whether registration was initiated to prevent premature redirect
+  // during createUserWithEmailAndPassword → onAuthStateChanged race condition
+  const isRegisteringRef = React.useRef(false);
   useEffect(() => {
-    if (isFullyReady && user) {
+    if (isFullyReady && user && !isRegisteringRef.current) {
       sessionStorage.removeItem('loginRedirect');
       navigate(redirect, { replace: true });
     }
@@ -375,6 +378,7 @@ const RegisterClient: React.FC = () => {
   // Register handler (passed to form)
   // ===========================================================================
   const handleRegister = useCallback(async (userData: Record<string, unknown>, password: string) => {
+    isRegisteringRef.current = true;
     await setPersistence(auth, browserLocalPersistence);
     await register(userData as Parameters<typeof register>[0], password);
     clearStoredReferral();
@@ -384,7 +388,8 @@ const RegisterClient: React.FC = () => {
   // RENDER: Loading
   // ===========================================================================
   const effectiveLoading = isLoading || googleLoading;
-  if (effectiveLoading && !user && !error && !googleError) {
+  // FIX: Ne pas afficher le spinner pendant l'inscription (isRegistering) pour éviter de démonter le formulaire
+  if (effectiveLoading && !user && !error && !googleError && !isRegisteringRef.current) {
     return (
       <div
         className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-gray-950 to-black px-4"

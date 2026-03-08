@@ -402,13 +402,13 @@ export function useInfluencer(): UseInfluencerReturn {
   // Computed values
   const clientShareUrl = useMemo(() => {
     if (!dashboardData?.influencer?.affiliateCodeClient) return "";
-    return `https://sos-expat.com/ref/i/${dashboardData.influencer.affiliateCodeClient}`;
+    return `${window.location.origin}/ref/i/${dashboardData.influencer.affiliateCodeClient}`;
   }, [dashboardData]);
 
   const recruitmentShareUrl = useMemo(() => {
     if (!dashboardData?.influencer?.affiliateCodeRecruitment) return "";
     const providerRoute = getTranslatedRouteSlug("become-provider" as any, langCode);
-    return `https://sos-expat.com/rec/i/${dashboardData.influencer.affiliateCodeRecruitment}`;
+    return `${window.location.origin}/rec/i/${dashboardData.influencer.affiliateCodeRecruitment}`;
   }, [dashboardData, langCode]);
 
   const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default

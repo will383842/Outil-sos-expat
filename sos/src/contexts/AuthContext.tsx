@@ -924,6 +924,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Flag déconnexion pour éviter les réinjections via snapshot
   const signingOutRef = useRef<boolean>(false);
 
+  // FIX: Flag inscription en cours pour éviter que onAuthStateChanged ne mette isLoading=true
+  // Ce qui démontait Layout et tous les formulaires d'inscription multi-étapes
+  const registeringRef = useRef<boolean>(false);
+
   // Garder trace de l'ancien uid pour détecter les changements d'utilisateur
   const previousAuthUserUidRef = useRef<string | null>(null);
 
@@ -963,7 +967,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // P0 FIX: Only set loading=true for actual user changes (login/logout)
       // NOT for token refreshes or focus events with the same user
       // This prevents unnecessary component unmounting via ProtectedRoute
-      if (!isSameUser) {
+      // FIX: Skip isLoading=true during registration to prevent Layout from unmounting
+      // the multi-step form (currentStep state loss → form resets to step 1)
+      if (!isSameUser && !registeringRef.current) {
         setIsLoading(true);
       }
 
@@ -2053,6 +2059,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const register = useCallback(async (userData: Partial<User>, password: string): Promise<void> => {
     devLog("[DEBUG] " + "🔵 REGISTER: Début\n\nEmail: " + userData.email + "\nRole: " + userData.role);
 
+    // FIX: Signal that registration is in progress to prevent onAuthStateChanged
+    // from setting isLoading=true (which unmounts Layout children → form reset)
+    registeringRef.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -2200,6 +2209,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       }).catch(() => { /* ignoré */ });
       throw e;
     } finally {
+      registeringRef.current = false;
       setIsLoading(false);
     }
   }, [deviceInfo]);

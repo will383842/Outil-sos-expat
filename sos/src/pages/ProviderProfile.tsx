@@ -695,6 +695,7 @@ const ProviderProfile: React.FC = () => {
   const [provider, setProvider] = useState<SosProfile | null>(null);
   const [realProviderId, setRealProviderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isAAAProfile = provider?.uid?.startsWith('aaa_') || (provider as any)?.isAAA === true;
   const [notFound, setNotFound] = useState(false);
   // Stocke la raison et le type pour afficher des alternatives pertinentes
   const [notFoundReason, setNotFoundReason] = useState<'not_found' | 'unavailable'>('not_found');
@@ -2234,55 +2235,8 @@ const ProviderProfile: React.FC = () => {
     preferredLangKey,
   ]);
 
-  // ✅ BreadcrumbList Schema
-  const breadcrumbSchema = useMemo(() => {
-    if (!provider) return null;
-    
-    return {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": intl.formatMessage({ id: "providerProfile.breadcrumbHome", defaultMessage: "Accueil" }),
-          "item": window.location.origin
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": intl.formatMessage({ id: "providerProfile.breadcrumbSosCall", defaultMessage: "SOS Appel" }),
-          "item": `${window.location.origin}/sos-appel`
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": formatPublicName(provider),
-          "item": window.location.href
-        }
-      ]
-    };
-  }, [provider, intl]);
-
-  // ✅ FAQPage Schema
-  const faqSchema = useMemo(() => {
-    if (!snippetData?.snippets?.faqContent || snippetData.snippets.faqContent.length === 0) {
-      return null;
-    }
-
-    return {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": snippetData.snippets.faqContent.map((faq) => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": faq.answer
-        }
-      }))
-    };
-  }, [snippetData]);
+  // BreadcrumbList + FAQPage schemas are already included in snippetData.jsonLD
+  // via generateJSONLD() in snippetGenerator.ts — no separate rendering needed
 
   // ✅ Loading state
   if (isLoading) {
@@ -2458,27 +2412,14 @@ const ProviderProfile: React.FC = () => {
         }
       />
 
-      {/* ✅ Snippets JSON-LD */}
-      {snippetData && (
+      {/* AAA profiles: noindex to prevent Google indexing test profiles */}
+      {isAAAProfile && <meta name="robots" content="noindex" />}
+
+      {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage — no separate rendering) */}
+      {snippetData && !isAAAProfile && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: snippetData.jsonLD }}
-        />
-      )}
-      
-      {/* ✅ BreadcrumbList Schema */}
-      {breadcrumbSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-        />
-      )}
-      
-      {/* ✅ FAQPage Schema */}
-      {faqSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
 

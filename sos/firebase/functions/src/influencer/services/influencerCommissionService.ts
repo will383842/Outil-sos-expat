@@ -336,6 +336,20 @@ export async function createCommission(
         throw new Error("Influencer not found in transaction");
       }
 
+      // Double-check for duplicates inside transaction (race condition safety net)
+      if (source.id) {
+        const txDuplicateCheck = await transaction.get(
+          db.collection("influencer_commissions")
+            .where("influencerId", "==", influencerId)
+            .where("type", "==", type)
+            .where("sourceId", "==", source.id)
+            .limit(1)
+        );
+        if (!txDuplicateCheck.empty) {
+          throw new Error("Commission already exists for this action");
+        }
+      }
+
       const currentData = freshInfluencer.data() as Influencer;
 
       // Calculate new stats

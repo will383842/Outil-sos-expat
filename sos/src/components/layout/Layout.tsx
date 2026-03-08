@@ -113,7 +113,11 @@ const Layout: React.FC<LayoutProps> = ({
   };
 
   // Loading state pendant l'initialisation auth
-  if (!authInitialized || isLoading) {
+  // FIX: Ne PAS démonter les enfants sur les pages d'inscription quand isLoading change
+  // pendant createUserWithEmailAndPassword (onAuthStateChanged met isLoading=true pour le nouvel utilisateur)
+  // Ce démontage détruisait l'état du formulaire multi-étapes (currentStep revenait à 1)
+  const isRegistrationPage = /\/(register|inscription)/.test(location.pathname);
+  if (!authInitialized || (isLoading && !isRegistrationPage)) {
     return (
       <div
         className="min-h-screen flex items-center justify-center bg-gray-50"

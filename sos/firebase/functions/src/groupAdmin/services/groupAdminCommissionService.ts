@@ -144,6 +144,18 @@ export async function createClientReferralCommission(
       }
       const freshGroupAdmin = freshGroupAdminDoc.data() as GroupAdmin;
 
+      // Double-check for duplicates inside transaction (race condition safety net)
+      const txDuplicateCheck = await tx.get(
+        getDb().collection("group_admin_commissions")
+          .where("groupAdminId", "==", groupAdminId)
+          .where("type", "==", "client_referral")
+          .where("sourceCallId", "==", callId)
+          .limit(1)
+      );
+      if (!txDuplicateCheck.empty) {
+        throw new Error("Commission already exists for this call");
+      }
+
       tx.set(commissionRef, commission);
       tx.update(groupAdminDoc.ref, {
         totalClients: FieldValue.increment(1),
@@ -489,6 +501,18 @@ export async function createN1CallCommission(
     };
 
     await getDb().runTransaction(async (tx) => {
+      // Double-check for duplicates inside transaction (race condition safety net)
+      const txDupCheck = await tx.get(
+        getDb().collection("group_admin_commissions")
+          .where("groupAdminId", "==", ga.recruitedBy)
+          .where("type", "==", "n1_call")
+          .where("sourceCallId", "==", callId)
+          .limit(1)
+      );
+      if (!txDupCheck.empty) {
+        throw new Error("N1 commission already exists for this call");
+      }
+
       tx.set(commissionRef, commission);
       tx.update(recruiterDoc.ref, {
         totalCommissions: FieldValue.increment(1),
@@ -565,6 +589,18 @@ export async function createN2CallCommission(
     };
 
     await getDb().runTransaction(async (tx) => {
+      // Double-check for duplicates inside transaction (race condition safety net)
+      const txDupCheck = await tx.get(
+        getDb().collection("group_admin_commissions")
+          .where("groupAdminId", "==", n2ParentId)
+          .where("type", "==", "n2_call")
+          .where("sourceCallId", "==", callId)
+          .limit(1)
+      );
+      if (!txDupCheck.empty) {
+        throw new Error("N2 commission already exists for this call");
+      }
+
       tx.set(commissionRef, commission);
       tx.update(n2Doc.ref, {
         totalCommissions: FieldValue.increment(1),
@@ -909,8 +945,8 @@ export async function cancelCommission(
 
       const commission = commissionDoc.data() as GroupAdminCommission;
 
-      // Can only cancel pending or validated commissions
-      if (!["pending", "validated"].includes(commission.status)) {
+      // Can only cancel pending, validated, or available commissions
+      if (!["pending", "validated", "available"].includes(commission.status)) {
         logger.warn("[GroupAdminCommission] Cannot cancel commission in this status", {
           commissionId,
           status: commission.status,
@@ -925,15 +961,27 @@ export async function cancelCommission(
         cancellationReason: reason,
       });
 
-      // Update GroupAdmin balance
+      // Update GroupAdmin balance based on current commission status
       const groupAdminRef = getDb().collection("group_admins").doc(commission.groupAdminId);
-      const balanceField = commission.status === "pending" ? "pendingBalance" : "validatedBalance";
-
-      transaction.update(groupAdminRef, {
-        [balanceField]: FieldValue.increment(-commission.amount),
+      const balanceUpdates: Record<string, unknown> = {
         totalCommissions: FieldValue.increment(-1),
         updatedAt: Timestamp.now(),
-      });
+      };
+
+      switch (commission.status) {
+        case "pending":
+          balanceUpdates.pendingBalance = FieldValue.increment(-commission.amount);
+          break;
+        case "validated":
+          balanceUpdates.validatedBalance = FieldValue.increment(-commission.amount);
+          break;
+        case "available":
+          balanceUpdates.availableBalance = FieldValue.increment(-commission.amount);
+          balanceUpdates.totalEarned = FieldValue.increment(-commission.amount);
+          break;
+      }
+
+      transaction.update(groupAdminRef, balanceUpdates);
 
       return true;
     });

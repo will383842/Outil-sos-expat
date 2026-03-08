@@ -410,12 +410,12 @@ export function useBlogger(): UseBloggerReturn {
 
   const clientShareUrl = useMemo(() => {
     if (!blogger?.affiliateCodeClient) return '';
-    return `https://sos-expat.com/ref/b/${blogger.affiliateCodeClient}`;
+    return `${window.location.origin}/ref/b/${blogger.affiliateCodeClient}`;
   }, [blogger?.affiliateCodeClient]);
 
   const recruitmentShareUrl = useMemo(() => {
     if (!blogger?.affiliateCodeRecruitment) return '';
-    return `https://sos-expat.com/rec/b/${blogger.affiliateCodeRecruitment}`;
+    return `${window.location.origin}/rec/b/${blogger.affiliateCodeRecruitment}`;
   }, [blogger?.affiliateCodeRecruitment]);
 
   const minimumWithdrawal = useMemo(() => {

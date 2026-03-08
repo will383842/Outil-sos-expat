@@ -22,8 +22,6 @@ import {
 } from "firebase/firestore";
 import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
-import { useApp } from "../contexts/AppContext";
-import { getTranslatedRouteSlug } from "@/multilingual-system/core/routing/localeRoutes";
 import {
   ChatterDashboardData,
   ChatterCommission,
@@ -77,8 +75,6 @@ interface UseChatterReturn {
 
 export function useChatter(): UseChatterReturn {
   const { user } = useAuth();
-  const { language } = useApp();
-  const langCode = (language || "en") as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
   const [dashboardData, setDashboardData] = useState<ChatterDashboardData | null>(null);
   const [commissions, setCommissions] = useState<ChatterCommission[]>([]);
   const [withdrawals, setWithdrawals] = useState<ChatterWithdrawal[]>([]);
@@ -336,14 +332,13 @@ export function useChatter(): UseChatterReturn {
   // Computed values
   const clientShareUrl = useMemo(() => {
     if (!dashboardData?.chatter?.affiliateCodeClient) return "";
-    return `${window.location.origin}?ref=${dashboardData.chatter.affiliateCodeClient}`;
+    return `${window.location.origin}/ref/c/${dashboardData.chatter.affiliateCodeClient}`;
   }, [dashboardData]);
 
   const recruitmentShareUrl = useMemo(() => {
     if (!dashboardData?.chatter?.affiliateCodeRecruitment) return "";
-    const providerRoute = getTranslatedRouteSlug("become-provider" as any, langCode);
-    return `${window.location.origin}/${providerRoute}?ref=${dashboardData.chatter.affiliateCodeRecruitment}`;
-  }, [dashboardData, langCode]);
+    return `${window.location.origin}/rec/c/${dashboardData.chatter.affiliateCodeRecruitment}`;
+  }, [dashboardData]);
 
   const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000;
 

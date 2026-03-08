@@ -333,7 +333,7 @@ const AdminPaymentsDashboard: React.FC = () => {
 
     try {
       const userTypes: PaymentUserType[] = userTypeFilter === 'all'
-        ? ['chatter', 'influencer', 'blogger', 'group_admin']
+        ? ['chatter', 'influencer', 'blogger', 'group_admin', 'affiliate', 'partner']
         : [userTypeFilter];
 
       const allWithdrawals: UnifiedWithdrawal[] = [];
@@ -409,7 +409,7 @@ const AdminPaymentsDashboard: React.FC = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const userTypes: PaymentUserType[] = ['chatter', 'influencer', 'blogger', 'group_admin'];
+      const userTypes: PaymentUserType[] = ['chatter', 'influencer', 'blogger', 'group_admin', 'affiliate', 'partner'];
       const stats: WithdrawalStats = {
         pending: { count: 0, amount: 0 },
         processing: { count: 0, amount: 0 },
@@ -940,6 +940,9 @@ const AdminPaymentsDashboard: React.FC = () => {
                 <option value="chatter">Chatter</option>
                 <option value="influencer">Influencer</option>
                 <option value="blogger">Blogger</option>
+                <option value="group_admin">Admin Groupe</option>
+                <option value="affiliate">Affilié</option>
+                <option value="partner">Partenaire</option>
               </select>
             </div>
 

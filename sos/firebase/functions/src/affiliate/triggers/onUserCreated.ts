@@ -252,18 +252,22 @@ export async function handleAffiliateUserCreated(event: any) {
         });
       } else if (actorType === "influencer") {
         (affiliateFields as any).influencerReferredBy = referredBy;
+        (affiliateFields as any).referredByInfluencer = referredBy;
+        (affiliateFields as any).influencerCode = referredBy;
         logger.info("[affiliateOnUserCreated] Set influencer-specific referral fields", {
           userId,
           influencerCode: referredBy,
         });
       } else if (actorType === "chatter") {
         (affiliateFields as any).chatterReferredBy = referredBy;
+        (affiliateFields as any).referredByChatter = referredBy;
         logger.info("[affiliateOnUserCreated] Set chatter-specific referral fields", {
           userId,
           chatterCode: referredBy,
         });
       } else if (actorType === "groupAdmin") {
         (affiliateFields as any).groupAdminReferredBy = referredBy;
+        (affiliateFields as any).referredByGroupAdmin = referredBy;
         logger.info("[affiliateOnUserCreated] Set groupAdmin-specific referral fields", {
           userId,
           groupAdminCode: referredBy,

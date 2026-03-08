@@ -48,6 +48,8 @@ interface UseGroupAdminReturn {
   markNotificationRead: (notificationId: string) => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
   unreadNotificationsCount: number;
+  clientShareUrl: string;
+  recruitmentShareUrl: string;
 }
 
 export function useGroupAdmin(): UseGroupAdminReturn {
@@ -186,6 +188,16 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     return notifications.filter((n) => !n.isRead).length;
   }, [notifications]);
 
+  const clientShareUrl = useMemo(() => {
+    if (!profile?.affiliateCodeClient) return '';
+    return `${window.location.origin}/ref/ga/${profile.affiliateCodeClient}`;
+  }, [profile?.affiliateCodeClient]);
+
+  const recruitmentShareUrl = useMemo(() => {
+    if (!profile?.affiliateCodeRecruitment) return '';
+    return `${window.location.origin}/rec/ga/${profile.affiliateCodeRecruitment}`;
+  }, [profile?.affiliateCodeRecruitment]);
+
   return {
     profile,
     recentCommissions,
@@ -199,6 +211,8 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     markNotificationRead,
     markAllNotificationsRead,
     unreadNotificationsCount,
+    clientShareUrl,
+    recruitmentShareUrl,
   };
 }
 

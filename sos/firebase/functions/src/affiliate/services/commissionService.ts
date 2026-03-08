@@ -276,6 +276,21 @@ export async function createCommission(
     const commissionRef = db.collection("affiliate_commissions").doc();
 
     await db.runTransaction(async (transaction: Transaction) => {
+      // Double-check for duplicates inside transaction (race condition safety net)
+      if (input.source.id) {
+        const txDuplicateCheck = await transaction.get(
+          db.collection("affiliate_commissions")
+            .where("referrerId", "==", input.referrerId)
+            .where("refereeId", "==", input.refereeId)
+            .where("type", "==", input.type)
+            .where("sourceId", "==", input.source.id)
+            .limit(1)
+        );
+        if (!txDuplicateCheck.empty) {
+          throw new Error("Commission already exists for this action");
+        }
+      }
+
       // Create commission
       transaction.set(commissionRef, { ...commission, id: commissionRef.id });
 
@@ -502,8 +517,8 @@ export async function cancelCommission(
 
     const commission = commissionDoc.data() as AffiliateCommission;
 
-    // Only pending or available commissions can be cancelled
-    const cancellableStatuses: CommissionStatus[] = ["pending", "available"];
+    // Only pending, validated, or available commissions can be cancelled
+    const cancellableStatuses: CommissionStatus[] = ["pending", "validated", "available"];
     if (!cancellableStatuses.includes(commission.status)) {
       return { success: false, error: `Cannot cancel commission with status: ${commission.status}` };
     }
@@ -527,13 +542,17 @@ export async function cancelCommission(
         updatedAt: now,
       };
 
-      if (commission.status === "pending") {
-        balanceUpdate.pendingBalance = FieldValue.increment(-commission.amount);
-      } else {
-        balanceUpdate.availableBalance = FieldValue.increment(-commission.amount);
+      switch (commission.status) {
+        case "pending":
+          balanceUpdate.pendingBalance = FieldValue.increment(-commission.amount);
+          break;
+        case "validated":
+          balanceUpdate.validatedBalance = FieldValue.increment(-commission.amount);
+          break;
+        case "available":
+          balanceUpdate.availableBalance = FieldValue.increment(-commission.amount);
+          break;
       }
-
-      // Don't decrease totalEarned - it's a lifetime counter
 
       transaction.update(userRef, balanceUpdate);
     });
