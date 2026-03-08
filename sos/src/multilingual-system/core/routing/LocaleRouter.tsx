@@ -58,6 +58,13 @@ function computeRedirectPath(
     return { redirectTo: null, newLang: null };
   }
 
+  // Skip locale handling for affiliate path-based links (/ref/X/CODE, /rec/X/CODE)
+  // These are handled by AffiliatePathCapture routes in App.tsx
+  if (/^\/(ref|rec)\//.test(pathname)) {
+    console.log("🔷 [LocaleRouter] Skipping affiliate path route:", pathname);
+    return { redirectTo: null, newLang: null };
+  }
+
   // Root path - redirect to default locale
   if (decodedPathname === "/") {
     const locale = getLocaleString(language);

@@ -1054,38 +1054,24 @@ const App: React.FC = () => {
                     /rec/ga/:code → group-admin recruitment link (stores as actorType=groupAdmin)
                     Static segments rank higher than /:x/:y/:z in React Router v6,
                     so these routes win over the catch-all provider routes below automatically. */}
-                <Route
-                  path="/ref/b/:code"
-                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
-                />
-                <Route
-                  path="/rec/b/:code"
-                  element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />}
-                />
-                <Route
-                  path="/ref/c/:code"
-                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
-                />
-                <Route
-                  path="/rec/c/:code"
-                  element={<AffiliatePathCapture actorType="chatter" codeType="recruitment" redirectPath="/chatter/inscription" />}
-                />
-                <Route
-                  path="/ref/i/:code"
-                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
-                />
-                <Route
-                  path="/rec/i/:code"
-                  element={<AffiliatePathCapture actorType="influencer" codeType="recruitment" redirectPath="/influencer/inscription" />}
-                />
-                <Route
-                  path="/ref/ga/:code"
-                  element={<AffiliatePathCapture actorType="client" codeType="client" />}
-                />
-                <Route
-                  path="/rec/ga/:code"
-                  element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />}
-                />
+                {/* Without locale prefix (direct links like /ref/c/CODE) */}
+                <Route path="/ref/b/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/rec/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />} />
+                <Route path="/ref/c/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/rec/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="recruitment" redirectPath="/chatter/inscription" />} />
+                <Route path="/ref/i/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/rec/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="recruitment" redirectPath="/influencer/inscription" />} />
+                <Route path="/ref/ga/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/rec/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />} />
+                {/* With locale prefix (after LocaleRouter redirect: /fr-fr/ref/c/CODE) */}
+                <Route path="/:locale/ref/b/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/:locale/rec/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />} />
+                <Route path="/:locale/ref/c/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/:locale/rec/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="recruitment" redirectPath="/chatter/inscription" />} />
+                <Route path="/:locale/ref/i/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/:locale/rec/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="recruitment" redirectPath="/influencer/inscription" />} />
+                <Route path="/:locale/ref/ga/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
+                <Route path="/:locale/rec/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />} />
 
                 {/* IMPORTANT: Catch-all provider routes MUST be rendered LAST (before 404)
                     These match generic patterns like /:langLocale/:roleCountry/:nameSlug
