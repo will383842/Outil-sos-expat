@@ -611,10 +611,12 @@ export function useWithdrawals(options?: {
         WithdrawalsResponse
       >(functions, "paymentGetHistory");
 
-      const result = await getWithdrawalsFn({
-        limit: optionsRef.current?.limit,
-        status: optionsRef.current?.status,
-      });
+      // Build payload without undefined keys (Firebase SDK serializes undefined → null, causing 400)
+      const payload: { limit?: number; status?: WithdrawalStatus[] } = {};
+      if (optionsRef.current?.limit != null) payload.limit = optionsRef.current.limit;
+      if (optionsRef.current?.status != null) payload.status = optionsRef.current.status;
+
+      const result = await getWithdrawalsFn(payload);
 
       setWithdrawals(result.data.withdrawals);
     } catch (err) {
