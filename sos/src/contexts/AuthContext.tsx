@@ -1730,7 +1730,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             window.location.href = savedRedirect;
           } else {
             devWarn('[Auth] Google popup: blocked invalid redirect URL:', savedRedirect);
-            window.location.href = '/dashboard';
+            window.location.href = '/dashboard' + (window.location.search || '');
           }
         }
         return;
@@ -2009,7 +2009,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             window.location.href = savedRedirect;
           } else {
             devWarn('[Auth] Google redirect: blocked invalid redirect URL:', savedRedirect);
-            window.location.href = '/dashboard';
+            window.location.href = '/dashboard' + (window.location.search || '');
           }
         }
       } catch (e) {

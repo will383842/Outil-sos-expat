@@ -348,6 +348,19 @@
       src="https://www.facebook.com/tr?id=2204016713738311&ev=PageView&noscript=1" />
   </noscript>
 
+  <!-- 🔗 AFFILIATE: Capture ?ref= IMMEDIATELY before any redirect can strip it -->
+  <script>
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var ref = params.get('ref');
+        if (ref) {
+          sessionStorage.setItem('sos_affiliate_ref', ref);
+        }
+      } catch (e) { }
+    })();
+  </script>
+
   <!-- 🌍 LOCALE REDIRECT - Must be FIRST before anything else -->
   <script>
     (function () {
@@ -431,8 +444,10 @@
       // Build locale: language-country (e.g., de-th, en-cn, fr-jp)
       var locale = lang + '-' + country;
 
-      // Redirect to locale
-      window.location.replace('/' + locale);
+      // Redirect to locale — preserve query params (?ref=CODE) and hash
+      var qs = window.location.search || '';
+      var hash = window.location.hash || '';
+      window.location.replace('/' + locale + qs + hash);
     })();
   </script>
 

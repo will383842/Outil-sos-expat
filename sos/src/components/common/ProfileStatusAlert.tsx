@@ -78,7 +78,7 @@ const ProfileStatusAlert: React.FC<ProfileStatusAlertProps> = ({ user }) => {
                 {intl.formatMessage({ id: 'profileValidation.rejected.contactSupport' })}
               </a>
               <button
-                onClick={() => window.location.href = '/dashboard/profile/edit'}
+                onClick={() => window.location.href = '/dashboard/profile/edit' + (window.location.search || '')}
                 className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-red-600 border-2 border-red-600 px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 {intl.formatMessage({ id: 'profileValidation.rejected.editProfile' })}
