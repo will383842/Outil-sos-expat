@@ -47,7 +47,10 @@ const LEGACY_KEYS = {
 // HELPERS
 // ============================================================================
 
-function getStorageKey(actorType: ActorType): string {
+function getStorageKey(actorType: ActorType, codeType?: ReferralCodeType): string {
+  if (codeType && codeType !== 'client') {
+    return `${STORAGE_KEY_PREFIX}${actorType}_${codeType}`;
+  }
   return `${STORAGE_KEY_PREFIX}${actorType}`;
 }
 
@@ -107,28 +110,41 @@ export function storeReferralCode(
   };
 
   try {
-    localStorage.setItem(getStorageKey(actorType), obfuscate(JSON.stringify(stored)));
+    localStorage.setItem(getStorageKey(actorType, codeType), obfuscate(JSON.stringify(stored)));
   } catch (err) {
     console.warn('[referralStorage] Failed to store referral code:', err);
   }
 }
 
 /**
- * Get the stored referral for a given actor type.
+ * Get the stored referral for a given actor type and optional code type.
+ * If codeType is specified, looks for that specific key first.
+ * If codeType is omitted, checks 'provider' first, then 'recruitment', then legacy (no suffix).
  * Returns null if not found or expired (auto-cleans expired entries).
  */
-export function getStoredReferral(actorType: ActorType): StoredReferral | null {
+export function getStoredReferral(actorType: ActorType, codeType?: ReferralCodeType): StoredReferral | null {
   if (typeof window === 'undefined') return null;
 
+  // If specific codeType requested, look only there
+  if (codeType) {
+    return _getFromKey(getStorageKey(actorType, codeType));
+  }
+
+  // Otherwise check all keys: provider → recruitment → legacy (client/no suffix)
+  return _getFromKey(getStorageKey(actorType, 'provider'))
+    || _getFromKey(getStorageKey(actorType, 'recruitment'))
+    || _getFromKey(getStorageKey(actorType));
+}
+
+function _getFromKey(key: string): StoredReferral | null {
   try {
-    const raw = localStorage.getItem(getStorageKey(actorType));
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
 
     const stored: StoredReferral = JSON.parse(deobfuscate(raw));
 
     if (isExpired(stored.expiresAt)) {
-      // Auto-clean expired entry
-      localStorage.removeItem(getStorageKey(actorType));
+      localStorage.removeItem(key);
       return null;
     }
 
@@ -148,11 +164,13 @@ export function getStoredReferralCode(actorType: ActorType): string | null {
 }
 
 /**
- * Clear the stored referral for a given actor type.
+ * Clear the stored referral for a given actor type (all codeType variants).
  */
 export function clearStoredReferral(actorType: ActorType): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(getStorageKey(actorType));
+  localStorage.removeItem(getStorageKey(actorType, 'recruitment'));
+  localStorage.removeItem(getStorageKey(actorType, 'provider'));
 }
 
 /**
@@ -161,7 +179,7 @@ export function clearStoredReferral(actorType: ActorType): void {
 export function clearAllStoredReferrals(): void {
   if (typeof window === 'undefined') return;
   const actorTypes: ActorType[] = ['client', 'influencer', 'chatter', 'blogger', 'groupAdmin', 'partner'];
-  actorTypes.forEach((type) => localStorage.removeItem(getStorageKey(type)));
+  actorTypes.forEach((type) => clearStoredReferral(type));
 }
 
 // ============================================================================

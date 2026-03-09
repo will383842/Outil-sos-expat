@@ -1068,10 +1068,10 @@ const App: React.FC = () => {
                 <Route path="/ref/ga/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/rec/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />} />
                 {/* Provider recruitment links (/prov/:role/:code) — recruits providers (lawyers/expats) */}
-                <Route path="/prov/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="provider" />} />
-                <Route path="/prov/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="provider" />} />
-                <Route path="/prov/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="provider" />} />
-                <Route path="/prov/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="provider" />} />
+                <Route path="/prov/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="provider" redirectPath="/register/lawyer" />} />
+                <Route path="/prov/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="provider" redirectPath="/register/lawyer" />} />
+                <Route path="/prov/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="provider" redirectPath="/register/lawyer" />} />
+                <Route path="/prov/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="provider" redirectPath="/register/lawyer" />} />
                 {/* With locale prefix (after LocaleRouter redirect: /fr-fr/ref/c/CODE) */}
                 <Route path="/:locale/ref/b/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/:locale/rec/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />} />
@@ -1082,10 +1082,10 @@ const App: React.FC = () => {
                 <Route path="/:locale/ref/ga/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/:locale/rec/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />} />
                 {/* Provider recruitment with locale prefix */}
-                <Route path="/:locale/prov/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="provider" />} />
-                <Route path="/:locale/prov/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="provider" />} />
-                <Route path="/:locale/prov/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="provider" />} />
-                <Route path="/:locale/prov/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="provider" />} />
+                <Route path="/:locale/prov/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="provider" redirectPath="/register/lawyer" />} />
+                <Route path="/:locale/prov/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="provider" redirectPath="/register/lawyer" />} />
+                <Route path="/:locale/prov/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="provider" redirectPath="/register/lawyer" />} />
+                <Route path="/:locale/prov/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="provider" redirectPath="/register/lawyer" />} />
 
                 {/* IMPORTANT: Catch-all provider routes MUST be rendered LAST (before 404)
                     These match generic patterns like /:langLocale/:roleCountry/:nameSlug
