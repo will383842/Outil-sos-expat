@@ -410,7 +410,7 @@ const protectedUserRoutes: RouteConfig[] = [
   // Chatter System Routes - Protected routes for registered chatters
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
-  { path: "/chatter", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard", redirectTo: "/chatter/tableau-de-bord" },
+  { path: "/chatter", component: ChatterDashboard, protected: true, role: 'chatter', redirectTo: "/chatter/tableau-de-bord" },
   { path: "/chatter/inscription", component: ChatterRegister, translated: "chatter-register" },
   // Après inscription, l'utilisateur passe par l'onboarding Telegram (optionnel mais incentivé)
   { path: "/chatter/telegram", component: ChatterTelegramOnboarding, protected: true, role: 'chatter', translated: "chatter-telegram" },
