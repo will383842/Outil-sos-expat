@@ -145,6 +145,38 @@ export function getStreakColor(days: number): string {
 }
 
 // ──────────────────────────────────────────────
+// MONEY TOKENS — Financial elements styling
+// ──────────────────────────────────────────────
+
+export const MONEY = {
+  /** Card with golden/amber tint for financial amounts */
+  card: "bg-gradient-to-br from-amber-500/10 to-yellow-500/5 dark:from-amber-500/10 dark:to-yellow-500/5 border border-amber-500/15 rounded-2xl",
+  /** Hero money amount (dashboard total) */
+  heroAmount: "text-[clamp(2rem,6vw,3rem)] font-extrabold tabular-nums tracking-tight text-amber-300",
+  /** Card-level money amount */
+  cardAmount: "text-[clamp(1.25rem,3vw,1.75rem)] font-bold tabular-nums text-emerald-500",
+  /** Inline money amount */
+  inlineAmount: "text-base font-semibold tabular-nums text-emerald-500",
+  /** Positive trend */
+  positive: "text-emerald-500",
+  /** Negative trend */
+  negative: "text-red-500",
+  /** Pending/waiting */
+  pending: "text-amber-500",
+} as const;
+
+// ──────────────────────────────────────────────
+// INPUT TOKENS — Form elements
+// ──────────────────────────────────────────────
+
+export const INPUT = {
+  base: "bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 min-h-[48px]",
+  select: "bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-3 text-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 min-h-[48px]",
+  label: "text-sm font-medium text-slate-300 mb-1.5 block",
+  error: "text-xs text-red-400 mt-1",
+} as const;
+
+// ──────────────────────────────────────────────
 // TYPOGRAPHY helpers
 // ──────────────────────────────────────────────
 
@@ -152,12 +184,19 @@ export const TYPOGRAPHY = {
   amountLarge: "text-4xl font-extrabold text-emerald-500 tracking-tight",
   amountMedium: "text-2xl font-bold text-emerald-500",
   amountSmall: "text-base font-semibold text-emerald-500",
+  /** Hero headline — page titles */
+  heroTitle: "text-[clamp(1.5rem,4vw,2.25rem)] font-extrabold tracking-tight",
+  /** Section headline — card groups */
   sectionTitle: "text-lg font-bold text-slate-900 dark:text-white tracking-tight",
   sectionSubtitle: "text-sm text-slate-500 dark:text-slate-400",
+  /** Card headline */
+  cardTitle: "text-[clamp(0.875rem,2vw,1.125rem)] font-semibold tracking-tight",
   label: "text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500",
   affiliateCode: "font-mono text-sm font-bold tracking-wide",
   /** Gradient headline for feature callouts */
   gradientHeadline: "text-2xl font-extrabold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent tracking-tight",
+  /** Caption / secondary text */
+  caption: "text-[clamp(0.6875rem,1.2vw,0.8125rem)] text-slate-400 dark:text-slate-500",
 } as const;
 
 // ──────────────────────────────────────────────

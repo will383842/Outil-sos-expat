@@ -4,10 +4,12 @@
  * Manages training modules, progress, quizzes, and certificates
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import { useChatterMissions } from '@/hooks/useChatterMissions';
+
+const TRAINING_CACHE_TTL = 300_000; // 5min — training content changes rarely
 import {
   ChatterTrainingModule,
   ChatterTrainingProgress,
@@ -51,11 +53,21 @@ export function useChatterTraining(): UseChatterTrainingReturn {
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Cache ref for modules list
+  const modulesCacheRef = useRef<{ data: { modules: TrainingModuleListItem[]; overallProgress: TrainingOverallProgress }; timestamp: number } | null>(null);
+
   // Track video watched for daily missions
   const { trackVideoWatched } = useChatterMissions();
 
-  // Load all training modules
-  const loadModules = useCallback(async () => {
+  // Load all training modules (with cache)
+  const loadModules = useCallback(async (force = false) => {
+    // Check cache
+    if (!force && modulesCacheRef.current && (Date.now() - modulesCacheRef.current.timestamp < TRAINING_CACHE_TTL)) {
+      setModules(modulesCacheRef.current.data.modules);
+      setOverallProgress(modulesCacheRef.current.data.overallProgress);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -67,11 +79,11 @@ export function useChatterTraining(): UseChatterTrainingReturn {
         overallProgress: TrainingOverallProgress;
       };
 
+      modulesCacheRef.current = { data, timestamp: Date.now() };
       setModules(data.modules);
       setOverallProgress(data.overallProgress);
     } catch (err: unknown) {
       console.error('[useChatterTraining] Failed to load modules:', err);
-      // Check if training is disabled
       const errorCode = (err as { code?: string })?.code;
       const errorMessage = (err as { message?: string })?.message;
       if (errorCode === 'unavailable' || errorMessage?.includes('disabled')) {

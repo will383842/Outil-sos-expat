@@ -1,24 +1,27 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Copy, Check, Share2, Users, UserPlus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check, Share2, Users, UserPlus, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { copyToClipboard } from '@/utils/clipboard';
 
 const StickyAffiliateBar: React.FC = () => {
   const intl = useIntl();
-  const { clientShareUrl, recruitmentShareUrl, dashboardData } = useChatterData();
+  const { clientShareUrl, recruitmentShareUrl, providerShareUrl, dashboardData } = useChatterData();
 
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruitment, setCopiedRecruitment] = useState(false);
+  const [copiedProvider, setCopiedProvider] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const lastScrollY = useRef(0);
 
   const affiliateCodeClient = dashboardData?.chatter?.affiliateCodeClient ?? '';
   const affiliateCodeRecruitment = dashboardData?.chatter?.affiliateCodeRecruitment ?? '';
+  const affiliateCodeProvider = dashboardData?.chatter?.affiliateCodeProvider ?? '';
   const totalClients = dashboardData?.chatter?.totalClients ?? 0;
   const totalRecruits = dashboardData?.chatter?.totalRecruits ?? 0;
+  const totalProviderRecruits = dashboardData?.chatter?.totalProviderRecruits ?? 0;
 
   // Dynamic commission amounts from config (cents -> dollars)
   const config = dashboardData?.config;
@@ -48,26 +51,31 @@ const StickyAffiliateBar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment') => {
+  const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment' | 'provider') => {
+    if (!url?.trim()) {
+      toast.error(intl.formatMessage({ id: 'chatter.bar.linkNotReady', defaultMessage: 'Link not ready yet, please wait...' }));
+      return;
+    }
     const success = await copyToClipboard(url);
     if (success) {
       if (type === 'client') {
         setCopiedClient(true);
         setTimeout(() => setCopiedClient(false), 2000);
-      } else {
+      } else if (type === 'recruitment') {
         setCopiedRecruitment(true);
         setTimeout(() => setCopiedRecruitment(false), 2000);
+      } else {
+        setCopiedProvider(true);
+        setTimeout(() => setCopiedProvider(false), 2000);
       }
       localStorage.setItem('chatter_link_copied', Date.now().toString());
       navigator.vibrate?.(50);
-      toast.success(
-        intl.formatMessage(
-          {
-            id: type === 'client' ? 'chatter.bar.copiedClient' : 'chatter.bar.copiedRecruitment',
-            defaultMessage: type === 'client' ? 'Client link copied!' : 'Recruitment link copied!',
-          }
-        )
-      );
+      const msgIds: Record<string, { id: string; defaultMessage: string }> = {
+        client: { id: 'chatter.bar.copiedClient', defaultMessage: 'Client link copied!' },
+        recruitment: { id: 'chatter.bar.copiedRecruitment', defaultMessage: 'Recruitment link copied!' },
+        provider: { id: 'chatter.bar.copiedProvider', defaultMessage: 'Provider link copied!' },
+      };
+      toast.success(intl.formatMessage(msgIds[type]));
     } else {
       toast.error(
         intl.formatMessage({
@@ -78,10 +86,17 @@ const StickyAffiliateBar: React.FC = () => {
     }
   }, [intl]);
 
-  const handleShare = useCallback(async (url: string, type: 'client' | 'recruitment') => {
-    const title = type === 'client'
-      ? 'SOS Expat - Assistance'
-      : 'SOS Expat - Rejoins-nous';
+  const handleShare = useCallback(async (url: string, type: 'client' | 'recruitment' | 'provider') => {
+    if (!url?.trim()) {
+      toast.error(intl.formatMessage({ id: 'chatter.bar.linkNotReady', defaultMessage: 'Link not ready yet, please wait...' }));
+      return;
+    }
+    const titles: Record<string, string> = {
+      client: 'SOS Expat - Assistance',
+      recruitment: 'SOS Expat - Rejoins-nous',
+      provider: 'SOS Expat - Devenez prestataire',
+    };
+    const title = titles[type];
 
     if (navigator.share) {
       try {
@@ -108,11 +123,11 @@ const StickyAffiliateBar: React.FC = () => {
     }
   }, [intl]);
 
-  // ── COLLAPSED: minimal bar with two compact copy buttons ──
+  // ── COLLAPSED: minimal bar with compact copy buttons (provider hidden on narrow screens) ──
   if (collapsed) {
     return (
-      <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-center gap-2">
+      <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
+        <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-center gap-1.5 flex-wrap">
           <button
             onClick={() => handleCopy(clientShareUrl ?? '', 'client')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
@@ -143,6 +158,22 @@ const StickyAffiliateBar: React.FC = () => {
             </span>
           </button>
 
+          {/* Provider button hidden on narrow screens (<400px) to prevent overflow */}
+          <button
+            onClick={() => handleCopy(providerShareUrl ?? '', 'provider')}
+            className={`hidden min-[400px]:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              copiedProvider
+                ? 'bg-teal-500/20 border border-teal-400/30 text-teal-300'
+                : 'bg-teal-500/10 border border-teal-500/20 text-teal-300 active:bg-teal-500/20'
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5 shrink-0" />
+            {copiedProvider ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            <span className="whitespace-nowrap">
+              <FormattedMessage id="chatter.bar.collapsedProvider" defaultMessage="Provider ${amount}/call" values={{ amount: providerCallAmount }} />
+            </span>
+          </button>
+
           <button
             onClick={() => { setCollapsed(false); lastScrollY.current = window.scrollY + 200; }}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white transition-colors"
@@ -157,7 +188,7 @@ const StickyAffiliateBar: React.FC = () => {
 
   // ── EXPANDED: full link cards ──
   return (
-    <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
+    <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
       <div className="max-w-7xl mx-auto px-3 py-2">
         <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
 
@@ -201,6 +232,28 @@ const StickyAffiliateBar: React.FC = () => {
               defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive calls, you earn $5 per call for 6 months.',
             })}
           />
+
+          {/* Divider (desktop) */}
+          <div className="hidden sm:block w-px bg-white/[0.06] shrink-0 self-stretch" />
+
+          {/* ── Provider link card ── */}
+          <LinkCard
+            type="provider"
+            icon={<Briefcase className="w-4 h-4 text-teal-400" />}
+            label={intl.formatMessage({ id: 'chatter.bar.providerLabel', defaultMessage: 'Provider link' })}
+            commission={`$${providerCallAmount}`}
+            commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
+            code={affiliateCodeProvider}
+            count={totalProviderRecruits}
+            copied={copiedProvider}
+            colorScheme="teal"
+            onCopy={() => handleCopy(providerShareUrl ?? '', 'provider')}
+            onShare={() => handleShare(providerShareUrl ?? '', 'provider')}
+            tooltip={intl.formatMessage({
+              id: 'chatter.bar.providerTooltip',
+              defaultMessage: 'Share this link with providers (lawyers, expats). When they register and receive paid calls, you earn per call.',
+            })}
+          />
         </div>
 
         {/* Collapse button (mobile only) */}
@@ -218,7 +271,7 @@ const StickyAffiliateBar: React.FC = () => {
 
 /** Reusable link card for client / recruitment */
 interface LinkCardProps {
-  type: 'client' | 'recruitment';
+  type: 'client' | 'recruitment' | 'provider';
   icon: React.ReactNode;
   label: string;
   commission: string;
@@ -226,7 +279,7 @@ interface LinkCardProps {
   code: string;
   count: number;
   copied: boolean;
-  colorScheme: 'emerald' | 'violet';
+  colorScheme: 'emerald' | 'violet' | 'teal';
   onCopy: () => void;
   onShare: () => void;
   tooltip: string;
@@ -259,16 +312,33 @@ function LinkCard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showTooltip]);
 
-  const isEmerald = colorScheme === 'emerald';
-
-  const cardBg = isEmerald ? 'bg-emerald-500/[0.08] border-emerald-500/[0.15]' : 'bg-violet-500/[0.08] border-violet-500/[0.15]';
-  const badgeBg = isEmerald ? 'bg-emerald-500/20 border-emerald-500/25 text-emerald-300' : 'bg-violet-500/20 border-violet-500/25 text-violet-300';
-  const commColor = isEmerald ? 'text-emerald-300' : 'text-violet-300';
-  const btnCopied = isEmerald ? 'bg-emerald-500/30 border-emerald-400/40 text-emerald-200' : 'bg-violet-500/30 border-violet-400/40 text-violet-200';
-  const btnDefault = isEmerald
-    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 active:bg-emerald-500/30'
-    : 'bg-violet-500/20 border-violet-500/30 text-violet-300 active:bg-violet-500/30';
-  const shareBtn = isEmerald ? 'text-emerald-400/70 active:text-emerald-300 active:bg-emerald-500/10' : 'text-violet-400/70 active:text-violet-300 active:bg-violet-500/10';
+  const colorMap = {
+    emerald: {
+      cardBg: 'bg-emerald-500/[0.08] border-emerald-500/[0.15]',
+      badgeBg: 'bg-emerald-500/20 border-emerald-500/25 text-emerald-300',
+      commColor: 'text-emerald-300',
+      btnCopied: 'bg-emerald-500/30 border-emerald-400/40 text-emerald-200',
+      btnDefault: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 active:bg-emerald-500/30',
+      shareBtn: 'text-emerald-400/70 active:text-emerald-300 active:bg-emerald-500/10',
+    },
+    violet: {
+      cardBg: 'bg-violet-500/[0.08] border-violet-500/[0.15]',
+      badgeBg: 'bg-violet-500/20 border-violet-500/25 text-violet-300',
+      commColor: 'text-violet-300',
+      btnCopied: 'bg-violet-500/30 border-violet-400/40 text-violet-200',
+      btnDefault: 'bg-violet-500/20 border-violet-500/30 text-violet-300 active:bg-violet-500/30',
+      shareBtn: 'text-violet-400/70 active:text-violet-300 active:bg-violet-500/10',
+    },
+    teal: {
+      cardBg: 'bg-teal-500/[0.08] border-teal-500/[0.15]',
+      badgeBg: 'bg-teal-500/20 border-teal-500/25 text-teal-300',
+      commColor: 'text-teal-300',
+      btnCopied: 'bg-teal-500/30 border-teal-400/40 text-teal-200',
+      btnDefault: 'bg-teal-500/20 border-teal-500/30 text-teal-300 active:bg-teal-500/30',
+      shareBtn: 'text-teal-400/70 active:text-teal-300 active:bg-teal-500/10',
+    },
+  };
+  const { cardBg, badgeBg, commColor, btnCopied, btnDefault, shareBtn } = colorMap[colorScheme];
 
   return (
     <div className={`flex-1 min-w-0 rounded-xl border ${cardBg} px-3 py-2`} ref={showTooltip ? tooltipRef : undefined}>

@@ -142,4 +142,4 @@ const LevelProgressCard: React.FC<LevelProgressCardProps> = ({ className = '' })
   );
 };
 
-export default LevelProgressCard;
+export default React.memo(LevelProgressCard);

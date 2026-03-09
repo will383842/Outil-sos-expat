@@ -618,8 +618,8 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
       }
     };
 
-    window.addEventListener('scroll', handleUpdate, true);
-    window.addEventListener('resize', handleUpdate);
+    window.addEventListener('scroll', handleUpdate, { capture: true, passive: true });
+    window.addEventListener('resize', handleUpdate, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', handleUpdate, true);

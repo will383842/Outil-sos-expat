@@ -8,7 +8,7 @@
  * - Active promotions
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,14 +40,23 @@ interface UseChatterReferralsReturn {
   refreshDashboard: () => Promise<void>;
 }
 
+const REFERRAL_CACHE_TTL = 120_000; // 2min cache
+
 export function useChatterReferrals(): UseChatterReferralsReturn {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<ChatterReferralDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cacheRef = useRef<{ data: ChatterReferralDashboardData; timestamp: number } | null>(null);
 
-  const fetchDashboard = useCallback(async () => {
+  const fetchDashboard = useCallback(async (force = false) => {
     if (!user) return;
+
+    // Check cache
+    if (!force && cacheRef.current && (Date.now() - cacheRef.current.timestamp < REFERRAL_CACHE_TTL)) {
+      setDashboardData(cacheRef.current.data);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -59,6 +68,7 @@ export function useChatterReferrals(): UseChatterReferralsReturn {
       );
 
       const result = await getReferralDashboard();
+      cacheRef.current = { data: result.data, timestamp: Date.now() };
       setDashboardData(result.data);
     } catch (err: any) {
       console.error("[useChatterReferrals] Error fetching dashboard:", err);

@@ -845,6 +845,169 @@ const MobileCarousel: React.FC<MobileCarouselProps> = ({
 };
 
 // ============================================================================
+// PAGINATED LIST (for large networks > 20 N1)
+// ============================================================================
+
+interface PaginatedNetworkListProps {
+  n1Nodes: ReferralNode[];
+  n2Nodes: ReferralNode[];
+  totalN1: number;
+  totalN2: number;
+  onNodeClick: (node: ReferralNode) => void;
+}
+
+const PAGE_SIZE = 15;
+
+const PaginatedNetworkList: React.FC<PaginatedNetworkListProps> = ({
+  n1Nodes,
+  n2Nodes,
+  totalN1,
+  totalN2,
+  onNodeClick,
+}) => {
+  const intl = useIntl();
+  const [n1Page, setN1Page] = useState(0);
+  const [n2Page, setN2Page] = useState(0);
+  const [showN2, setShowN2] = useState(false);
+
+  const n1Paginated = n1Nodes.slice(n1Page * PAGE_SIZE, (n1Page + 1) * PAGE_SIZE);
+  const n2Paginated = n2Nodes.slice(n2Page * PAGE_SIZE, (n2Page + 1) * PAGE_SIZE);
+  const n1TotalPages = Math.ceil(n1Nodes.length / PAGE_SIZE);
+  const n2TotalPages = Math.ceil(n2Nodes.length / PAGE_SIZE);
+
+  return (
+    <div className="space-y-4">
+      {/* N1 Section */}
+      <div>
+        <h4 className="text-sm font-semibold dark:text-white mb-2 flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-blue-500" />
+          N1 — {intl.formatMessage({ id: 'referralTree.level.n1', defaultMessage: 'Direct Referrals' })}
+          <span className="text-xs text-slate-400 font-normal">
+            ({n1Nodes.length}{totalN1 > n1Nodes.length ? `/${totalN1}` : ''})
+          </span>
+        </h4>
+        <div className="space-y-1.5">
+          {n1Paginated.map((node) => {
+            const colors = getNodeColors(1, node.isQualified, node.isActive);
+            return (
+              <button
+                key={node.id}
+                onClick={() => onNodeClick(node)}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.04] dark:bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-colors"
+              >
+                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${colors.bg} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                  {getInitials(node.name)}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium dark:text-white truncate">{node.name}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {new Date(node.joinedAt).toLocaleDateString(intl.locale)}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-bold text-green-500">{formatCurrency(node.earnings)}</p>
+                  <div className="flex items-center gap-1 justify-end mt-0.5">
+                    {node.isQualified && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                    <div className={`w-2 h-2 rounded-full ${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {/* Pagination */}
+        {n1TotalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-3">
+            <button
+              onClick={() => setN1Page(p => Math.max(0, p - 1))}
+              disabled={n1Page === 0}
+              className="px-3 py-1.5 text-xs rounded-lg bg-white/[0.06] text-slate-300 disabled:opacity-30 hover:bg-white/[0.1] transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-xs text-slate-400">{n1Page + 1} / {n1TotalPages}</span>
+            <button
+              onClick={() => setN1Page(p => Math.min(n1TotalPages - 1, p + 1))}
+              disabled={n1Page >= n1TotalPages - 1}
+              className="px-3 py-1.5 text-xs rounded-lg bg-white/[0.06] text-slate-300 disabled:opacity-30 hover:bg-white/[0.1] transition-colors"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* N2 Section (collapsible) */}
+      {n2Nodes.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowN2(!showN2)}
+            className="text-sm font-semibold dark:text-white mb-2 flex items-center gap-2 hover:text-indigo-400 transition-colors"
+          >
+            <div className="w-3 h-3 rounded-full bg-indigo-500" />
+            N2 — {intl.formatMessage({ id: 'referralTree.level.n2', defaultMessage: 'Indirect Referrals' })}
+            <span className="text-xs text-slate-400 font-normal">
+              ({n2Nodes.length}{totalN2 > n2Nodes.length ? `/${totalN2}` : ''})
+            </span>
+            {showN2 ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+
+          {showN2 && (
+            <>
+              <div className="space-y-1.5">
+                {n2Paginated.map((node) => {
+                  const colors = getNodeColors(2, node.isQualified, node.isActive);
+                  return (
+                    <button
+                      key={node.id}
+                      onClick={() => onNodeClick(node)}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.04] dark:bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-colors"
+                    >
+                      <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colors.bg} flex items-center justify-center text-white text-[10px] font-bold shrink-0`}>
+                        {getInitials(node.name)}
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-sm font-medium dark:text-white truncate">{node.name}</p>
+                        <p className="text-[10px] text-slate-500">
+                          {node.parrainN1Name && <span className="text-indigo-400">via {node.parrainN1Name}</span>}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {node.isQualified && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                        <div className={`w-2 h-2 rounded-full ${node.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {n2TotalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <button
+                    onClick={() => setN2Page(p => Math.max(0, p - 1))}
+                    disabled={n2Page === 0}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-white/[0.06] text-slate-300 disabled:opacity-30 hover:bg-white/[0.1] transition-colors"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs text-slate-400">{n2Page + 1} / {n2TotalPages}</span>
+                  <button
+                    onClick={() => setN2Page(p => Math.min(n2TotalPages - 1, p + 1))}
+                    disabled={n2Page >= n2TotalPages - 1}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-white/[0.06] text-slate-300 disabled:opacity-30 hover:bg-white/[0.1] transition-colors"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -1077,48 +1240,68 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
             counts={filterCounts}
           />
 
-          {/* Tree Visualization or Mobile View */}
-          {isMobile ? (
-            <div className="space-y-6">
-              {/* YOU indicator */}
-              <div className="flex justify-center">
-                <div className="flex items-center">
-                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-xl ring-4 dark:ring-indigo-900">
-                    YOU
-                    <Crown className="absolute -top-3 left-1/2 w-6 h-6 text-yellow-400 fill-yellow-400" />
+          {/* Tree Visualization / Mobile Carousel / Paginated List (depending on size) */}
+          {(() => {
+            const n1Filtered = filteredNodes.filter(n => n.level === 1);
+            const n2Filtered = filteredNodes.filter(n => n.level === 2);
+            const TREE_MAX = 20; // SVG tree max before switching to list mode
+
+            // Large network: paginated compact list (>20 N1)
+            if (n1Filtered.length > TREE_MAX || (!isMobile && totalN1 > TREE_MAX)) {
+              return (
+                <PaginatedNetworkList
+                  n1Nodes={n1Filtered}
+                  n2Nodes={n2Filtered}
+                  totalN1={totalN1}
+                  totalN2={totalN2}
+                  onNodeClick={isMobile ? handleMobileNodeClick : (node) => handleNodeClick({ clientX: window.innerWidth / 2, clientY: 200 } as React.MouseEvent, node)}
+                />
+              );
+            }
+
+            // Mobile: carousel cards
+            if (isMobile) {
+              return (
+                <div className="space-y-6">
+                  <div className="flex justify-center">
+                    <div className="flex items-center">
+                      <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-xl ring-4 dark:ring-indigo-900">
+                        YOU
+                        <Crown className="absolute -top-3 left-1/2 w-6 h-6 text-yellow-400 fill-yellow-400" />
+                      </div>
+                      <span className="mt-2 text-xs dark:text-gray-400">
+                        <FormattedMessage id="referralTree.you" defaultMessage="Your Position" />
+                      </span>
+                    </div>
                   </div>
-                  <span className="mt-2 text-xs dark:text-gray-400">
-                    <FormattedMessage id="referralTree.you" defaultMessage="Your Position" />
-                  </span>
+                  <MobileCarousel
+                    title={intl.formatMessage({ id: 'referralTree.level.n1', defaultMessage: 'N1 - Direct Referrals' })}
+                    nodes={n1Filtered}
+                    onNodeClick={handleMobileNodeClick}
+                    emptyMessage={intl.formatMessage({ id: 'referralTree.noN1', defaultMessage: 'No direct referrals yet' })}
+                  />
+                  <MobileCarousel
+                    title={intl.formatMessage({ id: 'referralTree.level.n2', defaultMessage: 'N2 - Indirect Referrals' })}
+                    nodes={n2Filtered}
+                    onNodeClick={handleMobileNodeClick}
+                    emptyMessage={intl.formatMessage({ id: 'referralTree.noN2', defaultMessage: 'No indirect referrals yet' })}
+                  />
                 </div>
+              );
+            }
+
+            // Desktop small network: SVG tree
+            return (
+              <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-xl p-4 min-h-[350px]">
+                <TreeVisualization
+                  nodes={filteredNodes}
+                  expandedNodes={expandedNodes}
+                  onToggleNode={handleToggleNode}
+                  onNodeClick={handleNodeClick}
+                />
               </div>
-
-              {/* N1 Carousel */}
-              <MobileCarousel
-                title={intl.formatMessage({ id: 'referralTree.level.n1', defaultMessage: 'N1 - Direct Referrals' })}
-                nodes={filteredNodes.filter(n => n.level === 1)}
-                onNodeClick={handleMobileNodeClick}
-                emptyMessage={intl.formatMessage({ id: 'referralTree.noN1', defaultMessage: 'No direct referrals yet' })}
-              />
-
-              {/* N2 Carousel */}
-              <MobileCarousel
-                title={intl.formatMessage({ id: 'referralTree.level.n2', defaultMessage: 'N2 - Indirect Referrals' })}
-                nodes={filteredNodes.filter(n => n.level === 2)}
-                onNodeClick={handleMobileNodeClick}
-                emptyMessage={intl.formatMessage({ id: 'referralTree.noN2', defaultMessage: 'No indirect referrals yet' })}
-              />
-            </div>
-          ) : (
-            <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-xl p-4 min-h-[350px]">
-              <TreeVisualization
-                nodes={filteredNodes}
-                expandedNodes={expandedNodes}
-                onToggleNode={handleToggleNode}
-                onNodeClick={handleNodeClick}
-              />
-            </div>
-          )}
+            );
+          })()}
 
           {/* Legend */}
           <div className="flex items-center justify-center gap-4 pt-4 border-t dark:border-white/10">

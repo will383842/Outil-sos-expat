@@ -183,6 +183,63 @@ export function clearAllStoredReferrals(): void {
 }
 
 // ============================================================================
+// CROSS-TRACKING: Find ANY stored referral code across all roles
+// ============================================================================
+
+/**
+ * Derive the client referral code from a recruitment or provider code.
+ * Convention: REC-XXXX → XXXX, PROV-XXXX → XXXX (strips prefix).
+ * If code has no prefix, returns as-is (already a client code).
+ */
+export function deriveClientCode(code: string): string {
+  const upper = code.toUpperCase();
+  // Influencer provider: PROV-INF-MARIE123 → MARIE123 (must check before generic PROV-)
+  if (upper.startsWith('PROV-INF-')) return upper.slice(9);
+  // Generic: REC-XXX → XXX, PROV-XXX → XXX
+  // Works for chatter (REC-JEAN456), blogger (REC-BLOG-JEAN456 → BLOG-JEAN456),
+  // groupAdmin (REC-GROUP-JEAN456 → GROUP-JEAN456) because BLOG-/GROUP- is part of client code
+  if (upper.startsWith('REC-')) return upper.slice(4);
+  if (upper.startsWith('PROV-')) return upper.slice(5);
+  return upper;
+}
+
+/**
+ * Cross-tracking: scan ALL stored referral codes across ALL roles and code types.
+ * Returns the best available referral code (client-derived) regardless of which
+ * link the user originally clicked.
+ *
+ * Use case: User clicks /rec/c/REC-ALICE123 (chatter recruitment link) but
+ * registers as a client instead. Without cross-tracking, the affiliate gets
+ * no commission. This function finds the stored recruitment code and derives
+ * the client code (ALICE123) so the affiliate is still credited.
+ *
+ * Priority: exact role match first, then any role; client > recruitment > provider.
+ */
+export function getBestAvailableReferralCode(preferredActorType?: ActorType): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const allActors: ActorType[] = ['client', 'chatter', 'blogger', 'influencer', 'groupAdmin', 'partner'];
+  const allCodeTypes: (ReferralCodeType | undefined)[] = [undefined, 'client', 'recruitment', 'provider'];
+
+  // 1. Preferred actor first (exact match)
+  if (preferredActorType) {
+    const stored = getStoredReferral(preferredActorType);
+    if (stored) return deriveClientCode(stored.code);
+  }
+
+  // 2. Scan all actors and code types
+  for (const actor of allActors) {
+    if (actor === preferredActorType) continue; // already checked
+    for (const codeType of allCodeTypes) {
+      const stored = getStoredReferral(actor, codeType);
+      if (stored) return deriveClientCode(stored.code);
+    }
+  }
+
+  return null;
+}
+
+// ============================================================================
 // LEGACY MIGRATION
 // ============================================================================
 

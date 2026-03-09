@@ -61,12 +61,13 @@ export const getReferralDashboard = onCall(
 
       const chatter = chatterDoc.data() as Chatter;
 
-      // Step 2: Get N1 filleuls
+      // Step 2: Get N1 filleuls (limited to 50 for performance — stats use chatter counters)
       logger.info("[getReferralDashboard] Step 2: Get N1 filleuls");
       const filleulsN1Query = await db
         .collection("chatters")
         .where("recruitedBy", "==", chatterId)
         .orderBy("createdAt", "desc")
+        .limit(50)
         .get();
 
       const filleulsN1 = filleulsN1Query.docs.map((doc) => {
@@ -93,15 +94,21 @@ export const getReferralDashboard = onCall(
       let filleulsN2: GetReferralDashboardResponse["filleulsN2"] = [];
 
       if (filleulsN1Ids.length > 0) {
+        // Limit to first 30 N1 IDs for N2 lookup (max 3 Firestore 'in' queries)
+        const limitedN1Ids = filleulsN1Ids.slice(0, 30);
         const chunks = [];
-        for (let i = 0; i < filleulsN1Ids.length; i += 10) {
-          chunks.push(filleulsN1Ids.slice(i, i + 10));
+        for (let i = 0; i < limitedN1Ids.length; i += 10) {
+          chunks.push(limitedN1Ids.slice(i, i + 10));
         }
 
+        const MAX_N2 = 50;
         for (const chunk of chunks) {
+          if (filleulsN2.length >= MAX_N2) break;
+
           const n2Query = await db
             .collection("chatters")
             .where("recruitedBy", "in", chunk)
+            .limit(MAX_N2 - filleulsN2.length)
             .get();
 
           for (const doc of n2Query.docs) {
@@ -183,8 +190,9 @@ export const getReferralDashboard = onCall(
             }
           : null;
 
-      // Calculate qualified N1 count
-      const qualifiedFilleulsN1 = filleulsN1.filter((f) => f.threshold50Reached).length;
+      // Calculate qualified N1 count — use chatter doc counter or separate count query
+      // (filleulsN1 is limited to 50, so filter would be inaccurate for large networks)
+      const qualifiedFilleulsN1 = chatter.qualifiedReferralsCount ?? filleulsN1.filter((f) => f.threshold50Reached).length;
 
       const paidTiers = chatter.tierBonusesPaid || [];
 
@@ -195,11 +203,15 @@ export const getReferralDashboard = onCall(
         qualifiedN1: qualifiedFilleulsN1,
       });
 
+      // Use chatter doc counters for accurate stats (query is limited to 50)
+      const totalN1FromDoc = chatter.totalRecruits || filleulsN1.length;
+      const totalN2FromDoc = chatter.referralsN2Count || filleulsN2.length;
+
       return {
         stats: {
-          totalFilleulsN1: filleulsN1.length,
+          totalFilleulsN1: totalN1FromDoc,
           qualifiedFilleulsN1,
-          totalFilleulsN2: filleulsN2.length,
+          totalFilleulsN2: totalN2FromDoc,
           totalReferralEarnings: chatter.referralEarnings || 0,
           monthlyReferralEarnings,
         },

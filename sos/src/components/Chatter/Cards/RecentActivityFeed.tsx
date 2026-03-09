@@ -160,4 +160,4 @@ const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
   );
 };
 
-export default RecentActivityFeed;
+export default React.memo(RecentActivityFeed);

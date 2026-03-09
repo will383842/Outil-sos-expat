@@ -196,4 +196,4 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
   );
 };
 
-export default NextActionCard;
+export default React.memo(NextActionCard);

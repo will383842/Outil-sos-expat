@@ -3,7 +3,7 @@
  * - Profile + Level badge with glow
  * - Available Balance widget (orange/green/blue states)
  * - Piggy Bank mini progress
- * - 2 Affiliate links (client + recruitment)
+ * - 3 Affiliate links (client + recruitment + provider)
  * - 7-tab navigation (+ captain conditional)
  * - Level progression bar
  * - Logout
@@ -17,7 +17,6 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import {
   Home,
-  Lightbulb,
   DollarSign,
   Users,
   Trophy,
@@ -45,6 +44,7 @@ import WithdrawalBottomSheet from '@/components/Chatter/WithdrawalBottomSheet';
 import { UI, CHATTER_THEME, LEVEL_COLORS } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
+import { lockScroll, unlockScroll } from '@/utils/scrollLockManager';
 
 interface ChatterDashboardLayoutProps {
   children: ReactNode;
@@ -80,10 +80,13 @@ interface SidebarContentProps {
   piggyBank: { totalPending: number; unlockThreshold: number; progressPercent: number; isUnlocked?: boolean; amountToUnlock?: number } | null;
   clientCode: string;
   recruitmentCode: string;
+  providerCode: string;
   clientShareUrl: string;
   recruitmentShareUrl: string;
+  providerShareUrl: string;
   commissionClientCall: number;
   commissionN1Call: number;
+  commissionProviderCall: number;
   drawerItems: NavItem[];
   currentKey: string;
   language: string;
@@ -96,11 +99,11 @@ interface SidebarContentProps {
 
 type NavItem = { key: string; icon: React.ReactNode; route: string; labels: Record<string, string> };
 
-const SidebarContent: React.FC<SidebarContentProps> = ({
+const SidebarContentInner: React.FC<SidebarContentProps> = ({
   photo, fullName, firstName, level, levelProgress,
   availableBalance, canWithdraw, minimumWithdrawal, pendingWithdrawalId,
-  piggyBank, clientCode, recruitmentCode, clientShareUrl, recruitmentShareUrl,
-  commissionClientCall, commissionN1Call,
+  piggyBank, clientCode, recruitmentCode, providerCode, clientShareUrl, recruitmentShareUrl, providerShareUrl,
+  commissionClientCall, commissionN1Call, commissionProviderCall,
   drawerItems, currentKey, language, loggingOut,
   onNavigate, onLogout, onWithdraw, intl,
 }) => {
@@ -333,6 +336,43 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Provider link */}
+        <div className="rounded-xl p-3 bg-teal-500/15 border border-teal-500/25">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-bold text-teal-300 uppercase tracking-wider">
+              <FormattedMessage id="chatter.sidebar.providerLink" defaultMessage="Lien prestataire" />
+            </span>
+            {commissionProviderCall > 0 && (
+              <span className="text-[11px] font-bold text-teal-400">
+                <FormattedMessage
+                  id="chatter.sidebar.perCall"
+                  defaultMessage="{amount}/appel"
+                  values={{ amount: `$${formatAmount(commissionProviderCall)}` }}
+                />
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <code className="flex-1 text-xs font-mono font-semibold text-teal-200 truncate bg-teal-500/10 px-2.5 py-1.5 rounded-lg">
+              {providerCode || '---'}
+            </code>
+            <button
+              onClick={() => handleCopy(providerCode, 'Code')}
+              className="p-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Copy"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleShare(providerShareUrl)}
+              className="p-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Share"
+            >
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ── 5. Navigation ── */}
@@ -401,6 +441,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
   );
 };
 
+const SidebarContent = React.memo(SidebarContentInner);
+
 // ============================================================================
 // INNER LAYOUT
 // ============================================================================
@@ -415,7 +457,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   const [showWithdrawalSheet, setShowWithdrawalSheet] = useState(false);
 
   // Captain status from Context (no more getDoc!)
-  const { dashboardData, clientShareUrl, recruitmentShareUrl, canWithdraw, minimumWithdrawal, refreshDashboard } = useChatterData();
+  const { dashboardData, clientShareUrl, recruitmentShareUrl, providerShareUrl, canWithdraw, minimumWithdrawal, refreshDashboard } = useChatterData();
   const isCaptain = dashboardData?.chatter?.role === 'captainChatter';
 
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -439,10 +481,16 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     }
   }, [logout, navigate, loggingOut, loginRoute]);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll when drawer is open (via centralized ScrollLockManager)
   useEffect(() => {
-    document.body.style.overflow = isDrawerOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (isDrawerOpen) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+    return () => {
+      if (isDrawerOpen) unlockScroll();
+    };
   }, [isDrawerOpen]);
 
   // Translated routes (6 main + captain + extras)
@@ -461,16 +509,36 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     referralEarnings: `/${getTranslatedRouteSlug('chatter-referral-earnings' as RouteKey, langCode)}`,
   }), [langCode]);
 
-  // Loading state
+  // Loading state — show skeleton layout instead of blank spinner
   if (!user || !authInitialized) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {intl.formatMessage({ id: 'common.loading', defaultMessage: 'Chargement...' })}
-            </p>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+          {/* Skeleton StickyBar */}
+          <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
+            <div className="max-w-7xl mx-auto px-3 py-2">
+              <div className="flex gap-2">
+                <div className="flex-1 h-16 rounded-xl bg-white/[0.04] animate-pulse" />
+                <div className="flex-1 h-16 rounded-xl bg-white/[0.04] animate-pulse" />
+              </div>
+            </div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+            {/* Skeleton Hero */}
+            <div className="h-28 rounded-2xl bg-white/[0.04] animate-pulse" />
+            {/* Skeleton Balance cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-20 rounded-2xl bg-white/[0.04] animate-pulse" />
+              <div className="h-20 rounded-2xl bg-white/[0.04] animate-pulse" />
+            </div>
+            {/* Skeleton Next Action */}
+            <div className="h-24 rounded-2xl bg-white/[0.04] animate-pulse" />
+            {/* Skeleton Activity */}
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 rounded-xl bg-white/[0.04] animate-pulse" />
+              ))}
+            </div>
           </div>
         </div>
       </Layout>
@@ -489,23 +557,21 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     if (path.includes('/paiements') || path.includes('/payments') || path.includes('/pagos') || path.includes('/zahlungen') || path.includes('/platezhi') || path.includes('/pagamentos') || path.includes('/fukuan') || path.includes('/bhugtaan')) return 'payments';
     if (path.includes('/filleuls') || path.includes('/referrals') || path.includes('/referral') || path.includes('/parrainer') || path.includes('/refer') || path.includes('/gains-parrainage')) return 'team';
     if (path.includes('/classement') || path.includes('/leaderboard') || path.includes('/progression') || path.includes('/progress')) return 'ranking';
-    if (path.includes('/comment-gagner') || path.includes('/how-to-earn')) return 'howToEarn';
-    if (path.includes('/formation') || path.includes('/training') || path.includes('/ressources') || path.includes('/resources')) return 'tools';
+    if (path.includes('/comment-gagner') || path.includes('/how-to-earn') || path.includes('/formation') || path.includes('/training') || path.includes('/ressources') || path.includes('/resources')) return 'tools';
     if (path.includes('/profil') || path.includes('/profile')) return 'profile';
     if (path.includes('/mon-equipe') || path.includes('/my-team')) return 'captain';
     return 'home';
   })();
 
-  // 7 main nav items
-  const mainNavItems: NavItem[] = [
-    { key: 'home', icon: <Home className="w-5 h-5" />, route: routes.dashboard, labels: { fr: 'Accueil', en: 'Home', es: 'Inicio', de: 'Start', ru: 'Главная', pt: 'Inicio', ch: '首页', hi: 'होम', ar: 'الرئيسية' } },
-    { key: 'howToEarn', icon: <Lightbulb className="w-5 h-5" />, route: routes.howToEarn, labels: { fr: 'Gagner', en: 'Earn', es: 'Ganar', de: 'Verdienen', ru: 'Заработок', pt: 'Ganhar', ch: '赚钱', hi: 'कमाएँ', ar: 'اكسب' } },
-    { key: 'payments', icon: <DollarSign className="w-5 h-5" />, route: routes.payments, labels: { fr: 'Gains', en: 'Earnings', es: 'Ganancias', de: 'Einnahmen', ru: 'Доходы', pt: 'Ganhos', ch: '收益', hi: 'कमाई', ar: 'الأرباح' } },
-    { key: 'team', icon: <Users className="w-5 h-5" />, route: routes.referrals, labels: { fr: 'Equipe', en: 'Team', es: 'Equipo', de: 'Team', ru: 'Команда', pt: 'Equipe', ch: '团队', hi: 'टीम', ar: 'الفريق' } },
+  // 6 sidebar nav items (2026 consolidated navigation) — memoized to avoid re-creating 63 i18n objects per render
+  const mainNavItems: NavItem[] = useMemo(() => [
+    { key: 'home', icon: <Home className="w-5 h-5" />, route: routes.dashboard, labels: { fr: 'Cockpit', en: 'Cockpit', es: 'Cockpit', de: 'Cockpit', ru: 'Главная', pt: 'Inicio', ch: '首页', hi: 'होम', ar: 'الرئيسية' } },
+    { key: 'payments', icon: <DollarSign className="w-5 h-5" />, route: routes.payments, labels: { fr: 'Mes Gains', en: 'My Earnings', es: 'Ganancias', de: 'Einnahmen', ru: 'Доходы', pt: 'Ganhos', ch: '收益', hi: 'कमाई', ar: 'الأرباح' } },
+    { key: 'team', icon: <Users className="w-5 h-5" />, route: routes.referrals, labels: { fr: 'Mon Reseau', en: 'My Network', es: 'Equipo', de: 'Team', ru: 'Команда', pt: 'Equipe', ch: '团队', hi: 'टीम', ar: 'الفريق' } },
     { key: 'ranking', icon: <Trophy className="w-5 h-5" />, route: routes.leaderboard, labels: { fr: 'Classement', en: 'Ranking', es: 'Ranking', de: 'Rangliste', ru: 'Рейтинг', pt: 'Ranking', ch: '排名', hi: 'रैंकिंग', ar: 'الترتيب' } },
-    { key: 'tools', icon: <Briefcase className="w-5 h-5" />, route: routes.training, labels: { fr: 'Formation', en: 'Training', es: 'Formacion', de: 'Schulung', ru: 'Обучение', pt: 'Formacao', ch: '培训', hi: 'प्रशिक्षण', ar: 'التدريب' } },
-    { key: 'profile', icon: <User className="w-5 h-5" />, route: routes.profile, labels: { fr: 'Profil', en: 'Profile', es: 'Perfil', de: 'Profil', ru: 'Профиль', pt: 'Perfil', ch: '个人资料', hi: 'प्रोफ़ाइल', ar: 'الملف الشخصي' } },
-  ];
+    { key: 'tools', icon: <Briefcase className="w-5 h-5" />, route: routes.training, labels: { fr: 'Academie', en: 'Academy', es: 'Formacion', de: 'Schulung', ru: 'Обучение', pt: 'Formacao', ch: '培训', hi: 'प्रशिक्षण', ar: 'التदريب' } },
+    { key: 'profile', icon: <User className="w-5 h-5" />, route: routes.profile, labels: { fr: 'Mon Profil', en: 'My Profile', es: 'Perfil', de: 'Profil', ru: 'Профиль', pt: 'Perfil', ch: '个人资料', hi: 'प्रोफ़ाइल', ar: 'الملف الشخصي' } },
+  ], [routes]);
 
   // Drawer items (includes sub-pages and captain)
   const drawerItems: NavItem[] = [
@@ -547,10 +613,13 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     piggyBank: dashboardData?.piggyBank || null,
     clientCode: chatter?.affiliateCodeClient || '',
     recruitmentCode: chatter?.affiliateCodeRecruitment || '',
+    providerCode: chatter?.affiliateCodeProvider || '',
     clientShareUrl,
     recruitmentShareUrl,
+    providerShareUrl,
     commissionClientCall: dashboardData?.config?.commissionClientCallAmount || 0,
     commissionN1Call: dashboardData?.config?.commissionN1CallAmount || 0,
+    commissionProviderCall: dashboardData?.config?.commissionProviderCallAmount || 0,
     drawerItems,
     currentKey,
     language: language || 'en',
@@ -626,19 +695,20 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <div className="flex items-center justify-around h-14 max-w-lg mx-auto px-1">
-            {/* Home */}
+            {/* Cockpit */}
             <BottomNavItem
               icon={<Home className="w-5 h-5" />}
-              label={mainNavItems[0].labels[language || 'en'] ?? 'Home'}
+              label={mainNavItems[0].labels[language || 'en'] ?? 'Cockpit'}
               active={currentKey === 'home'}
               onClick={() => currentKey !== 'home' && navigate(routes.dashboard)}
             />
-            {/* Gagner */}
+            {/* Mes Gains */}
             <BottomNavItem
-              icon={<Lightbulb className="w-5 h-5" />}
-              label={mainNavItems[1].labels[language || 'en'] ?? 'Earn'}
-              active={currentKey === 'howToEarn'}
-              onClick={() => currentKey !== 'howToEarn' && navigate(routes.howToEarn)}
+              icon={<DollarSign className="w-5 h-5" />}
+              label={mainNavItems[1].labels[language || 'en'] ?? 'Earnings'}
+              active={currentKey === 'payments'}
+              onClick={() => currentKey !== 'payments' && navigate(routes.payments)}
+              badge={canWithdraw}
             />
 
             {/* FAB - Central Share button */}
@@ -652,18 +722,17 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
               </button>
             </div>
 
-            {/* Gains */}
+            {/* Mon Reseau */}
             <BottomNavItem
-              icon={<DollarSign className="w-5 h-5" />}
-              label={mainNavItems[2].labels[language || 'en'] ?? 'Earnings'}
-              active={currentKey === 'payments'}
-              onClick={() => currentKey !== 'payments' && navigate(routes.payments)}
-              badge={canWithdraw}
+              icon={<Users className="w-5 h-5" />}
+              label={mainNavItems[2].labels[language || 'en'] ?? 'Network'}
+              active={currentKey === 'team'}
+              onClick={() => currentKey !== 'team' && navigate(routes.referrals)}
             />
-            {/* Menu */}
+            {/* Plus (drawer) */}
             <BottomNavItem
               icon={<Menu className="w-5 h-5" />}
-              label={intl.formatMessage({ id: 'common.menu', defaultMessage: 'Menu' })}
+              label={intl.formatMessage({ id: 'common.more', defaultMessage: 'Plus' })}
               active={false}
               onClick={() => setIsDrawerOpen(true)}
             />

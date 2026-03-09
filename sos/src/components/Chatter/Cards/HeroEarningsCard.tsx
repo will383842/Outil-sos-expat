@@ -176,4 +176,4 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
   );
 };
 
-export default HeroEarningsCard;
+export default React.memo(HeroEarningsCard);

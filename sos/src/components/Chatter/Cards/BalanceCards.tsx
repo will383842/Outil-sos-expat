@@ -102,4 +102,4 @@ const BalanceCards: React.FC<BalanceCardsProps> = ({ onNavigateToWithdraw, class
   );
 };
 
-export default BalanceCards;
+export default React.memo(BalanceCards);

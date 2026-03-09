@@ -237,6 +237,8 @@ export interface ChatterData {
   recruitedBy: string | null;
   recruitedByCode: string | null;
   recruitedAt: string | null;
+  recruiterName: string | null;
+  recruiterPhoto: string | null;
 
   // Role
   role?: 'chatter' | 'captainChatter';

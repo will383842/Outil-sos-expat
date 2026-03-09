@@ -147,6 +147,7 @@ export const getChatterDashboard = onCall(
         notificationsQuery,
         withdrawalFee,
         activePromotions,
+        recruiterDoc,
       ] = await Promise.all([
         // Config (cached)
         getChatterConfigCached(),
@@ -184,7 +185,18 @@ export const getChatterDashboard = onCall(
         getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
         // Active promotions
         getActivePromotions(userId, chatter.country),
+        // Recruiter info (if recruited)
+        chatter.recruitedBy
+          ? db.collection("chatters").doc(chatter.recruitedBy).get()
+          : Promise.resolve(null),
       ]);
+
+      // Recruiter info
+      const recruiterData = recruiterDoc?.exists ? recruiterDoc.data() : null;
+      const recruiterName = recruiterData
+        ? [recruiterData.firstName, recruiterData.lastName].filter(Boolean).join(" ") || recruiterData.email || null
+        : null;
+      const recruiterPhoto = recruiterData?.profilePhoto || recruiterData?.photoURL || null;
 
       // 4. Process recent commissions
       const recentCommissions = commissionsQuery.docs.map((doc) => {
@@ -404,6 +416,8 @@ export const getChatterDashboard = onCall(
           recruitedBy: chatter.recruitedBy,
           recruitedByCode: chatter.recruitedByCode,
           recruitedAt: chatter.recruitedAt?.toDate().toISOString() || null,
+          recruiterName: recruiterName || null,
+          recruiterPhoto: recruiterPhoto || null,
           recruiterCommissionPaid: chatter.recruiterCommissionPaid,
           // Referral N2 system fields
           parrainNiveau2Id: chatter.parrainNiveau2Id,

@@ -54,7 +54,7 @@ import {
   CheckCircle,
   PenTool,
 } from 'lucide-react';
-import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
@@ -207,7 +207,7 @@ const BloggerRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('blogger') || getStoredReferralCode('client') || '';
+    return getStoredReferralCode('blogger') || getStoredReferralCode('client') || getBestAvailableReferralCode('blogger') || '';
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('blogger-landing' as RouteKey, langCode)}`;

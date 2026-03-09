@@ -18,7 +18,7 @@ import type { GroupAdminRegistrationData } from '@/components/GroupAdmin/Forms/G
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
-import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
@@ -56,7 +56,7 @@ const GroupAdminRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('groupAdmin') || getStoredReferralCode('client') || '';
+    return getStoredReferralCode('groupAdmin') || getStoredReferralCode('client') || getBestAvailableReferralCode('groupAdmin') || '';
   }, [searchParams]);
 
   // Routes

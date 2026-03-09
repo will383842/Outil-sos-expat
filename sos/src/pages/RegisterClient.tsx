@@ -18,7 +18,7 @@ import { trackAdRegistration } from '../services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '../utils/googleAds';
 import { generateEventIdForType } from '../utils/sharedEventId';
 import { getStoredReferralTracking, clearStoredReferral } from '../hooks/useAffiliate';
-import { getStoredReferralCode as getStoredRefCode } from '../utils/referralStorage';
+import { getStoredReferralCode as getStoredRefCode, getBestAvailableReferralCode } from '../utils/referralStorage';
 
 import ClientRegisterForm from '../components/registration/client/ClientRegisterForm';
 
@@ -78,7 +78,7 @@ const RegisterClient: React.FC = () => {
   const rawRedirect = redirectFromStorage || redirectFromParams || '/dashboard';
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
-  const referralCode = searchParams.get('ref') || getStoredRefCode('client') || '';
+  const referralCode = searchParams.get('ref') || getStoredRefCode('client') || getBestAvailableReferralCode('client') || '';
 
   const { register, loginWithGoogle, isLoading, error, user, isFullyReady } = useAuth();
   const { language } = useApp();

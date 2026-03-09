@@ -4,9 +4,11 @@
  * Hook for chatter resources (logos, images, texts by category).
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '../config/firebase';
+
+const RESOURCES_CACHE_TTL = 600_000; // 10min — resources are quasi-static
 import {
   ChatterResourcesData,
   ChatterResourceCategory,
@@ -26,8 +28,18 @@ export function useChatterResources(): UseChatterResourcesReturn {
   const [resources, setResources] = useState<ChatterResourcesData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cacheRef = useRef<{ data: ChatterResourcesData; timestamp: number; category?: string } | null>(null);
 
   const fetchResources = useCallback(async (category?: ChatterResourceCategory) => {
+    // Check cache (same category)
+    if (cacheRef.current
+      && cacheRef.current.category === (category || '__all__')
+      && (Date.now() - cacheRef.current.timestamp < RESOURCES_CACHE_TTL)
+    ) {
+      setResources(cacheRef.current.data);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -38,10 +50,12 @@ export function useChatterResources(): UseChatterResourcesReturn {
       >(functionsAffiliate, 'getChatterResources');
 
       const result = await getChatterResources({ category });
-      setResources({
+      const data: ChatterResourcesData = {
         files: result.data.resources || [],
         texts: result.data.texts || [],
-      });
+      };
+      cacheRef.current = { data, timestamp: Date.now(), category: category || '__all__' };
+      setResources(data);
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message || 'Failed to load resources');

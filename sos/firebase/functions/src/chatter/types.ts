@@ -2481,6 +2481,8 @@ export interface GetChatterDashboardResponse {
     lastLoginAt: string | null;
     lastZoomAttendance: string | null;
     recruitedAt: string | null;
+    recruiterName: string | null;
+    recruiterPhoto: string | null;
     activatedAt: string | null;
   };
   recentCommissions: Array<{

@@ -10,7 +10,7 @@
  * - Mobile-first, dark mode support
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { trackMetaInitiateCheckout } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -22,7 +22,6 @@ import {
   useWithdrawals,
   useWithdrawalTracking,
   usePaymentConfig,
-  usePendingWithdrawal,
   type PaymentDetails,
 } from '@/hooks/usePayment';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
@@ -217,7 +216,13 @@ const ChatterPaymentsContent: React.FC = () => {
     cancelWithdrawal,
   } = useWithdrawals();
 
-  const { hasPendingWithdrawal, pendingWithdrawal } = usePendingWithdrawal();
+  // Derive pending withdrawal from context withdrawals (avoids redundant Firebase call)
+  const pendingStatuses = ['pending', 'validating', 'approved', 'queued', 'processing', 'sent'];
+  const pendingWithdrawal = useMemo(
+    () => withdrawals.find((w) => pendingStatuses.includes(w.status)) ?? null,
+    [withdrawals]
+  );
+  const hasPendingWithdrawal = pendingWithdrawal !== null;
   const { currency } = usePaymentConfig();
 
   // Local state -- simplified (no more activeTab)

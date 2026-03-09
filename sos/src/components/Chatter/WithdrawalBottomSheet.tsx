@@ -16,6 +16,7 @@ import { PaymentMethodForm, WithdrawalRequestForm, PaymentMethodCard } from '@/c
 import TelegramRequiredBanner from '@/components/Telegram/TelegramRequiredBanner';
 import { trackMetaInitiateCheckout } from '@/utils/metaPixel';
 import { UI } from '@/components/Chatter/designTokens';
+import { lockScroll, unlockScroll } from '@/utils/scrollLockManager';
 
 interface WithdrawalBottomSheetProps {
   isOpen: boolean;
@@ -54,14 +55,16 @@ const WithdrawalBottomSheet: React.FC<WithdrawalBottomSheetProps> = ({ isOpen, o
   const overlayRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll when open
+  // Lock body scroll when open (via centralized ScrollLockManager)
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
     } else {
-      document.body.style.overflow = '';
+      unlockScroll();
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      if (isOpen) unlockScroll();
+    };
   }, [isOpen]);
 
   // Reset state when closed

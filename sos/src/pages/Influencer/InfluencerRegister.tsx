@@ -17,7 +17,7 @@ import { trackMetaStartRegistration } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import InfluencerRegisterForm from '@/components/Influencer/Forms/InfluencerRegisterForm';
 import { CheckCircle, Gift, Users, Image, Megaphone, ArrowLeft, LogIn, Mail } from 'lucide-react';
-import { storeReferralCode, getStoredReferralCode } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferralCode, getBestAvailableReferralCode } from '@/utils/referralStorage';
 
 const UI = {
   card: "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
@@ -49,7 +49,7 @@ const InfluencerRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('influencer') || getStoredReferralCode('client') || '';
+    return getStoredReferralCode('influencer') || getStoredReferralCode('client') || getBestAvailableReferralCode('influencer') || '';
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('influencer-landing' as RouteKey, langCode)}`;

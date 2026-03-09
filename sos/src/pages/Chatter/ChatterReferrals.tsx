@@ -13,8 +13,6 @@ import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useChatterReferrals, getNextTierInfo, formatTierBonus } from '@/hooks/useChatterReferrals';
 import { ReferralStatsCard } from '@/components/Chatter/Cards/ReferralStatsCard';
 import { MilestoneProgressCard } from '@/components/Chatter/Cards/MilestoneProgressCard';
-import { ReferralN1Table } from '@/components/Chatter/Tables/ReferralN1Table';
-import { ReferralN2List } from '@/components/Chatter/Tables/ReferralN2List';
 import EmptyStateCard from '@/components/Chatter/Activation/EmptyStateCard';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
@@ -33,10 +31,13 @@ const QRCodeDisplay = lazy(() =>
 const ReferralCommissionsTable = lazy(() =>
   import('@/components/Chatter/Tables/ReferralCommissionsTable').then(m => ({ default: m.ReferralCommissionsTable }))
 );
+const ReferralTreeCard = lazy(() =>
+  import('@/components/Chatter/Cards/ReferralTreeCard').then(m => ({ default: m.ReferralTreeCard }))
+);
 
 export default function ChatterReferrals() {
   return (
-    <ChatterDashboardLayout activeKey="referrals">
+    <ChatterDashboardLayout activeKey="team">
       <ChatterReferralsContent />
     </ChatterDashboardLayout>
   );
@@ -60,6 +61,12 @@ function ChatterReferralsContent() {
   const qualifiedCount = chatter?.qualifiedReferralsCount || 0;
   const paidTiers = (chatter as any)?.tierBonusesPaid || [];
   const totalRecruits = chatter?.totalRecruits || 0;
+
+  // Parrain (recruiter) info
+  const recruiterName = chatter?.recruiterName || null;
+  const recruiterPhoto = chatter?.recruiterPhoto || null;
+  const recruitedAt = chatter?.recruitedAt || null;
+  const hasParrain = !!chatter?.recruitedBy;
 
   const handleCopyRecruitLink = useCallback(async () => {
     if (!recruitmentShareUrl) return;
@@ -94,6 +101,38 @@ function ChatterReferralsContent() {
   // Tab 1: Mon Reseau
   const networkTab = (
     <div className="space-y-4">
+      {/* Mon Parrain card */}
+      {hasParrain && (
+        <div className={`${UI.card} p-4`}>
+          <div className="flex items-center gap-3">
+            {recruiterPhoto ? (
+              <img src={recruiterPhoto} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-500/30" />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
+                <Crown className="h-5 w-5 text-white" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">
+                <FormattedMessage id="chatter.team.myParrain" defaultMessage="Mon Parrain" />
+              </p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                {recruiterName || intl.formatMessage({ id: 'chatter.team.parrainAnonymous', defaultMessage: 'Chatter' })}
+              </p>
+              {recruitedAt && !isNaN(new Date(recruitedAt).getTime()) && (
+                <p className="text-[10px] text-slate-500">
+                  <FormattedMessage
+                    id="chatter.team.recruitedOn"
+                    defaultMessage="Recrute le {date}"
+                    values={{ date: new Date(recruitedAt).toLocaleDateString(intl.locale) }}
+                  />
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {totalRecruits === 0 ? (
         <EmptyStateCard
           icon={<Users className="w-7 h-7" />}
@@ -121,32 +160,16 @@ function ChatterReferralsContent() {
             tierProgress={tierProgress}
           />
 
-          {/* "What if" projection */}
-          {totalRecruits > 0 && (
-            <div className={`${UI.card} p-4`}>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                <FormattedMessage
-                  id="chatter.team.projection"
-                  defaultMessage="Si chacun de vos {count} filleuls fait 2 appels/semaine :"
-                  values={{ count: totalRecruits }}
-                />
-              </p>
-              <p className="text-lg font-bold text-green-500 mt-1">
-                = ${((totalRecruits * 2 * 4 * 100) / 100).toFixed(0)}/mois
-                <span className="text-xs font-normal text-slate-400 ml-2">
-                  <FormattedMessage id="chatter.team.passive" defaultMessage="de revenus passifs" />
-                </span>
-              </p>
-            </div>
-          )}
-
-          {/* N1 Table */}
-          <ReferralN1Table filleuls={filleulsN1} isLoading={isLoading} />
-
-          {/* N2 List (collapsible) */}
-          {filleulsN2.length > 0 && (
-            <ReferralN2List filleuls={filleulsN2} />
-          )}
+          {/* Visual Team Tree */}
+          <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
+            <ReferralTreeCard
+              stats={stats}
+              filleulsN1={filleulsN1}
+              filleulsN2={filleulsN2}
+              isLoading={isLoading}
+              onRefresh={refreshDashboard}
+            />
+          </Suspense>
         </>
       )}
     </div>

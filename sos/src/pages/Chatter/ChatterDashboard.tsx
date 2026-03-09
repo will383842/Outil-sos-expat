@@ -19,7 +19,6 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { useChatterData } from '@/contexts/ChatterDataContext';
-import { useChatterReferrals } from '@/hooks/useChatterReferrals';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 
 // Above-fold: imported synchronously (visible immediately)
@@ -80,8 +79,8 @@ const ChatterDashboardContent: React.FC = () => {
   const chatter = dashboardData?.chatter;
   const totalEarned = (chatter?.totalEarned || 0);
 
-  // Referrals data (page-specific, not in Context)
-  const { stats: referralStats } = useChatterReferrals();
+  // Referral stats from dashboard payload (no separate callable needed)
+  const referralStats = dashboardData?.referralStats ?? null;
 
   // Routes
   const paymentsRoute = `/${getTranslatedRouteSlug('chatter-payments' as RouteKey, langCode)}`;
@@ -313,10 +312,20 @@ const BelowFoldSection: React.FC = () => {
   );
 };
 
-// Individual lazy imports - each card is its own chunk (no more BelowFoldBundle)
+// Below-fold lazy imports
 const LazyDailyMissions = lazy(() => import('@/components/Chatter/Cards/DailyMissionsCard'));
+const LazyMotivation = lazy(() => import('@/components/Chatter/Cards/MotivationWidget'));
 const LazyPiggyBank = lazy(() => import('@/components/Chatter/Cards/PiggyBankCard'));
 const LazyTrendsChart = lazy(() => import('@/components/Chatter/Cards/TrendsChartCard'));
-const LazyMotivation = lazy(() => import('@/components/Chatter/Cards/MotivationWidget'));
+
+// Prefetch below-fold chunks after dashboard is idle
+if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+  (window as any).requestIdleCallback(() => {
+    import('@/components/Chatter/Cards/DailyMissionsCard');
+    import('@/components/Chatter/Cards/MotivationWidget');
+    import('@/components/Chatter/Cards/PiggyBankCard');
+    import('@/components/Chatter/Cards/TrendsChartCard');
+  }, { timeout: 3000 });
+}
 
 export default ChatterDashboard;
