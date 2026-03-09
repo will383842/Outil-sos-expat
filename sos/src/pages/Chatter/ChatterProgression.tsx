@@ -231,7 +231,7 @@ function LevelProgressionSection({
       </div>
 
       {/* 5 level badges in a row */}
-      <div className="flex gap-2 mb-5">
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-5">
         {[1, 2, 3, 4, 5].map((l) => {
           const colors = LEVEL_COLORS[l];
           const isActive = l === level;
@@ -241,7 +241,7 @@ function LevelProgressionSection({
           return (
             <div
               key={l}
-              className={`flex-1 text-center py-2.5 px-1 rounded-xl border-2 transition-all ${
+              className={`text-center py-2 sm:py-2.5 px-0.5 sm:px-1 rounded-xl border-2 transition-all ${
                 isActive
                   ? `${colors.bg} border-current ${colors.text} ring-2 ring-offset-2 ring-current dark:ring-offset-gray-900`
                   : isPast

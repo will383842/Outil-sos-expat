@@ -192,14 +192,41 @@ const PiggyBankCard = memo(function PiggyBankCard({
           </div>
         </div>
 
+        {/* Explanation banner */}
+        <div className="p-3 bg-white/[0.04] border border-white/[0.06] rounded-xl mb-4">
+          <p className="text-xs dark:text-gray-400 text-center">
+            {totalPending > 0 ? (
+              isUnlocked ? (
+                <FormattedMessage
+                  id="chatter.piggyBank.explainUnlocked"
+                  defaultMessage="Your {bonus} Telegram bonus is unlocked! Claim it below."
+                  values={{ bonus: formatAmount(totalPending) }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="chatter.piggyBank.explainLocked"
+                  defaultMessage="Earn {threshold} in direct client commissions to unlock your {bonus} Telegram bonus."
+                  values={{ threshold: formatAmount(unlockThreshold), bonus: formatAmount(totalPending) }}
+                />
+              )
+            ) : (
+              <FormattedMessage
+                id="chatter.piggyBank.explainEmpty"
+                defaultMessage="Connect Telegram to receive a $50 bonus! You'll unlock it after earning {threshold} in client commissions."
+                values={{ threshold: formatAmount(unlockThreshold) }}
+              />
+            )}
+          </p>
+        </div>
+
         {/* Progress bar to unlock */}
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm mb-1.5">
             <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5" />
               <FormattedMessage
-                id="chatter.piggyBank.progress"
-                defaultMessage="Progress"
+                id="chatter.piggyBank.clientCommissions"
+                defaultMessage="Client commissions"
               />
             </span>
             <span className="font-medium text-gray-900 dark:text-white">

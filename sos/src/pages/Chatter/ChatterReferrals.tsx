@@ -223,7 +223,7 @@ function ChatterReferralsContent() {
   const earningsTab = (
     <div className="space-y-4">
       {/* KPI cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
         {[
           { label: intl.formatMessage({ id: 'chatter.referrals.totalReferral', defaultMessage: 'Total referral' }), value: stats ? `$${((stats.totalReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
           { label: intl.formatMessage({ id: 'chatter.referrals.thisMonth', defaultMessage: 'This month' }), value: stats ? `$${((stats.monthlyReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },

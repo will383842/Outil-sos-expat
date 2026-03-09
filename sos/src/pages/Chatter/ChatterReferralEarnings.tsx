@@ -126,7 +126,7 @@ function ChatterReferralEarningsContent() {
         {/* Loading skeleton */}
         {isLoading && !dashboardData && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-20 sm:h-24 bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl animate-pulse" />
               ))}
@@ -139,7 +139,7 @@ function ChatterReferralEarningsContent() {
         {dashboardData && (
           <>
             {/* Top stats — 3 cols */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
               {[
                 {
                   label: t("chatter.referrals.totalReferralEarnings"),

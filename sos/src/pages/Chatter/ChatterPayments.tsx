@@ -423,7 +423,7 @@ const ChatterPaymentsContent: React.FC = () => {
       {/* ------------------------------------------------------------------ */}
       {/* Balance Cards (3 cards)                                             */}
       {/* ------------------------------------------------------------------ */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
         {/* Available */}
         <div className={`${GLASS_CARD} p-3 sm:p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}>
           <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">

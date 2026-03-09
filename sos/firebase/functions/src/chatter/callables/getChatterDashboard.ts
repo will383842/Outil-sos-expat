@@ -524,9 +524,9 @@ export const getChatterDashboard = onCall(
             totalPending,
             message: isUnlocked
               ? totalPending > 0
-                ? `${(totalPending / 100).toFixed(0)}$ de bonus en attente de paiement`
-                : "Tirelire vide - connectez Telegram pour gagner un bonus !"
-              : `Encore ${(amountToUnlock / 100).toFixed(0)}$ de ventes pour debloquer ${(totalPending / 100).toFixed(0)}$ de bonus`,
+                ? `$${(totalPending / 100).toFixed(0)} Telegram bonus ready to claim`
+                : "Connect Telegram to get a $50 bonus!"
+              : `Earn $${(amountToUnlock / 100).toFixed(0)} more in client commissions to unlock your $${(totalPending / 100).toFixed(0)} bonus`,
           };
         })(),
         // Historical trends for charts

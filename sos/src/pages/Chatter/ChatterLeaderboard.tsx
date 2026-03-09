@@ -121,7 +121,7 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
 
       {/* Podium Top 3 */}
       {!isLoadingBoard && leaderboard.length >= 3 && (
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
           {PRIZES.map((prize) => {
             const entry = leaderboard[prize.rank - 1];
             if (!entry) return null;

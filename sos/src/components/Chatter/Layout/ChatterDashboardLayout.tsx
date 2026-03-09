@@ -77,7 +77,7 @@ interface SidebarContentProps {
   canWithdraw: boolean;
   minimumWithdrawal: number;
   pendingWithdrawalId: string | null;
-  piggyBank: { totalPending: number; unlockThreshold: number; progressPercent: number } | null;
+  piggyBank: { totalPending: number; unlockThreshold: number; progressPercent: number; isUnlocked?: boolean; amountToUnlock?: number } | null;
   clientCode: string;
   recruitmentCode: string;
   clientShareUrl: string;
@@ -157,20 +157,20 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       <div className="px-4 pb-3">
         <div className={`rounded-xl p-3.5 border ${
           hasPendingWithdrawal
-            ? 'bg-blue-500/10 border-blue-500/20'
+            ? 'bg-blue-500/15 border-blue-500/25'
             : canWithdraw
-              ? 'bg-emerald-500/10 border-emerald-500/20'
-              : 'bg-amber-500/10 border-amber-500/20'
+              ? 'bg-emerald-500/15 border-emerald-500/25'
+              : 'bg-amber-500/15 border-amber-500/25'
         }`}>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1">
             <FormattedMessage id="chatter.sidebar.available" defaultMessage="Disponible" />
           </p>
           <p className={`text-2xl font-extrabold tracking-tight ${
             hasPendingWithdrawal
-              ? 'text-blue-400'
+              ? 'text-blue-300'
               : canWithdraw
-                ? 'text-emerald-400'
-                : 'text-amber-400'
+                ? 'text-emerald-300'
+                : 'text-amber-300'
           }`}>
             ${balanceInDollars}
           </p>
@@ -219,18 +219,35 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       {/* ── 3. Piggy Bank Mini ── */}
       {piggyBank && (
         <div className="px-4 pb-3">
-          <div className="rounded-xl p-3 bg-pink-500/10 border border-pink-500/15">
-            <div className="flex items-center justify-between mb-2">
+          <div className="rounded-xl p-3 bg-pink-500/15 border border-pink-500/25">
+            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <PiggyBank className="w-4 h-4 text-pink-400" />
-                <span className="text-xs font-semibold text-pink-300">
+                <span className="text-xs font-semibold text-pink-200">
                   <FormattedMessage id="chatter.sidebar.piggyBank" defaultMessage="Tirelire" />
                 </span>
               </div>
-              <span className="text-xs font-bold text-pink-400">
-                ${formatAmount(piggyBank.totalPending)} / ${formatAmount(piggyBank.unlockThreshold)}
-              </span>
+              {piggyBank.totalPending > 0 && (
+                <span className="text-xs font-bold text-pink-400">
+                  ${formatAmount(piggyBank.totalPending)}
+                </span>
+              )}
             </div>
+            <p className="text-[10px] text-pink-200/70 mb-2">
+              {piggyBank.totalPending > 0 ? (
+                piggyBank.isUnlocked ? (
+                  <FormattedMessage id="chatter.sidebar.piggyUnlocked" defaultMessage="Bonus ready to claim!" />
+                ) : (
+                  <FormattedMessage
+                    id="chatter.sidebar.piggyProgress"
+                    defaultMessage="Earn {amount} in sales to unlock your ${bonus} bonus"
+                    values={{ amount: `$${formatAmount(piggyBank.amountToUnlock)}`, bonus: formatAmount(piggyBank.totalPending) }}
+                  />
+                )
+              ) : (
+                <FormattedMessage id="chatter.sidebar.piggyConnect" defaultMessage="Connect Telegram to get a $50 bonus!" />
+              )}
+            </p>
             <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-pink-500 to-pink-400 transition-all duration-700"
@@ -244,13 +261,13 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       {/* ── 4. Affiliate Links ── */}
       <div className="px-4 pb-3 space-y-2">
         {/* Client link */}
-        <div className="rounded-xl p-3 bg-emerald-500/10 border border-emerald-500/15">
+        <div className="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/25">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
               <FormattedMessage id="chatter.sidebar.clientLink" defaultMessage="Lien client" />
             </span>
             {commissionClientCall > 0 && (
-              <span className="text-[10px] font-medium text-emerald-500/70">
+              <span className="text-[11px] font-bold text-emerald-400">
                 <FormattedMessage
                   id="chatter.sidebar.perCall"
                   defaultMessage="{amount}/appel"
@@ -260,19 +277,19 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <code className="flex-1 text-xs font-mono text-emerald-300 truncate bg-white/5 px-2 py-1.5 rounded-lg">
+            <code className="flex-1 text-xs font-mono font-semibold text-emerald-200 truncate bg-emerald-500/10 px-2.5 py-1.5 rounded-lg">
               {clientCode || '---'}
             </code>
             <button
               onClick={() => handleCopy(clientCode, 'Code')}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-emerald-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
               aria-label="Copy"
             >
               <Copy className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleShare(clientShareUrl)}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-emerald-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
               aria-label="Share"
             >
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -281,13 +298,13 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
         </div>
 
         {/* Recruitment link */}
-        <div className="rounded-xl p-3 bg-violet-500/10 border border-violet-500/15">
+        <div className="rounded-xl p-3 bg-violet-500/15 border border-violet-500/25">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-semibold text-violet-400 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-violet-300 uppercase tracking-wider">
               <FormattedMessage id="chatter.sidebar.recruitLink" defaultMessage="Lien recrutement" />
             </span>
             {commissionN1Call > 0 && (
-              <span className="text-[10px] font-medium text-violet-500/70">
+              <span className="text-[11px] font-bold text-violet-400">
                 <FormattedMessage
                   id="chatter.sidebar.perCall"
                   defaultMessage="{amount}/appel"
@@ -297,19 +314,19 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <code className="flex-1 text-xs font-mono text-violet-300 truncate bg-white/5 px-2 py-1.5 rounded-lg">
+            <code className="flex-1 text-xs font-mono font-semibold text-violet-200 truncate bg-violet-500/10 px-2.5 py-1.5 rounded-lg">
               {recruitmentCode || '---'}
             </code>
             <button
               onClick={() => handleCopy(recruitmentCode, 'Code')}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-violet-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              className="p-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
               aria-label="Copy"
             >
               <Copy className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleShare(recruitmentShareUrl)}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-violet-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              className="p-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
               aria-label="Share"
             >
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -327,8 +344,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
                 onClick={() => onNavigate(item.key, item.route)}
                 className={`group relative w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[40px]
                   ${currentKey === item.key
-                    ? 'bg-indigo-500/15 text-indigo-400'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    ? 'bg-indigo-500/20 text-indigo-300'
+                    : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
                   }`}
               >
                 {currentKey === item.key && (
@@ -347,11 +364,11 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-[11px] font-medium text-slate-400">
+            <span className="text-[11px] font-medium text-slate-300">
               <FormattedMessage id="chatter.sidebar.progression" defaultMessage="Progression" />
             </span>
           </div>
-          <span className="text-[11px] font-bold text-indigo-400">{Math.round(levelProgress)}%</span>
+          <span className="text-[11px] font-bold text-indigo-300">{Math.round(levelProgress)}%</span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
           <div
@@ -371,7 +388,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
         <button
           onClick={onLogout}
           disabled={loggingOut}
-          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-all min-h-[40px]"
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-400 hover:bg-white/[0.08] hover:text-slate-200 transition-all min-h-[40px]"
         >
           <LogOut className="w-5 h-5" />
           {loggingOut
@@ -589,7 +606,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
 
             {/* DESKTOP SIDEBAR */}
             <aside className="hidden lg:block">
-              <div className="sticky top-4 bg-slate-900/60 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+              <div className="sticky top-4 bg-slate-900/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl shadow-black/30">
                 <SidebarContent {...sidebarProps} />
               </div>
             </aside>
