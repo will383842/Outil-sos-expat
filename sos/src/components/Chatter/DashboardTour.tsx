@@ -41,9 +41,7 @@ interface TourStep {
   id: string;
   targetSelector: string;
   title: string;
-  titleFr: string;
   description: string;
-  descriptionFr: string;
   icon: React.ReactNode;
   position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   highlight?: boolean;
@@ -71,9 +69,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'welcome',
     targetSelector: '', // No target, center modal
     title: 'Welcome to Your Dashboard!',
-    titleFr: 'Bienvenue sur votre Tableau de Bord !',
     description: 'Let us show you around and help you start earning money. This quick tour will guide you through all the features.',
-    descriptionFr: 'Laissez-nous vous faire decouvrir comment gagner de l\'argent. Ce guide rapide vous presentera toutes les fonctionnalites.',
     icon: <Rocket className="w-8 h-8 text-indigo-500" />,
     position: 'center',
     highlight: true,
@@ -82,9 +78,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'balance',
     targetSelector: '[data-tour="balance-card"]',
     title: 'Track Your Earnings',
-    titleFr: 'Suivez vos Gains',
     description: 'This is your piggy bank! Watch your earnings grow here. Once you reach $20, you can withdraw your money.',
-    descriptionFr: 'C\'est votre tirelire ! Suivez vos gains ici. Des que vous atteignez 20$, vous pouvez retirer votre argent.',
     icon: <Wallet className="w-6 h-6 text-green-500" />,
     position: 'left',
   },
@@ -92,9 +86,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'missions',
     targetSelector: '[data-tour="missions-card"]',
     title: 'Daily Missions',
-    titleFr: 'Missions Quotidiennes',
     description: 'Complete daily missions to earn bonus rewards and build your streak. The longer your streak, the bigger your bonuses!',
-    descriptionFr: 'Completez les missions quotidiennes pour gagner des bonus et augmenter votre serie. Plus la serie est longue, plus les bonus sont gros !',
     icon: <Target className="w-6 h-6 text-orange-500" />,
     position: 'bottom',
   },
@@ -102,9 +94,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'affiliate-links',
     targetSelector: '[data-tour="affiliate-links"]',
     title: 'Your Affiliate Links',
-    titleFr: 'Vos Liens d\'Affiliation',
     description: 'Share these links on social media. You earn {{callAmountRange}} for every client who books a call through your link!',
-    descriptionFr: 'Partagez ces liens sur les reseaux sociaux. Vous gagnez {{callAmountRange}} pour chaque client qui reserve un appel via votre lien !',
     icon: <Share2 className="w-6 h-6 text-blue-500" />,
     position: 'bottom',
   },
@@ -112,9 +102,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'team',
     targetSelector: '[data-tour="team-card"]',
     title: 'Build Your Team',
-    titleFr: 'Construisez votre Equipe',
     description: 'Recruit other chatters and earn passive income! Get $1 for every call your N1 recruits make, and $0.50 for N2.',
-    descriptionFr: 'Recrutez d\'autres chatters et gagnez des revenus passifs ! Gagnez 1$ pour chaque appel de vos filleuls N1, et 0.50$ pour les N2.',
     icon: <Users className="w-6 h-6 text-indigo-500" />,
     position: 'top',
   },
@@ -122,9 +110,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'piggy-bank',
     targetSelector: '[data-tour="piggy-bank"]',
     title: 'Your Piggy Bank',
-    titleFr: 'Votre Tirelire',
     description: 'Your Telegram bonus and other bonuses are stored here. Once you reach the sales threshold, you can claim them!',
-    descriptionFr: 'Votre bonus Telegram et autres bonus sont stockes ici. Une fois le seuil de ventes atteint, vous pouvez les reclamer !',
     icon: <PiggyBank className="w-6 h-6 text-pink-500" />,
     position: 'left',
   },
@@ -132,9 +118,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'leaderboard',
     targetSelector: '[data-tour="leaderboard"]',
     title: 'Compete & Win',
-    titleFr: 'Competez et Gagnez',
     description: 'Check the leaderboard to see how you rank. Top 3 chatters each month win cash prizes ($200, $100, $50)!',
-    descriptionFr: 'Consultez le classement pour voir votre position. Les 3 meilleurs chatters chaque mois gagnent des primes ($200, $100, $50) !',
     icon: <Trophy className="w-6 h-6 text-yellow-500" />,
     position: 'bottom',
   },
@@ -142,9 +126,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'quick-actions',
     targetSelector: '[data-tour="quick-actions"]',
     title: 'Quick Actions',
-    titleFr: 'Actions Rapides',
     description: 'Use this floating button for quick access to share your link, view earnings, invite team members, and more.',
-    descriptionFr: 'Utilisez ce bouton flottant pour acceder rapidement au partage de lien, voir vos gains, inviter des membres, etc.',
     icon: <Zap className="w-6 h-6 text-amber-500" />,
     position: 'top',
   },
@@ -152,9 +134,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'notifications',
     targetSelector: '[data-tour="notifications"]',
     title: 'Stay Updated',
-    titleFr: 'Restez Informe',
     description: 'Check your notifications here. We\'ll alert you about new commissions, bonuses, and important updates.',
-    descriptionFr: 'Consultez vos notifications ici. Nous vous alerterons des nouvelles commissions, bonus et mises a jour importantes.',
     icon: <Bell className="w-6 h-6 text-indigo-500" />,
     position: 'bottom',
   },
@@ -162,9 +142,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'complete',
     targetSelector: '',
     title: 'You\'re All Set!',
-    titleFr: 'Vous etes Pret !',
     description: 'Start sharing your links and earn money today. Good luck, and welcome to the team!',
-    descriptionFr: 'Commencez a partager vos liens et gagnez de l\'argent des aujourd\'hui. Bonne chance et bienvenue dans l\'equipe !',
     icon: <PartyPopper className="w-8 h-8 text-indigo-500" />,
     position: 'center',
     highlight: true,
@@ -304,7 +282,6 @@ interface TourTooltipProps {
   currentStep: number;
   totalSteps: number;
   targetRect: DOMRect | null;
-  language: string;
   callAmountRange: string;
   onNext: () => void;
   onPrev: () => void;
@@ -318,7 +295,6 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   currentStep,
   totalSteps,
   targetRect,
-  language,
   callAmountRange,
   onNext,
   onPrev,
@@ -329,7 +305,6 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   const intl = useIntl();
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number; arrowPosition: 'top' | 'bottom' | 'left' | 'right' | 'none' }>({ top: 0, left: 0, arrowPosition: 'none' });
-  const isFrench = language.startsWith('fr');
 
   // Calculate position on mount and when target changes
   useEffect(() => {
@@ -345,8 +320,8 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
     return () => window.removeEventListener('resize', calculateAndSetPosition);
   }, [targetRect, step.position]);
 
-  const title = isFrench ? step.titleFr : step.title;
-  const description = (isFrench ? step.descriptionFr : step.description).replace(/\{\{callAmountRange\}\}/g, callAmountRange);
+  const title = intl.formatMessage({ id: `chatter.tour.${step.id}.title`, defaultMessage: step.title });
+  const description = intl.formatMessage({ id: `chatter.tour.${step.id}.description`, defaultMessage: step.description }).replace(/\{\{callAmountRange\}\}/g, callAmountRange);
 
   // Arrow styles based on position
   const arrowStyles: Record<string, string> = {
@@ -728,7 +703,6 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
               currentStep={currentStep}
               totalSteps={TOUR_STEPS.length}
               targetRect={targetRect}
-              language={intl.locale}
               callAmountRange={callAmountRange}
               onNext={handleNext}
               onPrev={handlePrev}

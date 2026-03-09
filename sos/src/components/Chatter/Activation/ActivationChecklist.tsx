@@ -21,11 +21,11 @@ const WAITING_TIPS = [
 ];
 
 const DEFAULT_TIPS = [
-  "Astuce : Partagez dans des groupes WhatsApp d'expatries",
-  "Astuce : Les meilleurs chatters partagent 3-5 fois par jour",
-  "Astuce : Demandez a vos amis expatries s'ils ont besoin d'aide juridique",
-  "Astuce : Postez votre lien sur Facebook avec un temoignage personnel",
-  "Astuce : Envoyez votre lien a des personnes qui preparent un voyage a l'etranger",
+  "Tip: Share in WhatsApp groups for expats",
+  "Tip: The best chatters share 3-5 times per day",
+  "Tip: Ask your expat friends if they need legal help",
+  "Tip: Post your link on Facebook with a personal testimonial",
+  "Tip: Send your link to people planning a trip abroad",
 ];
 
 interface ActivationChecklistProps {
@@ -170,10 +170,10 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                     <FormattedMessage
                       id={`chatter.activation.step${index + 1}.title`}
                       defaultMessage={
-                        index === 0 ? 'Copiez votre lien client' :
-                        index === 1 ? 'Partagez-le (WhatsApp, Telegram...)' :
-                        index === 2 ? 'Un client appelle via votre lien' :
-                        'Vous recevez votre commission !'
+                        index === 0 ? 'Copy your client link' :
+                        index === 1 ? 'Share it (WhatsApp, Telegram...)' :
+                        index === 2 ? 'A client calls via your link' :
+                        'You receive your commission!'
                       }
                     />
                     {step.completed && (

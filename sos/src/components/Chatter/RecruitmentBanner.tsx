@@ -154,6 +154,198 @@ const translations = {
       collapse: "Ocultar calculadora"
     },
     dismiss: "Cerrar"
+  },
+  de: {
+    headline: "Rekrutieren Sie Chatter, Verdienen Sie Für Immer",
+    valueProps: {
+      commission: "Verdienen Sie 5% der Einnahmen Ihres Teams FÜR IMMER",
+      noLimit: "Keine Begrenzung der Teamgröße",
+      passive: "Passives Einkommen im Schlaf"
+    },
+    socialProof: {
+      topRecruiter: "Top-Rekrutierer verdiente ${amount} diesen Monat",
+      activeChatters: "{count} aktive Chatter weltweit",
+      joinedThisWeek: "{count} Chatter traten diese Woche bei",
+      testimonial: '"Ich habe ein Team von 50 Chattern aufgebaut und verdiene jetzt über $2.000 monatlich!" - Sarah M.'
+    },
+    calculator: {
+      title: "Berechnen Sie Ihr Potenzial",
+      teamSize: "Teamgröße",
+      members: "Mitglieder",
+      avgEarnings: "Durchschn. Einnahmen/Mitglied",
+      perMonth: "/Monat",
+      yourPassiveIncome: "Ihr passives Einkommen (5%)",
+      disclaimer: "Basierend auf durchschnittlichen Einnahmen von $500/Monat pro Mitglied"
+    },
+    cta: {
+      primary: "Meinen Rekrutierungslink erhalten",
+      secondary: "Wie es funktioniert",
+      copyLink: "Link kopieren",
+      copied: "Kopiert!",
+      expand: "Rechner anzeigen",
+      collapse: "Rechner ausblenden"
+    },
+    dismiss: "Schließen"
+  },
+  ru: {
+    headline: "Привлекайте Чаттеров, Зарабатывайте Всегда",
+    valueProps: {
+      commission: "Зарабатывайте 5% от доходов вашей команды НАВСЕГДА",
+      noLimit: "Без ограничений на размер команды",
+      passive: "Пассивный доход пока вы спите"
+    },
+    socialProof: {
+      topRecruiter: "Лучший рекрутер заработал ${amount} в этом месяце",
+      activeChatters: "{count} активных чаттеров по всему миру",
+      joinedThisWeek: "{count} чаттеров присоединились на этой неделе",
+      testimonial: '"Я собрал команду из 50 чаттеров и теперь зарабатываю $2000+ ежемесячно!" - Сергей М.'
+    },
+    calculator: {
+      title: "Рассчитайте Свой Потенциал",
+      teamSize: "Размер команды",
+      members: "участников",
+      avgEarnings: "Средн. заработок/участник",
+      perMonth: "/месяц",
+      yourPassiveIncome: "Ваш пассивный доход (5%)",
+      disclaimer: "На основе среднего заработка $500/месяц на участника"
+    },
+    cta: {
+      primary: "Получить Мою Ссылку",
+      secondary: "Как Это Работает",
+      copyLink: "Скопировать",
+      copied: "Скопировано!",
+      expand: "Показать калькулятор",
+      collapse: "Скрыть калькулятор"
+    },
+    dismiss: "Закрыть"
+  },
+  pt: {
+    headline: "Recrute Chatters, Ganhe Para Sempre",
+    valueProps: {
+      commission: "Ganhe 5% dos ganhos da sua equipa PARA SEMPRE",
+      noLimit: "Sem limite no tamanho da equipa",
+      passive: "Rendimento passivo enquanto dorme"
+    },
+    socialProof: {
+      topRecruiter: "O melhor recrutador ganhou ${amount} este mês",
+      activeChatters: "{count} chatters ativos globalmente",
+      joinedThisWeek: "{count} chatters juntaram-se esta semana",
+      testimonial: '"Construí uma equipa de 50 chatters e agora ganho $2000+ mensais!" - Sofia M.'
+    },
+    calculator: {
+      title: "Calcule o Seu Potencial",
+      teamSize: "Tamanho da equipa",
+      members: "membros",
+      avgEarnings: "Ganhos médios/membro",
+      perMonth: "/mês",
+      yourPassiveIncome: "O seu rendimento passivo (5%)",
+      disclaimer: "Baseado em ganhos médios de $500/mês por membro"
+    },
+    cta: {
+      primary: "Obter o Meu Link de Recrutamento",
+      secondary: "Como Funciona",
+      copyLink: "Copiar Link",
+      copied: "Copiado!",
+      expand: "Ver calculadora",
+      collapse: "Ocultar calculadora"
+    },
+    dismiss: "Fechar"
+  },
+  ch: {
+    headline: "招募推广者，永久赚钱",
+    valueProps: {
+      commission: "永久赚取团队收入的5%",
+      noLimit: "团队规模无上限",
+      passive: "睡觉也能赚被动收入"
+    },
+    socialProof: {
+      topRecruiter: "最佳招募者本月赚了${amount}",
+      activeChatters: "全球{count}个活跃推广者",
+      joinedThisWeek: "本周{count}个推广者加入",
+      testimonial: '"我建了一个50人的推广团队，现在每月赚$2000+！" - 小王'
+    },
+    calculator: {
+      title: "计算您的潜力",
+      teamSize: "团队规模",
+      members: "成员",
+      avgEarnings: "平均收入/成员",
+      perMonth: "/月",
+      yourPassiveIncome: "您的被动收入 (5%)",
+      disclaimer: "基于每位成员平均收入$500/月"
+    },
+    cta: {
+      primary: "获取我的招募链接",
+      secondary: "了解运作方式",
+      copyLink: "复制链接",
+      copied: "已复制！",
+      expand: "显示计算器",
+      collapse: "隐藏计算器"
+    },
+    dismiss: "关闭"
+  },
+  hi: {
+    headline: "चैटर्स भर्ती करें, हमेशा कमाएं",
+    valueProps: {
+      commission: "अपनी टीम की कमाई का 5% हमेशा के लिए कमाएं",
+      noLimit: "टीम के आकार पर कोई सीमा नहीं",
+      passive: "सोते समय भी निष्क्रिय आय"
+    },
+    socialProof: {
+      topRecruiter: "शीर्ष भर्तीकर्ता ने इस महीने ${amount} कमाया",
+      activeChatters: "वैश्विक स्तर पर {count} सक्रिय चैटर्स",
+      joinedThisWeek: "इस सप्ताह {count} चैटर्स जुड़े",
+      testimonial: '"मैंने 50 चैटर्स की टीम बनाई और अब मैं $2000+ मासिक कमाता हूं!" - राज एम.'
+    },
+    calculator: {
+      title: "अपनी संभावना की गणना करें",
+      teamSize: "टीम का आकार",
+      members: "सदस्य",
+      avgEarnings: "औसत कमाई/सदस्य",
+      perMonth: "/माह",
+      yourPassiveIncome: "आपकी निष्क्रिय आय (5%)",
+      disclaimer: "प्रति सदस्य औसत $500/माह कमाई पर आधारित"
+    },
+    cta: {
+      primary: "मेरा भर्ती लिंक प्राप्त करें",
+      secondary: "यह कैसे काम करता है",
+      copyLink: "लिंक कॉपी करें",
+      copied: "कॉपी हो गया!",
+      expand: "कैलकुलेटर दिखाएं",
+      collapse: "कैलकुलेटर छुपाएं"
+    },
+    dismiss: "बंद करें"
+  },
+  ar: {
+    headline: "جنّد محادثين، اكسب للأبد",
+    valueProps: {
+      commission: "اكسب 5% من أرباح فريقك للأبد",
+      noLimit: "لا حد لحجم الفريق",
+      passive: "دخل سلبي أثناء نومك"
+    },
+    socialProof: {
+      topRecruiter: "أفضل مجنّد كسب ${amount} هذا الشهر",
+      activeChatters: "{count} محادث نشط حول العالم",
+      joinedThisWeek: "{count} محادث انضموا هذا الأسبوع",
+      testimonial: '"بنيت فريقًا من 50 محادثًا وأكسب الآن $2000+ شهريًا!" - سارة م.'
+    },
+    calculator: {
+      title: "احسب إمكانياتك",
+      teamSize: "حجم الفريق",
+      members: "أعضاء",
+      avgEarnings: "متوسط الأرباح/عضو",
+      perMonth: "/شهر",
+      yourPassiveIncome: "دخلك السلبي (5%)",
+      disclaimer: "بناءً على متوسط أرباح $500/شهر لكل عضو"
+    },
+    cta: {
+      primary: "احصل على رابط التجنيد",
+      secondary: "كيف يعمل",
+      copyLink: "نسخ الرابط",
+      copied: "تم النسخ!",
+      expand: "عرض الآلة الحاسبة",
+      collapse: "إخفاء الآلة الحاسبة"
+    },
+    dismiss: "إغلاق"
   }
 };
 
@@ -353,7 +545,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
   defaultExpanded = false,
 }) => {
   const intl = useIntl();
-  const locale = intl.locale.split('-')[0] as 'en' | 'fr' | 'es';
+  const locale = intl.locale.split('-')[0] as keyof typeof translations;
   const t = translations[locale] || translations.en;
 
   const [isDismissed, setIsDismissed] = useState(false);
