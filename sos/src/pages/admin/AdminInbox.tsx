@@ -71,6 +71,9 @@ const USER_TYPE_LABELS: Record<string, { label: string; color: string; bg: strin
   group_admin: { label: 'Group Admin', color: 'text-violet-700', bg: 'bg-violet-100' },
   affiliate: { label: 'Affiliate', color: 'text-emerald-700', bg: 'bg-emerald-100' },
   partner: { label: 'Partenaire', color: 'text-teal-700', bg: 'bg-teal-100' },
+  client: { label: 'Client', color: 'text-green-700', bg: 'bg-green-100' },
+  lawyer: { label: 'Avocat', color: 'text-amber-700', bg: 'bg-amber-100' },
+  expat: { label: 'Expat', color: 'text-sky-700', bg: 'bg-sky-100' },
 };
 
 const formatCentsToUSD = (cents: number): string => {
