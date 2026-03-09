@@ -595,5 +595,16 @@
   "admin.menu.paymentsWithdrawals": "Levantamentos",
   "admin.menu.paymentsWithdrawals.description": "Gerir pedidos de levantamento",
   "admin.menu.paymentsConfig": "Configuração de Pagamentos",
-  "admin.menu.paymentsConfig.description": "Definições do sistema de pagamentos"
+  "admin.menu.paymentsConfig.description": "Definições do sistema de pagamentos",
+  "admin.withdrawals.title": "Gestão de Levantamentos",
+  "admin.withdrawals.userType.chatter": "Chatter",
+  "admin.withdrawals.userType.influencer": "Influenciador",
+  "admin.withdrawals.userType.blogger": "Blogueiro",
+  "admin.withdrawals.userType.group_admin": "Admin do Grupo",
+  "admin.withdrawals.userType.affiliate": "Afiliado",
+  "admin.withdrawals.userType.partner": "Parceiro",
+  "admin.withdrawals.userType.client": "Cliente",
+  "admin.withdrawals.userType.lawyer": "Advogado",
+  "admin.withdrawals.userType.expat": "Expat",
+  "admin.withdrawals.detail.userType": "Tipo de utilizador"
 }

@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Target, ArrowRight, DollarSign, Users, Trophy, Send } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { UI } from '@/components/Chatter/designTokens';
@@ -36,6 +36,7 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
 }) => {
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
+  const intl = useIntl();
 
   const objective = useMemo((): Objective | null => {
     if (!chatter) return null;
@@ -52,11 +53,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (availableBalance < 30 && totalEarned > 0) {
       return {
         id: 'first_withdrawal',
-        title: 'Premier retrait',
+        title: intl.formatMessage({ id: 'chatter.objective.firstWithdrawal.title', defaultMessage: 'First withdrawal' }),
         current: availableBalance,
         target: 30,
         unit: '$',
-        ctaLabel: 'Partager pour gagner',
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareToEarn', defaultMessage: 'Share to earn' }),
         ctaAction: 'share',
         icon: <DollarSign className="w-5 h-5" />,
         color: 'text-green-500',
@@ -67,11 +68,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (availableBalance >= 30 && !hasWithdrawn) {
       return {
         id: 'withdraw_now',
-        title: 'Retirer votre argent !',
+        title: intl.formatMessage({ id: 'chatter.objective.withdrawNow.title', defaultMessage: 'Withdraw your money!' }),
         current: 30,
         target: 30,
         unit: '$',
-        ctaLabel: `Retirer $${availableBalance.toFixed(0)}`,
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.withdrawAmount', defaultMessage: 'Withdraw ${amount}' }, { amount: availableBalance.toFixed(0) }),
         ctaAction: 'withdraw',
         icon: <DollarSign className="w-5 h-5" />,
         color: 'text-green-500',
@@ -82,11 +83,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (totalRecruits === 0) {
       return {
         id: 'first_recruit',
-        title: 'Recruter votre premier filleul',
+        title: intl.formatMessage({ id: 'chatter.objective.firstRecruit.title', defaultMessage: 'Recruit your first referral' }),
         current: 0,
         target: 1,
-        unit: 'filleul',
-        ctaLabel: 'Inviter quelqu\'un',
+        unit: intl.formatMessage({ id: 'chatter.objective.unit.referral', defaultMessage: 'referral' }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.inviteSomeone', defaultMessage: 'Invite someone' }),
         ctaAction: 'recruit',
         icon: <Users className="w-5 h-5" />,
         color: 'text-blue-500',
@@ -97,11 +98,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (qualifiedReferrals < 5) {
       return {
         id: 'tier_5',
-        title: '5 filleuls qualifies = $15 bonus',
+        title: intl.formatMessage({ id: 'chatter.objective.tier5.title', defaultMessage: '5 qualified referrals = $15 bonus' }),
         current: qualifiedReferrals,
         target: 5,
-        unit: 'filleuls',
-        ctaLabel: 'Recruter plus',
+        unit: intl.formatMessage({ id: 'chatter.objective.unit.referrals', defaultMessage: 'referrals' }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.recruitMore', defaultMessage: 'Recruit more' }),
         ctaAction: 'recruit',
         icon: <Users className="w-5 h-5" />,
         color: 'text-blue-500',
@@ -112,11 +113,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (level < 2) {
       return {
         id: 'level_2',
-        title: 'Niveau 2 (+10% bonus)',
+        title: intl.formatMessage({ id: 'chatter.objective.level2.title', defaultMessage: 'Level 2 (+10% bonus)' }),
         current: totalEarned,
         target: 100,
         unit: '$',
-        ctaLabel: 'Partager pour gagner',
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareToEarn', defaultMessage: 'Share to earn' }),
         ctaAction: 'share',
         icon: <Trophy className="w-5 h-5" />,
         color: 'text-blue-500',
@@ -127,11 +128,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (!telegramLinked) {
       return {
         id: 'telegram_bonus',
-        title: 'Liez Telegram = $50 bonus',
+        title: intl.formatMessage({ id: 'chatter.objective.telegramBonus.title', defaultMessage: 'Link Telegram = $50 bonus' }),
         current: 0,
         target: 1,
         unit: '',
-        ctaLabel: 'Lier Telegram',
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.linkTelegram', defaultMessage: 'Link Telegram' }),
         ctaAction: 'telegram',
         icon: <Send className="w-5 h-5" />,
         color: 'text-indigo-500',
@@ -142,11 +143,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (qualifiedReferrals < 10) {
       return {
         id: 'tier_10',
-        title: '10 filleuls qualifies = $35 bonus',
+        title: intl.formatMessage({ id: 'chatter.objective.tier10.title', defaultMessage: '10 qualified referrals = $35 bonus' }),
         current: qualifiedReferrals,
         target: 10,
-        unit: 'filleuls',
-        ctaLabel: 'Recruter plus',
+        unit: intl.formatMessage({ id: 'chatter.objective.unit.referrals', defaultMessage: 'referrals' }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.recruitMore', defaultMessage: 'Recruit more' }),
         ctaAction: 'recruit',
         icon: <Users className="w-5 h-5" />,
         color: 'text-blue-500',
@@ -157,11 +158,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (level < 3) {
       return {
         id: 'level_3',
-        title: 'Niveau 3 Avance (+20% bonus)',
+        title: intl.formatMessage({ id: 'chatter.objective.level3.title', defaultMessage: 'Level 3 Advanced (+20% bonus)' }),
         current: totalEarned,
         target: 500,
         unit: '$',
-        ctaLabel: 'Partager pour gagner',
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareToEarn', defaultMessage: 'Share to earn' }),
         ctaAction: 'share',
         icon: <Trophy className="w-5 h-5" />,
         color: 'text-violet-500',
@@ -172,11 +173,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (qualifiedReferrals < 20) {
       return {
         id: 'tier_20',
-        title: '20 filleuls qualifies = $75 bonus',
+        title: intl.formatMessage({ id: 'chatter.objective.tier20.title', defaultMessage: '20 qualified referrals = $75 bonus' }),
         current: qualifiedReferrals,
         target: 20,
-        unit: 'filleuls',
-        ctaLabel: 'Recruter plus',
+        unit: intl.formatMessage({ id: 'chatter.objective.unit.referrals', defaultMessage: 'referrals' }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.recruitMore', defaultMessage: 'Recruit more' }),
         ctaAction: 'recruit',
         icon: <Users className="w-5 h-5" />,
         color: 'text-blue-500',
@@ -187,11 +188,11 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     if (level < 4) {
       return {
         id: 'level_4',
-        title: 'Niveau 4 Expert (+35% bonus)',
+        title: intl.formatMessage({ id: 'chatter.objective.level4.title', defaultMessage: 'Level 4 Expert (+35% bonus)' }),
         current: totalEarned,
         target: 2000,
         unit: '$',
-        ctaLabel: 'Continuer a gagner',
+        ctaLabel: intl.formatMessage({ id: 'chatter.objective.keepEarning', defaultMessage: 'Keep earning' }),
         ctaAction: 'share',
         icon: <Trophy className="w-5 h-5" />,
         color: 'text-indigo-500',
@@ -201,16 +202,16 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     // Default: keep sharing
     return {
       id: 'keep_going',
-      title: 'Continuez a gagner !',
+      title: intl.formatMessage({ id: 'chatter.objective.keepGoing.title', defaultMessage: 'Keep earning!' }),
       current: totalEarned,
       target: 5000,
       unit: '$',
-      ctaLabel: 'Partager mon lien',
+      ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareMyLink', defaultMessage: 'Share my link' }),
       ctaAction: 'share',
       icon: <Target className="w-5 h-5" />,
       color: 'text-violet-500',
     };
-  }, [chatter]);
+  }, [chatter, intl]);
 
   if (!objective) return null;
 

@@ -778,5 +778,16 @@
   "admin.menu.paymentsWithdrawals": "Retiros",
   "admin.menu.paymentsWithdrawals.description": "Gestionar solicitudes de retiro",
   "admin.menu.paymentsConfig": "Configuración de Pagos",
-  "admin.menu.paymentsConfig.description": "Configuración del sistema de pagos"
+  "admin.menu.paymentsConfig.description": "Configuración del sistema de pagos",
+  "admin.withdrawals.title": "Gestión de Retiros",
+  "admin.withdrawals.userType.chatter": "Chatter",
+  "admin.withdrawals.userType.influencer": "Influencer",
+  "admin.withdrawals.userType.blogger": "Bloguero",
+  "admin.withdrawals.userType.group_admin": "Admin de Grupo",
+  "admin.withdrawals.userType.affiliate": "Afiliado",
+  "admin.withdrawals.userType.partner": "Socio",
+  "admin.withdrawals.userType.client": "Cliente",
+  "admin.withdrawals.userType.lawyer": "Abogado",
+  "admin.withdrawals.userType.expat": "Expat",
+  "admin.withdrawals.detail.userType": "Tipo de usuario"
 }

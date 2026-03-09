@@ -306,6 +306,12 @@ const AdminPaymentDetail: React.FC = () => {
       case 'chatter': return 'chatter_commissions';
       case 'influencer': return 'influencer_commissions';
       case 'blogger': return 'blogger_commissions';
+      case 'group_admin': return 'group_admin_commissions';
+      case 'affiliate': return 'affiliate_commissions';
+      case 'partner': return 'partner_commissions';
+      case 'client': return 'affiliate_commissions';
+      case 'lawyer': return 'affiliate_commissions';
+      case 'expat': return 'affiliate_commissions';
       default: return 'chatter_commissions';
     }
   };

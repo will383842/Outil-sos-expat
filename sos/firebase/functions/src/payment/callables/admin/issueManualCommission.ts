@@ -49,7 +49,7 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
  */
 interface IssueManualCommissionInput {
   userId: string;
-  userType: 'chatter' | 'influencer' | 'blogger' | 'group_admin';
+  userType: 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat';
   amount: number; // positive, in cents
   reason: string;
   reference?: string;
@@ -60,6 +60,11 @@ const USER_TYPE_COLLECTION_MAP: Record<string, string> = {
   influencer: 'influencers',
   blogger: 'bloggers',
   group_admin: 'group_admins',
+  affiliate: 'users',
+  partner: 'partners',
+  client: 'users',
+  lawyer: 'users',
+  expat: 'users',
 };
 
 const USER_TYPE_COMMISSION_COLLECTION_MAP: Record<string, string> = {
@@ -67,6 +72,11 @@ const USER_TYPE_COMMISSION_COLLECTION_MAP: Record<string, string> = {
   influencer: 'influencer_commissions',
   blogger: 'blogger_commissions',
   group_admin: 'group_admin_commissions',
+  affiliate: 'affiliate_commissions',
+  partner: 'partner_commissions',
+  client: 'affiliate_commissions',
+  lawyer: 'affiliate_commissions',
+  expat: 'affiliate_commissions',
 };
 
 /**
@@ -94,7 +104,7 @@ export const adminIssueManualCommission = onCall(
       throw new HttpsError('invalid-argument', 'User ID is required');
     }
 
-    const validUserTypes = ['chatter', 'influencer', 'blogger', 'group_admin'];
+    const validUserTypes = Object.keys(USER_TYPE_COLLECTION_MAP);
     if (!input.userType || !validUserTypes.includes(input.userType)) {
       throw new HttpsError('invalid-argument', `Invalid userType. Must be one of: ${validUserTypes.join(', ')}`);
     }

@@ -778,5 +778,16 @@
   "admin.menu.paymentsWithdrawals": "Auszahlungen",
   "admin.menu.paymentsWithdrawals.description": "Auszahlungsanträge verwalten",
   "admin.menu.paymentsConfig": "Zahlungskonfiguration",
-  "admin.menu.paymentsConfig.description": "Einstellungen des Zahlungssystems"
+  "admin.menu.paymentsConfig.description": "Einstellungen des Zahlungssystems",
+  "admin.withdrawals.title": "Auszahlungsverwaltung",
+  "admin.withdrawals.userType.chatter": "Chatter",
+  "admin.withdrawals.userType.influencer": "Influencer",
+  "admin.withdrawals.userType.blogger": "Blogger",
+  "admin.withdrawals.userType.group_admin": "Gruppenadmin",
+  "admin.withdrawals.userType.affiliate": "Partner",
+  "admin.withdrawals.userType.partner": "Partner",
+  "admin.withdrawals.userType.client": "Kunde",
+  "admin.withdrawals.userType.lawyer": "Anwalt",
+  "admin.withdrawals.userType.expat": "Expat",
+  "admin.withdrawals.detail.userType": "Benutzertyp"
 }

@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
 import { TelegramAdminConfig } from "../../telegram/types";
+import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -58,6 +59,42 @@ async function getPaymentConfig(): Promise<PaymentConfig> {
 }
 
 /**
+ * Get human-readable label for user type
+ */
+function getUserTypeLabel(userType: string): string {
+  const labels: Record<string, string> = {
+    chatter: "Chatter",
+    influencer: "Influencer",
+    blogger: "Blogger",
+    group_admin: "GroupAdmin",
+    affiliate: "Affiliate",
+    partner: "Partner",
+    client: "Client",
+    lawyer: "Avocat",
+    expat: "Expat",
+  };
+  return labels[userType] || userType.charAt(0).toUpperCase() + userType.slice(1);
+}
+
+/**
+ * Get the notification collection for a user type
+ */
+function getNotificationCollection(userType: string): string {
+  switch (userType) {
+    case 'chatter': return 'chatter_notifications';
+    case 'influencer': return 'influencer_notifications';
+    case 'blogger': return 'blogger_notifications';
+    case 'group_admin': return 'group_admin_notifications';
+    case 'affiliate': return 'affiliate_notifications';
+    case 'partner': return 'partner_notifications';
+    case 'client': return 'inapp_notifications';
+    case 'lawyer': return 'inapp_notifications';
+    case 'expat': return 'inapp_notifications';
+    default: return `${userType}_notifications`;
+  }
+}
+
+/**
  * Create a notification for the user
  */
 async function createUserNotification(
@@ -69,7 +106,7 @@ async function createUserNotification(
   const now = Timestamp.now();
 
   // Determine the correct notification collection based on user type
-  const notificationCollection = `${withdrawal.userType}_notifications`;
+  const notificationCollection = getNotificationCollection(withdrawal.userType);
 
   const notification = {
     id: "",
@@ -78,10 +115,26 @@ async function createUserNotification(
     title,
     titleTranslations: {
       en: title,
+      fr: "Demande de retrait reçue",
+      es: "Solicitud de retiro recibida",
+      de: "Auszahlungsanfrage erhalten",
+      pt: "Pedido de saque recebido",
+      ru: "Запрос на вывод получен",
+      ar: "تم استلام طلب السحب",
+      zh: "提款请求已收到",
+      hi: "निकासी अनुरोध प्राप्त",
     },
     message,
     messageTranslations: {
       en: message,
+      fr: `Votre demande de retrait de $${(withdrawal.amount / 100).toFixed(2)} a été reçue et est en cours de traitement.`,
+      es: `Su solicitud de retiro de $${(withdrawal.amount / 100).toFixed(2)} ha sido recibida y está siendo procesada.`,
+      de: `Ihre Auszahlungsanfrage über $${(withdrawal.amount / 100).toFixed(2)} wurde erhalten und wird bearbeitet.`,
+      pt: `O seu pedido de saque de $${(withdrawal.amount / 100).toFixed(2)} foi recebido e está a ser processado.`,
+      ru: `Ваш запрос на вывод $${(withdrawal.amount / 100).toFixed(2)} получен и обрабатывается.`,
+      ar: `تم استلام طلب السحب الخاص بك بقيمة $${(withdrawal.amount / 100).toFixed(2)} وجاري معالجته.`,
+      zh: `您的 $${(withdrawal.amount / 100).toFixed(2)} 提款请求已收到并正在处理中。`,
+      hi: `आपका $${(withdrawal.amount / 100).toFixed(2)} निकासी अनुरोध प्राप्त हुआ और संसाधित किया जा रहा है।`,
     },
     actionUrl: `/${withdrawal.userType}/payments`,
     isRead: false,
@@ -173,8 +226,7 @@ async function sendAdminTelegramAlert(withdrawal: WithdrawalRequest): Promise<vo
     }
 
     const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
-    const userTypeLabel = withdrawal.userType === "group_admin" ? "GroupAdmin" :
-      withdrawal.userType.charAt(0).toUpperCase() + withdrawal.userType.slice(1);
+    const userTypeLabel = getUserTypeLabel(withdrawal.userType);
 
     const text = [
       `💰 *Nouvelle demande de retrait*`,
@@ -206,6 +258,54 @@ async function sendAdminTelegramAlert(withdrawal: WithdrawalRequest): Promise<vo
     logger.error("[onWithdrawalCreated] Failed to send Telegram admin alert", {
       withdrawalId: withdrawal.id,
       error: tgError instanceof Error ? tgError.message : String(tgError),
+    });
+  }
+}
+
+/**
+ * Send confirmation email to user when withdrawal is created.
+ * Non-blocking: never fails the trigger.
+ */
+async function sendUserConfirmationEmail(withdrawal: WithdrawalRequest): Promise<void> {
+  try {
+    const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
+    const feesFormatted = withdrawal.withdrawalFee ? `$${((withdrawal.withdrawalFee) / 100).toFixed(2)}` : "$3.00";
+    const totalFormatted = withdrawal.totalDebited ? `$${((withdrawal.totalDebited) / 100).toFixed(2)}` : amountFormatted;
+
+    const subject = `📩 Demande de retrait reçue — ${amountFormatted}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #2b6cb0;">📩 Demande de retrait reçue</h2>
+        <p>Bonjour ${withdrawal.userName},</p>
+        <p>Nous avons bien reçu votre demande de retrait. Voici le récapitulatif :</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <tr style="background: #f7fafc;"><td style="padding: 12px; color: #666; border-bottom: 1px solid #e2e8f0;">Montant :</td><td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #e2e8f0;">${amountFormatted}</td></tr>
+          <tr><td style="padding: 12px; color: #666; border-bottom: 1px solid #e2e8f0;">Frais SOS :</td><td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${feesFormatted}</td></tr>
+          <tr style="background: #f7fafc;"><td style="padding: 12px; color: #666; border-bottom: 1px solid #e2e8f0;">Total débité :</td><td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #e2e8f0;">${totalFormatted}</td></tr>
+          <tr><td style="padding: 12px; color: #666;">Méthode :</td><td style="padding: 12px;">${withdrawal.provider}${withdrawal.methodType ? ` (${withdrawal.methodType})` : ""}</td></tr>
+        </table>
+        <p style="color: #4a5568;">Votre demande sera examinée et traitée dans les plus brefs délais. Vous recevrez une notification à chaque étape.</p>
+        <p>
+          <a href="https://sos-expat.com/${withdrawal.userType}/payments"
+             style="display: inline-block; background: #2b6cb0; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+            Suivre mon retrait
+          </a>
+        </p>
+        <p style="color: #999; font-size: 12px;">— L'équipe SOS Expat</p>
+      </div>
+    `;
+    await sendZoho(withdrawal.userEmail, subject, html, undefined, {
+      skipUnsubscribeFooter: true,
+    });
+    logger.info("[onWithdrawalCreated] Confirmation email sent", {
+      withdrawalId: withdrawal.id,
+      to: withdrawal.userEmail,
+    });
+  } catch (emailErr) {
+    // Non-blocking
+    logger.error("[onWithdrawalCreated] Failed to send confirmation email", {
+      withdrawalId: withdrawal.id,
+      error: emailErr instanceof Error ? emailErr.message : String(emailErr),
     });
   }
 }
@@ -362,6 +462,9 @@ export const paymentOnWithdrawalCreated = onDocumentCreated(
 
       // 4b. Send Telegram notification to admin
       await sendAdminTelegramAlert(withdrawal);
+
+      // 4c. Send confirmation email to user
+      await sendUserConfirmationEmail(withdrawal);
 
       // 5. Queue for auto-processing if eligible
       const wasQueued = await queueForAutoProcessing(withdrawal, config);

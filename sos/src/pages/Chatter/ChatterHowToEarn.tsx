@@ -37,6 +37,7 @@ import { useChatterData } from '@/contexts/ChatterDataContext';
 import { functionsAffiliate, db } from '@/config/firebase';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import { copyToClipboard } from '@/utils/clipboard';
+import type { ChatterDashboardData } from '@/types/chatter';
 
 // ============================================================================
 // DESIGN TOKENS
@@ -239,7 +240,7 @@ function CommissionRow({
 function YourNextGoal({
   dashboardData,
 }: {
-  dashboardData: any;
+  dashboardData: ChatterDashboardData | null;
 }) {
   const intl = useIntl();
   const chatter = dashboardData?.chatter;

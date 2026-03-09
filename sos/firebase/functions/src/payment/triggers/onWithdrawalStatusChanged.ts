@@ -41,48 +41,254 @@ const WITHDRAWAL_COLLECTION = "payment_withdrawals";
 const CONFIG_DOC_PATH = "payment_config/payment_config";
 
 /**
- * Status messages for notifications
+ * Multi-language status messages for user notifications
+ * Languages: en, fr, es, de, pt, ru, ar, zh, hi
  */
-const STATUS_MESSAGES: Record<WithdrawalStatus, { title: string; message: string }> = {
+interface StatusMessageTranslations {
+  title: Record<string, string>;
+  message: Record<string, string>;
+}
+
+const STATUS_MESSAGES: Record<WithdrawalStatus, StatusMessageTranslations> = {
   pending: {
-    title: "Withdrawal Pending",
-    message: "Your withdrawal request is pending review.",
+    title: {
+      en: "Withdrawal Pending",
+      fr: "Retrait en attente",
+      es: "Retiro pendiente",
+      de: "Auszahlung ausstehend",
+      pt: "Saque pendente",
+      ru: "Вывод ожидает",
+      ar: "السحب معلق",
+      zh: "提款待处理",
+      hi: "निकासी लंबित",
+    },
+    message: {
+      en: "Your withdrawal request is pending review.",
+      fr: "Votre demande de retrait est en attente de vérification.",
+      es: "Su solicitud de retiro está pendiente de revisión.",
+      de: "Ihre Auszahlungsanfrage wird geprüft.",
+      pt: "O seu pedido de saque está pendente de revisão.",
+      ru: "Ваш запрос на вывод средств ожидает проверки.",
+      ar: "طلب السحب الخاص بك قيد المراجعة.",
+      zh: "您的提款请求正在等待审核。",
+      hi: "आपका निकासी अनुरोध समीक्षा के लिए लंबित है।",
+    },
   },
   validating: {
-    title: "Withdrawal Being Validated",
-    message: "Your withdrawal request is being validated.",
+    title: {
+      en: "Withdrawal Being Validated",
+      fr: "Retrait en cours de validation",
+      es: "Retiro en validación",
+      de: "Auszahlung wird validiert",
+      pt: "Saque em validação",
+      ru: "Вывод проверяется",
+      ar: "السحب قيد التحقق",
+      zh: "提款验证中",
+      hi: "निकासी सत्यापन में",
+    },
+    message: {
+      en: "Your withdrawal request is being validated.",
+      fr: "Votre demande de retrait est en cours de validation.",
+      es: "Su solicitud de retiro está siendo validada.",
+      de: "Ihre Auszahlungsanfrage wird validiert.",
+      pt: "O seu pedido de saque está a ser validado.",
+      ru: "Ваш запрос на вывод средств проверяется.",
+      ar: "يتم التحقق من طلب السحب الخاص بك.",
+      zh: "您的提款请求正在验证中。",
+      hi: "आपका निकासी अनुरोध सत्यापित किया जा रहा है।",
+    },
   },
   approved: {
-    title: "Withdrawal Approved",
-    message: "Your withdrawal request has been approved and will be processed soon.",
+    title: {
+      en: "Withdrawal Approved",
+      fr: "Retrait approuvé",
+      es: "Retiro aprobado",
+      de: "Auszahlung genehmigt",
+      pt: "Saque aprovado",
+      ru: "Вывод одобрен",
+      ar: "تمت الموافقة على السحب",
+      zh: "提款已批准",
+      hi: "निकासी स्वीकृत",
+    },
+    message: {
+      en: "Your withdrawal request has been approved and will be processed soon.",
+      fr: "Votre demande de retrait a été approuvée et sera traitée prochainement.",
+      es: "Su solicitud de retiro ha sido aprobada y será procesada pronto.",
+      de: "Ihre Auszahlungsanfrage wurde genehmigt und wird bald bearbeitet.",
+      pt: "O seu pedido de saque foi aprovado e será processado em breve.",
+      ru: "Ваш запрос на вывод одобрен и скоро будет обработан.",
+      ar: "تمت الموافقة على طلب السحب وسيتم معالجته قريبًا.",
+      zh: "您的提款请求已获批准，将很快处理。",
+      hi: "आपका निकासी अनुरोध स्वीकृत हो गया है और जल्द ही संसाधित किया जाएगा।",
+    },
   },
   queued: {
-    title: "Withdrawal Queued",
-    message: "Your withdrawal is queued for automatic processing.",
+    title: {
+      en: "Withdrawal Queued",
+      fr: "Retrait en file d'attente",
+      es: "Retiro en cola",
+      de: "Auszahlung in Warteschlange",
+      pt: "Saque em fila de espera",
+      ru: "Вывод в очереди",
+      ar: "السحب في قائمة الانتظار",
+      zh: "提款排队中",
+      hi: "निकासी कतार में",
+    },
+    message: {
+      en: "Your withdrawal is queued for automatic processing.",
+      fr: "Votre retrait est en file d'attente pour traitement automatique.",
+      es: "Su retiro está en cola para procesamiento automático.",
+      de: "Ihre Auszahlung ist zur automatischen Verarbeitung eingereiht.",
+      pt: "O seu saque está em fila para processamento automático.",
+      ru: "Ваш вывод поставлен в очередь на автоматическую обработку.",
+      ar: "سحبك في قائمة الانتظار للمعالجة التلقائية.",
+      zh: "您的提款已排队等待自动处理。",
+      hi: "आपकी निकासी स्वचालित प्रसंस्करण के लिए कतार में है।",
+    },
   },
   processing: {
-    title: "Withdrawal Processing",
-    message: "Your withdrawal is currently being processed by our payment provider.",
+    title: {
+      en: "Withdrawal Processing",
+      fr: "Retrait en traitement",
+      es: "Retiro en proceso",
+      de: "Auszahlung wird verarbeitet",
+      pt: "Saque em processamento",
+      ru: "Вывод обрабатывается",
+      ar: "السحب قيد المعالجة",
+      zh: "提款处理中",
+      hi: "निकासी प्रक्रिया में",
+    },
+    message: {
+      en: "Your withdrawal is currently being processed by our payment provider.",
+      fr: "Votre retrait est en cours de traitement par notre prestataire de paiement.",
+      es: "Su retiro está siendo procesado por nuestro proveedor de pagos.",
+      de: "Ihre Auszahlung wird von unserem Zahlungsanbieter verarbeitet.",
+      pt: "O seu saque está a ser processado pelo nosso provedor de pagamento.",
+      ru: "Ваш вывод обрабатывается нашим платёжным провайдером.",
+      ar: "يتم معالجة سحبك حاليًا بواسطة مزود الدفع لدينا.",
+      zh: "您的提款正在由我们的支付提供商处理。",
+      hi: "आपकी निकासी हमारे भुगतान प्रदाता द्वारा संसाधित की जा रही है।",
+    },
   },
   sent: {
-    title: "Withdrawal Sent",
-    message: "Your withdrawal has been sent! Funds should arrive within 1-3 business days.",
+    title: {
+      en: "Withdrawal Sent",
+      fr: "Retrait envoyé",
+      es: "Retiro enviado",
+      de: "Auszahlung gesendet",
+      pt: "Saque enviado",
+      ru: "Вывод отправлен",
+      ar: "تم إرسال السحب",
+      zh: "提款已发送",
+      hi: "निकासी भेजी गई",
+    },
+    message: {
+      en: "Your withdrawal has been sent! Funds should arrive within 1-3 business days.",
+      fr: "Votre retrait a été envoyé ! Les fonds devraient arriver sous 1 à 3 jours ouvrés.",
+      es: "¡Su retiro ha sido enviado! Los fondos deberían llegar en 1 a 3 días hábiles.",
+      de: "Ihre Auszahlung wurde gesendet! Die Mittel sollten innerhalb von 1-3 Werktagen eintreffen.",
+      pt: "O seu saque foi enviado! Os fundos devem chegar em 1 a 3 dias úteis.",
+      ru: "Ваш вывод отправлен! Средства поступят в течение 1-3 рабочих дней.",
+      ar: "تم إرسال سحبك! يجب أن تصل الأموال خلال 1-3 أيام عمل.",
+      zh: "您的提款已发送！资金应在1-3个工作日内到账。",
+      hi: "आपकी निकासी भेज दी गई है! धनराशि 1-3 कार्य दिवसों में पहुंच जानी चाहिए।",
+    },
   },
   completed: {
-    title: "Withdrawal Completed",
-    message: "Your withdrawal has been completed successfully. Funds should now be in your account.",
+    title: {
+      en: "Withdrawal Completed",
+      fr: "Retrait terminé",
+      es: "Retiro completado",
+      de: "Auszahlung abgeschlossen",
+      pt: "Saque concluído",
+      ru: "Вывод завершён",
+      ar: "اكتمل السحب",
+      zh: "提款已完成",
+      hi: "निकासी पूर्ण",
+    },
+    message: {
+      en: "Your withdrawal has been completed successfully. Funds should now be in your account.",
+      fr: "Votre retrait a été effectué avec succès. Les fonds devraient être sur votre compte.",
+      es: "Su retiro se ha completado con éxito. Los fondos deberían estar en su cuenta.",
+      de: "Ihre Auszahlung wurde erfolgreich abgeschlossen. Die Mittel sollten jetzt auf Ihrem Konto sein.",
+      pt: "O seu saque foi concluído com sucesso. Os fundos devem estar na sua conta.",
+      ru: "Ваш вывод успешно завершён. Средства должны быть на вашем счёте.",
+      ar: "اكتمل سحبك بنجاح. يجب أن تكون الأموال الآن في حسابك.",
+      zh: "您的提款已成功完成。资金现在应该已到账。",
+      hi: "आपकी निकासी सफलतापूर्वक पूर्ण हो गई है। धनराशि अब आपके खाते में होनी चाहिए।",
+    },
   },
   failed: {
-    title: "Withdrawal Failed",
-    message: "Unfortunately, your withdrawal could not be processed. Please contact support.",
+    title: {
+      en: "Withdrawal Failed",
+      fr: "Retrait échoué",
+      es: "Retiro fallido",
+      de: "Auszahlung fehlgeschlagen",
+      pt: "Saque falhado",
+      ru: "Вывод не удался",
+      ar: "فشل السحب",
+      zh: "提款失败",
+      hi: "निकासी विफल",
+    },
+    message: {
+      en: "Unfortunately, your withdrawal could not be processed. Your balance has been restored. Please contact support.",
+      fr: "Malheureusement, votre retrait n'a pas pu être traité. Votre solde a été restauré. Veuillez contacter le support.",
+      es: "Lamentablemente, su retiro no pudo ser procesado. Su saldo ha sido restaurado. Contacte con soporte.",
+      de: "Leider konnte Ihre Auszahlung nicht verarbeitet werden. Ihr Guthaben wurde wiederhergestellt. Bitte kontaktieren Sie den Support.",
+      pt: "Infelizmente, o seu saque não pôde ser processado. O seu saldo foi restaurado. Contacte o suporte.",
+      ru: "К сожалению, ваш вывод не удался. Ваш баланс восстановлен. Обратитесь в поддержку.",
+      ar: "للأسف، لم يتم معالجة سحبك. تم استعادة رصيدك. يرجى الاتصال بالدعم.",
+      zh: "很遗憾，您的提款无法处理。余额已恢复。请联系客服。",
+      hi: "दुर्भाग्य से, आपकी निकासी संसाधित नहीं हो सकी। आपका शेष बहाल कर दिया गया है। कृपया सहायता से संपर्क करें।",
+    },
   },
   rejected: {
-    title: "Withdrawal Rejected",
-    message: "Your withdrawal request has been rejected. Please check your payment details.",
+    title: {
+      en: "Withdrawal Rejected",
+      fr: "Retrait rejeté",
+      es: "Retiro rechazado",
+      de: "Auszahlung abgelehnt",
+      pt: "Saque rejeitado",
+      ru: "Вывод отклонён",
+      ar: "تم رفض السحب",
+      zh: "提款被拒绝",
+      hi: "निकासी अस्वीकृत",
+    },
+    message: {
+      en: "Your withdrawal request has been rejected. Your balance has been restored. Please check your payment details and try again.",
+      fr: "Votre demande de retrait a été rejetée. Votre solde a été restauré. Veuillez vérifier vos coordonnées bancaires et réessayer.",
+      es: "Su solicitud de retiro ha sido rechazada. Su saldo ha sido restaurado. Verifique sus datos de pago e intente de nuevo.",
+      de: "Ihre Auszahlungsanfrage wurde abgelehnt. Ihr Guthaben wurde wiederhergestellt. Überprüfen Sie Ihre Zahlungsdaten und versuchen Sie es erneut.",
+      pt: "O seu pedido de saque foi rejeitado. O seu saldo foi restaurado. Verifique os seus dados de pagamento e tente novamente.",
+      ru: "Ваш запрос на вывод отклонён. Ваш баланс восстановлен. Проверьте платёжные реквизиты и попробуйте снова.",
+      ar: "تم رفض طلب السحب الخاص بك. تم استعادة رصيدك. يرجى التحقق من تفاصيل الدفع والمحاولة مرة أخرى.",
+      zh: "您的提款请求已被拒绝。余额已恢复。请检查您的付款信息后重试。",
+      hi: "आपका निकासी अनुरोध अस्वीकार कर दिया गया है। आपका शेष बहाल कर दिया गया है। कृपया अपने भुगतान विवरण जांचें और पुनः प्रयास करें।",
+    },
   },
   cancelled: {
-    title: "Withdrawal Cancelled",
-    message: "Your withdrawal request has been cancelled.",
+    title: {
+      en: "Withdrawal Cancelled",
+      fr: "Retrait annulé",
+      es: "Retiro cancelado",
+      de: "Auszahlung storniert",
+      pt: "Saque cancelado",
+      ru: "Вывод отменён",
+      ar: "تم إلغاء السحب",
+      zh: "提款已取消",
+      hi: "निकासी रद्द",
+    },
+    message: {
+      en: "Your withdrawal request has been cancelled.",
+      fr: "Votre demande de retrait a été annulée.",
+      es: "Su solicitud de retiro ha sido cancelada.",
+      de: "Ihre Auszahlungsanfrage wurde storniert.",
+      pt: "O seu pedido de saque foi cancelado.",
+      ru: "Ваш запрос на вывод отменён.",
+      ar: "تم إلغاء طلب السحب الخاص بك.",
+      zh: "您的提款请求已取消。",
+      hi: "आपका निकासी अनुरोध रद्द कर दिया गया है।",
+    },
   },
 };
 
@@ -106,35 +312,62 @@ async function getPaymentConfig(): Promise<PaymentConfig> {
 }
 
 /**
+ * Get the notification collection for a user type
+ */
+function getNotificationCollection(userType: PaymentUserType): string {
+  switch (userType) {
+    case 'chatter': return 'chatter_notifications';
+    case 'influencer': return 'influencer_notifications';
+    case 'blogger': return 'blogger_notifications';
+    case 'group_admin': return 'group_admin_notifications';
+    case 'affiliate': return 'affiliate_notifications';
+    case 'partner': return 'partner_notifications';
+    case 'client': return 'inapp_notifications';
+    case 'lawyer': return 'inapp_notifications';
+    case 'expat': return 'inapp_notifications';
+    default: return `${userType}_notifications`;
+  }
+}
+
+/**
+ * Get the payments page URL for a user type
+ */
+function getPaymentsUrl(userType: PaymentUserType): string {
+  switch (userType) {
+    case 'group_admin': return '/group-admin/payments';
+    case 'client': return '/account/payments';
+    case 'lawyer': return '/provider/payments';
+    case 'expat': return '/provider/payments';
+    default: return `/${userType}/payments`;
+  }
+}
+
+/**
  * Create a notification for the user
  */
 async function createUserNotification(
   withdrawal: WithdrawalRequest,
   title: string,
   message: string,
-  additionalData?: Record<string, unknown>
+  additionalData?: Record<string, unknown>,
+  titleTranslations?: Record<string, string>,
+  messageTranslations?: Record<string, string>
 ): Promise<void> {
   const db = getFirestore();
   const now = Timestamp.now();
 
   // Determine the correct notification collection based on user type
-  // P2-3 FIX: Affiliate uses 'affiliate_notifications' (consistent with other roles)
-  // but also write to user's inapp_notifications for frontend compatibility
-  const notificationCollection = `${withdrawal.userType}_notifications`;
+  const notificationCollection = getNotificationCollection(withdrawal.userType as PaymentUserType);
 
   const notification = {
     id: "",
     [`${withdrawal.userType}Id`]: withdrawal.userId,
     type: "payment",
     title,
-    titleTranslations: {
-      en: title,
-    },
+    titleTranslations: titleTranslations || { en: title },
     message,
-    messageTranslations: {
-      en: message,
-    },
-    actionUrl: `/${withdrawal.userType}/payments`,
+    messageTranslations: messageTranslations || { en: message },
+    actionUrl: getPaymentsUrl(withdrawal.userType as PaymentUserType),
     isRead: false,
     emailSent: false,
     data: {
@@ -150,8 +383,9 @@ async function createUserNotification(
   notification.id = notificationRef.id;
   await notificationRef.set(notification);
 
-  // P2-3 FIX: For affiliates, also write to inapp_notifications (frontend reads this)
-  if (withdrawal.userType === 'affiliate') {
+  // For affiliates, clients, lawyers, expats — also write to inapp_notifications
+  const inappTypes: PaymentUserType[] = ['affiliate', 'client', 'lawyer', 'expat'];
+  if (inappTypes.includes(withdrawal.userType as PaymentUserType)) {
     try {
       const inappRef = db.collection('inapp_notifications').doc();
       await inappRef.set({
@@ -161,7 +395,7 @@ async function createUserNotification(
         type: 'payment',
       });
     } catch (inappErr) {
-      logger.warn("[onWithdrawalStatusChanged] Failed to write inapp notification for affiliate", {
+      logger.warn("[onWithdrawalStatusChanged] Failed to write inapp notification", {
         error: inappErr instanceof Error ? inappErr.message : "Unknown",
       });
     }
@@ -268,6 +502,154 @@ async function notifyUserWithdrawalFailed(withdrawal: WithdrawalRequest): Promis
         error: fallbackErr instanceof Error ? fallbackErr.message : fallbackErr,
       });
     }
+  }
+}
+
+/**
+ * Send transactional email for withdrawal status changes.
+ * Sends for: approved, sent, completed, rejected (failed is handled by notifyUserWithdrawalFailed)
+ */
+async function sendStatusChangeEmail(
+  withdrawal: WithdrawalRequest,
+  newStatus: WithdrawalStatus
+): Promise<void> {
+  // Only send emails for significant status changes
+  const emailableStatuses: WithdrawalStatus[] = ['approved', 'sent', 'completed', 'rejected'];
+  if (!emailableStatuses.includes(newStatus)) {
+    return;
+  }
+
+  const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
+
+  const statusConfig: Record<string, { emoji: string; color: string; ctaText: string; ctaUrl: string }> = {
+    approved: {
+      emoji: "\u2705",
+      color: "#2b6cb0",
+      ctaText: "Suivre mon retrait",
+      ctaUrl: `https://sos-expat.com/${withdrawal.userType}/payments`,
+    },
+    sent: {
+      emoji: "\uD83D\uDE80",
+      color: "#5a67d8",
+      ctaText: "Voir les d\u00e9tails",
+      ctaUrl: `https://sos-expat.com/${withdrawal.userType}/payments`,
+    },
+    completed: {
+      emoji: "\uD83C\uDF89",
+      color: "#276749",
+      ctaText: "Voir mon historique",
+      ctaUrl: `https://sos-expat.com/${withdrawal.userType}/payments`,
+    },
+    rejected: {
+      emoji: "\u274C",
+      color: "#c53030",
+      ctaText: "V\u00e9rifier mes coordonn\u00e9es",
+      ctaUrl: `https://sos-expat.com/${withdrawal.userType}/payments`,
+    },
+  };
+
+  const config = statusConfig[newStatus];
+  if (!config) return;
+
+  const statusMessages = STATUS_MESSAGES[newStatus];
+  const titleFr = statusMessages.title.fr || statusMessages.title.en;
+  const messageFr = statusMessages.message.fr || statusMessages.message.en;
+
+  try {
+    const subject = `${config.emoji} ${titleFr} \u2014 ${amountFormatted}`;
+    const rejectionNote = newStatus === 'rejected' && withdrawal.errorMessage
+      ? `<tr><td style="padding: 8px; color: #666;">Raison :</td><td style="padding: 8px; color: ${config.color};">${withdrawal.errorMessage}</td></tr>`
+      : '';
+    const balanceRestoredNote = newStatus === 'rejected'
+      ? '<p style="color: #276749; font-weight: bold;">\u2705 Votre solde a \u00e9t\u00e9 restaur\u00e9 automatiquement.</p>'
+      : '';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: ${config.color};">${config.emoji} ${titleFr}</h2>
+        <p>Bonjour ${withdrawal.userName},</p>
+        <p>${messageFr}</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding: 8px; color: #666;">Montant :</td><td style="padding: 8px;"><strong>${amountFormatted}</strong></td></tr>
+          <tr><td style="padding: 8px; color: #666;">M\u00e9thode :</td><td style="padding: 8px;">${withdrawal.provider}${withdrawal.methodType ? ` (${withdrawal.methodType})` : ""}</td></tr>
+          ${rejectionNote}
+        </table>
+        ${balanceRestoredNote}
+        <p>
+          <a href="${config.ctaUrl}"
+             style="display: inline-block; background: ${config.color}; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+            ${config.ctaText}
+          </a>
+        </p>
+        <p style="color: #999; font-size: 12px;">\u2014 L'\u00e9quipe SOS Expat</p>
+      </div>
+    `;
+    await sendZoho(withdrawal.userEmail, subject, html, undefined, {
+      skipUnsubscribeFooter: true,
+    });
+    logger.info("[onWithdrawalStatusChanged] Status email sent", {
+      withdrawalId: withdrawal.id,
+      newStatus,
+      to: withdrawal.userEmail,
+    });
+  } catch (emailErr) {
+    logger.error("[onWithdrawalStatusChanged] Failed to send status email", {
+      withdrawalId: withdrawal.id,
+      newStatus,
+      error: emailErr instanceof Error ? emailErr.message : emailErr,
+    });
+  }
+}
+
+/**
+ * Send Telegram DM to user for key status changes (approved, sent, completed, rejected)
+ */
+async function sendStatusChangeTelegram(
+  withdrawal: WithdrawalRequest,
+  newStatus: WithdrawalStatus
+): Promise<void> {
+  const telegramStatuses: WithdrawalStatus[] = ['approved', 'sent', 'completed', 'rejected'];
+  if (!telegramStatuses.includes(newStatus)) {
+    return;
+  }
+
+  try {
+    const db = getFirestore();
+    const userDoc = await db.collection("users").doc(withdrawal.userId).get();
+    const telegramId = userDoc.data()?.telegramId as number | undefined;
+
+    if (!telegramId) return;
+
+    const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
+    const statusMessages = STATUS_MESSAGES[newStatus];
+    const titleFr = statusMessages.title.fr || statusMessages.title.en;
+
+    const emojiMap: Record<string, string> = {
+      approved: "\u2705",
+      sent: "\uD83D\uDE80",
+      completed: "\uD83C\uDF89",
+      rejected: "\u274C",
+    };
+
+    const text = `${emojiMap[newStatus] || "\uD83D\uDCE2"} *${titleFr}*\n\uD83D\uDCB5 Montant : *${amountFormatted}*\n${statusMessages.message.fr || statusMessages.message.en}`;
+
+    await enqueueTelegramMessage(telegramId, text, {
+      parseMode: "Markdown",
+      priority: "realtime",
+      sourceEventType: `withdrawal_${newStatus}_user`,
+    });
+
+    logger.info("[onWithdrawalStatusChanged] Status Telegram sent", {
+      withdrawalId: withdrawal.id,
+      newStatus,
+      telegramId,
+    });
+  } catch (tgErr) {
+    logger.error("[onWithdrawalStatusChanged] Failed to send status Telegram", {
+      withdrawalId: withdrawal.id,
+      newStatus,
+      error: tgErr instanceof Error ? tgErr.message : tgErr,
+    });
   }
 }
 
@@ -432,8 +814,11 @@ function getUserCollection(userType: PaymentUserType): string {
     case 'influencer': return 'influencers';
     case 'blogger': return 'bloggers';
     case 'group_admin': return 'group_admins';
-    case 'affiliate': return 'users'; // P1-1 FIX: affiliate balance lives on users/{userId}
+    case 'affiliate': return 'users';
     case 'partner': return 'partners';
+    case 'client': return 'users';
+    case 'lawyer': return 'users';
+    case 'expat': return 'users';
     default: return `${userType}s`;
   }
 }
@@ -477,8 +862,7 @@ async function clearPendingWithdrawalId(
     }
 
     const userData = userDoc.data()!;
-    // P1-1 FIX: Affiliate uses 'pendingPayoutId', other roles use 'pendingWithdrawalId'
-    const pendingField = withdrawal.userType === 'affiliate'
+    const pendingField = (withdrawal.userType === 'affiliate' || withdrawal.userType === 'client' || withdrawal.userType === 'lawyer' || withdrawal.userType === 'expat')
       ? 'pendingPayoutId'
       : 'pendingWithdrawalId';
 
@@ -745,25 +1129,32 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
       // 2. Get payment configuration
       const config = await getPaymentConfig();
 
-      // 3. Send user notification for the new status
+      // 3. Send user notification for the new status (multi-language)
       const statusMessage = STATUS_MESSAGES[newStatus];
       if (statusMessage) {
-        // Add amount to the message
         const formattedAmount = `$${(withdrawal.amount / 100).toFixed(2)}`;
-        const personalizedMessage = statusMessage.message.replace(
-          "Your withdrawal",
-          `Your withdrawal of ${formattedAmount}`
-        );
+
+        // Build translated messages with amount
+        const titleTranslations = { ...statusMessage.title };
+        const messageTranslations: Record<string, string> = {};
+        for (const [lang, msg] of Object.entries(statusMessage.message)) {
+          messageTranslations[lang] = msg.replace(
+            /Your withdrawal|Votre retrait|Su retiro|Ihre Auszahlung|O seu saque|Ваш вывод|سحبك|您的提款|आपकी निकासी/,
+            (match: string) => `${match} (${formattedAmount})`
+          );
+        }
 
         await createUserNotification(
           withdrawal,
-          statusMessage.title,
-          personalizedMessage,
+          titleTranslations.en || statusMessage.title.en,
+          messageTranslations.en || statusMessage.message.en,
           {
             oldStatus,
             newStatus,
             providerTransactionId: withdrawal.providerTransactionId,
-          }
+          },
+          titleTranslations,
+          messageTranslations
         );
       }
 
@@ -773,6 +1164,16 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
       // 4b. Notify user via email + Telegram on failure
       if (newStatus === "failed") {
         await notifyUserWithdrawalFailed(withdrawal);
+      }
+
+      // 4c. Send transactional email for other key status changes
+      if (newStatus !== "failed") {
+        await sendStatusChangeEmail(withdrawal, newStatus);
+      }
+
+      // 4d. Send Telegram DM for key status changes
+      if (newStatus !== "failed") {
+        await sendStatusChangeTelegram(withdrawal, newStatus);
       }
 
       // 5. Handle specific status transitions

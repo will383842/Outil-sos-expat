@@ -3,7 +3,7 @@
  * Visual roadmap with glassmorphism cards and indigo/violet palette.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   Target,
@@ -38,13 +38,13 @@ const DEFAULT_COMMISSIONS = {
   TIER_500: 400000,         // $4,000
 };
 
-// Milestones to $5000 (500000 cents)
-const DEFAULT_MILESTONES = [
-  { amount: 10000, label: '$100', emoji: '🎯', description: '10 clients' },
-  { amount: 50000, label: '$500', emoji: '🔥', description: '50 clients ou 5 filleuls actifs' },
-  { amount: 100000, label: '$1,000', emoji: '⭐', description: '100 clients ou 10 filleuls actifs' },
-  { amount: 250000, label: '$2,500', emoji: '💎', description: 'Équipe de 25 personnes + bonus tiers' },
-  { amount: 500000, label: '$5,000', emoji: '🚀', description: '50+ filleuls qualifiés = Bonus $4,000 !' },
+// Milestones to $5000 (500000 cents) — descriptions added inside component via intl
+const DEFAULT_MILESTONES_BASE = [
+  { amount: 10000, label: '$100', emoji: '🎯' },
+  { amount: 50000, label: '$500', emoji: '🔥' },
+  { amount: 100000, label: '$1,000', emoji: '⭐' },
+  { amount: 250000, label: '$2,500', emoji: '💎' },
+  { amount: 500000, label: '$5,000', emoji: '🚀' },
 ];
 
 interface PathTo5000Props {
@@ -103,7 +103,13 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
     }
   }
 
-  const MILESTONES = DEFAULT_MILESTONES;
+  const MILESTONES = useMemo(() => [
+    { ...DEFAULT_MILESTONES_BASE[0], description: intl.formatMessage({ id: 'chatter.path.milestone.100', defaultMessage: '10 clients' }) },
+    { ...DEFAULT_MILESTONES_BASE[1], description: intl.formatMessage({ id: 'chatter.path.milestone.500', defaultMessage: '50 clients or 5 active referrals' }) },
+    { ...DEFAULT_MILESTONES_BASE[2], description: intl.formatMessage({ id: 'chatter.path.milestone.1000', defaultMessage: '100 clients or 10 active referrals' }) },
+    { ...DEFAULT_MILESTONES_BASE[3], description: intl.formatMessage({ id: 'chatter.path.milestone.2500', defaultMessage: 'Team of 25 + tier bonuses' }) },
+    { ...DEFAULT_MILESTONES_BASE[4], description: intl.formatMessage({ id: 'chatter.path.milestone.5000', defaultMessage: '50+ qualified referrals = $4,000 Bonus!' }) },
+  ], [intl]);
 
   // Calculate progress
   const progressPercent = Math.min(100, (currentEarnings / 500000) * 100);
@@ -119,61 +125,83 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
       id: 'solo' as const,
       icon: <Target className="w-6 h-6" />,
       title: 'Solo',
-      subtitle: 'Clients directs uniquement',
+      subtitle: intl.formatMessage({ id: 'chatter.path.solo.subtitle', defaultMessage: 'Direct clients only' }),
       color: 'from-blue-500 to-cyan-500',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
       borderColor: 'border-blue-200 dark:border-blue-800',
-      timeline: '12-18 mois',
-      monthlyTarget: '$400-500/mois',
+      timeline: intl.formatMessage({ id: 'chatter.path.solo.timeline', defaultMessage: '12-18 months' }),
+      monthlyTarget: intl.formatMessage({ id: 'chatter.path.solo.target', defaultMessage: '$400-500/mo' }),
       steps: [
-        { action: 'Trouver 40-50 clients/mois', earnings: '$400-500', icon: <Users className="w-4 h-4" /> },
-        { action: 'Partager sur 5+ groupes Facebook/jour', earnings: '', icon: <Zap className="w-4 h-4" /> },
-        { action: 'Utiliser WhatsApp Status quotidiennement', earnings: '', icon: <Clock className="w-4 h-4" /> },
-        { action: 'Total après 12 mois', earnings: '$5,000+', icon: <Trophy className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.solo.step1', defaultMessage: 'Find 40-50 clients/month' }), earnings: '$400-500', icon: <Users className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.solo.step2', defaultMessage: 'Share on 5+ Facebook groups/day' }), earnings: '', icon: <Zap className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.solo.step3', defaultMessage: 'Use WhatsApp Status daily' }), earnings: '', icon: <Clock className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.solo.step4', defaultMessage: 'Total after 12 months' }), earnings: '$5,000+', icon: <Trophy className="w-4 h-4" /> },
       ],
-      pros: ['100% de vos gains', 'Pas besoin de recruter', 'Simple à comprendre'],
-      cons: ['Plus long', 'Pas de revenus passifs', 'Dépend de votre temps'],
+      pros: [
+        intl.formatMessage({ id: 'chatter.path.solo.pro1', defaultMessage: '100% of your earnings' }),
+        intl.formatMessage({ id: 'chatter.path.solo.pro2', defaultMessage: 'No need to recruit' }),
+        intl.formatMessage({ id: 'chatter.path.solo.pro3', defaultMessage: 'Simple to understand' }),
+      ],
+      cons: [
+        intl.formatMessage({ id: 'chatter.path.solo.con1', defaultMessage: 'Takes longer' }),
+        intl.formatMessage({ id: 'chatter.path.solo.con2', defaultMessage: 'No passive income' }),
+        intl.formatMessage({ id: 'chatter.path.solo.con3', defaultMessage: 'Depends on your time' }),
+      ],
     },
     {
       id: 'small' as const,
       icon: <Users className="w-6 h-6" />,
-      title: 'Petite Équipe',
-      subtitle: '10 membres actifs',
+      title: intl.formatMessage({ id: 'chatter.path.small.title', defaultMessage: 'Small Team' }),
+      subtitle: intl.formatMessage({ id: 'chatter.path.small.subtitle', defaultMessage: '10 active members' }),
       color: 'from-green-500 to-emerald-500',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
       borderColor: 'border-green-200 dark:border-green-800',
-      timeline: '6-9 mois',
-      monthlyTarget: '$600-800/mois',
+      timeline: intl.formatMessage({ id: 'chatter.path.small.timeline', defaultMessage: '6-9 months' }),
+      monthlyTarget: intl.formatMessage({ id: 'chatter.path.small.target', defaultMessage: '$600-800/mo' }),
       recommended: true,
       steps: [
-        { action: 'Recruter 10 personnes motivées', earnings: '+$50 bonus activation', icon: <Users className="w-4 h-4" /> },
-        { action: 'Chacun fait 20 clients/mois', earnings: '+$1/appel N1', icon: <TrendingUp className="w-4 h-4" /> },
-        { action: 'Vous faites 20 clients/mois', earnings: '+$200 direct', icon: <Target className="w-4 h-4" /> },
-        { action: 'Bonus tier 10 filleuls qualifiés', earnings: '+$35', icon: <Star className="w-4 h-4" /> },
-        { action: 'Total mensuel estimé', earnings: '$400-600', icon: <DollarSign className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.small.step1', defaultMessage: 'Recruit 10 motivated people' }), earnings: '+$50 bonus activation', icon: <Users className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.small.step2', defaultMessage: 'Each gets 20 clients/month' }), earnings: '+$1/appel N1', icon: <TrendingUp className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.small.step3', defaultMessage: 'You get 20 clients/month' }), earnings: '+$200 direct', icon: <Target className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.small.step4', defaultMessage: 'Tier bonus 10 qualified referrals' }), earnings: '+$35', icon: <Star className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.small.step5', defaultMessage: 'Estimated monthly total' }), earnings: '$400-600', icon: <DollarSign className="w-4 h-4" /> },
       ],
-      pros: ['Revenus passifs dès le départ', 'Croissance exponentielle', 'Bonus de paliers'],
-      cons: ['Besoin de recruter et former', 'Résultats dépendent de l\'équipe'],
+      pros: [
+        intl.formatMessage({ id: 'chatter.path.small.pro1', defaultMessage: 'Passive income from day one' }),
+        intl.formatMessage({ id: 'chatter.path.small.pro2', defaultMessage: 'Exponential growth' }),
+        intl.formatMessage({ id: 'chatter.path.small.pro3', defaultMessage: 'Tier bonuses' }),
+      ],
+      cons: [
+        intl.formatMessage({ id: 'chatter.path.small.con1', defaultMessage: 'Need to recruit and train' }),
+        intl.formatMessage({ id: 'chatter.path.small.con2', defaultMessage: 'Results depend on team' }),
+      ],
     },
     {
       id: 'big' as const,
       icon: <Crown className="w-6 h-6" />,
-      title: 'Grande Équipe',
-      subtitle: '50+ filleuls qualifiés',
+      title: intl.formatMessage({ id: 'chatter.path.big.title', defaultMessage: 'Large Team' }),
+      subtitle: intl.formatMessage({ id: 'chatter.path.big.subtitle', defaultMessage: '50+ qualified referrals' }),
       color: 'from-indigo-500 to-violet-500',
       bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
       borderColor: 'border-indigo-200 dark:border-indigo-800',
-      timeline: '3-6 mois',
-      monthlyTarget: '$1,000+/mois',
+      timeline: intl.formatMessage({ id: 'chatter.path.big.timeline', defaultMessage: '3-6 months' }),
+      monthlyTarget: intl.formatMessage({ id: 'chatter.path.big.target', defaultMessage: '$1,000+/mo' }),
       steps: [
-        { action: 'Construire équipe de 50 personnes', earnings: '', icon: <Users className="w-4 h-4" /> },
-        { action: 'Bonus tier 50 filleuls qualifiés', earnings: '+$250', icon: <Trophy className="w-4 h-4" /> },
-        { action: '50 filleuls x $1/appel client', earnings: '+$500 passif', icon: <TrendingUp className="w-4 h-4" /> },
-        { action: 'Viser Top 3 mensuel', earnings: 'x2 commissions!', icon: <Crown className="w-4 h-4" /> },
-        { action: 'Bonus tier 100 puis 500', earnings: '+$600 puis +$4,000!', icon: <Rocket className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.big.step1', defaultMessage: 'Build a team of 50 people' }), earnings: '', icon: <Users className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.big.step2', defaultMessage: 'Tier bonus 50 qualified referrals' }), earnings: '+$250', icon: <Trophy className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.big.step3', defaultMessage: '50 referrals x $1/client call' }), earnings: '+$500 passif', icon: <TrendingUp className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.big.step4', defaultMessage: 'Aim for monthly Top 3' }), earnings: 'x2 commissions!', icon: <Crown className="w-4 h-4" /> },
+        { action: intl.formatMessage({ id: 'chatter.path.big.step5', defaultMessage: 'Tier bonus 100 then 500' }), earnings: '+$600 puis +$4,000!', icon: <Rocket className="w-4 h-4" /> },
       ],
-      pros: ['Revenus massifs passifs', 'Bonus $4,000 au tier 500', 'Potentiel illimité'],
-      cons: ['Demande du leadership', 'Investissement temps initial'],
+      pros: [
+        intl.formatMessage({ id: 'chatter.path.big.pro1', defaultMessage: 'Massive passive income' }),
+        intl.formatMessage({ id: 'chatter.path.big.pro2', defaultMessage: '$4,000 bonus at tier 500' }),
+        intl.formatMessage({ id: 'chatter.path.big.pro3', defaultMessage: 'Unlimited potential' }),
+      ],
+      cons: [
+        intl.formatMessage({ id: 'chatter.path.big.con1', defaultMessage: 'Requires leadership' }),
+        intl.formatMessage({ id: 'chatter.path.big.con2', defaultMessage: 'Initial time investment' }),
+      ],
     },
   ];
 
@@ -378,7 +406,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
                   : 'bg-slate-100 dark:bg-white/[0.05]'
               }`}
             >
-              <p className={`text-xs ${tier.highlight ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>{tier.count} filleuls</p>
+              <p className={`text-xs ${tier.highlight ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>{intl.formatMessage({ id: 'chatter.path.tierCount', defaultMessage: '{count} referrals' }, { count: tier.count })}</p>
               <p className={`text-lg font-bold ${tier.highlight ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{tier.bonus}</p>
             </div>
           ))}

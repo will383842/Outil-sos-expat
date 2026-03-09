@@ -69,6 +69,9 @@ function getUserCollectionName(userType: PaymentUserType): string {
     case 'partner':
       return 'partners';
     case 'affiliate':
+    case 'client':
+    case 'lawyer':
+    case 'expat':
       return 'users';
     default:
       throw new Error(`Unknown user type: ${userType}`);
@@ -156,7 +159,8 @@ export const adminRejectWithdrawal = onCall(
         if (userDoc.exists) {
           // Restore the pending amount (including fee) to available balance
           const refundAmount = withdrawal.totalDebited || withdrawal.amount;
-          const pendingField = withdrawal.userType === 'affiliate'
+          const inUserTypes: PaymentUserType[] = ['affiliate', 'client', 'lawyer', 'expat'];
+          const pendingField = inUserTypes.includes(withdrawal.userType)
             ? 'pendingPayoutId'
             : 'pendingWithdrawalId';
 

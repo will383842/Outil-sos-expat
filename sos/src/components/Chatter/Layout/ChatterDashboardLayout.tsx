@@ -628,7 +628,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
             <div className="relative -mt-6">
               <button
                 onClick={handleFabShare}
-                className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white active:scale-95 transition-transform"
+                className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white active:scale-95 transition-transform animate-[fabBounce_0.6s_ease-out]"
                 aria-label={intl.formatMessage({ id: 'chatter.share', defaultMessage: 'Partager' })}
               >
                 <Share2 className="w-6 h-6" />
@@ -641,6 +641,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
               label={mainNavItems[2].labels[language || 'en'] ?? 'Earnings'}
               active={currentKey === 'payments'}
               onClick={() => currentKey !== 'payments' && navigate(routes.payments)}
+              badge={canWithdraw}
             />
             {/* Menu */}
             <BottomNavItem
@@ -652,6 +653,9 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
           </div>
         </nav>
       </div>
+
+      {/* FAB bounce keyframe */}
+      <style>{`@keyframes fabBounce { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 70% { transform: scale(0.95); } 100% { transform: scale(1); opacity: 1; } }`}</style>
 
       {/* Withdrawal Bottom Sheet */}
       <WithdrawalBottomSheet
@@ -671,7 +675,8 @@ const BottomNavItem: React.FC<{
   label: string;
   active: boolean;
   onClick: () => void;
-}> = ({ icon, label, active, onClick }) => (
+  badge?: boolean;
+}> = ({ icon, label, active, onClick, badge }) => (
   <button
     onClick={onClick}
     className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[48px] transition-colors touch-manipulation ${
@@ -679,8 +684,11 @@ const BottomNavItem: React.FC<{
     }`}
     aria-current={active ? 'page' : undefined}
   >
-    <div className={`p-1.5 rounded-lg transition-colors ${active ? 'bg-indigo-50 dark:bg-indigo-500/10' : ''}`}>
+    <div className={`relative p-1.5 rounded-lg transition-colors ${active ? 'bg-indigo-50 dark:bg-indigo-500/10' : ''}`}>
       {icon}
+      {badge && (
+        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+      )}
     </div>
     <span className={`text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'}`}>
       {label}

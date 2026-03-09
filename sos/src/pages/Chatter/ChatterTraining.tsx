@@ -29,7 +29,31 @@ import type {
   TrainingSlide,
   TrainingQuizQuestion,
   SubmitTrainingQuizResult,
+  ChatterResourceFile,
+  ChatterResourceText,
 } from '@/types/chatter';
+
+/** Unified resource item combining file and text fields with _kind discriminator */
+interface ResourceItem {
+  id: string;
+  category: string;
+  type: string;
+  _kind: 'file' | 'text';
+  // Common display fields (present on text, may be absent on file)
+  title?: string;
+  name?: string;
+  description?: string;
+  content?: string;
+  // File-specific fields
+  downloadUrl?: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  fileUrl?: string;
+  format?: string;
+  size?: number;
+  sizeFormatted?: string;
+  dimensions?: { width: number; height: number };
+}
 
 // Revenue calculator simple
 const REVENUE_SCENARIOS = [
@@ -256,24 +280,24 @@ function ChatterTrainingContent() {
   // Derive filtered resources from resourcesData
   const allResources = useMemo(() => {
     if (!resourcesData) return [];
-    const files = (resourcesData.files || []).map((f: any) => ({ ...f, _kind: 'file' as const }));
-    const texts = (resourcesData.texts || []).map((t: any) => ({ ...t, _kind: 'text' as const }));
+    const files: ResourceItem[] = (resourcesData.files || []).map((f) => ({ ...f, _kind: 'file' as const }));
+    const texts: ResourceItem[] = (resourcesData.texts || []).map((t) => ({ ...t, _kind: 'text' as const }));
     return [...files, ...texts];
   }, [resourcesData]);
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    allResources.forEach((r: any) => { if (r.category) cats.add(r.category); });
+    allResources.forEach((r) => { if (r.category) cats.add(r.category); });
     return Array.from(cats).sort();
   }, [allResources]);
 
   const filteredResources = useMemo(() => {
     let items = allResources;
-    if (selectedCategory) items = items.filter((r: any) => r.category === selectedCategory);
+    if (selectedCategory) items = items.filter((r) => r.category === selectedCategory);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      items = items.filter((r: any) =>
-        (r.title || '').toLowerCase().includes(q) ||
+      items = items.filter((r) =>
+        (r.title || r.name || '').toLowerCase().includes(q) ||
         (r.description || '').toLowerCase().includes(q) ||
         (r.content || '').toLowerCase().includes(q)
       );
@@ -327,7 +351,7 @@ function ChatterTrainingContent() {
 
       {filteredResources.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredResources.map((resource: any) => (
+          {filteredResources.map((resource) => (
             <div key={resource.id} className={`${UI.card} p-4`}>
               {resource.type === 'image' && resource.thumbnailUrl && (
                 <img src={resource.thumbnailUrl} alt={resource.title} className="w-full h-32 object-cover rounded-lg mb-3" loading="lazy" />
@@ -360,7 +384,7 @@ function ChatterTrainingContent() {
                 {resource.content && (
                   <button
                     onClick={async () => {
-                      const success = await copyToClipboard(resource.content);
+                      const success = await copyToClipboard(resource.content!);
                       if (success) toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copie !' }));
                     }}
                     className={`${UI.button.secondary} px-3 py-1.5 text-xs flex-1`}

@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Copy, Share2, Phone, DollarSign, Send, Calculator, ArrowRight, MessageCircle } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
@@ -19,6 +19,7 @@ interface NewChatterDashboardProps {
 }
 
 const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToTelegram }) => {
+  const intl = useIntl();
   const { clientShareUrl, dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config;
@@ -51,11 +52,11 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
     if (success) {
       localStorage.setItem('chatter_link_copied', Date.now().toString());
       navigator.vibrate?.(50);
-      toast.success('Lien copie ! Partagez-le sur WhatsApp, Telegram...', { duration: 3000 });
+      toast.success(intl.formatMessage({ id: 'chatter.new.toast.linkCopied', defaultMessage: 'Link copied! Share it on WhatsApp, Telegram...' }), { duration: 3000 });
     } else {
-      toast.error('Impossible de copier le lien');
+      toast.error(intl.formatMessage({ id: 'chatter.new.toast.copyFailed', defaultMessage: 'Unable to copy link' }));
     }
-  }, [clientShareUrl]);
+  }, [clientShareUrl, intl]);
 
   const handleShareLink = useCallback(async () => {
     if (!clientShareUrl) return;
@@ -64,23 +65,23 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'SOS Expat - Aide juridique expatries',
-          text: "Besoin d'aide juridique a l'etranger ? Appelez un avocat en 2 minutes !",
+          title: intl.formatMessage({ id: 'chatter.new.share.title', defaultMessage: 'SOS Expat - Legal help for expats' }),
+          text: intl.formatMessage({ id: 'chatter.new.share.text', defaultMessage: 'Need legal help abroad? Call a lawyer in 2 minutes!' }),
           url: clientShareUrl,
         });
-        toast.success(`Lien partage ! Chaque appel = ${callAmountRange} pour vous`);
+        toast.success(intl.formatMessage({ id: 'chatter.new.toast.linkShared', defaultMessage: 'Link shared! Each call = {amount} for you' }, { amount: callAmountRange }));
       } catch {
         // User cancelled, no error
       }
     } else {
       // Fallback: open WhatsApp
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-        `Besoin d'aide juridique a l'etranger ? Appelez un avocat en 2 minutes : ${clientShareUrl}`
+        intl.formatMessage({ id: 'chatter.new.share.whatsapp', defaultMessage: 'Need legal help abroad? Call a lawyer in 2 minutes: {url}' }, { url: clientShareUrl })
       )}`;
       window.open(whatsappUrl, '_blank');
-      toast.success('Lien partage !');
+      toast.success(intl.formatMessage({ id: 'chatter.new.toast.shared', defaultMessage: 'Link shared!' }));
     }
-  }, [clientShareUrl]);
+  }, [clientShareUrl, callAmountRange, intl]);
 
   // Reactivation message (if chatter returns without progress)
   const reactivationMessage = useMemo(() => {
@@ -98,25 +99,25 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
     if (daysSince >= 7 && linkCopied) {
       return {
-        text: `Votre lien est toujours actif ! Un seul appel = ${callAmountRange}. Les meilleurs chatters ont commence exactement comme vous.`,
-        cta: 'Recommencer',
+        text: intl.formatMessage({ id: 'chatter.new.reactivation.weekAbsent', defaultMessage: 'Your link is still active! One call = {amount}. The best chatters started just like you.' }, { amount: callAmountRange }),
+        cta: intl.formatMessage({ id: 'chatter.new.reactivation.restart', defaultMessage: 'Start again' }),
       };
     }
     if (daysSince >= 3 && linkCopied) {
       return {
-        text: 'Les chatters qui partagent leur lien 3x/jour gagnent en moyenne plus vite. Continuez !',
-        cta: 'Partager mon lien',
+        text: intl.formatMessage({ id: 'chatter.new.reactivation.shareMore', defaultMessage: 'Chatters who share their link 3x/day earn faster on average. Keep going!' }),
+        cta: intl.formatMessage({ id: 'chatter.new.reactivation.shareLink', defaultMessage: 'Share my link' }),
       };
     }
     if (daysSince >= 1 && linkCopied && !linkShared) {
       return {
-        text: "Vous avez copie votre lien ! L'avez-vous partage ? Plus vous partagez, plus vite vous gagnerez.",
-        cta: 'Partager maintenant',
+        text: intl.formatMessage({ id: 'chatter.new.reactivation.copiedNotShared', defaultMessage: "You copied your link! Did you share it? The more you share, the faster you'll earn." }),
+        cta: intl.formatMessage({ id: 'chatter.new.reactivation.shareNow', defaultMessage: 'Share now' }),
       };
     }
 
     return null;
-  }, [callAmountRange]);
+  }, [callAmountRange, intl]);
 
   return (
     <div className={`space-y-4 ${SPACING.pagePadding} py-4`}>
@@ -162,7 +163,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => {
-                const url = `https://wa.me/?text=${encodeURIComponent(`Besoin d'aide juridique ? ${clientShareUrl}`)}`;
+                const url = `https://wa.me/?text=${encodeURIComponent(intl.formatMessage({ id: 'chatter.new.share.shortText', defaultMessage: 'Need legal help? {url}' }, { url: clientShareUrl }))}`;
                 window.open(url, '_blank');
                 localStorage.setItem('chatter_link_shared', Date.now().toString());
               }}
@@ -173,7 +174,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
             </button>
             <button
               onClick={() => {
-                const url = `https://t.me/share/url?url=${encodeURIComponent(clientShareUrl)}&text=${encodeURIComponent("Besoin d'aide juridique ?")}`;
+                const url = `https://t.me/share/url?url=${encodeURIComponent(clientShareUrl)}&text=${encodeURIComponent(intl.formatMessage({ id: 'chatter.new.share.telegramText', defaultMessage: 'Need legal help?' }))}`;
                 window.open(url, '_blank');
                 localStorage.setItem('chatter_link_shared', Date.now().toString());
               }}
@@ -208,9 +209,9 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           </h3>
           <div className="space-y-4">
             {[
-              { icon: <Share2 className="w-4 h-4" />, num: '1', title: 'Partagez votre lien', color: 'bg-indigo-500' },
-              { icon: <Phone className="w-4 h-4" />, num: '2', title: 'Quelqu\'un appelle un avocat', color: 'bg-violet-500' },
-              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: `Vous gagnez ${callAmountRange} automatiquement`, color: 'bg-indigo-600' },
+              { icon: <Share2 className="w-4 h-4" />, num: '1', title: intl.formatMessage({ id: 'chatter.new.step1', defaultMessage: 'Share your link' }), color: 'bg-indigo-500' },
+              { icon: <Phone className="w-4 h-4" />, num: '2', title: intl.formatMessage({ id: 'chatter.new.step2', defaultMessage: 'Someone calls a lawyer' }), color: 'bg-violet-500' },
+              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: intl.formatMessage({ id: 'chatter.new.step3', defaultMessage: 'You earn {amount} automatically' }, { amount: callAmountRange }), color: 'bg-indigo-600' },
             ].map((step) => (
               <div key={step.num} className="flex items-center gap-3">
                 <div className={`flex-shrink-0 w-8 h-8 ${step.color} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
@@ -244,7 +245,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
                   {ex.calls} <FormattedMessage id="chatter.new.callsPerWeek" defaultMessage="appels/sem" />
                 </span>
                 <span className="text-lg font-bold text-green-500">
-                  ~${ex.monthly}/mois
+                  {intl.formatMessage({ id: 'chatter.new.perMonth', defaultMessage: '~${amount}/mo' }, { amount: ex.monthly })}
                 </span>
               </div>
             ))}

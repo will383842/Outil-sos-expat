@@ -696,7 +696,8 @@ export class PaymentService {
       const refundAmount = withdrawal.totalDebited || withdrawal.amount;
 
       // V10 FIX: Clear pendingWithdrawalId to unblock future withdrawals
-      const pendingField = withdrawal.userType === 'affiliate'
+      const usersCollectionTypes: string[] = ['affiliate', 'client', 'lawyer', 'expat'];
+      const pendingField = usersCollectionTypes.includes(withdrawal.userType)
         ? 'pendingPayoutId'
         : 'pendingWithdrawalId';
 
@@ -1576,6 +1577,11 @@ export class PaymentService {
         return COLLECTIONS.GROUP_ADMINS;
       case 'partner':
         return 'partners';
+      case 'affiliate':
+      case 'client':
+      case 'lawyer':
+      case 'expat':
+        return 'users';
       default:
         throw new Error(`Unknown user type: ${userType}`);
     }

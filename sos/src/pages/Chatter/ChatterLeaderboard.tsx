@@ -351,4 +351,4 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
       <SwipeTabContainer tabs={tabs} />
     </div>
   );
-}
+});

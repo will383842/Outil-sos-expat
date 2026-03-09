@@ -61,7 +61,11 @@ function getUserCollectionName(userType: string): string {
     case 'influencer': return COLLECTIONS.INFLUENCERS;
     case 'blogger': return COLLECTIONS.BLOGGERS;
     case 'group_admin': return COLLECTIONS.GROUP_ADMINS;
-    case 'affiliate': return 'users'; // Affiliate balance is on users/{userId}
+    case 'affiliate': return 'users';
+    case 'partner': return 'partners';
+    case 'client': return 'users';
+    case 'lawyer': return 'users';
+    case 'expat': return 'users';
     default: return `${userType}s`;
   }
 }

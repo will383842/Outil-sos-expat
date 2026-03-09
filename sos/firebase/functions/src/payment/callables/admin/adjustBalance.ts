@@ -49,7 +49,7 @@ async function verifyAdmin(request: CallableRequest): Promise<string> {
  */
 interface AdjustBalanceInput {
   userId: string;
-  userType: 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate';
+  userType: 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat';
   amount: number; // cents — positive = credit, negative = debit
   reason: string;
   reference?: string; // optional external reference
@@ -61,7 +61,11 @@ const USER_TYPE_COLLECTION_MAP: Record<AdjustBalanceInput['userType'], string> =
   influencer: 'influencers',
   blogger: 'bloggers',
   group_admin: 'group_admins',
-  affiliate: 'users', // affiliates are stored in the users collection
+  affiliate: 'users',
+  partner: 'partners',
+  client: 'users',
+  lawyer: 'users',
+  expat: 'users',
 };
 
 const VALID_USER_TYPES = Object.keys(USER_TYPE_COLLECTION_MAP) as AdjustBalanceInput['userType'][];

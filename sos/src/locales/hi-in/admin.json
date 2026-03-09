@@ -598,5 +598,16 @@
   "admin.menu.paymentsWithdrawals": "निकासी",
   "admin.menu.paymentsWithdrawals.description": "निकासी अनुरोध प्रबंधित करें",
   "admin.menu.paymentsConfig": "भुगतान कॉन्फ़िगरेशन",
-  "admin.menu.paymentsConfig.description": "भुगतान प्रणाली सेटिंग्स"
+  "admin.menu.paymentsConfig.description": "भुगतान प्रणाली सेटिंग्स",
+  "admin.withdrawals.title": "निकासी प्रबंधन",
+  "admin.withdrawals.userType.chatter": "चैटर",
+  "admin.withdrawals.userType.influencer": "इन्फ्लुएंसर",
+  "admin.withdrawals.userType.blogger": "ब्लॉगर",
+  "admin.withdrawals.userType.group_admin": "ग्रुप एडमिन",
+  "admin.withdrawals.userType.affiliate": "सहयोगी",
+  "admin.withdrawals.userType.partner": "साझेदार",
+  "admin.withdrawals.userType.client": "ग्राहक",
+  "admin.withdrawals.userType.lawyer": "वकील",
+  "admin.withdrawals.userType.expat": "प्रवासी",
+  "admin.withdrawals.detail.userType": "उपयोगकर्ता प्रकार"
 }

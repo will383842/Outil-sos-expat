@@ -595,5 +595,16 @@
   "admin.menu.paymentsWithdrawals": "提款",
   "admin.menu.paymentsWithdrawals.description": "管理提款请求",
   "admin.menu.paymentsConfig": "付款配置",
-  "admin.menu.paymentsConfig.description": "付款系统设置"
+  "admin.menu.paymentsConfig.description": "付款系统设置",
+  "admin.withdrawals.title": "提款管理",
+  "admin.withdrawals.userType.chatter": "推广员",
+  "admin.withdrawals.userType.influencer": "网红",
+  "admin.withdrawals.userType.blogger": "博主",
+  "admin.withdrawals.userType.group_admin": "群组管理员",
+  "admin.withdrawals.userType.affiliate": "联盟会员",
+  "admin.withdrawals.userType.partner": "合作伙伴",
+  "admin.withdrawals.userType.client": "客户",
+  "admin.withdrawals.userType.lawyer": "律师",
+  "admin.withdrawals.userType.expat": "外籍人士",
+  "admin.withdrawals.detail.userType": "用户类型"
 }

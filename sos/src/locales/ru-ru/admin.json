@@ -595,5 +595,16 @@
   "admin.menu.paymentsWithdrawals": "Выводы средств",
   "admin.menu.paymentsWithdrawals.description": "Управление запросами на вывод",
   "admin.menu.paymentsConfig": "Настройки платежей",
-  "admin.menu.paymentsConfig.description": "Параметры платёжной системы"
+  "admin.menu.paymentsConfig.description": "Параметры платёжной системы",
+  "admin.withdrawals.title": "Управление выводами",
+  "admin.withdrawals.userType.chatter": "Чаттер",
+  "admin.withdrawals.userType.influencer": "Инфлюенсер",
+  "admin.withdrawals.userType.blogger": "Блогер",
+  "admin.withdrawals.userType.group_admin": "Админ группы",
+  "admin.withdrawals.userType.affiliate": "Партнёр",
+  "admin.withdrawals.userType.partner": "Партнёр",
+  "admin.withdrawals.userType.client": "Клиент",
+  "admin.withdrawals.userType.lawyer": "Адвокат",
+  "admin.withdrawals.userType.expat": "Экспат",
+  "admin.withdrawals.detail.userType": "Тип пользователя"
 }

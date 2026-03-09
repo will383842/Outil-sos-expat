@@ -135,6 +135,9 @@ const UserTypeBadge: React.FC<{ userType: PaymentUserType }> = ({ userType }) =>
     group_admin: { color: 'bg-indigo-100 text-indigo-800 border-indigo-200', label: 'Group Admin' },
     affiliate: { color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Affiliate' },
     partner: { color: 'bg-cyan-100 text-cyan-800 border-cyan-200', label: 'Partner' },
+    client: { color: 'bg-emerald-100 text-emerald-800 border-emerald-200', label: 'Client' },
+    lawyer: { color: 'bg-amber-100 text-amber-800 border-amber-200', label: 'Avocat' },
+    expat: { color: 'bg-teal-100 text-teal-800 border-teal-200', label: 'Expat' },
   };
 
   const { color, label } = config[userType] || config.chatter;
@@ -333,7 +336,7 @@ const AdminPaymentsDashboard: React.FC = () => {
 
     try {
       const userTypes: PaymentUserType[] = userTypeFilter === 'all'
-        ? ['chatter', 'influencer', 'blogger', 'group_admin', 'affiliate', 'partner']
+        ? ['chatter', 'influencer', 'blogger', 'group_admin', 'affiliate', 'partner', 'client', 'lawyer', 'expat']
         : [userTypeFilter];
 
       const allWithdrawals: UnifiedWithdrawal[] = [];
@@ -409,7 +412,7 @@ const AdminPaymentsDashboard: React.FC = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const userTypes: PaymentUserType[] = ['chatter', 'influencer', 'blogger', 'group_admin', 'affiliate', 'partner'];
+      const userTypes: PaymentUserType[] = ['chatter', 'influencer', 'blogger', 'group_admin', 'affiliate', 'partner', 'client', 'lawyer', 'expat'];
       const stats: WithdrawalStats = {
         pending: { count: 0, amount: 0 },
         processing: { count: 0, amount: 0 },
@@ -943,6 +946,9 @@ const AdminPaymentsDashboard: React.FC = () => {
                 <option value="group_admin">Admin Groupe</option>
                 <option value="affiliate">Affilié</option>
                 <option value="partner">Partenaire</option>
+                <option value="client">Client</option>
+                <option value="lawyer">Avocat</option>
+                <option value="expat">Expat</option>
               </select>
             </div>
 

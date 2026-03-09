@@ -598,5 +598,16 @@
   "admin.menu.paymentsWithdrawals": "عمليات السحب",
   "admin.menu.paymentsWithdrawals.description": "إدارة طلبات السحب",
   "admin.menu.paymentsConfig": "تكوين المدفوعات",
-  "admin.menu.paymentsConfig.description": "إعدادات نظام الدفع"
+  "admin.menu.paymentsConfig.description": "إعدادات نظام الدفع",
+  "admin.withdrawals.title": "إدارة عمليات السحب",
+  "admin.withdrawals.userType.chatter": "شاتر",
+  "admin.withdrawals.userType.influencer": "مؤثر",
+  "admin.withdrawals.userType.blogger": "مدوّن",
+  "admin.withdrawals.userType.group_admin": "مدير مجموعة",
+  "admin.withdrawals.userType.affiliate": "شريك",
+  "admin.withdrawals.userType.partner": "شريك",
+  "admin.withdrawals.userType.client": "عميل",
+  "admin.withdrawals.userType.lawyer": "محامي",
+  "admin.withdrawals.userType.expat": "مغترب",
+  "admin.withdrawals.detail.userType": "نوع المستخدم"
 }
