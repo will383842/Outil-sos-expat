@@ -80,6 +80,18 @@ jobs:
           EOF
 
       # ----------------------------------------------------------------
+      # Count expected functions from source code (before deploy)
+      # ----------------------------------------------------------------
+      - name: Count expected functions from source
+        working-directory: sos/firebase
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+        run: |
+          echo "Listing functions that Firebase CLI detects from source..."
+          firebase functions:list --project sos-urgently-ac307 2>/dev/null \
+            | tee /tmp/expected_functions.txt || true
+
+      # ----------------------------------------------------------------
       # Deploy: passe 1 complète, puis passes incrémentales sur les échecs
       # ----------------------------------------------------------------
       - name: Deploy functions (incremental passes)
@@ -87,39 +99,46 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         run: |
-          set +e
+          set +e  # Don't exit on error — we handle it ourselves
           PROJECT="sos-urgently-ac307"
           MAX_PASSES=6
           WAIT_BETWEEN=90
 
-          # Helper: extract failed function names from Firebase CLI output
+          # ── Helper: extract failed function names from Firebase output ──
+          # Firebase CLI outputs errors like:
+          #   ✖  functions[myFunction(us-central1)] Deployment error.
+          #   Failed to create function myFunction in region us-central1
+          #   Could not update function myFunction
+          #   functions[myFunc(europe-west1)]: Quota exceeded
           extract_failed() {
             local log_file="$1"
-            > /tmp/failed_raw.txt
             > /tmp/failed_functions.txt
+            > /tmp/failed_raw.txt
 
-            # Pattern 1: "✖  functions[funcName(region)]"
+            # Pattern 1: "✖  functions[funcName(region)]" (most common)
             grep -oP '✖\s+functions\[\K[^(]+' "$log_file" >> /tmp/failed_raw.txt 2>/dev/null
 
             # Pattern 2: "Failed to create/update function funcName"
             grep -oP 'Failed to (create|update|delete) function \K\S+' "$log_file" >> /tmp/failed_raw.txt 2>/dev/null
 
-            # Pattern 3: "Could not create/update function funcName"
+            # Pattern 3: "Could not (create|update) function ... funcName"
             grep -oP 'Could not \w+ (?:cloud )?function[s]? \K\S+' "$log_file" >> /tmp/failed_raw.txt 2>/dev/null
 
-            # Pattern 4: lines with functions[name(region)] followed by error/quota/429
+            # Pattern 4: "functions[funcName(region)]: ... error/quota/429"
             grep -iP 'functions\[[^\]]+\].*?(error|quota|429|RESOURCE_EXHAUSTED|failed)' "$log_file" \
               | grep -oP 'functions\[\K[^(]+' >> /tmp/failed_raw.txt 2>/dev/null
 
             # Deduplicate and clean
-            cat /tmp/failed_raw.txt | sed 's/[[:space:]]*$//' | sort -u > /tmp/failed_functions.txt
-            rm -f /tmp/failed_raw.txt
+            if [ -f /tmp/failed_raw.txt ]; then
+              cat /tmp/failed_raw.txt | sed 's/[[:space:]]*$//' | sort -u > /tmp/failed_functions.txt
+              rm -f /tmp/failed_raw.txt
+            fi
           }
 
-          # ── PASSE 1: deploy all ──
+          # ── PASSE 1: déploiement complet ──
           echo ""
           echo "=========================================="
-          echo "  PASSE 1/$MAX_PASSES — Déploiement complet"
+          echo "  PASSE 1/6 — Déploiement complet"
           echo "=========================================="
           firebase deploy --only functions --project "$PROJECT" --force 2>&1 | tee /tmp/deploy_pass.txt
           EXIT=${PIPESTATUS[0]}
@@ -130,16 +149,18 @@ jobs:
           fi
           echo "⚠️  Passe 1 terminée avec des échecs (exit $EXIT)"
 
-          # ── PASSES 2..N: only failed functions ──
+          # ── PASSES 2..N: re-déployer uniquement les fonctions en échec ──
           for PASS in $(seq 2 $MAX_PASSES); do
             extract_failed /tmp/deploy_pass.txt
 
             FAILED_COUNT=$(wc -l < /tmp/failed_functions.txt | tr -d '[:space:]')
             if [ "$FAILED_COUNT" -eq 0 ]; then
+              echo ""
               echo "✅ Aucune fonction en échec détectée — déploiement terminé !"
               exit 0
             fi
 
+            # Build --only functions:fn1,functions:fn2,...
             ONLY_ARG=$(cat /tmp/failed_functions.txt | sed 's/^/functions:/' | paste -sd ',' -)
 
             echo ""
@@ -158,10 +179,11 @@ jobs:
               echo "✅ Passe $PASS réussie — toutes les fonctions restantes déployées !"
               exit 0
             fi
+
             echo "⚠️  Passe $PASS terminée avec des échecs (exit $EXIT)"
           done
 
-          # Final check
+          # ── Après toutes les passes ──
           extract_failed /tmp/deploy_pass.txt
           REMAINING=$(wc -l < /tmp/failed_functions.txt | tr -d '[:space:]')
           if [ "$REMAINING" -gt 0 ]; then
@@ -169,48 +191,88 @@ jobs:
             echo "❌ Après $MAX_PASSES passes, $REMAINING fonction(s) toujours en échec :"
             cat /tmp/failed_functions.txt
             echo ""
+            echo "Dernières erreurs :"
             grep -iE "error|fail|could not" /tmp/deploy_pass.txt | tail -30
             exit 1
           fi
+
           echo "✅ Déploiement complet !"
 
       # ----------------------------------------------------------------
-      # Vérification: toutes les fonctions sont-elles bien déployées ?
+      # Vérification: comparer fonctions déployées vs fonctions attendues
       # ----------------------------------------------------------------
       - name: Verify all functions are deployed
+        working-directory: sos/firebase
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         run: |
+          set +e
           PROJECT="sos-urgently-ac307"
 
           echo "=========================================="
           echo "  VÉRIFICATION POST-DÉPLOIEMENT"
           echo "=========================================="
 
-          # List all deployed functions via gcloud
-          echo "Récupération des fonctions déployées..."
-          DEPLOYED=$(gcloud functions list --project "$PROJECT" \
-            --format="value(name)" 2>/dev/null | wc -l | tr -d '[:space:]')
-
-          # Also check gen2 functions
-          DEPLOYED_V2=$(gcloud functions list --project "$PROJECT" --gen2 \
-            --format="value(name)" 2>/dev/null | wc -l | tr -d '[:space:]')
-
-          TOTAL=$((DEPLOYED + DEPLOYED_V2))
-          # Avoid double-counting (gen2 flag may list same functions)
-          TOTAL_UNIQUE=$(gcloud functions list --project "$PROJECT" \
-            --format="value(name)" 2>/dev/null | sort -u | wc -l | tr -d '[:space:]')
-
+          # 1. List all deployed functions from GCP
           echo ""
-          echo "📊 Fonctions déployées : $TOTAL_UNIQUE"
+          echo "Récupération des fonctions déployées sur GCP..."
+          gcloud functions list --project "$PROJECT" --format="value(name)" 2>/dev/null \
+            | sed 's|.*/||' \
+            | sort -u > /tmp/deployed_functions.txt
 
-          if [ "$TOTAL_UNIQUE" -ge 800 ]; then
-            echo "✅ $TOTAL_UNIQUE fonctions vérifiées — déploiement complet !"
-          elif [ "$TOTAL_UNIQUE" -gt 0 ]; then
-            echo "⚠️  Seulement $TOTAL_UNIQUE fonctions déployées (attendu 800+)."
-            echo "    Certaines fonctions peuvent manquer."
-            exit 1
+          DEPLOYED_COUNT=$(wc -l < /tmp/deployed_functions.txt | tr -d '[:space:]')
+          echo "Fonctions déployées sur GCP : $DEPLOYED_COUNT"
+
+          # 2. List expected functions from Firebase CLI source analysis
+          echo ""
+          echo "Analyse des fonctions déclarées dans le code source..."
+          firebase deploy --only functions --project "$PROJECT" --dry-run 2>&1 \
+            | grep -oP '(?:✔|i)\s+functions:\s+\K\S+' \
+            | sort -u > /tmp/source_functions_raw.txt 2>/dev/null
+
+          firebase deploy --only functions --project "$PROJECT" --dry-run 2>&1 \
+            | tee /tmp/dryrun_output.txt \
+            | grep -oP 'functions\[\K[^(]+' \
+            | sort -u > /tmp/source_functions.txt 2>/dev/null
+
+          SOURCE_COUNT=$(wc -l < /tmp/source_functions.txt | tr -d '[:space:]')
+          echo "Fonctions déclarées dans le code : $SOURCE_COUNT"
+
+          # 3. Compare
+          echo ""
+          echo "=========================================="
+          echo "  RÉSULTAT"
+          echo "=========================================="
+
+          if [ "$DEPLOYED_COUNT" -eq 0 ]; then
+            echo "⚠️  Impossible de récupérer la liste des fonctions déployées via gcloud."
+            echo "    Vérifiez manuellement dans la console Firebase."
+            echo "    Le deploy s'est terminé sans erreur — probablement OK."
+            exit 0
+          fi
+
+          echo "📊 Fonctions déployées : $DEPLOYED_COUNT"
+          if [ "$SOURCE_COUNT" -gt 0 ]; then
+            echo "📊 Fonctions attendues  : $SOURCE_COUNT"
+
+            # Find missing functions
+            comm -23 /tmp/source_functions.txt /tmp/deployed_functions.txt > /tmp/missing_functions.txt 2>/dev/null
+            MISSING_COUNT=$(wc -l < /tmp/missing_functions.txt | tr -d '[:space:]')
+
+            if [ "$MISSING_COUNT" -gt 0 ]; then
+              echo ""
+              echo "⚠️  $MISSING_COUNT fonction(s) manquante(s) :"
+              cat /tmp/missing_functions.txt | while read fn; do echo "  ❌ $fn"; done
+              echo ""
+              echo "Ces fonctions sont dans le code mais pas déployées."
+              exit 1
+            fi
+          fi
+
+          if [ "$DEPLOYED_COUNT" -ge 800 ]; then
+            echo "✅ $DEPLOYED_COUNT fonctions déployées — tout est bon !"
           else
-            echo "⚠️  Impossible de compter les fonctions (gcloud peut ne pas être configuré)."
-            echo "    Le deploy s'est terminé sans erreur — vérifiez manuellement."
+            echo "⚠️  Seulement $DEPLOYED_COUNT fonctions déployées (attendu 800+)."
+            echo "    Vérifiez s'il n'y a pas de fonctions manquantes."
+            exit 1
           fi
