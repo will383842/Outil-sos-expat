@@ -73,6 +73,7 @@ const GroupAdminDashboard: React.FC = () => {
     providerShareUrl,
     isLoading: loading,
     error,
+    config,
     refresh: fetchDashboard,
     markNotificationRead,
     markAllNotificationsRead,
@@ -243,7 +244,7 @@ const GroupAdminDashboard: React.FC = () => {
               <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-100 dark:to-emerald-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link ($5 lawyer / $3 expat per call)" />
+                    <FormattedMessage id="groupAdmin.dashboard.clientLink" defaultMessage="Client link (${lawyerAmount} lawyer / ${expatAmount} expat per call)" values={{ lawyerAmount: ((config?.commissionClientAmountLawyer ?? 500) / 100).toFixed(0), expatAmount: ((config?.commissionClientAmountExpat ?? 300) / 100).toFixed(0) }} />
                   </span>
                   <span className="text-sm dark:text-green-300 font-bold bg-green-200 dark:bg-green-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeClient}
@@ -328,7 +329,7 @@ const GroupAdminDashboard: React.FC = () => {
                 <div className="bg-gradient-to-br from-teal-50 dark:from-teal-900/20 to-emerald-100 dark:to-emerald-800/20 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm dark:text-white font-semibold">
-                      <FormattedMessage id="groupAdmin.dashboard.providerLink" defaultMessage="Lien prestataire ($5/appel, 6 mois)" />
+                      <FormattedMessage id="groupAdmin.dashboard.providerLink" defaultMessage="Lien prestataire (${amount}/appel, 6 mois)" values={{ amount: ((config?.commissionClientCallAmount ?? 500) / 100).toFixed(0) }} />
                     </span>
                     <span className="text-sm dark:text-teal-300 font-bold bg-teal-200 dark:bg-teal-800/50 px-3 py-1.5 rounded-full">
                       {profile.affiliateCodeProvider}

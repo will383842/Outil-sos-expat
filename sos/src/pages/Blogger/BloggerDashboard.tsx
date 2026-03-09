@@ -327,7 +327,7 @@ const BloggerDashboard: React.FC = () => {
               <div className="bg-gradient-to-br from-teal-50 dark:from-teal-900/20 to-teal-100 dark:to-teal-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="blogger.dashboard.providerLink" defaultMessage="Lien prestataire ($5/appel, 6 mois)" />
+                    <FormattedMessage id="blogger.dashboard.providerLink" defaultMessage="Lien prestataire (${amount}/appel, 6 mois)" values={{ amount: ((dashboardData?.config?.commissionRecruitmentAmount ?? 500) / 100).toFixed(0) }} />
                   </span>
                   <span className="text-sm dark:text-teal-300 font-bold bg-teal-200 dark:bg-teal-800/50 px-3 py-1.5 rounded-full">
                     {blogger.affiliateCodeProvider}

@@ -433,6 +433,15 @@ export interface GroupAdminDashboardResponse {
   recentRecruits: GroupAdminRecruit[];
   notifications: GroupAdminNotification[];
   leaderboard: GroupAdminLeaderboardEntry[];
+  config?: {
+    commissionClientCallAmount?: number;
+    commissionClientAmountLawyer?: number;
+    commissionClientAmountExpat?: number;
+    commissionN1CallAmount?: number;
+    commissionN2CallAmount?: number;
+    commissionActivationBonusAmount?: number;
+    commissionN1RecruitBonusAmount?: number;
+  };
   commissionPlan?: {
     id: string;
     name: string;

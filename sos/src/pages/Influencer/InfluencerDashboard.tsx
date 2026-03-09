@@ -700,13 +700,13 @@ const InfluencerDashboard: React.FC = () => {
 
           <div className="grid sm:grid-cols-2 gap-4 text-center">
             <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 border dark:border-red-800">
-              <p className="text-3xl dark:text-red-400 font-black">$10</p>
+              <p className="text-3xl dark:text-red-400 font-black">${((config?.commissionClientAmountLawyer ?? config?.clientReferralCommission ?? 1000) / 100).toFixed(0)}</p>
               <p className="text-sm dark:text-gray-600 mt-1">
                 <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
               </p>
             </div>
             <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 dark:from-purple-900/20 to-pink-50 dark:to-pink-900/20 border dark:border-purple-800">
-              <p className="text-3xl dark:text-purple-400 font-black">$5<span className="text-lg">/call</span></p>
+              <p className="text-3xl dark:text-purple-400 font-black">${((config?.commissionRecruitmentAmountLawyer ?? config?.providerRecruitmentCommission ?? 500) / 100).toFixed(0)}<span className="text-lg">/call</span></p>
               <p className="text-sm dark:text-gray-600 mt-1">
                 <FormattedMessage id="influencer.dashboard.info.partner" defaultMessage="par appel de vos partenaires (6 mois)" />
               </p>

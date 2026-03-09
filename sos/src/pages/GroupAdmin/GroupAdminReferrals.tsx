@@ -36,6 +36,7 @@ const GroupAdminReferrals: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [recruits, setRecruits] = useState<GroupAdminRecruit[]>([]);
   const [affiliateCode, setAffiliateCode] = useState('');
+  const [activationBonusAmount, setActivationBonusAmount] = useState(500);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -47,9 +48,12 @@ const GroupAdminReferrals: React.FC = () => {
       setLoading(true);
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
-      const data = result.data as { profile: { affiliateCodeRecruitment: string }; recentRecruits: GroupAdminRecruit[] };
+      const data = result.data as { profile: { affiliateCodeRecruitment: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number } };
       setAffiliateCode(data.profile.affiliateCodeRecruitment);
       setRecruits(data.recentRecruits);
+      if (data.config?.commissionActivationBonusAmount) {
+        setActivationBonusAmount(data.config.commissionActivationBonusAmount);
+      }
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
@@ -175,7 +179,7 @@ const GroupAdminReferrals: React.FC = () => {
             </div>
             <div className="bg-white dark:bg-white/5 rounded-xl p-4 shadow-sm dark:shadow-none text-center">
               <p className="text-2xl font-bold">
-                {formatGroupAdminAmount(recruits.filter((r) => r.commissionPaid).length * 5000)}
+                {formatGroupAdminAmount(recruits.filter((r) => r.commissionPaid).length * activationBonusAmount)}
               </p>
               <p className="text-sm dark:text-gray-700">
                 <FormattedMessage id="groupAdmin.referrals.earned" defaultMessage="Earned" />

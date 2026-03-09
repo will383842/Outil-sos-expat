@@ -57,6 +57,7 @@ function ChatterReferralsContent() {
   } = useChatterReferrals();
 
   const chatter = chatterDashboard?.chatter;
+  const config = chatterDashboard?.config;
   const isCaptain = chatter?.role === 'captainChatter';
   const qualifiedCount = chatter?.qualifiedReferralsCount || 0;
   const paidTiers = (chatter as any)?.tierBonusesPaid || [];
@@ -227,10 +228,10 @@ function ChatterReferralsContent() {
         </h4>
         <div className="space-y-2 text-sm">
           {[
-            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.n1Call', defaultMessage: 'N1 call (your referral)' }), amount: '$1' },
-            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.n2Call', defaultMessage: 'N2 call (referral of referral)' }), amount: '$0.50' },
-            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.activationBonus', defaultMessage: 'N1 activation bonus' }), amount: '$5' },
-            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.recruitBonus', defaultMessage: 'N1 recruitment bonus' }), amount: '$1' },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.n1Call', defaultMessage: 'N1 call (your referral)' }), amount: `$${((config?.commissionN1CallAmount ?? 100) / 100).toFixed(2).replace(/\.00$/, '')}` },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.n2Call', defaultMessage: 'N2 call (referral of referral)' }), amount: `$${((config?.commissionN2CallAmount ?? 50) / 100).toFixed(2)}` },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.activationBonus', defaultMessage: 'N1 activation bonus' }), amount: `$${((config?.commissionActivationBonusAmount ?? 500) / 100).toFixed(2).replace(/\.00$/, '')}` },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.recruitBonus', defaultMessage: 'N1 recruitment bonus' }), amount: `$${((config?.commissionN1RecruitBonusAmount ?? 100) / 100).toFixed(2).replace(/\.00$/, '')}` },
           ].map((rate) => (
             <div key={rate.label} className="flex items-center justify-between">
               <span className="text-slate-600 dark:text-slate-400">{rate.label}</span>
