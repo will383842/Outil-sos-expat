@@ -101,43 +101,43 @@ const STATUS_CONFIG = {
   },
 } as const;
 
-// Message templates in French
+// Message templates - use intl for localization
 const MESSAGE_TEMPLATES: MessageTemplate[] = [
   {
     id: 'inactive',
     status: 'inactive',
     icon: <UserX className="w-4 h-4" />,
     getMessage: (name: string) =>
-      `Salut ${name} ! Ca fait un moment, tout va bien ? 😊 Si tu as besoin d'aide ou de conseils pour reprendre, je suis la ! On peut en parler quand tu veux.`,
+      `Hey ${name}! It's been a while, is everything ok? 😊 If you need help or tips to get back on track, I'm here! We can chat anytime.`,
     titleKey: 'teamMessages.template.inactive.title',
-    defaultTitle: 'Reactiver un membre inactif',
+    defaultTitle: 'Reactivate an inactive member',
   },
   {
     id: 'slowing',
     status: 'slowing',
     icon: <TrendingDown className="w-4 h-4" />,
     getMessage: (name: string) =>
-      `Hey ${name} ! J'ai remarque que tu etais un peu moins actif ces derniers temps. Tout va bien ? 💪 Si tu as des questions ou besoin de motivation, n'hesite pas ! Ensemble on peut faire de grandes choses.`,
+      `Hey ${name}! I noticed you've been a bit less active lately. Everything ok? 💪 If you have questions or need motivation, don't hesitate! Together we can do great things.`,
     titleKey: 'teamMessages.template.slowing.title',
-    defaultTitle: 'Motiver un membre en baisse',
+    defaultTitle: 'Motivate a slowing member',
   },
   {
     id: 'top',
     status: 'top',
     icon: <Trophy className="w-4 h-4" />,
     getMessage: (name: string) =>
-      `Bravo ${name} ! 🎉 Tu geres vraiment ! Tes resultats sont impressionnants. Continue comme ca, tu es une vraie star de l'equipe ! 💪🔥`,
+      `Great job ${name}! 🎉 You're really killing it! Your results are impressive. Keep it up, you're a true team star! 💪🔥`,
     titleKey: 'teamMessages.template.top.title',
-    defaultTitle: 'Feliciter un top performer',
+    defaultTitle: 'Congratulate a top performer',
   },
   {
     id: 'beginner',
     status: 'beginner',
     icon: <Baby className="w-4 h-4" />,
     getMessage: (name: string) =>
-      `Felicitations pour tes premiers pas ${name} ! 🌟 Tu veux que je te partage mes astuces pour bien demarrer ? Je suis la pour t'accompagner dans cette aventure !`,
+      `Congratulations on your first steps ${name}! 🌟 Want me to share my tips for getting started? I'm here to guide you on this journey!`,
     titleKey: 'teamMessages.template.beginner.title',
-    defaultTitle: 'Aider un debutant',
+    defaultTitle: 'Help a beginner',
   },
 ];
 
@@ -189,7 +189,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
     const subject = encodeURIComponent(
       intl.formatMessage({
         id: 'teamMessages.email.subject',
-        defaultMessage: 'Message de ton parrain SOS-Expat',
+        defaultMessage: 'Message from your SOS-Expat sponsor',
       })
     );
     const body = encodeURIComponent(message);
@@ -496,11 +496,11 @@ export const TeamMessagesCard: React.FC<TeamMessagesCardProps> = ({
           ) : (
             <ChevronDown className="w-4 h-4" />
           )}
-          <FormattedMessage
-            id="teamMessages.showOther"
-            defaultMessage="{action} autres modeles"
-            values={{ action: showAllTemplates ? 'Masquer les' : 'Voir les' }}
-          />
+          {showAllTemplates ? (
+            <FormattedMessage id="teamMessages.hideOther" defaultMessage="Hide other templates" />
+          ) : (
+            <FormattedMessage id="teamMessages.showOther" defaultMessage="Show other templates" />
+          )}
         </button>
 
         {/* Other Templates */}

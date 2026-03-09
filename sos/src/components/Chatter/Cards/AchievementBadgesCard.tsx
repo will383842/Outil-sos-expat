@@ -366,27 +366,32 @@ const BADGE_CONFIG: BadgeConfig[] = [
 const RARITY_CONFIG = {
   common: {
     border: 'border-gray-300 dark:border-gray-600',
-    label: 'Commun',
+    labelKey: 'chatter.badges.rarity.common',
+    defaultLabel: 'Common',
     labelColor: 'text-gray-500',
   },
   uncommon: {
     border: 'border-green-400 dark:border-green-600',
-    label: 'Peu commun',
+    labelKey: 'chatter.badges.rarity.uncommon',
+    defaultLabel: 'Uncommon',
     labelColor: 'text-green-600 dark:text-green-400',
   },
   rare: {
     border: 'border-blue-400 dark:border-blue-600',
-    label: 'Rare',
+    labelKey: 'chatter.badges.rarity.rare',
+    defaultLabel: 'Rare',
     labelColor: 'text-blue-600 dark:text-blue-400',
   },
   epic: {
     border: 'border-indigo-400 dark:border-indigo-600',
-    label: 'Epique',
+    labelKey: 'chatter.badges.rarity.epic',
+    defaultLabel: 'Epic',
     labelColor: 'text-indigo-600 dark:text-indigo-400',
   },
   legendary: {
     border: 'border-yellow-400 dark:border-yellow-500',
-    label: 'Legendaire',
+    labelKey: 'chatter.badges.rarity.legendary',
+    defaultLabel: 'Legendary',
     labelColor: 'text-yellow-600 dark:text-yellow-400',
   },
 };
@@ -776,7 +781,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
 
                 {/* Rarity */}
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${RARITY_CONFIG[selectedBadge.rarity].labelColor} bg-current/10 mb-3`}>
-                  {RARITY_CONFIG[selectedBadge.rarity].label}
+                  {intl.formatMessage({ id: RARITY_CONFIG[selectedBadge.rarity].labelKey, defaultMessage: RARITY_CONFIG[selectedBadge.rarity].defaultLabel })}
                 </span>
 
                 {/* Description */}

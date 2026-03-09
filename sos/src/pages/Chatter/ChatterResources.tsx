@@ -28,33 +28,40 @@ const UI = {
   },
 } as const;
 
-const CATEGORIES: { value: ChatterResourceCategory; label: string; description: string; icon: React.ReactNode; color: string }[] = [
-  {
-    value: 'sos_expat',
-    label: 'SOS-Expat',
-    description: 'Logos, bannieres et visuels SOS-Expat',
-    icon: <FolderOpen className="w-6 h-6" />,
-    color: 'red',
-  },
-  {
-    value: 'ulixai',
-    label: 'Ulixai',
-    description: "Ressources pour promouvoir l'assistant IA Ulixai",
-    icon: <Star className="w-6 h-6" />,
-    color: 'blue',
-  },
-  {
-    value: 'founder',
-    label: 'Fondateur',
-    description: 'Photos, bio et citations du fondateur',
-    icon: <FileText className="w-6 h-6" />,
-    color: 'green',
-  },
-];
+// Categories are built inside component to access intl
+const CATEGORY_ICONS = {
+  sos_expat: <FolderOpen className="w-6 h-6" />,
+  ulixai: <Star className="w-6 h-6" />,
+  founder: <FileText className="w-6 h-6" />,
+} as const;
 
 const ChatterResources: React.FC = () => {
   const intl = useIntl();
   const { resources, isLoading, error, fetchResources, downloadResource, copyText } = useChatterResources();
+
+  const CATEGORIES = [
+    {
+      value: 'sos_expat' as ChatterResourceCategory,
+      label: 'SOS-Expat',
+      description: intl.formatMessage({ id: 'chatter.resources.cat.sosExpat', defaultMessage: 'SOS-Expat logos, banners and visuals' }),
+      icon: CATEGORY_ICONS.sos_expat,
+      color: 'red',
+    },
+    {
+      value: 'ulixai' as ChatterResourceCategory,
+      label: 'Ulixai',
+      description: intl.formatMessage({ id: 'chatter.resources.cat.ulixai', defaultMessage: 'Resources to promote the Ulixai AI assistant' }),
+      icon: CATEGORY_ICONS.ulixai,
+      color: 'blue',
+    },
+    {
+      value: 'founder' as ChatterResourceCategory,
+      label: intl.formatMessage({ id: 'chatter.resources.cat.founderLabel', defaultMessage: 'Founder' }),
+      description: intl.formatMessage({ id: 'chatter.resources.cat.founder', defaultMessage: 'Photos, bio and quotes from the founder' }),
+      icon: CATEGORY_ICONS.founder,
+      color: 'green',
+    },
+  ];
   const [selectedCategory, setSelectedCategory] = useState<ChatterResourceCategory>('sos_expat');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);

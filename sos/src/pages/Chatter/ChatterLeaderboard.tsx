@@ -107,7 +107,7 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
         {isCurrentMonth && (
           <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            {daysRemaining}j
+            <FormattedMessage id="chatter.leaderboard.daysLeft" defaultMessage="{days}d left" values={{ days: daysRemaining }} />
           </span>
         )}
       </div>
@@ -177,7 +177,7 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${isMe ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>
-                      {entry.chatterName || 'Chatter'} {isMe && '(vous)'}
+                      {entry.chatterName || 'Chatter'} {isMe && intl.formatMessage({ id: 'chatter.leaderboard.you', defaultMessage: '(you)' })}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-green-500 flex-shrink-0">
@@ -279,12 +279,12 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Total gagne', value: `$${((chatter?.totalEarned || 0) / 100).toFixed(0)}` },
-          { label: 'Meilleur rang', value: chatter?.bestRank ? `#${chatter.bestRank}` : '-' },
-          { label: 'Meilleur streak', value: `${chatter?.bestStreak || 0}j` },
-          { label: 'Clients total', value: String(chatter?.totalClients || 0) },
-          { label: 'Filleuls', value: String(chatter?.totalRecruits || 0) },
-          { label: 'Commissions', value: String(chatter?.totalCommissions || 0) },
+          { label: intl.formatMessage({ id: 'chatter.progression.totalEarned', defaultMessage: 'Total earned' }), value: `$${((chatter?.totalEarned || 0) / 100).toFixed(0)}` },
+          { label: intl.formatMessage({ id: 'chatter.progression.bestRank', defaultMessage: 'Best rank' }), value: chatter?.bestRank ? `#${chatter.bestRank}` : '-' },
+          { label: intl.formatMessage({ id: 'chatter.progression.bestStreak', defaultMessage: 'Best streak' }), value: `${chatter?.bestStreak || 0}d` },
+          { label: intl.formatMessage({ id: 'chatter.progression.totalClients', defaultMessage: 'Total clients' }), value: String(chatter?.totalClients || 0) },
+          { label: intl.formatMessage({ id: 'chatter.progression.referrals', defaultMessage: 'Referrals' }), value: String(chatter?.totalRecruits || 0) },
+          { label: intl.formatMessage({ id: 'chatter.progression.commissions', defaultMessage: 'Commissions' }), value: String(chatter?.totalCommissions || 0) },
         ].map((stat) => (
           <div key={stat.label} className={`${UI.card} p-3 text-center`}>
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">{stat.label}</p>

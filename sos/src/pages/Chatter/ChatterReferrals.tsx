@@ -204,10 +204,10 @@ function ChatterReferralsContent() {
         </h4>
         <div className="space-y-2 text-sm">
           {[
-            { label: 'Appel N1 (votre filleul)', amount: '$1' },
-            { label: 'Appel N2 (filleul de filleul)', amount: '$0.50' },
-            { label: 'Bonus activation N1', amount: '$5' },
-            { label: 'Bonus recrutement N1', amount: '$1' },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.n1Call', defaultMessage: 'N1 call (your referral)' }), amount: '$1' },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.n2Call', defaultMessage: 'N2 call (referral of referral)' }), amount: '$0.50' },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.activationBonus', defaultMessage: 'N1 activation bonus' }), amount: '$5' },
+            { label: intl.formatMessage({ id: 'chatter.sponsor.rate.recruitBonus', defaultMessage: 'N1 recruitment bonus' }), amount: '$1' },
           ].map((rate) => (
             <div key={rate.label} className="flex items-center justify-between">
               <span className="text-slate-600 dark:text-slate-400">{rate.label}</span>
@@ -225,9 +225,9 @@ function ChatterReferralsContent() {
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total referral', value: stats ? `$${((stats.totalReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
-          { label: 'Ce mois', value: stats ? `$${((stats.monthlyReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
-          { label: 'Qualifies', value: String(qualifiedCount) },
+          { label: intl.formatMessage({ id: 'chatter.referrals.totalReferral', defaultMessage: 'Total referral' }), value: stats ? `$${((stats.totalReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
+          { label: intl.formatMessage({ id: 'chatter.referrals.thisMonth', defaultMessage: 'This month' }), value: stats ? `$${((stats.monthlyReferralEarnings || 0) / 100).toFixed(2)}` : '$0' },
+          { label: intl.formatMessage({ id: 'chatter.referrals.qualified', defaultMessage: 'Qualified' }), value: String(qualifiedCount) },
         ].map((kpi) => (
           <div key={kpi.label} className={`${UI.card} p-3 text-center`}>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">{kpi.label}</p>

@@ -274,7 +274,7 @@ const MotivationWidget = memo(function MotivationWidget({
 
     const message = intl.formatMessage({
       id: 'motivation.share.whatsapp.message',
-      defaultMessage: "Besoin d'aide juridique ou administrative ? Contactez un expert expatrie sur SOS-Expat ! {url}",
+      defaultMessage: "Need legal or administrative help? Contact an expat expert on SOS-Expat! {url}",
     }, { url: linkToShare });
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -580,40 +580,40 @@ const MotivationWidget = memo(function MotivationWidget({
 function getTipDefaultMessage(tipId: string): string {
   const messages: Record<string, string> = {
     // Finding Clients
-    'tip.clients.facebook': "Rejoignez les groupes Facebook d'expatries de votre pays cible",
-    'tip.clients.whatsapp': "Partagez votre lien dans les groupes WhatsApp communautaires",
-    'tip.clients.expat.groups': "Les forums d'expatries sont une mine d'or de clients potentiels",
-    'tip.clients.local.events': "Assistez aux evenements locaux d'expatries pour creer des contacts",
-    'tip.clients.linkedin': "LinkedIn est ideal pour toucher des professionnels expatries",
+    'tip.clients.facebook': "Join Facebook groups for expats in your target country",
+    'tip.clients.whatsapp': "Share your link in community WhatsApp groups",
+    'tip.clients.expat.groups': "Expat forums are a goldmine for potential clients",
+    'tip.clients.local.events': "Attend local expat events to build contacts",
+    'tip.clients.linkedin': "LinkedIn is ideal for reaching expat professionals",
 
     // Best Times
-    'tip.timing.evening': "Les meilleurs moments pour poster sont entre 18h et 21h",
-    'tip.timing.weekend': "Le dimanche soir est ideal pour toucher les expatries",
-    'tip.timing.payday': "Postez en debut de mois quand les gens recoivent leur salaire",
-    'tip.timing.morning': "Les posts du matin (7h-9h) touchent les gens avant le travail",
-    'tip.timing.consistency': "La regularite est cle : postez au moins 3 fois par semaine",
+    'tip.timing.evening': "The best times to post are between 6pm and 9pm",
+    'tip.timing.weekend': "Sunday evening is ideal for reaching expats",
+    'tip.timing.payday': "Post at the beginning of the month when people get paid",
+    'tip.timing.morning': "Morning posts (7-9am) reach people before work",
+    'tip.timing.consistency': "Consistency is key: post at least 3 times per week",
 
     // Message Tips
-    'tip.messages.personal': "Personnalisez vos messages - evitez le copier-coller generique",
-    'tip.messages.story': "Racontez une histoire de reussite d'un client aide",
-    'tip.messages.urgency': "Creez un sentiment d'urgence avec des offres limitees",
-    'tip.messages.benefits': "Focalisez sur les benefices, pas sur les fonctionnalites",
-    'tip.messages.testimonial': "Partagez des temoignages de clients satisfaits",
+    'tip.messages.personal': "Personalize your messages - avoid generic copy-paste",
+    'tip.messages.story': "Tell a success story of a helped client",
+    'tip.messages.urgency': "Create urgency with limited-time offers",
+    'tip.messages.benefits': "Focus on benefits, not features",
+    'tip.messages.testimonial': "Share testimonials from satisfied clients",
 
     // Growing Team
-    'tip.team.recruit.active': "Recrutez des personnes actives sur les reseaux sociaux",
-    'tip.team.train.referrals': "Formez vos filleuls pour maximiser leurs performances",
-    'tip.team.share.success': "Partagez vos succes pour motiver votre equipe",
-    'tip.team.mentorship': "Devenez mentor pour vos recrues les plus prometteurs",
+    'tip.team.recruit.active': "Recruit people who are active on social media",
+    'tip.team.train.referrals': "Train your referrals to maximize their performance",
+    'tip.team.share.success': "Share your successes to motivate your team",
+    'tip.team.mentorship': "Become a mentor for your most promising recruits",
 
     // General
-    'tip.general.consistency': "La constance bat l'intensite : soyez regulier",
-    'tip.general.track.results': "Suivez vos resultats pour identifier ce qui fonctionne",
-    'tip.general.level.up': "Montez de niveau pour debloquer des bonus plus eleves",
-    'tip.general.quality': "Un client satisfait en amene 3 autres - privilegiez la qualite",
+    'tip.general.consistency': "Consistency beats intensity: be regular",
+    'tip.general.track.results': "Track your results to identify what works",
+    'tip.general.level.up': "Level up to unlock higher bonuses",
+    'tip.general.quality': "A satisfied client brings 3 more - prioritize quality",
   };
 
-  return messages[tipId] || "Astuce du jour";
+  return messages[tipId] || "Tip of the day";
 }
 
 export default MotivationWidget;
