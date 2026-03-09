@@ -362,6 +362,7 @@ export const adminGetChatterDetail = onCall(
         adminNotes: chatter.adminNotes || "",
         affiliateCodeClient: chatter.affiliateCodeClient,
         affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
+        affiliateCodeProvider: chatter.affiliateCodeProvider || "",
         totalEarned: chatter.totalEarned || 0,
         availableBalance: chatter.availableBalance || 0,
         pendingBalance: chatter.pendingBalance || 0,

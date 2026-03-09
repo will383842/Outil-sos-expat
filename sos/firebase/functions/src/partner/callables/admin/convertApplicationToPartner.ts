@@ -102,6 +102,12 @@ export const adminConvertApplicationToPartner = onCall(
         throw new HttpsError("already-exists", `Affiliate code "${normalizedCode}" is already taken`);
       }
 
+      const providerCode = `PROV-${normalizedCode}`;
+      const providerCodeTaken = await isAffiliateCodeTaken(providerCode);
+      if (providerCodeTaken) {
+        throw new HttpsError("already-exists", `Derived provider code "${providerCode}" is already taken`);
+      }
+
       // 3. Check email uniqueness in partners collection
       const emailSnap = await db
         .collection("partners")
@@ -142,6 +148,7 @@ export const adminConvertApplicationToPartner = onCall(
 
       // 8. Build docs
       const now = Timestamp.now();
+      const affiliateCodeProvider = `PROV-${normalizedCode}`;
       const normalizedUrl = application.websiteUrl.toLowerCase().trim().replace(/\/+$/, "");
       const affiliateLink = `${PARTNER_CONSTANTS.AFFILIATE_BASE_URL}?ref=${normalizedCode}`;
 
@@ -151,6 +158,7 @@ export const adminConvertApplicationToPartner = onCall(
         lastName: application.lastName,
         role: "partner",
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         createdAt: now,
         updatedAt: now,
       };
@@ -174,6 +182,7 @@ export const adminConvertApplicationToPartner = onCall(
         isVisible: false,
 
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         affiliateLink,
 
         commissionConfig,
@@ -232,6 +241,13 @@ export const adminConvertApplicationToPartner = onCall(
         userType: "partner",
         createdAt: now,
       });
+      batch.set(db.collection("affiliate_codes").doc(affiliateCodeProvider), {
+        code: affiliateCodeProvider,
+        userId: uid,
+        userType: "partner",
+        codeType: "provider_recruitment",
+        createdAt: now,
+      });
       batch.update(appRef, {
         convertedToPartnerId: uid,
         updatedAt: now,
@@ -267,6 +283,7 @@ export const adminConvertApplicationToPartner = onCall(
         details: {
           partnerId: uid,
           affiliateCode: normalizedCode,
+          affiliateCodeProvider,
           applicationEmail: application.email,
         },
       });
@@ -275,6 +292,7 @@ export const adminConvertApplicationToPartner = onCall(
         applicationId: input.applicationId,
         partnerId: uid,
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         adminId,
       });
 

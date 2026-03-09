@@ -34,12 +34,21 @@ export async function checkBloggerProviderRecruitment(
       return { success: false, error: "Blogger system not active" };
     }
 
-    // 2. Find blogger by recruitment code
-    const bloggerQuery = await db
+    // 2. Find blogger by provider code first, then fallback to recruitment code
+    let bloggerQuery = await db
       .collection("bloggers")
-      .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
+      .where("affiliateCodeProvider", "==", recruitmentCode.toUpperCase())
       .limit(1)
       .get();
+
+    // Fallback: try affiliateCodeRecruitment (backward compatibility)
+    if (bloggerQuery.empty) {
+      bloggerQuery = await db
+        .collection("bloggers")
+        .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
+        .limit(1)
+        .get();
+    }
 
     if (bloggerQuery.empty) {
       return { success: false, error: "Blogger not found for recruitment code" };
@@ -76,7 +85,7 @@ export async function checkBloggerProviderRecruitment(
     const recruitment: BloggerRecruitedProvider = {
       id: recruitmentRef.id,
       bloggerId,
-      bloggerCode: blogger.affiliateCodeRecruitment,
+      bloggerCode: blogger.affiliateCodeProvider || blogger.affiliateCodeRecruitment,
       bloggerEmail: blogger.email,
       providerId,
       providerEmail,

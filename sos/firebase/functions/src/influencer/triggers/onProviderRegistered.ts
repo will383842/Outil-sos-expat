@@ -79,19 +79,33 @@ export async function handleInfluencerProviderRegistered(event: any) {
           influencer = influencerDoc.data() as Influencer;
         }
       } else {
-        // Find by recruitment code (REC-XXXX format)
         const code = userData.influencerCode.toUpperCase();
-        const clientCode = code.replace("REC-", "");
 
-        const influencerQuery = await db
+        // 1. Try affiliateCodeProvider first (PROV-INF-XXXX format)
+        const providerCodeQuery = await db
           .collection("influencers")
-          .where("affiliateCodeClient", "==", clientCode)
+          .where("affiliateCodeProvider", "==", code)
+          .where("status", "==", "active")
           .limit(1)
           .get();
 
-        if (!influencerQuery.empty) {
-          influencer = influencerQuery.docs[0].data() as Influencer;
+        if (!providerCodeQuery.empty) {
+          influencer = providerCodeQuery.docs[0].data() as Influencer;
           influencerId = influencer.id;
+        } else {
+          // 2. Fallback: Find by recruitment code (REC-XXXX format) or client code
+          const clientCode = code.replace("REC-", "");
+
+          const influencerQuery = await db
+            .collection("influencers")
+            .where("affiliateCodeClient", "==", clientCode)
+            .limit(1)
+            .get();
+
+          if (!influencerQuery.empty) {
+            influencer = influencerQuery.docs[0].data() as Influencer;
+            influencerId = influencer.id;
+          }
         }
       }
 

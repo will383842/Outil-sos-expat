@@ -149,6 +149,7 @@ export interface GroupAdmin {
 
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 
   totalEarned: number;
   availableBalance: number;
@@ -468,6 +469,7 @@ export interface RegisterGroupAdminResponse {
   groupAdminId: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 }
 
 export interface RequestWithdrawalResponse {

@@ -75,7 +75,8 @@ export interface Partner {
   suspensionReason?: string;
 
   // CODE AFFILIE
-  affiliateCode: string;
+  affiliateCode: string; // code client referral
+  affiliateCodeProvider: string; // code provider recruitment (PROV-{affiliateCode})
   affiliateLink: string;
 
   // COMMISSIONS CUSTOM

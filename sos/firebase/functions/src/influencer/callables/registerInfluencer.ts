@@ -25,6 +25,7 @@ import {
   areRegistrationsEnabled,
   generateClientCode,
   generateRecruitmentCode,
+  generateProviderCode,
   hashIP,
   captureCurrentRates,
 } from "../utils";
@@ -241,6 +242,7 @@ export const registerInfluencer = onCall(
             influencerId: userId,
             affiliateCodeClient: existingData.affiliateCodeClient,
             affiliateCodeRecruitment: existingData.affiliateCodeRecruitment,
+            affiliateCodeProvider: existingData.affiliateCodeProvider,
             message: "Influencer already registered",
           };
         } else {
@@ -370,6 +372,7 @@ export const registerInfluencer = onCall(
       // 8. Generate affiliate codes
       const affiliateCodeClient = await generateClientCode(input.firstName);
       const affiliateCodeRecruitment = generateRecruitmentCode(affiliateCodeClient);
+      const affiliateCodeProvider = generateProviderCode(affiliateCodeClient);
 
       // 8. V2: Capture current rates (frozen at registration)
       const capturedRates = captureCurrentRates(config);
@@ -404,6 +407,7 @@ export const registerInfluencer = onCall(
         isVisible: false,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
 
         // Level system (aligned with Chatter)
         level: 1,
@@ -498,6 +502,7 @@ export const registerInfluencer = onCall(
             influencerStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             updatedAt: now,
           });
@@ -512,6 +517,7 @@ export const registerInfluencer = onCall(
             influencerStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
@@ -570,6 +576,7 @@ export const registerInfluencer = onCall(
         country: input.country,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
         totalDuration: Date.now() - startTime
       });
 
@@ -595,6 +602,7 @@ export const registerInfluencer = onCall(
         influencerId: userId,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
         message: "Registration successful. Your account is now active!",
       };
     } catch (error) {

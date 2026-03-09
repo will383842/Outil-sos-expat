@@ -6,13 +6,16 @@
 export {
   generateChatterClientCode,
   generateChatterRecruitmentCode,
+  generateChatterProviderCode,
   normalizeForCode,
   isValidClientCode,
   isValidRecruitmentCode,
+  isValidProviderCode,
   getClientCodeFromRecruitmentCode,
   normalizeCodeForLookup,
   findChatterByClientCode,
   findChatterByRecruitmentCode,
+  findChatterByProviderCode,
   resolveChatterCode,
 } from "./chatterCodeGenerator";
 

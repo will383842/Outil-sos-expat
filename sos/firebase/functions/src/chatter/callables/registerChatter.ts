@@ -25,6 +25,7 @@ import { detectCircularReferral, runComprehensiveFraudCheck } from "../services/
 import {
   generateChatterClientCode,
   generateChatterRecruitmentCode,
+  generateChatterProviderCode,
 } from "../utils/chatterCodeGenerator";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
@@ -451,9 +452,10 @@ export const registerChatter = onCall(
         input.email
       );
       const affiliateCodeRecruitment = generateChatterRecruitmentCode(affiliateCodeClient);
+      const affiliateCodeProvider = generateChatterProviderCode(affiliateCodeClient);
 
       console.log("[registerChatter] STEP 10: Codes generated", JSON.stringify({
-        userId, affiliateCodeClient, affiliateCodeRecruitment, elapsed: Date.now() - startTime,
+        userId, affiliateCodeClient, affiliateCodeRecruitment, affiliateCodeProvider, elapsed: Date.now() - startTime,
       }));
 
       // 10b. Resolve commission plan (Lifetime Rate Lock)
@@ -486,6 +488,7 @@ export const registerChatter = onCall(
         // Codes generated immediately at registration
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
 
         totalEarned: 0,
         availableBalance: 0,
@@ -594,6 +597,7 @@ export const registerChatter = onCall(
             chatterStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
             country: input.country.toUpperCase(),
@@ -610,6 +614,7 @@ export const registerChatter = onCall(
             chatterStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
             country: input.country.toUpperCase(),
@@ -699,6 +704,7 @@ export const registerChatter = onCall(
         chatterId: userId,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
         message: "Registration successful. Your account is now active!",
         // P1-6 FIX: Include referral warnings so frontend can display them
         ...(referralWarnings.length > 0 && { warnings: referralWarnings }),

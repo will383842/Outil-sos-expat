@@ -197,6 +197,9 @@ export interface Influencer {
   /** Code for provider recruitment (e.g., "REC-MARIE123") */
   affiliateCodeRecruitment: string;
 
+  /** Code for provider recruitment (e.g., "PROV-INF-MARIE123") */
+  affiliateCodeProvider: string;
+
   // ---- Balances (in cents) ----
 
   /** Total earned all time (never decreases) */
@@ -1609,6 +1612,7 @@ export interface RegisterInfluencerResponse {
   influencerId: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
   message: string;
 }
 

@@ -248,6 +248,9 @@ export interface Chatter {
   /** Code for provider recruitment (e.g., "REC-JEAN123") */
   affiliateCodeRecruitment: string;
 
+  /** Code for provider recruitment (e.g., "PROV-JEAN123") */
+  affiliateCodeProvider: string;
+
   // ---- Balances (in cents) ----
 
   /** Total earned all time (never decreases) */
@@ -2465,6 +2468,7 @@ export interface RegisterChatterResponse {
   chatterId: string;
   affiliateCodeClient?: string;
   affiliateCodeRecruitment?: string;
+  affiliateCodeProvider?: string;
   message: string;
   /** P1-6 FIX: Warnings about referral code issues (expired, self-referral, circular) */
   warnings?: string[];

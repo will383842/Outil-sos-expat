@@ -70,6 +70,7 @@ interface UseInfluencerReturn {
   clientShareUrl: string;
   unreadNotificationsCount: number;
   recruitmentShareUrl: string;
+  providerShareUrl: string;
   canWithdraw: boolean;
   minimumWithdrawal: number;
   totalBalance: number;
@@ -411,6 +412,11 @@ export function useInfluencer(): UseInfluencerReturn {
     return `${window.location.origin}/rec/i/${dashboardData.influencer.affiliateCodeRecruitment}`;
   }, [dashboardData, langCode]);
 
+  const providerShareUrl = useMemo(() => {
+    if (!dashboardData?.influencer?.affiliateCodeProvider) return "";
+    return `${window.location.origin}/prov/i/${dashboardData.influencer.affiliateCodeProvider}`;
+  }, [dashboardData]);
+
   const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default
 
   const canWithdraw = useMemo(() => {
@@ -454,6 +460,7 @@ export function useInfluencer(): UseInfluencerReturn {
     unreadNotificationsCount,
     clientShareUrl,
     recruitmentShareUrl,
+    providerShareUrl,
     canWithdraw,
     minimumWithdrawal,
     totalBalance,

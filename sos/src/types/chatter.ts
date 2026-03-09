@@ -208,6 +208,7 @@ export interface ChatterData {
 
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 
   totalEarned: number;
   availableBalance: number;
@@ -216,6 +217,7 @@ export interface ChatterData {
 
   totalClients: number;
   totalRecruits: number;
+  totalProviderRecruits: number;
   totalCommissions: number;
   commissionsByType: Record<string, { count: number; amount: number }>;
 

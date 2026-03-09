@@ -28,6 +28,7 @@ interface PartnersListResponse {
     websiteUrl: string;
     websiteCategory: string;
     affiliateCode: string;
+    affiliateCodeProvider: string;
     status: string;
     isVisible: boolean;
     totalEarned: number;
@@ -95,6 +96,7 @@ export const adminPartnersList = onCall(
           websiteUrl: data.websiteUrl,
           websiteCategory: data.websiteCategory,
           affiliateCode: data.affiliateCode,
+          affiliateCodeProvider: data.affiliateCodeProvider,
           status: data.status,
           isVisible: data.isVisible,
           totalEarned: data.totalEarned,

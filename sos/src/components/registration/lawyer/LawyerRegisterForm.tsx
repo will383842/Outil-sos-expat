@@ -32,7 +32,7 @@ import { LocaleLink } from '../../../multilingual-system';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { generateEventIdForType } from '@/utils/sharedEventId';
-import { getStoredReferralCode, clearStoredReferral } from '@/utils/referralStorage';
+import { getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
 
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
@@ -421,20 +421,20 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
           pendingReferralCode: referralCode.toUpperCase().trim(),
         }),
         ...(() => {
-          const bloggerCode = getStoredReferralCode('blogger');
-          return bloggerCode ? { providerRecruitedByBlogger: bloggerCode } : {};
+          const ref = getStoredReferral('blogger');
+          return ref?.codeType === 'provider' ? { providerRecruitedByBlogger: ref.code } : {};
         })(),
         ...(() => {
-          const influencerCode = getStoredReferralCode('influencer');
-          return influencerCode ? { recruitedByInfluencer: true, influencerCode } : {};
+          const ref = getStoredReferral('influencer');
+          return ref?.codeType === 'provider' ? { recruitedByInfluencer: true, influencerCode: ref.code } : {};
         })(),
         ...(() => {
-          const chatterCode = getStoredReferralCode('chatter');
-          return chatterCode ? { providerRecruitedByChatter: chatterCode } : {};
+          const ref = getStoredReferral('chatter');
+          return ref?.codeType === 'provider' ? { providerRecruitedByChatter: ref.code } : {};
         })(),
         ...(() => {
-          const groupAdminCode = getStoredReferralCode('groupAdmin');
-          return groupAdminCode ? { providerRecruitedByGroupAdmin: groupAdminCode } : {};
+          const ref = getStoredReferral('groupAdmin');
+          return ref?.codeType === 'provider' ? { providerRecruitedByGroupAdmin: ref.code } : {};
         })(),
         ...(() => {
           const tracking = getStoredReferralTracking();

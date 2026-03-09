@@ -80,6 +80,7 @@ interface UseBloggerReturn {
   clientShareUrl: string;
   unreadNotificationsCount: number;
   recruitmentShareUrl: string;
+  providerShareUrl: string;
   canWithdraw: boolean;
   minimumWithdrawal: number;
   totalBalance: number;
@@ -418,6 +419,11 @@ export function useBlogger(): UseBloggerReturn {
     return `${window.location.origin}/rec/b/${blogger.affiliateCodeRecruitment}`;
   }, [blogger?.affiliateCodeRecruitment]);
 
+  const providerShareUrl = useMemo(() => {
+    if (!blogger?.affiliateCodeProvider) return '';
+    return `${window.location.origin}/prov/b/${blogger.affiliateCodeProvider}`;
+  }, [blogger?.affiliateCodeProvider]);
+
   const minimumWithdrawal = useMemo(() => {
     return dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default
   }, [dashboardData]);
@@ -472,6 +478,7 @@ export function useBlogger(): UseBloggerReturn {
     clientShareUrl,
     unreadNotificationsCount,
     recruitmentShareUrl,
+    providerShareUrl,
     canWithdraw,
     minimumWithdrawal,
     totalBalance,

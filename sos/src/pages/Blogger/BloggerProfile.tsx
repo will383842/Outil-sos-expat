@@ -276,7 +276,7 @@ const BloggerProfile: React.FC = () => {
               <FormattedMessage id="blogger.profile.codes" defaultMessage="Codes d'affiliation" />
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm dark:text-gray-700">
                 <FormattedMessage id="blogger.profile.clientCode" defaultMessage="Code client ($10/appel)" />
@@ -291,6 +291,14 @@ const BloggerProfile: React.FC = () => {
               </label>
               <p className="text-xl dark:text-blue-400 font-mono">
                 {blogger.affiliateCodeRecruitment}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm dark:text-gray-700">
+                <FormattedMessage id="blogger.profile.providerCode" defaultMessage="Code prestataire ($5/appel)" />
+              </label>
+              <p className="text-xl dark:text-teal-400 font-mono">
+                {blogger.affiliateCodeProvider}
               </p>
             </div>
           </div>

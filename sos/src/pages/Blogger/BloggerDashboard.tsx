@@ -47,6 +47,7 @@ const BloggerDashboard: React.FC = () => {
     isBlogger,
     clientShareUrl,
     recruitmentShareUrl,
+    providerShareUrl,
     totalBalance,
     canWithdraw,
     markNotificationRead,
@@ -320,6 +321,47 @@ const BloggerDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Provider Recruitment Link */}
+            {providerShareUrl && (
+              <div className="bg-gradient-to-br from-teal-50 dark:from-teal-900/20 to-teal-100 dark:to-teal-800/20 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm dark:text-white font-semibold">
+                    <FormattedMessage id="blogger.dashboard.providerLink" defaultMessage="Lien prestataire ($5/appel, 6 mois)" />
+                  </span>
+                  <span className="text-sm dark:text-teal-300 font-bold bg-teal-200 dark:bg-teal-800/50 px-3 py-1.5 rounded-full">
+                    {blogger.affiliateCodeProvider}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={providerShareUrl}
+                    readOnly
+                    className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => copyToClipboard(providerShareUrl)}
+                      className="flex-1 min-h-[48px] bg-teal-600 hover:bg-teal-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    >
+                      <Copy className="w-5 h-5" />
+                      <span className="sm:inline">
+                        <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                      </span>
+                    </button>
+                    <a
+                      href={providerShareUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

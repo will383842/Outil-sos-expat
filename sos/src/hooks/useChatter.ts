@@ -39,10 +39,10 @@ import {
 // ============================================================================
 
 const CACHE_TTL = {
-  dashboard: 60_000,      // 60s — main dashboard data
-  commissions: 60_000,    // 60s — commission history
-  withdrawals: 120_000,   // 2min — withdrawal history (changes rarely)
-  notifications: 30_000,  // 30s — notifications (more frequent)
+  dashboard: 180_000,     // 3min — main dashboard data (pull-to-refresh & mutations force refetch)
+  commissions: 120_000,   // 2min — commission history
+  withdrawals: 300_000,   // 5min — withdrawal history (changes rarely)
+  notifications: 60_000,  // 1min — notifications
 } as const;
 
 interface CacheEntry<T> {
@@ -84,6 +84,7 @@ interface UseChatterReturn {
   // Computed
   clientShareUrl: string;
   recruitmentShareUrl: string;
+  providerShareUrl: string;
   canWithdraw: boolean;
   minimumWithdrawal: number;
   totalBalance: number;
@@ -387,6 +388,11 @@ export function useChatter(): UseChatterReturn {
     return `${window.location.origin}/rec/c/${dashboardData.chatter.affiliateCodeRecruitment}`;
   }, [dashboardData]);
 
+  const providerShareUrl = useMemo(() => {
+    if (!dashboardData?.chatter?.affiliateCodeProvider) return "";
+    return `${window.location.origin}/prov/c/${dashboardData.chatter.affiliateCodeProvider}`;
+  }, [dashboardData]);
+
   const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000;
 
   const canWithdraw = useMemo(() => {
@@ -431,6 +437,7 @@ export function useChatter(): UseChatterReturn {
     markAllNotificationsRead,
     clientShareUrl,
     recruitmentShareUrl,
+    providerShareUrl,
     canWithdraw,
     minimumWithdrawal,
     totalBalance,
@@ -450,6 +457,7 @@ export function useChatter(): UseChatterReturn {
     markAllNotificationsRead,
     clientShareUrl,
     recruitmentShareUrl,
+    providerShareUrl,
     canWithdraw,
     minimumWithdrawal,
     totalBalance,

@@ -12,7 +12,7 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { findChatterByRecruitmentCode } from "../utils";
+import { findChatterByRecruitmentCode, findChatterByProviderCode } from "../utils";
 import { Chatter, ChatterRecruitedProvider, ChatterNotification } from "../types";
 
 // Lazy initialization
@@ -67,8 +67,13 @@ export async function handleChatterProviderRegistered(event: any) {
     const db = getFirestore();
 
     try {
-      // Find the recruiting chatter
-      const chatterSnapshot = await findChatterByRecruitmentCode(recruitmentCode);
+      // Find the recruiting chatter: try PROV- code first, then fall back to REC- code
+      let chatterSnapshot = await findChatterByProviderCode(recruitmentCode);
+
+      if (!chatterSnapshot) {
+        // Backward compatibility: old codes used REC- prefix for provider recruitment
+        chatterSnapshot = await findChatterByRecruitmentCode(recruitmentCode);
+      }
 
       if (!chatterSnapshot) {
         logger.warn("[chatterOnProviderRegistered] Chatter not found for code", {

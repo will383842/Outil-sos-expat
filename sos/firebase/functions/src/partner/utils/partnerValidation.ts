@@ -87,9 +87,12 @@ export async function isAffiliateCodeTaken(code: string): Promise<boolean> {
   const reservedDoc = await db.collection("affiliate_codes").doc(normalized).get();
   if (reservedDoc.exists) return true;
 
-  // Check partners collection
+  // Check partners collection (affiliateCode + affiliateCodeProvider)
   const partnerSnap = await db.collection("partners").where("affiliateCode", "==", normalized).limit(1).get();
   if (!partnerSnap.empty) return true;
+
+  const partnerProvSnap = await db.collection("partners").where("affiliateCodeProvider", "==", normalized).limit(1).get();
+  if (!partnerProvSnap.empty) return true;
 
   return false;
 }

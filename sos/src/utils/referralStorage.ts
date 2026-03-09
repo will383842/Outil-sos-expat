@@ -11,7 +11,7 @@
 // ============================================================================
 
 export type ActorType = 'client' | 'influencer' | 'chatter' | 'blogger' | 'groupAdmin' | 'partner';
-export type ReferralCodeType = 'client' | 'recruitment';
+export type ReferralCodeType = 'client' | 'recruitment' | 'provider';
 
 export interface StoredReferral {
   code: string;

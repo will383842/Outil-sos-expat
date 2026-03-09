@@ -50,6 +50,7 @@ interface UseGroupAdminReturn {
   unreadNotificationsCount: number;
   clientShareUrl: string;
   recruitmentShareUrl: string;
+  providerShareUrl: string;
 }
 
 export function useGroupAdmin(): UseGroupAdminReturn {
@@ -198,6 +199,11 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     return `${window.location.origin}/rec/ga/${profile.affiliateCodeRecruitment}`;
   }, [profile?.affiliateCodeRecruitment]);
 
+  const providerShareUrl = useMemo(() => {
+    if (!profile?.affiliateCodeProvider) return '';
+    return `${window.location.origin}/prov/ga/${profile.affiliateCodeProvider}`;
+  }, [profile?.affiliateCodeProvider]);
+
   return {
     profile,
     recentCommissions,
@@ -213,6 +219,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     unreadNotificationsCount,
     clientShareUrl,
     recruitmentShareUrl,
+    providerShareUrl,
   };
 }
 

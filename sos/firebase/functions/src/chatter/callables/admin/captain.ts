@@ -773,6 +773,7 @@ export const adminGetCaptainDetail = onCall(
       // Affiliate codes
       affiliateCodeClient: captain.affiliateCodeClient || "",
       affiliateCodeRecruitment: captain.affiliateCodeRecruitment || "",
+      affiliateCodeProvider: captain.affiliateCodeProvider || "",
       // Monthly archives
       archives,
     };

@@ -378,7 +378,7 @@ const GroupAdminProfile: React.FC = () => {
               <FormattedMessage id="groupAdmin.profile.codes" defaultMessage="Codes d'affiliation" />
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm text-gray-500 dark:text-gray-400 block mb-0.5">
                 <FormattedMessage id="groupAdmin.profile.clientCode" defaultMessage="Code client ($5 remise)" />
@@ -393,6 +393,14 @@ const GroupAdminProfile: React.FC = () => {
               </label>
               <p className="text-xl text-purple-600 dark:text-purple-400 font-mono">
                 {profile?.affiliateCodeRecruitment || '-'}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-0.5">
+                <FormattedMessage id="groupAdmin.profile.providerCode" defaultMessage="Code prestataire ($5/appel)" />
+              </label>
+              <p className="text-xl text-teal-600 dark:text-teal-400 font-mono">
+                {profile?.affiliateCodeProvider || '-'}
               </p>
             </div>
           </div>

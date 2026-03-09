@@ -104,6 +104,7 @@ const InfluencerPromoTools: React.FC = () => {
               <InfluencerAffiliateLinks
                 clientCode={influencer?.affiliateCodeClient || ''}
                 recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
+                providerCode={influencer?.affiliateCodeProvider || ''}
                 clientDiscount={config?.clientDiscountPercent ?? 0}
               />
             </div>

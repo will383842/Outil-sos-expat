@@ -77,7 +77,7 @@ export default function ChatterTraining() {
 function ChatterTrainingContent() {
   const intl = useIntl();
   const { language } = useApp();
-  const { dashboardData, clientShareUrl, recruitmentShareUrl } = useChatterData();
+  const { dashboardData, clientShareUrl, recruitmentShareUrl, providerShareUrl } = useChatterData();
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config;
 
@@ -104,6 +104,7 @@ function ChatterTrainingContent() {
   const [revenueSlider, setRevenueSlider] = useState(2);
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruitment, setCopiedRecruitment] = useState(false);
+  const [copiedProvider, setCopiedProvider] = useState(false);
 
   // Commission amounts from config
   const clientCallLawyer = (config?.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmount ?? 500) / 100;
@@ -128,6 +129,12 @@ function ChatterTrainingContent() {
     const success = await copyToClipboard(recruitmentShareUrl);
     if (success) { setCopiedRecruitment(true); setTimeout(() => setCopiedRecruitment(false), 2000); toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Link copied!' })); }
   }, [recruitmentShareUrl, intl]);
+
+  const handleCopyProvider = useCallback(async () => {
+    if (!providerShareUrl) return;
+    const success = await copyToClipboard(providerShareUrl);
+    if (success) { setCopiedProvider(true); setTimeout(() => setCopiedProvider(false), 2000); toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Link copied!' })); }
+  }, [providerShareUrl, intl]);
 
   const handleOpenModule = useCallback(async (moduleId: string) => {
     await loadModuleContent(moduleId);
@@ -161,7 +168,7 @@ function ChatterTrainingContent() {
       {/* Your 2 links explained */}
       <div className={`${UI.card} p-4`}>
         <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
-          <FormattedMessage id="chatter.training.links.title" defaultMessage="Your 2 links explained" />
+          <FormattedMessage id="chatter.training.links.title" defaultMessage="Your 3 links explained" />
         </h3>
 
         {/* Client link */}
@@ -192,7 +199,7 @@ function ChatterTrainingContent() {
         </div>
 
         {/* Recruitment link */}
-        <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20">
+        <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 mb-3">
           <div className="flex items-center gap-2 mb-1">
             <UserPlus className="w-4 h-4 text-violet-600 dark:text-violet-400" />
             <span className="text-sm font-bold text-violet-700 dark:text-violet-300">
@@ -203,7 +210,7 @@ function ChatterTrainingContent() {
           <p className="text-xs text-violet-600 dark:text-violet-400/80 leading-relaxed">
             <FormattedMessage
               id="chatter.training.links.recruitDesc"
-              defaultMessage="Share this with people who want to EARN money too. When they sign up and their clients make calls, you earn ${n1} per call (passive income forever)."
+              defaultMessage="Share this with other chatters. When they generate paid calls, you earn ${n1} per call."
               values={{ n1: n1CallAmount }}
             />
           </p>
@@ -213,6 +220,33 @@ function ChatterTrainingContent() {
               <button onClick={handleCopyRecruitment} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-violet-500 text-white text-xs font-bold flex items-center gap-1">
                 {copiedRecruitment ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copiedRecruitment ? intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }) : intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copy' })}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Provider link */}
+        <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Briefcase className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <span className="text-sm font-bold text-teal-700 dark:text-teal-300">
+              <FormattedMessage id="chatter.training.links.provider" defaultMessage="Provider link" />
+            </span>
+            <span className="ml-auto text-sm font-black text-teal-600 dark:text-teal-400">${providerCallAmount}<span className="text-xs font-medium opacity-70"><FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" /></span></span>
+          </div>
+          <p className="text-xs text-teal-600 dark:text-teal-400/80 leading-relaxed">
+            <FormattedMessage
+              id="chatter.training.links.providerDesc"
+              defaultMessage="Share this with lawyers or expat helpers who want to join the platform. When their clients call, you earn ${amount} per call (for 6 months)."
+              values={{ amount: providerCallAmount }}
+            />
+          </p>
+          {providerShareUrl && (
+            <div className="mt-2 flex items-center gap-2">
+              <code className="flex-1 text-[11px] font-mono text-teal-700 dark:text-teal-300 truncate bg-white/50 dark:bg-white/5 px-2 py-1.5 rounded-lg">{providerShareUrl}</code>
+              <button onClick={handleCopyProvider} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-teal-500 text-white text-xs font-bold flex items-center gap-1">
+                {copiedProvider ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedProvider ? intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }) : intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copy' })}
               </button>
             </div>
           )}

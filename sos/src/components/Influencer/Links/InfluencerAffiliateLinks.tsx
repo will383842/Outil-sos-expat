@@ -4,35 +4,42 @@
 
 import React, { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Copy, Check, ExternalLink, Percent, Users } from 'lucide-react';
+import { Copy, Check, ExternalLink, Percent, Users, Briefcase } from 'lucide-react';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 interface InfluencerAffiliateLinksProps {
   clientCode: string;
   recruitmentCode: string;
+  providerCode: string;
   clientDiscount: number;
 }
 
 const InfluencerAffiliateLinks: React.FC<InfluencerAffiliateLinksProps> = ({
   clientCode,
   recruitmentCode,
+  providerCode,
   clientDiscount,
 }) => {
   const intl = useIntl();
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruit, setCopiedRecruit] = useState(false);
+  const [copiedProvider, setCopiedProvider] = useState(false);
 
   const clientLink = `https://sos-expat.com/ref/i/${clientCode}`;
   const recruitLink = `https://sos-expat.com/rec/i/${recruitmentCode}`;
+  const providerLink = `${window.location.origin}/prov/i/${providerCode}`;
 
-  const copyToClipboard = (text: string, type: 'client' | 'recruit') => {
+  const copyToClipboard = (text: string, type: 'client' | 'recruit' | 'provider') => {
     clipboardCopy(text);
     if (type === 'client') {
       setCopiedClient(true);
       setTimeout(() => setCopiedClient(false), 2000);
-    } else {
+    } else if (type === 'recruit') {
       setCopiedRecruit(true);
       setTimeout(() => setCopiedRecruit(false), 2000);
+    } else {
+      setCopiedProvider(true);
+      setTimeout(() => setCopiedProvider(false), 2000);
     }
   };
 
@@ -158,6 +165,68 @@ const InfluencerAffiliateLinks: React.FC<InfluencerAffiliateLinksProps> = ({
           <span className="font-mono text-purple-600 dark:text-purple-400">{recruitmentCode}</span>
         </div>
       </div>
+
+      {/* Provider Recruitment Link - Mobile optimized */}
+      {providerCode && (
+        <div className="bg-gradient-to-br from-teal-50 dark:from-teal-900/20 to-teal-100 dark:to-teal-800/10 border dark:border-teal-800/30 rounded-2xl p-4 sm:p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-500 flex items-center justify-center shadow-lg">
+              <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage id="influencer.links.provider.title" defaultMessage="Lien recrutement prestataire" />
+              </h3>
+              <p className="text-sm dark:text-teal-400 font-medium">
+                <FormattedMessage
+                  id="influencer.links.provider.info"
+                  defaultMessage="Recrutez des avocats ou expatriés et gagnez $5/appel pendant 6 mois"
+                />
+              </p>
+            </div>
+            <span className="hidden sm:inline-flex px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold">
+              {providerCode}
+            </span>
+          </div>
+
+          {/* Mobile: Stack vertically */}
+          <div className="space-y-2">
+            <div className="w-full bg-white dark:bg-gray-800 rounded-xl px-4 py-3 min-h-[48px] font-mono text-sm dark:text-gray-300 overflow-x-auto border dark:border-gray-700 flex items-center">
+              <span className="truncate">{providerLink}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => copyToClipboard(providerLink, 'provider')}
+                className="flex-1 min-h-[48px] rounded-xl bg-teal-500 hover:bg-teal-600 text-white transition-colors items-center justify-center gap-2 font-medium active:scale-[0.98]"
+                title={intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copier' })}
+              >
+                {copiedProvider ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                <span>{copiedProvider ?
+                  <FormattedMessage id="common.copied" defaultMessage="Copié !" /> :
+                  <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                }</span>
+              </button>
+              <a
+                href={providerLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[48px] rounded-xl bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors flex items-center justify-center active:scale-[0.98]"
+                title={intl.formatMessage({ id: 'common.openLink', defaultMessage: 'Ouvrir' })}
+              >
+                <ExternalLink className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Mobile code display */}
+          <div className="mt-3 flex items-center gap-2 sm:hidden">
+            <span className="text-sm dark:text-gray-300">
+              <FormattedMessage id="influencer.links.code" defaultMessage="Code:" />
+            </span>
+            <span className="font-mono text-teal-600 dark:text-teal-400">{providerCode}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

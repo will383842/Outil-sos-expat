@@ -236,8 +236,11 @@ export interface Blogger {
   /** Code for client referrals (e.g., "BLOG-JEAN123") */
   affiliateCodeClient: string;
 
-  /** Code for provider recruitment (e.g., "REC-BLOG-JEAN123") */
+  /** Code for recruiting other bloggers (e.g., "REC-BLOG-JEAN123") */
   affiliateCodeRecruitment: string;
+
+  /** Code for recruiting providers/lawyers/expats (e.g., "PROV-BLOG-JEAN123") */
+  affiliateCodeProvider: string;
 
   // ---- Balances (in cents) ----
 
@@ -1453,6 +1456,7 @@ export interface RegisterBloggerResponse {
   bloggerId: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
   message: string;
 }
 

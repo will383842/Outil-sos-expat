@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Copy, Share2, CheckCircle, Users, UserPlus, ExternalLink, QrCode } from 'lucide-react';
+import { Copy, Share2, CheckCircle, Users, UserPlus, Briefcase, ExternalLink, QrCode } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { copyToClipboard } from '@/utils/clipboard';
 
@@ -21,25 +21,32 @@ const UI = {
 interface ChatterAffiliateLinksProps {
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
   clientLinkUrl: string;
   recruitmentLinkUrl: string;
+  providerLinkUrl: string;
   totalClientConversions?: number;
   totalRecruitmentConversions?: number;
+  totalProviderConversions?: number;
 }
 
 const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
   affiliateCodeClient,
   affiliateCodeRecruitment,
+  affiliateCodeProvider,
   clientLinkUrl,
   recruitmentLinkUrl,
+  providerLinkUrl,
   totalClientConversions = 0,
   totalRecruitmentConversions = 0,
+  totalProviderConversions = 0,
 }) => {
   const intl = useIntl();
   const { dashboardData } = useChatterData();
   const config = dashboardData?.config;
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruitment, setCopiedRecruitment] = useState(false);
+  const [copiedProvider, setCopiedProvider] = useState(false);
 
   // Dynamic commission range from config (cents → dollars)
   const callAmountRange = useMemo(() => {
@@ -51,15 +58,18 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
   }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
 
   // Copy link to clipboard
-  const copyLink = async (link: string, type: 'client' | 'recruitment') => {
+  const copyLink = async (link: string, type: 'client' | 'recruitment' | 'provider') => {
     const success = await copyToClipboard(link);
     if (success) {
       if (type === 'client') {
         setCopiedClient(true);
         setTimeout(() => setCopiedClient(false), 2000);
-      } else {
+      } else if (type === 'recruitment') {
         setCopiedRecruitment(true);
         setTimeout(() => setCopiedRecruitment(false), 2000);
+      } else {
+        setCopiedProvider(true);
+        setTimeout(() => setCopiedProvider(false), 2000);
       }
     }
   };
@@ -172,7 +182,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                 <FormattedMessage id="chatter.links.recruitment.title" defaultMessage="Lien Recrutement" />
               </h3>
               <p className="text-sm dark:text-gray-400">
-                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez des avocats ou expatriés et gagnez $5/appel pendant 6 mois" />
+                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez d'autres chatters et gagnez $1/appel N1" />
               </p>
             </div>
           </div>
@@ -239,6 +249,90 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-sm dark:text-gray-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.recruitment.commission"
+            defaultMessage="Commission : $1 par appel N1"
+          />
+        </p>
+      </div>
+
+      {/* Provider Recruitment Link - Mobile optimized */}
+      <div className={`${UI.card} p-4 sm:p-6`}>
+        <div className="flex sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-lg">
+              <Briefcase className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                <FormattedMessage id="chatter.links.provider.title" defaultMessage="Lien Prestataire" />
+              </h3>
+              <p className="text-sm dark:text-gray-400">
+                <FormattedMessage id="chatter.links.provider.desc" defaultMessage="Recrutez des avocats ou expatriés et gagnez $5/appel pendant 6 mois" />
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 sm:block sm:text-right bg-teal-50 dark:bg-teal-900/20 sm:bg-transparent rounded-xl p-3 sm:p-0">
+            <p className="text-2xl dark:text-teal-400 sm:text-3xl font-bold">
+              {totalProviderConversions}
+            </p>
+            <p className="text-xs dark:text-gray-400">
+              <FormattedMessage id="chatter.links.recruits" defaultMessage="recrutés" />
+            </p>
+          </div>
+        </div>
+
+        {/* Code Display - Prominent */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-teal-50 dark:from-teal-900/20 to-emerald-50 dark:to-emerald-900/20 rounded-xl border dark:border-teal-800/30">
+          <p className="text-xs dark:text-gray-400 mb-1">
+            <FormattedMessage id="chatter.links.yourCode" defaultMessage="Votre code" />
+          </p>
+          <p className="text-2xl dark:text-teal-400 font-bold tracking-wider">
+            {affiliateCodeProvider}
+          </p>
+        </div>
+
+        {/* Link Display - Mobile optimized with stacked layout */}
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center px-4 py-3 min-h-[48px] bg-gray-50 dark:bg-white/5 rounded-xl border dark:border-white/10">
+            <span className="text-sm dark:text-gray-300 truncate">
+              {providerLinkUrl}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => copyLink(providerLinkUrl, 'provider')}
+              className={`flex-1 min-h-[48px] rounded-xl font-medium transition-all items-center justify-center gap-2 active:scale-[0.98]${
+                copiedProvider
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200'
+              }`}
+              title={intl.formatMessage({ id: copiedProvider ? 'common.copied' : 'common.copy' })}
+            >
+              {copiedProvider ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              <span>{copiedProvider ?
+                <FormattedMessage id="common.copied" defaultMessage="Copié !" /> :
+                <FormattedMessage id="common.copy" defaultMessage="Copier" />
+              }</span>
+            </button>
+            {typeof navigator.share === 'function' && (
+              <button
+                onClick={() => shareLink(
+                  providerLinkUrl,
+                  intl.formatMessage({ id: 'chatter.links.provider.share.title', defaultMessage: 'Devenez prestataire SOS-Expat' }),
+                  intl.formatMessage({ id: 'chatter.links.provider.share.text', defaultMessage: 'Rejoignez notre réseau et aidez les expatriés en tant que prestataire' })
+                )}
+                className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-medium rounded-xl min-h-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
+                title={intl.formatMessage({ id: 'common.share' })}
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Commission Info */}
+        <p className="text-sm dark:text-gray-400 bg-teal-50 dark:bg-teal-900/20 rounded-lg px-3 py-2">
+          💰 <FormattedMessage
+            id="chatter.links.provider.commission"
             defaultMessage="Commission : $5 par appel du prestataire recruté (pendant 6 mois)"
           />
         </p>

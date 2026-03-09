@@ -51,8 +51,13 @@ const VALID_GROUP_SIZES: GroupSizeTier[] = [
  * P1 FIX: Uses a suffix derived from the user's UID (globally unique) to avoid
  * Firestore collision-check queries entirely. No retry loop needed.
  */
-function generateAffiliateCode(firstName: string, uid: string, isRecruitment: boolean = false): string {
-  const prefix = isRecruitment ? "REC-GROUP-" : "GROUP-";
+function generateAffiliateCode(firstName: string, uid: string, mode: "client" | "recruitment" | "provider" = "client"): string {
+  const prefixes: Record<string, string> = {
+    client: "GROUP-",
+    recruitment: "REC-GROUP-",
+    provider: "PROV-GROUP-",
+  };
+  const prefix = prefixes[mode];
   const cleanName = firstName.replace(/[^a-zA-Z]/g, "").toUpperCase().substring(0, 4);
   // Take last 6 chars of UID (base36-like, already unique per user)
   const uidSuffix = uid.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
@@ -252,6 +257,7 @@ export const registerGroupAdmin = onCall(
             groupAdminId: userId,
             affiliateCodeClient: existingData.affiliateCodeClient,
             affiliateCodeRecruitment: existingData.affiliateCodeRecruitment,
+            affiliateCodeProvider: existingData.affiliateCodeProvider,
           };
         } else {
           throw new HttpsError("permission-denied", "This account has been blocked");
@@ -392,8 +398,9 @@ export const registerGroupAdmin = onCall(
 
       // 10. Generate unique affiliate codes
       // P1 FIX: UID-based suffix guarantees uniqueness — no Firestore collision checks needed
-      const affiliateCodeClient = generateAffiliateCode(input.firstName, userId, false);
-      const affiliateCodeRecruitment = generateAffiliateCode(input.firstName, userId, true);
+      const affiliateCodeClient = generateAffiliateCode(input.firstName, userId, "client");
+      const affiliateCodeRecruitment = generateAffiliateCode(input.firstName, userId, "recruitment");
+      const affiliateCodeProvider = generateAffiliateCode(input.firstName, userId, "provider");
 
       // 10b. Resolve commission plan (Lifetime Rate Lock)
       const planSnapshot = await snapshotLockedRates("groupAdmin");
@@ -429,6 +436,7 @@ export const registerGroupAdmin = onCall(
 
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
 
         totalEarned: 0,
         availableBalance: 0,
@@ -514,6 +522,7 @@ export const registerGroupAdmin = onCall(
             groupAdminStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             updatedAt: now,
           });
@@ -527,6 +536,7 @@ export const registerGroupAdmin = onCall(
             groupAdminStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
@@ -582,6 +592,7 @@ export const registerGroupAdmin = onCall(
         groupType: input.groupType,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
         recruitedBy,
         totalDuration: Date.now() - startTime
       });
@@ -610,6 +621,7 @@ export const registerGroupAdmin = onCall(
         groupAdminId: userId,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
       };
     } catch (error) {
       logger.error("[registerGroupAdmin] ❌ ERREUR INSCRIPTION", {

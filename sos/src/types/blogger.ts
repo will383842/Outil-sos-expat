@@ -106,6 +106,7 @@ export interface Blogger {
   // Affiliate codes
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 
   // Balances (in cents)
   totalEarned: number;
@@ -553,6 +554,7 @@ export interface RegisterBloggerResponse {
   bloggerId: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
   message: string;
 }
 

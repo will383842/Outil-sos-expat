@@ -93,6 +93,14 @@ export function generateChatterRecruitmentCode(clientCode: string): string {
 }
 
 /**
+ * Generate provider recruitment code from client code
+ * Format: PROV-CLIENTCODE (e.g., PROV-JEAN456)
+ */
+export function generateChatterProviderCode(clientCode: string): string {
+  return `PROV-${clientCode}`;
+}
+
+/**
  * Normalize string for code generation
  * - Convert to uppercase
  * - Remove accents
@@ -125,6 +133,17 @@ export function isValidRecruitmentCode(code: string): boolean {
     return false;
   }
   return isValidClientCode(code.slice(4));
+}
+
+/**
+ * Validate a provider recruitment code format
+ */
+export function isValidProviderCode(code: string): boolean {
+  // Format: PROV- + client code
+  if (!code.startsWith("PROV-")) {
+    return false;
+  }
+  return isValidClientCode(code.slice(5));
 }
 
 /**
@@ -193,15 +212,57 @@ export async function findChatterByRecruitmentCode(
 }
 
 /**
+ * Find chatter by provider recruitment code
+ */
+export async function findChatterByProviderCode(
+  code: string
+): Promise<FirebaseFirestore.DocumentSnapshot | null> {
+  const db = getFirestore();
+  const normalizedCode = normalizeCodeForLookup(code);
+
+  const query = await db
+    .collection("chatters")
+    .where("affiliateCodeProvider", "==", normalizedCode)
+    .where("status", "==", "active")
+    .limit(1)
+    .get();
+
+  if (query.empty) {
+    return null;
+  }
+
+  return query.docs[0];
+}
+
+/**
  * Check if a code (client or recruitment) is valid and find the chatter
  */
 export async function resolveChatterCode(code: string): Promise<{
   valid: boolean;
-  type: "client" | "recruitment" | null;
+  type: "client" | "recruitment" | "provider" | null;
   chatterId: string | null;
   chatterCode: string | null;
 }> {
   const normalizedCode = normalizeCodeForLookup(code);
+
+  // Check if it's a provider recruitment code
+  if (normalizedCode.startsWith("PROV-")) {
+    const chatter = await findChatterByProviderCode(normalizedCode);
+    if (chatter) {
+      return {
+        valid: true,
+        type: "provider",
+        chatterId: chatter.id,
+        chatterCode: normalizedCode,
+      };
+    }
+    return {
+      valid: false,
+      type: "provider",
+      chatterId: null,
+      chatterCode: null,
+    };
+  }
 
   // Check if it's a recruitment code
   if (normalizedCode.startsWith("REC-")) {

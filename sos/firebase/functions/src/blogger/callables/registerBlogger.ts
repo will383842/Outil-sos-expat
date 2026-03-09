@@ -359,7 +359,7 @@ export const registerBlogger = onCall(
       }
 
       // 8. Generate affiliate codes (P1-4 FIX: UID-based, 0 Firestore lookups)
-      const { affiliateCodeClient, affiliateCodeRecruitment } =
+      const { affiliateCodeClient, affiliateCodeRecruitment, affiliateCodeProvider } =
         generateBloggerAffiliateCodes(input.firstName, uid);
 
       // 7b. Resolve commission plan (Lifetime Rate Lock)
@@ -406,6 +406,7 @@ export const registerBlogger = onCall(
         // Affiliate codes
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
 
         // Balances (all start at 0)
         totalEarned: 0,
@@ -497,6 +498,7 @@ export const registerBlogger = onCall(
             bloggerStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             updatedAt: now,
           });
@@ -510,6 +512,7 @@ export const registerBlogger = onCall(
             bloggerStatus: "active",
             affiliateCodeClient,
             affiliateCodeRecruitment,
+            affiliateCodeProvider,
             telegramOnboardingCompleted: false,
             createdAt: now,
             updatedAt: now,
@@ -603,6 +606,7 @@ export const registerBlogger = onCall(
         blogUrl: input.blogUrl,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
         totalDuration: Date.now() - startTime
       });
 
@@ -629,6 +633,7 @@ export const registerBlogger = onCall(
         bloggerId: uid,
         affiliateCodeClient,
         affiliateCodeRecruitment,
+        affiliateCodeProvider,
         message: "Inscription réussie ! Votre compte blogueur est maintenant actif.",
       };
     } catch (error) {

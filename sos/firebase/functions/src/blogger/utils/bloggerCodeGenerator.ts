@@ -36,19 +36,33 @@ export function generateBloggerRecruitmentCode(firstName: string, uid: string): 
 }
 
 /**
- * Generate both codes for a new blogger
+ * Generate a unique provider recruitment code for a blogger
+ * Format: PROV-BLOG-PRENOM + UID suffix (0 Firestore lookups)
+ * Used specifically for recruiting providers (lawyers/expats), separate from blogger recruitment
+ */
+export function generateBloggerProviderCode(firstName: string, uid: string): string {
+  const cleanName = sanitizeName(firstName).toUpperCase().substring(0, 4);
+  const uidSuffix = uid.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
+  return `PROV-BLOG-${cleanName}${uidSuffix}`;
+}
+
+/**
+ * Generate all three codes for a new blogger
  * P1-4 FIX: Now synchronous (no Firestore lookups needed)
  */
 export function generateBloggerAffiliateCodes(firstName: string, uid: string): {
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 } {
   const affiliateCodeClient = generateBloggerClientCode(firstName, uid);
   const affiliateCodeRecruitment = generateBloggerRecruitmentCode(firstName, uid);
+  const affiliateCodeProvider = generateBloggerProviderCode(firstName, uid);
 
   return {
     affiliateCodeClient,
     affiliateCodeRecruitment,
+    affiliateCodeProvider,
   };
 }
 
@@ -75,19 +89,31 @@ export function generateBloggerRecruitmentUrl(code: string, baseUrl?: string): s
 }
 
 /**
+ * Generate provider recruitment URL
+ * Format: /prov/b/CODE
+ */
+export function generateBloggerProviderUrl(code: string, baseUrl?: string): string {
+  const base = baseUrl || "https://sos-expat.com";
+  return `${base}/prov/b/${code}`;
+}
+
+/**
  * Generate all URLs for a blogger
  */
 export function generateBloggerUrls(
   affiliateCodeClient: string,
   affiliateCodeRecruitment: string,
+  affiliateCodeProvider: string,
   baseUrl?: string
 ): {
   clientUrl: string;
   recruitmentUrl: string;
+  providerUrl: string;
 } {
   return {
     clientUrl: generateBloggerClientUrl(affiliateCodeClient, baseUrl),
     recruitmentUrl: generateBloggerRecruitmentUrl(affiliateCodeRecruitment, baseUrl),
+    providerUrl: generateBloggerProviderUrl(affiliateCodeProvider, baseUrl),
   };
 }
 
@@ -111,9 +137,9 @@ function sanitizeName(name: string): string {
  */
 export function extractBloggerCodeFromUrl(url: string): {
   code: string | null;
-  type: "client" | "recruitment" | null;
+  type: "client" | "recruitment" | "provider" | null;
 } {
-  // Match /ref/b/CODE or /rec/b/CODE
+  // Match /ref/b/CODE, /rec/b/CODE, or /prov/b/CODE
   const clientMatch = url.match(/\/ref\/b\/([A-Z0-9-]+)/i);
   if (clientMatch) {
     return { code: clientMatch[1].toUpperCase(), type: "client" };
@@ -122,6 +148,11 @@ export function extractBloggerCodeFromUrl(url: string): {
   const recruitmentMatch = url.match(/\/rec\/b\/([A-Z0-9-]+)/i);
   if (recruitmentMatch) {
     return { code: recruitmentMatch[1].toUpperCase(), type: "recruitment" };
+  }
+
+  const providerMatch = url.match(/\/prov\/b\/([A-Z0-9-]+)/i);
+  if (providerMatch) {
+    return { code: providerMatch[1].toUpperCase(), type: "provider" };
   }
 
   return { code: null, type: null };
@@ -133,7 +164,8 @@ export function extractBloggerCodeFromUrl(url: string): {
 export function isValidBloggerCode(code: string): boolean {
   // Client code: BLOG-XXX or BLOG-XXX123
   // Recruitment code: REC-BLOG-XXX or REC-BLOG-XXX123
-  return /^(BLOG-[A-Z0-9]+|REC-BLOG-[A-Z0-9]+)$/i.test(code);
+  // Provider code: PROV-BLOG-XXX or PROV-BLOG-XXX123
+  return /^(BLOG-[A-Z0-9]+|REC-BLOG-[A-Z0-9]+|PROV-BLOG-[A-Z0-9]+)$/i.test(code);
 }
 
 /**
@@ -141,7 +173,7 @@ export function isValidBloggerCode(code: string): boolean {
  */
 export async function getBloggerByCode(
   code: string
-): Promise<{ id: string; type: "client" | "recruitment" } | null> {
+): Promise<{ id: string; type: "client" | "recruitment" | "provider" } | null> {
   const db = getFirestore();
   const upperCode = code.toUpperCase();
 
@@ -165,6 +197,17 @@ export async function getBloggerByCode(
 
   if (!query.empty) {
     return { id: query.docs[0].id, type: "recruitment" };
+  }
+
+  // Try provider recruitment code
+  query = await db
+    .collection("bloggers")
+    .where("affiliateCodeProvider", "==", upperCode)
+    .limit(1)
+    .get();
+
+  if (!query.empty) {
+    return { id: query.docs[0].id, type: "provider" };
   }
 
   return null;

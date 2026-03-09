@@ -1052,6 +1052,10 @@ const App: React.FC = () => {
                     /rec/i/:code  → influencer recruitment link (stores as actorType=influencer)
                     /ref/ga/:code → group-admin client referral (stores as actorType=client)
                     /rec/ga/:code → group-admin recruitment link (stores as actorType=groupAdmin)
+                    /prov/c/:code → chatter provider recruitment (stores as actorType=chatter, codeType=provider)
+                    /prov/i/:code → influencer provider recruitment (stores as actorType=influencer, codeType=provider)
+                    /prov/b/:code → blogger provider recruitment (stores as actorType=blogger, codeType=provider)
+                    /prov/ga/:code→ group-admin provider recruitment (stores as actorType=groupAdmin, codeType=provider)
                     Static segments rank higher than /:x/:y/:z in React Router v6,
                     so these routes win over the catch-all provider routes below automatically. */}
                 {/* Without locale prefix (direct links like /ref/c/CODE) */}
@@ -1063,6 +1067,11 @@ const App: React.FC = () => {
                 <Route path="/rec/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="recruitment" redirectPath="/influencer/inscription" />} />
                 <Route path="/ref/ga/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/rec/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />} />
+                {/* Provider recruitment links (/prov/:role/:code) — recruits providers (lawyers/expats) */}
+                <Route path="/prov/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="provider" />} />
+                <Route path="/prov/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="provider" />} />
+                <Route path="/prov/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="provider" />} />
+                <Route path="/prov/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="provider" />} />
                 {/* With locale prefix (after LocaleRouter redirect: /fr-fr/ref/c/CODE) */}
                 <Route path="/:locale/ref/b/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/:locale/rec/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />} />
@@ -1072,6 +1081,11 @@ const App: React.FC = () => {
                 <Route path="/:locale/rec/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="recruitment" redirectPath="/influencer/inscription" />} />
                 <Route path="/:locale/ref/ga/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/:locale/rec/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="recruitment" redirectPath="/group-admin/inscription" />} />
+                {/* Provider recruitment with locale prefix */}
+                <Route path="/:locale/prov/c/:code" element={<AffiliatePathCapture actorType="chatter" codeType="provider" />} />
+                <Route path="/:locale/prov/i/:code" element={<AffiliatePathCapture actorType="influencer" codeType="provider" />} />
+                <Route path="/:locale/prov/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="provider" />} />
+                <Route path="/:locale/prov/ga/:code" element={<AffiliatePathCapture actorType="groupAdmin" codeType="provider" />} />
 
                 {/* IMPORTANT: Catch-all provider routes MUST be rendered LAST (before 404)
                     These match generic patterns like /:langLocale/:roleCountry/:nameSlug

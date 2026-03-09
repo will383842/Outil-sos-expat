@@ -81,6 +81,7 @@ export const onGroupAdminCreated = onDocumentCreated(
         data: {
           affiliateCodeClient: groupAdminData.affiliateCodeClient,
           affiliateCodeRecruitment: groupAdminData.affiliateCodeRecruitment,
+          affiliateCodeProvider: groupAdminData.affiliateCodeProvider,
         },
         isRead: false,
         createdAt: now,

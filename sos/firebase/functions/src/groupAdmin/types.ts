@@ -254,6 +254,9 @@ export interface GroupAdmin {
   /** Code for admin recruitment (e.g., "REC-GROUP-JEAN123") */
   affiliateCodeRecruitment: string;
 
+  /** Code for provider recruitment (e.g., "PROV-GROUP-JEAN123") */
+  affiliateCodeProvider: string;
+
   // ---- Balances (in cents) ----
 
   /** Total earned all time (never decreases) */
@@ -759,7 +762,7 @@ export interface GroupAdminClick {
   affiliateCode: string;
 
   /** Type of click */
-  clickType: "client" | "recruitment";
+  clickType: "client" | "recruitment" | "provider";
 
   /** IP address (hashed for privacy) */
   ipHash: string;
@@ -1312,6 +1315,7 @@ export interface RegisterGroupAdminResponse {
   groupAdminId: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 }
 
 /**
@@ -1421,7 +1425,7 @@ export interface RequestWithdrawalResponse {
 /**
  * Partial GroupAdmin for updates
  */
-export type GroupAdminUpdate = Partial<Omit<GroupAdmin, "id" | "createdAt" | "affiliateCodeClient" | "affiliateCodeRecruitment">>;
+export type GroupAdminUpdate = Partial<Omit<GroupAdmin, "id" | "createdAt" | "affiliateCodeClient" | "affiliateCodeRecruitment" | "affiliateCodeProvider">>;
 
 /**
  * GroupAdmin creation data (without computed fields)

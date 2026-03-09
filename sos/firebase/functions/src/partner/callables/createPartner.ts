@@ -114,6 +114,11 @@ export const createPartner = onCall(
         throw new HttpsError("already-exists", "This affiliate code is already taken");
       }
 
+      const providerCodeTaken = await isAffiliateCodeTaken(`PROV-${input.affiliateCode.toUpperCase().trim()}`);
+      if (providerCodeTaken) {
+        throw new HttpsError("already-exists", "The derived provider recruitment code is already taken");
+      }
+
       const websiteTaken = await isWebsiteUrlTaken(input.websiteUrl);
       if (websiteTaken) {
         throw new HttpsError("already-exists", "This website URL is already registered");
@@ -134,6 +139,7 @@ export const createPartner = onCall(
 
       const now = Timestamp.now();
       const normalizedCode = input.affiliateCode.toUpperCase().trim();
+      const affiliateCodeProvider = `PROV-${normalizedCode}`;
       const normalizedUrl = input.websiteUrl.toLowerCase().trim().replace(/\/+$/, "");
       const affiliateLink = `${PARTNER_CONSTANTS.AFFILIATE_BASE_URL}?ref=${normalizedCode}`;
 
@@ -144,6 +150,7 @@ export const createPartner = onCall(
         lastName: input.lastName.trim(),
         role: "partner",
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         createdAt: now,
         updatedAt: now,
       };
@@ -168,6 +175,7 @@ export const createPartner = onCall(
         isVisible: false,
 
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         affiliateLink,
 
         commissionConfig: {
@@ -241,11 +249,18 @@ export const createPartner = onCall(
       batch.set(db.collection("users").doc(uid), userDoc);
       batch.set(db.collection("partners").doc(uid), partner);
 
-      // Reserve affiliate code
+      // Reserve affiliate codes (client + provider)
       batch.set(db.collection("affiliate_codes").doc(normalizedCode), {
         code: normalizedCode,
         userId: uid,
         userType: "partner",
+        createdAt: now,
+      });
+      batch.set(db.collection("affiliate_codes").doc(affiliateCodeProvider), {
+        code: affiliateCodeProvider,
+        userId: uid,
+        userType: "partner",
+        codeType: "provider_recruitment",
         createdAt: now,
       });
 
@@ -301,7 +316,7 @@ export const createPartner = onCall(
           es: `Su cuenta de socio ha sido creada. Su codigo de afiliado es ${normalizedCode}.`,
           de: `Ihr Partnerkonto wurde erstellt. Ihr Affiliate-Code ist ${normalizedCode}.`,
         },
-        data: { affiliateCode: normalizedCode, affiliateLink },
+        data: { affiliateCode: normalizedCode, affiliateCodeProvider, affiliateLink },
         isRead: false,
         createdAt: now,
       });
@@ -309,6 +324,7 @@ export const createPartner = onCall(
       logger.info("[createPartner] Partner created successfully", {
         partnerId: uid,
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         createdBy: adminUid,
       });
 
@@ -316,6 +332,7 @@ export const createPartner = onCall(
         success: true,
         partnerId: uid,
         affiliateCode: normalizedCode,
+        affiliateCodeProvider,
         affiliateLink,
         ...(resetLink && { resetLink }),
       };

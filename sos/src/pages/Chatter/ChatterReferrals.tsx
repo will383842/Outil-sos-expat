@@ -101,7 +101,7 @@ function ChatterReferralsContent() {
           description={
             <FormattedMessage
               id="chatter.team.emptyDesc"
-              defaultMessage="Chaque personne que vous recrutez genere $1 a chaque appel. C'est un revenu passif qui ne s'arrete JAMAIS. Exemple : 10 filleuls x 2 appels/semaine = $80/mois sans effort"
+              defaultMessage="Chaque prestataire (avocat ou expatrie) que vous recrutez vous rapporte $5 par appel de ses clients pendant 6 mois. Exemple : 10 prestataires x 2 appels/semaine = $400/mois"
             />
           }
           cta={{

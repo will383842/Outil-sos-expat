@@ -149,6 +149,7 @@ export interface Influencer {
   // Affiliate codes
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
+  affiliateCodeProvider: string;
 
   // Status
   status: InfluencerStatus;

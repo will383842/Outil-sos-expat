@@ -72,13 +72,23 @@ export async function checkGroupAdminProviderRecruitment(
       return { success: false, error: "GroupAdmin system not active" };
     }
 
-    // 2. Find GroupAdmin by recruitment code
-    const gaQuery = await db
+    // 2. Find GroupAdmin by provider code (preferred) or recruitment code (fallback)
+    let gaQuery = await db
       .collection("group_admins")
-      .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
+      .where("affiliateCodeProvider", "==", recruitmentCode.toUpperCase())
       .where("status", "==", "active")
       .limit(1)
       .get();
+
+    // Fallback: search by affiliateCodeRecruitment for backward compatibility
+    if (gaQuery.empty) {
+      gaQuery = await db
+        .collection("group_admins")
+        .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
+        .where("status", "==", "active")
+        .limit(1)
+        .get();
+    }
 
     if (gaQuery.empty) {
       logger.warn("[checkGroupAdminProviderRecruitment] GroupAdmin not found for code", { recruitmentCode });
@@ -112,7 +122,7 @@ export async function checkGroupAdminProviderRecruitment(
     const recruitment: GroupAdminRecruitedProvider = {
       id: recruitmentRef.id,
       groupAdminId,
-      groupAdminCode: groupAdmin.affiliateCodeRecruitment,
+      groupAdminCode: groupAdmin.affiliateCodeProvider || groupAdmin.affiliateCodeRecruitment,
       groupAdminEmail: groupAdmin.email,
       providerId,
       providerEmail,

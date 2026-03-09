@@ -284,13 +284,15 @@ export const getGroupAdminProcessedPost = onCall(
       // 5. Replace placeholders
       const placeholdersReplaced: string[] = [];
 
-      // Build affiliate link
+      // Build affiliate links
       const affiliateLink = `https://sos-expat.com/r/${groupAdmin.affiliateCodeClient}`;
       const recruitmentLink = `https://sos-expat.com/group-admin/inscription?ref=${groupAdmin.affiliateCodeRecruitment}`;
+      const providerLink = `https://sos-expat.com/inscription-prestataire?ref=${groupAdmin.affiliateCodeProvider || groupAdmin.affiliateCodeRecruitment}`;
 
       const replacements: Record<string, string> = {
         "{{AFFILIATE_LINK}}": affiliateLink,
         "{{RECRUITMENT_LINK}}": recruitmentLink,
+        "{{PROVIDER_LINK}}": providerLink,
         "{{GROUP_NAME}}": groupAdmin.groupName,
         "{{ADMIN_NAME}}": `${groupAdmin.firstName} ${groupAdmin.lastName}`,
         "{{ADMIN_FIRST_NAME}}": groupAdmin.firstName,

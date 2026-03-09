@@ -4,6 +4,7 @@
  * Generates unique affiliate codes for influencers:
  * - Client codes: e.g., "MARIE123"
  * - Recruitment codes: e.g., "REC-MARIE123"
+ * - Provider codes: e.g., "PROV-INF-MARIE123"
  */
 
 import { getFirestore } from "firebase-admin/firestore";
@@ -58,6 +59,37 @@ export async function generateClientCode(firstName: string): Promise<string> {
  */
 export function generateRecruitmentCode(clientCode: string): string {
   return `REC-${clientCode}`;
+}
+
+/**
+ * Generate a provider recruitment code from a client code
+ * Format: PROV-INF-CLIENTCODE
+ * e.g., "PROV-INF-MARIE123"
+ */
+export function generateProviderCode(clientCode: string): string {
+  return `PROV-INF-${clientCode}`;
+}
+
+/**
+ * Find influencer by provider code
+ */
+export async function findInfluencerByProviderCode(
+  providerCode: string
+): Promise<{ influencerId: string; influencer: any } | null> {
+  const db = getFirestore();
+  const query = await db
+    .collection("influencers")
+    .where("affiliateCodeProvider", "==", providerCode.toUpperCase())
+    .where("status", "==", "active")
+    .limit(1)
+    .get();
+
+  if (query.empty) {
+    return null;
+  }
+
+  const doc = query.docs[0];
+  return { influencerId: doc.id, influencer: doc.data() };
 }
 
 /**
@@ -131,6 +163,14 @@ export function isValidClientCode(code: string): boolean {
 export function isValidRecruitmentCode(code: string): boolean {
   // Format: REC- + client code
   return /^REC-[A-Z]{2,8}\d{3,6}$/.test(code);
+}
+
+/**
+ * Validate a provider code format
+ */
+export function isValidProviderCode(code: string): boolean {
+  // Format: PROV-INF- + client code
+  return /^PROV-INF-[A-Z]{2,8}\d{3,6}$/.test(code);
 }
 
 /**

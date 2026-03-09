@@ -35,11 +35,14 @@ export {
 export {
   generateClientCode,
   generateRecruitmentCode,
+  generateProviderCode,
+  findInfluencerByProviderCode,
   generateClientReferralLink,
   generateRecruitmentLink,
   generateLinkWithUtm,
   isValidClientCode,
   isValidRecruitmentCode,
+  isValidProviderCode,
   extractClientCode,
   hashIP,
 } from "./influencerCodeGenerator";
