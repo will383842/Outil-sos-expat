@@ -2,9 +2,11 @@
  * AdminInbox - Centre de notifications unifie
  *
  * Agregation temps reel de tous les messages entrants :
+ * - Demandes de retrait (payment_withdrawals) — EN PREMIER, URGENT
  * - Candidatures Captain (captain_applications)
  * - Messages contact (contact_messages)
  * - Feedbacks utilisateurs (user_feedback)
+ * - Candidatures Partenaire (partner_applications)
  *
  * Permet de voir en un coup d'oeil tous les items non traites.
  */
@@ -20,7 +22,6 @@ import {
   limit,
   updateDoc,
   doc,
-  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -30,11 +31,14 @@ import {
   Crown,
   Mail,
   MessageSquare,
+  Handshake,
   ExternalLink,
   Eye,
   Clock,
   ChevronDown,
-  Filter,
+  Globe,
+  Wallet,
+  DollarSign,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,11 +46,11 @@ import { useNavigate } from 'react-router-dom';
 // TYPES
 // ============================================================================
 
-type InboxCategory = 'all' | 'captain' | 'contact' | 'feedback';
+type InboxCategory = 'all' | 'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner';
 
 interface InboxItem {
   id: string;
-  category: 'captain' | 'contact' | 'feedback';
+  category: 'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner';
   title: string;
   subtitle: string;
   detail: string;
@@ -57,13 +61,38 @@ interface InboxItem {
 }
 
 // ============================================================================
+// WITHDRAWAL HELPERS
+// ============================================================================
+
+const USER_TYPE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  chatter: { label: 'Chatter', color: 'text-orange-700', bg: 'bg-orange-100' },
+  influencer: { label: 'Influencer', color: 'text-pink-700', bg: 'bg-pink-100' },
+  blogger: { label: 'Blogger', color: 'text-cyan-700', bg: 'bg-cyan-100' },
+  group_admin: { label: 'Group Admin', color: 'text-violet-700', bg: 'bg-violet-100' },
+  affiliate: { label: 'Affiliate', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+  partner: { label: 'Partenaire', color: 'text-teal-700', bg: 'bg-teal-100' },
+};
+
+const formatCentsToUSD = (cents: number): string => {
+  return `$${(cents / 100).toFixed(2)}`;
+};
+
+// ============================================================================
 // CATEGORY CONFIG
 // ============================================================================
 
 const CATEGORY_CONFIG: Record<
-  'captain' | 'contact' | 'feedback',
+  'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner',
   { icon: React.ReactNode; color: string; bg: string; border: string; label: string; defaultLabel: string }
 > = {
+  withdrawal: {
+    icon: <Wallet className="w-4 h-4" />,
+    color: 'text-red-600',
+    bg: 'bg-red-50',
+    border: 'border-red-200',
+    label: 'admin.inbox.category.withdrawal',
+    defaultLabel: 'Retraits',
+  },
   captain: {
     icon: <Crown className="w-4 h-4" />,
     color: 'text-amber-600',
@@ -88,6 +117,14 @@ const CATEGORY_CONFIG: Record<
     label: 'admin.inbox.category.feedback',
     defaultLabel: 'Feedback',
   },
+  partner: {
+    icon: <Handshake className="w-4 h-4" />,
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    label: 'admin.inbox.category.partner',
+    defaultLabel: 'Partenaire',
+  },
 };
 
 // ============================================================================
@@ -102,9 +139,49 @@ const AdminInbox: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<InboxCategory>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Real-time listeners for all 3 collections
+  // Real-time listeners for all 5 collections
   useEffect(() => {
     const unsubs: (() => void)[] = [];
+
+    // 0. WITHDRAWAL REQUESTS (pending) — PRIORITE #1
+    const qWithdrawal = query(
+      collection(db, 'payment_withdrawals'),
+      where('status', '==', 'pending'),
+      orderBy('requestedAt', 'desc'),
+      limit(50)
+    );
+    unsubs.push(
+      onSnapshot(qWithdrawal, (snap) => {
+        const withdrawalItems: InboxItem[] = snap.docs.map((d) => {
+          const data = d.data();
+          const userType = data.userType || 'affiliate';
+          const typeInfo = USER_TYPE_LABELS[userType] || USER_TYPE_LABELS.affiliate;
+          const amount = data.amount || 0;
+          const fee = data.withdrawalFee || 0;
+          const totalDebited = data.totalDebited || amount + fee;
+          const method = data.provider === 'wise' ? 'Wise' : data.provider === 'flutterwave' ? 'Mobile Money' : data.methodType === 'bank_transfer' ? 'Virement' : 'Manuel';
+
+          return {
+            id: `withdrawal_${d.id}`,
+            category: 'withdrawal' as const,
+            title: `${data.userName || data.userEmail || 'N/A'} — ${formatCentsToUSD(amount)}`,
+            subtitle: `${typeInfo.label} · ${method} · Total debite: ${formatCentsToUSD(totalDebited)}`,
+            detail: fee > 0
+              ? `Montant: ${formatCentsToUSD(amount)} + Frais: ${formatCentsToUSD(fee)} = Total: ${formatCentsToUSD(totalDebited)}\nMethode: ${method}\nEmail: ${data.userEmail || 'N/A'}`
+              : `Montant: ${formatCentsToUSD(amount)}\nMethode: ${method}\nEmail: ${data.userEmail || 'N/A'}`,
+            status: 'pending',
+            createdAt: data.requestedAt ? new Date(data.requestedAt) : null,
+            link: '/admin/payments',
+            raw: { ...data, _docId: d.id, _userType: userType },
+          };
+        });
+        setItems((prev) => {
+          const others = prev.filter((i) => i.category !== 'withdrawal');
+          return [...others, ...withdrawalItems].sort(sortByDate);
+        });
+        setLoading(false);
+      }, (err) => { console.error('Inbox withdrawal listener error:', err); })
+    );
 
     // 1. Captain applications (pending/contacted)
     const qCaptain = query(
@@ -198,6 +275,36 @@ const AdminInbox: React.FC = () => {
       }, (err) => { console.error('Inbox feedback listener error:', err); })
     );
 
+    // 4. Partner applications (pending/contacted)
+    const qPartner = query(
+      collection(db, 'partner_applications'),
+      where('status', 'in', ['pending', 'contacted']),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+    unsubs.push(
+      onSnapshot(qPartner, (snap) => {
+        const partnerItems: InboxItem[] = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: `partner_${d.id}`,
+            category: 'partner' as const,
+            title: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email || 'N/A',
+            subtitle: `${data.websiteName || data.websiteUrl || ''} - ${data.country || '?'}`,
+            detail: data.message || data.websiteDescription || '',
+            status: data.status || 'pending',
+            createdAt: data.createdAt ? new Date(data.createdAt) : null,
+            link: '/admin/partners/applications',
+            raw: { ...data, _docId: d.id },
+          };
+        });
+        setItems((prev) => {
+          const others = prev.filter((i) => i.category !== 'partner');
+          return [...others, ...partnerItems].sort(sortByDate);
+        });
+      }, (err) => { console.error('Inbox partner listener error:', err); })
+    );
+
     return () => unsubs.forEach((u) => u());
   }, []);
 
@@ -211,9 +318,11 @@ const AdminInbox: React.FC = () => {
 
   const counts = {
     all: items.length,
+    withdrawal: items.filter((i) => i.category === 'withdrawal').length,
     captain: items.filter((i) => i.category === 'captain').length,
     contact: items.filter((i) => i.category === 'contact').length,
     feedback: items.filter((i) => i.category === 'feedback').length,
+    partner: items.filter((i) => i.category === 'partner').length,
   };
 
   const markContactRead = async (docId: string) => {
@@ -252,6 +361,16 @@ const AdminInbox: React.FC = () => {
     );
   };
 
+  // Badge for withdrawal userType (chatter, influencer, blogger, etc.)
+  const userTypeBadge = (userType: string) => {
+    const info = USER_TYPE_LABELS[userType] || { label: userType, color: 'text-gray-700', bg: 'bg-gray-100' };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${info.bg} ${info.color}`}>
+        {info.label}
+      </span>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-5">
@@ -274,11 +393,22 @@ const AdminInbox: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {/* Withdrawal alert banner */}
+          {counts.withdrawal > 0 && (
+            <button
+              onClick={() => setActiveFilter('withdrawal')}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold hover:bg-red-100 transition-colors animate-pulse"
+            >
+              <DollarSign className="w-4 h-4" />
+              {counts.withdrawal} retrait{counts.withdrawal > 1 ? 's' : ''} en attente
+            </button>
+          )}
         </div>
 
-        {/* Category filters */}
+        {/* Category filters — withdrawal EN PREMIER */}
         <div className="flex flex-wrap gap-2">
-          {(['all', 'captain', 'contact', 'feedback'] as InboxCategory[]).map((cat) => {
+          {(['all', 'withdrawal', 'captain', 'contact', 'feedback', 'partner'] as InboxCategory[]).map((cat) => {
             const isActive = activeFilter === cat;
             const count = counts[cat];
             if (cat === 'all') {
@@ -304,7 +434,9 @@ const AdminInbox: React.FC = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 min-h-[44px] ${
                   isActive
                     ? `${cfg.bg} ${cfg.color} border ${cfg.border}`
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-transparent'
+                    : cat === 'withdrawal' && count > 0
+                      ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-transparent'
                 }`}
               >
                 {cfg.icon}
@@ -334,7 +466,11 @@ const AdminInbox: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                  className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
+                    item.category === 'withdrawal'
+                      ? 'border-red-200 bg-red-50/30'
+                      : 'border-gray-200'
+                  }`}
                 >
                   <div
                     className="flex items-start gap-3 p-4 cursor-pointer"
@@ -350,6 +486,7 @@ const AdminInbox: React.FC = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-900 text-sm truncate">{item.title}</span>
                         {statusBadge(item)}
+                        {item.category === 'withdrawal' && typeof item.raw._userType === 'string' && userTypeBadge(item.raw._userType)}
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{item.subtitle}</p>
                     </div>
@@ -409,6 +546,28 @@ const AdminInbox: React.FC = () => {
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors min-h-[36px]"
                           >
                             CV
+                          </a>
+                        )}
+
+                        {item.category === 'partner' && !!item.raw.websiteUrl && (
+                          <a
+                            href={item.raw.websiteUrl as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors min-h-[36px]"
+                          >
+                            <Globe className="w-3.5 h-3.5" />
+                            {(item.raw.websiteName as string) || 'Site web'}
+                          </a>
+                        )}
+
+                        {item.category === 'partner' && !!item.raw.email && (
+                          <a
+                            href={`mailto:${item.raw.email as string}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors min-h-[36px]"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            Email
                           </a>
                         )}
 

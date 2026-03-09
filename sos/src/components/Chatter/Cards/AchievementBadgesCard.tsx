@@ -80,9 +80,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Premier Recrutement',
     descriptionKey: 'chatter.badges.firstRecruit.desc',
     defaultDescription: 'Premier membre recrute dans ton equipe',
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
-    glowColor: 'shadow-red-500/30',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    glowColor: 'shadow-indigo-500/30',
     rarity: 'common',
     category: 'milestone',
     requirement: { type: 'recruits', target: 1 },
@@ -109,9 +109,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Mois de Feu',
     descriptionKey: 'chatter.badges.streak30.desc',
     defaultDescription: '30 jours consecutifs d\'activite',
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
-    glowColor: 'shadow-red-500/30',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    glowColor: 'shadow-indigo-500/30',
     rarity: 'rare',
     category: 'streak',
     requirement: { type: 'streak', target: 30 },
@@ -180,9 +180,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Niveau Diamond',
     descriptionKey: 'chatter.badges.level5.desc',
     defaultDescription: 'Atteint le niveau 5 - Elite',
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30',
-    glowColor: 'shadow-red-500/40',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/30 dark:to-violet-900/30',
+    glowColor: 'shadow-indigo-500/40',
     rarity: 'legendary',
     category: 'level',
     requirement: { type: 'level', target: 5 },
@@ -267,9 +267,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Leader Emergent',
     descriptionKey: 'chatter.badges.recruits5.desc',
     defaultDescription: '5 membres recrutes',
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
-    glowColor: 'shadow-red-500/30',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    glowColor: 'shadow-indigo-500/30',
     rarity: 'uncommon',
     category: 'milestone',
     requirement: { type: 'recruits', target: 5 },
@@ -281,9 +281,9 @@ const BADGE_CONFIG: BadgeConfig[] = [
     defaultName: 'Chef d\'Equipe',
     descriptionKey: 'chatter.badges.recruits10.desc',
     defaultDescription: '10 membres recrutes',
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
-    glowColor: 'shadow-red-500/30',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    glowColor: 'shadow-indigo-500/30',
     rarity: 'rare',
     category: 'milestone',
     requirement: { type: 'recruits', target: 10 },
@@ -380,9 +380,9 @@ const RARITY_CONFIG = {
     labelColor: 'text-blue-600 dark:text-blue-400',
   },
   epic: {
-    border: 'border-red-400 dark:border-red-600',
+    border: 'border-indigo-400 dark:border-indigo-600',
     label: 'Epique',
-    labelColor: 'text-red-600 dark:text-red-400',
+    labelColor: 'text-indigo-600 dark:text-indigo-400',
   },
   legendary: {
     border: 'border-yellow-400 dark:border-yellow-500',
@@ -533,7 +533,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
               <Award className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -628,7 +628,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex-1 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
                       style={{ width: `${stats.nextBadgeProgress}%` }}
                     />
                   </div>
@@ -700,7 +700,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                 <div
                   className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
                     badge.rarity === 'legendary' ? 'bg-yellow-400' :
-                    badge.rarity === 'epic' ? 'bg-red-400' :
+                    badge.rarity === 'epic' ? 'bg-indigo-400' :
                     badge.rarity === 'rare' ? 'bg-blue-400' :
                     badge.rarity === 'uncommon' ? 'bg-green-400' :
                     'bg-gray-400'
@@ -804,7 +804,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
                     </div>
                     <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
                         style={{ width: `${getBadgeProgress(selectedBadge)}%` }}
                       />
                     </div>

@@ -24,6 +24,7 @@ import {
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 import { generateBloggerAffiliateCodes } from "../utils/bloggerCodeGenerator";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
+import { detectCircularReferral } from "../../affiliate/utils/circularReferralDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
@@ -308,6 +309,26 @@ export const registerBlogger = onCall(
         recruitedByCode = null;
       }
 
+      // 7a-bis. Circular referral detection
+      if (recruitedBy) {
+        try {
+          const circularCheck = await detectCircularReferral(recruitedBy, uid, "bloggers");
+          if (circularCheck.isCircular) {
+            logger.warn("[registerBlogger] Circular referral detected, ignoring recruitment code", {
+              uid,
+              recruiterId: recruitedBy,
+              chain: circularCheck.chain,
+            });
+            recruitedBy = null;
+            recruitedByCode = null;
+          }
+        } catch (circularError) {
+          logger.warn("[registerBlogger] Circular check failed, accepting referral", {
+            error: circularError instanceof Error ? circularError.message : String(circularError),
+          });
+        }
+      }
+
       // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
       // Wrapped in try-catch: fraud check must NEVER block registration
       let fraudResult: { allowed: boolean; riskScore: number; issues: Array<{ type: string; severity: string; description: string }>; shouldAlert: boolean; blockReason?: string } = {
@@ -337,9 +358,9 @@ export const registerBlogger = onCall(
         throw new HttpsError("permission-denied", fraudResult.blockReason || "Registration blocked by fraud detection");
       }
 
-      // 8. Generate affiliate codes
+      // 8. Generate affiliate codes (P1-4 FIX: UID-based, 0 Firestore lookups)
       const { affiliateCodeClient, affiliateCodeRecruitment } =
-        await generateBloggerAffiliateCodes(input.firstName);
+        generateBloggerAffiliateCodes(input.firstName, uid);
 
       // 7b. Resolve commission plan (Lifetime Rate Lock)
       const planSnapshot = await snapshotLockedRates("blogger");

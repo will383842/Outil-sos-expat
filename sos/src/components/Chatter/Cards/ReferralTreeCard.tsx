@@ -86,8 +86,8 @@ interface ReferralTreeCardProps {
 
 const NODE_COLORS = {
   you: {
-    bg: 'from-red-500 to-orange-500',
-    ring: 'ring-red-300 dark:ring-red-700',
+    bg: 'from-indigo-500 to-violet-500',
+    ring: 'ring-indigo-300 dark:ring-indigo-700',
     text: 'text-white',
   },
   n1: {
@@ -109,8 +109,8 @@ const NODE_COLORS = {
   },
   n2: {
     active: {
-      bg: 'from-red-500 to-pink-500',
-      ring: 'ring-red-300 dark:ring-red-700',
+      bg: 'from-indigo-500 to-violet-500',
+      ring: 'ring-indigo-300 dark:ring-indigo-700',
       text: 'text-white',
     },
     inactive: {
@@ -196,7 +196,7 @@ const NodeTooltip: React.FC<NodeTooltipProps> = ({ data, onClose, onView }) => {
             {node.name}
           </h4>
           <div className="flex items-center gap-2">
-            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'}`}>
               N{node.level}
             </span>
             {node.isQualified && (
@@ -373,7 +373,7 @@ const MobileCard: React.FC<MobileCardProps> = ({ node, onClick }) => {
         </span>
 
         {/* Level badge */}
-        <span className={`mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}`}>
+        <span className={`mt-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${node.level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'}`}>
           N{node.level}
         </span>
 
@@ -422,12 +422,12 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       </div>
 
       {/* Total N2 */}
-      <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+      <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
-          <Users className="w-4 h-4 text-red-600 dark:text-red-400" />
+          <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           <span className="text-xs dark:text-gray-400">N2</span>
         </div>
-        <p className="text-xl dark:text-red-400 font-bold">
+        <p className="text-xl dark:text-indigo-400 font-bold">
           {totalN2}
         </p>
         <p className="text-[10px] dark:text-gray-300">
@@ -497,7 +497,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({ currentFilter, onChange, 
           className={`
             px-3 py-1.5 rounded-lg text-xs font-medium transition-all
             ${currentFilter === filter.key
-              ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+              ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }
           `}
@@ -600,12 +600,12 @@ const TreeVisualization: React.FC<TreeVisualizationProps> = ({
         <defs>
           {/* Gradient for lines */}
           <linearGradient id="lineGradientN1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
+            <stop offset="0%" stopColor="#6366F1" stopOpacity="0.8" />
             <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.6" />
           </linearGradient>
           <linearGradient id="lineGradientN2" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#EF4444" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#6366F1" stopOpacity="0.4" />
           </linearGradient>
 
           {/* Glow effect */}
@@ -630,7 +630,7 @@ const TreeVisualization: React.FC<TreeVisualizationProps> = ({
               className="animate-[dash_1s_linear_infinite]"
             />
             {/* Animated dot */}
-            <circle r="3" fill="#EF4444" opacity="0.8">
+            <circle r="3" fill="#6366F1" opacity="0.8">
               <animateMotion
                 dur="2s"
                 repeatCount="indefinite"
@@ -666,7 +666,7 @@ const TreeVisualization: React.FC<TreeVisualizationProps> = ({
         {/* YOU node */}
         <g transform={`translate(${centerX}, ${youY})`} className="cursor-pointer">
           <circle r="30" className="fill-[url(#lineGradientN1)]" filter="url(#glow)" />
-          <circle r="32" fill="none" stroke="#EF4444" strokeWidth="2" opacity="0.5">
+          <circle r="32" fill="none" stroke="#6366F1" strokeWidth="2" opacity="0.5">
             <animate attributeName="r" from="32" to="40" dur="2s" repeatCount="indefinite" />
             <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
           </circle>
@@ -1033,7 +1033,7 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
         <div className="px-4 sm:px-6 py-4 border-b dark:border-white/10">
           <div className="flex sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl shadow-lg">
+              <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-xl shadow-lg">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -1083,7 +1083,7 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
               {/* YOU indicator */}
               <div className="flex justify-center">
                 <div className="flex items-center">
-                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold shadow-xl ring-4 dark:ring-red-900">
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-xl ring-4 dark:ring-indigo-900">
                     YOU
                     <Crown className="absolute -top-3 left-1/2 w-6 h-6 text-yellow-400 fill-yellow-400" />
                   </div>
@@ -1139,7 +1139,7 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
               <span>N1</span>
             </div>
             <div className="flex items-center gap-2 text-xs dark:text-gray-400">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-indigo-500" />
               <span>N2</span>
             </div>
           </div>
@@ -1149,4 +1149,4 @@ export const ReferralTreeCard: React.FC<ReferralTreeCardProps> = ({
   );
 };
 
-export default ReferralTreeCard;
+export default React.memo(ReferralTreeCard);

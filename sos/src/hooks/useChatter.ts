@@ -9,7 +9,7 @@
  * - Profile management
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { httpsCallable } from "firebase/functions";
 import {
   getFirestore,
@@ -35,6 +35,26 @@ import {
 } from "../types/chatter";
 
 // ============================================================================
+// CACHE TTL — avoids redundant Firebase calls on navigation
+// ============================================================================
+
+const CACHE_TTL = {
+  dashboard: 60_000,      // 60s — main dashboard data
+  commissions: 60_000,    // 60s — commission history
+  withdrawals: 120_000,   // 2min — withdrawal history (changes rarely)
+  notifications: 30_000,  // 30s — notifications (more frequent)
+} as const;
+
+interface CacheEntry<T> {
+  data: T;
+  fetchedAt: number;
+}
+
+function isCacheValid<T>(entry: CacheEntry<T> | null, ttl: number): entry is CacheEntry<T> {
+  return !!entry && Date.now() - entry.fetchedAt < ttl;
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -51,7 +71,7 @@ interface UseChatterReturn {
   isChatter: boolean;
 
   // Actions
-  refreshDashboard: () => Promise<void>;
+  refreshDashboard: (forceRefresh?: boolean) => Promise<void>;
   requestWithdrawal: (
     input: RequestWithdrawalInput
   ) => Promise<{ success: boolean; withdrawalId?: string; message: string }>;
@@ -83,6 +103,12 @@ export function useChatter(): UseChatterReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Cache refs (survive re-renders, cleared on unmount)
+  const dashboardCache = useRef<CacheEntry<ChatterDashboardData> | null>(null);
+  const commissionsCache = useRef<CacheEntry<ChatterCommission[]> | null>(null);
+  const withdrawalsCache = useRef<CacheEntry<ChatterWithdrawal[]> | null>(null);
+  const notificationsCache = useRef<CacheEntry<ChatterNotification[]> | null>(null);
+
   const db = getFirestore();
 
   // Check if user is a chatter
@@ -91,41 +117,67 @@ export function useChatter(): UseChatterReturn {
   }, [dashboardData]);
 
   // Fetch all list data (commissions, withdrawals, notifications) via getDocs
-  const fetchListData = useCallback(async () => {
+  // Respects cache TTL — only fetches stale data
+  const fetchListData = useCallback(async (forceRefresh = false) => {
     if (!user?.uid) return;
 
-    const commissionsQuery = query(
-      collection(db, "chatter_commissions"),
-      where("chatterId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(50)
-    );
+    const needsCommissions = forceRefresh || !isCacheValid(commissionsCache.current, CACHE_TTL.commissions);
+    const needsWithdrawals = forceRefresh || !isCacheValid(withdrawalsCache.current, CACHE_TTL.withdrawals);
+    const needsNotifications = forceRefresh || !isCacheValid(notificationsCache.current, CACHE_TTL.notifications);
 
-    const withdrawalsQuery = query(
-      collection(db, "payment_withdrawals"),
-      where("userId", "==", user.uid),
-      where("userType", "==", "chatter"),
-      orderBy("requestedAt", "desc"),
-      limit(20)
-    );
+    // Nothing to fetch — everything is cached
+    if (!needsCommissions && !needsWithdrawals && !needsNotifications) return;
 
-    const notificationsQuery = query(
-      collection(db, "chatter_notifications"),
-      where("chatterId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(30)
-    );
+    const promises: Promise<any>[] = [];
+    const keys: string[] = [];
 
-    // Use allSettled so one failing query doesn't break the dashboard
-    const [commissionsResult, withdrawalsResult, notificationsResult] = await Promise.allSettled([
-      getDocs(commissionsQuery),
-      getDocs(withdrawalsQuery),
-      getDocs(notificationsQuery),
-    ]);
+    if (needsCommissions) {
+      const commissionsQuery = query(
+        collection(db, "chatter_commissions"),
+        where("chatterId", "==", user.uid),
+        orderBy("createdAt", "desc"),
+        limit(50)
+      );
+      promises.push(getDocs(commissionsQuery));
+      keys.push("commissions");
+    }
 
-    if (commissionsResult.status === "fulfilled") {
-      setCommissions(
-        commissionsResult.value.docs.map((doc) => {
+    if (needsWithdrawals) {
+      const withdrawalsQuery = query(
+        collection(db, "payment_withdrawals"),
+        where("userId", "==", user.uid),
+        where("userType", "==", "chatter"),
+        orderBy("requestedAt", "desc"),
+        limit(20)
+      );
+      promises.push(getDocs(withdrawalsQuery));
+      keys.push("withdrawals");
+    }
+
+    if (needsNotifications) {
+      const notificationsQuery = query(
+        collection(db, "chatter_notifications"),
+        where("chatterId", "==", user.uid),
+        orderBy("createdAt", "desc"),
+        limit(30)
+      );
+      promises.push(getDocs(notificationsQuery));
+      keys.push("notifications");
+    }
+
+    const results = await Promise.allSettled(promises);
+
+    results.forEach((result, i) => {
+      const key = keys[i];
+      if (result.status !== "fulfilled") {
+        console.warn(`[useChatter] Failed to fetch ${key}:`, result.reason);
+        return;
+      }
+
+      const now = Date.now();
+
+      if (key === "commissions") {
+        const parsed = result.value.docs.map((doc: any) => {
           const data = doc.data();
           return {
             ...data,
@@ -135,15 +187,11 @@ export function useChatter(): UseChatterReturn {
             availableAt: data.availableAt?.toDate?.()?.toISOString() || null,
             paidAt: data.paidAt?.toDate?.()?.toISOString() || null,
           } as ChatterCommission;
-        })
-      );
-    } else {
-      console.warn("[useChatter] Failed to fetch commissions:", commissionsResult.reason);
-    }
-
-    if (withdrawalsResult.status === "fulfilled") {
-      setWithdrawals(
-        withdrawalsResult.value.docs.map((doc) => {
+        });
+        commissionsCache.current = { data: parsed, fetchedAt: now };
+        setCommissions(parsed);
+      } else if (key === "withdrawals") {
+        const parsed = result.value.docs.map((doc: any) => {
           const data = doc.data();
           return {
             ...data,
@@ -153,33 +201,39 @@ export function useChatter(): UseChatterReturn {
             completedAt: data.completedAt?.toDate?.()?.toISOString() || undefined,
             failedAt: data.failedAt?.toDate?.()?.toISOString() || undefined,
           } as ChatterWithdrawal;
-        })
-      );
-    } else {
-      console.warn("[useChatter] Failed to fetch withdrawals:", withdrawalsResult.reason);
-    }
-
-    if (notificationsResult.status === "fulfilled") {
-      setNotifications(
-        notificationsResult.value.docs.map((doc) => {
+        });
+        withdrawalsCache.current = { data: parsed, fetchedAt: now };
+        setWithdrawals(parsed);
+      } else if (key === "notifications") {
+        const parsed = result.value.docs.map((doc: any) => {
           const data = doc.data();
           return {
             ...data,
             id: doc.id,
             createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
           } as ChatterNotification;
-        })
-      );
-    } else {
-      console.warn("[useChatter] Failed to fetch notifications:", notificationsResult.reason);
-    }
+        });
+        notificationsCache.current = { data: parsed, fetchedAt: now };
+        setNotifications(parsed);
+      }
+    });
   }, [user?.uid, db]);
 
-  // Fetch dashboard data + list data in parallel
-  const refreshDashboard = useCallback(async () => {
+  // Fetch dashboard data + list data in parallel (with cache TTL)
+  const refreshDashboard = useCallback(async (forceRefresh = false) => {
     if (!user?.uid) {
       setDashboardData(null);
       setIsLoading(false);
+      return;
+    }
+
+    const dashboardCached = !forceRefresh && isCacheValid(dashboardCache.current, CACHE_TTL.dashboard);
+
+    // If dashboard is cached, serve it immediately (lists may still refresh)
+    if (dashboardCached) {
+      setDashboardData(dashboardCache.current!.data);
+      // Still refresh lists in background (they have their own TTL)
+      fetchListData(forceRefresh);
       return;
     }
 
@@ -195,9 +249,10 @@ export function useChatter(): UseChatterReturn {
       // Fetch dashboard callable and list data in parallel
       const [result] = await Promise.all([
         getChatterDashboardFn(),
-        fetchListData(),
+        fetchListData(forceRefresh),
       ]);
 
+      dashboardCache.current = { data: result.data, fetchedAt: Date.now() };
       setDashboardData(result.data);
     } catch (err) {
       console.error("[useChatter] Error fetching dashboard:", err);
@@ -227,7 +282,10 @@ export function useChatter(): UseChatterReturn {
       >(functionsAffiliate, "chatterRequestWithdrawal");
 
       const result = await requestWithdrawalFn(input);
-      await refreshDashboard();
+      // Force refresh — balance changed
+      dashboardCache.current = null;
+      withdrawalsCache.current = null;
+      await refreshDashboard(true);
       return {
         success: result.data.success,
         withdrawalId: result.data.withdrawalId,
@@ -252,7 +310,9 @@ export function useChatter(): UseChatterReturn {
       >(functionsAffiliate, "updateChatterProfile");
 
       const result = await updateProfileFn(input);
-      await refreshDashboard();
+      // Force refresh — profile data changed
+      dashboardCache.current = null;
+      await refreshDashboard(true);
       return result.data;
     },
     [user?.uid, functionsAffiliate, refreshDashboard]

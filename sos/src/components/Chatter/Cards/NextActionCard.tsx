@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Copy, Users, Send, Trophy, TrendingUp, Sparkles, Share2 } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { UI } from '@/components/Chatter/designTokens';
@@ -25,6 +25,7 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
   className = '',
 }) => {
   const { dashboardData } = useChatterData();
+  const intl = useIntl();
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config;
 
@@ -67,24 +68,26 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
     if (totalClients === 0) {
       return {
         icon: <Share2 className="w-5 h-5" />,
-        title: 'Partagez votre lien client',
-        subtitle: `pour gagner ${callAmountRange} par appel !`,
-        ctaLabel: 'Copier mon lien',
+        title: intl.formatMessage({ id: 'chatter.nextAction.shareClientLink', defaultMessage: 'Partagez votre lien client' }),
+        subtitle: intl.formatMessage({ id: 'chatter.nextAction.shareClientLinkSub', defaultMessage: 'pour gagner {amount} par appel !' }, { amount: callAmountRange }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.copyLink', defaultMessage: 'Copier mon lien' }),
         ctaAction: onCopyLink,
         borderColor: 'border-l-green-500',
         iconColor: 'text-green-500',
+        glowColor: 'shadow-green-500/20',
       };
     }
 
     if (totalRecruits === 0) {
       return {
         icon: <Users className="w-5 h-5" />,
-        title: 'Recrutez votre premier affilie',
-        subtitle: `et gagnez $${n1CallAmount} a chaque appel qu'il genere !`,
-        ctaLabel: 'Inviter quelqu\'un',
+        title: intl.formatMessage({ id: 'chatter.nextAction.recruitFirst', defaultMessage: 'Recrutez votre premier affilié' }),
+        subtitle: intl.formatMessage({ id: 'chatter.nextAction.recruitFirstSub', defaultMessage: 'et gagnez {amount} à chaque appel qu\'il génère !' }, { amount: `$${n1CallAmount}` }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.inviteSomeone', defaultMessage: 'Inviter quelqu\'un' }),
         ctaAction: onNavigateToRecruit || onShareLink,
         borderColor: 'border-l-blue-500',
         iconColor: 'text-blue-500',
+        glowColor: 'shadow-blue-500/20',
       };
     }
 
@@ -92,24 +95,26 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
       const remaining = firstTierCount - qualifiedReferrals;
       return {
         icon: <Users className="w-5 h-5" />,
-        title: `Plus que ${remaining} filleul${remaining > 1 ? 's' : ''} qualifie${remaining > 1 ? 's' : ''}`,
-        subtitle: `pour debloquer $${firstTierBonus} de bonus !`,
-        ctaLabel: 'Recruter plus',
+        title: intl.formatMessage({ id: 'chatter.nextAction.moreReferrals', defaultMessage: 'Plus que {count} filleul(s) qualifié(s)' }, { count: remaining }),
+        subtitle: intl.formatMessage({ id: 'chatter.nextAction.moreReferralsSub', defaultMessage: 'pour débloquer {amount} de bonus !' }, { amount: `$${firstTierBonus}` }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.recruitMore', defaultMessage: 'Recruter plus' }),
         ctaAction: onNavigateToRecruit || onShareLink,
         borderColor: 'border-l-blue-500',
         iconColor: 'text-blue-500',
+        glowColor: 'shadow-blue-500/20',
       };
     }
 
     if (!telegramLinked) {
       return {
         icon: <Send className="w-5 h-5" />,
-        title: 'Liez Telegram',
-        subtitle: `et debloquez $${telegramBonusAmount} de bonus !`,
-        ctaLabel: 'Lier maintenant',
+        title: intl.formatMessage({ id: 'chatter.nextAction.linkTelegram', defaultMessage: 'Liez Telegram' }),
+        subtitle: intl.formatMessage({ id: 'chatter.nextAction.linkTelegramSub', defaultMessage: 'et débloquez {amount} de bonus !' }, { amount: `$${telegramBonusAmount}` }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.linkNow', defaultMessage: 'Lier maintenant' }),
         ctaAction: onNavigateToTelegram || onShareLink,
         borderColor: 'border-l-indigo-500',
         iconColor: 'text-indigo-500',
+        glowColor: 'shadow-indigo-500/20',
       };
     }
 
@@ -127,12 +132,13 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
       const remaining = (nextLevel.target - totalEarned).toFixed(0);
       return {
         icon: <TrendingUp className="w-5 h-5" />,
-        title: `Encore $${remaining} pour ${nextLevel.name}`,
-        subtitle: `Debloquez ${nextLevel.bonus} de bonus sur vos commissions !`,
-        ctaLabel: 'Partager pour gagner',
+        title: intl.formatMessage({ id: 'chatter.nextAction.levelUp', defaultMessage: 'Encore {amount} pour {level}' }, { amount: `$${remaining}`, level: nextLevel.name }),
+        subtitle: intl.formatMessage({ id: 'chatter.nextAction.levelUpSub', defaultMessage: 'Débloquez {bonus} de bonus sur vos commissions !' }, { bonus: nextLevel.bonus }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.shareToEarn', defaultMessage: 'Partager pour gagner' }),
         ctaAction: onShareLink,
         borderColor: 'border-l-violet-500',
         iconColor: 'text-violet-500',
+        glowColor: 'shadow-violet-500/20',
       };
     }
 
@@ -140,33 +146,35 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
     if (isCaptain && chatter.captainCurrentTier) {
       return {
         icon: <Trophy className="w-5 h-5" />,
-        title: 'Motivez votre equipe !',
-        subtitle: 'Plus votre equipe appelle, plus vos bonus montent',
-        ctaLabel: 'Voir mon equipe',
+        title: intl.formatMessage({ id: 'chatter.nextAction.motivateTeam', defaultMessage: 'Motivez votre équipe !' }),
+        subtitle: intl.formatMessage({ id: 'chatter.nextAction.motivateTeamSub', defaultMessage: 'Plus votre équipe appelle, plus vos bonus montent' }),
+        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.viewTeam', defaultMessage: 'Voir mon équipe' }),
         ctaAction: onShareLink,
         borderColor: 'border-l-amber-500',
         iconColor: 'text-amber-500',
+        glowColor: 'shadow-amber-500/20',
       };
     }
 
     // Default
     return {
       icon: <Sparkles className="w-5 h-5" />,
-      title: 'Continuez a partager !',
-      subtitle: `Chaque appel = ${callAmountRange} dans votre poche`,
-      ctaLabel: 'Partager mon lien',
+      title: intl.formatMessage({ id: 'chatter.nextAction.keepSharing', defaultMessage: 'Continuez à partager !' }),
+      subtitle: intl.formatMessage({ id: 'chatter.nextAction.keepSharingSub', defaultMessage: 'Chaque appel = {amount} dans votre poche' }, { amount: callAmountRange }),
+      ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.shareMyLink', defaultMessage: 'Partager mon lien' }),
       ctaAction: onShareLink,
       borderColor: 'border-l-green-500',
       iconColor: 'text-green-500',
+      glowColor: 'shadow-green-500/20',
     };
-  }, [chatter, config, dashboardData?.piggyBank, onCopyLink, onShareLink, onNavigateToRecruit, onNavigateToTelegram]);
+  }, [chatter, config, dashboardData?.piggyBank, onCopyLink, onShareLink, onNavigateToRecruit, onNavigateToTelegram, intl]);
 
   if (!action) return null;
 
   return (
-    <div className={`${UI.card} border-l-4 ${action.borderColor} p-4 sm:p-5 ${className}`}>
+    <div className={`bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl border-l-4 ${action.borderColor} p-4 sm:p-5 ${className}`}>
       <div className="flex items-start gap-3">
-        <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center ${action.iconColor}`}>
+        <div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center ${action.iconColor} shadow-lg ${action.glowColor}`}>
           {action.icon}
         </div>
         <div className="flex-1 min-w-0">

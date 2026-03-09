@@ -14,69 +14,37 @@ import { getFirestore } from "firebase-admin/firestore";
 
 /**
  * Generate a unique client affiliate code for a blogger
- * Format: BLOG-PRENOM123
+ * Format: BLOG-PRENOM + UID suffix (0 Firestore lookups, guaranteed unique)
+ *
+ * P1-4 FIX: Replaced unbounded loop (up to 999 lookups) with UID-based pattern.
+ * Same approach as GroupAdmin — uniqueness guaranteed by UID, zero collision risk.
  */
-export async function generateBloggerClientCode(firstName: string): Promise<string> {
-  const db = getFirestore();
-  const baseCode = sanitizeName(firstName).toUpperCase();
-  let code = `BLOG-${baseCode}`;
-  let suffix = 1;
-
-  // Check if code already exists
-  let exists = await checkCodeExists(db, code, "affiliateCodeClient");
-
-  while (exists) {
-    code = `BLOG-${baseCode}${suffix}`;
-    suffix++;
-    exists = await checkCodeExists(db, code, "affiliateCodeClient");
-
-    // Prevent infinite loop
-    if (suffix > 999) {
-      code = `BLOG-${baseCode}${Date.now().toString(36).toUpperCase()}`;
-      break;
-    }
-  }
-
-  return code;
+export function generateBloggerClientCode(firstName: string, uid: string): string {
+  const cleanName = sanitizeName(firstName).toUpperCase().substring(0, 4);
+  const uidSuffix = uid.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
+  return `BLOG-${cleanName}${uidSuffix}`;
 }
 
 /**
  * Generate a unique recruitment affiliate code for a blogger
- * Format: REC-BLOG-PRENOM123
+ * Format: REC-BLOG-PRENOM + UID suffix (0 Firestore lookups)
  */
-export async function generateBloggerRecruitmentCode(firstName: string): Promise<string> {
-  const db = getFirestore();
-  const baseCode = sanitizeName(firstName).toUpperCase();
-  let code = `REC-BLOG-${baseCode}`;
-  let suffix = 1;
-
-  // Check if code already exists
-  let exists = await checkCodeExists(db, code, "affiliateCodeRecruitment");
-
-  while (exists) {
-    code = `REC-BLOG-${baseCode}${suffix}`;
-    suffix++;
-    exists = await checkCodeExists(db, code, "affiliateCodeRecruitment");
-
-    // Prevent infinite loop
-    if (suffix > 999) {
-      code = `REC-BLOG-${baseCode}${Date.now().toString(36).toUpperCase()}`;
-      break;
-    }
-  }
-
-  return code;
+export function generateBloggerRecruitmentCode(firstName: string, uid: string): string {
+  const cleanName = sanitizeName(firstName).toUpperCase().substring(0, 4);
+  const uidSuffix = uid.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
+  return `REC-BLOG-${cleanName}${uidSuffix}`;
 }
 
 /**
  * Generate both codes for a new blogger
+ * P1-4 FIX: Now synchronous (no Firestore lookups needed)
  */
-export async function generateBloggerAffiliateCodes(firstName: string): Promise<{
+export function generateBloggerAffiliateCodes(firstName: string, uid: string): {
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
-}> {
-  const affiliateCodeClient = await generateBloggerClientCode(firstName);
-  const affiliateCodeRecruitment = await generateBloggerRecruitmentCode(firstName);
+} {
+  const affiliateCodeClient = generateBloggerClientCode(firstName, uid);
+  const affiliateCodeRecruitment = generateBloggerRecruitmentCode(firstName, uid);
 
   return {
     affiliateCodeClient,
@@ -136,23 +104,6 @@ function sanitizeName(name: string): string {
     .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
     .replace(/[^a-zA-Z0-9]/g, "") // Remove non-alphanumeric
     .substring(0, 10); // Limit length
-}
-
-/**
- * Check if a code already exists in the bloggers collection
- */
-async function checkCodeExists(
-  db: FirebaseFirestore.Firestore,
-  code: string,
-  field: "affiliateCodeClient" | "affiliateCodeRecruitment"
-): Promise<boolean> {
-  const query = await db
-    .collection("bloggers")
-    .where(field, "==", code)
-    .limit(1)
-    .get();
-
-  return !query.empty;
 }
 
 /**

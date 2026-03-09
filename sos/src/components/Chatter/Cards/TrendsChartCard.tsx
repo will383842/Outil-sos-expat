@@ -105,7 +105,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
   // Loading skeleton
   if (loading) {
     return (
-      <div className={`${UI.card} p-4 sm:p-5`}>
+      <div className="bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
           <div className={`${UI.skeleton} h-4 w-28`} />
           <div className={`${UI.skeleton} h-6 w-16 rounded-full`} />
@@ -121,7 +121,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
 
   return (
     <div
-      className={`${UI.card} ${UI.cardHover} p-4 sm:p-5 opacity-0 animate-fade-in-up`}
+      className="bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-4 sm:p-5 opacity-0 animate-fade-in-up"
       style={{
         animationDelay: `${animationDelay}ms`,
         animationFillMode: 'forwards',
@@ -183,16 +183,16 @@ const TrendsChartCard = memo(function TrendsChartCard({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-gray-300 dark:text-gray-600"
+            className="text-slate-300 dark:text-slate-600"
             strokeOpacity="0.5"
             strokeDasharray="4 4"
           />
 
-          {/* This week path (main) */}
+          {/* This week path (main) - always indigo */}
           <path
             d={thisWeekPath}
             fill="none"
-            stroke={isPositive ? '#22c55e' : '#ef4444'}
+            stroke="#6366f1"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -203,17 +203,17 @@ const TrendsChartCard = memo(function TrendsChartCard({
             }}
           />
 
-          {/* Area gradient under current line */}
+          {/* Area gradient under current line - indigo */}
           <defs>
             <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
               <stop
                 offset="0%"
-                stopColor={isPositive ? '#22c55e' : '#ef4444'}
+                stopColor="#6366f1"
                 stopOpacity="0.3"
               />
               <stop
                 offset="100%"
-                stopColor={isPositive ? '#22c55e' : '#ef4444'}
+                stopColor="#6366f1"
                 stopOpacity="0"
               />
             </linearGradient>
@@ -224,7 +224,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
             className={`transition-opacity duration-1000 ${chartAnimated ? 'opacity-100' : 'opacity-0'}`}
           />
 
-          {/* Data points */}
+          {/* Data points - indigo */}
           {thisWeekData.map((value, index) => {
             const maxValue = Math.max(...thisWeekData, 1);
             const minValue = Math.min(...thisWeekData, 0);
@@ -237,7 +237,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
                 cx={x}
                 cy={y}
                 r="3"
-                fill={isPositive ? '#22c55e' : '#ef4444'}
+                fill="#6366f1"
                 className={`transition-all duration-500 ${chartAnimated ? 'opacity-100' : 'opacity-0'}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               />
@@ -264,7 +264,7 @@ const TrendsChartCard = memo(function TrendsChartCard({
           <span className="text-gray-500 dark:text-gray-400">
             <FormattedMessage id="chatter.trends.thisWeek" defaultMessage="Cette semaine" />
           </span>
-          <p className={`font-semibold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
+          <p className="font-semibold text-indigo-600 dark:text-indigo-400">
             {formatAmount(thisWeekTotal)}
           </p>
         </div>

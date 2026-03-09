@@ -779,16 +779,7 @@ async function processProviderRecruitmentCommission(
     }
 
     // 2. Award commission to each chatter who recruited this provider
-    // SKIP: No commission for expat providers (only lawyers generate provider_call commissions)
-    if (session.providerType === "expat") {
-      logger.info("[processProviderRecruitmentCommission] Skipping — expat providers do not generate provider_call commissions", {
-        sessionId,
-        providerId: session.providerId,
-        providerType: session.providerType,
-      });
-      return;
-    }
-
+    // Both lawyer ($5) and expat ($3) providers generate provider_call commissions
     for (const recruitmentDoc of recruitmentQuery.docs) {
       const recruitment = recruitmentDoc.data();
       const recruiterChatterId = recruitment.chatterId;

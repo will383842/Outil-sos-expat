@@ -3433,6 +3433,20 @@
       ]
     },
     {
+      "collectionGroup": "chatter_badge_awards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "chatterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "awardedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "chatter_quiz_attempts",
       "queryScope": "COLLECTION",
       "fields": [

@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { httpsCallable } from "firebase/functions";
-import { getFirestore, collection, doc, query, where, orderBy, limit, onSnapshot, Timestamp, DocumentSnapshot } from "firebase/firestore";
+import { getFirestore, collection, doc, query, where, orderBy, limit, onSnapshot, Timestamp, DocumentSnapshot, getDocs } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import { functionsAffiliate } from "../config/firebase";
 import {
@@ -296,11 +296,14 @@ interface UseAffiliateAdminReturn {
   globalStats: AffiliateGlobalStats | null;
   config: AffiliateConfig | null;
   pendingPayouts: AffiliatePayout[];
+  archivedPayouts: AffiliatePayout[];
   isLoading: boolean;
+  isLoadingArchived: boolean;
   error: string | null;
   wiseConfigured: boolean;
   refreshStats: () => Promise<void>;
   refreshPayouts: () => Promise<void>;
+  refreshArchivedPayouts: () => Promise<void>;
   updateConfig: (config: Partial<AffiliateConfig>, reason: string) => Promise<void>;
   // Payout actions
   approvePayout: (payoutId: string, notes?: string) => Promise<{ success: boolean; message: string }>;
@@ -314,7 +317,9 @@ export function useAffiliateAdmin(): UseAffiliateAdminReturn {
   const [globalStats, setGlobalStats] = useState<AffiliateGlobalStats | null>(null);
   const [config, setConfig] = useState<AffiliateConfig | null>(null);
   const [pendingPayouts, setPendingPayouts] = useState<AffiliatePayout[]>([]);
+  const [archivedPayouts, setArchivedPayouts] = useState<AffiliatePayout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingArchived, setIsLoadingArchived] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wiseConfigured, setWiseConfigured] = useState(false);
 
@@ -404,6 +409,56 @@ export function useAffiliateAdmin(): UseAffiliateAdminReturn {
     }
   }, [user?.uid, functions]);
 
+  // Fetch archived payouts (completed, rejected, failed, cancelled)
+  const refreshArchivedPayouts = useCallback(async () => {
+    if (!user?.uid) return;
+
+    setIsLoadingArchived(true);
+    try {
+      const colRef = collection(db, "payment_withdrawals");
+      const q = query(
+        colRef,
+        where("userType", "==", "affiliate"),
+        where("status", "in", ["completed", "rejected", "failed", "cancelled"]),
+        orderBy("requestedAt", "desc"),
+        limit(100)
+      );
+      const snap = await getDocs(q);
+      const payouts: AffiliatePayout[] = snap.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          userId: data.userId || "",
+          userType: data.userType || "affiliate",
+          userName: data.userName || "",
+          userEmail: data.userEmail || "",
+          amount: data.amount || 0,
+          withdrawalFee: data.withdrawalFee || 0,
+          totalDebited: data.totalDebited || data.amount || 0,
+          sourceCurrency: data.sourceCurrency || "USD",
+          targetCurrency: data.targetCurrency || "USD",
+          status: data.status,
+          requestedAt: data.requestedAt,
+          completedAt: data.completedAt,
+          rejectedAt: data.rejectedAt,
+          rejectionReason: data.rejectionReason,
+          failureReason: data.failureReason || data.errorMessage,
+          paymentReference: data.paymentReference || data.providerTransactionId,
+          commissionIds: data.commissionIds || [],
+          commissionCount: data.commissionCount || 0,
+          bankDetailsSnapshot: data.bankDetailsSnapshot || { maskedAccount: "N/A", country: "" },
+          wiseTransferId: data.wiseTransferId,
+          processedBy: data.processedBy,
+        } as AffiliatePayout;
+      });
+      setArchivedPayouts(payouts);
+    } catch (err) {
+      console.error("[useAffiliateAdmin] Error fetching archived payouts:", err);
+    } finally {
+      setIsLoadingArchived(false);
+    }
+  }, [user?.uid, db]);
+
   // Approve payout
   const approvePayout = useCallback(
     async (payoutId: string, notes?: string) => {
@@ -478,11 +533,14 @@ export function useAffiliateAdmin(): UseAffiliateAdminReturn {
     globalStats,
     config,
     pendingPayouts,
+    archivedPayouts,
     isLoading,
+    isLoadingArchived,
     error,
     wiseConfigured,
     refreshStats,
     refreshPayouts,
+    refreshArchivedPayouts,
     updateConfig,
     approvePayout,
     rejectPayout,

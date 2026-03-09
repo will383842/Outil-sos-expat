@@ -50,9 +50,9 @@ export function ReferralStatsCard({ stats, isLoading }: ReferralStatsCardProps) 
       label: t("chatter.referrals.filleulsN2"),
       value: stats.totalFilleulsN2,
       icon: Users,
-      iconBg: "bg-red-100 dark:bg-red-900/30",
-      iconColor: "text-red-600 dark:text-red-400",
-      gradient: "from-red-600 to-red-400",
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/30",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      gradient: "from-indigo-600 to-indigo-400",
     },
     {
       label: t("chatter.referrals.totalEarnings"),

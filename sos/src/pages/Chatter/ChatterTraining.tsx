@@ -162,7 +162,7 @@ function ChatterTrainingContent() {
           max={REVENUE_SCENARIOS.length - 1}
           value={revenueSlider}
           onChange={(e) => setRevenueSlider(parseInt(e.target.value))}
-          className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-red-500"
+          className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-indigo-500"
         />
         <div className="flex justify-between text-[10px] text-slate-400 mt-1 mb-4">
           {REVENUE_SCENARIOS.map((s) => <span key={s.calls}>{s.label}</span>)}
@@ -225,7 +225,7 @@ function ChatterTrainingContent() {
               </p>
               {mod.progress && mod.progress.isStarted && !mod.progress.isCompleted && mod.progress.totalSlides > 0 && (
                 <div className="mt-2 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${(mod.progress.currentSlideIndex / mod.progress.totalSlides) * 100}%` }} />
+                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(mod.progress.currentSlideIndex / mod.progress.totalSlides) * 100}%` }} />
                 </div>
               )}
             </button>
@@ -299,7 +299,7 @@ function ChatterTrainingContent() {
           <button
             onClick={() => setSelectedCategory('')}
             className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
-              !selectedCategory ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+              !selectedCategory ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
             }`}
           >
             <FormattedMessage id="common.all" defaultMessage="Tout" />
@@ -309,7 +309,7 @@ function ChatterTrainingContent() {
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
-                selectedCategory === cat ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+                selectedCategory === cat ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
               }`}
             >
               {cat}
@@ -453,7 +453,7 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({
 
       {/* Progress */}
       <div className="h-1 bg-slate-200 dark:bg-white/10">
-        <div className="h-full bg-red-500 transition-all" style={{ width: `${((selectedSlide + 1) / totalSteps) * 100}%` }} />
+        <div className="h-full bg-indigo-500 transition-all" style={{ width: `${((selectedSlide + 1) / totalSteps) * 100}%` }} />
       </div>
 
       {/* Content */}
@@ -482,7 +482,7 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({
                         onClick={() => onQuizAnswer(q.id, opt.id)}
                         className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors ${
                           quizAnswers[q.id] === opt.id
-                            ? 'border-red-500 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400'
+                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400'
                             : 'border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
                         }`}
                       >

@@ -314,26 +314,26 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
       </div>
 
       {/* Progress to next milestone */}
-      <div className="p-3 sm:p-4 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl border dark:border-red-800/30 mb-4">
+      <div className="p-3 sm:p-4 bg-gradient-to-r from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-xl border dark:border-indigo-800/30 mb-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-red-500" />
-            <span className="text-xs dark:text-red-400 font-medium">
+            <Target className="w-4 h-4 text-indigo-500" />
+            <span className="text-xs dark:text-indigo-400 font-medium">
               <FormattedMessage id="chatter.motivation.nextMilestone" defaultMessage="Prochain objectif" />
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-lg">{nextMilestone.emoji}</span>
-            <span className="font-bold text-red-600 dark:text-red-400">
+            <span className="font-bold text-indigo-600 dark:text-indigo-400">
               {nextMilestone.label}
             </span>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="relative h-3 bg-red-100 dark:bg-red-900/30 rounded-full overflow-hidden mb-2">
+        <div className="relative h-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full overflow-hidden mb-2">
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-full transition-all duration-1000"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-1000"
             style={{ width: `${milestoneProgress}%` }}
           />
           {/* Animated shine effect */}
@@ -344,7 +344,7 @@ const EarningsMotivationCard = memo(function EarningsMotivationCard({
           <span className="text-gray-500 dark:text-gray-400">
             {formatAmount(totalEarned)}
           </span>
-          <span className="font-medium text-red-600 dark:text-red-400">
+          <span className="font-medium text-indigo-600 dark:text-indigo-400">
             {Math.round(milestoneProgress)}%
           </span>
           <span className="text-gray-500 dark:text-gray-400">

@@ -1,51 +1,97 @@
 /**
- * Chatter Design Tokens - Centralized design system for all Chatter components
+ * Chatter Design Tokens — 2026 Design System
+ * Indigo/Violet/Cyan palette with glassmorphism, motion tokens, and sidebar widgets.
  * Single source of truth for colors, spacing, typography, and component styles.
+ *
+ * COLOR PALETTE:
+ *   Primary   — indigo-500 (#6366F1) → violet-500 (#8B5CF6)
+ *   Accent    — cyan-500 (#06B6D4) → teal-500 (#14B8A6)
+ *   Success   — emerald-500 (#10B981)
+ *   Warning   — amber-500 (#F59E0B)
+ *   Danger    — red-500 (#EF4444)
+ *   Surface   — slate-900 (#0F172A), slate-800 (#1E293B)
  */
 
-// === BACKWARD-COMPATIBLE EXPORTS ===
+// ──────────────────────────────────────────────
+// ANIMATION tokens
+// ──────────────────────────────────────────────
+
+export const ANIMATION = {
+  /** Micro-interactions (button press, toggle) */
+  fast: "duration-100 ease-out",
+  /** Standard transitions (card hover, panel open) */
+  normal: "duration-200 ease-out",
+  /** Emphasised motion (page transition, modal) */
+  slow: "duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+  /** Spring-like entrance for toasts / popovers */
+  spring: "duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+  /** Fade in */
+  fadeIn: "animate-[fadeIn_0.25s_ease-out_forwards]",
+  /** Slide up entrance */
+  slideUp: "animate-[slideUp_0.3s_ease-out_forwards]",
+  /** Pulse glow (notifications, live indicators) */
+  pulseGlow: "animate-[pulseGlow_2s_ease-in-out_infinite]",
+  /** Skeleton shimmer */
+  shimmer: "animate-[shimmer_1.8s_ease-in-out_infinite]",
+} as const;
+
+// ──────────────────────────────────────────────
+// UI — core component tokens
+// ──────────────────────────────────────────────
 
 export const UI = {
-  // Cards - Light-first design
-  card: "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/8 rounded-2xl shadow-sm transition-colors duration-200",
-  cardHover: "transition-all duration-200 ease-out hover:border-slate-300 dark:hover:border-white/15 hover:shadow-md",
-  cardHighlight: "bg-gradient-to-br from-red-500/5 to-orange-500/5 dark:from-red-500/10 dark:to-orange-500/10 border-red-200/50 dark:border-red-500/20",
+  // ── Cards ──────────────────────────────────
+  card: "bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200/60 dark:border-white/[0.06] rounded-2xl shadow-sm shadow-indigo-500/[0.03] transition-all duration-200",
+  cardHover: "transition-all duration-200 ease-out hover:border-indigo-300/40 dark:hover:border-indigo-400/20 hover:shadow-md hover:shadow-indigo-500/[0.06] hover:-translate-y-0.5",
+  cardHighlight: "bg-gradient-to-br from-indigo-500/5 to-violet-500/5 dark:from-indigo-500/10 dark:to-violet-500/10 border-indigo-200/50 dark:border-indigo-500/20",
 
-  // Radius
+  // ── Glass variants ─────────────────────────
+  glass: "bg-white/[0.03] backdrop-blur-2xl border border-white/[0.06] rounded-2xl",
+  glassCard: "bg-white/[0.05] dark:bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] dark:border-white/[0.06] rounded-2xl shadow-lg shadow-black/5",
+  bottomSheet: "bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-t border-slate-200/60 dark:border-white/[0.08] rounded-t-3xl shadow-2xl shadow-black/20",
+
+  // ── Radius ─────────────────────────────────
   radiusSm: "rounded-lg",
   radiusMd: "rounded-xl",
   radiusLg: "rounded-2xl",
   radiusFull: "rounded-full",
 
-  // Text
+  // ── Text ───────────────────────────────────
   textPrimary: "text-slate-900 dark:text-slate-50",
   textSecondary: "text-slate-500 dark:text-slate-400",
   textMuted: "text-slate-400 dark:text-slate-500",
 
-  // Skeleton
+  // ── Skeleton ───────────────────────────────
   skeleton: "relative overflow-hidden bg-slate-200 dark:bg-white/10 rounded animate-pulse",
 
-  // Buttons
+  // ── Buttons ────────────────────────────────
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all active:scale-[0.98] focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
-    secondary: "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 font-medium rounded-xl transition-all",
-    ghost: "bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.97] focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-500/25 hover:shadow-lg hover:shadow-indigo-500/30",
+    secondary: "bg-white/80 dark:bg-white/[0.05] backdrop-blur-lg border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 font-medium rounded-xl transition-all duration-200",
+    ghost: "bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all duration-200",
+    accent: "bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.97] focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-cyan-500/25",
   },
 } as const;
 
+// ──────────────────────────────────────────────
+// CHATTER_THEME — header / accent branding
+// ──────────────────────────────────────────────
+
 export const CHATTER_THEME = {
-  header: "bg-gradient-to-r from-red-500 via-orange-500 to-red-500 text-white",
-  accent: "from-red-500 to-orange-500",
-  accentBg: "bg-gradient-to-r from-red-500 to-orange-500",
-  accentText: "bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent",
+  header: "bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 text-white",
+  accent: "from-indigo-500 to-violet-500",
+  accentBg: "bg-gradient-to-r from-indigo-500 to-violet-500",
+  accentText: "bg-gradient-to-r from-indigo-500 to-violet-600 bg-clip-text text-transparent",
 } as const;
 
 // Bottom nav items count (for pb-safe spacing)
 export const BOTTOM_NAV_HEIGHT = "pb-20";
 
-// === NEW TOKENS ===
+// ──────────────────────────────────────────────
+// SEMANTIC COLOR SETS (kept for backward compat)
+// ──────────────────────────────────────────────
 
-// Level colors (1-5)
+// Level colors (1–5)
 export const LEVEL_COLORS = {
   1: { bg: "bg-gray-100 dark:bg-gray-500/15", text: "text-gray-600 dark:text-gray-400", border: "border-gray-300", name: "Debutant" },
   2: { bg: "bg-blue-50 dark:bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", border: "border-blue-300", name: "Intermediaire" },
@@ -76,7 +122,7 @@ export const COMMISSION_COLORS = {
 
 // Balance card variants
 export const BALANCE_VARIANTS = {
-  available: { border: "border-l-4 border-l-green-500", icon: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+  available: { border: "border-l-4 border-l-emerald-500", icon: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
   pending: { border: "border-l-4 border-l-amber-500", icon: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10" },
   locked: { border: "border-l-4 border-l-indigo-500", icon: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
 } as const;
@@ -84,10 +130,10 @@ export const BALANCE_VARIANTS = {
 // Streak colors
 export const STREAK_COLORS = {
   none: "text-slate-400",
-  low: "text-slate-400",      // 1-6 days
-  medium: "text-orange-500",  // 7-13 days
-  high: "text-red-500",       // 14-29 days
-  legendary: "text-purple-500", // 30+ days
+  low: "text-slate-400",        // 1–6 days
+  medium: "text-cyan-500",      // 7–13 days
+  high: "text-indigo-500",      // 14–29 days
+  legendary: "text-violet-500", // 30+ days
 } as const;
 
 export function getStreakColor(days: number): string {
@@ -98,22 +144,93 @@ export function getStreakColor(days: number): string {
   return STREAK_COLORS.none;
 }
 
-// Typography helpers
+// ──────────────────────────────────────────────
+// TYPOGRAPHY helpers
+// ──────────────────────────────────────────────
+
 export const TYPOGRAPHY = {
-  amountLarge: "text-4xl font-extrabold text-green-500",
-  amountMedium: "text-2xl font-bold text-green-500",
-  amountSmall: "text-base font-semibold text-green-500",
+  amountLarge: "text-4xl font-extrabold text-emerald-500 tracking-tight",
+  amountMedium: "text-2xl font-bold text-emerald-500",
+  amountSmall: "text-base font-semibold text-emerald-500",
   sectionTitle: "text-lg font-bold text-slate-900 dark:text-white tracking-tight",
   sectionSubtitle: "text-sm text-slate-500 dark:text-slate-400",
   label: "text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500",
   affiliateCode: "font-mono text-sm font-bold tracking-wide",
+  /** Gradient headline for feature callouts */
+  gradientHeadline: "text-2xl font-extrabold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent tracking-tight",
 } as const;
 
-// Spacing
+// ──────────────────────────────────────────────
+// FLUID TYPOGRAPHY — clamp()-based mobile↔desktop scaling
+// ──────────────────────────────────────────────
+
+export const FLUID_TYPOGRAPHY = {
+  /** Hero / page titles: 24px → 36px */
+  heroTitle: "text-[clamp(1.5rem,4vw,2.25rem)]",
+  /** Card titles: 14px → 18px */
+  cardTitle: "text-[clamp(0.875rem,2vw,1.125rem)]",
+  /** Large values (balances, amounts): 20px → 30px */
+  cardValue: "text-[clamp(1.25rem,3vw,1.875rem)]",
+  /** Body text: 13px → 15px */
+  body: "text-[clamp(0.8125rem,1.5vw,0.9375rem)]",
+  /** Captions / secondary text: 11px → 13px */
+  caption: "text-[clamp(0.6875rem,1.2vw,0.8125rem)]",
+  /** Badges / tags: 10px → 12px */
+  badge: "text-[clamp(0.625rem,1vw,0.75rem)]",
+} as const;
+
+// ──────────────────────────────────────────────
+// SPACING
+// ──────────────────────────────────────────────
+
 export const SPACING = {
   cardPadding: "p-4 sm:p-5",
   cardGap: "gap-3 sm:gap-4",
   pagePadding: "px-4 sm:px-6",
   sectionMargin: "mt-6",
   touchTarget: "min-h-[44px] min-w-[44px]",
+} as const;
+
+// ──────────────────────────────────────────────
+// SIDEBAR TOKENS — balance widget, piggy bank, affiliate links
+// ──────────────────────────────────────────────
+
+export const SIDEBAR_TOKENS = {
+  /** Wrapper for the entire sidebar */
+  container: "flex flex-col gap-3 p-3",
+
+  /** Balance display widget */
+  balanceWidget: {
+    wrapper: "bg-white/[0.04] dark:bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-4 space-y-3",
+    totalLabel: "text-xs font-medium uppercase tracking-wider text-slate-400",
+    totalAmount: "text-3xl font-extrabold text-emerald-400 tracking-tight",
+    row: "flex items-center justify-between text-sm",
+    rowLabel: "text-slate-400",
+    rowValue: "font-semibold text-slate-200",
+    progressBar: "h-1.5 rounded-full bg-slate-700 overflow-hidden",
+    progressFill: "h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500",
+    belowThreshold: "text-amber-400 text-xs font-medium",
+  },
+
+  /** Piggy bank mini widget */
+  piggyBank: {
+    wrapper: "bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:from-indigo-500/[0.08] dark:to-violet-500/[0.08] backdrop-blur-xl border border-indigo-300/20 dark:border-indigo-500/15 rounded-2xl p-4 space-y-2",
+    icon: "text-3xl",
+    title: "text-sm font-bold text-slate-800 dark:text-slate-100",
+    amount: "text-xl font-extrabold text-emerald-500",
+    subtitle: "text-xs text-slate-500 dark:text-slate-400",
+    action: "mt-2 w-full text-center bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-sm font-semibold rounded-xl py-2 transition-all duration-200 hover:shadow-md hover:shadow-indigo-500/25 active:scale-[0.97]",
+  },
+
+  /** Affiliate link cards */
+  affiliateLink: {
+    wrapper: "bg-white/[0.04] dark:bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-xl p-3 flex items-center gap-3 group cursor-pointer transition-all duration-200 hover:bg-white/[0.07] hover:border-cyan-400/20",
+    icon: "flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center text-cyan-400",
+    title: "text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-400 transition-colors",
+    subtitle: "text-xs text-slate-500 dark:text-slate-400",
+    copyBadge: "ml-auto flex-shrink-0 text-xs font-medium text-cyan-500 bg-cyan-500/10 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+  },
+
+  /** Section divider inside sidebar */
+  divider: "border-t border-white/[0.06] my-2",
 } as const;

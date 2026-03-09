@@ -19,10 +19,10 @@ import {
 
 import { UI } from '@/components/Chatter/designTokens';
 
-// PiggyBank-specific button overrides (pink theme)
+// PiggyBank-specific button overrides (violet glassmorphism theme)
 const PIGGY_BUTTON = {
-  primary: "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-xl transition-all",
-  disabled: "bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500 cursor-not-allowed rounded-xl",
+  primary: "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all shadow-lg shadow-violet-500/25",
+  disabled: "bg-white/[0.06] backdrop-blur-sm text-gray-400 dark:text-gray-500 cursor-not-allowed rounded-xl border border-white/[0.06]",
 } as const;
 
 // Types
@@ -74,7 +74,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
   // Loading skeleton
   if (loading || !piggyBank) {
     return (
-      <div className={`${UI.card} p-4 sm:p-6`}>
+      <div className="backdrop-blur-xl bg-white/[0.04] border border-white/[0.06] rounded-2xl p-4 sm:p-6">
         <div className="flex items-center">
           <div className={`${UI.skeleton} w-24 h-24 rounded-full mb-4`} />
           <div className={`${UI.skeleton} h-6 w-32 mb-2`} />
@@ -104,18 +104,18 @@ const PiggyBankCard = memo(function PiggyBankCard({
   const canClaim = isUnlocked && totalPending > 0;
 
   return (
-    <div className={`${UI.card} ${UI.cardHover} overflow-hidden relative`}>
+    <div className="backdrop-blur-xl bg-white/[0.04] border border-white/[0.06] rounded-2xl overflow-hidden relative hover:bg-white/[0.06] transition-colors duration-300">
       {/* Celebration overlay */}
       <>
         {showCelebration && (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-rose-500/20 z-10 flex items-center justify-center animate-fade-in"
+            className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-purple-500/20 z-10 flex items-center justify-center animate-fade-in backdrop-blur-sm"
           >
             <div
               className="text-center animate-fade-in"
             >
-              <PartyPopper className="w-12 h-12 text-pink-500 mx-auto mb-2" />
-              <p className="text-lg dark:text-pink-400 font-bold">
+              <PartyPopper className="w-12 h-12 text-violet-400 mx-auto mb-2" />
+              <p className="text-lg text-violet-300 font-bold">
                 <FormattedMessage
                   id="chatter.piggyBank.unlocked"
                   defaultMessage="Unlocked!"
@@ -142,21 +142,23 @@ const PiggyBankCard = memo(function PiggyBankCard({
         <div className="relative mx-auto w-32 h-32 mb-4">
           {/* Piggy bank container */}
           <div className="relative w-full h-full">
-            {/* Background piggy shape */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-pink-100 dark:from-pink-900/30 to-rose-100 dark:to-rose-900/30 border-4 dark:border-pink-800/50 overflow-hidden">
-              {/* Fill level animation */}
-              <div
-                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-400 dark:from-pink-600 to-pink-300 dark:to-pink-500 transition-all duration-1000 ease-out"
-                style={{
-                  height: `${progressPercent}%`,
-                  borderRadius: '0 0 100% 100% / 0 0 50% 50%',
-                }}
-              />
+            {/* Gradient ring */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 p-[3px]">
+              <div className="w-full h-full rounded-full bg-slate-950/80 overflow-hidden relative">
+                {/* Fill level animation */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-violet-400 to-purple-500 transition-all duration-1000 ease-out opacity-80"
+                  style={{
+                    height: `${progressPercent}%`,
+                    borderRadius: '0 0 100% 100% / 0 0 50% 50%',
+                  }}
+                />
 
-              {/* Shimmer effect */}
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-slide"
-              />
+                {/* Shimmer effect */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-slide"
+                />
+              </div>
             </div>
 
             {/* Piggy emoji overlay */}
@@ -167,8 +169,8 @@ const PiggyBankCard = memo(function PiggyBankCard({
             {/* Lock/Unlock indicator */}
             <div className={`absolute -bottom-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${
               isUnlocked
-                ? 'bg-green-500'
-                : 'bg-gray-400 dark:bg-gray-600'
+                ? 'bg-green-500 shadow-green-500/30'
+                : 'bg-slate-500 dark:bg-slate-600'
             }`}>
               {isUnlocked ? (
                 <Unlock className="w-4 h-4 text-white" />
@@ -182,8 +184,8 @@ const PiggyBankCard = memo(function PiggyBankCard({
           <div
             className="absolute inset-0 flex items-center justify-center animate-fade-in"
           >
-            <div className="bg-white/90 dark:bg-gray-900/90 px-3 py-1 rounded-full shadow-lg backdrop-blur-sm">
-              <span className="text-sm dark:text-pink-400 font-bold">
+            <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/[0.08]">
+              <span className="text-sm text-violet-300 font-bold">
                 {formatAmount(totalPending)}
               </span>
             </div>
@@ -206,9 +208,9 @@ const PiggyBankCard = memo(function PiggyBankCard({
           </div>
 
           {/* Progress bar */}
-          <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden relative">
+          <div className="h-3 bg-white/[0.06] rounded-full overflow-hidden relative">
             <div
-              className="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 background-animate transition-all duration-800 ease-out"
+              className="h-full bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 background-animate transition-all duration-800 ease-out shadow-[0_0_12px_rgba(139,92,246,0.4)]"
               style={{ width: `${progressPercent}%` }}
             />
             {/* Threshold marker */}
@@ -239,7 +241,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
         </div>
 
         {/* Total Pending Display */}
-        <div className="p-3 bg-gradient-to-r from-pink-50 dark:from-pink-900/20 to-rose-50 dark:to-rose-900/20 rounded-xl mb-4">
+        <div className="p-3 bg-white/[0.04] backdrop-blur-sm border border-white/[0.06] rounded-xl mb-4">
           <div className="text-center">
             <p className="text-xs dark:text-gray-400 mb-1">
               <FormattedMessage
@@ -248,7 +250,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
               />
             </p>
             <p
-              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent transition-transform duration-300"
+              className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent transition-transform duration-300"
             >
               {formatAmount(totalPending)}
             </p>
@@ -306,7 +308,7 @@ const PiggyBankCard = memo(function PiggyBankCard({
       </div>
 
       {/* Bottom gradient decoration */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500" />
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500" />
 
       {/* CSS for background animation */}
       <style>{`

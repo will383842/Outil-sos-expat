@@ -18,6 +18,8 @@ import {
   PaymentConfig,
   DEFAULT_PAYMENT_CONFIG,
 } from "../types";
+import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
+import { TelegramAdminConfig } from "../../telegram/types";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -146,6 +148,66 @@ async function sendAdminAlert(
     notificationId: adminNotification.id,
     adminEmailCount: config.adminEmails.length,
   });
+}
+
+/**
+ * Send Telegram notification to admin when a withdrawal is requested.
+ * Reads config from telegram_admin_config/settings.
+ * Non-blocking: never fails the trigger if Telegram is unavailable.
+ */
+async function sendAdminTelegramAlert(withdrawal: WithdrawalRequest): Promise<void> {
+  try {
+    const db = getFirestore();
+    const configDoc = await db.collection("telegram_admin_config").doc("settings").get();
+
+    if (!configDoc.exists) {
+      logger.info("[onWithdrawalCreated] No Telegram admin config found, skipping Telegram alert");
+      return;
+    }
+
+    const adminConfig = configDoc.data() as TelegramAdminConfig;
+
+    if (!adminConfig.notifications?.withdrawalRequest || !adminConfig.recipientChatId) {
+      logger.info("[onWithdrawalCreated] Telegram withdrawal notifications disabled or no chat ID");
+      return;
+    }
+
+    const amountFormatted = `$${(withdrawal.amount / 100).toFixed(2)}`;
+    const userTypeLabel = withdrawal.userType === "group_admin" ? "GroupAdmin" :
+      withdrawal.userType.charAt(0).toUpperCase() + withdrawal.userType.slice(1);
+
+    const text = [
+      `💰 *Nouvelle demande de retrait*`,
+      ``,
+      `👤 *${withdrawal.userName}* (${userTypeLabel})`,
+      `💵 Montant : *${amountFormatted}*`,
+      `🏦 Méthode : ${withdrawal.provider}${withdrawal.methodType ? ` (${withdrawal.methodType})` : ""}`,
+      `📋 ID : \`${withdrawal.id}\``,
+      ``,
+      `➡️ Action requise dans la console d'admin`,
+    ].join("\n");
+
+    await enqueueTelegramMessage(
+      Number(adminConfig.recipientChatId),
+      text,
+      {
+        parseMode: "Markdown",
+        priority: "realtime",
+        sourceEventType: "withdrawal_request_admin",
+      }
+    );
+
+    logger.info("[onWithdrawalCreated] Admin Telegram alert sent", {
+      withdrawalId: withdrawal.id,
+      chatId: adminConfig.recipientChatId,
+    });
+  } catch (tgError) {
+    // Non-blocking: log and continue
+    logger.error("[onWithdrawalCreated] Failed to send Telegram admin alert", {
+      withdrawalId: withdrawal.id,
+      error: tgError instanceof Error ? tgError.message : String(tgError),
+    });
+  }
 }
 
 /**
@@ -297,6 +359,9 @@ export const paymentOnWithdrawalCreated = onDocumentCreated(
 
       // 4. Send admin alert if configured
       await sendAdminAlert(withdrawal, config);
+
+      // 4b. Send Telegram notification to admin
+      await sendAdminTelegramAlert(withdrawal);
 
       // 5. Queue for auto-processing if eligible
       const wasQueued = await queueForAutoProcessing(withdrawal, config);

@@ -29,6 +29,23 @@ const LEVEL_NAMES: Record<number, string> = {
   5: 'Elite',
 };
 
+// Glow colors matching each level for the progress bar
+const LEVEL_GLOW: Record<number, string> = {
+  1: 'shadow-[0_0_12px_rgba(156,163,175,0.4)]',
+  2: 'shadow-[0_0_12px_rgba(96,165,250,0.4)]',
+  3: 'shadow-[0_0_12px_rgba(167,139,250,0.4)]',
+  4: 'shadow-[0_0_12px_rgba(251,146,60,0.4)]',
+};
+
+// Border glow for the level badge
+const LEVEL_BADGE_GLOW: Record<number, string> = {
+  1: 'ring-1 ring-gray-400/30',
+  2: 'ring-1 ring-blue-400/30',
+  3: 'ring-1 ring-violet-400/30',
+  4: 'ring-1 ring-orange-400/30',
+  5: 'ring-1 ring-yellow-400/30',
+};
+
 const LevelProgressCard: React.FC<LevelProgressCardProps> = ({ className = '' }) => {
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
@@ -60,18 +77,18 @@ const LevelProgressCard: React.FC<LevelProgressCardProps> = ({ className = '' })
   const stars = Array.from({ length: 5 }, (_, i) => i < level);
 
   return (
-    <div className={`${UI.card} p-4 sm:p-5 ${className}`}>
+    <div className={`backdrop-blur-xl bg-white/[0.04] border border-white/[0.06] rounded-2xl p-4 sm:p-5 ${className}`}>
       {/* Header: level name + stars + streak */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${levelColor.bg} ${levelColor.text}`}>
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${levelColor.bg} ${levelColor.text} ${LEVEL_BADGE_GLOW[level] || ''}`}>
             {LEVEL_NAMES[level] || `Level ${level}`}
           </span>
           <div className="flex gap-0.5">
             {stars.map((filled, i) => (
               <Star
                 key={i}
-                className={`w-3.5 h-3.5 ${filled ? 'text-yellow-400 fill-yellow-400' : 'text-slate-200 dark:text-white/10'}`}
+                className={`w-3.5 h-3.5 ${filled ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]' : 'text-slate-200 dark:text-white/10'}`}
               />
             ))}
           </div>
@@ -87,14 +104,14 @@ const LevelProgressCard: React.FC<LevelProgressCardProps> = ({ className = '' })
       {/* Progress bar */}
       {!isMaxLevel && (
         <>
-          <div className="h-2.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${
                 level === 1 ? 'from-gray-400 to-gray-500' :
                 level === 2 ? 'from-blue-400 to-blue-600' :
                 level === 3 ? 'from-violet-400 to-violet-600' :
                 'from-orange-400 to-orange-600'
-              }`}
+              } ${LEVEL_GLOW[level] || ''}`}
               style={{ width: `${levelProgress}%` }}
             />
           </div>

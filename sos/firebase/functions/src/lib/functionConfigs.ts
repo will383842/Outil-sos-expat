@@ -75,9 +75,9 @@ export const adminConfig = {
  */
 export const chatterAdminConfig = {
   region: "us-central1" as const,
-  memory: "512MiB" as const,  // FIX: 256MiB causes OOM under load (chatters list, stats, withdrawals)
-  cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
-  maxInstances: 1,  // QUOTA FIX: 5→1 to stay under 48 vCPU/region (0.5 CPU × 5 = 2.5 per fn)
+  memory: "256MiB" as const,  // QUOTA FIX: 512MiB→256MiB to fix "Quota exceeded for total allowable memory per project per region"
+  cpu: 0.083,  // QUOTA FIX: 0.5→0.083 (memory ≤ 256MiB allows lower cpu)
+  maxInstances: 1,
   minInstances: 0,
   concurrency: 1,
   cors: ALLOWED_ORIGINS,
@@ -89,9 +89,9 @@ export const chatterAdminConfig = {
  */
 export const affiliateAdminConfig = {
   region: "us-central1" as const,
-  memory: "512MiB" as const,  // FIX: 256MiB causes OOM under load (same as chatterAdminConfig)
-  cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
-  maxInstances: 1,  // QUOTA FIX: 5→1 to stay under 48 vCPU/region (0.5 CPU × 5 = 2.5 per fn)
+  memory: "256MiB" as const,  // QUOTA FIX: 512MiB→256MiB to fix "Quota exceeded for total allowable memory per project per region"
+  cpu: 0.083,  // QUOTA FIX: 0.5→0.083 (memory ≤ 256MiB allows lower cpu)
+  maxInstances: 1,
   minInstances: 0,
   concurrency: 1,
   cors: ALLOWED_ORIGINS,

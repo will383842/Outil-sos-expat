@@ -23,7 +23,7 @@ import {
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all",
   },
 } as const;
@@ -109,7 +109,7 @@ const ChatterResources: React.FC = () => {
           {CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat.value;
             const colorClasses = {
-              red: isActive ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100',
+              red: isActive ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white' : 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100',
               blue: isActive ? 'bg-blue-600 text-white' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100',
               green: isActive ? 'bg-green-600 text-white' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100',
             };
@@ -138,14 +138,14 @@ const ChatterResources: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={intl.formatMessage({ id: 'chatter.resources.search', defaultMessage: 'Rechercher une ressource...' })}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
           </div>
         )}
 
@@ -160,7 +160,7 @@ const ChatterResources: React.FC = () => {
         {!isLoading && filteredFiles.length > 0 && (
           <div className={`${UI.card} p-4 sm:p-6`}>
             <h2 className="text-lg dark:text-white font-semibold mb-4 flex items-center gap-2">
-              <Image className="w-5 h-5 text-red-500" />
+              <Image className="w-5 h-5 text-indigo-500" />
               <FormattedMessage id="chatter.resources.files" defaultMessage="Fichiers telechargeables" />
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

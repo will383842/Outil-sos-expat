@@ -753,8 +753,6 @@
   "admin.menu.affiliateConfig.description": "Parámetros del programa de afiliados",
   "admin.menu.commissionRules": "Reglas de Comisiones",
   "admin.menu.commissionRules.description": "Configuración de tasas de comisión",
-  "admin.menu.ambassadors": "Embajadores",
-  "admin.menu.ambassadors.description": "Programa de embajadores premium",
   "admin.menu.influencersList": "Lista de Influencers",
   "admin.menu.influencersList.description": "Gestionar todos los influencers",
   "admin.menu.influencersPayments": "Pagos de Influencers",

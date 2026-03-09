@@ -41,7 +41,7 @@ import { copyToClipboard } from '@/utils/clipboard';
 const BelowFoldSkeleton = () => (
   <div className="space-y-4 animate-pulse">
     {[1, 2, 3].map((i) => (
-      <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/8 rounded-2xl h-48">
+      <div key={i} className="bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl h-48">
         <div className="p-5 space-y-3">
           <div className="h-5 bg-slate-200 dark:bg-white/10 rounded w-1/3" />
           <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-2/3" />
@@ -102,7 +102,7 @@ const ChatterDashboardContent: React.FC = () => {
       if (document.visibilityState === 'visible') {
         const inactiveMs = Date.now() - lastActive;
         if (inactiveMs > 5 * 60 * 1000) {
-          refreshDashboard();
+          refreshDashboard(true);
         }
       } else {
         lastActive = Date.now();
@@ -150,9 +150,9 @@ const ChatterDashboardContent: React.FC = () => {
     }
   }, [clientShareUrl, intl]);
 
-  // Pull-to-refresh handler
+  // Pull-to-refresh handler — always force refresh (explicit user action)
   const handleRefresh = useCallback(() => {
-    refreshDashboard();
+    refreshDashboard(true);
     toast.success(intl.formatMessage({ id: 'chatter.refreshed', defaultMessage: 'Mise a jour...' }), { duration: 1500 });
   }, [refreshDashboard, intl]);
 
@@ -170,7 +170,7 @@ const ChatterDashboardContent: React.FC = () => {
     return (
       <div className="px-4 py-8 text-center">
         <p className="text-red-500 mb-4">{error}</p>
-        <button onClick={handleRefresh} className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-xl">
+        <button onClick={handleRefresh} className="bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white px-6 py-2 rounded-xl">
           <FormattedMessage id="common.retry" defaultMessage="Reessayer" />
         </button>
       </div>

@@ -96,6 +96,15 @@ export const adminMenuTree: AdminMenuItem[] = [
     descriptionKey: "admin.menu.dashboard.description",
   },
 
+  // ===== INBOX CENTRALISÉ (tous les messages entrants) =====
+  {
+    id: "inbox",
+    labelKey: "admin.menu.inbox",
+    path: "/admin/inbox",
+    icon: Inbox,
+    descriptionKey: "admin.menu.inbox.description",
+  },
+
   // ===== 2. UTILISATEURS (clients + providers + validations + reviews) =====
   {
     id: "users",
@@ -158,7 +167,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         labelKey: "admin.menu.providerValidation",
         path: "/admin/approvals/lawyers",
         icon: UserCheck,
-        badge: "3",
         descriptionKey: "admin.menu.providerValidation.description",
       },
       {
@@ -166,7 +174,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         labelKey: "admin.menu.kycProviders",
         path: "/admin/kyc/providers",
         icon: Shield,
-        badge: "2",
         descriptionKey: "admin.menu.kycProviders.description",
       },
       {
@@ -291,8 +298,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             labelKey: "admin.menu.paymentsWithdrawals",
             path: "/admin/payments/withdrawals",
             icon: Banknote,
-            badge: "NEW",
             descriptionKey: "admin.menu.paymentsWithdrawals.description",
+          },
+          {
+            id: "affiliate-payouts",
+            labelKey: "admin.menu.affiliatePayouts",
+            path: "/admin/affiliates/payouts",
+            icon: DollarSign,
+            descriptionKey: "admin.menu.affiliatePayouts.description",
           },
           {
             id: "payments-config",
@@ -322,7 +335,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             labelKey: "admin.menu.disputes",
             path: "/admin/finance/disputes",
             icon: AlertCircle,
-            badge: "2",
             descriptionKey: "admin.menu.disputes.description",
           },
         ],
@@ -509,33 +521,11 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.landingPages.description",
       },
       {
-        id: "inbox",
-        labelKey: "admin.menu.inbox",
-        path: "/admin/inbox",
-        icon: Inbox,
-        badge: "NEW",
-        descriptionKey: "admin.menu.inbox.description",
-      },
-      {
         id: "notifications",
         labelKey: "admin.menu.notifications",
         path: "/admin/comms/notifications",
         icon: Bell,
         descriptionKey: "admin.menu.notifications.description",
-      },
-      {
-        id: "Contacts",
-        labelKey: "admin.menu.contactRequests",
-        path: "/admin/contact-messages",
-        icon: MessageSquare,
-        descriptionKey: "admin.menu.contactRequests.description",
-      },
-      {
-        id: "user-feedback",
-        labelKey: "admin.menu.userFeedback",
-        path: "/admin/feedback",
-        icon: MessageSquare,
-        descriptionKey: "admin.menu.userFeedback.description",
       },
     ],
   },
@@ -617,13 +607,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/affiliates/plans",
             icon: Cog,
             descriptionKey: "admin.menu.commissionPlans.description",
-          },
-          {
-            id: "ambassadors",
-            labelKey: "admin.menu.ambassadors",
-            path: "/admin/ambassadors",
-            icon: Award,
-            descriptionKey: "admin.menu.ambassadors.description",
           },
         ],
       },

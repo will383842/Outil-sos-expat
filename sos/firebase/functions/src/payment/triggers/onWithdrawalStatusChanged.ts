@@ -582,11 +582,21 @@ async function rollbackAffiliateCommissions(
 
   try {
     // Find commissions tied to this withdrawal that were marked "paid"
-    const commissionsSnapshot = await db
+    // P1-2 FIX: Try both "payoutId" and "withdrawalId" fields for robustness
+    let commissionsSnapshot = await db
       .collection("affiliate_commissions")
       .where("payoutId", "==", withdrawal.id)
       .where("status", "==", "paid")
       .get();
+
+    // Fallback: some commissions may use "withdrawalId" instead of "payoutId"
+    if (commissionsSnapshot.empty) {
+      commissionsSnapshot = await db
+        .collection("affiliate_commissions")
+        .where("withdrawalId", "==", withdrawal.id)
+        .where("status", "==", "paid")
+        .get();
+    }
 
     if (commissionsSnapshot.empty) {
       logger.info("[onWithdrawalStatusChanged] No affiliate commissions to rollback", {

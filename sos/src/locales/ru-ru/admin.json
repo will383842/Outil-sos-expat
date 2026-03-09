@@ -570,8 +570,6 @@
   "admin.menu.affiliateConfig.description": "Параметры партнёрской программы",
   "admin.menu.commissionRules": "Правила комиссий",
   "admin.menu.commissionRules.description": "Настройка ставок комиссий",
-  "admin.menu.ambassadors": "Амбассадоры",
-  "admin.menu.ambassadors.description": "Премиум-программа амбассадоров",
   "admin.menu.influencersList": "Список инфлюенсеров",
   "admin.menu.influencersList.description": "Управление всеми инфлюенсерами",
   "admin.menu.influencersPayments": "Выплаты инфлюенсерам",

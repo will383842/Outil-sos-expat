@@ -131,13 +131,13 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
       {/* Reactivation message */}
       {reactivationMessage && (
-        <div className={`${UI.card} p-4 border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-500/5`}>
+        <div className={`backdrop-blur-xl border border-white/[0.06] rounded-2xl bg-white/80 dark:bg-white/[0.03] p-4 border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/5`}>
           <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
             {reactivationMessage.text}
           </p>
           <button
             onClick={handleShareLink}
-            className={`${UI.button.primary} px-4 py-2 text-sm`}
+            className="bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.97] shadow-md shadow-indigo-500/25 px-4 py-2 text-sm"
           >
             {reactivationMessage.cta}
           </button>
@@ -208,9 +208,9 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           </h3>
           <div className="space-y-4">
             {[
-              { icon: <Share2 className="w-4 h-4" />, num: '1', title: 'Partagez votre lien', color: 'bg-blue-500' },
-              { icon: <Phone className="w-4 h-4" />, num: '2', title: 'Quelqu\'un appelle un avocat', color: 'bg-green-500' },
-              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: `Vous gagnez ${callAmountRange} automatiquement`, color: 'bg-yellow-500' },
+              { icon: <Share2 className="w-4 h-4" />, num: '1', title: 'Partagez votre lien', color: 'bg-indigo-500' },
+              { icon: <Phone className="w-4 h-4" />, num: '2', title: 'Quelqu\'un appelle un avocat', color: 'bg-violet-500' },
+              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: `Vous gagnez ${callAmountRange} automatiquement`, color: 'bg-indigo-600' },
             ].map((step) => (
               <div key={step.num} className="flex items-center gap-3">
                 <div className={`flex-shrink-0 w-8 h-8 ${step.color} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
@@ -229,7 +229,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
       <div className={UI.card}>
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Calculator className="w-5 h-5 text-slate-400" />
+            <Calculator className="w-5 h-5 text-indigo-400" />
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               <FormattedMessage id="chatter.new.revenueTitle" defaultMessage="Revenus possibles" />
             </h3>

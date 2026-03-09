@@ -74,7 +74,7 @@ const TOUR_STEPS: TourStep[] = [
     titleFr: 'Bienvenue sur votre Tableau de Bord !',
     description: 'Let us show you around and help you start earning money. This quick tour will guide you through all the features.',
     descriptionFr: 'Laissez-nous vous faire decouvrir comment gagner de l\'argent. Ce guide rapide vous presentera toutes les fonctionnalites.',
-    icon: <Rocket className="w-8 h-8 text-red-500" />,
+    icon: <Rocket className="w-8 h-8 text-indigo-500" />,
     position: 'center',
     highlight: true,
   },
@@ -115,7 +115,7 @@ const TOUR_STEPS: TourStep[] = [
     titleFr: 'Construisez votre Equipe',
     description: 'Recruit other chatters and earn passive income! Get $1 for every call your N1 recruits make, and $0.50 for N2.',
     descriptionFr: 'Recrutez d\'autres chatters et gagnez des revenus passifs ! Gagnez 1$ pour chaque appel de vos filleuls N1, et 0.50$ pour les N2.',
-    icon: <Users className="w-6 h-6 text-red-500" />,
+    icon: <Users className="w-6 h-6 text-indigo-500" />,
     position: 'top',
   },
   {
@@ -165,7 +165,7 @@ const TOUR_STEPS: TourStep[] = [
     titleFr: 'Vous etes Pret !',
     description: 'Start sharing your links and earn money today. Good luck, and welcome to the team!',
     descriptionFr: 'Commencez a partager vos liens et gagnez de l\'argent des aujourd\'hui. Bonne chance et bienvenue dans l\'equipe !',
-    icon: <PartyPopper className="w-8 h-8 text-red-500" />,
+    icon: <PartyPopper className="w-8 h-8 text-indigo-500" />,
     position: 'center',
     highlight: true,
   },
@@ -369,7 +369,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
         <div className={arrowStyles[position.arrowPosition]} />
 
         {/* Header with gradient */}
-        <div className={`p-4 ${step.highlight ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900'}`}>
+        <div className={`p-4 ${step.highlight ? 'bg-gradient-to-r from-indigo-500 to-violet-500' : 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl ${step.highlight ? 'bg-white/20' : 'bg-white dark:bg-gray-800 shadow-md'}`}>
               {step.icon}
@@ -385,9 +385,9 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
                     key={i}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       i === currentStep
-                        ? `w-4 ${step.highlight ? 'bg-white' : 'bg-red-500'}`
+                        ? `w-4 ${step.highlight ? 'bg-white' : 'bg-indigo-500'}`
                         : i < currentStep
-                        ? `w-1.5 ${step.highlight ? 'bg-white/60' : 'bg-red-300 dark:bg-red-700'}`
+                        ? `w-1.5 ${step.highlight ? 'bg-white/60' : 'bg-indigo-300 dark:bg-indigo-700'}`
                         : `w-1.5 ${step.highlight ? 'bg-white/30' : 'bg-gray-300 dark:bg-gray-600'}`
                     }`}
                   />
@@ -447,7 +447,7 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
             )}
             <button
               onClick={onNext}
-              className="flex items-center gap-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
             >
               <span>
                 {isLastStep
@@ -534,8 +534,8 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ targetRect, isVisib
       />
       <style>{`
         @keyframes spotlightPulse {
-          0%, 100% { opacity: 0.5; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-          50% { opacity: 1; box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+          0%, 100% { opacity: 0.5; box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+          50% { opacity: 1; box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
         }
         .animate-spotlight-pulse { animation: spotlightPulse 2s ease-in-out infinite; }
       `}</style>

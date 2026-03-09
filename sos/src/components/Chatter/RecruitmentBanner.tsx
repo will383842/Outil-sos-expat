@@ -1,8 +1,6 @@
 /**
- * RecruitmentBanner Component
- *
- * A prominent, highly visible CTA banner to maximize chatter recruitment.
- * Features animated elements, earnings calculator, and social proof.
+ * RecruitmentBanner - 2026 Design System
+ * Glassmorphism recruitment CTA with indigo/violet palette.
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -25,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { copyToClipboard } from '@/utils/clipboard';
+import { UI, ANIMATION } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -204,8 +203,8 @@ const PulsingButton: React.FC<{
   const baseClasses = "relative font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95";
 
   const variantClasses = {
-    primary: "bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 text-gray-900 shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/40",
-    secondary: "bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30"
+    primary: "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:from-indigo-600 hover:to-violet-600",
+    secondary: "bg-white/10 backdrop-blur-xl text-white border border-white/20 hover:bg-white/20"
   };
 
   return (
@@ -224,7 +223,7 @@ const PulsingButton: React.FC<{
         {children}
       </span>
       {variant === 'primary' && (
-        <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 animate-ping-slow opacity-20" />
+        <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 animate-ping-slow opacity-20" />
       )}
     </button>
   );
@@ -261,10 +260,10 @@ const CounterBadge: React.FC<{
   }, [count]);
 
   return (
-    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
-      {icon && <span className="text-yellow-400">{icon}</span>}
+    <div className="flex items-center gap-2 bg-white/[0.08] backdrop-blur-xl border border-white/[0.06] rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
+      {icon && <span className="text-cyan-400">{icon}</span>}
       <span className="font-bold text-white sm:text-base">{displayCount.toLocaleString()}</span>
-      <span className="text-white/80 sm:text-sm">{label}</span>
+      <span className="text-white/70 sm:text-sm">{label}</span>
     </div>
   );
 };
@@ -284,9 +283,9 @@ const EarningsCalculator: React.FC<{
   }, [teamSize]);
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 border">
+    <div className="bg-white/[0.06] backdrop-blur-2xl rounded-2xl p-4 sm:p-6 border border-white/[0.08]">
       <h4 className="text-white font-bold sm:text-lg mb-4 flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-yellow-400" />
+        <Sparkles className="w-5 h-5 text-indigo-400" />
         {t.title}
       </h4>
 
@@ -295,7 +294,7 @@ const EarningsCalculator: React.FC<{
         <div>
           <div className="flex justify-between items-center mb-2">
             <label className="text-white/80">{t.teamSize}</label>
-            <span className="text-yellow-400 font-bold">{teamSize} {t.members}</span>
+            <span className="text-indigo-400 font-bold">{teamSize} {t.members}</span>
           </div>
           <input
             type="range"
@@ -319,7 +318,7 @@ const EarningsCalculator: React.FC<{
         </div>
 
         {/* Result */}
-        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border">
+        <div className="bg-gradient-to-r from-indigo-500/20 to-violet-500/20 rounded-xl p-4 border border-indigo-500/20">
           <div className="text-white/80 mb-1">{t.yourPassiveIncome}</div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl sm:text-4xl font-bold">
@@ -411,15 +410,15 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
   return (
     <div
       className={cn(
-        "relative w-full overflow-hidden",
-        stickyOnMobile && "lg:relative fixed bottom-0 left-0 right-0 z-50 lg:z-auto",
+        "relative w-full overflow-hidden rounded-2xl",
+        stickyOnMobile && "lg:relative fixed bottom-0 left-0 right-0 z-50 lg:z-auto lg:rounded-2xl rounded-none",
         className
       )}
     >
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-indigo-900 to-blue-900">
+      {/* Gradient Background — 2026 indigo/violet */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950">
         {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-pink-500/20 to-orange-500/30 animate-gradient-x" />
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-violet-500/15 to-cyan-500/10 animate-gradient-x" />
 
         {/* Floating coins animation */}
         {[...Array(8)].map((_, i) => (
@@ -457,38 +456,38 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
           </div>
 
           {/* Main Headline */}
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4 sm:mb-6">
-            <span className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 text-transparent">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4 sm:mb-6 text-center">
+            <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
               {t.headline}
             </span>
           </h2>
 
           {/* Value Propositions */}
           <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border">
-              <DollarSign className="w-5 h-5 text-green-400 flex-shrink-0" />
-              <span className="text-white sm:text-base font-medium">{t.valueProps.commission}</span>
+            <div className="flex items-center justify-center gap-2 bg-white/[0.06] backdrop-blur-xl rounded-xl px-4 py-3 border border-white/[0.08]">
+              <DollarSign className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <span className="text-white/90 sm:text-base font-medium">{t.valueProps.commission}</span>
             </div>
-            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border">
-              <Users className="w-5 h-5 text-blue-400 flex-shrink-0" />
-              <span className="text-white sm:text-base font-medium">{t.valueProps.noLimit}</span>
+            <div className="flex items-center justify-center gap-2 bg-white/[0.06] backdrop-blur-xl rounded-xl px-4 py-3 border border-white/[0.08]">
+              <Users className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+              <span className="text-white/90 sm:text-base font-medium">{t.valueProps.noLimit}</span>
             </div>
-            <div className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border">
-              <Zap className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-              <span className="text-white sm:text-base font-medium">{t.valueProps.passive}</span>
+            <div className="flex items-center justify-center gap-2 bg-white/[0.06] backdrop-blur-xl rounded-xl px-4 py-3 border border-white/[0.08]">
+              <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+              <span className="text-white/90 sm:text-base font-medium">{t.valueProps.passive}</span>
             </div>
           </div>
 
           {/* Social Proof: Top Recruiter */}
           <div className="text-center mb-6">
-            <p className="text-yellow-400 font-semibold sm:text-base">
+            <p className="text-cyan-400 font-semibold sm:text-base">
               {t.socialProof.topRecruiter.replace('{amount}', stats.topRecruiterEarnings.toLocaleString())}
             </p>
           </div>
 
           {/* Testimonial */}
           <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
-            <blockquote className="text-center italic sm:text-base">
+            <blockquote className="text-center italic text-white/70 sm:text-base">
               {t.socialProof.testimonial}
             </blockquote>
           </div>
@@ -601,10 +600,10 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
 
         @keyframes pulse-subtle {
           0%, 100% {
-            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
           }
           50% {
-            box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+            box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
           }
         }
 
@@ -634,25 +633,25 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
           cursor: pointer;
-          box-shadow: 0 2px 6px rgba(251, 191, 36, 0.4);
+          box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
           transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .slider-thumb-yellow::-webkit-slider-thumb:hover {
           transform: scale(1.1);
-          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
         }
 
         .slider-thumb-yellow::-moz-range-thumb {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
           cursor: pointer;
           border: none;
-          box-shadow: 0 2px 6px rgba(251, 191, 36, 0.4);
+          box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
         }
       `}</style>
     </div>

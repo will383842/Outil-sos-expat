@@ -85,12 +85,22 @@ const StickyAffiliateBar: React.FC = () => {
       localStorage.setItem('chatter_link_copied', Date.now().toString());
       navigator.vibrate?.(50);
       toast.success(
-        type === 'client' ? 'Lien client copie !' : 'Lien recrutement copie !'
+        intl.formatMessage(
+          {
+            id: type === 'client' ? 'chatter.bar.copiedClient' : 'chatter.bar.copiedRecruitment',
+            defaultMessage: type === 'client' ? 'Client link copied!' : 'Recruitment link copied!',
+          }
+        )
       );
     } else {
-      toast.error('Impossible de copier le lien');
+      toast.error(
+        intl.formatMessage({
+          id: 'chatter.bar.copyError',
+          defaultMessage: 'Unable to copy the link',
+        })
+      );
     }
-  }, []);
+  }, [intl]);
 
   const handleShare = useCallback(async (url: string, type: 'client' | 'recruitment') => {
     const title = type === 'client'
@@ -111,49 +121,91 @@ const StickyAffiliateBar: React.FC = () => {
       } catch (err: any) {
         // User cancelled share — ignore AbortError
         if (err?.name !== 'AbortError') {
-          toast.error('Erreur lors du partage');
+          toast.error(
+            intl.formatMessage({
+              id: 'chatter.bar.shareError',
+              defaultMessage: 'Error while sharing',
+            })
+          );
         }
       }
     } else {
-      toast('Copiez le lien et partagez-le manuellement', { icon: 'i' });
+      toast(
+        intl.formatMessage({
+          id: 'chatter.bar.shareFallback',
+          defaultMessage: 'Copy the link and share it manually',
+        }),
+        { icon: 'i' }
+      );
     }
-  }, []);
+  }, [intl]);
 
   const toggleTooltip = useCallback((type: 'client' | 'recruitment') => {
     setTooltipOpen((prev) => (prev === type ? null : type));
   }, []);
 
-  // Collapsed mini version — two copy buttons with updated labels
+  // Collapsed mini version — two copy buttons with labels
   if (collapsed) {
     return (
-      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-sm border-b border-slate-200/80 shadow-sm dark:bg-slate-900/85 dark:border-white/5 transition-all duration-300">
+      <div className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-white/[0.06] dark:bg-slate-900/80 dark:backdrop-blur-xl dark:border-white/[0.06] light:bg-white/80 light:backdrop-blur-xl light:border-slate-200/50 transition-all duration-500 ease-out">
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-center gap-3">
+          {/* Client collapsed button */}
           <button
             onClick={() => handleCopy(clientShareUrl ?? '', 'client')}
-            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
-            title={`Partagez ce lien. Quand quelqu'un appelle un prestataire via votre lien, vous gagnez ${callAmountRange} par appel pay\u00e9.`}
+            className={`group flex items-center gap-2 px-4 py-2 min-h-[48px] min-w-[48px] rounded-xl transition-all duration-300 ${
+              copiedClient
+                ? 'bg-emerald-500/20 border border-emerald-400/30 text-emerald-300'
+                : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400/30'
+            }`}
+            title={intl.formatMessage({
+              id: 'chatter.bar.clientTooltip',
+              defaultMessage: 'Share this link. When someone calls a provider through your link, you earn $3 to $5 per paid call.',
+            })}
           >
-            <Users className="w-3.5 h-3.5" />
-            {copiedClient ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span className="sm:hidden">
-              <FormattedMessage id="chatter.bar.clientLinkMobile" defaultMessage="Gagner" />
-            </span>
-            <span className="hidden sm:inline">
-              {`Lien client \u2014 Gagnez ${callAmountRange}/appel`}
+            <Users className="w-4 h-4 shrink-0" />
+            {copiedClient ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0" />}
+            <span className="text-xs font-semibold whitespace-nowrap">
+              <span className="sm:hidden">
+                <FormattedMessage id="chatter.bar.clientLinkMobile" defaultMessage="Earn" />
+                {' '}{callAmountRange}
+              </span>
+              <span className="hidden sm:inline">
+                <FormattedMessage
+                  id="chatter.bar.collapsedClient"
+                  defaultMessage="Client {amount}/call"
+                  values={{ amount: callAmountRange }}
+                />
+              </span>
             </span>
           </button>
+
+          {/* Recruitment collapsed button */}
           <button
             onClick={() => handleCopy(recruitmentShareUrl ?? '', 'recruitment')}
-            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-xs font-medium hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors"
-            title={`Partagez ce lien aux prestataires. Quand ils s'inscrivent et re\u00e7oivent des appels, vous gagnez $${providerCallAmount} par appel pendant 6 mois.`}
+            className={`group flex items-center gap-2 px-4 py-2 min-h-[48px] min-w-[48px] rounded-xl transition-all duration-300 ${
+              copiedRecruitment
+                ? 'bg-violet-500/20 border border-violet-400/30 text-violet-300'
+                : 'bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 hover:border-violet-400/30'
+            }`}
+            title={intl.formatMessage({
+              id: 'chatter.bar.recruitmentTooltip',
+              defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive calls, you earn $5 per call for 6 months.',
+            })}
           >
-            <UserPlus className="w-3.5 h-3.5" />
-            {copiedRecruitment ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span className="sm:hidden">
-              <FormattedMessage id="chatter.bar.recruitmentLinkMobile" defaultMessage="Recruter" />
-            </span>
-            <span className="hidden sm:inline">
-              {`Recrutement avocat/expat \u2014 Gagnez $${providerCallAmount}/appel 6 mois`}
+            <UserPlus className="w-4 h-4 shrink-0" />
+            {copiedRecruitment ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0" />}
+            <span className="text-xs font-semibold whitespace-nowrap">
+              <span className="sm:hidden">
+                <FormattedMessage id="chatter.bar.recruitmentLinkMobile" defaultMessage="Recruit" />
+                {` $${providerCallAmount}`}
+              </span>
+              <span className="hidden sm:inline">
+                <FormattedMessage
+                  id="chatter.bar.collapsedRecruitment"
+                  defaultMessage="Recruit ${amount}/call"
+                  values={{ amount: providerCallAmount }}
+                />
+              </span>
             </span>
           </button>
         </div>
@@ -162,121 +214,201 @@ const StickyAffiliateBar: React.FC = () => {
   }
 
   return (
-    <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-sm border-b border-slate-200/80 shadow-sm dark:bg-slate-900/85 dark:border-white/5 transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-1.5 sm:py-2">
-        <div className="flex flex-col sm:flex-row sm:items-stretch sm:gap-4 gap-1.5">
+    <div className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-white/[0.06] dark:bg-slate-900/80 dark:backdrop-blur-xl dark:border-white/[0.06] light:bg-white/80 light:backdrop-blur-xl light:border-slate-200/50 transition-all duration-500 ease-out">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-stretch sm:gap-4 gap-2">
 
-          {/* Client link section */}
-          <div className="flex-1 min-w-0 rounded-xl bg-emerald-50/70 dark:bg-emerald-900/20 px-3 py-2" ref={tooltipOpen === 'client' ? tooltipRef : undefined}>
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium hidden sm:inline">
-                  {`Lien client \u2014 Gagnez ${callAmountRange}/appel`}
-                </span>
-                <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium sm:hidden">
-                  <FormattedMessage id="chatter.bar.clientLinkMobile" defaultMessage="Gagner" />
+          {/* ── Client link section ── */}
+          <div
+            className="flex-1 min-w-0 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/[0.12] px-3.5 py-2.5 transition-all duration-300"
+            ref={tooltipOpen === 'client' ? tooltipRef : undefined}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              {/* Icon + label */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/20">
+                  <Users className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-xs text-emerald-300/70 font-medium leading-tight">
+                    <FormattedMessage id="chatter.bar.clientLabel" defaultMessage="Client link" />
+                  </span>
+                  {/* Prominent commission display */}
+                  <span className="text-sm font-bold text-emerald-300 leading-tight relative">
+                    <span className="relative z-10">
+                      <FormattedMessage
+                        id="chatter.bar.clientEarn"
+                        defaultMessage="Earn {amount}/call"
+                        values={{ amount: callAmountRange }}
+                      />
+                    </span>
+                    <span className="absolute inset-0 bg-emerald-400/10 blur-lg rounded-full" aria-hidden="true" />
+                  </span>
+                </div>
+                <span className="text-xs text-emerald-300 font-semibold sm:hidden">
+                  <FormattedMessage id="chatter.bar.clientLinkMobile" defaultMessage="Earn" />
                 </span>
                 <button
                   onClick={() => toggleTooltip('client')}
-                  className="flex items-center justify-center w-5 h-5 rounded-full text-emerald-500 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors"
+                  className="flex items-center justify-center w-6 h-6 min-w-[48px] min-h-[48px] rounded-full text-emerald-400/60 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors"
                   aria-label="Info"
                 >
                   <Info className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <code className="font-mono text-sm font-bold tracking-wide text-slate-800 dark:text-slate-100 truncate min-w-0">
+
+              {/* Affiliate code */}
+              <code className="font-mono text-base font-bold tracking-wider text-slate-100 truncate min-w-0 px-2.5 py-1 rounded-lg bg-white/[0.06]">
                 {affiliateCodeClient}
               </code>
+
+              {/* Client count badge */}
               {totalClients > 0 && (
-                <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold leading-none">
+                <span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 text-[11px] font-bold leading-none">
                   {totalClients}
                 </span>
               )}
-              <div className="flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
+
+              {/* Mobile commission badge */}
+              <div className="sm:hidden shrink-0 relative">
+                <span className="text-sm font-bold text-emerald-300 relative z-10">
+                  {callAmountRange}
+                  <span className="text-[10px] font-medium text-emerald-400/70">
+                    <FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" />
+                  </span>
+                </span>
+                <span className="absolute inset-0 bg-emerald-400/15 blur-md rounded-full" aria-hidden="true" />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-1 shrink-0 ml-auto">
                 <button
                   onClick={() => handleCopy(clientShareUrl ?? '', 'client')}
-                  className={`flex items-center justify-center w-[44px] h-[44px] sm:w-8 sm:h-8 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors ${showPulse ? 'animate-pulse' : ''}`}
-                  aria-label="Copier lien client"
+                  className={`flex items-center justify-center w-[48px] h-[48px] sm:w-9 sm:h-9 rounded-xl transition-all duration-300 ${
+                    copiedClient
+                      ? 'border border-emerald-400/40 text-emerald-300 bg-transparent'
+                      : `bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30 hover:border-emerald-400/40 ${showPulse ? 'animate-pulse' : ''}`
+                  }`}
+                  aria-label={intl.formatMessage({ id: 'chatter.bar.copyClientAriaLabel', defaultMessage: 'Copy client link' })}
                 >
-                  {copiedClient ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedClient ? <Check className="w-4.5 h-4.5" /> : <Copy className="w-4.5 h-4.5" />}
                 </button>
                 <button
                   onClick={() => handleShare(clientShareUrl ?? '', 'client')}
-                  className="flex items-center justify-center w-[44px] h-[44px] sm:w-8 sm:h-8 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
-                  aria-label="Partager lien client"
+                  className="flex items-center justify-center w-[48px] h-[48px] sm:w-9 sm:h-9 rounded-xl text-emerald-400/60 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all duration-300"
+                  aria-label={intl.formatMessage({ id: 'chatter.bar.shareClientAriaLabel', defaultMessage: 'Share client link' })}
                 >
-                  {sharedClient ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                  {sharedClient ? <Check className="w-4.5 h-4.5" /> : <Share2 className="w-4.5 h-4.5" />}
                 </button>
               </div>
             </div>
-            {/* Mobile badge */}
-            <div className="sm:hidden mt-0.5 ml-5.5">
-              <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/70 font-medium">{"~" + callAmountRange + "/appel"}</span>
-            </div>
+
             {/* Tooltip */}
             {tooltipOpen === 'client' && (
-              <div className="mt-2 p-2.5 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/40 text-xs text-emerald-800 dark:text-emerald-200 leading-relaxed">
-                {`Partagez ce lien. Quand quelqu'un appelle un prestataire via votre lien, vous gagnez ${callAmountRange} par appel pay\u00e9.`}
+              <div className="mt-2.5 p-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/[0.12] text-xs text-emerald-200/90 leading-relaxed backdrop-blur-sm">
+                <FormattedMessage
+                  id="chatter.bar.clientTooltip"
+                  defaultMessage="Share this link. When someone calls a provider through your link, you earn $3 to $5 per paid call."
+                />
               </div>
             )}
           </div>
 
           {/* Divider (desktop only) */}
-          <div className="hidden sm:block w-px bg-slate-200 dark:bg-white/10 shrink-0 self-stretch" />
+          <div className="hidden sm:block w-px bg-white/[0.06] shrink-0 self-stretch" />
 
-          {/* Recruitment link section */}
-          <div className="flex-1 min-w-0 rounded-xl bg-violet-50/70 dark:bg-violet-900/20 px-3 py-2" ref={tooltipOpen === 'recruitment' ? tooltipRef : undefined}>
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex items-center gap-1.5 shrink-0">
-                <UserPlus className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                <span className="text-xs text-violet-700 dark:text-violet-300 font-medium hidden sm:inline">
-                  {`Recrutement avocat/expat \u2014 Gagnez $${providerCallAmount}/appel 6 mois`}
-                </span>
-                <span className="text-xs text-violet-700 dark:text-violet-300 font-medium sm:hidden">
-                  <FormattedMessage id="chatter.bar.recruitmentLinkMobile" defaultMessage="Recruter" />
+          {/* ── Recruitment link section ── */}
+          <div
+            className="flex-1 min-w-0 rounded-2xl bg-violet-500/[0.08] border border-violet-500/[0.12] px-3.5 py-2.5 transition-all duration-300"
+            ref={tooltipOpen === 'recruitment' ? tooltipRef : undefined}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              {/* Icon + label */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-violet-500/20">
+                  <UserPlus className="w-4 h-4 text-violet-400" />
+                </div>
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-xs text-violet-300/70 font-medium leading-tight">
+                    <FormattedMessage id="chatter.bar.recruitmentLabel" defaultMessage="Recruitment link" />
+                  </span>
+                  {/* Prominent commission display */}
+                  <span className="text-sm font-bold text-violet-300 leading-tight relative">
+                    <span className="relative z-10">
+                      <FormattedMessage
+                        id="chatter.bar.recruitmentEarn"
+                        defaultMessage="Earn ${amount}/call · 6 months"
+                        values={{ amount: providerCallAmount }}
+                      />
+                    </span>
+                    <span className="absolute inset-0 bg-violet-400/10 blur-lg rounded-full" aria-hidden="true" />
+                  </span>
+                </div>
+                <span className="text-xs text-violet-300 font-semibold sm:hidden">
+                  <FormattedMessage id="chatter.bar.recruitmentLinkMobile" defaultMessage="Recruit" />
                 </span>
                 <button
                   onClick={() => toggleTooltip('recruitment')}
-                  className="flex items-center justify-center w-5 h-5 rounded-full text-violet-500 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-800/40 transition-colors"
+                  className="flex items-center justify-center w-6 h-6 min-w-[48px] min-h-[48px] rounded-full text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/10 transition-colors"
                   aria-label="Info"
                 >
                   <Info className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <code className="font-mono text-sm font-bold tracking-wide text-slate-800 dark:text-slate-100 truncate min-w-0">
+
+              {/* Affiliate code */}
+              <code className="font-mono text-base font-bold tracking-wider text-slate-100 truncate min-w-0 px-2.5 py-1 rounded-lg bg-white/[0.06]">
                 {affiliateCodeRecruitment}
               </code>
+
+              {/* Recruit count badge */}
               {totalRecruits > 0 && (
-                <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-[10px] font-semibold leading-none">
+                <span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/20 text-violet-300 text-[11px] font-bold leading-none">
                   {totalRecruits}
                 </span>
               )}
-              <div className="flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
+
+              {/* Mobile commission badge */}
+              <div className="sm:hidden shrink-0 relative">
+                <span className="text-sm font-bold text-violet-300 relative z-10">
+                  {`$${providerCallAmount}`}
+                  <span className="text-[10px] font-medium text-violet-400/70">
+                    <FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" />
+                  </span>
+                </span>
+                <span className="absolute inset-0 bg-violet-400/15 blur-md rounded-full" aria-hidden="true" />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-1 shrink-0 ml-auto">
                 <button
                   onClick={() => handleCopy(recruitmentShareUrl ?? '', 'recruitment')}
-                  className={`flex items-center justify-center w-[44px] h-[44px] sm:w-8 sm:h-8 rounded-lg text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors ${showPulse ? 'animate-pulse' : ''}`}
-                  aria-label="Copier lien recrutement"
+                  className={`flex items-center justify-center w-[48px] h-[48px] sm:w-9 sm:h-9 rounded-xl transition-all duration-300 ${
+                    copiedRecruitment
+                      ? 'border border-violet-400/40 text-violet-300 bg-transparent'
+                      : `bg-violet-500/20 border border-violet-500/30 text-violet-300 hover:bg-violet-500/30 hover:border-violet-400/40 ${showPulse ? 'animate-pulse' : ''}`
+                  }`}
+                  aria-label={intl.formatMessage({ id: 'chatter.bar.copyRecruitmentAriaLabel', defaultMessage: 'Copy recruitment link' })}
                 >
-                  {copiedRecruitment ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedRecruitment ? <Check className="w-4.5 h-4.5" /> : <Copy className="w-4.5 h-4.5" />}
                 </button>
                 <button
                   onClick={() => handleShare(recruitmentShareUrl ?? '', 'recruitment')}
-                  className="flex items-center justify-center w-[44px] h-[44px] sm:w-8 sm:h-8 rounded-lg text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors"
-                  aria-label="Partager lien recrutement"
+                  className="flex items-center justify-center w-[48px] h-[48px] sm:w-9 sm:h-9 rounded-xl text-violet-400/60 hover:text-violet-300 hover:bg-violet-500/10 transition-all duration-300"
+                  aria-label={intl.formatMessage({ id: 'chatter.bar.shareRecruitmentAriaLabel', defaultMessage: 'Share recruitment link' })}
                 >
-                  {sharedRecruitment ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                  {sharedRecruitment ? <Check className="w-4.5 h-4.5" /> : <Share2 className="w-4.5 h-4.5" />}
                 </button>
               </div>
             </div>
-            {/* Mobile badge */}
-            <div className="sm:hidden mt-0.5 ml-5.5">
-              <span className="text-[10px] text-violet-600/80 dark:text-violet-400/70 font-medium">{`~$${providerCallAmount}/appel recrut\u00e9`}</span>
-            </div>
+
             {/* Tooltip */}
             {tooltipOpen === 'recruitment' && (
-              <div className="mt-2 p-2.5 rounded-lg bg-violet-100/80 dark:bg-violet-900/40 text-xs text-violet-800 dark:text-violet-200 leading-relaxed">
-                {`Partagez ce lien aux prestataires (avocats, expatri\u00e9s). Quand ils s'inscrivent et re\u00e7oivent des appels, vous gagnez $${providerCallAmount} par appel pendant 6 mois.`}
+              <div className="mt-2.5 p-3 rounded-xl bg-violet-500/[0.08] border border-violet-500/[0.12] text-xs text-violet-200/90 leading-relaxed backdrop-blur-sm">
+                <FormattedMessage
+                  id="chatter.bar.recruitmentTooltip"
+                  defaultMessage="Share this link with providers (lawyers, expats). When they sign up and receive calls, you earn $5 per call for 6 months."
+                />
               </div>
             )}
           </div>

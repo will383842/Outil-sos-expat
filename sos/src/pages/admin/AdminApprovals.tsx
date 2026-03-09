@@ -12,6 +12,7 @@ import {
   writeBatch,
   deleteField,
   getDocs,
+  getCountFromServer,
   limit // ✅ OPTIMISATION: Ajout de limit pour réduire les lectures
 } from 'firebase/firestore';
 import {
@@ -85,6 +86,20 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
   const [expandedProfiles, setExpandedProfiles] = useState<Set<string>>(new Set());
   const [isFixingData, setIsFixingData] = useState(false);
   const [fixedCount, setFixedCount] = useState<number | null>(null);
+  const [statusCounts, setStatusCounts] = useState({ pending: 0, approved: 0, rejected: 0 });
+
+  // Load status counts (once on mount)
+  useEffect(() => {
+    const profilesRef = collection(db, 'sos_profiles');
+    const typeFilter = where('type', 'in', ['lawyer', 'expat']);
+    Promise.all([
+      getCountFromServer(query(profilesRef, typeFilter, where('approvalStatus', '==', 'pending'))),
+      getCountFromServer(query(profilesRef, typeFilter, where('approvalStatus', '==', 'approved'))),
+      getCountFromServer(query(profilesRef, typeFilter, where('approvalStatus', '==', 'rejected'))),
+    ])
+      .then(([p, a, r]) => setStatusCounts({ pending: p.data().count, approved: a.data().count, rejected: r.data().count }))
+      .catch(() => {});
+  }, []);
 
   // ✅ OPTIMISATION COÛTS GCP: Polling 60s au lieu de onSnapshot pour les approbations
   useEffect(() => {
@@ -674,6 +689,13 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
             >
               <Clock className="w-5 h-5" />
               {t('admin.approvals.tabPending')}
+              {statusCounts.pending > 0 && (
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                  statusTab === 'pending' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-700'
+                }`}>
+                  {statusCounts.pending}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setStatusTab('approved')}
@@ -685,6 +707,11 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
             >
               <CheckCircle className="w-5 h-5" />
               {t('admin.approvals.tabApproved')}
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                statusTab === 'approved' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700'
+              }`}>
+                {statusCounts.approved}
+              </span>
             </button>
             <button
               onClick={() => setStatusTab('rejected')}
@@ -696,6 +723,13 @@ type StatusTab = 'pending' | 'approved' | 'rejected';
             >
               <XCircle className="w-5 h-5" />
               {t('admin.approvals.tabRejected')}
+              {statusCounts.rejected > 0 && (
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                  statusTab === 'rejected' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'
+                }`}>
+                  {statusCounts.rejected}
+                </span>
+              )}
             </button>
           </div>
         </div>

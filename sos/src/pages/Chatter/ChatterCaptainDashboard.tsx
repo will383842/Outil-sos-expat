@@ -54,7 +54,7 @@ import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboard
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
-    primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
+    primary: "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
   },
 };
@@ -262,7 +262,7 @@ function RecruitRow({ recruit, locale }: RecruitRowProps) {
           loading="lazy"
         />
       ) : (
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 flex items-center justify-center flex-shrink-0">
           <User className="h-5 w-5 text-white" />
         </div>
       )}
@@ -616,7 +616,7 @@ function ChatterCaptainDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* N1 count */}
         <div className={`${UI.card} p-4 text-center`}>
-          <Users className="h-5 w-5 text-red-500 mx-auto mb-1" />
+          <Users className="h-5 w-5 text-indigo-500 mx-auto mb-1" />
           <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{data.n1Recruits.length}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             <FormattedMessage id="chatter.captain.n1Count" defaultMessage="Recrues N1" />
@@ -812,7 +812,7 @@ function ChatterCaptainDashboard() {
               value={recruitSearch}
               onChange={(e) => setRecruitSearch(e.target.value)}
               placeholder={intl.formatMessage({ id: 'chatter.captain.searchRecruits', defaultMessage: 'Rechercher une recrue...' })}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full pl-9 pr-3 py-2 text-sm bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div className="flex items-center gap-1">
@@ -823,7 +823,7 @@ function ChatterCaptainDashboard() {
                 onClick={() => setRecruitSort(key)}
                 className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-all ${
                   recruitSort === key
-                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
                     : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
                 }`}
               >
@@ -846,8 +846,8 @@ function ChatterCaptainDashboard() {
           className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <Users className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+              <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -860,7 +860,7 @@ function ChatterCaptainDashboard() {
                   values={{ count: data.n1Recruits.length }}
                 />
                 {recruitSearch && filteredN1.length !== data.n1Recruits.length && (
-                  <span className="ml-1 text-red-500">
+                  <span className="ml-1 text-indigo-500">
                     ({filteredN1.length} <FormattedMessage id="chatter.captain.filtered" defaultMessage="filtrés" />)
                   </span>
                 )}
@@ -912,7 +912,7 @@ function ChatterCaptainDashboard() {
                   values={{ count: data.n2Recruits.length }}
                 />
                 {recruitSearch && filteredN2.length !== data.n2Recruits.length && (
-                  <span className="ml-1 text-red-500">
+                  <span className="ml-1 text-indigo-500">
                     ({filteredN2.length} <FormattedMessage id="chatter.captain.filtered" defaultMessage="filtrés" />)
                   </span>
                 )}

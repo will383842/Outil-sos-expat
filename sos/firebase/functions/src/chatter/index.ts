@@ -161,6 +161,7 @@ export {
   adminAssignChatterCaptain,
   adminBulkAssignChattersCaptain,
   adminGetAvailableCaptains,
+  adminSearchChatters,
 } from "./callables/admin/captain";
 
 // Admin Commissions Tracker

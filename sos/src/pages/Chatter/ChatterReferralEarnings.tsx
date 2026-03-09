@@ -78,7 +78,7 @@ function ChatterReferralEarningsContent() {
     const styles: Record<string, { iconBg: string; iconColor: string; icon: React.ElementType }> = {
       threshold_10: { iconBg: "bg-blue-100 dark:bg-blue-900/30", iconColor: "text-blue-600 dark:text-blue-400", icon: TrendingUp },
       threshold_50: { iconBg: "bg-green-100 dark:bg-green-900/30", iconColor: "text-green-600 dark:text-green-400", icon: TrendingUp },
-      threshold_50_n2: { iconBg: "bg-red-100 dark:bg-red-900/30", iconColor: "text-red-600 dark:text-red-400", icon: Users },
+      threshold_50_n2: { iconBg: "bg-indigo-100 dark:bg-indigo-900/30", iconColor: "text-indigo-600 dark:text-indigo-400", icon: Users },
       recurring_5pct: { iconBg: "bg-orange-100 dark:bg-orange-900/30", iconColor: "text-orange-600 dark:text-orange-400", icon: Calendar },
       tier_bonus: { iconBg: "bg-yellow-100 dark:bg-yellow-900/30", iconColor: "text-yellow-600 dark:text-yellow-400", icon: Trophy },
     };
@@ -107,7 +107,7 @@ function ChatterReferralEarningsContent() {
             </div>
           </div>
           <button
-            onClick={refreshDashboard}
+            onClick={() => refreshDashboard()}
             disabled={isLoading}
             className="p-2 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 transition-all touch-manipulation flex-shrink-0"
             aria-label={t("common.refresh")}
@@ -154,7 +154,7 @@ function ChatterReferralEarningsContent() {
                 {
                   label: t("chatter.referrals.qualifiedReferrals"),
                   value: `${stats?.qualifiedFilleulsN1 || 0}`,
-                  gradient: "from-red-600 to-orange-400",
+                  gradient: "from-indigo-600 to-violet-400",
                 },
               ].map((stat, index) => (
                 <div

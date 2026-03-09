@@ -109,8 +109,8 @@ const CHALLENGE_TYPE_CONFIG: Record<
 > = {
   recruiter: {
     icon: UserPlus,
-    color: "text-red-600 dark:text-red-400",
-    bgColor: "bg-red-100 dark:bg-red-900/30",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
     ctaKey: "chatter.weeklyChallenge.cta.recruiter",
     ctaDefault: "Recruit Chatters",
   },
@@ -348,7 +348,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                   key={entry.chatterId}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all animate-fade-in ${
                     isCurrentUser
-                      ? "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-red-200 dark:border-red-800"
+                      ? "bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20 border-2 border-indigo-200 dark:border-indigo-800"
                       : "bg-gray-50 dark:bg-white/5"
                   }`}
                 >
@@ -379,7 +379,7 @@ const WeeklyChallengeCard: React.FC<WeeklyChallengeCardProps> = ({
                     <p
                       className={`text-sm font-medium truncate ${
                         isCurrentUser
-                          ? "text-red-600 dark:text-red-400"
+                          ? "text-indigo-600 dark:text-indigo-400"
                           : "text-gray-900 dark:text-white"
                       }`}
                     >

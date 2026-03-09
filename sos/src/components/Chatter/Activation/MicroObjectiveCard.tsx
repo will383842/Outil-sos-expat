@@ -194,7 +194,7 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
         ctaLabel: 'Continuer a gagner',
         ctaAction: 'share',
         icon: <Trophy className="w-5 h-5" />,
-        color: 'text-orange-500',
+        color: 'text-indigo-500',
       };
     }
 
@@ -208,7 +208,7 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
       ctaLabel: 'Partager mon lien',
       ctaAction: 'share',
       icon: <Target className="w-5 h-5" />,
-      color: 'text-red-500',
+      color: 'text-violet-500',
     };
   }, [chatter]);
 
@@ -235,8 +235,8 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
   };
 
   return (
-    <div className={`${UI.card} p-4 sm:p-5 border-l-4 ${
-      objective.ctaAction === 'share' ? 'border-l-green-500' : 'border-l-blue-500'
+    <div className={`backdrop-blur-xl border border-white/[0.06] rounded-2xl bg-white/80 dark:bg-white/[0.03] shadow-sm shadow-indigo-500/[0.03] p-4 sm:p-5 border-l-4 ${
+      objective.ctaAction === 'share' ? 'border-l-indigo-500' : 'border-l-violet-500'
     }`}>
       <div className="flex items-center gap-2 mb-3">
         <div className={objective.color}>{objective.icon}</div>
@@ -253,7 +253,7 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-1 h-2.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>

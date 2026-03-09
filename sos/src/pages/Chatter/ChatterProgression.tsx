@@ -224,7 +224,7 @@ function LevelProgressionSection({
   return (
     <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-5">
-        <TrendingUp className="h-5 w-5 text-red-500" />
+        <TrendingUp className="h-5 w-5 text-indigo-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.level.title" defaultMessage="Mon Niveau" />
         </h2>
@@ -319,7 +319,7 @@ function RecruitmentTierSection({
   return (
     <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-1">
-        <Users className="h-5 w-5 text-red-500" />
+        <Users className="h-5 w-5 text-indigo-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.recruitment.title" defaultMessage="Paliers de Recrutement" />
         </h2>
@@ -340,7 +340,7 @@ function RecruitmentTierSection({
       {/* Progress bar */}
       <div className="relative h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-3">
         <div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-700 ease-out"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-700 ease-out"
           style={{ width: `${progressPercent}%` }}
         />
         {/* Milestone markers */}
@@ -382,7 +382,7 @@ function RecruitmentTierSection({
           />
         </span>
         {nextTier ? (
-          <span className="text-red-600 dark:text-red-400 font-semibold">
+          <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
             <FormattedMessage
               id="chatter.progression.recruitment.nextBonus"
               defaultMessage="Prochain bonus : {amount} à {count} recrues"
@@ -443,10 +443,10 @@ function OverallStatsSection({
       accent: bestRank ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400',
     },
     {
-      icon: <Flame className="h-5 w-5 text-red-500" />,
+      icon: <Flame className="h-5 w-5 text-indigo-500" />,
       label: intl.formatMessage({ id: 'chatter.progression.stats.currentStreak', defaultMessage: 'Série actuelle' }),
       value: intl.formatMessage({ id: 'chatter.progression.stats.days', defaultMessage: '{count}j' }, { count: currentStreak }),
-      accent: currentStreak > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400',
+      accent: currentStreak > 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400',
     },
     {
       icon: <Flame className="h-5 w-5 text-purple-500" />,
@@ -465,7 +465,7 @@ function OverallStatsSection({
   return (
     <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-4">
-        <Target className="h-5 w-5 text-red-500" />
+        <Target className="h-5 w-5 text-indigo-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.stats.title" defaultMessage="Statistiques Globales" />
         </h2>
@@ -509,7 +509,7 @@ function PiggyBankSection({
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="h-5 w-5 text-red-500" />
+        <Sparkles className="h-5 w-5 text-indigo-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.piggyBank.title" defaultMessage="Tirelire Bonus" />
         </h2>
@@ -540,7 +540,7 @@ function CaptainTierSection({
   return (
     <div className={`${UI.card} p-4 sm:p-6`}>
       <div className="flex items-center gap-2 mb-1">
-        <Crown className="h-5 w-5 text-red-500" />
+        <Crown className="h-5 w-5 text-indigo-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.captain.title" defaultMessage="Progression Capitaine" />
         </h2>
@@ -645,10 +645,10 @@ function CaptainTierSection({
 /** Captain Promo Teaser — for non-captains */
 function CaptainPromoTeaser() {
   return (
-    <div className={`${UI.card} p-6 border-dashed border-2 border-orange-200 dark:border-orange-800/50`}>
+    <div className={`${UI.card} p-6 border-dashed border-2 border-violet-200 dark:border-violet-800/50`}>
       <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30">
-          <Crown className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+        <div className="p-2 rounded-xl bg-gradient-to-br from-violet-100 to-indigo-100 dark:from-violet-900/30 dark:to-indigo-900/30">
+          <Crown className="h-6 w-6 text-violet-600 dark:text-violet-400" />
         </div>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
           <FormattedMessage id="chatter.progression.teaser.title" defaultMessage="Devenez Capitaine !" />
@@ -660,7 +660,7 @@ function CaptainPromoTeaser() {
           defaultMessage="Les capitaines gèrent une équipe de chatters et gagnent des commissions supplémentaires sur les appels de leur équipe. Atteignez un excellent niveau de performance pour être éligible !"
         />
       </p>
-      <div className="flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400 font-medium">
+      <div className="flex items-center gap-2 text-sm text-violet-600 dark:text-violet-400 font-medium">
         <MessageCircle className="h-4 w-4" />
         <FormattedMessage id="chatter.progression.teaser.cta" defaultMessage="Contactez le support pour en savoir plus" />
       </div>

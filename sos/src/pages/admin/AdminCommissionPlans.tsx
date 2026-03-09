@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { httpsCallable, functions } from "@/config/firebase";
+import AdminLayout from "../../components/admin/AdminLayout";
 
 interface CommissionPlan {
   id: string;
@@ -94,13 +95,16 @@ const AdminCommissionPlans: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout>
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -254,6 +258,7 @@ const AdminCommissionPlans: React.FC = () => {
         />
       )}
     </div>
+    </AdminLayout>
   );
 };
 

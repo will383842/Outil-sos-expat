@@ -205,6 +205,15 @@ const AdminCaptainDetail: React.FC = () => {
   const [transferTargetId, setTransferTargetId] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  // Available captains for dropdown (transfer + assign)
+  const [availableCaptains, setAvailableCaptains] = useState<Array<{ id: string; firstName: string; lastName: string; country?: string }>>([]);
+  const [captainsListLoaded, setCaptainsListLoaded] = useState(false);
+  // Assign chatter modal state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignSearch, setAssignSearch] = useState('');
+  const [assignSearchResults, setAssignSearchResults] = useState<Array<{ id: string; firstName: string; lastName: string; email: string; country?: string }>>([]);
+  const [assignSearchLoading, setAssignSearchLoading] = useState(false);
+  const [assignLoading, setAssignLoading] = useState<string | null>(null);
 
   // Fetch captain detail
   const fetchCaptain = useCallback(async () => {
@@ -311,6 +320,83 @@ const AdminCaptainDetail: React.FC = () => {
       toast.error(err.message || 'Erreur de transfert');
     } finally {
       setTransferLoading(false);
+    }
+  };
+
+  // Fetch available captains for transfer dropdown
+  const fetchAvailableCaptains = useCallback(async () => {
+    if (captainsListLoaded) return;
+    try {
+      const fn = httpsCallable<Record<string, never>, { captains: Array<{ id: string; firstName: string; lastName: string; country?: string }> }>(
+        functionsAffiliate, 'adminGetAvailableCaptains'
+      );
+      const { data } = await fn({});
+      setAvailableCaptains((data.captains || []).filter(c => c.id !== captainId));
+      setCaptainsListLoaded(true);
+    } catch (err) {
+      console.error('Failed to fetch captains:', err);
+    }
+  }, [captainId, captainsListLoaded]);
+
+  // Load captains list when transfer or assign modal opens
+  useEffect(() => {
+    if (showTransfer || showAssignModal) {
+      fetchAvailableCaptains();
+    }
+  }, [showTransfer, showAssignModal, fetchAvailableCaptains]);
+
+  // Search chatters for assignment
+  const handleSearchChatters = async (query: string) => {
+    setAssignSearch(query);
+    if (query.length < 2) { setAssignSearchResults([]); return; }
+    setAssignSearchLoading(true);
+    try {
+      const fn = httpsCallable<{ search: string; limit: number }, { chatters: Array<{ id: string; firstName: string; lastName: string; email: string; country?: string; captainId?: string }> }>(
+        functionsAffiliate, 'adminSearchChatters'
+      );
+      const { data } = await fn({ search: query, limit: 10 });
+      // Filter out chatters already assigned to this captain
+      const existingIds = new Set((captain?.assignedChatters || []).map(c => c.id));
+      setAssignSearchResults((data.chatters || []).filter(c => !existingIds.has(c.id) && !c.captainId));
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setAssignSearchLoading(false);
+    }
+  };
+
+  // Assign a chatter to this captain
+  const handleAssignChatter = async (chatterId: string) => {
+    if (!captainId) return;
+    setAssignLoading(chatterId);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminAssignChatterCaptain');
+      await fn({ chatterId, captainId });
+      toast.success(intl.formatMessage({ id: 'admin.captainDetail.assign.success', defaultMessage: 'Chatter assigne avec succes' }));
+      // Remove from search results
+      setAssignSearchResults(prev => prev.filter(c => c.id !== chatterId));
+      fetchCaptain(); // Refresh
+    } catch (err: any) {
+      console.error('Assign error:', err);
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setAssignLoading(null);
+    }
+  };
+
+  // Unassign a chatter from this captain
+  const handleUnassignChatter = async (chatterId: string) => {
+    setAssignLoading(chatterId);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminAssignChatterCaptain');
+      await fn({ chatterId, captainId: null });
+      toast.success(intl.formatMessage({ id: 'admin.captainDetail.unassign.success', defaultMessage: 'Chatter desassigne' }));
+      fetchCaptain();
+    } catch (err: any) {
+      console.error('Unassign error:', err);
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setAssignLoading(null);
     }
   };
 
@@ -966,6 +1052,75 @@ const AdminCaptainDetail: React.FC = () => {
             {/* Assigned Chatters Tab */}
             {activeTab === 'assigned' && (
               <div>
+                {/* Assign chatter toolbar */}
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setShowAssignModal(!showAssignModal)}
+                    className={`${UI.button.primary} px-3 py-1.5 text-xs flex items-center gap-1.5`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <FormattedMessage id="admin.captainDetail.assign.btn" defaultMessage="Assigner un chatter" />
+                  </button>
+                </div>
+
+                {/* Assign chatter search panel */}
+                {showAssignModal && (
+                  <div className="mb-4 p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
+                    <input
+                      type="text"
+                      value={assignSearch}
+                      onChange={(e) => handleSearchChatters(e.target.value)}
+                      placeholder={intl.formatMessage({ id: 'admin.captainDetail.assign.searchPlaceholder', defaultMessage: 'Rechercher par nom ou email...' })}
+                      className="w-full px-3 py-2 text-sm bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-red-500/30 focus:border-red-500 outline-none"
+                      autoFocus
+                    />
+                    {assignSearchLoading && (
+                      <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <FormattedMessage id="common.searching" defaultMessage="Recherche..." />
+                      </div>
+                    )}
+                    {assignSearchResults.length > 0 && (
+                      <div className="mt-3 divide-y divide-gray-100 dark:divide-white/5 max-h-64 overflow-y-auto">
+                        {assignSearchResults.map(chatter => (
+                          <div key={chatter.id} className="flex items-center justify-between py-2 px-1 hover:bg-white dark:hover:bg-white/5 rounded-lg transition-colors">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                                {chatter.firstName?.[0]}{chatter.lastName?.[0]}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                                  {chatter.firstName} {chatter.lastName}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  {chatter.email}{chatter.country ? ` · ${chatter.country}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleAssignChatter(chatter.id)}
+                              disabled={assignLoading === chatter.id}
+                              className={`${UI.button.success} px-2.5 py-1 text-xs flex items-center gap-1 shrink-0 disabled:opacity-50`}
+                            >
+                              {assignLoading === chatter.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <CheckCircle className="w-3 h-3" />
+                              )}
+                              <FormattedMessage id="admin.captainDetail.assign.add" defaultMessage="Assigner" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {assignSearch.length >= 2 && !assignSearchLoading && assignSearchResults.length === 0 && (
+                      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        <FormattedMessage id="admin.captainDetail.assign.noResults" defaultMessage="Aucun chatter disponible trouve" />
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {captain.assignedChatters && captain.assignedChatters.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -975,7 +1130,8 @@ const AdminCaptainDetail: React.FC = () => {
                           <th className="pb-3 pr-4 hidden sm:table-cell">Pays</th>
                           <th className="pb-3 pr-4">Statut</th>
                           <th className="pb-3 pr-4 text-right hidden md:table-cell">Appels</th>
-                          <th className="pb-3 text-right">Total gagne</th>
+                          <th className="pb-3 pr-4 text-right">Total gagne</th>
+                          <th className="pb-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -1019,27 +1175,41 @@ const AdminCaptainDetail: React.FC = () => {
                                 {chatter.totalCalls || 0}
                               </span>
                             </td>
-                            <td className="py-3 text-right">
+                            <td className="py-3 pr-4 text-right">
                               <span className="text-sm font-medium text-green-600 dark:text-green-400">
                                 ${((chatter.totalEarned || 0) / 100).toFixed(0)}
                               </span>
+                            </td>
+                            <td className="py-3 text-right">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleUnassignChatter(chatter.id); }}
+                                disabled={assignLoading === chatter.id}
+                                className="text-red-500 hover:text-red-700 dark:hover:text-red-400 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                title={intl.formatMessage({ id: 'admin.captainDetail.unassign.btn', defaultMessage: 'Desassigner' })}
+                              >
+                                {assignLoading === chatter.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <UserMinus className="w-4 h-4" />
+                                )}
+                              </button>
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                ) : (
+                ) : !showAssignModal ? (
                   <div className="text-center py-8">
                     <Crown className="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
                     <p className="text-gray-500 dark:text-gray-400 text-sm">
                       <FormattedMessage id="admin.captainDetail.assigned.empty" defaultMessage="No chatter assigned to this captain" />
                     </p>
                     <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
-                      <FormattedMessage id="admin.captainDetail.assigned.hint" defaultMessage="Assign chatters from their detail page" />
+                      <FormattedMessage id="admin.captainDetail.assigned.hint2" defaultMessage="Cliquez sur 'Assigner un chatter' pour commencer" />
                     </p>
                   </div>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -1062,14 +1232,21 @@ const AdminCaptainDetail: React.FC = () => {
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {selectedForTransfer.size} <FormattedMessage id="admin.captainDetail.transfer.selected" defaultMessage="selectionnes" />
                         </span>
-                        <input
-                          type="text"
+                        <select
                           value={transferTargetId}
                           onChange={(e) => setTransferTargetId(e.target.value)}
-                          placeholder={intl.formatMessage({ id: 'admin.captainDetail.transfer.targetId', defaultMessage: 'ID du captain cible' })}
-                          className="px-2 py-1 text-xs bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg w-48"
+                          className="px-2 py-1 text-xs bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg w-56"
                           onClick={(e) => e.stopPropagation()}
-                        />
+                        >
+                          <option value="">
+                            {intl.formatMessage({ id: 'admin.captainDetail.transfer.selectCaptain', defaultMessage: '-- Choisir un captain --' })}
+                          </option>
+                          {availableCaptains.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.firstName} {c.lastName}{c.country ? ` (${c.country})` : ''}
+                            </option>
+                          ))}
+                        </select>
                         <button
                           onClick={handleTransfer}
                           disabled={transferLoading || selectedForTransfer.size === 0 || !transferTargetId}

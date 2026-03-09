@@ -27,6 +27,8 @@ import {
   TrendingUp,
   Users,
   ArrowUpRight,
+  Inbox,
+  Archive,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import { StatusBadge as UnifiedStatusBadge, type StatusType } from "../../components/admin/StatusBadge";
@@ -322,16 +324,20 @@ const AdminAffiliatePayouts: React.FC = () => {
   const {
     globalStats,
     pendingPayouts,
+    archivedPayouts,
     isLoading,
+    isLoadingArchived,
     wiseConfigured,
     refreshStats,
     refreshPayouts,
+    refreshArchivedPayouts,
     approvePayout,
     rejectPayout,
     processPayoutManual,
     processPayoutWise,
   } = useAffiliateAdmin();
 
+  const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPayout, setSelectedPayout] = useState<AffiliatePayout | null>(null);
@@ -344,8 +350,18 @@ const AdminAffiliatePayouts: React.FC = () => {
     message: string;
   } | null>(null);
 
+  // Load archived payouts when switching to archived tab
+  useEffect(() => {
+    if (activeTab === "archived" && archivedPayouts.length === 0) {
+      refreshArchivedPayouts();
+    }
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Choose payouts based on active tab
+  const currentPayouts = activeTab === "active" ? pendingPayouts : archivedPayouts;
+
   // Filter payouts
-  const filteredPayouts = pendingPayouts.filter((payout) => {
+  const filteredPayouts = currentPayouts.filter((payout) => {
     const matchesStatus =
       filterStatus === "all" || payout.status === filterStatus;
     const matchesSearch =
@@ -364,6 +380,8 @@ const AdminAffiliatePayouts: React.FC = () => {
     approvedCount: pendingPayouts.filter((p) => p.status === "approved").length,
     processingCount: pendingPayouts.filter((p) => p.status === "processing").length,
   };
+
+  const currentIsLoading = activeTab === "active" ? isLoading : isLoadingArchived;
 
   // Handle action
   const handleAction = (
@@ -470,15 +488,52 @@ const AdminAffiliatePayouts: React.FC = () => {
               onClick={() => {
                 refreshStats();
                 refreshPayouts();
+                if (activeTab === "archived") refreshArchivedPayouts();
               }}
-              disabled={isLoading}
+              disabled={currentIsLoading}
             >
               <RefreshCw
-                className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+                className={`h-4 w-4 mr-2 ${currentIsLoading ? "animate-spin" : ""}`}
               />
               Actualiser
             </Button>
           </div>
+        </div>
+
+        {/* Tabs: En cours / Archives */}
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => { setActiveTab("active"); setFilterStatus("all"); }}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors min-h-[48px] ${
+              activeTab === "active"
+                ? "border-emerald-500 text-emerald-700 dark:text-emerald-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            <Inbox className="w-4 h-4" />
+            En cours
+            {pendingPayouts.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full font-semibold">
+                {pendingPayouts.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => { setActiveTab("archived"); setFilterStatus("all"); }}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors min-h-[48px] ${
+              activeTab === "archived"
+                ? "border-gray-500 text-gray-700 dark:text-gray-300"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            <Archive className="w-4 h-4" />
+            Archives
+            {archivedPayouts.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full font-semibold">
+                {archivedPayouts.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Notification */}
@@ -499,8 +554,8 @@ const AdminAffiliatePayouts: React.FC = () => {
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stats Cards (only for active tab) */}
+        {activeTab === "active" && <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="En attente"
             value={stats.pendingCount}
@@ -529,7 +584,7 @@ const AdminAffiliatePayouts: React.FC = () => {
             icon={<Users className="h-6 w-6" />}
             color="green"
           />
-        </div>
+        </div>}
 
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
@@ -555,12 +610,20 @@ const AdminAffiliatePayouts: React.FC = () => {
                 className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
               >
                 <option value="all">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="approved">Approuvés</option>
-                <option value="processing">En traitement</option>
-                <option value="completed">Complétés</option>
-                <option value="failed">Échoués</option>
-                <option value="rejected">Rejetés</option>
+                {activeTab === "active" ? (
+                  <>
+                    <option value="pending">En attente</option>
+                    <option value="approved">Approuves</option>
+                    <option value="processing">En traitement</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="completed">Payes</option>
+                    <option value="rejected">Rejetes</option>
+                    <option value="failed">Echoues</option>
+                    <option value="cancelled">Annules</option>
+                  </>
+                )}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
@@ -569,18 +632,31 @@ const AdminAffiliatePayouts: React.FC = () => {
 
         {/* Payouts Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {isLoading ? (
+          {currentIsLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
           ) : filteredPayouts.length === 0 ? (
             <div className="text-center py-12">
-              <Banknote className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">
-                {searchQuery || filterStatus !== "all"
-                  ? "Aucun payout ne correspond aux critères"
-                  : "Aucun payout en attente"}
-              </p>
+              {activeTab === "active" ? (
+                <>
+                  <CheckCircle className="h-12 w-12 text-green-200 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {searchQuery || filterStatus !== "all"
+                      ? "Aucun payout ne correspond aux criteres"
+                      : "Aucune demande en cours - tout est a jour !"}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Archive className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {searchQuery || filterStatus !== "all"
+                      ? "Aucun payout ne correspond aux criteres"
+                      : "Aucun payout archive"}
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">

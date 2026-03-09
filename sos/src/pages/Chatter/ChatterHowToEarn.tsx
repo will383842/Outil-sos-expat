@@ -144,7 +144,7 @@ function Step({
   title,
   description,
   highlight,
-  color = "text-red-500",
+  color = "text-indigo-500",
 }: {
   number: number;
   icon: React.ReactNode;
@@ -155,7 +155,7 @@ function Step({
 }) {
   return (
     <div className="flex gap-4 items-start">
-      <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-black text-lg`}>
+      <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-black text-lg`}>
         {number}
       </div>
       <div className="flex-1 min-w-0">
@@ -280,7 +280,7 @@ function YourNextGoal({
     );
     goalReward = formatCents(referralStats.nextTierBonus.bonusAmount);
     goalIcon = <TrendingUp className="h-5 w-5" />;
-    goalColor = 'text-red-500';
+    goalColor = 'text-indigo-500';
   } else if (chatter?.currentMonthRank != null && chatter.currentMonthRank > 3 && chatter.currentMonthRank <= 10) {
     const placesToClimb = chatter.currentMonthRank - 3;
     goalMessage = intl.formatMessage(
@@ -312,7 +312,7 @@ function YourNextGoal({
   }
 
   return (
-    <div className={`${UI.card} p-4 border-l-4 border-orange-400`}>
+    <div className={`${UI.card} p-4 border-l-4 border-violet-400`}>
       <div className="flex items-center gap-3">
         <div className={`flex-shrink-0 ${goalColor}`}>
           {goalIcon}
@@ -330,7 +330,7 @@ function YourNextGoal({
       {progressPercent != null && (
         <div className="mt-2 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all duration-700"
+            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-700"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -658,7 +658,7 @@ function ChatterHowToEarn() {
               </code>
               <button
                 onClick={handleCopy}
-                className="flex-shrink-0 px-3 py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold hover:from-red-600 hover:to-orange-600 transition-all flex items-center gap-1"
+                className="flex-shrink-0 px-3 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-bold hover:from-indigo-600 hover:to-violet-600 transition-all flex items-center gap-1"
               >
                 {copied ? <CheckCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied
@@ -801,7 +801,7 @@ function ChatterHowToEarn() {
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierBonuses', defaultMessage: 'Bonus paliers' })}
                 amount="$15→$4K"
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierDesc', defaultMessage: '5 à 500 recrues' })}
-                color="text-red-600 dark:text-red-400"
+                color="text-indigo-600 dark:text-indigo-400"
               />
             </div>
           </div>
@@ -861,7 +861,7 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       <div className={`${UI.card} p-4 sm:p-6`}>
         <div className="flex items-center gap-2 mb-4">
-          <Users className="h-5 w-5 text-red-500" />
+          <Users className="h-5 w-5 text-indigo-500" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             <FormattedMessage id="chatter.howToEarn.tiers.title" defaultMessage="Bonus de recrutement" />
           </h2>

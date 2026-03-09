@@ -100,7 +100,7 @@ const SwipeTabContainer: React.FC<SwipeTabContainerProps> = ({
               onClick={() => setActiveTab(tab.key)}
               className={`relative flex-shrink-0 px-4 py-3 text-sm font-medium transition-colors min-h-[44px] whitespace-nowrap
                 ${isActive
-                  ? 'text-red-600 dark:text-red-400'
+                  ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                 }
               `}
@@ -108,7 +108,7 @@ const SwipeTabContainer: React.FC<SwipeTabContainerProps> = ({
               {tab.label}
               {/* Active indicator */}
               <span
-                className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-orange-500 transition-transform duration-200 origin-center
+                className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-500 transition-transform duration-200 origin-center
                   ${isActive ? 'scale-x-100' : 'scale-x-0'}
                 `}
               />

@@ -225,7 +225,7 @@ const ForecastCard = memo(function ForecastCard({
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-red-500" />
+        <Target className="w-5 h-5 text-indigo-500" />
         <h3 className="text-sm dark:text-white font-semibold">
           <FormattedMessage
             id="chatter.forecast.title"
@@ -235,7 +235,7 @@ const ForecastCard = memo(function ForecastCard({
       </div>
 
       {/* Projected Month-End */}
-      <div className="p-4 bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 rounded-xl mb-3">
+      <div className="p-4 bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-xl mb-3">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs dark:text-gray-400 mb-1">
@@ -244,7 +244,7 @@ const ForecastCard = memo(function ForecastCard({
                 defaultMessage="Gains estimes fin de mois"
               />
             </p>
-            <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600">
+            <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600">
               <AnimatedNumber
                 value={projections.projectedMonthEnd}
                 isCurrency
@@ -279,7 +279,7 @@ const ForecastCard = memo(function ForecastCard({
         {/* Next Level */}
         <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
           <div className="flex items-center gap-1.5 mb-1">
-            <Calendar className="w-3.5 h-3.5 text-red-500" />
+            <Calendar className="w-3.5 h-3.5 text-indigo-500" />
             <span className="text-[10px] dark:text-gray-400 sm:text-xs">
               <FormattedMessage
                 id="chatter.forecast.nextLevel"
@@ -311,7 +311,7 @@ const ForecastCard = memo(function ForecastCard({
               )}
             </>
           ) : (
-            <p className="text-sm dark:text-red-400 font-semibold">
+            <p className="text-sm dark:text-indigo-400 font-semibold">
               <FormattedMessage
                 id="chatter.forecast.maxLevel"
                 defaultMessage="Niveau max !"

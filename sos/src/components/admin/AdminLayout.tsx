@@ -195,28 +195,89 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }, [user?.id]);
 
   // =========================================================================
+  // PENDING PROVIDER VALIDATION BADGE
+  // =========================================================================
+  const [pendingValidationCount, setPendingValidationCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    const q = query(
+      collection(db, 'sos_profiles'),
+      where('type', 'in', ['lawyer', 'expat']),
+      where('approvalStatus', '==', 'pending')
+    );
+    getCountFromServer(q)
+      .then((snap) => setPendingValidationCount(snap.data().count))
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // =========================================================================
+  // PENDING KYC BADGE
+  // =========================================================================
+  const [pendingKycCount, setPendingKycCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    const q = query(
+      collection(db, 'sos_profiles'),
+      where('serviceType', 'in', ['lawyer_call', 'expat_call']),
+      where('kycStatus', '==', 'pending')
+    );
+    getCountFromServer(q)
+      .then((snap) => setPendingKycCount(snap.data().count))
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // =========================================================================
+  // INBOX BADGE (all pending messages across collections)
+  // =========================================================================
+  const [inboxCount, setInboxCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    Promise.all([
+      getCountFromServer(query(collection(db, 'captain_applications'), where('status', 'in', ['pending', 'contacted']))),
+      getCountFromServer(query(collection(db, 'contact_messages'), where('isRead', '==', false))),
+      getCountFromServer(query(collection(db, 'user_feedback'), where('status', 'in', ['new', 'in_progress']))),
+      getCountFromServer(query(collection(db, 'partner_applications'), where('status', 'in', ['pending', 'contacted']))),
+    ])
+      .then(([cap, contact, feedback, partner]) => {
+        setInboxCount(cap.data().count + contact.data().count + feedback.data().count + partner.data().count);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // =========================================================================
   // MENU FILTRE PAR ROLE
   // =========================================================================
   const filteredMenu = useMemo(() => {
     const menu = getFinalMenu(user?.role || 'admin');
 
-    // Inject pending withdrawal badge into the payments-withdrawals menu item
-    if (pendingWithdrawalCount > 0) {
-      const injectBadge = (items: AdminMenuItem[]): AdminMenuItem[] =>
-        items.map((item) => {
-          if (item.id === 'finance-withdrawals' || item.id === 'payments-withdrawals') {
-            return { ...item, badge: `${pendingWithdrawalCount}`, children: item.children ? injectBadge(item.children) : undefined };
-          }
-          if (item.children) {
-            return { ...item, children: injectBadge(item.children) };
-          }
-          return item;
-        });
-      return injectBadge(menu);
-    }
-
-    return menu;
-  }, [user?.role, pendingWithdrawalCount]);
+    // Inject badges into menu items
+    const injectBadge = (items: AdminMenuItem[]): AdminMenuItem[] =>
+      items.map((item) => {
+        if ((item.id === 'finance-withdrawals' || item.id === 'payments-withdrawals') && pendingWithdrawalCount > 0) {
+          return { ...item, badge: `${pendingWithdrawalCount}`, children: item.children ? injectBadge(item.children) : undefined };
+        }
+        if (item.id === 'inbox' && inboxCount > 0) {
+          return { ...item, badge: `${inboxCount}` };
+        }
+        if (item.id === 'validation-prestataires' && pendingValidationCount > 0) {
+          return { ...item, badge: `${pendingValidationCount}`, children: item.children ? injectBadge(item.children) : undefined };
+        }
+        if (item.id === 'kyc-prestataires' && pendingKycCount > 0) {
+          return { ...item, badge: `${pendingKycCount}`, children: item.children ? injectBadge(item.children) : undefined };
+        }
+        if (item.children) {
+          return { ...item, children: injectBadge(item.children) };
+        }
+        return item;
+      });
+    return injectBadge(menu);
+  }, [user?.role, pendingWithdrawalCount, inboxCount, pendingValidationCount, pendingKycCount]);
 
   // =========================================================================
   // EFFECTS

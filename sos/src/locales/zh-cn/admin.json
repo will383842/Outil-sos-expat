@@ -570,8 +570,6 @@
   "admin.menu.affiliateConfig.description": "联盟计划设置",
   "admin.menu.commissionRules": "佣金规则",
   "admin.menu.commissionRules.description": "配置佣金费率",
-  "admin.menu.ambassadors": "大使",
-  "admin.menu.ambassadors.description": "高级大使计划",
   "admin.menu.influencersList": "网红列表",
   "admin.menu.influencersList.description": "管理所有网红",
   "admin.menu.influencersPayments": "网红付款",

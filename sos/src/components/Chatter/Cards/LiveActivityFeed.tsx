@@ -90,8 +90,8 @@ const ACTIVITY_CONFIG: Record<
   },
   signup: {
     icon: UserPlus,
-    color: "text-red-600 dark:text-red-400",
-    bgColor: "bg-red-100 dark:bg-red-900/30",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
     messageKey: "chatter.activityFeed.signup",
     defaultMessage: "just joined the team!",
     emoji: "🎉",
@@ -281,7 +281,7 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
       <div className={`${UI.card} p-4 ${className}`}>
         {showHeader && (
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
@@ -318,7 +318,7 @@ const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
         <div className="flex items-center justify-between p-4 pb-2">
           <div className="flex items-center gap-2">
             <div className="relative">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               {/* Pulse indicator */}

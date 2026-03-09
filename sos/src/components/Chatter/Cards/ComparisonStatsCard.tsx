@@ -224,7 +224,7 @@ const ComparisonStatsCard = memo(function ComparisonStatsCard({
               defaultMessage="Recrues"
             />
           }
-          icon={<UserPlus className="w-4 h-4 text-red-600 dark:text-red-400" />}
+          icon={<UserPlus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
           thisValue={thisMonth.recruits}
           lastValue={lastMonth.recruits}
           percentChange={Math.abs(comparisons.recruits.change)}

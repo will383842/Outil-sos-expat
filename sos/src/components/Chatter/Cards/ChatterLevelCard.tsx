@@ -23,7 +23,7 @@ const DEFAULT_LEVEL_CONFIG = {
   2: { color: 'from-gray-400 to-gray-500', icon: Star, minEarned: 10000 },
   3: { color: 'from-yellow-400 to-yellow-500', icon: Trophy, minEarned: 50000 },
   4: { color: 'from-cyan-400 to-cyan-500', icon: Trophy, minEarned: 200000 },
-  5: { color: 'from-red-400 to-pink-400', icon: Zap, minEarned: 500000 },
+  5: { color: 'from-indigo-400 to-violet-400', icon: Zap, minEarned: 500000 },
 } as const;
 
 // Default level bonus percentages — overridden by backend config
@@ -210,8 +210,8 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
 
       {/* Max Level Reached */}
       {!nextLevel && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
-          <p className="text-xs dark:text-red-300 sm:text-sm font-medium">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-lg sm:rounded-xl text-center animate-pulse-subtle">
+          <p className="text-xs dark:text-indigo-300 sm:text-sm font-medium">
             <FormattedMessage id="chatter.level.maxReached" defaultMessage="Niveau maximum atteint !" />
           </p>
         </div>
@@ -221,7 +221,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
       <div className="grid gap-2 sm:gap-3">
         {/* Current Streak */}
         <div
-          className={`p-2 sm:p-3 bg-gradient-to-br from-orange-50 dark:from-orange-900/20 to-red-50 dark:to-red-900/20 rounded-lg sm:rounded-xl transition-transform hover:scale-[1.02]${currentStreak >= 7 ? 'ring-2 ring-orange-400/50' : ''}`}
+          className={`p-2 sm:p-3 bg-gradient-to-br from-violet-50 dark:from-violet-900/20 to-indigo-50 dark:to-indigo-900/20 rounded-lg sm:rounded-xl transition-transform hover:scale-[1.02]${currentStreak >= 7 ? 'ring-2 ring-orange-400/50' : ''}`}
         >
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
             <Flame
@@ -259,13 +259,13 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
 
         {/* Monthly Rank */}
         <div
-          className={`p-2 sm:p-3 bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 rounded-lg sm:rounded-xl transition-transform hover:scale-[1.02]${monthlyRank && monthlyRank <= 3 ? 'ring-2 ring-red-400/50 animate-pulse-subtle' : ''}`}
+          className={`p-2 sm:p-3 bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-lg sm:rounded-xl transition-transform hover:scale-[1.02]${monthlyRank && monthlyRank <= 3 ? 'ring-2 ring-indigo-400/50 animate-pulse-subtle' : ''}`}
         >
           <div className="flex items-center gap-1 sm:gap-2 mb-1">
             <Trophy
               className={`
                 w-3 h-3 sm:w-4 sm:h-4
-                ${monthlyRank && monthlyRank <= 3 ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'}
+                ${monthlyRank && monthlyRank <= 3 ? 'text-indigo-500' : 'text-gray-600 dark:text-gray-400'}
               `}
             />
             <span className="text-[10px] dark:text-gray-400 sm:text-xs truncate">
@@ -283,7 +283,7 @@ const ChatterLevelCard = memo(function ChatterLevelCard({
                 />
               </p>
               {monthlyRank <= 3 && (
-                <p className="text-[10px] dark:text-red-400 sm:text-xs mt-0.5 sm:mt-1 font-medium">
+                <p className="text-[10px] dark:text-indigo-400 sm:text-xs mt-0.5 sm:mt-1 font-medium">
                   <FormattedMessage
                     id={`chatter.rank.top${monthlyRank}`}
                     defaultMessage="Top {rank} ce mois!"

@@ -53,8 +53,8 @@ export default function ChatterRefer() {
       label: t("chatter.referrals.when50N2"),
       amount: n2CallAmount / 100,
       icon: Users,
-      color: "text-red-600 dark:text-red-400",
-      bg: "bg-red-100 dark:bg-red-900/30",
+      color: "text-indigo-600 dark:text-indigo-400",
+      bg: "bg-indigo-100 dark:bg-indigo-900/30",
     },
     {
       label: t("chatter.referrals.perCallN1"),
@@ -97,7 +97,7 @@ export default function ChatterRefer() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {[
               { icon: Users, value: stats.totalFilleulsN1, label: t("chatter.referrals.filleulsN1"), color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-900/30", gradient: "from-blue-600 to-blue-400" },
-              { icon: Users, value: stats.qualifiedFilleulsN1, label: t("chatter.referrals.qualified"), color: "text-red-600 dark:text-red-400", bg: "bg-red-100 dark:bg-red-900/30", gradient: "from-red-600 to-red-400" },
+              { icon: Users, value: stats.qualifiedFilleulsN1, label: t("chatter.referrals.qualified"), color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-100 dark:bg-indigo-900/30", gradient: "from-indigo-600 to-indigo-400" },
               { icon: DollarSign, value: `$${(stats.totalReferralEarnings / 100).toFixed(0)}`, label: t("chatter.referrals.earned"), color: "text-green-600 dark:text-green-400", bg: "bg-green-100 dark:bg-green-900/30", gradient: "from-green-600 to-green-400" },
               { icon: TrendingUp, value: `$${(stats.monthlyReferralEarnings / 100).toFixed(0)}`, label: t("chatter.referrals.thisMonth"), color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-100 dark:bg-orange-900/30", gradient: "from-orange-600 to-orange-400" },
             ].map((stat, index) => (

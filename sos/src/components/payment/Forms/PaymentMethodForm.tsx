@@ -62,7 +62,7 @@ type FormStep = 'country' | 'details' | 'confirm';
 // CONSTANTS
 // ============================================================================
 
-// Wise-supported countries (Bank Transfer) - 155 countries matching backend config
+// Wise-supported countries (Bank Transfer) - 142 countries matching backend config
 const WISE_COUNTRIES: CountryOption[] = [
   // Western Europe (EUR zone)
   { code: 'FR', name: 'France', nameEn: 'France', flag: '🇫🇷', currency: 'EUR', provider: 'wise', methodType: 'bank_transfer', bankFields: ['iban'] },
@@ -253,9 +253,7 @@ const FLUTTERWAVE_COUNTRIES: CountryOption[] = [
   { code: 'UG', name: 'Ouganda', nameEn: 'Uganda', flag: '🇺🇬', currency: 'UGX', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money'] },
   { code: 'RW', name: 'Rwanda', nameEn: 'Rwanda', flag: '🇷🇼', currency: 'RWF', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mtn_momo', 'airtel_money'] },
   { code: 'ZA', name: 'Afrique du Sud', nameEn: 'South Africa', flag: '🇿🇦', currency: 'ZAR', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['vodacom'] },
-  { code: 'MA', name: 'Maroc', nameEn: 'Morocco', flag: '🇲🇦', currency: 'MAD', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
-  { code: 'TN', name: 'Tunisie', nameEn: 'Tunisia', flag: '🇹🇳', currency: 'TND', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
-  { code: 'DZ', name: 'Algerie', nameEn: 'Algeria', flag: '🇩🇿', currency: 'DZD', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['mobilis'] },
+  // MA, TN, DZ: North Africa - Wise bank transfer only (no Flutterwave support in backend)
   { code: 'MG', name: 'Madagascar', nameEn: 'Madagascar', flag: '🇲🇬', currency: 'MGA', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money', 'airtel_money'] },
   { code: 'MU', name: 'Maurice', nameEn: 'Mauritius', flag: '🇲🇺', currency: 'MUR', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
   { code: 'GQ', name: 'Guinee equatoriale', nameEn: 'Equatorial Guinea', flag: '🇬🇶', currency: 'XAF', provider: 'flutterwave', methodType: 'mobile_money', mobileProviders: ['orange_money'] },
@@ -711,39 +709,28 @@ const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
 
       {/* Country list */}
       <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-        {filteredCountries.map((country) => {
-          const isMobileMoney = country.methodType === 'mobile_money';
-          return (
+        {filteredCountries.map((country) => (
             <button
               key={country.code}
-              onClick={() => { if (!isMobileMoney) handleCountrySelect(country); }}
-              disabled={isMobileMoney}
+              onClick={() => handleCountrySelect(country)}
               className={`
                 w-full flex items-center gap-3 p-3 rounded-xl border-2
                 transition-all duration-200 text-left
-                ${isMobileMoney
-                  ? 'opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                  : `hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20
-                    ${selectedCountry?.code === country.code
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900/30'
-                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
-                    }`
+                hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20
+                ${selectedCountry?.code === country.code
+                  ? 'border-red-500 bg-red-50 dark:bg-red-900/30'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                 }
               `}
             >
               <span className="text-2xl">{country.flag}</span>
               <div className="flex-1 min-w-0">
-                <p className={`font-medium truncate ${isMobileMoney ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                <p className="font-medium truncate text-gray-900 dark:text-white">
                   {country.name}
-                  {isMobileMoney && (
-                    <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                      Bientôt
-                    </span>
-                  )}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {country.currency} - {isMobileMoney
-                    ? intl.formatMessage({ id: 'payment.form.mobileMoneyComingSoon', defaultMessage: 'Mobile Money (bientôt disponible)' })
+                  {country.currency} - {country.methodType === 'mobile_money'
+                    ? 'Mobile Money'
                     : intl.formatMessage({ id: 'payment.form.bankTransfer', defaultMessage: 'Virement bancaire' })
                   }
                 </p>
@@ -752,10 +739,9 @@ const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
                 ? <Building2 className="w-5 h-5 text-gray-400" />
                 : <Smartphone className="w-5 h-5 text-gray-400" />
               }
-              {!isMobileMoney && <ChevronRight className="w-5 h-5 text-gray-400" />}
+              <ChevronRight className="w-5 h-5 text-gray-400" />
             </button>
-          );
-        })}
+        ))}
 
         {filteredCountries.length === 0 && (
           <div className="text-center py-8 text-gray-500">

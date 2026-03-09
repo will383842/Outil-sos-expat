@@ -1985,8 +1985,6 @@
   "admin.menu.affiliateConfig.description": "Paramètres du programme d'affiliation",
   "admin.menu.commissionRules": "Règles de Commissions",
   "admin.menu.commissionRules.description": "Configuration des taux de commission",
-  "admin.menu.ambassadors": "Ambassadeurs",
-  "admin.menu.ambassadors.description": "Programme ambassadeur premium",
   "admin.menu.backups": "Sauvegardes",
   "admin.menu.backups.description": "Backup et restauration",
   "admin.menu.balanceSheet": "Bilan",

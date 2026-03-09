@@ -1342,3 +1342,76 @@ export const adminGetAvailableCaptains = onCall(
     return { captains };
   }
 );
+
+// ============================================================================
+// 13. SEARCH CHATTERS (for assignment UI)
+// ============================================================================
+
+/**
+ * Search chatters by name or email for the captain assignment UI.
+ * Returns lightweight chatter info including their current captainId.
+ */
+export const adminSearchChatters = onCall(
+  { ...adminConfig, timeoutSeconds: 30 },
+  async (request) => {
+    await verifyAdmin(request);
+
+    const { search, limit: resultLimit } = request.data as {
+      search: string;
+      limit?: number;
+    };
+
+    if (!search || typeof search !== "string" || search.trim().length < 2) {
+      return { chatters: [] };
+    }
+
+    const maxResults = Math.min(resultLimit || 10, 50);
+    const db = getDb();
+    const searchLower = search.trim().toLowerCase();
+
+    // Firestore doesn't support full-text search, so we fetch active chatters
+    // and filter in memory. For large datasets, consider Algolia/Typesense.
+    // We use a range query on firstName to narrow results when possible.
+    const chattersQuery = await db
+      .collection("chatters")
+      .where("status", "==", "active")
+      .limit(500)
+      .get();
+
+    const results: Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      country?: string;
+      captainId?: string;
+    }> = [];
+
+    for (const doc of chattersQuery.docs) {
+      if (results.length >= maxResults) break;
+
+      const data = doc.data() as Chatter;
+      const fullName = `${data.firstName || ""} ${data.lastName || ""}`.toLowerCase();
+      const email = (data.email || "").toLowerCase();
+
+      if (fullName.includes(searchLower) || email.includes(searchLower)) {
+        results.push({
+          id: doc.id,
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          country: data.country || undefined,
+          captainId: data.captainId || undefined,
+        });
+      }
+    }
+
+    logger.info("[adminSearchChatters] Search completed", {
+      search: searchLower,
+      totalScanned: chattersQuery.size,
+      resultsFound: results.length,
+    });
+
+    return { chatters: results };
+  }
+);

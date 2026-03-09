@@ -753,8 +753,6 @@
   "admin.menu.affiliateConfig.description": "Einstellungen des Partnerprogramms",
   "admin.menu.commissionRules": "Provisionsregeln",
   "admin.menu.commissionRules.description": "Konfiguration der Provisionssätze",
-  "admin.menu.ambassadors": "Botschafter",
-  "admin.menu.ambassadors.description": "Premium-Botschafterprogramm",
   "admin.menu.influencersList": "Influencer-Liste",
   "admin.menu.influencersList.description": "Alle Influencer verwalten",
   "admin.menu.influencersPayments": "Influencer-Zahlungen",

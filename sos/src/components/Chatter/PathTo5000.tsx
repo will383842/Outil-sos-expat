@@ -1,12 +1,6 @@
 /**
- * PathTo5000 - Visual roadmap showing how to reach $5000 in earnings
- *
- * Displays 3 clear paths with specific actions and timelines:
- * - Path A: Solo (direct clients only)
- * - Path B: Small Team (10 active members)
- * - Path C: Big Team (50+ members with tier bonus)
- *
- * Used in: ChatterLanding, ChatterDashboard, ChatterRefer
+ * PathTo5000 - 2026 Design System
+ * Visual roadmap with glassmorphism cards and indigo/violet palette.
  */
 
 import React, { useState } from 'react';
@@ -28,6 +22,7 @@ import {
   ChevronUp,
   Sparkles,
 } from 'lucide-react';
+import { UI, ANIMATION, CHATTER_THEME, TYPOGRAPHY } from '@/components/Chatter/designTokens';
 
 // Default commission constants (in cents) — overridden by backend config
 const DEFAULT_COMMISSIONS = {
@@ -165,9 +160,9 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
       icon: <Crown className="w-6 h-6" />,
       title: 'Grande Équipe',
       subtitle: '50+ filleuls qualifiés',
-      color: 'from-red-500 to-pink-500',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      borderColor: 'border-red-200 dark:border-red-800',
+      color: 'from-indigo-500 to-violet-500',
+      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+      borderColor: 'border-indigo-200 dark:border-indigo-800',
       timeline: '3-6 mois',
       monthlyTarget: '$1,000+/mois',
       steps: [
@@ -185,27 +180,29 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
   // Compact version for dashboard
   if (variant === 'compact') {
     return (
-      <div className={`bg-gradient-to-br from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-2xl p-4 ${className}`}>
+      <div className={`${UI.card} bg-gradient-to-br from-indigo-500/5 to-violet-500/5 dark:from-indigo-500/10 dark:to-violet-500/10 p-4 ${className}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
+          <div className={`w-10 h-10 rounded-xl ${CHATTER_THEME.accentBg} flex items-center justify-center shadow-md shadow-indigo-500/25`}>
             <Rocket className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-white">Objectif $5,000</h3>
-            <p className="text-xs">{formatAmount(currentEarnings)} / $5,000</p>
+            <h3 className="font-bold text-slate-900 dark:text-white">
+              <FormattedMessage id="chatter.pathTo5000.goal" defaultMessage="Objectif $5,000" />
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{formatAmount(currentEarnings)} / $5,000</p>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
+        <div className="h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
           <div
-            className="h-full bg-gradient-to-r from-red-500 to-pink-500 transition-all duration-500"
+            className={`h-full ${CHATTER_THEME.accentBg} rounded-full transition-all duration-500`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
 
-        <p className="text-xs dark:text-gray-400">
-          Prochain palier: {nextMilestone.emoji} {nextMilestone.label}
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          <FormattedMessage id="chatter.pathTo5000.nextMilestone" defaultMessage="Prochain palier:" /> {nextMilestone.emoji} {nextMilestone.label}
         </p>
       </div>
     );
@@ -215,30 +212,36 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
     <div className={`${className}`}>
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/10 to-pink-500/10 rounded-full mb-4">
-          <Rocket className="w-5 h-5 text-red-600" />
-          <span className="text-sm dark:text-red-400 font-semibold">
-            Plan d'Action
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 dark:bg-indigo-500/15 backdrop-blur-lg rounded-full mb-4 border border-indigo-500/20">
+          <Rocket className="w-5 h-5 text-indigo-500" />
+          <span className="text-sm text-indigo-600 dark:text-indigo-400 font-semibold">
+            <FormattedMessage id="chatter.pathTo5000.badge" defaultMessage="Plan d'Action" />
           </span>
         </div>
-        <h2 className="text-2xl dark:text-white md:text-3xl font-bold mb-2">
-          🚀 Comment Atteindre <span className="text-transparent bg-clip-text from-red-600 to-pink-600">$5,000</span>
+        <h2 className="text-2xl text-slate-900 dark:text-white md:text-3xl font-bold mb-2">
+          <FormattedMessage
+            id="chatter.pathTo5000.title"
+            defaultMessage="Comment Atteindre {amount}"
+            values={{ amount: <span className={CHATTER_THEME.accentText}>$5,000</span> }}
+          />
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          3 chemins possibles selon votre style. Choisissez celui qui vous convient le mieux.
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          <FormattedMessage id="chatter.pathTo5000.subtitle" defaultMessage="3 chemins possibles selon votre style. Choisissez celui qui vous convient le mieux." />
         </p>
       </div>
 
       {/* Progress (if dashboard variant) */}
       {variant === 'dashboard' && currentEarnings > 0 && (
-        <div className="mb-8 p-4 bg-white/80 dark:bg-white/5 rounded-2xl border dark:border-white/10">
+        <div className={`mb-8 ${UI.card} p-4`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm dark:text-gray-400 font-medium">Votre progression</span>
-            <span className="text-sm font-bold">{progressPercent.toFixed(1)}%</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              <FormattedMessage id="chatter.pathTo5000.progress" defaultMessage="Votre progression" />
+            </span>
+            <span className="text-sm font-bold text-slate-900 dark:text-white">{progressPercent.toFixed(1)}%</span>
           </div>
-          <div className="h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-3">
+          <div className="h-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mb-3">
             <div
-              className="h-full bg-gradient-to-r from-red-500 to-pink-500 transition-all duration-1000 relative"
+              className={`h-full ${CHATTER_THEME.accentBg} rounded-full transition-all duration-1000 relative`}
               style={{ width: `${progressPercent}%` }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
@@ -250,7 +253,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
               <div
                 key={idx}
                 className={`flex items-center ${
-                  currentEarnings >= milestone.amount ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+                  currentEarnings >= milestone.amount ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
                 <span className="text-lg">{milestone.emoji}</span>
@@ -267,20 +270,19 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
           <div
             key={path.id}
             className={`
-              relative rounded-2xl border-2 transition-all duration-300 cursor-pointer
-              ${path.borderColor}
+              relative ${UI.card} border-2 transition-all ${ANIMATION.slow} cursor-pointer
               ${expandedPath === path.id
-                ? `${path.bgColor} shadow-lg scale-[1.02]`
-                : 'bg-white/50 dark:bg-white/5 hover:shadow-md'
+                ? `${path.bgColor} shadow-lg shadow-indigo-500/[0.06] scale-[1.02] ${path.borderColor}`
+                : `hover:shadow-md ${path.borderColor}`
               }
             `}
             onClick={() => setExpandedPath(expandedPath === path.id ? null : path.id)}
           >
             {/* Recommended badge */}
             {path.recommended && (
-              <div className="absolute -top-3 left-1/2 px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full flex items-center gap-1 shadow-lg">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-lg shadow-emerald-500/25">
                 <Star className="w-3 h-3" />
-                RECOMMANDÉ
+                <FormattedMessage id="chatter.pathTo5000.recommended" defaultMessage="RECOMMANDE" />
               </div>
             )}
 
@@ -291,41 +293,41 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
                   {path.icon}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 dark:text-white">{path.title}</h3>
-                  <p className="text-xs">{path.subtitle}</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white">{path.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{path.subtitle}</p>
                 </div>
                 {expandedPath === path.id ? (
-                  <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <ChevronUp className="w-5 h-5 text-slate-400" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <ChevronDown className="w-5 h-5 text-slate-400" />
                 )}
               </div>
 
               {/* Key stats */}
               <div className="flex gap-2 mb-3">
-                <div className="flex-1 p-2 bg-gray-100 dark:bg-white/10 rounded-lg text-center">
-                  <p className="text-xs">Durée</p>
-                  <p className="text-sm dark:text-white font-bold">{path.timeline}</p>
+                <div className="flex-1 p-2 bg-slate-100 dark:bg-white/[0.05] rounded-lg text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400"><FormattedMessage id="chatter.pathTo5000.duration" defaultMessage="Duree" /></p>
+                  <p className="text-sm text-slate-900 dark:text-white font-bold">{path.timeline}</p>
                 </div>
-                <div className="flex-1 p-2 bg-gray-100 dark:bg-white/10 rounded-lg text-center">
-                  <p className="text-xs">Objectif</p>
-                  <p className="text-sm dark:text-white font-bold">{path.monthlyTarget}</p>
+                <div className="flex-1 p-2 bg-slate-100 dark:bg-white/[0.05] rounded-lg text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400"><FormattedMessage id="chatter.pathTo5000.objective" defaultMessage="Objectif" /></p>
+                  <p className="text-sm text-slate-900 dark:text-white font-bold">{path.monthlyTarget}</p>
                 </div>
               </div>
 
               {/* Expanded content */}
               {expandedPath === path.id && (
-                <div className="mt-4 pt-4 border-t dark:border-white/10 animate-fade-in">
+                <div className={`mt-4 pt-4 border-t border-slate-200/60 dark:border-white/[0.06] ${ANIMATION.fadeIn}`}>
                   {/* Steps */}
                   <div className="space-y-2 mb-4">
                     {path.steps.map((step, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${path.color} flex items-center justify-center text-white`}>
+                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${path.color} flex items-center justify-center text-white flex-shrink-0`}>
                           {step.icon}
                         </div>
-                        <span className="flex-1 text-gray-700 dark:text-gray-300">{step.action}</span>
+                        <span className="flex-1 text-slate-700 dark:text-slate-300">{step.action}</span>
                         {step.earnings && (
-                          <span className="font-bold text-green-600 dark:text-green-400">{step.earnings}</span>
+                          <span className="font-bold text-emerald-500">{step.earnings}</span>
                         )}
                       </div>
                     ))}
@@ -334,15 +336,15 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
                   {/* Pros & Cons */}
                   <div className="grid gap-2 text-xs">
                     <div>
-                      <p className="font-semibold text-green-600 mb-1">✅ Avantages</p>
+                      <p className="font-semibold text-emerald-500 mb-1"><FormattedMessage id="chatter.pathTo5000.advantages" defaultMessage="Avantages" /></p>
                       {path.pros.map((pro, idx) => (
-                        <p key={idx} className="text-gray-600 dark:text-gray-400">• {pro}</p>
+                        <p key={idx} className="text-slate-600 dark:text-slate-400">• {pro}</p>
                       ))}
                     </div>
                     <div>
-                      <p className="font-semibold text-orange-600 mb-1">⚠️ À savoir</p>
+                      <p className="font-semibold text-amber-500 mb-1"><FormattedMessage id="chatter.pathTo5000.toKnow" defaultMessage="A savoir" /></p>
                       {path.cons.map((con, idx) => (
-                        <p key={idx} className="text-gray-600 dark:text-gray-400">• {con}</p>
+                        <p key={idx} className="text-slate-600 dark:text-slate-400">• {con}</p>
                       ))}
                     </div>
                   </div>
@@ -354,12 +356,12 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
       </div>
 
       {/* Tier Bonuses Summary */}
-      <div className="bg-gradient-to-r from-yellow-50 dark:from-yellow-900/20 to-orange-50 dark:to-orange-900/20 rounded-2xl p-6 mb-8">
-        <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-600" />
-          Bonus de Paliers (Filleuls Qualifiés)
+      <div className={`${UI.card} bg-gradient-to-r from-amber-500/5 to-violet-500/5 dark:from-amber-500/[0.03] dark:to-violet-500/[0.03] p-6 mb-8`}>
+        <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-amber-500" />
+          <FormattedMessage id="chatter.pathTo5000.tierBonuses" defaultMessage="Bonus de Paliers (Filleuls Qualifies)" />
         </h3>
-        <div className="grid md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {[
             { count: 5, bonus: '$15' },
             { count: 10, bonus: '$35' },
@@ -370,19 +372,19 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
           ].map((tier) => (
             <div
               key={tier.count}
-              className={`p-3 rounded-xl text-center ${
+              className={`p-3 rounded-xl text-center transition-all ${ANIMATION.normal} ${
                 tier.highlight
-                  ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg'
-                  : 'bg-white dark:bg-white/10'
+                  ? `${CHATTER_THEME.accentBg} text-white shadow-lg shadow-indigo-500/25`
+                  : 'bg-slate-100 dark:bg-white/[0.05]'
               }`}
             >
-              <p className={`text-xs ${tier.highlight ? 'text-white/80' : 'text-gray-700 dark:text-gray-300'}`}>{tier.count} filleuls</p>
-              <p className={`text-lg font-bold ${tier.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{tier.bonus}</p>
+              <p className={`text-xs ${tier.highlight ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>{tier.count} filleuls</p>
+              <p className={`text-lg font-bold ${tier.highlight ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{tier.bonus}</p>
             </div>
           ))}
         </div>
-        <p className="text-xs dark:text-gray-400 mt-3">
-          * Filleul qualifié = a gagné $20+ en commissions directes
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+          <FormattedMessage id="chatter.pathTo5000.qualifiedNote" defaultMessage="* Filleul qualifie = a gagne $20+ en commissions directes" />
         </p>
       </div>
 
@@ -391,10 +393,10 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
         <div className="text-center">
           <button
             onClick={onCTAClick}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95"
+            className={`${UI.button.primary} inline-flex items-center gap-3 px-8 py-4 text-lg`}
           >
             <Sparkles className="w-5 h-5" />
-            Commencer Mon Chemin vers $5,000
+            <FormattedMessage id="chatter.pathTo5000.cta" defaultMessage="Commencer Mon Chemin vers $5,000" />
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>

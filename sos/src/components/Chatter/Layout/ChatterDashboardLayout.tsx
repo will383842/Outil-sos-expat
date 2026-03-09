@@ -1,15 +1,17 @@
 /**
- * ChatterDashboardLayout - Redesigned layout with:
- * - ChatterDataProvider (single useChatter() for all pages)
- * - StickyAffiliateBar (persistent affiliate links)
- * - 7-tab navigation (simplified from 12+)
- * - Mobile bottom nav with FAB share button
- * - Desktop sidebar (collapsible)
- * - No more getDoc() for captain check (uses Context data)
+ * ChatterDashboardLayout - Rich sidebar with:
+ * - Profile + Level badge with glow
+ * - Available Balance widget (orange/green/blue states)
+ * - Piggy Bank mini progress
+ * - 2 Affiliate links (client + recruitment)
+ * - 7-tab navigation (+ captain conditional)
+ * - Level progression bar
+ * - Logout
+ * - Mobile drawer (same content) + bottom nav with indigo FAB
  */
 
 import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
@@ -26,6 +28,11 @@ import {
   Share2,
   Crown,
   Menu,
+  Copy,
+  PiggyBank,
+  TrendingUp,
+  ArrowUpRight,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
@@ -34,7 +41,8 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { ChatterDataProvider, useChatterData } from '@/contexts/ChatterDataContext';
 import { CelebrationProvider } from '@/components/Chatter/Activation/CelebrationSystem';
 import StickyAffiliateBar from './StickyAffiliateBar';
-import { UI, CHATTER_THEME } from '@/components/Chatter/designTokens';
+import WithdrawalBottomSheet from '@/components/Chatter/WithdrawalBottomSheet';
+import { UI, CHATTER_THEME, LEVEL_COLORS } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
 
@@ -51,9 +59,334 @@ const ChatterDashboardLayout: React.FC<ChatterDashboardLayoutProps> = ({ childre
   );
 };
 
-/**
- * Inner layout component that has access to ChatterDataContext
- */
+// ============================================================================
+// HELPER: Format cents to dollars
+// ============================================================================
+const formatAmount = (cents: number): string => (cents / 100).toFixed(2);
+
+// ============================================================================
+// SIDEBAR CONTENT (shared between desktop sidebar and mobile drawer)
+// ============================================================================
+interface SidebarContentProps {
+  photo: string | undefined;
+  fullName: string;
+  firstName: string;
+  level: number;
+  levelProgress: number;
+  availableBalance: number;
+  canWithdraw: boolean;
+  minimumWithdrawal: number;
+  pendingWithdrawalId: string | null;
+  piggyBank: { totalPending: number; unlockThreshold: number; progressPercent: number } | null;
+  clientCode: string;
+  recruitmentCode: string;
+  clientShareUrl: string;
+  recruitmentShareUrl: string;
+  commissionClientCall: number;
+  commissionN1Call: number;
+  drawerItems: NavItem[];
+  currentKey: string;
+  language: string;
+  loggingOut: boolean;
+  onNavigate: (key: string, route: string) => void;
+  onLogout: () => void;
+  onWithdraw?: () => void;
+  intl: ReturnType<typeof useIntl>;
+}
+
+type NavItem = { key: string; icon: React.ReactNode; route: string; labels: Record<string, string> };
+
+const SidebarContent: React.FC<SidebarContentProps> = ({
+  photo, fullName, firstName, level, levelProgress,
+  availableBalance, canWithdraw, minimumWithdrawal, pendingWithdrawalId,
+  piggyBank, clientCode, recruitmentCode, clientShareUrl, recruitmentShareUrl,
+  commissionClientCall, commissionN1Call,
+  drawerItems, currentKey, language, loggingOut,
+  onNavigate, onLogout, onWithdraw, intl,
+}) => {
+  const levelConfig = LEVEL_COLORS[level as keyof typeof LEVEL_COLORS] || LEVEL_COLORS[1];
+  const balanceInDollars = formatAmount(availableBalance);
+  const minimumInDollars = formatAmount(minimumWithdrawal);
+  const remaining = minimumWithdrawal - availableBalance;
+  const withdrawProgress = Math.min((availableBalance / minimumWithdrawal) * 100, 100);
+
+  // Determine balance state
+  const hasPendingWithdrawal = !!pendingWithdrawalId;
+  const belowThreshold = !canWithdraw && !hasPendingWithdrawal;
+
+  const handleCopy = useCallback(async (text: string, label: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) toast.success(`${label} copie !`);
+  }, []);
+
+  const handleShare = useCallback(async (url: string) => {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'SOS Expat', url }); } catch { /* cancelled */ }
+    } else {
+      const ok = await copyToClipboard(url);
+      if (ok) toast.success('Lien copie !');
+    }
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* ── 1. Profile ── */}
+      <div className="p-5">
+        <div className="flex items-center gap-3">
+          {photo ? (
+            <img src={photo} alt={firstName} className="w-14 h-14 rounded-full object-cover ring-2 ring-indigo-500/40 shadow-lg shadow-indigo-500/20" />
+          ) : (
+            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <User className="h-7 w-7 text-white" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-bold text-white truncate">{fullName}</h2>
+            <span
+              className={`inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${levelConfig.bg} ${levelConfig.text}`}
+              style={{ boxShadow: `0 0 12px ${level >= 4 ? 'rgba(251,191,36,0.3)' : level >= 3 ? 'rgba(139,92,246,0.3)' : 'transparent'}` }}
+            >
+              <FormattedMessage id="chatter.sidebar.level" defaultMessage="Niveau {level}" values={{ level }} />
+              {' '}&middot;{' '}{levelConfig.name}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 2. Available Balance ── */}
+      <div className="px-4 pb-3">
+        <div className={`rounded-xl p-3.5 border ${
+          hasPendingWithdrawal
+            ? 'bg-blue-500/10 border-blue-500/20'
+            : canWithdraw
+              ? 'bg-emerald-500/10 border-emerald-500/20'
+              : 'bg-amber-500/10 border-amber-500/20'
+        }`}>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">
+            <FormattedMessage id="chatter.sidebar.available" defaultMessage="Disponible" />
+          </p>
+          <p className={`text-2xl font-extrabold tracking-tight ${
+            hasPendingWithdrawal
+              ? 'text-blue-400'
+              : canWithdraw
+                ? 'text-emerald-400'
+                : 'text-amber-400'
+          }`}>
+            ${balanceInDollars}
+          </p>
+
+          {/* State: Pending withdrawal */}
+          {hasPendingWithdrawal && (
+            <div className="flex items-center gap-2 mt-2.5 text-blue-400">
+              <Clock className="w-3.5 h-3.5 animate-pulse" />
+              <span className="text-xs font-medium">
+                <FormattedMessage id="chatter.sidebar.withdrawPending" defaultMessage="Retrait en cours" />
+              </span>
+            </div>
+          )}
+
+          {/* State: Can withdraw */}
+          {canWithdraw && !hasPendingWithdrawal && (
+            <button
+              onClick={onWithdraw}
+              className="mt-2.5 w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold transition-all animate-pulse hover:animate-none shadow-lg shadow-emerald-500/25"
+            >
+              <FormattedMessage id="chatter.sidebar.withdraw" defaultMessage="Retirer" /> ${balanceInDollars}
+            </button>
+          )}
+
+          {/* State: Below threshold */}
+          {belowThreshold && (
+            <div className="mt-2.5">
+              <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-700"
+                  style={{ width: `${withdrawProgress}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-amber-400/80 mt-1.5">
+                <FormattedMessage
+                  id="chatter.sidebar.moreToWithdraw"
+                  defaultMessage="Encore {amount} pour retirer"
+                  values={{ amount: `$${formatAmount(Math.max(remaining, 0))}` }}
+                />
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── 3. Piggy Bank Mini ── */}
+      {piggyBank && (
+        <div className="px-4 pb-3">
+          <div className="rounded-xl p-3 bg-pink-500/10 border border-pink-500/15">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <PiggyBank className="w-4 h-4 text-pink-400" />
+                <span className="text-xs font-semibold text-pink-300">
+                  <FormattedMessage id="chatter.sidebar.piggyBank" defaultMessage="Tirelire" />
+                </span>
+              </div>
+              <span className="text-xs font-bold text-pink-400">
+                ${formatAmount(piggyBank.totalPending)} / ${formatAmount(piggyBank.unlockThreshold)}
+              </span>
+            </div>
+            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-pink-500 to-pink-400 transition-all duration-700"
+                style={{ width: `${Math.min(piggyBank.progressPercent, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 4. Affiliate Links ── */}
+      <div className="px-4 pb-3 space-y-2">
+        {/* Client link */}
+        <div className="rounded-xl p-3 bg-emerald-500/10 border border-emerald-500/15">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
+              <FormattedMessage id="chatter.sidebar.clientLink" defaultMessage="Lien client" />
+            </span>
+            {commissionClientCall > 0 && (
+              <span className="text-[10px] font-medium text-emerald-500/70">
+                <FormattedMessage
+                  id="chatter.sidebar.perCall"
+                  defaultMessage="{amount}/appel"
+                  values={{ amount: `$${formatAmount(commissionClientCall)}` }}
+                />
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <code className="flex-1 text-xs font-mono text-emerald-300 truncate bg-white/5 px-2 py-1.5 rounded-lg">
+              {clientCode || '---'}
+            </code>
+            <button
+              onClick={() => handleCopy(clientCode, 'Code')}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-emerald-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Copy"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleShare(clientShareUrl)}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-emerald-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Share"
+            >
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Recruitment link */}
+        <div className="rounded-xl p-3 bg-violet-500/10 border border-violet-500/15">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-violet-400 uppercase tracking-wider">
+              <FormattedMessage id="chatter.sidebar.recruitLink" defaultMessage="Lien recrutement" />
+            </span>
+            {commissionN1Call > 0 && (
+              <span className="text-[10px] font-medium text-violet-500/70">
+                <FormattedMessage
+                  id="chatter.sidebar.perCall"
+                  defaultMessage="{amount}/appel"
+                  values={{ amount: `$${formatAmount(commissionN1Call)}` }}
+                />
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <code className="flex-1 text-xs font-mono text-violet-300 truncate bg-white/5 px-2 py-1.5 rounded-lg">
+              {recruitmentCode || '---'}
+            </code>
+            <button
+              onClick={() => handleCopy(recruitmentCode, 'Code')}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-violet-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Copy"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleShare(recruitmentShareUrl)}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-violet-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Share"
+            >
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. Navigation ── */}
+      <nav className="px-3 flex-1">
+        <ul className="space-y-0.5">
+          {drawerItems.map((item) => (
+            <li key={item.key}>
+              <button
+                onClick={() => onNavigate(item.key, item.route)}
+                className={`group relative w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all min-h-[40px]
+                  ${currentKey === item.key
+                    ? 'bg-indigo-500/15 text-indigo-400'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                  }`}
+              >
+                {currentKey === item.key && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-r" />
+                )}
+                {item.icon}
+                {item.labels[language] ?? item.labels.en}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* ── 6. Level Progression ── */}
+      <div className="px-4 py-3 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[11px] font-medium text-slate-400">
+              <FormattedMessage id="chatter.sidebar.progression" defaultMessage="Progression" />
+            </span>
+          </div>
+          <span className="text-[11px] font-bold text-indigo-400">{Math.round(levelProgress)}%</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-700"
+            style={{ width: `${Math.min(levelProgress, 100)}%` }}
+          />
+        </div>
+        {level < 5 && (
+          <p className="text-[10px] text-slate-500 mt-1">
+            <FormattedMessage id="chatter.sidebar.level" defaultMessage="Niveau {level}" values={{ level: level + 1 }} />
+          </p>
+        )}
+      </div>
+
+      {/* ── 7. Logout ── */}
+      <div className="px-3 pb-4 pt-1">
+        <button
+          onClick={onLogout}
+          disabled={loggingOut}
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-all min-h-[40px]"
+        >
+          <LogOut className="w-5 h-5" />
+          {loggingOut
+            ? intl.formatMessage({ id: 'dashboard.loggingOut', defaultMessage: 'Deconnexion...' })
+            : intl.formatMessage({ id: 'dashboard.logout', defaultMessage: 'Deconnexion' })
+          }
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// INNER LAYOUT
+// ============================================================================
 const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKey }) => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
@@ -62,9 +395,10 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   const { language } = useApp();
   const [loggingOut, setLoggingOut] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showWithdrawalSheet, setShowWithdrawalSheet] = useState(false);
 
   // Captain status from Context (no more getDoc!)
-  const { dashboardData, clientShareUrl } = useChatterData();
+  const { dashboardData, clientShareUrl, recruitmentShareUrl, canWithdraw, minimumWithdrawal, refreshDashboard } = useChatterData();
   const isCaptain = dashboardData?.chatter?.role === 'captainChatter';
 
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -116,7 +450,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
       <Layout showFooter={false}>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {intl.formatMessage({ id: 'common.loading', defaultMessage: 'Chargement...' })}
             </p>
@@ -146,15 +480,13 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   })();
 
   // 7 main nav items
-  type NavItem = { key: string; icon: React.ReactNode; route: string; labels: Record<string, string> };
-
   const mainNavItems: NavItem[] = [
-    { key: 'home', icon: <Home className="w-5 h-5" />, route: routes.dashboard, labels: { fr: 'Accueil', en: 'Home', es: 'Inicio', de: 'Start', ru: 'Главная', pt: 'Início', ch: '首页', hi: 'होम', ar: 'الرئيسية' } },
+    { key: 'home', icon: <Home className="w-5 h-5" />, route: routes.dashboard, labels: { fr: 'Accueil', en: 'Home', es: 'Inicio', de: 'Start', ru: 'Главная', pt: 'Inicio', ch: '首页', hi: 'होम', ar: 'الرئيسية' } },
     { key: 'howToEarn', icon: <Lightbulb className="w-5 h-5" />, route: routes.howToEarn, labels: { fr: 'Gagner', en: 'Earn', es: 'Ganar', de: 'Verdienen', ru: 'Заработок', pt: 'Ganhar', ch: '赚钱', hi: 'कमाएँ', ar: 'اكسب' } },
     { key: 'payments', icon: <DollarSign className="w-5 h-5" />, route: routes.payments, labels: { fr: 'Gains', en: 'Earnings', es: 'Ganancias', de: 'Einnahmen', ru: 'Доходы', pt: 'Ganhos', ch: '收益', hi: 'कमाई', ar: 'الأرباح' } },
     { key: 'team', icon: <Users className="w-5 h-5" />, route: routes.referrals, labels: { fr: 'Equipe', en: 'Team', es: 'Equipo', de: 'Team', ru: 'Команда', pt: 'Equipe', ch: '团队', hi: 'टीम', ar: 'الفريق' } },
     { key: 'ranking', icon: <Trophy className="w-5 h-5" />, route: routes.leaderboard, labels: { fr: 'Classement', en: 'Ranking', es: 'Ranking', de: 'Rangliste', ru: 'Рейтинг', pt: 'Ranking', ch: '排名', hi: 'रैंकिंग', ar: 'الترتيب' } },
-    { key: 'tools', icon: <Briefcase className="w-5 h-5" />, route: routes.training, labels: { fr: 'Formation', en: 'Training', es: 'Formación', de: 'Schulung', ru: 'Обучение', pt: 'Formação', ch: '培训', hi: 'प्रशिक्षण', ar: 'التدريب' } },
+    { key: 'tools', icon: <Briefcase className="w-5 h-5" />, route: routes.training, labels: { fr: 'Formation', en: 'Training', es: 'Formacion', de: 'Schulung', ru: 'Обучение', pt: 'Formacao', ch: '培训', hi: 'प्रशिक्षण', ar: 'التدريب' } },
     { key: 'profile', icon: <User className="w-5 h-5" />, route: routes.profile, labels: { fr: 'Profil', en: 'Profile', es: 'Perfil', de: 'Profil', ru: 'Профиль', pt: 'Perfil', ch: '个人资料', hi: 'प्रोफ़ाइल', ar: 'الملف الشخصي' } },
   ];
 
@@ -168,7 +500,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   ];
 
   // FAB share action
-  const handleFabShare = useCallback(async () => {
+  const handleFabShare = async () => {
     if (!clientShareUrl) return;
     localStorage.setItem('chatter_link_shared', Date.now().toString());
     if (navigator.share) {
@@ -181,7 +513,38 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
         if (success) toast.success('Lien copie !');
       });
     }
-  }, [clientShareUrl]);
+  };
+
+  // Shared sidebar props
+  const chatter = dashboardData?.chatter;
+  const sidebarProps: SidebarContentProps = {
+    photo,
+    fullName,
+    firstName,
+    level: chatter?.level || 1,
+    levelProgress: chatter?.levelProgress || 0,
+    availableBalance: chatter?.availableBalance || 0,
+    canWithdraw,
+    minimumWithdrawal,
+    pendingWithdrawalId: chatter?.pendingWithdrawalId || null,
+    piggyBank: dashboardData?.piggyBank || null,
+    clientCode: chatter?.affiliateCodeClient || '',
+    recruitmentCode: chatter?.affiliateCodeRecruitment || '',
+    clientShareUrl,
+    recruitmentShareUrl,
+    commissionClientCall: dashboardData?.config?.commissionClientCallAmount || 0,
+    commissionN1Call: dashboardData?.config?.commissionN1CallAmount || 0,
+    drawerItems,
+    currentKey,
+    language: language || 'en',
+    loggingOut,
+    onNavigate: (key, route) => {
+      if (currentKey !== key) navigate(route);
+    },
+    onLogout: () => handleLogout(),
+    onWithdraw: () => setShowWithdrawalSheet(true),
+    intl,
+  };
 
   return (
     <Layout showFooter={false}>
@@ -190,133 +553,44 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
         <StickyAffiliateBar />
 
         <div className="max-w-7xl mx-auto lg:px-6 lg:py-6">
-          <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-6">
+          <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
 
             {/* MOBILE DRAWER */}
             {isDrawerOpen && (
               <>
                 <div
-                  className="lg:hidden fixed inset-0 bg-black/40 z-40"
+                  className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
                   onClick={() => setIsDrawerOpen(false)}
                   aria-hidden="true"
                 />
-                <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl overflow-y-auto">
-                  {/* Drawer header */}
-                  <div className={`p-4 ${CHATTER_THEME.header}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20">Chatter</span>
-                      <button
-                        onClick={() => setIsDrawerOpen(false)}
-                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-white/20"
-                        aria-label="Close"
-                      >
-                        <X className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {photo ? (
-                        <img src={photo} alt={firstName} className="w-12 h-12 rounded-full object-cover ring-2 ring-white/30" />
-                      ) : (
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                          <User className="h-6 w-6 text-white" />
-                        </div>
-                      )}
-                      <h2 className="text-base font-bold text-white truncate">{fullName}</h2>
-                    </div>
+                <div className="lg:hidden fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-slate-900/95 backdrop-blur-xl border-r border-white/[0.06] shadow-2xl shadow-black/50 overflow-y-auto">
+                  {/* Drawer close button */}
+                  <div className="absolute top-3 right-3 z-10">
+                    <button
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="p-2 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 transition-colors"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4 text-white" />
+                    </button>
                   </div>
 
-                  {/* Drawer nav */}
-                  <nav className="p-3">
-                    <ul className="space-y-1">
-                      {drawerItems.map((item) => (
-                        <li key={item.key}>
-                          <button
-                            onClick={() => { setIsDrawerOpen(false); if (currentKey !== item.key) navigate(item.route); }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all min-h-[44px]
-                              ${currentKey === item.key
-                                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
-                                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
-                              }`}
-                          >
-                            {item.icon}
-                            {item.labels[language] ?? item.labels.en}
-                          </button>
-                        </li>
-                      ))}
-                      <li className="pt-3 border-t border-slate-200 dark:border-white/10">
-                        <button
-                          onClick={() => { setIsDrawerOpen(false); handleLogout(); }}
-                          disabled={loggingOut}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 min-h-[44px]"
-                        >
-                          <LogOut className="w-5 h-5" />
-                          {intl.formatMessage({ id: 'dashboard.logout', defaultMessage: 'Deconnexion' })}
-                        </button>
-                      </li>
-                    </ul>
-                  </nav>
+                  <SidebarContent
+                    {...sidebarProps}
+                    onNavigate={(key, route) => {
+                      setIsDrawerOpen(false);
+                      if (currentKey !== key) navigate(route);
+                    }}
+                    onLogout={() => { setIsDrawerOpen(false); handleLogout(); }}
+                  />
                 </div>
               </>
             )}
 
             {/* DESKTOP SIDEBAR */}
             <aside className="hidden lg:block">
-              <div className={`${UI.card} overflow-hidden sticky top-4`}>
-                {/* Header */}
-                <div className={`p-5 ${CHATTER_THEME.header}`}>
-                  <div className="flex items-center gap-3">
-                    {photo ? (
-                      <img src={photo} alt={firstName} className="w-14 h-14 rounded-full object-cover ring-2 ring-white/30" />
-                    ) : (
-                      <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                        <User className="h-7 w-7 text-white" />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <h2 className="text-base font-bold text-white truncate">{fullName}</h2>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white">
-                        Chatter
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Nav */}
-                <nav className="p-3">
-                  <ul className="space-y-1">
-                    {drawerItems.map((item) => (
-                      <li key={item.key}>
-                        <button
-                          onClick={() => { if (currentKey !== item.key) navigate(item.route); }}
-                          className={`group relative w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all
-                            ${currentKey === item.key
-                              ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                        >
-                          {currentKey === item.key && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-r" />
-                          )}
-                          {item.icon}
-                          {item.labels[language] ?? item.labels.en}
-                        </button>
-                      </li>
-                    ))}
-                    <li className="pt-3 border-t border-slate-200 dark:border-white/10">
-                      <button
-                        onClick={handleLogout}
-                        disabled={loggingOut}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
-                      >
-                        <LogOut className="w-5 h-5" />
-                        {loggingOut
-                          ? intl.formatMessage({ id: 'dashboard.loggingOut', defaultMessage: 'Deconnexion...' })
-                          : intl.formatMessage({ id: 'dashboard.logout', defaultMessage: 'Deconnexion' })
-                        }
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+              <div className="sticky top-4 bg-slate-900/60 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+                <SidebarContent {...sidebarProps} />
               </div>
             </aside>
 
@@ -338,14 +612,14 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
             {/* Home */}
             <BottomNavItem
               icon={<Home className="w-5 h-5" />}
-              label={mainNavItems[0].labels[language] ?? 'Home'}
+              label={mainNavItems[0].labels[language || 'en'] ?? 'Home'}
               active={currentKey === 'home'}
               onClick={() => currentKey !== 'home' && navigate(routes.dashboard)}
             />
             {/* Gagner */}
             <BottomNavItem
               icon={<Lightbulb className="w-5 h-5" />}
-              label={mainNavItems[1].labels[language] ?? 'Earn'}
+              label={mainNavItems[1].labels[language || 'en'] ?? 'Earn'}
               active={currentKey === 'howToEarn'}
               onClick={() => currentKey !== 'howToEarn' && navigate(routes.howToEarn)}
             />
@@ -354,7 +628,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
             <div className="relative -mt-6">
               <button
                 onClick={handleFabShare}
-                className="w-14 h-14 bg-gradient-to-r from-red-500 to-orange-500 rounded-full shadow-lg shadow-red-500/25 flex items-center justify-center text-white active:scale-95 transition-transform"
+                className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg shadow-indigo-500/30 flex items-center justify-center text-white active:scale-95 transition-transform"
                 aria-label={intl.formatMessage({ id: 'chatter.share', defaultMessage: 'Partager' })}
               >
                 <Share2 className="w-6 h-6" />
@@ -364,7 +638,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
             {/* Gains */}
             <BottomNavItem
               icon={<DollarSign className="w-5 h-5" />}
-              label={mainNavItems[2].labels[language] ?? 'Earnings'}
+              label={mainNavItems[2].labels[language || 'en'] ?? 'Earnings'}
               active={currentKey === 'payments'}
               onClick={() => currentKey !== 'payments' && navigate(routes.payments)}
             />
@@ -378,6 +652,13 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
           </div>
         </nav>
       </div>
+
+      {/* Withdrawal Bottom Sheet */}
+      <WithdrawalBottomSheet
+        isOpen={showWithdrawalSheet}
+        onClose={() => setShowWithdrawalSheet(false)}
+        onSuccess={() => refreshDashboard()}
+      />
     </Layout>
   );
 };
@@ -394,11 +675,11 @@ const BottomNavItem: React.FC<{
   <button
     onClick={onClick}
     className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[48px] transition-colors touch-manipulation ${
-      active ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'
+      active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'
     }`}
     aria-current={active ? 'page' : undefined}
   >
-    <div className={`p-1.5 rounded-lg transition-colors ${active ? 'bg-red-50 dark:bg-red-500/10' : ''}`}>
+    <div className={`p-1.5 rounded-lg transition-colors ${active ? 'bg-indigo-50 dark:bg-indigo-500/10' : ''}`}>
       {icon}
     </div>
     <span className={`text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'}`}>

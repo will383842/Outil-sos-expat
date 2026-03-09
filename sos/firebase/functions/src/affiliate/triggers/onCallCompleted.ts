@@ -108,7 +108,9 @@ export async function handleCallCompleted(
         clientData.referredByBlogger ||
         clientData.bloggerReferredBy ||
         clientData.referredByGroupAdmin ||
-        clientData.groupAdminReferredBy;
+        clientData.groupAdminReferredBy ||
+        clientData.partnerReferredBy ||
+        clientData.partnerReferredById;
 
       if (hasRoleSpecificReferral) {
         logger.info("[affiliateOnCallCompleted] Skipping — handled by role-specific handler", {
@@ -120,6 +122,8 @@ export async function handleCallCompleted(
           influencerReferredBy: !!clientData.influencerReferredBy,
           referredByBlogger: !!clientData.referredByBlogger,
           referredByGroupAdmin: !!clientData.referredByGroupAdmin,
+          partnerReferredBy: !!clientData.partnerReferredBy,
+          partnerReferredById: !!clientData.partnerReferredById,
         });
         return;
       }
@@ -145,6 +149,22 @@ export async function handleCallCompleted(
       const providerType = providerDoc.exists
         ? (providerDoc.data()?.providerType as "lawyer" | "expat")
         : undefined;
+
+      // 6b. Deduplicate: check if a commission was already created for this exact session
+      const existingSessionCommission = await db
+        .collection("affiliate_commissions")
+        .where("sourceId", "==", sessionId)
+        .where("referrerId", "==", referredByUserId)
+        .limit(1)
+        .get();
+
+      if (!existingSessionCommission.empty) {
+        logger.info("[affiliateOnCallCompleted] Commission already exists for this session, skipping", {
+          sessionId,
+          existingCommissionId: existingSessionCommission.docs[0].id,
+        });
+        return;
+      }
 
       // 7. Check if this is the client's first completed call
       // First, check if a first_call commission already exists for this referral pair

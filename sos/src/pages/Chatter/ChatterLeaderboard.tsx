@@ -34,7 +34,7 @@ export default function ChatterLeaderboard() {
   );
 }
 
-function ChatterLeaderboardContent() {
+const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent() {
   const intl = useIntl();
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
@@ -170,13 +170,13 @@ function ChatterLeaderboardContent() {
               return (
                 <div
                   key={entry.chatterId}
-                  className={`flex items-center gap-3 px-4 py-3 ${isMe ? 'bg-red-50/50 dark:bg-red-500/5' : ''}`}
+                  className={`flex items-center gap-3 px-4 py-3 ${isMe ? 'bg-indigo-50/50 dark:bg-indigo-500/5' : ''}`}
                 >
-                  <span className={`text-sm font-bold w-8 text-center ${isMe ? 'text-red-500' : 'text-slate-400'}`}>
+                  <span className={`text-sm font-bold w-8 text-center ${isMe ? 'text-indigo-500' : 'text-slate-400'}`}>
                     #{rank}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${isMe ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                    <p className={`text-sm font-medium truncate ${isMe ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>
                       {entry.chatterName || 'Chatter'} {isMe && '(vous)'}
                     </p>
                   </div>
@@ -192,7 +192,7 @@ function ChatterLeaderboardContent() {
 
       {/* My position sticky card */}
       {myRank > 3 && myEntry && (
-        <div className={`${UI.card} p-4 border-l-4 border-l-red-500 sticky bottom-20 lg:bottom-4`}>
+        <div className={`${UI.card} p-4 border-l-4 border-l-indigo-500 sticky bottom-20 lg:bottom-4`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-slate-400">
@@ -256,7 +256,7 @@ function ChatterLeaderboardContent() {
           <div>
             <div className="h-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
                 style={{ width: `${chatter?.levelProgress || 0}%` }}
               />
             </div>
@@ -325,12 +325,28 @@ function ChatterLeaderboardContent() {
   ];
 
   return (
-    <div className="px-4 py-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Trophy className="w-5 h-5 text-amber-500" />
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-          <FormattedMessage id="chatter.ranking.title" defaultMessage="Classement" />
-        </h1>
+    <div className={`${SPACING.pagePadding} py-4`}>
+      {/* Hero header */}
+      <div className={`${UI.card} ${SPACING.cardPadding} bg-gradient-to-r from-amber-500/5 to-indigo-500/5 dark:from-amber-500/[0.03] dark:to-indigo-500/[0.03] mb-4`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-indigo-500 flex items-center justify-center shadow-md shadow-amber-500/25">
+            <Trophy className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+              <FormattedMessage id="chatter.ranking.title" defaultMessage="Classement" />
+            </h1>
+            {myRank > 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                <FormattedMessage
+                  id="chatter.leaderboard.yourPosition"
+                  defaultMessage="#{rank} sur {total}"
+                  values={{ rank: myRank, total: totalParticipants }}
+                />
+              </p>
+            )}
+          </div>
+        </div>
       </div>
       <SwipeTabContainer tabs={tabs} />
     </div>

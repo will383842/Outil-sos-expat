@@ -1,15 +1,16 @@
 /**
- * ChatterPayments - Full payment management page for chatters (Redesigned)
+ * ChatterPayments - Full payment management page for chatters (Redesigned 2026)
  *
  * KEY CHANGES:
+ * - Single scrollable page (no more SwipeTabContainer / 4 tabs)
+ * - Inline withdrawal flow with expand/collapse
+ * - Collapsible withdrawal history section
+ * - Glassmorphism cards, indigo/violet accent palette
  * - Uses useChatterData() (Context) instead of direct useChatter() call
- * - 4 sub-tabs via SwipeTabContainer (Vue d'ensemble, Retirer, Methodes, Historique retraits)
- * - Uses UI from @/components/Chatter/designTokens
- * - Shared payment components imported as-is (no modifications)
  * - Mobile-first, dark mode support
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { trackMetaInitiateCheckout } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -25,7 +26,6 @@ import {
   type PaymentDetails,
 } from '@/hooks/usePayment';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
-import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
 import { UI } from '@/components/Chatter/designTokens';
 import {
   PaymentMethodForm,
@@ -43,6 +43,7 @@ import {
   Loader2,
   AlertCircle,
   ArrowUpRight,
+  ArrowDownRight,
   Plus,
   History,
   Eye,
@@ -51,6 +52,8 @@ import {
   DollarSign,
   TrendingUp,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 // ============================================================================
@@ -58,6 +61,9 @@ import {
 // ============================================================================
 
 const SOS_WITHDRAWAL_FEE_CENTS = 300; // $3
+
+const GLASS_CARD =
+  'rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] shadow-lg dark:shadow-none';
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -131,7 +137,7 @@ const LockedBonusBanner: React.FC<{
   if (piggyBank.totalPending <= 0 || piggyBank.isUnlocked) return null;
 
   return (
-    <div className={`${UI.card} p-4 bg-gradient-to-r from-pink-50 dark:from-pink-900/20 to-rose-50 dark:to-rose-900/20 border-l-4 border-l-pink-400`}>
+    <div className={`${GLASS_CARD} p-4 bg-gradient-to-r from-pink-50 dark:from-pink-900/20 to-rose-50 dark:to-rose-900/20 border-l-4 border-l-pink-400`}>
       <div className="flex items-start gap-3">
         <div className="p-2 bg-pink-100 dark:bg-pink-900/50 rounded-lg shrink-0">
           <Gift className="w-5 h-5 text-pink-600 dark:text-pink-400" />
@@ -194,7 +200,7 @@ const ChatterPaymentsContent: React.FC = () => {
     error: chatterError,
   } = useChatterData();
 
-  // Page-specific payment hooks (actions only — withdrawals data from context)
+  // Page-specific payment hooks (actions only -- withdrawals data from context)
   const {
     methods,
     defaultMethodId,
@@ -214,8 +220,9 @@ const ChatterPaymentsContent: React.FC = () => {
   const { hasPendingWithdrawal, pendingWithdrawal } = usePendingWithdrawal();
   const { currency } = usePaymentConfig();
 
-  // Local state
-  const [activeTab, setActiveTab] = useState('overview');
+  // Local state -- simplified (no more activeTab)
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [showWithdrawalHistory, setShowWithdrawalHistory] = useState(false);
   const [showPaymentMethodForm, setShowPaymentMethodForm] = useState(false);
   const [savingMethod, setSavingMethod] = useState(false);
   const [saveMethodError, setSaveMethodError] = useState<string | null>(null);
@@ -228,7 +235,7 @@ const ChatterPaymentsContent: React.FC = () => {
   const [pendingConfirmationId, setPendingConfirmationId] = useState<string | null>(null);
   const [pendingConfirmationAmount, setPendingConfirmationAmount] = useState(0);
 
-  // Tracking for selected withdrawal in history tab
+  // Tracking for selected withdrawal in history
   const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
   const {
     tracking: selectedTracking,
@@ -370,16 +377,55 @@ const ChatterPaymentsContent: React.FC = () => {
   );
 
   // ============================================================================
-  // TAB CONTENT
+  // LOADING / ERROR STATES
   // ============================================================================
 
-  /** Tab 1: Vue d'ensemble */
-  const overviewContent = useMemo(() => (
-    <div className="space-y-4">
-      {/* Balance Cards */}
+  if (chatterLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (chatterError) {
+    return (
+      <div className={`${GLASS_CARD} p-6`}>
+        <div className="flex items-center gap-3 text-red-500">
+          <AlertCircle className="w-6 h-6" />
+          <span>{chatterError}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================================
+  // RENDER -- Single scrollable page
+  // ============================================================================
+
+  return (
+    <div className="space-y-6">
+      {/* ------------------------------------------------------------------ */}
+      {/* Header                                                              */}
+      {/* ------------------------------------------------------------------ */}
+      <div>
+        <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
+          <FormattedMessage id="chatter.payments.title" defaultMessage="Mes paiements" />
+        </h1>
+        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <FormattedMessage
+            id="chatter.payments.subtitle"
+            defaultMessage="Gerez vos gains et retraits"
+          />
+        </p>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Balance Cards (3 cards)                                             */}
+      {/* ------------------------------------------------------------------ */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {/* Available */}
-        <div className={`${UI.card} p-3 sm:p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}>
+        <div className={`${GLASS_CARD} p-3 sm:p-5 bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20`}>
           <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
             <div className="p-1 sm:p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
               <Wallet className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
@@ -394,7 +440,7 @@ const ChatterPaymentsContent: React.FC = () => {
         </div>
 
         {/* Pending */}
-        <div className={`${UI.card} p-3 sm:p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}>
+        <div className={`${GLASS_CARD} p-3 sm:p-5 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20`}>
           <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
             <div className="p-1 sm:p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
               <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
@@ -409,7 +455,7 @@ const ChatterPaymentsContent: React.FC = () => {
         </div>
 
         {/* Validated */}
-        <div className={`${UI.card} p-3 sm:p-5 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20`}>
+        <div className={`${GLASS_CARD} p-3 sm:p-5 bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20`}>
           <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-2">
             <div className="p-1 sm:p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
               <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
@@ -424,8 +470,10 @@ const ChatterPaymentsContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Total balance summary + earnings breakdown bar chart */}
-      <div className={`${UI.card} p-4 sm:p-5`}>
+      {/* ------------------------------------------------------------------ */}
+      {/* Total + Breakdown                                                   */}
+      {/* ------------------------------------------------------------------ */}
+      <div className={`${GLASS_CARD} p-4 sm:p-5`}>
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
             <FormattedMessage id="chatter.payments.totalBalance" defaultMessage="Solde total" />
@@ -442,12 +490,16 @@ const ChatterPaymentsContent: React.FC = () => {
         />
       </div>
 
-      {/* Locked Bonus */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Locked Bonus (if applicable)                                        */}
+      {/* ------------------------------------------------------------------ */}
       {piggyBank && <LockedBonusBanner piggyBank={piggyBank} formatAmount={formatAmount} />}
 
-      {/* Pending Withdrawal Alert */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Pending Withdrawal Alert                                            */}
+      {/* ------------------------------------------------------------------ */}
       {hasPendingWithdrawal && pendingWithdrawal && (
-        <div className={`${UI.card} p-4 bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20 border-l-4 border-l-blue-400`}>
+        <div className={`${GLASS_CARD} p-4 bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-indigo-50 dark:to-indigo-900/20 border-l-4 border-l-blue-400`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
@@ -467,9 +519,9 @@ const ChatterPaymentsContent: React.FC = () => {
             <button
               onClick={() => {
                 setSelectedWithdrawalId(pendingWithdrawal.id);
-                setActiveTab('history');
+                setShowWithdrawalHistory(true);
               }}
-              className={`${UI.button.secondary} px-4 py-2 text-sm flex items-center gap-2`}
+              className="px-4 py-2 text-sm rounded-xl bg-white/10 backdrop-blur border border-white/[0.08] text-blue-600 dark:text-blue-300 hover:bg-white/20 transition-all flex items-center gap-2"
             >
               <Eye className="w-4 h-4" />
               <FormattedMessage id="chatter.payments.trackWithdrawal" defaultMessage="Suivre" />
@@ -478,383 +530,318 @@ const ChatterPaymentsContent: React.FC = () => {
         </div>
       )}
 
-      {/* Commissions History (shared component) */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Withdraw Section                                                    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="space-y-4">
+        {!showWithdrawForm ? (
+          /* Big withdraw button when collapsed */
+          <button
+            onClick={() => setShowWithdrawForm(true)}
+            disabled={availableBalance <= 0}
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed text-white font-semibold text-lg shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 flex items-center justify-center gap-3"
+          >
+            <ArrowUpRight className="w-5 h-5" />
+            <FormattedMessage id="chatter.payments.tab.withdraw" defaultMessage="Retirer" />
+            {availableBalance > 0 && (
+              <span className="ml-1 opacity-80">({formatAmount(availableBalance)})</span>
+            )}
+          </button>
+        ) : (
+          /* Inline withdrawal flow when expanded */
+          <div className={`${GLASS_CARD} p-4 sm:p-6 space-y-4`}>
+            {/* Section header with collapse button */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <ArrowUpRight className="w-5 h-5 text-indigo-500" />
+                <FormattedMessage id="chatter.payments.tab.withdraw" defaultMessage="Retirer" />
+              </h2>
+              <button
+                onClick={() => setShowWithdrawForm(false)}
+                className="px-3 py-1.5 text-sm rounded-xl bg-white/10 backdrop-blur border border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-white/20 transition-all"
+              >
+                <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
+              </button>
+            </div>
+
+            {/* Balance reminder + fee info */}
+            <div className={`${GLASS_CARD} p-4 flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                  <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <FormattedMessage id="chatter.payments.availableBalance" defaultMessage="Disponible" />
+                  </p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {formatAmount(availableBalance)}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
+                  <FormattedMessage id="chatter.payments.withdrawFee" defaultMessage="Frais de retrait" />
+                </p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                  {formatAmount(SOS_WITHDRAWAL_FEE_CENTS)}
+                </p>
+              </div>
+            </div>
+
+            {/* Telegram Required Banner */}
+            {!user?.telegramId && (
+              <TelegramRequiredBanner
+                role="chatter"
+                onboardingPath="/chatter/telegram"
+                availableBalance={availableBalance}
+              />
+            )}
+
+            {/* Payment methods inline (if no methods, show add form) */}
+            {methods.length === 0 && !showPaymentMethodForm && (
+              <div className={`${GLASS_CARD} p-5 text-center space-y-3`}>
+                <CreditCard className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <FormattedMessage
+                    id="chatter.payments.noMethods"
+                    defaultMessage="Aucune methode de paiement enregistree"
+                  />
+                </p>
+                <button
+                  onClick={() => setShowPaymentMethodForm(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-violet-600 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <FormattedMessage
+                    id="chatter.payments.addPaymentMethod"
+                    defaultMessage="Ajouter une methode de paiement"
+                  />
+                </button>
+              </div>
+            )}
+
+            {/* Inline add payment method form */}
+            {showPaymentMethodForm && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                    <FormattedMessage
+                      id="chatter.payments.addMethod"
+                      defaultMessage="Ajouter une methode de paiement"
+                    />
+                  </h3>
+                  <button
+                    onClick={() => setShowPaymentMethodForm(false)}
+                    className="px-3 py-1.5 text-sm rounded-xl bg-white/10 backdrop-blur border border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-white/20 transition-all"
+                  >
+                    <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
+                  </button>
+                </div>
+                <PaymentMethodForm
+                  onSubmit={handleSavePaymentMethod}
+                  loading={savingMethod}
+                  error={saveMethodError}
+                />
+              </div>
+            )}
+
+            {/* Existing payment methods list (compact) */}
+            {methods.length > 0 && !showPaymentMethodForm && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <FormattedMessage id="chatter.payments.tab.methods" defaultMessage="Methodes" />
+                  </span>
+                  <button
+                    onClick={() => setShowPaymentMethodForm(true)}
+                    className="text-xs text-indigo-500 hover:text-indigo-400 flex items-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <FormattedMessage id="chatter.payments.addMethod" defaultMessage="Ajouter" />
+                  </button>
+                </div>
+                {methods.map((method) => (
+                  <PaymentMethodCard
+                    key={method.id}
+                    method={method}
+                    showActions
+                    onDelete={() => handleDeleteMethod(method.id)}
+                    onSelect={
+                      method.isDefault ? undefined : () => handleSetDefaultMethod(method.id)
+                    }
+                    className="dark:bg-white/5 dark:border-white/8"
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Withdrawal Form (shared component) */}
+            {(methods.length > 0 || showPaymentMethodForm) && !showPaymentMethodForm && (
+              <WithdrawalRequestForm
+                availableBalance={availableBalance}
+                currency="USD"
+                onSubmit={handleWithdrawalRequest}
+                onAddPaymentMethod={() => setShowPaymentMethodForm(true)}
+                loading={withdrawalLoading}
+                error={withdrawalError}
+                success={withdrawalSuccess}
+                paymentMethods={methods}
+                defaultPaymentMethodId={defaultMethodId}
+                role="chatter"
+                telegramConnected={!!user?.telegramId}
+                onTelegramConnected={refreshUser}
+                pendingConfirmationWithdrawalId={pendingConfirmationId}
+                pendingConfirmationAmount={pendingConfirmationAmount}
+                onTelegramConfirmed={handleTelegramConfirmed}
+                onTelegramCancelled={handleTelegramCancelled}
+                onTelegramExpired={handleTelegramExpired}
+                withdrawalFeeCents={dashboardData?.config?.withdrawalFeeCents}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Commission History                                                  */}
+      {/* ------------------------------------------------------------------ */}
       <CommissionsHistoryTab
         commissions={commissions as any}
         role="chatter"
         currency="USD"
         isLoading={chatterLoading}
       />
-    </div>
-  ), [
-    availableBalance, pendingBalance, validatedBalance, totalBalance,
-    piggyBank, hasPendingWithdrawal, pendingWithdrawal, commissions,
-    chatterLoading, formatAmount, intl,
-  ]);
 
-  /** Tab 2: Retirer */
-  const withdrawContent = useMemo(() => (
-    <div className="space-y-4">
-      {/* Balance reminder + fee info */}
-      <div className={`${UI.card} p-4 flex items-center justify-between`}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-            <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              <FormattedMessage id="chatter.payments.availableBalance" defaultMessage="Disponible" />
-            </p>
-            <p className="text-lg font-bold text-green-600 dark:text-green-400">
-              {formatAmount(availableBalance)}
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            <FormattedMessage id="chatter.payments.withdrawFee" defaultMessage="Frais de retrait" />
-          </p>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-            {formatAmount(SOS_WITHDRAWAL_FEE_CENTS)}
-          </p>
-        </div>
-      </div>
-
-      {/* Telegram Required Banner */}
-      {!user?.telegramId && (
-        <TelegramRequiredBanner
-          role="chatter"
-          onboardingPath="/chatter/telegram"
-          availableBalance={availableBalance}
-        />
-      )}
-
-      {/* Withdrawal Form (shared component) */}
-      <WithdrawalRequestForm
-        availableBalance={availableBalance}
-        currency="USD"
-        onSubmit={handleWithdrawalRequest}
-        onAddPaymentMethod={() => {
-          setActiveTab('methods');
-          setShowPaymentMethodForm(true);
-        }}
-        loading={withdrawalLoading}
-        error={withdrawalError}
-        success={withdrawalSuccess}
-        paymentMethods={methods}
-        defaultPaymentMethodId={defaultMethodId}
-        role="chatter"
-        telegramConnected={!!user?.telegramId}
-        onTelegramConnected={refreshUser}
-        pendingConfirmationWithdrawalId={pendingConfirmationId}
-        pendingConfirmationAmount={pendingConfirmationAmount}
-        onTelegramConfirmed={handleTelegramConfirmed}
-        onTelegramCancelled={handleTelegramCancelled}
-        onTelegramExpired={handleTelegramExpired}
-        withdrawalFeeCents={dashboardData?.config?.withdrawalFeeCents}
-      />
-    </div>
-  ), [
-    availableBalance, user?.telegramId, methods, defaultMethodId,
-    withdrawalLoading, withdrawalError, withdrawalSuccess,
-    pendingConfirmationId, pendingConfirmationAmount,
-    dashboardData?.config?.withdrawalFeeCents, formatAmount,
-    handleWithdrawalRequest, handleTelegramConfirmed,
-    handleTelegramCancelled, handleTelegramExpired, refreshUser,
-  ]);
-
-  /** Tab 3: Methodes */
-  const methodsContent = useMemo(() => (
-    <div className="space-y-4">
-      {showPaymentMethodForm ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              <FormattedMessage
-                id="chatter.payments.addMethod"
-                defaultMessage="Ajouter une methode de paiement"
-              />
-            </h3>
-            <button
-              onClick={() => setShowPaymentMethodForm(false)}
-              className={`${UI.button.secondary} px-4 py-2 text-sm`}
-            >
-              <FormattedMessage id="common.cancel" defaultMessage="Annuler" />
-            </button>
-          </div>
-          <PaymentMethodForm
-            onSubmit={handleSavePaymentMethod}
-            loading={savingMethod}
-            error={saveMethodError}
-          />
-        </div>
-      ) : (
-        <>
-          {/* Add Method Button */}
-          <button
-            onClick={() => setShowPaymentMethodForm(true)}
-            className={`${UI.card} w-full p-4 border-2 border-dashed border-slate-300 dark:border-white/20 hover:border-red-400 dark:hover:border-red-400 transition-all flex items-center justify-center gap-3`}
-          >
-            <Plus className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-            <span className="font-medium text-slate-500 dark:text-slate-400">
-              <FormattedMessage
-                id="chatter.payments.addPaymentMethod"
-                defaultMessage="Ajouter une methode de paiement"
-              />
+      {/* ------------------------------------------------------------------ */}
+      {/* Withdrawal History (collapsible)                                    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className={`${GLASS_CARD} overflow-hidden`}>
+        <button
+          onClick={() => setShowWithdrawalHistory(!showWithdrawalHistory)}
+          className="w-full px-4 sm:px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <History className="w-5 h-5 text-indigo-500" />
+            <span className="font-semibold text-slate-900 dark:text-white">
+              <FormattedMessage id="chatter.payments.tab.historyWithdrawals" defaultMessage="Historique retraits" />
             </span>
-          </button>
-
-          {/* Payment Methods List */}
-          {methodsLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-            </div>
-          ) : methodsError ? (
-            <div className={`${UI.card} p-6 text-center`}>
-              <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-3" />
-              <p className="text-red-500">{methodsError}</p>
-            </div>
-          ) : methods.length === 0 ? (
-            <div className={`${UI.card} p-8 text-center`}>
-              <CreditCard className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-              <p className="text-slate-500 dark:text-slate-400">
-                <FormattedMessage
-                  id="chatter.payments.noMethods"
-                  defaultMessage="Aucune methode de paiement enregistree"
-                />
-              </p>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                <FormattedMessage
-                  id="chatter.payments.addMethodHint"
-                  defaultMessage="Ajoutez une methode pour pouvoir effectuer des retraits"
-                />
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {methods.map((method) => (
-                <PaymentMethodCard
-                  key={method.id}
-                  method={method}
-                  showActions
-                  onDelete={() => handleDeleteMethod(method.id)}
-                  onSelect={
-                    method.isDefault ? undefined : () => handleSetDefaultMethod(method.id)
-                  }
-                  className="dark:bg-white/5 dark:border-white/8"
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  ), [
-    showPaymentMethodForm, savingMethod, saveMethodError, methodsLoading,
-    methodsError, methods, handleSavePaymentMethod,
-    handleDeleteMethod, handleSetDefaultMethod,
-  ]);
-
-  /** Tab 4: Historique retraits */
-  const historyContent = useMemo(() => (
-    <div className="space-y-4">
-      {withdrawals.length === 0 ? (
-        <div className={`${UI.card} p-8 text-center`}>
-          <History className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-slate-500 dark:text-slate-400">
-            <FormattedMessage id="chatter.payments.noWithdrawals" defaultMessage="Aucun retrait effectue" />
-          </p>
-        </div>
-      ) : (
-        <div className="grid lg:grid-cols-2 gap-4">
-          {/* Withdrawals List */}
-          <div className={`${UI.card} overflow-hidden divide-y divide-slate-100 dark:divide-white/5`}>
-            {withdrawals.map((withdrawal) => (
-              <button
-                key={withdrawal.id}
-                onClick={() => setSelectedWithdrawalId(withdrawal.id)}
-                className={`w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${
-                  selectedWithdrawalId === withdrawal.id
-                    ? 'bg-red-50 dark:bg-red-900/20'
-                    : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                    withdrawal.status === 'completed'
-                      ? 'bg-green-100 dark:bg-green-900/30'
-                      : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
-                        ? 'bg-red-100 dark:bg-red-900/30'
-                        : 'bg-blue-100 dark:bg-blue-900/30'
-                  }`}>
-                    <ArrowUpRight className={`w-4 h-4 ${
-                      withdrawal.status === 'completed'
-                        ? 'text-green-500'
-                        : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
-                          ? 'text-red-500'
-                          : 'text-blue-500'
-                    }`} />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium text-slate-900 dark:text-white text-sm">
-                      {formatAmount(withdrawal.amount)}
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      {new Date(withdrawal.requestedAt).toLocaleDateString(intl.locale, {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <WithdrawalStatusBadge status={withdrawal.status as any} size="sm" />
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                </div>
-              </button>
-            ))}
+            {withdrawals.length > 0 && (
+              <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium">
+                {withdrawals.length}
+              </span>
+            )}
           </div>
+          {showWithdrawalHistory ? (
+            <ChevronUp className="w-5 h-5 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-slate-400" />
+          )}
+        </button>
 
-          {/* Withdrawal Tracking Detail */}
-          <div>
-            {selectedWithdrawalId ? (
-              trackingLoading ? (
-                <div className={`${UI.card} p-6 flex items-center justify-center`}>
-                  <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-                </div>
-              ) : selectedTracking ? (
-                <WithdrawalTracker
-                  tracking={selectedTracking}
-                  onRefresh={refreshTracking}
-                  onCancel={() => handleCancelWithdrawal(selectedWithdrawalId)}
-                  isRefreshing={trackingLoading}
-                />
-              ) : (
-                <div className={`${UI.card} p-6 text-center`}>
-                  <AlertCircle className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-                  <p className="text-slate-500 dark:text-slate-400">
-                    <FormattedMessage
-                      id="chatter.payments.noTrackingData"
-                      defaultMessage="Impossible de charger les details"
-                    />
-                  </p>
-                </div>
-              )
-            ) : (
-              <div className={`${UI.card} p-8 text-center`}>
-                <Eye className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+        {showWithdrawalHistory && (
+          <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4">
+            {withdrawals.length === 0 ? (
+              <div className="py-8 text-center">
+                <History className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                 <p className="text-slate-500 dark:text-slate-400">
-                  <FormattedMessage
-                    id="chatter.payments.selectWithdrawal"
-                    defaultMessage="Selectionnez un retrait pour voir les details"
-                  />
+                  <FormattedMessage id="chatter.payments.noWithdrawals" defaultMessage="Aucun retrait effectue" />
                 </p>
+              </div>
+            ) : (
+              <div className="grid lg:grid-cols-2 gap-4">
+                {/* Withdrawals List */}
+                <div className={`${GLASS_CARD} overflow-hidden divide-y divide-slate-100 dark:divide-white/5`}>
+                  {withdrawals.map((withdrawal) => (
+                    <button
+                      key={withdrawal.id}
+                      onClick={() => setSelectedWithdrawalId(withdrawal.id)}
+                      className={`w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors ${
+                        selectedWithdrawalId === withdrawal.id
+                          ? 'bg-indigo-50 dark:bg-indigo-900/20'
+                          : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                          withdrawal.status === 'completed'
+                            ? 'bg-green-100 dark:bg-green-900/30'
+                            : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
+                              ? 'bg-red-100 dark:bg-red-900/30'
+                              : 'bg-indigo-100 dark:bg-indigo-900/30'
+                        }`}>
+                          <ArrowUpRight className={`w-4 h-4 ${
+                            withdrawal.status === 'completed'
+                              ? 'text-green-500'
+                              : withdrawal.status === 'failed' || withdrawal.status === 'rejected'
+                                ? 'text-red-500'
+                                : 'text-indigo-500'
+                          }`} />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium text-slate-900 dark:text-white text-sm">
+                            {formatAmount(withdrawal.amount)}
+                          </p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">
+                            {new Date(withdrawal.requestedAt).toLocaleDateString(intl.locale, {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <WithdrawalStatusBadge status={withdrawal.status as any} size="sm" />
+                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Withdrawal Tracking Detail */}
+                <div>
+                  {selectedWithdrawalId ? (
+                    trackingLoading ? (
+                      <div className={`${GLASS_CARD} p-6 flex items-center justify-center`}>
+                        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                      </div>
+                    ) : selectedTracking ? (
+                      <WithdrawalTracker
+                        tracking={selectedTracking}
+                        onRefresh={refreshTracking}
+                        onCancel={() => handleCancelWithdrawal(selectedWithdrawalId)}
+                        isRefreshing={trackingLoading}
+                      />
+                    ) : (
+                      <div className={`${GLASS_CARD} p-6 text-center`}>
+                        <AlertCircle className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                        <p className="text-slate-500 dark:text-slate-400">
+                          <FormattedMessage
+                            id="chatter.payments.noTrackingData"
+                            defaultMessage="Impossible de charger les details"
+                          />
+                        </p>
+                      </div>
+                    )
+                  ) : (
+                    <div className={`${GLASS_CARD} p-8 text-center`}>
+                      <Eye className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                      <p className="text-slate-500 dark:text-slate-400">
+                        <FormattedMessage
+                          id="chatter.payments.selectWithdrawal"
+                          defaultMessage="Selectionnez un retrait pour voir les details"
+                        />
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-  ), [
-    withdrawals, selectedWithdrawalId, trackingLoading, selectedTracking,
-    formatAmount, intl, refreshTracking, handleCancelWithdrawal,
-  ]);
-
-  // ============================================================================
-  // TABS DEFINITION
-  // ============================================================================
-
-  const tabs = useMemo(() => [
-    {
-      key: 'overview',
-      label: <FormattedMessage id="chatter.payments.tab.overview" defaultMessage="Vue d'ensemble" />,
-      content: overviewContent,
-    },
-    {
-      key: 'withdraw',
-      label: <FormattedMessage id="chatter.payments.tab.withdraw" defaultMessage="Retirer" />,
-      content: withdrawContent,
-    },
-    {
-      key: 'methods',
-      label: (
-        <span className="flex items-center gap-1.5">
-          <FormattedMessage id="chatter.payments.tab.methods" defaultMessage="Methodes" />
-          {methods.length > 0 && (
-            <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400">
-              {methods.length}
-            </span>
-          )}
-        </span>
-      ),
-      content: methodsContent,
-    },
-    {
-      key: 'history',
-      label: (
-        <span className="flex items-center gap-1.5">
-          <FormattedMessage id="chatter.payments.tab.historyWithdrawals" defaultMessage="Historique retraits" />
-          {withdrawals.length > 0 && (
-            <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400">
-              {withdrawals.length}
-            </span>
-          )}
-        </span>
-      ),
-      content: historyContent,
-    },
-  ], [overviewContent, withdrawContent, methodsContent, historyContent, methods.length, withdrawals.length]);
-
-  // ============================================================================
-  // LOADING / ERROR STATES
-  // ============================================================================
-
-  if (chatterLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
-      </div>
-    );
-  }
-
-  if (chatterError) {
-    return (
-      <div className={`${UI.card} p-6`}>
-        <div className="flex items-center gap-3 text-red-500">
-          <AlertCircle className="w-6 h-6" />
-          <span>{chatterError}</span>
-        </div>
-      </div>
-    );
-  }
-
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-
-  return (
-      <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white">
-            <FormattedMessage id="chatter.payments.title" defaultMessage="Mes paiements" />
-          </h1>
-          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            <FormattedMessage
-              id="chatter.payments.subtitle"
-              defaultMessage="Gerez vos gains et retraits"
-            />
-          </p>
-        </div>
-
-        {/* Swipeable Tabs */}
-        <SwipeTabContainer
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </div>
   );
 };
 

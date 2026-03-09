@@ -1,13 +1,14 @@
 /**
  * HeroEarningsCard - Main earnings card for active chatters (totalEarned > 0)
  * Shows total earned with count-up animation, monthly/daily stats, sparkline, level badge
+ * 2026 glassmorphism design with indigo/violet gradient
  */
 
 import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { TrendingUp, Star } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
-import { LEVEL_COLORS, UI } from '@/components/Chatter/designTokens';
+import { LEVEL_COLORS } from '@/components/Chatter/designTokens';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 
 interface HeroEarningsCardProps {
@@ -16,11 +17,14 @@ interface HeroEarningsCardProps {
 
 const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) => {
   const intl = useIntl();
-  const { dashboardData, commissions } = useChatterData();
+  const { dashboardData, commissions, minimumWithdrawal } = useChatterData();
   const chatter = dashboardData?.chatter;
 
   const totalEarned = (chatter?.totalEarned || 0) / 100;
   const monthlyEarnings = (dashboardData?.monthlyStats?.earnings || 0) / 100;
+
+  // Minimum withdrawal in dollars (from config, fallback 3000 cents = $30)
+  const minWithdrawalDollars = (minimumWithdrawal || dashboardData?.config?.minimumWithdrawalAmount || 3000) / 100;
 
   // Calculate today's earnings from commissions
   const todayEarnings = useMemo(() => {
@@ -49,8 +53,8 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
   const level = chatter?.level || 1;
   const levelColor = LEVEL_COLORS[level as keyof typeof LEVEL_COLORS] || LEVEL_COLORS[1];
 
-  // First withdrawal progress (if < $30)
-  const showWithdrawalProgress = totalEarned > 0 && totalEarned < 30;
+  // First withdrawal progress (if below minimum)
+  const showWithdrawalProgress = totalEarned > 0 && totalEarned < minWithdrawalDollars;
 
   // Sparkline SVG
   const sparklineSvg = useMemo(() => {
@@ -66,8 +70,20 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
   }, [sparklineData]);
 
   return (
-    <div className={`${UI.card} ${UI.cardHighlight} overflow-hidden ${className}`}>
-      <div className="p-4 sm:p-5">
+    <div
+      className={`relative overflow-hidden bg-gradient-to-br from-indigo-500/10 via-violet-500/5 to-transparent dark:from-indigo-500/20 dark:via-violet-500/10 dark:to-transparent backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] ${className}`}
+    >
+      {/* Subtle grain texture overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.03] mix-blend-overlay"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '128px 128px',
+        }}
+      />
+
+      <div className="relative z-10 p-4 sm:p-5">
         {/* Top row: label + level badge */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -96,7 +112,7 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
             <polyline
               points={sparklineSvg.points}
               fill="none"
-              stroke="#22c55e"
+              stroke="#818cf8"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -144,13 +160,13 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
                 <FormattedMessage id="chatter.hero.firstWithdrawal" defaultMessage="Vers votre premier retrait" />
               </span>
               <span className="font-bold text-green-600 dark:text-green-400">
-                ${totalEarned.toFixed(2)} / $30
+                ${totalEarned.toFixed(2)} / ${minWithdrawalDollars.toFixed(0)}
               </span>
             </div>
             <div className="h-2 bg-green-200 dark:bg-green-500/20 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min((totalEarned / 30) * 100, 100)}%` }}
+                style={{ width: `${Math.min((totalEarned / minWithdrawalDollars) * 100, 100)}%` }}
               />
             </div>
           </div>

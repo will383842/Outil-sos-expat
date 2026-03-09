@@ -261,7 +261,7 @@ const InputSlider: React.FC<InputSliderProps> = ({
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none"
           style={{
-            background: `linear-gradient(to right, #3B82F6 0%, #EF4444 ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`,
+            background: `linear-gradient(to right, #3B82F6 0%, #6366F1 ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`,
           }}
         />
       </div>
@@ -307,7 +307,7 @@ const GoalInput: React.FC<GoalInputProps> = ({ value, onChange }) => {
             onClick={() => onChange(preset)}
             className={`min-h-[44px] px-4 py-2 rounded-full text-sm font-medium transition-all touch-manipulation active:scale-95 ${
               value === preset
-                ? 'bg-gradient-to-r from-blue-500 to-red-500 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
@@ -720,7 +720,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
             icon={<UserPlus className="w-5 h-5" />}
             title={<FormattedMessage id="calculator.simulation.title" defaultMessage="If You Recruit More" />}
             subtitle={<FormattedMessage id="calculator.simulation.subtitle" defaultMessage="Simulate your growth" />}
-            gradient="from-red-500 to-pink-600"
+            gradient="from-indigo-500 to-violet-600"
             isExpanded={expandedSections.simulation}
             onToggle={() => toggleSection('simulation')}
             collapsible
@@ -739,10 +739,10 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                 onChange={setRecruitSimulation}
                 min={1}
                 max={50}
-                gradient="from-red-500 to-pink-500"
+                gradient="from-indigo-500 to-violet-500"
               />
 
-              <div className="p-4 bg-gradient-to-br from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 rounded-xl space-y-3">
+              <div className="p-4 bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-xl space-y-3">
                 <StatLine
                   label={
                     <FormattedMessage
@@ -751,7 +751,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     />
                   }
                   value={`${recruitSimulation} x $${(rates.ACTIVATION_BONUS / 100).toFixed(0)} = ${formatCents(simulationResults.activationBonus)}`}
-                  icon={<Gift className="w-4 h-4 text-red-500" />}
+                  icon={<Gift className="w-4 h-4 text-indigo-500" />}
                 />
 
                 {/* Tier Bonuses */}
@@ -788,7 +788,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                   icon={<TrendingUp className="w-4 h-4 text-green-500" />}
                 />
 
-                <div className="h-px bg-red-200 dark:bg-red-800/50" />
+                <div className="h-px bg-indigo-200 dark:bg-indigo-800/50" />
 
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-gray-900 dark:text-white">
@@ -798,7 +798,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                     />
                   </span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                    <p className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                       {formatCents(simulationResults.newMonthlyEstimate)}/month
                     </p>
                     {simulationResults.oneTimeBonus > 0 && (
@@ -821,7 +821,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
             icon={<Target className="w-5 h-5" />}
             title={<FormattedMessage id="calculator.objective.title" defaultMessage="Objective Calculator" />}
             subtitle={<FormattedMessage id="calculator.objective.subtitle" defaultMessage="How to reach your income goal" />}
-            gradient="from-orange-500 to-red-600"
+            gradient="from-violet-500 to-indigo-600"
             isExpanded={expandedSections.objective}
             onToggle={() => toggleSection('objective')}
             collapsible
@@ -872,7 +872,7 @@ export const RevenueCalculatorCard: React.FC<RevenueCalculatorCardProps> = ({
                       value: `${goalOptions.smallTeam.ownCalls}/month`,
                     },
                   ]}
-                  gradient="from-red-500 to-pink-500"
+                  gradient="from-indigo-500 to-violet-500"
                   icon={<Users className="w-5 h-5" />}
                   recommended
                 />

@@ -276,12 +276,14 @@ const AdminCommissionTracker: React.FC = () => {
     }
   }, [dateRange]);
 
-  // Fetch commissions
+  // Fetch commissions — offset tracked via ref to avoid recreating callback
+  const offsetRef = React.useRef(0);
+
   const fetchCommissions = useCallback(
     async (resetOffset = true) => {
       setLoading(true);
       try {
-        const newOffset = resetOffset ? 0 : offset;
+        const newOffset = resetOffset ? 0 : offsetRef.current;
 
         const adminGetCommissionsDetailed = httpsCallable<
           {
@@ -318,14 +320,15 @@ const AdminCommissionTracker: React.FC = () => {
           setCommissions((prev) => [...prev, ...result.data.commissions]);
         }
         setHasMore(result.data.hasMore);
-        setOffset(newOffset + result.data.commissions.length);
+        offsetRef.current = newOffset + result.data.commissions.length;
+        setOffset(offsetRef.current);
       } catch (error) {
         console.error('Failed to fetch commissions:', error);
       } finally {
         setLoading(false);
       }
     },
-    [chatterId, dateRange, type, status, sourceType, search, offset]
+    [chatterId, dateRange, type, status, sourceType, search]
   );
 
   // Export CSV
@@ -370,21 +373,25 @@ const AdminCommissionTracker: React.FC = () => {
     }
   };
 
-  // Initial fetch
+  // Initial fetch on mount
+  const mountedRef = React.useRef(false);
   useEffect(() => {
     fetchStats();
     fetchCommissions(true);
+    mountedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refetch on filter change
+  // Refetch on filter change (skip initial mount — handled above)
   useEffect(() => {
+    if (!mountedRef.current) return;
     const timeoutId = setTimeout(() => {
       fetchCommissions(true);
     }, 300);
     return () => clearTimeout(timeoutId);
-  }, [type, status, sourceType, chatterId, dateRange]);
+  }, [type, status, sourceType, chatterId, dateRange, fetchCommissions]);
 
-  // Update URL params
+  // Update URL params (replace, not push, to avoid history spam)
   useEffect(() => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
@@ -394,8 +401,9 @@ const AdminCommissionTracker: React.FC = () => {
     if (chatterId) params.set('chatterId', chatterId);
     if (dateRange.start) params.set('startDate', dateRange.start);
     if (dateRange.end) params.set('endDate', dateRange.end);
-    setSearchParams(params);
-  }, [search, type, status, sourceType, chatterId, dateRange, setSearchParams]);
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, type, status, sourceType, chatterId, dateRange]);
 
   // Clear filters
   const clearFilters = () => {

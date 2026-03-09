@@ -1,16 +1,15 @@
 /**
- * ReferralLinkCard
+ * ReferralLinkCard — 2026 Design System
  *
  * Displays referral link with copy button.
+ * Gradient card with glassmorphism and indigo/violet accents.
  */
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Link, Copy, Check, ExternalLink } from "lucide-react";
 import { useViralKit, formatReferralLink } from "@/hooks/useViralKit";
 import { useTranslation } from "@/hooks/useTranslation";
+import { UI, CHATTER_THEME, SPACING, ANIMATION } from "@/components/Chatter/designTokens";
 
 interface ReferralLinkCardProps {
   variant?: "full" | "compact";
@@ -27,41 +26,46 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
 
   if (variant === "compact") {
     return (
-      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-        <Link className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-        <span className="flex-1 text-sm font-mono truncate">
+      <div className="flex items-center gap-2 p-3 bg-white/80 dark:bg-white/[0.04] backdrop-blur-lg border border-slate-200/60 dark:border-white/[0.08] rounded-xl">
+        <Link className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+        <span className="flex-1 text-sm font-mono truncate text-slate-700 dark:text-slate-300">
           {formatReferralLink(referralLink, 30)}
         </span>
-        <Button size="sm" variant="outline" onClick={copyLink}>
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        </Button>
+        <button
+          onClick={copyLink}
+          className={`${UI.button.secondary} p-2 rounded-lg ${SPACING.touchTarget}`}
+        >
+          {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
+    <div className={`bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/25 transition-all ${ANIMATION.normal}`}>
       <div className="flex items-center gap-3 mb-4">
-        <Link className="w-6 h-6" />
-        <span className="font-bold">
+        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          <Link className="w-5 h-5" />
+        </div>
+        <span className="font-bold text-lg">
           {t("chatter.referrals.yourReferralLink")}
         </span>
       </div>
 
       {/* Link input with quick copy */}
-      <div className="flex items-center gap-2 bg-white/10 rounded-lg p-3 mb-4">
+      <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 border border-white/10">
         <input
           type="text"
           readOnly
           value={referralLink}
-          className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
+          className="flex-1 bg-transparent text-white font-mono text-sm outline-none placeholder:text-white/50"
         />
         <button
           onClick={copyLink}
-          className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+          className={`bg-white text-indigo-600 p-2.5 rounded-xl hover:bg-indigo-50 transition-all ${ANIMATION.fast} active:scale-95 ${SPACING.touchTarget}`}
           title={t("common.copy")}
         >
-          {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+          {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
         </button>
       </div>
 
@@ -71,14 +75,14 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
           href={referralLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
+          className={`flex-1 bg-white text-indigo-600 font-semibold py-3 px-4 rounded-xl hover:bg-indigo-50 transition-all ${ANIMATION.fast} active:scale-[0.97] flex items-center justify-center gap-2 ${SPACING.touchTarget}`}
         >
           <ExternalLink className="w-5 h-5" />
           {t("chatter.referrals.previewLink", undefined, "Voir la page d'invitation")}
         </a>
         <button
           onClick={copyLink}
-          className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+          className={`flex-1 bg-white/15 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-xl hover:bg-white/25 border border-white/10 transition-all ${ANIMATION.fast} active:scale-[0.97] flex items-center justify-center gap-2 ${SPACING.touchTarget}`}
         >
           {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
           {copied ? t("common.copied", undefined, "Copié !") : t("common.copy", undefined, "Copier le lien")}
@@ -86,24 +90,24 @@ export function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
       </div>
 
       {/* Referral Code */}
-      <div className="bg-white/10 rounded-lg p-4">
-        <label className="text-purple-100 text-xs font-medium mb-2 block">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+        <label className="text-indigo-100 text-xs font-medium mb-2 block uppercase tracking-wider">
           {t("chatter.referrals.codeLabel", undefined, "Votre code")}
         </label>
         <div className="flex gap-2">
-          <div className="flex-1 px-4 py-2 bg-white/20 rounded-md font-mono text-xl text-white font-bold">
+          <div className="flex-1 px-4 py-2 bg-white/15 rounded-lg font-mono text-xl text-white font-bold">
             {referralCode}
           </div>
           <button
             onClick={copyCode}
-            className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className={`bg-white text-indigo-600 p-2.5 rounded-xl hover:bg-indigo-50 transition-all ${ANIMATION.fast} active:scale-95`}
           >
             <Copy className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      <p className="text-purple-100 text-sm mt-4">
+      <p className="text-indigo-100 text-sm mt-4">
         {t("chatter.referrals.shareLinkDesc", undefined, "Partagez ce lien pour inviter d'autres personnes et gagner des commissions.")}
       </p>
     </div>

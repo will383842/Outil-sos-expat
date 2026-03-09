@@ -1,12 +1,13 @@
 /**
  * RecentActivityFeed - Last 5 commissions with colored icons by type
+ * 2026 glassmorphism design with i18n labels and fade-in animations
  */
 
 import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Phone, Users, UserPlus, Gift, Crown, Settings, ArrowRight } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
-import { UI, COMMISSION_COLORS } from '@/components/Chatter/designTokens';
+import { COMMISSION_COLORS } from '@/components/Chatter/designTokens';
 
 interface RecentActivityFeedProps {
   onViewAll?: () => void;
@@ -26,16 +27,17 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   manual: <Settings className="w-4 h-4" />,
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  client_call: 'Appel client',
-  n1_call: 'Appel N1',
-  n2_call: 'Appel N2',
-  provider_call: 'Appel provider',
-  activation_bonus: 'Bonus activation',
-  tier_bonus: 'Bonus tier',
-  telegram_bonus: 'Bonus Telegram',
-  captain_call: 'Appel captain',
-  manual: 'Ajustement',
+/** i18n label map — each type maps to its FormattedMessage id + default */
+const TYPE_LABEL_KEYS: Record<string, { id: string; defaultMessage: string }> = {
+  client_call: { id: 'chatter.commission.type.client_call', defaultMessage: 'Appel client' },
+  n1_call: { id: 'chatter.commission.type.n1_call', defaultMessage: 'Appel N1' },
+  n2_call: { id: 'chatter.commission.type.n2_call', defaultMessage: 'Appel N2' },
+  provider_call: { id: 'chatter.commission.type.provider_call', defaultMessage: 'Appel provider' },
+  activation_bonus: { id: 'chatter.commission.type.activation_bonus', defaultMessage: 'Bonus activation' },
+  tier_bonus: { id: 'chatter.commission.type.tier_bonus', defaultMessage: 'Bonus tier' },
+  telegram_bonus: { id: 'chatter.commission.type.telegram_bonus', defaultMessage: 'Bonus Telegram' },
+  captain_call: { id: 'chatter.commission.type.captain_call', defaultMessage: 'Appel captain' },
+  manual: { id: 'chatter.commission.type.manual', defaultMessage: 'Ajustement' },
 };
 
 function getCommissionColor(type: string): string {
@@ -88,7 +90,7 @@ const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
   }
 
   return (
-    <div className={`${UI.card} overflow-hidden ${className}`}>
+    <div className={`bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200/60 dark:border-white/[0.06] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden ${className}`}>
       <div className="flex items-center justify-between p-4 pb-2">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
           <FormattedMessage id="chatter.activity.recent" defaultMessage="Activite recente" />
@@ -96,7 +98,7 @@ const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
         {onViewAll && (
           <button
             onClick={onViewAll}
-            className="text-xs text-red-500 hover:text-red-600 font-medium inline-flex items-center gap-1 min-h-[44px] px-2"
+            className="text-xs text-indigo-500 hover:text-indigo-600 font-medium inline-flex items-center gap-1 min-h-[44px] px-2 transition-colors duration-200"
           >
             <FormattedMessage id="chatter.activity.viewAll" defaultMessage="Voir tout" />
             <ArrowRight className="w-3 h-3" />
@@ -105,18 +107,21 @@ const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
       </div>
 
       <div className="divide-y divide-slate-100 dark:divide-white/5">
-        {recentCommissions.map((commission) => {
+        {recentCommissions.map((commission, index) => {
           const color = getCommissionColor(commission.type || '');
           const icon = TYPE_ICONS[commission.type || 'manual'] || TYPE_ICONS.manual;
           const isNew = commission.createdAt && new Date(commission.createdAt).getTime() > lastVisit;
           const amount = (commission.amount || 0) / 100;
+          const labelKey = TYPE_LABEL_KEYS[commission.type || ''] || TYPE_LABEL_KEYS.manual;
+          const filleulName = (commission as any).filleulName;
 
           return (
             <div
               key={commission.id}
-              className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 transition-colors animate-[fadeIn_0.3s_ease-out_forwards] ${
                 isNew ? 'bg-green-50/50 dark:bg-green-500/5' : ''
               }`}
+              style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}
             >
               <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-white/10 ${color}`}>
                 {icon}
@@ -124,7 +129,15 @@ const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                    {TYPE_LABELS[commission.type || ''] || commission.type}
+                    {filleulName ? (
+                      <>
+                        {filleulName}
+                        <span className="text-slate-400 dark:text-slate-500"> — </span>
+                        <FormattedMessage id={labelKey.id} defaultMessage={labelKey.defaultMessage} />
+                      </>
+                    ) : (
+                      <FormattedMessage id={labelKey.id} defaultMessage={labelKey.defaultMessage} />
+                    )}
                   </span>
                   {isNew && (
                     <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 text-[10px] font-bold rounded">

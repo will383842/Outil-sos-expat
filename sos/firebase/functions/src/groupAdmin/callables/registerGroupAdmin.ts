@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { areNewRegistrationsEnabled, getGroupAdminConfig } from "../groupAdminConfig";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
+import { detectCircularReferral } from "../../affiliate/utils/circularReferralDetection";
 import { hashIP } from "../../chatter/utils";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
@@ -338,6 +339,26 @@ export const registerGroupAdmin = onCall(
         });
         recruitedBy = null;
         recruitedByCode = null;
+      }
+
+      // 9a-bis. Circular referral detection
+      if (recruitedBy) {
+        try {
+          const circularCheck = await detectCircularReferral(recruitedBy, userId, "group_admins");
+          if (circularCheck.isCircular) {
+            logger.warn("[registerGroupAdmin] Circular referral detected, ignoring recruitment code", {
+              userId,
+              recruiterId: recruitedBy,
+              chain: circularCheck.chain,
+            });
+            recruitedBy = null;
+            recruitedByCode = null;
+          }
+        } catch (circularError) {
+          logger.warn("[registerGroupAdmin] Circular check failed, accepting referral", {
+            error: circularError instanceof Error ? circularError.message : String(circularError),
+          });
+        }
       }
 
       // 9b. Anti-fraud check (disposable emails, same IP, suspicious patterns)

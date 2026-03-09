@@ -202,17 +202,6 @@ const devPageTexts: Record<string, Record<string, { title: string; desc: string 
     hi: { title: 'सहयोगी भुगतान', desc: 'पृष्ठ विकास में है' },
     ar: { title: 'مدفوعات الشركاء', desc: 'الصفحة قيد التطوير' }
   },
-  ambassadors: {
-    fr: { title: 'Ambassadeurs', desc: 'Page en cours de développement' },
-    en: { title: 'Ambassadors', desc: 'Page under development' },
-    es: { title: 'Embajadores', desc: 'Página en desarrollo' },
-    de: { title: 'Botschafter', desc: 'Seite in Entwicklung' },
-    pt: { title: 'Embaixadores', desc: 'Página em desenvolvimento' },
-    ru: { title: 'Амбассадоры', desc: 'Страница в разработке' },
-    ch: { title: '大使', desc: '页面开发中' },
-    hi: { title: 'राजदूत', desc: 'पृष्ठ विकास में है' },
-    ar: { title: 'السفراء', desc: 'الصفحة قيد التطوير' }
-  },
   financialReports: {
     fr: { title: 'Rapports Financiers', desc: 'Page en cours de développement' },
     en: { title: 'Financial Reports', desc: 'Page under development' },
@@ -333,9 +322,6 @@ const AdminAffiliateReports = lazy(
 );
 const AdminAffiliateFraudAlerts = lazy(
   () => import("../../pages/admin/AdminAffiliateFraudAlerts")
-);
-const AdminAmbassadors = lazy(() =>
-  Promise.resolve({ default: () => <DevPage pageKey="ambassadors" /> })
 );
 
 // ===== LAZY IMPORTS - CHATTER =====
@@ -520,7 +506,6 @@ const AdminPaymentDetail = lazy(
 const AdminPaymentConfig = lazy(
   () => import("../../pages/admin/Payments/AdminPaymentConfig")
 );
-
 // ===== LAZY IMPORTS - TOOLBOX =====
 const AdminToolbox = lazy(
   () => import("../../pages/admin/AdminToolbox")
@@ -1151,7 +1136,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
-      {/* 🤝 AFFILIATION & AMBASSADEURS */}
+      {/* 🤝 AFFILIATION */}
       {/* Dashboard Affiliés - Vue d'ensemble */}
       <Route
         path="affiliates/dashboard"
@@ -1239,14 +1224,6 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminAffiliateDetail />
-          </Suspense>
-        }
-      />
-      <Route
-        path="ambassadors"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminAmbassadors />
           </Suspense>
         }
       />
@@ -2190,7 +2167,6 @@ export const useAdminRouteValidation = () => {
       "/admin/affiliates/payouts",
       "/admin/affiliates/reports",
       "/admin/affiliates/fraud",
-      "/admin/ambassadors",
       "/admin/b2b/accounts",
       "/admin/b2b/members",
       "/admin/b2b/pricing",

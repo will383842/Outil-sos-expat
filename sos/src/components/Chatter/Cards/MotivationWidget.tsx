@@ -290,7 +290,7 @@ const MotivationWidget = memo(function MotivationWidget({
   // Loading skeleton
   if (loading) {
     return (
-      <div className={`${UI.card} overflow-hidden`}>
+      <div className="bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden">
         <div className="p-4 sm:p-6">
           <div className="animate-pulse">
             <div className="h-6 w-40 bg-gray-200 dark:bg-white/10 rounded mb-4" />
@@ -307,14 +307,14 @@ const MotivationWidget = memo(function MotivationWidget({
   }
 
   return (
-    <div className={`${UI.card} overflow-hidden`}>
+    <div className="bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden">
       {/* Header with collapse toggle */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-gradient-to-r from-amber-500/10 dark:from-amber-500/20 via-orange-500/10 dark:via-orange-500/20 to-red-500/10 dark:to-red-500/20 hover:from-amber-500/20 hover:via-orange-500/20 hover:to-red-500/20 transition-all"
+        className="w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-gradient-to-r from-indigo-500/10 dark:from-indigo-500/20 via-violet-500/10 dark:via-violet-500/20 to-purple-500/10 dark:to-purple-500/20 hover:from-indigo-500/20 hover:via-violet-500/20 hover:to-purple-500/20 transition-all"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg">
+          <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-xl shadow-lg">
             <Lightbulb className="w-5 h-5 text-white" />
           </div>
           <div className="text-left">
@@ -350,7 +350,7 @@ const MotivationWidget = memo(function MotivationWidget({
             onTouchEnd={onTouchEnd}
             className="relative"
           >
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-50 dark:from-amber-900/20 via-orange-50 dark:via-orange-900/20 to-red-50 dark:to-red-900/20 border dark:border-amber-800/30 p-4">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-50 dark:from-indigo-900/20 via-violet-50 dark:via-violet-900/20 to-purple-50 dark:to-purple-900/20 border dark:border-indigo-800/30 p-4">
               {/* Tip content with fade animation */}
               <div
                 className={`transition-opacity duration-300 ${
@@ -358,7 +358,7 @@ const MotivationWidget = memo(function MotivationWidget({
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-white/80 dark:bg-white/10 rounded-lg text-amber-600 dark:text-amber-400 flex-shrink-0">
+                  <div className="p-2 bg-white/80 dark:bg-white/10 rounded-lg text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     {currentTip?.icon}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -401,8 +401,8 @@ const MotivationWidget = memo(function MotivationWidget({
                       }}
                       className={`w-2 h-2 rounded-full transition-all ${
                         index === currentTipIndex
-                          ? 'bg-amber-500 w-4'
-                          : 'bg-gray-300 dark:bg-gray-600 hover:bg-amber-400'
+                          ? 'bg-indigo-500 w-4'
+                          : 'bg-gray-300 dark:bg-gray-600 hover:bg-indigo-400'
                       }`}
                       aria-label={intl.formatMessage({ id: 'chatter.motivation.goToTip', defaultMessage: 'Go to tip {number}' }, { number: index + 1 })}
                     />
@@ -536,7 +536,7 @@ const MotivationWidget = memo(function MotivationWidget({
               {/* View Leaderboard */}
               <button
                 onClick={onViewLeaderboard}
-                className="flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all active:scale-[0.98] touch-manipulation"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white transition-all active:scale-[0.98] touch-manipulation"
               >
                 <Trophy className="w-5 h-5" />
                 <span className="text-[10px] sm:text-xs font-medium leading-tight">
@@ -548,9 +548,9 @@ const MotivationWidget = memo(function MotivationWidget({
 
           {/* Current Streak Motivation */}
           {currentStreak > 0 && (
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 dark:from-orange-900/20 to-red-50 dark:to-red-900/20 rounded-xl border dark:border-orange-800/30">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-xl border dark:border-indigo-800/30">
               <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-orange-500" />
+                <Zap className="w-5 h-5 text-violet-500" />
                 <span className="text-sm dark:text-white font-medium">
                   <FormattedMessage
                     id="motivation.streak"
@@ -559,7 +559,7 @@ const MotivationWidget = memo(function MotivationWidget({
                   />
                 </span>
               </div>
-              <span className="text-xs dark:text-orange-400">
+              <span className="text-xs dark:text-violet-400">
                 <FormattedMessage id="motivation.streak.keep" defaultMessage="Continuez !" />
               </span>
             </div>

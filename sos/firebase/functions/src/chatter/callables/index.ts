@@ -61,6 +61,7 @@ export {
   adminAssignChatterCaptain,
   adminBulkAssignChattersCaptain,
   adminGetAvailableCaptains,
+  adminSearchChatters,
 } from "./admin/captain";
 
 // Resource Callables

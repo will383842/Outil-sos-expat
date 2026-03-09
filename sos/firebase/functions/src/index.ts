@@ -3492,6 +3492,7 @@ export {
   adminAssignChatterCaptain,
   adminBulkAssignChattersCaptain,
   adminGetAvailableCaptains,
+  adminSearchChatters,
 } from './chatter';
 
 // getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)

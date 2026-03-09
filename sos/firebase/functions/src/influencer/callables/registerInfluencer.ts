@@ -30,6 +30,7 @@ import {
 } from "../utils";
 import { snapshotLockedRates } from "../../lib/planResolver";
 import { checkReferralFraud } from "../../affiliate/utils/fraudDetection";
+import { detectCircularReferral } from "../../affiliate/utils/circularReferralDetection";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
@@ -314,6 +315,27 @@ export const registerInfluencer = onCall(
         });
         recruitedBy = null;
         recruitedByCode = null;
+      }
+
+      // 7a-bis. Circular referral detection
+      if (recruitedBy) {
+        try {
+          const circularCheck = await detectCircularReferral(recruitedBy, userId, "influencers");
+          if (circularCheck.isCircular) {
+            logger.warn("[registerInfluencer] Circular referral detected, ignoring recruitment code", {
+              userId,
+              recruiterId: recruitedBy,
+              chain: circularCheck.chain,
+            });
+            recruitedBy = null;
+            recruitedByCode = null;
+          }
+        } catch (circularError) {
+          // Fail-open: if circular check fails, still accept the referral
+          logger.warn("[registerInfluencer] Circular check failed, accepting referral", {
+            error: circularError instanceof Error ? circularError.message : String(circularError),
+          });
+        }
       }
 
       // 7b. Anti-fraud check (disposable emails, same IP, suspicious patterns)
