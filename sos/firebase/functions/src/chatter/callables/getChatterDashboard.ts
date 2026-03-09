@@ -98,7 +98,6 @@ export const getChatterDashboard = onCall(
   {
     region: "us-central1",
     memory: "256MiB",
-    cpu: 1,
     timeoutSeconds: 30,
     maxInstances: 20,
     cors: ALLOWED_ORIGINS,
@@ -383,6 +382,7 @@ export const getChatterDashboard = onCall(
           levelProgress: chatter.levelProgress,
           affiliateCodeClient: chatter.affiliateCodeClient,
           affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
+          affiliateCodeProvider: chatter.affiliateCodeProvider,
           totalEarned: chatter.totalEarned,
           availableBalance: chatter.availableBalance,
           pendingBalance: chatter.pendingBalance,
