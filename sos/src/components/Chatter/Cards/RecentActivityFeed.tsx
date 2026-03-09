@@ -1,5 +1,5 @@
 /**
- * RecentActivityFeed - Last 5 commissions with colored icons by type
+ * RecentActivityFeed - Last 10 commissions with colored icons by type
  * 2026 glassmorphism design with i18n labels and fade-in animations
  */
 
@@ -52,7 +52,7 @@ function getCommissionColor(type: string): string {
 
 const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
   onViewAll,
-  limit: maxItems = 5,
+  limit: maxItems = 10,
   className = '',
 }) => {
   const intl = useIntl();

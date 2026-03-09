@@ -55,7 +55,7 @@ function FilleulStatusBadge({ filleul, t }: { filleul: ChatterFilleulN1; t: (key
   );
 }
 
-export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
+export const ReferralN1Table = React.memo(function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
   const { t } = useTranslation();
   const {
     paginatedItems,
@@ -266,4 +266,4 @@ export function ReferralN1Table({ filleuls, isLoading }: ReferralN1TableProps) {
       )}
     </div>
   );
-}
+});

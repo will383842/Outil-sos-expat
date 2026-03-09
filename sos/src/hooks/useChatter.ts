@@ -242,19 +242,29 @@ export function useChatter(): UseChatterReturn {
     setError(null);
 
     try {
-      const getChatterDashboardFn = httpsCallable<void, ChatterDashboardData>(
+      const getChatterDashboardFn = httpsCallable<{ level?: string }, ChatterDashboardData>(
         functionsAffiliate,
         "getChatterDashboard"
       );
 
-      // Fetch dashboard callable and list data in parallel
+      // Phase 1: Fetch essential data (fast — skips trends/comparison/forecast)
       const [result] = await Promise.all([
-        getChatterDashboardFn(),
+        getChatterDashboardFn({ level: "essential" }),
         fetchListData(forceRefresh),
       ]);
 
       dashboardCache.current = { data: result.data, fetchedAt: Date.now() };
       setDashboardData(result.data);
+
+      // Phase 2: Fetch deferred data (trends, comparison, forecast) in background
+      if (!result.data.trends) {
+        getChatterDashboardFn({ level: "full" }).then((fullResult) => {
+          dashboardCache.current = { data: fullResult.data, fetchedAt: Date.now() };
+          setDashboardData(fullResult.data);
+        }).catch(() => {
+          // Non-critical: below-fold cards just won't have trend data
+        });
+      }
     } catch (err) {
       console.error("[useChatter] Error fetching dashboard:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch chatter data";

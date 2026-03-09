@@ -22,6 +22,7 @@ import {
 } from "../types";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
 import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -1178,6 +1179,16 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
 
       // 5. Handle specific status transitions
       await handleStatusTransition(withdrawal, oldStatus, newStatus);
+
+      // 6. Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.withdrawal_status_changed", withdrawal.userId, {
+        withdrawalId,
+        amountCents: withdrawal.amount,
+        oldStatus,
+        newStatus,
+      }).catch((err) => {
+        logger.warn("[onWithdrawalStatusChanged] Failed to notify Motivation Engine", { error: err });
+      });
 
       logger.info("[onWithdrawalStatusChanged] Status change processing complete", {
         withdrawalId,

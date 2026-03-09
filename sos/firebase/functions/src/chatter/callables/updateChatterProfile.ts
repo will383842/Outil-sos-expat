@@ -18,6 +18,7 @@ import {
 } from "../types";
 import { getChatterConfigCached, isCountrySupported } from "../utils";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -184,9 +185,18 @@ export const updateChatterProfile = onCall(
       // 8. Update chatter
       await db.collection("chatters").doc(userId).update(updates);
 
+      const updatedFields = Object.keys(updates).filter((k) => k !== "updatedAt");
+
       logger.info("[updateChatterProfile] Profile updated", {
         chatterId: userId,
-        updatedFields: Object.keys(updates).filter((k) => k !== "updatedAt"),
+        updatedFields,
+      });
+
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.profile_updated", userId, {
+        updatedFields,
+      }).catch((err) => {
+        logger.warn("[updateChatterProfile] Failed to notify Motivation Engine", { error: err });
       });
 
       return {

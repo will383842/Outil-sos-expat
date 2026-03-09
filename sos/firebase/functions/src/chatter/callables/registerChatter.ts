@@ -28,6 +28,7 @@ import {
   generateChatterProviderCode,
 } from "../utils/chatterCodeGenerator";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { snapshotLockedRates } from "../../lib/planResolver";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
@@ -697,6 +698,43 @@ export const registerChatter = onCall(
       }).catch((err) => {
         logger.warn("[registerChatter] Failed to notify Backlink Engine", { error: err });
         // Don't fail registration if webhook fails
+      });
+
+      // Notify Motivation Engine — chatter.registered
+      notifyMotivationEngine("chatter.registered", userId, {
+        email: input.email.toLowerCase(),
+        displayName: `${input.firstName.trim()} ${input.lastName.trim()}`,
+        phone: input.phone?.trim(),
+        language: input.language,
+        country: input.country,
+        timezone: "UTC",
+        affiliateCodeClient,
+        affiliateCodeRecruitment,
+        referrerUid: recruitedBy || null,
+      }).catch((err) => {
+        logger.warn("[registerChatter] Failed to notify Motivation Engine (registered)", { error: err });
+      });
+
+      // Notify Motivation Engine — chatter.referral_signup (if recruited)
+      if (recruitedBy) {
+        notifyMotivationEngine("chatter.referral_signup", recruitedBy, {
+          referralUid: userId,
+          referralName: `${input.firstName.trim()} ${input.lastName.trim()}`,
+          recruitmentCode: recruitedByCode,
+        }).catch((err) => {
+          logger.warn("[registerChatter] Failed to notify Motivation Engine (referral_signup)", { error: err });
+        });
+      }
+
+      // Notify Motivation Engine — chatter.click_tracked (registration = conversion)
+      notifyMotivationEngine("chatter.click_tracked", recruitedBy || userId, {
+        linkType: recruitedBy ? "recruitment" : "client",
+        landingPage: "/chatter/register",
+        converted: true,
+        conversionId: userId,
+        conversionType: "chatter_signup",
+      }).catch((err) => {
+        logger.warn("[registerChatter] Failed to notify Motivation Engine (click_tracked)", { error: err });
       });
 
       return {

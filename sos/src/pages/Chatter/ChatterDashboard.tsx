@@ -31,6 +31,7 @@ import NewChatterDashboard from '@/components/Chatter/Activation/NewChatterDashb
 import MicroObjectiveCard from '@/components/Chatter/Activation/MicroObjectiveCard';
 import { CelebrationProvider } from '@/components/Chatter/Activation/CelebrationSystem';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
+import DashboardSkeleton from '@/components/Chatter/Cards/DashboardSkeleton';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
 
@@ -155,13 +156,9 @@ const ChatterDashboardContent: React.FC = () => {
     toast.success(intl.formatMessage({ id: 'chatter.refreshed', defaultMessage: 'Mise a jour...' }), { duration: 1500 });
   }, [refreshDashboard, intl]);
 
-  // Loading state
+  // Loading state — full dashboard skeleton mimicking above-fold structure
   if (isLoading && !dashboardData) {
-    return (
-      <div className="space-y-4 px-4 py-4">
-        <BelowFoldSkeleton />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Error state
@@ -283,6 +280,27 @@ const BelowFoldSection: React.FC = () => {
     return { thisWeekData: thisWeek, lastWeekData: lastWeek };
   }, [commissions]);
 
+  // Compute monthly trends from commissions (last 6 months)
+  const monthlyData = useMemo(() => {
+    const now = new Date();
+    const months: { month: string; amount: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        amount: 0,
+      });
+    }
+    commissions.forEach((c) => {
+      if (!c.createdAt || c.status === 'cancelled') return;
+      const d = new Date(c.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const entry = months.find((m) => m.month === key);
+      if (entry) entry.amount += (c.amount || 0);
+    });
+    return months;
+  }, [commissions]);
+
   return (
     <div className="space-y-4">
       {/* Daily Missions */}
@@ -300,7 +318,7 @@ const BelowFoldSection: React.FC = () => {
       {/* Trends Chart */}
       {commissions.length >= 3 && (
         <Suspense fallback={null}>
-          <LazyTrendsChart thisWeekData={thisWeekData} lastWeekData={lastWeekData} />
+          <LazyTrendsChart thisWeekData={thisWeekData} lastWeekData={lastWeekData} monthlyData={monthlyData} />
         </Suspense>
       )}
 
@@ -312,19 +330,23 @@ const BelowFoldSection: React.FC = () => {
   );
 };
 
-// Below-fold lazy imports
-const LazyDailyMissions = lazy(() => import('@/components/Chatter/Cards/DailyMissionsCard'));
-const LazyMotivation = lazy(() => import('@/components/Chatter/Cards/MotivationWidget'));
-const LazyPiggyBank = lazy(() => import('@/components/Chatter/Cards/PiggyBankCard'));
-const LazyTrendsChart = lazy(() => import('@/components/Chatter/Cards/TrendsChartCard'));
+// Below-fold lazy imports — grouped into 2 chunks (engagement + analytics) for fewer round-trips
+const LazyDailyMissions = lazy(() => import('@/components/Chatter/Cards/chunks/EngagementBundle').then(m => ({ default: m.DailyMissionsCard })));
+const LazyPiggyBank = lazy(() => import('@/components/Chatter/Cards/chunks/EngagementBundle').then(m => ({ default: m.PiggyBankCard })));
+const LazyMotivation = lazy(() => import('@/components/Chatter/Cards/chunks/AnalyticsBundle').then(m => ({ default: m.MotivationWidget })));
+const LazyTrendsChart = lazy(() => import('@/components/Chatter/Cards/chunks/AnalyticsBundle').then(m => ({ default: m.TrendsChartCard })));
 
-// Prefetch below-fold chunks after dashboard is idle
+// Prefetch below-fold chunks + adjacent page data after dashboard is idle
 if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
   (window as any).requestIdleCallback(() => {
-    import('@/components/Chatter/Cards/DailyMissionsCard');
-    import('@/components/Chatter/Cards/MotivationWidget');
-    import('@/components/Chatter/Cards/PiggyBankCard');
-    import('@/components/Chatter/Cards/TrendsChartCard');
+    // Prefetch 2 below-fold bundles (instead of 4 individual chunks)
+    import('@/components/Chatter/Cards/chunks/EngagementBundle');
+    import('@/components/Chatter/Cards/chunks/AnalyticsBundle');
+    // Prefetch adjacent page JS chunks (most visited after dashboard)
+    import('@/pages/Chatter/ChatterPayments');
+    import('@/pages/Chatter/ChatterReferrals');
+    import('@/pages/Chatter/ChatterLeaderboard');
+    import('@/pages/Chatter/ChatterTraining');
   }, { timeout: 3000 });
 }
 

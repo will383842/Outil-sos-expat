@@ -311,30 +311,36 @@ function ChatterReferralsContent() {
 
   return (
     <div className="px-4 py-4">
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            <FormattedMessage id="chatter.team.title" defaultMessage="Equipe" />
-          </h1>
-          {totalRecruits > 0 && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              <FormattedMessage
-                id="chatter.team.socialProof"
-                defaultMessage="Les chatters avec 10+ filleuls gagnent en moyenne $400/mois"
-              />
-            </p>
-          )}
+      {/* Page header with gradient */}
+      <div className={`${UI.card} ${SPACING.cardPadding} bg-gradient-to-r from-indigo-500/5 to-violet-500/5 dark:from-indigo-500/[0.03] dark:to-violet-500/[0.03] mb-4`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-md shadow-indigo-500/25">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+                <FormattedMessage id="chatter.team.title" defaultMessage="Equipe" />
+              </h1>
+              {totalRecruits > 0 && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <FormattedMessage
+                    id="chatter.team.socialProof"
+                    defaultMessage="Les chatters avec 10+ filleuls gagnent en moyenne $400/mois"
+                  />
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={refreshDashboard}
+            disabled={isLoading}
+            className={`${UI.button.ghost} p-2 ${SPACING.touchTarget}`}
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
-        <button
-          onClick={refreshDashboard}
-          disabled={isLoading}
-          className={`${UI.button.ghost} p-2 ${SPACING.touchTarget}`}
-          aria-label="Refresh"
-        >
-          <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-        </button>
       </div>
 
       {/* Tabs */}

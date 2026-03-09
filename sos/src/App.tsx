@@ -64,6 +64,8 @@ interface RouteConfig {
   alias?: string;
   preload?: boolean;
   translated?: RouteKey;
+  /** Redirect this path to another path (for consolidated pages) */
+  redirectTo?: string;
 }
 
 // --------------------------------------------
@@ -408,20 +410,22 @@ const protectedUserRoutes: RouteConfig[] = [
   // Chatter System Routes - Protected routes for registered chatters
   // IMPORTANT: Les rôles sont mutuellement exclusifs. Un chatter ne peut pas être client/lawyer/expat.
   // L'inscription est PUBLIQUE - le composant gère la vérification des rôles existants
+  { path: "/chatter", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard", redirectTo: "/chatter/tableau-de-bord" },
   { path: "/chatter/inscription", component: ChatterRegister, translated: "chatter-register" },
   // Après inscription, l'utilisateur passe par l'onboarding Telegram (optionnel mais incentivé)
   { path: "/chatter/telegram", component: ChatterTelegramOnboarding, protected: true, role: 'chatter', translated: "chatter-telegram" },
   { path: "/chatter/tableau-de-bord", component: ChatterDashboard, protected: true, role: 'chatter', translated: "chatter-dashboard" },
   { path: "/chatter/classement", component: ChatterLeaderboard, protected: true, role: 'chatter', translated: "chatter-leaderboard" },
-  { path: "/chatter/progression", component: ChatterProgression, protected: true, role: 'chatter', translated: "chatter-progression" },
-  { path: "/chatter/comment-gagner", component: ChatterHowToEarn, protected: true, role: 'chatter', translated: "chatter-how-to-earn" },
+  // Consolidated redirects: progression → classement, comment-gagner → formation
+  { path: "/chatter/progression", component: ChatterProgression, protected: true, role: 'chatter', translated: "chatter-progression", redirectTo: "/chatter/classement" },
+  { path: "/chatter/comment-gagner", component: ChatterHowToEarn, protected: true, role: 'chatter', translated: "chatter-how-to-earn", redirectTo: "/chatter/formation" },
   { path: "/chatter/paiements", component: ChatterPayments, protected: true, role: 'chatter', translated: "chatter-payments" },
   { path: "/chatter/suspendu", component: ChatterSuspended, protected: true, role: 'chatter', translated: "chatter-suspended" },
   { path: "/chatter/formation", component: ChatterTraining, protected: true, role: 'chatter', translated: "chatter-training" },
-  { path: "/chatter/ressources", component: ChatterResources, protected: true, role: 'chatter', translated: "chatter-resources" },
+  { path: "/chatter/ressources", component: ChatterResources, protected: true, role: 'chatter', translated: "chatter-resources", redirectTo: "/chatter/formation" },
   { path: "/chatter/filleuls", component: ChatterReferrals, protected: true, role: 'chatter', translated: "chatter-referrals" },
-  { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings" },
-  { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer" },
+  { path: "/chatter/gains-parrainage", component: ChatterReferralEarnings, protected: true, role: 'chatter', translated: "chatter-referral-earnings", redirectTo: "/chatter/paiements" },
+  { path: "/chatter/parrainer", component: ChatterRefer, protected: true, role: 'chatter', translated: "chatter-refer", redirectTo: "/chatter/filleuls" },
   { path: "/chatter/mon-equipe", component: ChatterCaptainDashboard, protected: true, role: 'chatter', translated: "chatter-captain-team" },
   { path: "/chatter/profil", component: ChatterProfile, protected: true, role: 'chatter', translated: "chatter-profile" },
 
@@ -832,6 +836,7 @@ const App: React.FC = () => {
       role,
       alias,
       translated,
+      redirectTo,
     } = config;
 
     // If this route is an admin path (or its alias), DO NOT add the locale prefix.
@@ -907,6 +912,22 @@ const App: React.FC = () => {
       // Debug: log route paths in development
       if (process.env.NODE_ENV === 'development' && path === "/") {
         devLog(`[Route] Registering locale route: ${routePath}`);
+      }
+
+      // If this route is a redirect, render a locale-aware Navigate
+      if (redirectTo) {
+        const RedirectWithLocale = () => {
+          const params = useParams<{ locale?: string }>();
+          const target = params.locale ? `/${params.locale}${redirectTo}` : redirectTo;
+          return <Navigate to={target} replace />;
+        };
+        return (
+          <Route
+            key={`${index}-${i}-${routePath}`}
+            path={routePath}
+            element={<RedirectWithLocale />}
+          />
+        );
       }
 
       return (

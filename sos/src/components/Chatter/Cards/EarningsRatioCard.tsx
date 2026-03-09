@@ -1,14 +1,15 @@
 /**
  * EarningsRatioCard
  *
- * Shows transparent breakdown of earnings with glassmorphism design.
+ * Shows transparent breakdown of earnings with doré/money design.
+ * Uses FormattedMessage for i18n, React.memo for performance.
  */
 
-import React from "react";
+import React, { memo } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Users, DollarSign } from "lucide-react";
-import { useTranslation } from "@/hooks/useTranslation";
-import { UI } from '@/components/Chatter/designTokens';
+import { UI, MONEY } from '@/components/Chatter/designTokens';
 
 interface EarningsRatioCardProps {
   affiliationEarnings: number; // in cents
@@ -16,12 +17,12 @@ interface EarningsRatioCardProps {
   isLoading?: boolean;
 }
 
-export function EarningsRatioCard({
+const EarningsRatioCard = memo(function EarningsRatioCard({
   affiliationEarnings,
   referralEarnings,
   isLoading,
 }: EarningsRatioCardProps) {
-  const { t } = useTranslation();
+  const intl = useIntl();
 
   const totalEarnings = affiliationEarnings + referralEarnings;
   const affiliationPercent =
@@ -34,7 +35,9 @@ export function EarningsRatioCard({
       <div className={`${UI.card} p-3 sm:p-5`}>
         <div className="flex items-center gap-2 mb-3">
           <PieChart className="h-5 w-5 dark:text-white" />
-          <span className="font-semibold dark:text-white">{t("chatter.referrals.earningsRatio")}</span>
+          <span className="font-semibold dark:text-white">
+            <FormattedMessage id="chatter.referrals.earningsRatio" defaultMessage="Earnings Ratio" />
+          </span>
         </div>
         <div className="space-y-3">
           <div className="h-4 bg-gray-100 dark:bg-white/5 rounded animate-pulse" />
@@ -45,11 +48,15 @@ export function EarningsRatioCard({
   }
 
   return (
-    <div className={`${UI.card} p-3 sm:p-5`}>
+    <div className={`${UI.card} bg-gradient-to-br from-amber-500/10 to-yellow-500/5 dark:from-amber-500/10 dark:to-yellow-500/5 p-3 sm:p-5`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-3 sm:mb-4">
-        <PieChart className="h-5 w-5 dark:text-white" />
-        <span className="font-semibold dark:text-white">{t("chatter.referrals.earningsRatio")}</span>
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-sm shadow-amber-500/20">
+          <PieChart className="h-4 w-4 text-white" />
+        </div>
+        <span className="font-semibold dark:text-white">
+          <FormattedMessage id="chatter.referrals.earningsRatio" defaultMessage="Earnings Ratio" />
+        </span>
       </div>
 
       <div className="space-y-3 sm:space-y-4">
@@ -57,9 +64,9 @@ export function EarningsRatioCard({
         <div>
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-1.5">
-              <DollarSign className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <DollarSign className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
               <span className="text-xs sm:text-sm font-medium dark:text-white">
-                {t("chatter.referrals.affiliationEarnings")}
+                <FormattedMessage id="chatter.referrals.affiliationEarnings" defaultMessage="Affiliation Earnings" />
               </span>
             </div>
             <span className="text-xs sm:text-sm dark:text-gray-300">
@@ -67,7 +74,7 @@ export function EarningsRatioCard({
             </span>
           </div>
           <p className="text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500 mb-1.5 ml-5">
-            {t("chatter.referrals.affiliationEarningsDesc")}
+            <FormattedMessage id="chatter.referrals.affiliationEarningsDesc" defaultMessage="Commissions from your client referrals" />
           </p>
           <Progress value={affiliationPercent} className="h-1.5 sm:h-2 bg-gray-100 dark:bg-white/10" />
         </div>
@@ -76,9 +83,9 @@ export function EarningsRatioCard({
         <div>
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+              <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
               <span className="text-xs sm:text-sm font-medium dark:text-white">
-                {t("chatter.referrals.referralEarnings")}
+                <FormattedMessage id="chatter.referrals.referralEarnings" defaultMessage="Referral Earnings" />
               </span>
             </div>
             <span className="text-xs sm:text-sm dark:text-gray-300">
@@ -86,7 +93,7 @@ export function EarningsRatioCard({
             </span>
           </div>
           <p className="text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500 mb-1.5 ml-5">
-            {t("chatter.referrals.referralEarningsDesc")}
+            <FormattedMessage id="chatter.referrals.referralEarningsDesc" defaultMessage="Commissions from your recruits' activity" />
           </p>
           <Progress
             value={referralPercent}
@@ -95,10 +102,12 @@ export function EarningsRatioCard({
         </div>
 
         {/* Total */}
-        <div className="pt-2 sm:pt-3 border-t border-gray-200 dark:border-white/10">
+        <div className="pt-2 sm:pt-3 border-t border-amber-200/30 dark:border-amber-500/15">
           <div className="flex justify-between items-center">
-            <span className="font-medium text-sm dark:text-white">{t("common.total")}</span>
-            <span className="font-bold text-base sm:text-lg bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
+            <span className="font-medium text-sm dark:text-white">
+              <FormattedMessage id="common.total" defaultMessage="Total" />
+            </span>
+            <span className="font-bold text-base sm:text-lg bg-gradient-to-r from-amber-600 to-yellow-500 bg-clip-text text-transparent">
               ${(totalEarnings / 100).toFixed(2)}
             </span>
           </div>
@@ -106,9 +115,12 @@ export function EarningsRatioCard({
 
         {/* Info */}
         <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">
-          {t("chatter.referrals.ratioExplanation")}
+          <FormattedMessage id="chatter.referrals.ratioExplanation" defaultMessage="Breakdown of your total earnings by source" />
         </p>
       </div>
     </div>
   );
-}
+});
+
+export { EarningsRatioCard };
+export default EarningsRatioCard;

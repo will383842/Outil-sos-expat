@@ -16,12 +16,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
-import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import {
   Users,
   Trophy,
-  TrendingUp,
   Phone,
   ChevronDown,
   ChevronUp,
@@ -32,7 +30,6 @@ import {
   Shield,
   Clock,
   DollarSign,
-  Loader2,
   RefreshCw,
   User,
   Calendar,
@@ -43,21 +40,9 @@ import {
   XCircle,
   Sparkles,
   MapPin,
-  Languages,
 } from 'lucide-react';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
-
-// ============================================================================
-// DESIGN TOKENS
-// ============================================================================
-
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  button: {
-    primary: "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all",
-    secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
-  },
-};
+import { UI, SPACING } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -203,19 +188,19 @@ function formatCents(cents: number): string {
 // SKELETON
 // ============================================================================
 
-function DashboardSkeleton() {
+const DashboardSkeleton = React.memo(function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       {/* Gauge skeleton */}
-      <div className={`${UI.card} p-4 sm:p-6`}>
+      <div className={`${UI.card} ${SPACING.cardPadding}`}>
         <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
         <div className="h-6 bg-gray-200 dark:bg-white/10 rounded-full w-full mb-3" />
         <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
       </div>
       {/* Cards skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${SPACING.cardGap}`}>
         {[1, 2].map((i) => (
-          <div key={i} className={`${UI.card} p-4 sm:p-6`}>
+          <div key={i} className={`${UI.card} ${SPACING.cardPadding}`}>
             <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/3 mb-4" />
             <div className="space-y-3">
               {[1, 2, 3].map((j) => (
@@ -226,7 +211,7 @@ function DashboardSkeleton() {
         ))}
       </div>
       {/* Commission skeleton */}
-      <div className={`${UI.card} p-4 sm:p-6`}>
+      <div className={`${UI.card} ${SPACING.cardPadding}`}>
         <div className="h-6 bg-gray-200 dark:bg-white/10 rounded w-1/4 mb-4" />
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
@@ -236,7 +221,7 @@ function DashboardSkeleton() {
       </div>
     </div>
   );
-}
+});
 
 // ============================================================================
 // RECRUIT ROW
@@ -247,7 +232,7 @@ interface RecruitRowProps {
   locale: string;
 }
 
-function RecruitRow({ recruit, locale }: RecruitRowProps) {
+const RecruitRow = React.memo(function RecruitRow({ recruit, locale }: RecruitRowProps) {
   const intl = useIntl();
   const joinDate = parseTimestamp(recruit.createdAt);
 
@@ -301,7 +286,7 @@ function RecruitRow({ recruit, locale }: RecruitRowProps) {
       </div>
     </div>
   );
-}
+});
 
 // ============================================================================
 // MAIN COMPONENT
@@ -309,7 +294,6 @@ function RecruitRow({ recruit, locale }: RecruitRowProps) {
 
 function ChatterCaptainDashboard() {
   const intl = useIntl();
-  const { user } = useAuth();
   const locale = intl.locale;
 
   const [data, setData] = useState<CaptainDashboardData | null>(null);
@@ -345,7 +329,6 @@ function ChatterCaptainDashboard() {
       setData(result.data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error('[CaptainDashboard] Error:', message);
       setError(message);
       toast.error(
         intl.formatMessage({
@@ -479,7 +462,7 @@ function ChatterCaptainDashboard() {
       {/* ============================================================== */}
       {/* TIER BADGE + GAUGE */}
       {/* ============================================================== */}
-      <div className={`${UI.card} p-5 sm:p-6`}>
+      <div className={`${UI.card} ${SPACING.cardPadding}`}>
         {/* Current tier badge */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <div className={`inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border ${tierStyle.bg} ${tierStyle.border}`}>
@@ -613,7 +596,7 @@ function ChatterCaptainDashboard() {
       {/* ============================================================== */}
       {/* STATS ROW */}
       {/* ============================================================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className={`grid grid-cols-2 sm:grid-cols-4 ${SPACING.cardGap}`}>
         {/* N1 count */}
         <div className={`${UI.card} p-4 text-center`}>
           <Users className="h-5 w-5 text-indigo-500 mx-auto mb-1" />
@@ -654,7 +637,7 @@ function ChatterCaptainDashboard() {
       {/* COVERAGE (assigned countries & languages) */}
       {/* ============================================================== */}
       {((data.captainInfo.assignedCountries?.length ?? 0) > 0 || (data.captainInfo.assignedLanguages?.length ?? 0) > 0) && (
-        <div className={`${UI.card} p-5 sm:p-6`}>
+        <div className={`${UI.card} p-4 sm:p-5`}>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -700,7 +683,7 @@ function ChatterCaptainDashboard() {
       {/* QUALITY BONUS STATUS */}
       {/* ============================================================== */}
       {data.qualityBonusStatus && (
-        <div className={`${UI.card} p-5 sm:p-6`}>
+        <div className={`${UI.card} p-4 sm:p-5`}>
           <div className="flex items-center gap-3 mb-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               data.qualityBonusStatus.qualified
@@ -843,7 +826,7 @@ function ChatterCaptainDashboard() {
       <div className={UI.card}>
         <button
           onClick={() => setShowN1(!showN1)}
-          className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
+          className="w-full flex items-center justify-between p-4 sm:p-5 text-left"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -895,7 +878,7 @@ function ChatterCaptainDashboard() {
       <div className={UI.card}>
         <button
           onClick={() => setShowN2(!showN2)}
-          className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
+          className="w-full flex items-center justify-between p-4 sm:p-5 text-left"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
@@ -947,7 +930,7 @@ function ChatterCaptainDashboard() {
       <div className={UI.card}>
         <button
           onClick={() => setShowCommissions(!showCommissions)}
-          className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
+          className="w-full flex items-center justify-between p-4 sm:p-5 text-left"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -1044,7 +1027,7 @@ function ChatterCaptainDashboard() {
         <div className={UI.card}>
           <button
             onClick={() => setShowArchives(!showArchives)}
-            className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
+            className="w-full flex items-center justify-between p-4 sm:p-5 text-left"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">

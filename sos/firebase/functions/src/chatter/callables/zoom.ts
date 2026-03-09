@@ -6,6 +6,8 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { adminConfig } from "../../lib/functionConfigs";
 import * as zoomService from "../services/chatterZoomService";
+import { logger } from "firebase-functions/v2";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 const db = () => getFirestore();
 
@@ -71,6 +73,14 @@ export const recordZoomAttendance = onCall(
       if (!result.success) {
         throw new HttpsError("failed-precondition", result.error || "Failed to record attendance");
       }
+
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.zoom_attended", request.auth.uid, {
+        chatterId: request.auth.uid,
+        meetingId,
+      }).catch((err) => {
+        logger.warn("[recordZoomAttendance] Failed to notify Motivation Engine", { error: err });
+      });
 
       return result;
     } catch (error) {

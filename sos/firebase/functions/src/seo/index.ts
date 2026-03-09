@@ -44,3 +44,6 @@ export { diagnoseProfiles } from './diagnoseProfiles';
 
 // OG Image generation service
 export { generateOgImage } from './ogImageService';
+
+// Affiliate OG rendering (lightweight, no Puppeteer)
+export { affiliateOgRender, generateAffiliateOgImage } from './affiliateOgRender';

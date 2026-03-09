@@ -18,7 +18,7 @@ interface ReferralN2ListProps {
   isLoading?: boolean;
 }
 
-export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
+export const ReferralN2List = React.memo(function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
   const { t } = useTranslation();
   const {
     paginatedItems,
@@ -141,4 +141,4 @@ export function ReferralN2List({ filleuls, isLoading }: ReferralN2ListProps) {
       </p>
     </div>
   );
-}
+});

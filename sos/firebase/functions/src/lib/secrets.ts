@@ -185,6 +185,15 @@ export const BACKLINK_ENGINE_WEBHOOK_SECRET = defineSecret("BACKLINK_ENGINE_WEBH
 export const BACKLINK_ENGINE_SECRETS = [BACKLINK_ENGINE_WEBHOOK_SECRET];
 
 // ============================================================================
+// MOTIVATION ENGINE
+// ============================================================================
+
+export const MOTIVATION_ENGINE_WEBHOOK_SECRET = defineSecret("MOTIVATION_ENGINE_WEBHOOK_SECRET");
+
+/** Motivation Engine secrets for function config */
+export const MOTIVATION_ENGINE_SECRETS = [MOTIVATION_ENGINE_WEBHOOK_SECRET];
+
+// ============================================================================
 // OUTIL SERVICE ACCOUNT (SSO for Outil IA)
 // ============================================================================
 
@@ -965,6 +974,7 @@ export const ALL_SECRETS = [
   ...META_CAPI_SECRETS,
   ...OPENAI_SECRETS,
   ...BACKLINK_ENGINE_SECRETS,
+  ...MOTIVATION_ENGINE_SECRETS,
   ENCRYPTION_KEY,
   TASKS_AUTH_SECRET,
   OUTIL_API_KEY,

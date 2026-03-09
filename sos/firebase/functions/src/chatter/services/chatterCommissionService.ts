@@ -23,6 +23,7 @@ import {
 } from "../utils/chatterConfigService";
 // Note: getValidationDelayMs and getReleaseDelayMs are used in validateCommission and batch operations
 import { checkCommissionFraud, checkAutoSuspension } from "../utils/chatterFraudDetection";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // ============================================================================
 // TYPES
@@ -849,6 +850,15 @@ export async function checkAndUpdateLevel(chatterId: string): Promise<{
       chatterId,
       previousLevel: chatter.level,
       newLevel,
+    });
+
+    // Notify Motivation Engine (non-blocking)
+    notifyMotivationEngine("chatter.level_up", chatterId, {
+      oldLevel: chatter.level,
+      newLevel,
+      totalEarningsCents: chatter.totalEarned,
+    }).catch((err) => {
+      logger.warn("[checkAndUpdateLevel] Failed to notify Motivation Engine", { error: err });
     });
 
     return {

@@ -30,6 +30,9 @@ function hasCelebrated(id: string): boolean {
 
 async function fireConfetti(intensity: 'light' | 'medium' | 'heavy' = 'medium') {
   try {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
     const confetti = (await import('canvas-confetti')).default;
     const particleCount = intensity === 'light' ? 30 : intensity === 'heavy' ? 150 : 80;
     confetti({

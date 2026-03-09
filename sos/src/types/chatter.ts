@@ -604,13 +604,13 @@ export interface ChatterDashboardData {
     } | null;
   };
 
-  /** Earnings ratio (affiliation vs referral) */
-  earningsRatio: {
+  /** Earnings ratio (affiliation vs referral) — null in essential mode */
+  earningsRatio?: {
     affiliationEarnings: number;
     referralEarnings: number;
     affiliationPercent: number;
     referralPercent: number;
-  };
+  } | null;
 
   /** Active promotion if any */
   activePromotion: {
@@ -629,12 +629,12 @@ export interface ChatterDashboardData {
   } | null;
   /** Piggy Bank - Bonus pending unlock */
   piggyBank: PiggyBankData;
-  /** Weekly/monthly trend data for visualization */
-  trends: ChatterTrendsData;
-  /** Month-over-month comparison data */
-  comparison: ChatterComparisonData;
-  /** Forecast/projection data */
-  forecast: ChatterForecastData;
+  /** Weekly/monthly trend data for visualization — null in essential mode */
+  trends?: ChatterTrendsData | null;
+  /** Month-over-month comparison data — null in essential mode */
+  comparison?: ChatterComparisonData | null;
+  /** Forecast/projection data — null in essential mode */
+  forecast?: ChatterForecastData | null;
 }
 
 // ============================================================================

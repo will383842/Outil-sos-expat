@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { formatCurrencyLocale, formatCurrencyLocaleWhole } from './currencyUtils';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
-import { UI } from '@/components/Chatter/designTokens';
+import { UI, MONEY } from '@/components/Chatter/designTokens';
 
 // Default level configurations (thresholds in cents) — overridden by backend config
 const DEFAULT_LEVEL_CONFIG = {
@@ -225,7 +225,7 @@ const ForecastCard = memo(function ForecastCard({
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-indigo-500" />
+        <Target className="w-5 h-5 text-amber-500" />
         <h3 className="text-sm dark:text-white font-semibold">
           <FormattedMessage
             id="chatter.forecast.title"
@@ -235,7 +235,7 @@ const ForecastCard = memo(function ForecastCard({
       </div>
 
       {/* Projected Month-End */}
-      <div className="p-4 bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-xl mb-3">
+      <div className="p-4 bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-yellow-50 dark:to-yellow-900/20 rounded-xl mb-3">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs dark:text-gray-400 mb-1">

@@ -29,7 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { ChatterCommissionType } from '@/types/chatter';
-import { UI } from '@/components/Chatter/designTokens';
+import { UI, MONEY } from '@/components/Chatter/designTokens';
 
 // ============================================================================
 // TYPES
@@ -514,7 +514,7 @@ const EarningsBreakdownCard = memo(function EarningsBreakdownCard({
       {/* Header */}
       <div className="p-4 sm:p-6 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
             <PieChart className="w-5 h-5 text-white" />
           </div>
           <div>

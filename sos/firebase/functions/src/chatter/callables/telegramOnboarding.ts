@@ -24,6 +24,7 @@ import { REFERRAL_CONFIG } from "../types";
 import { handleWithdrawalCallback } from "../../telegram/withdrawalConfirmation";
 import { TELEGRAM_SECRETS, getTelegramBotToken, getTelegramWebhookSecret } from "../../lib/secrets";
 import { enqueueTelegramMessage } from "../../telegram/queue";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // ============================================================================
 // TYPES
@@ -986,6 +987,17 @@ export const telegramChatterBotWebhook = onRequest(
         role: link.role,
         bonusAmount: telegramBonusAmount,
       });
+
+      // Notify Motivation Engine — chatter.telegram_linked
+      if (link.role === "chatter") {
+        notifyMotivationEngine("chatter.telegram_linked", link.userId, {
+          telegramId,
+          telegramUsername,
+          linkedAt: new Date().toISOString(),
+        }).catch((err) => {
+          logger.warn("[telegramChatterBotWebhook] Failed to notify Motivation Engine", { error: err });
+        });
+      }
 
       // Send success message with bonus info
       const bonusFormatted = (telegramBonusAmount / 100).toFixed(0);

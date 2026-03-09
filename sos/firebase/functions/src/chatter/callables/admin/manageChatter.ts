@@ -17,6 +17,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { chatterAdminConfig as adminConfig } from "../../../lib/functionConfigs";
 import { Chatter } from "../../types";
+import { notifyMotivationEngine } from "../../../Webhooks/notifyMotivationEngine";
 
 function ensureInitialized() {
   if (!getApps().length) {
@@ -212,6 +213,14 @@ export const adminManageChatter = onCall(
 
       logger.info("[adminManageChatter] Chatter blocked", { chatterId: input.chatterId, adminId });
 
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.status_changed", input.chatterId, {
+        action: "block",
+        reason: input.reason,
+      }).catch((err) => {
+        logger.warn("[adminManageChatter] Failed to notify Motivation Engine", { error: err });
+      });
+
       return {
         success: true,
         message: `Chatter ${chatter.firstName} ${chatter.lastName} a ete bloque (banni)`,
@@ -247,6 +256,14 @@ export const adminManageChatter = onCall(
       });
 
       logger.info("[adminManageChatter] Chatter restricted", { chatterId: input.chatterId, adminId });
+
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.status_changed", input.chatterId, {
+        action: "restrict",
+        reason: input.reason,
+      }).catch((err) => {
+        logger.warn("[adminManageChatter] Failed to notify Motivation Engine", { error: err });
+      });
 
       return {
         success: true,
@@ -293,6 +310,14 @@ export const adminManageChatter = onCall(
       });
 
       logger.info("[adminManageChatter] Chatter reactivated", { chatterId: input.chatterId, adminId });
+
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.status_changed", input.chatterId, {
+        action: "reactivate",
+        reason: input.reason,
+      }).catch((err) => {
+        logger.warn("[adminManageChatter] Failed to notify Motivation Engine", { error: err });
+      });
 
       return {
         success: true,
@@ -498,6 +523,14 @@ export const adminManageChatter = onCall(
       } catch (authErr) {
         logger.warn("[adminManageChatter] Could not delete auth user", { chatterId: input.chatterId, authErr });
       }
+
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.deleted", input.chatterId, {
+        reason: input.reason,
+        deletedAt: new Date().toISOString(),
+      }).catch((err) => {
+        logger.warn("[adminManageChatter] Failed to notify Motivation Engine (deleted)", { error: err });
+      });
 
       // GDPR Audit log
       await db.collection("admin_audit_logs").add({

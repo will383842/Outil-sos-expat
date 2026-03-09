@@ -33,6 +33,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { chatterAdminConfig as adminConfig } from "../../../lib/functionConfigs";
 import { Chatter } from "../../types";
+import { notifyMotivationEngine } from "../../../Webhooks/notifyMotivationEngine";
 
 // ============================================================================
 // LAZY INITIALIZATION
@@ -194,6 +195,15 @@ export const adminPromoteToCaptain = onCall(
     logger.info("[adminPromoteToCaptain] Chatter promoted to captain", {
       chatterId,
       promotedBy: adminUid,
+    });
+
+    // Notify Motivation Engine (non-blocking)
+    notifyMotivationEngine("chatter.captain_promoted", chatterId, {
+      chatterId,
+      adminUid,
+      previousRole: chatter.role || "chatter",
+    }).catch((err) => {
+      logger.warn("[adminPromoteToCaptain] Failed to notify Motivation Engine", { error: err });
     });
 
     return { success: true, message: "Chatter promoted to captain" };

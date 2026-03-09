@@ -10,6 +10,9 @@
 // Firebase Cloud Function URL for server-side rendering
 const SSR_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
 
+// Lightweight affiliate OG renderer (no Puppeteer — fast HTML with OG tags)
+const AFFILIATE_OG_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/affiliateOgRender';
+
 // Firebase Auth handler origin (used for /__/auth/* proxy)
 // This allows using a custom authDomain (www.sosexpats.com) instead of firebaseapp.com,
 // which fixes Google OAuth on iOS Safari where ITP blocks cross-site cookies/storage.
@@ -809,6 +812,17 @@ function isLandingPagePath(pathname) {
 }
 
 /**
+ * Check if the URL path is an affiliate referral link
+ * Matches: /ref/c/CODE, /rec/c/CODE, /prov/c/CODE (and locale variants)
+ * Actor types: c (chatter), b (blogger), i (influencer), ga (group admin)
+ * @param {string} pathname - The URL pathname
+ * @returns {boolean}
+ */
+function isAffiliatePath(pathname) {
+  return /^(\/[a-z]{2}(-[a-z]{2})?)?\/(ref|rec|prov)\/(c|b|i|ga)\/[A-Za-z0-9_-]+\/?$/i.test(pathname);
+}
+
+/**
  * Check if the URL path needs SSR/Prerendering
  * @param {string} pathname - The URL pathname
  * @returns {boolean} - True if the path needs prerendering for bots
@@ -1018,8 +1032,45 @@ async function handleRequest(request, env, ctx) {
     }
   }
 
-  // Check if this is a bot AND visiting a page that needs prerendering
+  // ==========================================================================
+  // Affiliate link OG rendering (lightweight — no Puppeteer)
+  // Routes /ref/, /rec/, /prov/ paths to affiliateOgRender for social bots
+  // ==========================================================================
   const botDetected = isBot(userAgent);
+
+  if (botDetected && isAffiliatePath(pathname)) {
+    const botName = getBotName(userAgent);
+    console.log(`[SOS Expat Affiliate OG] Bot: ${botName}, Path: ${pathname}`);
+
+    try {
+      const ogUrl = new URL(AFFILIATE_OG_FUNCTION_URL);
+      ogUrl.searchParams.set('path', pathname);
+      ogUrl.searchParams.set('url', request.url);
+
+      const ogResponse = await fetch(ogUrl.toString(), {
+        method: 'GET',
+        headers: {
+          'User-Agent': userAgent,
+          'X-Bot-Name': botName,
+          'Accept': 'text/html',
+        },
+      });
+
+      const ogHeaders = new Headers(ogResponse.headers);
+      ogHeaders.set('X-Rendered-By', 'affiliate-og-render');
+      ogHeaders.set('X-Bot-Detected', botName);
+
+      return new Response(ogResponse.body, {
+        status: ogResponse.status,
+        headers: ogHeaders,
+      });
+    } catch (error) {
+      console.error(`[SOS Expat Affiliate OG] Error: ${error.message}`);
+      // Fall through to SPA on error
+    }
+  }
+
+  // Check if this is a bot AND visiting a page that needs prerendering
   const needsSSR = needsPrerendering(pathname);
 
   if (botDetected && needsSSR) {

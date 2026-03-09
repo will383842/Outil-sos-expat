@@ -30,6 +30,7 @@ import { sendWithdrawalConfirmation, WithdrawalConfirmationRole } from "../../te
 import { TELEGRAM_SECRETS } from "../../lib/secrets";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -282,6 +283,16 @@ export const requestWithdrawal = onCall(
         amount: requestedAmount,
         paymentMethod: input.paymentMethod,
         collection: "payment_withdrawals",
+      });
+
+      // Notify Motivation Engine (non-blocking)
+      notifyMotivationEngine("chatter.withdrawal", userId, {
+        withdrawalId: withdrawal.id,
+        requestedAmount,
+        paymentMethod: input.paymentMethod,
+        status: "pending",
+      }).catch((err) => {
+        logger.warn("[requestWithdrawal] Failed to notify Motivation Engine", { error: err });
       });
 
       return {

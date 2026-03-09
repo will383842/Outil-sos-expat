@@ -1,6 +1,6 @@
 /**
  * ChatterTraining - Complete training center for chatters
- * 4 tabs: Getting Started | Build Your Team | Maximize Earnings | Resources
+ * 3 tabs: Comment Gagner | Formation | Ressources
  * All content is i18n-ready with FormattedMessage / intl.formatMessage
  */
 
@@ -786,8 +786,18 @@ function ChatterTrainingContent() {
         </div>
       </div>
 
-      {/* Backend training modules */}
-      {modules && modules.length > 0 && (
+    </div>
+  );
+
+  // ══════════════════════════════════════════════════════════════
+  // TAB 2: FORMATION — Training modules with progress
+  // ══════════════════════════════════════════════════════════════
+  const formationTab = (
+    <div className="space-y-4">
+      {trainingLoading && (
+        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>
+      )}
+      {!trainingLoading && modules && modules.length > 0 && (
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
             <FormattedMessage id="chatter.training.modules.title" defaultMessage="Training modules" />
@@ -824,11 +834,18 @@ function ChatterTrainingContent() {
           </div>
         </div>
       )}
+      {!trainingLoading && (!modules || modules.length === 0) && (
+        <EmptyStateCard
+          icon={<BookOpen className="w-7 h-7" />}
+          title={<FormattedMessage id="chatter.training.modules.emptyTitle" defaultMessage="Modules coming soon" />}
+          description={<FormattedMessage id="chatter.training.modules.emptyDesc" defaultMessage="Training modules are being prepared. Check back soon!" />}
+        />
+      )}
     </div>
   );
 
   // ══════════════════════════════════════════════════════════════
-  // TAB 4: RESOURCES
+  // TAB 3: RESOURCES
   // ══════════════════════════════════════════════════════════════
   const allResources = useMemo(() => {
     if (!resourcesData) return [];
@@ -944,23 +961,29 @@ function ChatterTrainingContent() {
   );
 
   // ══════════════════════════════════════════════════════════════
+  // COMBINED TAB: Comment Gagner = Getting Started + Maximize + Build Team
+  // ══════════════════════════════════════════════════════════════
+  const howToEarnTab = (
+    <div className="space-y-4">
+      {gettingStartedTab}
+      {maximizeTab}
+      {buildTeamTab}
+    </div>
+  );
+
+  // ══════════════════════════════════════════════════════════════
   // TABS
   // ══════════════════════════════════════════════════════════════
   const tabs = [
     {
-      key: 'start',
-      label: <FormattedMessage id="chatter.training.tab.start" defaultMessage="Getting Started" />,
-      content: gettingStartedTab,
+      key: 'howToEarn',
+      label: <FormattedMessage id="chatter.training.tab.howToEarn" defaultMessage="Comment Gagner" />,
+      content: howToEarnTab,
     },
     {
-      key: 'team',
-      label: <FormattedMessage id="chatter.training.tab.team" defaultMessage="Build Team" />,
-      content: buildTeamTab,
-    },
-    {
-      key: 'maximize',
-      label: <FormattedMessage id="chatter.training.tab.maximize" defaultMessage="Maximize" />,
-      content: maximizeTab,
+      key: 'training',
+      label: <FormattedMessage id="chatter.training.tab.training" defaultMessage="Formation" />,
+      content: formationTab,
     },
     {
       key: 'resources',

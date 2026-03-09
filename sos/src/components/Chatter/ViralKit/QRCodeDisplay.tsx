@@ -1,12 +1,13 @@
 /**
  * QRCodeDisplay — 2026 Design System
  *
- * QR code for referral link with download option.
- * Glassmorphism card with indigo/violet accents.
+ * QR code generated client-side with qrcode.react.
+ * Downloadable as PNG. Glassmorphism card with indigo/violet accents.
  */
 
-import React, { useState } from "react";
-import { QrCode, Download, Loader2 } from "lucide-react";
+import React, { useRef, useCallback } from "react";
+import { QRCodeCanvas } from "qrcode.react";
+import { QrCode, Download } from "lucide-react";
 import { useViralKit } from "@/hooks/useViralKit";
 import { useTranslation } from "@/hooks/useTranslation";
 import { UI, SPACING, ANIMATION } from "@/components/Chatter/designTokens";
@@ -16,37 +17,29 @@ interface QRCodeDisplayProps {
   showDownload?: boolean;
 }
 
-export function QRCodeDisplay({
+export const QRCodeDisplay = React.memo(function QRCodeDisplay({
   size = 200,
   showDownload = true,
 }: QRCodeDisplayProps) {
   const { t } = useTranslation();
-  const { generateQRCode, referralCode } = useViralKit();
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const { referralLink, referralCode } = useViralKit();
+  const qrRef = useRef<HTMLDivElement>(null);
 
-  const qrCodeUrl = generateQRCode();
+  const handleDownload = useCallback(() => {
+    if (!qrRef.current) return;
+    const canvas = qrRef.current.querySelector("canvas");
+    if (!canvas) return;
 
-  const handleDownload = async () => {
-    if (!qrCodeUrl) return;
+    const url = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sos-expat-referral-${referralCode}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [referralCode]);
 
-    try {
-      const response = await fetch(qrCodeUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `sos-expat-referral-${referralCode}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download QR code:", error);
-    }
-  };
-
-  if (!qrCodeUrl) {
+  if (!referralLink) {
     return null;
   }
 
@@ -63,32 +56,19 @@ export function QRCodeDisplay({
       </div>
 
       <div className="flex flex-col items-center space-y-4">
-        {/* QR Code */}
+        {/* QR Code — rendered client-side */}
         <div
-          className="relative bg-white p-4 rounded-xl border border-slate-200/60 dark:border-white/10 shadow-sm"
-          style={{ width: size + 32, height: size + 32 }}
+          ref={qrRef}
+          className="bg-white p-4 rounded-xl border border-slate-200/60 dark:border-white/10 shadow-sm"
         >
-          {!imageLoaded && !imageError && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-            </div>
-          )}
-
-          {imageError ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <QrCode className="h-12 w-12" />
-            </div>
-          ) : (
-            <img
-              src={qrCodeUrl}
-              alt="QR Code"
-              width={size}
-              height={size}
-              onLoad={() => setImageLoaded(true)}
-              onError={() => setImageError(true)}
-              className={`transition-opacity ${ANIMATION.normal} ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-            />
-          )}
+          <QRCodeCanvas
+            value={referralLink}
+            size={size}
+            level="M"
+            includeMargin={false}
+            bgColor="#ffffff"
+            fgColor="#1e1b4b"
+          />
         </div>
 
         {/* Code display */}
@@ -114,20 +94,26 @@ export function QRCodeDisplay({
       </div>
     </div>
   );
-}
+});
 
 /**
  * Compact QR code display
  */
-export function QRCodeCompact({ size = 100 }: { size?: number }) {
-  const { generateQRCode } = useViralKit();
-  const qrCodeUrl = generateQRCode();
+export const QRCodeCompact = React.memo(function QRCodeCompact({ size = 100 }: { size?: number }) {
+  const { referralLink } = useViralKit();
 
-  if (!qrCodeUrl) return null;
+  if (!referralLink) return null;
 
   return (
     <div className="bg-white p-2 rounded-xl border border-slate-200/60 dark:border-white/10 inline-block shadow-sm">
-      <img src={qrCodeUrl} alt="QR Code" width={size} height={size} />
+      <QRCodeCanvas
+        value={referralLink}
+        size={size}
+        level="M"
+        includeMargin={false}
+        bgColor="#ffffff"
+        fgColor="#1e1b4b"
+      />
     </div>
   );
-}
+});

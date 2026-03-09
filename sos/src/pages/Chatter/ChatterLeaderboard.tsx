@@ -9,12 +9,13 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
 import { useChatterData } from '@/contexts/ChatterDataContext';
+import { useLocaleNavigate } from '@/multilingual-system';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
 import StreakDisplay from '@/components/Chatter/Activation/StreakDisplay';
 import { UI, LEVEL_COLORS, SPACING } from '@/components/Chatter/designTokens';
 import {
-  Trophy, Star, Clock, Calendar, Crown, Medal,
+  Trophy, Star, Clock, Calendar, Crown, Medal, ArrowRight,
   ChevronLeft, ChevronRight, Loader2, Flame,
 } from 'lucide-react';
 import type { ChatterLeaderboardEntry } from '@/types/chatter';
@@ -36,6 +37,7 @@ export default function ChatterLeaderboard() {
 
 const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent() {
   const intl = useIntl();
+  const navigate = useLocaleNavigate();
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
 
@@ -119,25 +121,27 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
         </div>
       )}
 
-      {/* Podium Top 3 */}
+      {/* Podium Top 3 — Olympic layout: #2 | #1 (center, taller) | #3 */}
       {!isLoadingBoard && leaderboard.length >= 3 && (
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
-          {PRIZES.map((prize) => {
-            const entry = leaderboard[prize.rank - 1];
-            if (!entry) return null;
+        <div className="flex items-end justify-center gap-1.5 sm:gap-3">
+          {[1, 0, 2].map((podiumIndex) => {
+            const prize = PRIZES[podiumIndex];
+            const entry = leaderboard[podiumIndex];
+            if (!entry || !prize) return null;
             const Icon = prize.icon;
+            const isFirst = prize.rank === 1;
             return (
               <div
                 key={prize.rank}
-                className={`${UI.card} p-3 sm:p-4 text-center ${prize.rank === 1 ? 'ring-2 ring-yellow-400/50' : ''}`}
+                className={`${UI.card} text-center flex-1 max-w-[140px] ${isFirst ? 'ring-2 ring-yellow-400/50 p-4 sm:p-5' : 'p-3 sm:p-4'}`}
               >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-full bg-gradient-to-br ${prize.gradient} flex items-center justify-center ${prize.shadow} shadow-lg`}>
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className={`${isFirst ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-10 h-10 sm:w-12 sm:h-12'} mx-auto mb-2 rounded-full bg-gradient-to-br ${prize.gradient} flex items-center justify-center ${prize.shadow} shadow-lg`}>
+                  <Icon className={`${isFirst ? 'w-7 h-7 sm:w-8 sm:h-8' : 'w-5 h-5 sm:w-6 sm:h-6'} text-white`} />
                 </div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                <p className={`${isFirst ? 'text-sm sm:text-base' : 'text-sm'} font-bold text-slate-900 dark:text-white truncate`}>
                   {entry.chatterName || 'Chatter'}
                 </p>
-                <p className="text-lg font-extrabold text-green-500 mt-1">
+                <p className={`${isFirst ? 'text-xl sm:text-2xl' : 'text-lg'} font-extrabold text-green-500 mt-1`}>
                   ${((entry.monthlyEarnings || 0) / 100).toFixed(0)}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
@@ -305,6 +309,144 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
                 {badge}
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Roadmap to $5000/month */}
+      <div className={`${UI.card} p-5`}>
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
+          <FormattedMessage id="chatter.progression.roadmap.title" defaultMessage="Roadmap vers $5000/mois" />
+        </h3>
+        <div className="relative">
+          {[
+            { level: 1, threshold: 0, name: 'Rookie', bonus: 'x1' },
+            { level: 2, threshold: 100, name: 'Challenger', bonus: 'x1.1' },
+            { level: 3, threshold: 500, name: 'Pro', bonus: 'x1.2' },
+            { level: 4, threshold: 2000, name: 'Expert', bonus: 'x1.35' },
+            { level: 5, threshold: 5000, name: 'Légende', bonus: 'x1.5' },
+          ].map((step, index, arr) => {
+            const currentLevel = chatter?.level || 1;
+            const isPast = step.level < currentLevel;
+            const isCurrent = step.level === currentLevel;
+            const isFuture = step.level > currentLevel;
+            const isLast = index === arr.length - 1;
+
+            return (
+              <div key={step.level} className="flex items-start gap-4 relative">
+                {/* Vertical line */}
+                {!isLast && (
+                  <div
+                    className={`absolute left-[15px] top-[32px] w-0.5 h-[calc(100%-8px)] ${
+                      isPast ? 'bg-green-400' : isCurrent ? 'bg-gradient-to-b from-indigo-500 to-slate-300 dark:to-slate-600' : 'border-l-2 border-dashed border-slate-300 dark:border-slate-600'
+                    }`}
+                    style={isFuture ? { width: 0 } : {}}
+                  />
+                )}
+
+                {/* Circle */}
+                <div className="flex-shrink-0 relative z-10">
+                  <div
+                    className={`w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                      isPast
+                        ? 'bg-green-500 border-green-400 text-white'
+                        : isCurrent
+                        ? 'bg-indigo-500 border-indigo-400 text-white animate-pulse'
+                        : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-400'
+                    }`}
+                  >
+                    {step.level}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className={`pb-6 flex-1 ${isCurrent ? '' : ''}`}>
+                  <div className={`flex items-center gap-2 ${isCurrent ? 'text-indigo-600 dark:text-indigo-400' : isPast ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                    <span className="text-sm font-bold">{step.name}</span>
+                    {isCurrent && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full font-medium">
+                        <FormattedMessage id="chatter.progression.roadmap.current" defaultMessage="Vous" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <span className={`text-xs ${isCurrent ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                      ${step.threshold.toLocaleString()}
+                    </span>
+                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                      isPast || isCurrent
+                        ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400'
+                        : 'bg-slate-100 dark:bg-white/5 text-slate-400'
+                    }`}>
+                      <FormattedMessage id="chatter.progression.roadmap.bonus" defaultMessage="Bonus {multiplier}" values={{ multiplier: step.bonus }} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Captain Teaser */}
+      {chatter?.role !== 'captainChatter' ? (
+        <div className={`${UI.card} overflow-hidden`}>
+          <div className="p-5 bg-gradient-to-br from-amber-500/10 to-indigo-500/10 dark:from-amber-500/[0.07] dark:to-indigo-500/[0.07]">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-indigo-600 flex items-center justify-center shadow-md shadow-amber-500/25">
+                <Crown className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <FormattedMessage id="chatter.progression.captain.title" defaultMessage="Devenez Captain !" />
+              </h3>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+              <FormattedMessage id="chatter.progression.captain.description" defaultMessage="Passez au niveau supérieur en devenant Captain de votre équipe." />
+            </p>
+            <ul className="space-y-2 mb-4">
+              {[
+                { id: 'chatter.progression.captain.benefit1', defaultMessage: 'Bonus $50 à $1000/mois' },
+                { id: 'chatter.progression.captain.benefit2', defaultMessage: 'Gestion de votre équipe' },
+                { id: 'chatter.progression.captain.benefit3', defaultMessage: 'Récompenses exclusives' },
+              ].map((benefit) => (
+                <li key={benefit.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <Star className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                  <FormattedMessage id={benefit.id} defaultMessage={benefit.defaultMessage} />
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => navigate('/devenir-capitaine')}
+              className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-indigo-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-amber-500/20"
+            >
+              <FormattedMessage id="chatter.progression.captain.cta" defaultMessage="En savoir plus" />
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={`${UI.card} overflow-hidden`}>
+          <div className="p-5 bg-gradient-to-br from-yellow-400/10 to-amber-500/10 dark:from-yellow-400/[0.07] dark:to-amber-500/[0.07]">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center shadow-md shadow-yellow-500/25">
+                <Crown className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  <FormattedMessage id="chatter.progression.captain.congrats" defaultMessage="Vous êtes Captain !" />
+                </h3>
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  <FormattedMessage id="chatter.progression.captain.congratsSub" defaultMessage="Gérez votre équipe et maximisez vos gains" />
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/chatter/mon-equipe')}
+              className="w-full py-3 px-4 bg-gradient-to-r from-yellow-400 to-amber-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-yellow-500/20"
+            >
+              <FormattedMessage id="chatter.progression.captain.dashboard" defaultMessage="Mon équipe" />
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}

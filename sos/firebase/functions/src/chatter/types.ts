@@ -2547,8 +2547,8 @@ export interface GetChatterDashboardResponse {
     } | null;
   };
 
-  /** Earnings ratio (affiliation vs referral) */
-  earningsRatio: {
+  /** Earnings ratio (affiliation vs referral) — null in essential mode */
+  earningsRatio?: {
     affiliationEarnings: number;   // Client referrals + recruitment
     referralEarnings: number;      // Referral system only
     affiliationPercent: number;
@@ -2581,8 +2581,8 @@ export interface GetChatterDashboardResponse {
     message: string;
   };
 
-  /** Historical trends data for charts */
-  trends: {
+  /** Historical trends data for charts — null in essential mode */
+  trends?: {
     /** Earnings for last 4 weeks (cents), index 0 = oldest week */
     earningsWeekly: number[];
     /** Earnings for last 6 months (cents), index 0 = oldest month */
@@ -2593,8 +2593,8 @@ export interface GetChatterDashboardResponse {
     recruitsWeekly: number[];
   };
 
-  /** Comparison with previous period */
-  comparison: {
+  /** Comparison with previous period — null in essential mode */
+  comparison?: {
     /** Percentage change in earnings vs last month (+15 means +15%) */
     earningsVsLastMonth: number;
     /** Percentage change in clients vs last month */
@@ -2611,8 +2611,8 @@ export interface GetChatterDashboardResponse {
     };
   };
 
-  /** Simple forecast based on current pace */
-  forecast: {
+  /** Simple forecast based on current pace — null in essential mode */
+  forecast?: {
     /** Estimated monthly earnings based on current pace (cents) */
     estimatedMonthlyEarnings: number;
     /** Estimated time to reach next level (e.g., "2 weeks") or null if already max */

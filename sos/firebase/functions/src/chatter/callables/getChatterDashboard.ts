@@ -100,6 +100,7 @@ export const getChatterDashboard = onCall(
     memory: "256MiB",
     timeoutSeconds: 30,
     maxInstances: 20,
+    minInstances: 1, // Anti cold-start: keep 1 instance warm (~$5/month)
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetChatterDashboardResponse> => {
@@ -112,6 +113,9 @@ export const getChatterDashboard = onCall(
 
     const userId = request.auth.uid;
     const db = getFirestore();
+
+    // Support 2-level payload: 'essential' skips heavy trend calculations
+    const level: "essential" | "full" = request.data?.level === "essential" ? "essential" : "full";
 
     try {
       // 2. Get chatter data
@@ -157,13 +161,15 @@ export const getChatterDashboard = onCall(
           .orderBy("createdAt", "desc")
           .limit(10)
           .get(),
-        // Historical commissions for trends (last 6 months, limited to 500)
-        db.collection("chatter_commissions")
-          .where("chatterId", "==", userId)
-          .where("createdAt", ">=", Timestamp.fromDate(sixMonthsAgo))
-          .orderBy("createdAt", "desc")
-          .limit(500)
-          .get(),
+        // Historical commissions for trends (last 6 months) — skip in essential mode
+        level === "full"
+          ? db.collection("chatter_commissions")
+              .where("chatterId", "==", userId)
+              .where("createdAt", ">=", Timestamp.fromDate(sixMonthsAgo))
+              .orderBy("createdAt", "desc")
+              .limit(150)
+              .get()
+          : Promise.resolve({ docs: [] } as unknown as FirebaseFirestore.QuerySnapshot),
         // Current month ranking
         db.collection("chatter_monthly_rankings").doc(monthKey).get(),
         // Last month ranking
@@ -301,50 +307,56 @@ export const getChatterDashboard = onCall(
         lastMonthRank = chatterRanking?.rank || null;
       }
 
-      // Build trends, comparison, forecast
-      const trends: GetChatterDashboardResponse["trends"] = {
-        earningsWeekly,
-        earningsMonthly,
-        clientsWeekly,
-        recruitsWeekly,
-      };
+      // Build trends, comparison, forecast (heavy — only in 'full' mode)
+      let trends: GetChatterDashboardResponse["trends"] | null = null;
+      let comparison: GetChatterDashboardResponse["comparison"] | null = null;
+      let forecast: GetChatterDashboardResponse["forecast"] | null = null;
 
-      const comparison: GetChatterDashboardResponse["comparison"] = {
-        earningsVsLastMonth: calculatePercentChange(monthlyEarnings, lastMonthEarnings),
-        clientsVsLastMonth: calculatePercentChange(monthlyClients, lastMonthClients),
-        recruitsVsLastMonth: calculatePercentChange(monthlyRecruits, lastMonthRecruits),
-        rankChange:
-          monthlyRank !== null && lastMonthRank !== null
-            ? lastMonthRank - monthlyRank
-            : 0,
-        lastMonth: {
-          earnings: lastMonthEarnings,
-          clients: lastMonthClients,
-          recruits: lastMonthRecruits,
-        },
-      };
+      if (level === "full") {
+        trends = {
+          earningsWeekly,
+          earningsMonthly,
+          clientsWeekly,
+          recruitsWeekly,
+        };
 
-      const dayOfMonth = now.getDate();
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      const estimatedMonthlyEarnings =
-        dayOfMonth > 0 ? Math.round((monthlyEarnings / dayOfMonth) * daysInMonth) : 0;
+        comparison = {
+          earningsVsLastMonth: calculatePercentChange(monthlyEarnings, lastMonthEarnings),
+          clientsVsLastMonth: calculatePercentChange(monthlyClients, lastMonthClients),
+          recruitsVsLastMonth: calculatePercentChange(monthlyRecruits, lastMonthRecruits),
+          rankChange:
+            monthlyRank !== null && lastMonthRank !== null
+              ? lastMonthRank - monthlyRank
+              : 0,
+          lastMonth: {
+            earnings: lastMonthEarnings,
+            clients: lastMonthClients,
+            recruits: lastMonthRecruits,
+          },
+        };
 
-      const estimatedNextLevel = estimateTimeToNextLevel(
-        chatter.level,
-        chatter.totalEarned,
-        estimatedMonthlyEarnings,
-        config.levelThresholds
-      );
+        const dayOfMonth = now.getDate();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const estimatedMonthlyEarnings =
+          dayOfMonth > 0 ? Math.round((monthlyEarnings / dayOfMonth) * daysInMonth) : 0;
 
-      const nextTierBonusInfo = getNextTierBonus(chatter);
-      const potentialBonus = nextTierBonusInfo?.bonusAmount || 0;
+        const estimatedNextLevel = estimateTimeToNextLevel(
+          chatter.level,
+          chatter.totalEarned,
+          estimatedMonthlyEarnings,
+          config.levelThresholds
+        );
 
-      const forecast: GetChatterDashboardResponse["forecast"] = {
-        estimatedMonthlyEarnings,
-        estimatedNextLevel,
-        potentialBonus,
-        currentDayOfMonth: dayOfMonth,
-      };
+        const nextTierBonusInfo = getNextTierBonus(chatter);
+        const potentialBonus = nextTierBonusInfo?.bonusAmount || 0;
+
+        forecast = {
+          estimatedMonthlyEarnings,
+          estimatedNextLevel,
+          potentialBonus,
+          currentDayOfMonth: dayOfMonth,
+        };
+      }
 
       // 7. Process Zoom meeting (already fetched in parallel)
       let upcomingZoomMeeting: GetChatterDashboardResponse["upcomingZoomMeeting"] = null;
@@ -477,8 +489,8 @@ export const getChatterDashboard = onCall(
           recruitmentMilestones: config.recruitmentMilestones ?? DEFAULT_CHATTER_CONFIG.recruitmentMilestones,
           monthlyCompetitionPrizes: config.monthlyCompetitionPrizes ?? DEFAULT_CHATTER_CONFIG.monthlyCompetitionPrizes,
         },
-        // Commission Plan info (for display on dashboard)
-        commissionPlan: chatter.commissionPlanId ? {
+        // Commission Plan info (deferred — only in full mode)
+        commissionPlan: level === "full" && chatter.commissionPlanId ? {
           id: chatter.commissionPlanId,
           name: chatter.commissionPlanName || "Plan personnalis\u00e9",
           rateLockDate: chatter.rateLockDate,
@@ -492,8 +504,8 @@ export const getChatterDashboard = onCall(
           referralEarnings: chatter.referralEarnings || 0,
           nextTierBonus: getNextTierBonus(chatter),
         },
-        // Earnings ratio
-        earningsRatio: (() => {
+        // Earnings ratio (deferred — only in full mode)
+        earningsRatio: level === "full" ? (() => {
           const affiliationEarnings = (chatter.totalEarned || 0) - (chatter.referralEarnings || 0);
           const referralEarnings = chatter.referralEarnings || 0;
           const total = affiliationEarnings + referralEarnings;
@@ -503,7 +515,7 @@ export const getChatterDashboard = onCall(
             affiliationPercent: total > 0 ? Math.round((affiliationEarnings / total) * 100) : 100,
             referralPercent: total > 0 ? Math.round((referralEarnings / total) * 100) : 0,
           };
-        })(),
+        })() : undefined,
         // Active promotion (already fetched in parallel)
         activePromotion: (() => {
           if (activePromotions.length === 0) return null;
@@ -543,12 +555,12 @@ export const getChatterDashboard = onCall(
               : `Earn $${(amountToUnlock / 100).toFixed(0)} more in client commissions to unlock your $${(totalPending / 100).toFixed(0)} bonus`,
           };
         })(),
-        // Historical trends for charts
-        trends,
-        // Comparison with previous period
-        comparison,
-        // Forecast based on current pace
-        forecast,
+        // Historical trends for charts (undefined in essential mode)
+        trends: trends ?? undefined,
+        // Comparison with previous period (undefined in essential mode)
+        comparison: comparison ?? undefined,
+        // Forecast based on current pace (undefined in essential mode)
+        forecast: forecast ?? undefined,
       };
 
       logger.info("[getChatterDashboard] Dashboard data returned", {

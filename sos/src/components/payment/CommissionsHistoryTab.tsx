@@ -57,6 +57,16 @@ const PAGE_SIZE = 10;
 
 const STATUS_FILTER_KEYS = ['all', 'pending', 'validated', 'available', 'paid', 'cancelled'] as const;
 
+const PERIOD_FILTER_KEYS = ['all', '7d', '30d', '90d'] as const;
+type PeriodFilter = (typeof PERIOD_FILTER_KEYS)[number];
+
+const PERIOD_DAYS: Record<PeriodFilter, number | null> = {
+  all: null,
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+};
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -149,6 +159,7 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
 }) => {
   const intl = useIntl();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [page, setPage] = useState(1);
 
   const statusLabels: Record<string, string> = useMemo(() => ({
@@ -160,10 +171,32 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
     cancelled: intl.formatMessage({ id: 'commission.status.cancelled', defaultMessage: 'Annulé' }),
   }), [intl]);
 
+  const periodLabels: Record<PeriodFilter, string> = useMemo(() => ({
+    all: intl.formatMessage({ id: 'chatter.payments.period.all', defaultMessage: 'Tout' }),
+    '7d': intl.formatMessage({ id: 'chatter.payments.period.7d', defaultMessage: '7 jours' }),
+    '30d': intl.formatMessage({ id: 'chatter.payments.period.30d', defaultMessage: '30 jours' }),
+    '90d': intl.formatMessage({ id: 'chatter.payments.period.90d', defaultMessage: '90 jours' }),
+  }), [intl]);
+
   const filtered = useMemo(() => {
-    if (statusFilter === 'all') return commissions;
-    return commissions.filter((c) => c.status === statusFilter);
-  }, [commissions, statusFilter]);
+    let result = commissions;
+
+    // Period filter
+    const days = PERIOD_DAYS[periodFilter];
+    if (days !== null) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      const cutoffTime = cutoff.getTime();
+      result = result.filter((c) => new Date(c.createdAt).getTime() >= cutoffTime);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter((c) => c.status === statusFilter);
+    }
+
+    return result;
+  }, [commissions, statusFilter, periodFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = useMemo(
@@ -174,6 +207,14 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
   const handleFilterChange = useCallback(
     (value: string) => {
       setStatusFilter(value);
+      setPage(1);
+    },
+    []
+  );
+
+  const handlePeriodChange = useCallback(
+    (value: PeriodFilter) => {
+      setPeriodFilter(value);
       setPage(1);
     },
     []
@@ -215,6 +256,23 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'commission.stats.available', defaultMessage: 'Disponible' })}</p>
           <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatAmountUSD(available)}</p>
         </div>
+      </div>
+
+      {/* Period filter pills */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {PERIOD_FILTER_KEYS.map((key) => (
+          <button
+            key={key}
+            onClick={() => handlePeriodChange(key)}
+            className={`text-sm px-3 py-1 rounded-full font-medium transition-colors ${
+              periodFilter === key
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
+            }`}
+          >
+            {periodLabels[key]}
+          </button>
+        ))}
       </div>
 
       {/* Toolbar */}

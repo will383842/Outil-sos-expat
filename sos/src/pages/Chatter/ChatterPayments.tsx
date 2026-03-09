@@ -53,6 +53,9 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  Calendar,
+  BarChart3,
+  Target,
 } from 'lucide-react';
 
 // ============================================================================
@@ -68,7 +71,7 @@ const GLASS_CARD =
 // SUB-COMPONENTS
 // ============================================================================
 
-/** Simple CSS bar chart for earnings breakdown */
+/** SVG Donut/Ring chart for earnings breakdown */
 const EarningsBreakdown: React.FC<{
   availableBalance: number;
   pendingBalance: number;
@@ -82,45 +85,84 @@ const EarningsBreakdown: React.FC<{
     {
       label: <FormattedMessage id="chatter.payments.availableBalance" defaultMessage="Disponible" />,
       value: availableBalance,
-      color: 'bg-green-500',
+      stroke: '#22c55e', // green-500
+      dotColor: 'bg-green-500',
       textColor: 'text-green-600 dark:text-green-400',
     },
     {
       label: <FormattedMessage id="chatter.payments.pendingBalance" defaultMessage="En attente" />,
       value: pendingBalance,
-      color: 'bg-amber-500',
+      stroke: '#f59e0b', // amber-500
+      dotColor: 'bg-amber-500',
       textColor: 'text-amber-600 dark:text-amber-400',
     },
     {
       label: <FormattedMessage id="chatter.payments.validatedBalance" defaultMessage="Valide" />,
       value: validatedBalance,
-      color: 'bg-blue-500',
+      stroke: '#3b82f6', // blue-500
+      dotColor: 'bg-blue-500',
       textColor: 'text-blue-600 dark:text-blue-400',
     },
   ];
 
+  // SVG donut math
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  let cumulativeOffset = 0;
+
   return (
-    <div className="space-y-3">
-      {/* Stacked bar */}
-      <div className="h-3 rounded-full overflow-hidden flex bg-slate-100 dark:bg-white/10">
-        {segments.map((seg, i) =>
-          seg.value > 0 ? (
-            <div
-              key={i}
-              className={`${seg.color} transition-all duration-500`}
-              style={{ width: `${(seg.value / total) * 100}%` }}
-            />
-          ) : null
-        )}
+    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+      {/* Donut ring */}
+      <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0">
+        <svg viewBox="0 0 128 128" className="w-full h-full -rotate-90">
+          {/* Background ring */}
+          <circle
+            cx="64" cy="64" r={radius}
+            fill="none"
+            stroke="currentColor"
+            className="text-slate-100 dark:text-white/10"
+            strokeWidth="14"
+          />
+          {/* Segments */}
+          {segments.map((seg, i) => {
+            const pct = seg.value / total;
+            const dashLength = pct * circumference;
+            const offset = cumulativeOffset;
+            cumulativeOffset += dashLength;
+            if (seg.value === 0) return null;
+            return (
+              <circle
+                key={i}
+                cx="64" cy="64" r={radius}
+                fill="none"
+                stroke={seg.stroke}
+                strokeWidth="14"
+                strokeDasharray={`${dashLength} ${circumference - dashLength}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="round"
+                className="transition-all duration-700"
+              />
+            );
+          })}
+        </svg>
+        {/* Center text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-medium">
+            <FormattedMessage id="chatter.payments.totalBalance" defaultMessage="Total" />
+          </span>
+          <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+            {formatAmount(total)}
+          </span>
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
+      <div className="flex flex-col gap-2">
         {segments.map((seg, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-xs">
-            <span className={`w-2 h-2 rounded-full ${seg.color}`} />
+          <div key={i} className="flex items-center gap-2 text-xs sm:text-sm">
+            <span className={`w-2.5 h-2.5 rounded-full ${seg.dotColor} shrink-0`} />
             <span className="text-slate-500 dark:text-slate-400">{seg.label}</span>
-            <span className={`font-semibold ${seg.textColor}`}>{formatAmount(seg.value)}</span>
+            <span className={`font-semibold ${seg.textColor} ml-auto`}>{formatAmount(seg.value)}</span>
           </div>
         ))}
       </div>
@@ -170,6 +212,206 @@ const LockedBonusBanner: React.FC<{
           </p>
         </div>
       </div>
+    </div>
+  );
+};
+
+/** KPI Row: Total Earned, This Month, Average/Month */
+const KpiRow: React.FC<{
+  chatter: any;
+  commissions: any[];
+  formatAmount: (cents: number) => string;
+}> = ({ chatter, commissions, formatAmount }) => {
+  const totalEarned = chatter?.totalEarned || 0;
+
+  // Calculate this month's earnings from commissions
+  const now = new Date();
+  const thisMonthEarnings = useMemo(() => {
+    if (!commissions || commissions.length === 0) return 0;
+    return commissions
+      .filter((c: any) => {
+        const d = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+  }, [commissions, now.getMonth(), now.getFullYear()]);
+
+  // Calculate average monthly from totalEarned and createdAt
+  const averageMonthly = useMemo(() => {
+    if (!chatter?.createdAt || totalEarned === 0) return 0;
+    const createdAt = chatter.createdAt?.toDate ? chatter.createdAt.toDate() : new Date(chatter.createdAt);
+    const monthsDiff = Math.max(
+      1,
+      (now.getFullYear() - createdAt.getFullYear()) * 12 + (now.getMonth() - createdAt.getMonth()) + 1
+    );
+    return Math.round(totalEarned / monthsDiff);
+  }, [chatter?.createdAt, totalEarned]);
+
+  const kpis = [
+    {
+      label: <FormattedMessage id="chatter.payments.kpi.totalEarned" defaultMessage="Total gagne" />,
+      value: formatAmount(totalEarned),
+      icon: <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />,
+      bg: 'from-emerald-50 dark:from-emerald-900/20 to-teal-50 dark:to-teal-900/20',
+      valueColor: 'text-emerald-600 dark:text-emerald-400',
+    },
+    {
+      label: <FormattedMessage id="chatter.payments.kpi.thisMonth" defaultMessage="Ce mois" />,
+      value: formatAmount(thisMonthEarnings),
+      icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-violet-500" />,
+      bg: 'from-violet-50 dark:from-violet-900/20 to-purple-50 dark:to-purple-900/20',
+      valueColor: 'text-violet-600 dark:text-violet-400',
+    },
+    {
+      label: <FormattedMessage id="chatter.payments.kpi.averageMonthly" defaultMessage="Moyenne/mois" />,
+      value: formatAmount(averageMonthly),
+      icon: <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500" />,
+      bg: 'from-cyan-50 dark:from-cyan-900/20 to-sky-50 dark:to-sky-900/20',
+      valueColor: 'text-cyan-600 dark:text-cyan-400',
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      {kpis.map((kpi, i) => (
+        <div key={i} className={`${GLASS_CARD} p-3 sm:p-4 bg-gradient-to-br ${kpi.bg}`}>
+          <div className="flex items-center gap-1.5 mb-1">
+            {kpi.icon}
+            <span className="text-[9px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+              {kpi.label}
+            </span>
+          </div>
+          <p className={`text-sm sm:text-lg font-bold ${kpi.valueColor}`}>
+            {kpi.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/** Monthly Forecast Card with progress bar */
+const MonthlyForecastCard: React.FC<{
+  commissions: any[];
+  formatAmount: (cents: number) => string;
+}> = ({ commissions, formatAmount }) => {
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  // This month earnings
+  const thisMonthEarnings = useMemo(() => {
+    if (!commissions || commissions.length === 0) return 0;
+    return commissions
+      .filter((c: any) => {
+        const d = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+  }, [commissions, now.getMonth(), now.getFullYear()]);
+
+  // Last month earnings
+  const lastMonthEarnings = useMemo(() => {
+    if (!commissions || commissions.length === 0) return 0;
+    const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    return commissions
+      .filter((c: any) => {
+        const d = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt);
+        return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+      })
+      .reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+  }, [commissions, now.getMonth(), now.getFullYear()]);
+
+  // Forecast: extrapolate from current pace
+  const forecast = dayOfMonth > 0 ? Math.round((thisMonthEarnings / dayOfMonth) * daysInMonth) : 0;
+  const progressPct = forecast > 0 ? Math.min(100, Math.round((thisMonthEarnings / forecast) * 100)) : 0;
+
+  // Comparison with last month
+  const diff = lastMonthEarnings > 0
+    ? Math.round(((forecast - lastMonthEarnings) / lastMonthEarnings) * 100)
+    : forecast > 0 ? 100 : 0;
+  const isUp = diff >= 0;
+
+  return (
+    <div className={`${GLASS_CARD} p-4 sm:p-5 bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 sm:p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
+            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+              <FormattedMessage id="chatter.payments.forecast.title" defaultMessage="Prevision mensuelle" />
+            </h3>
+            <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500">
+              <FormattedMessage
+                id="chatter.payments.forecast.dayProgress"
+                defaultMessage="Jour {day}/{total}"
+                values={{ day: dayOfMonth, total: daysInMonth }}
+              />
+            </p>
+          </div>
+        </div>
+        {/* Comparison badge */}
+        {lastMonthEarnings > 0 && (
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+            isUp
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+          }`}>
+            {isUp ? (
+              <ArrowUpRight className="w-3 h-3" />
+            ) : (
+              <ArrowDownRight className="w-3 h-3" />
+            )}
+            {isUp ? '+' : ''}{diff}%
+            <span className="hidden sm:inline ml-0.5">
+              <FormattedMessage id="chatter.payments.forecast.vsLastMonth" defaultMessage="vs mois dernier" />
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Forecast amount */}
+      <div className="mb-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+            {formatAmount(forecast)}
+          </span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">
+            <FormattedMessage id="chatter.payments.forecast.estimated" defaultMessage="estime" />
+          </span>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="space-y-1.5">
+        <div className="h-2.5 bg-indigo-100 dark:bg-indigo-900/40 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-700"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-400 dark:text-slate-500">
+          <span>{formatAmount(thisMonthEarnings)} <FormattedMessage id="chatter.payments.forecast.earned" defaultMessage="gagne" /></span>
+          <span>{progressPct}%</span>
+        </div>
+      </div>
+
+      {/* Last month comparison */}
+      {lastMonthEarnings > 0 && (
+        <div className="mt-3 pt-3 border-t border-white/10">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400 dark:text-slate-500">
+              <FormattedMessage id="chatter.payments.forecast.lastMonth" defaultMessage="Mois dernier" />
+            </span>
+            <span className="font-medium text-slate-600 dark:text-slate-300">
+              {formatAmount(lastMonthEarnings)}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -474,6 +716,23 @@ const ChatterPaymentsContent: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* KPI Row: Total Earned / This Month / Average/Month                  */}
+      {/* ------------------------------------------------------------------ */}
+      <KpiRow
+        chatter={chatter}
+        commissions={commissions}
+        formatAmount={formatAmount}
+      />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Monthly Forecast Card                                               */}
+      {/* ------------------------------------------------------------------ */}
+      <MonthlyForecastCard
+        commissions={commissions}
+        formatAmount={formatAmount}
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Total + Breakdown                                                   */}

@@ -39,6 +39,7 @@ import {
   getCaptainCallCommission,
 } from "../utils/chatterConfigService";
 import { updateChatterChallengeScore } from "../scheduled/weeklyChallenges";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -232,6 +233,29 @@ export async function handleCallCompleted(
 
         // Check and pay recruitment commission (recruiter gets $5 when this chatter reaches $50)
         await checkAndPayRecruitmentCommission(chatterId);
+
+        // Notify Motivation Engine — sale_completed always, first_sale if first commission
+        const isFirstSale = (chatter.totalClientCalls || 0) === 0;
+        if (isFirstSale) {
+          notifyMotivationEngine("chatter.first_sale", chatterId, {
+            callId: sessionId,
+            commissionCents: clientCallResult.amount,
+            commissionId: clientCallResult.commissionId,
+            callDuration: session.duration || 0,
+            isFirstSale: true,
+          }).catch((err) => {
+            logger.warn("[chatterOnCallCompleted] Failed to notify Motivation Engine (first_sale)", { error: err });
+          });
+        }
+        notifyMotivationEngine("chatter.sale_completed", chatterId, {
+          callId: sessionId,
+          commissionCents: clientCallResult.amount,
+          commissionId: clientCallResult.commissionId,
+          callDuration: session.duration || 0,
+          isFirstSale,
+        }).catch((err) => {
+          logger.warn("[chatterOnCallCompleted] Failed to notify Motivation Engine (sale_completed)", { error: err });
+        });
       }
 
       // ========================================================================
@@ -347,6 +371,16 @@ export async function handleCallCompleted(
             bonusResult.commissionId!,
             bonusResult.amount!
           );
+
+          // Notify Motivation Engine — chatter.referral_activated
+          notifyMotivationEngine("chatter.referral_activated", activationResult.recruitedBy, {
+            referralUid: chatterId,
+            activationBonusCents: bonusResult.amount,
+            commissionId: bonusResult.commissionId,
+            referralCallCount: newCallCount,
+          }).catch((err) => {
+            logger.warn("[chatterOnCallCompleted] Failed to notify Motivation Engine (referral_activated)", { error: err });
+          });
 
           // ========================================================================
           // 4. N1 RECRUIT BONUS ($1) - When N1 recruits someone who activates

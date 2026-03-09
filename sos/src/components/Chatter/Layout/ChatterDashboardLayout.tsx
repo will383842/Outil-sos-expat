@@ -41,6 +41,7 @@ import { ChatterDataProvider, useChatterData } from '@/contexts/ChatterDataConte
 import { CelebrationProvider } from '@/components/Chatter/Activation/CelebrationSystem';
 import StickyAffiliateBar from './StickyAffiliateBar';
 import WithdrawalBottomSheet from '@/components/Chatter/WithdrawalBottomSheet';
+import { ShareHub } from '@/components/Chatter/ViralKit/ShareHub';
 import { UI, CHATTER_THEME, LEVEL_COLORS } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
@@ -455,6 +456,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   const [loggingOut, setLoggingOut] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showWithdrawalSheet, setShowWithdrawalSheet] = useState(false);
+  const [showShareHub, setShowShareHub] = useState(false);
 
   // Captain status from Context (no more getDoc!)
   const { dashboardData, clientShareUrl, recruitmentShareUrl, providerShareUrl, canWithdraw, minimumWithdrawal, refreshDashboard } = useChatterData();
@@ -582,20 +584,20 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     }] : []),
   ];
 
-  // FAB share action
+  // FAB share action — Web Share API first, fallback to ShareHub
   const handleFabShare = async () => {
     if (!clientShareUrl) return;
     localStorage.setItem('chatter_link_shared', Date.now().toString());
     if (navigator.share) {
       try {
         await navigator.share({ title: 'SOS Expat', url: clientShareUrl });
-        toast.success('Lien partage !');
-      } catch { /* cancelled */ }
-    } else {
-      copyToClipboard(clientShareUrl).then((success) => {
-        if (success) toast.success('Lien copie !');
-      });
+        toast.success(intl.formatMessage({ id: 'chatter.share.toast.shared', defaultMessage: 'Lien partagé !' }));
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+      }
     }
+    setShowShareHub(true);
   };
 
   // Shared sidebar props
@@ -681,7 +683,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
             </aside>
 
             {/* MAIN CONTENT */}
-            <main className="min-w-0 pb-24 lg:pb-0">
+            <main className="min-w-0 pb-24 lg:pb-0 [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
@@ -742,6 +744,9 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
 
       {/* FAB bounce keyframe */}
       <style>{`@keyframes fabBounce { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 70% { transform: scale(0.95); } 100% { transform: scale(1); opacity: 1; } }`}</style>
+
+      {/* Share Hub Bottom Sheet */}
+      <ShareHub isOpen={showShareHub} onClose={() => setShowShareHub(false)} />
 
       {/* Withdrawal Bottom Sheet */}
       <WithdrawalBottomSheet

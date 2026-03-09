@@ -10,12 +10,12 @@
  * - Sparkle effect when reaching withdrawal threshold
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { PiggyBank, ArrowRight, Clock, CheckCircle, Sparkles } from 'lucide-react';
 import { formatCurrencyLocale } from './currencyUtils';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
-import { UI } from '@/components/Chatter/designTokens';
+import { UI, MONEY } from '@/components/Chatter/designTokens';
 
 interface ChatterBalanceCardProps {
   availableBalance: number;
@@ -30,7 +30,7 @@ interface ChatterBalanceCardProps {
   animationDelay?: number;
 }
 
-const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
+const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = memo(function ChatterBalanceCard({
   availableBalance,
   pendingBalance,
   validatedBalance,
@@ -40,7 +40,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
   onWithdraw,
   loading,
   animationDelay = 0,
-}) => {
+}) {
   const intl = useIntl();
   const [progressAnimated, setProgressAnimated] = useState(false);
   const [showSparkle, setShowSparkle] = useState(false);
@@ -87,7 +87,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
 
   return (
     <div
-      className={`${UI.card} ${UI.cardHover} p-4 sm:p-6 relative opacity-0 animate-fade-in-up`}
+      className={`${UI.card} ${UI.cardHover} bg-gradient-to-br from-amber-500/10 to-yellow-500/5 dark:from-amber-500/10 dark:to-yellow-500/5 p-4 sm:p-6 relative opacity-0 animate-fade-in-up`}
       style={{
         animationDelay: `${animationDelay}ms`,
         animationFillMode: 'forwards',
@@ -113,9 +113,9 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
       <div className="text-center">
         {/* Piggy Bank Icon with pulse when withdrawable */}
         <div
-          className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-indigo-100 dark:from-indigo-900/30 to-violet-100 dark:to-violet-900/30 flex items-center justify-center transition-all duration-500 ${canWithdraw ? 'animate-pulse-subtle shadow-lg shadow-indigo-500/20' : ''}`}
+          className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-amber-100 dark:from-amber-900/30 to-yellow-100 dark:to-yellow-900/30 flex items-center justify-center transition-all duration-500 ${canWithdraw ? 'animate-pulse-subtle shadow-lg shadow-amber-500/20' : ''}`}
         >
-          <PiggyBank className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
+          <PiggyBank className="w-6 h-6 sm:w-8 sm:h-8 text-amber-600 dark:text-amber-400" />
         </div>
 
         {/* Title */}
@@ -132,7 +132,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
             duration={1500}
             delay={animationDelay + 200}
             animateOnVisible
-            className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600"
+            className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 to-yellow-500"
           />
         </div>
         <p className="text-xs dark:text-gray-400 mb-3 sm:mb-4">
@@ -166,7 +166,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
         </div>
 
         {/* Total */}
-        <div className="p-2 sm:p-3 bg-gradient-to-r from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-lg sm:rounded-xl mb-3 sm:mb-4">
+        <div className="p-2 sm:p-3 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-yellow-50 dark:to-yellow-900/20 rounded-lg sm:rounded-xl mb-3 sm:mb-4">
           <span className="text-[10px] dark:text-gray-400 sm:text-xs">
             <FormattedMessage id="chatter.balance.total" defaultMessage="Total general" />
           </span>
@@ -189,7 +189,7 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
           <div className="mb-3 sm:mb-4">
             <div className="h-1.5 sm:h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-1000 ease-out"
+                className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full transition-all duration-1000 ease-out"
                 style={{
                   width: progressAnimated ? `${progressToMinimum}%` : '0%',
                 }}
@@ -255,6 +255,6 @@ const ChatterBalanceCard: React.FC<ChatterBalanceCardProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default ChatterBalanceCard;

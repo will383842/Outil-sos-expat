@@ -76,6 +76,7 @@ import {
   TASKS_AUTH_SECRET,
   OUTIL_API_KEY,
   OUTIL_SYNC_API_KEY,
+  MOTIVATION_ENGINE_WEBHOOK_SECRET,
 } from "./lib/secrets";
 
 // P0 FIX 2026-02-04: Import call region from centralized config - dedicated region for call functions
@@ -466,6 +467,8 @@ const GLOBAL_SECRETS = [
   ENCRYPTION_KEY,
   OUTIL_API_KEY,
   OUTIL_SYNC_API_KEY,
+  // Motivation Engine webhook HMAC secret
+  MOTIVATION_ENGINE_WEBHOOK_SECRET,
 ].filter(Boolean) as any[];
 
 

@@ -14,6 +14,7 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { chatterAdminConfig as adminConfig } from "../../lib/functionConfigs";
+import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 import {
   Chatter,
@@ -609,6 +610,17 @@ export const submitChatterTrainingQuiz = onCall(
             });
           }
         }
+      }
+
+      // Notify Motivation Engine on training completion (non-blocking)
+      if (passed) {
+        notifyMotivationEngine("chatter.training_completed", userId, {
+          moduleId,
+          score,
+          certificateId: certificateId || null,
+        }).catch((err) => {
+          logger.warn("[submitChatterTrainingQuiz] Failed to notify Motivation Engine", { error: err });
+        });
       }
 
       return {
