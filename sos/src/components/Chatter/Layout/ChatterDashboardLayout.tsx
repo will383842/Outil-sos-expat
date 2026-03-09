@@ -241,7 +241,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
                   <FormattedMessage
                     id="chatter.sidebar.piggyProgress"
                     defaultMessage="Earn {amount} in sales to unlock your ${bonus} bonus"
-                    values={{ amount: `$${formatAmount(piggyBank.amountToUnlock)}`, bonus: formatAmount(piggyBank.totalPending) }}
+                    values={{ amount: `$${formatAmount(piggyBank.amountToUnlock ?? 0)}`, bonus: formatAmount(piggyBank.totalPending) }}
                   />
                 )
               ) : (
