@@ -93,6 +93,16 @@ export async function handleCallCompleted(
         return;
       }
 
+      // SECURITY: Block self-referral — user cannot earn commissions on themselves
+      if (referredByUserId === clientId) {
+        logger.warn("[affiliateOnCallCompleted] Self-referral blocked", {
+          clientId,
+          referredByUserId,
+          sessionId,
+        });
+        return;
+      }
+
       // P1-1 FIX: Skip if a role-specific handler already covers this referral.
       // When a user signs up via a chatter/influencer/blogger/groupAdmin link,
       // affiliateOnUserCreated writes BOTH referredByUserId AND the role-specific

@@ -148,6 +148,15 @@ export async function handleAffiliateUserCreated(event: any) {
         const referrer = await resolveAffiliateCode(normalizedCode);
 
         if (referrer) {
+          // SECURITY: Block self-referral — user cannot refer themselves
+          if (referrer.userId === userId) {
+            logger.warn("[affiliateOnUserCreated] Self-referral blocked", {
+              userId,
+              referrerUserId: referrer.userId,
+              code: pendingReferralCode,
+            });
+            // Don't attribute, continue with user creation
+          } else {
           // 6a. Fraud detection
           const antiFraudSettings = await getAntiFraudSettings();
           const fraudCheck = await checkReferralFraud(
@@ -185,6 +194,7 @@ export async function handleAffiliateUserCreated(event: any) {
               });
             }
           }
+          } // end else (not self-referral)
         } else {
           logger.info("[affiliateOnUserCreated] Invalid referral code", {
             code: normalizedCode,

@@ -85,6 +85,12 @@ export async function checkBloggerClientReferral(
       const attribution = attributionQuery.docs[0].data();
       const bloggerId = attribution.bloggerId;
 
+      // SECURITY: Block self-referral
+      if (bloggerId === clientId) {
+        logger.warn("[checkBloggerClientReferral] Self-referral blocked", { bloggerId, clientId, callSessionId });
+        return { awarded: false, error: "Self-referral blocked" };
+      }
+
       // Proceed with commission
       return await awardBloggerCommission(
         bloggerId,
@@ -109,6 +115,12 @@ export async function checkBloggerClientReferral(
     }
 
     const bloggerId = bloggerQuery.docs[0].id;
+
+    // SECURITY: Block self-referral
+    if (bloggerId === clientId) {
+      logger.warn("[checkBloggerClientReferral] Self-referral blocked", { bloggerId, clientId, callSessionId });
+      return { awarded: false, error: "Self-referral blocked" };
+    }
 
     return await awardBloggerCommission(
       bloggerId,

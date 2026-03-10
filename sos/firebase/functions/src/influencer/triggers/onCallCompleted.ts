@@ -158,6 +158,16 @@ export async function handleCallCompleted(
         return;
       }
 
+      // SECURITY: Block self-referral — influencer cannot earn commissions on their own calls
+      if (influencerId === afterData.clientId) {
+        logger.warn("[influencerOnCallCompleted] Self-referral blocked", {
+          influencerId,
+          clientId: afterData.clientId,
+          sessionId,
+        });
+        return;
+      }
+
       // Create commission (split by provider type: lawyer=$5, expat=$3)
       const result = await createCommission({
         influencerId,

@@ -113,6 +113,16 @@ export async function handleCallCompleted(
       return;
     }
 
+    // SECURITY: Block self-referral — partner cannot earn commissions on their own calls
+    if (partnerId === clientId) {
+      logger.warn("[partnerOnCallCompleted] Self-referral blocked", {
+        partnerId,
+        clientId,
+        sessionId,
+      });
+      return;
+    }
+
     // 4. Read partner document and validate
     const partnerDoc = await db.collection("partners").doc(partnerId).get();
     if (!partnerDoc.exists) {
