@@ -23,25 +23,30 @@ const StickyAffiliateBar: React.FC = () => {
   const totalRecruits = dashboardData?.chatter?.totalRecruits ?? 0;
   const totalProviderRecruits = dashboardData?.chatter?.totalProviderRecruits ?? 0;
 
-  // Dynamic commission amounts from config (cents -> dollars)
+  // Dynamic commission amounts from config (cents → dollars)
   const config = dashboardData?.config;
-  const { callAmountRange, providerCallAmount } = useMemo(() => {
+  const { callAmountRange, providerCallAmount, n1CallAmount } = useMemo(() => {
     const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
     const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
     const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
     const providerAmt = (config?.commissionProviderCallAmount ?? 500) / 100;
-    return { callAmountRange: range, providerCallAmount: providerAmt };
-  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer, config?.commissionProviderCallAmount]);
+    const n1Amt = (config?.commissionN1CallAmount ?? 100) / 100;
+    return { callAmountRange: range, providerCallAmount: providerAmt, n1CallAmount: n1Amt };
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer, config?.commissionProviderCallAmount, config?.commissionN1CallAmount]);
 
   // Collapse on scroll down, expand on scroll up
+  // Uses a delta threshold to prevent feedback loops caused by the sticky bar's
+  // own height change shifting content and re-triggering scroll events.
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+      const delta = currentScrollY - lastScrollY.current;
+      // Only react to intentional scrolls (delta > threshold), not layout-shift micro-scrolls
+      if (delta > 12 && currentScrollY > 80) {
         setCollapsed(true);
-      } else if (currentScrollY < lastScrollY.current) {
+      } else if (delta < -12) {
         setCollapsed(false);
       }
       lastScrollY.current = currentScrollY;
@@ -126,7 +131,7 @@ const StickyAffiliateBar: React.FC = () => {
   // ── COLLAPSED: minimal bar with compact copy buttons (provider hidden on narrow screens) ──
   if (collapsed) {
     return (
-      <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
+      <div className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-center gap-1.5 flex-wrap">
           <button
             onClick={() => handleCopy(clientShareUrl ?? '', 'client')}
@@ -154,7 +159,7 @@ const StickyAffiliateBar: React.FC = () => {
             <UserPlus className="w-3.5 h-3.5 shrink-0" />
             {copiedRecruitment ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span className="whitespace-nowrap">
-              <FormattedMessage id="chatter.bar.collapsedRecruitment" defaultMessage="Team ${amount}/call" values={{ amount: providerCallAmount }} />
+              <FormattedMessage id="chatter.bar.collapsedRecruitment" defaultMessage="Team ${amount}/call" values={{ amount: n1CallAmount }} />
             </span>
           </button>
 
@@ -188,7 +193,7 @@ const StickyAffiliateBar: React.FC = () => {
 
   // ── EXPANDED: full link cards ──
   return (
-    <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
+    <div className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
       <div className="max-w-7xl mx-auto px-3 py-2">
         <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
 
@@ -207,8 +212,8 @@ const StickyAffiliateBar: React.FC = () => {
             onShare={() => handleShare(clientShareUrl ?? '', 'client')}
             tooltip={intl.formatMessage({
               id: 'chatter.bar.clientTooltip',
-              defaultMessage: 'Share this link. When someone calls a provider through your link, you earn $3 to $5 per paid call.',
-            })}
+              defaultMessage: 'Share this link. When someone calls a provider through your link, you earn {amount} per paid call.',
+            }, { amount: callAmountRange })}
           />
 
           {/* Divider (desktop) */}
@@ -219,7 +224,7 @@ const StickyAffiliateBar: React.FC = () => {
             type="recruitment"
             icon={<UserPlus className="w-4 h-4 text-violet-400" />}
             label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruit team' })}
-            commission={`$${providerCallAmount}`}
+            commission={`$${n1CallAmount}`}
             commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
             code={affiliateCodeRecruitment}
             count={totalRecruits}
@@ -229,8 +234,8 @@ const StickyAffiliateBar: React.FC = () => {
             onShare={() => handleShare(recruitmentShareUrl ?? '', 'recruitment')}
             tooltip={intl.formatMessage({
               id: 'chatter.bar.recruitmentTooltip',
-              defaultMessage: 'Share this link to recruit other chatters to your team. When your recruits generate calls, you earn $5 per call (N1 commission).',
-            })}
+              defaultMessage: 'Share this link to recruit other chatters to your team. When your recruits generate calls, you earn ${amount} per call (N1 commission, forever).',
+            }, { amount: `$${n1CallAmount}` })}
           />
 
           {/* Divider (desktop) */}
@@ -251,8 +256,8 @@ const StickyAffiliateBar: React.FC = () => {
             onShare={() => handleShare(providerShareUrl ?? '', 'provider')}
             tooltip={intl.formatMessage({
               id: 'chatter.bar.providerTooltip',
-              defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive paid calls, you earn $5 per call for 6 months.',
-            })}
+              defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive paid calls, you earn ${amount} per call for 6 months.',
+            }, { amount: providerCallAmount })}
           />
         </div>
 

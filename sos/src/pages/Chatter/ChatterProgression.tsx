@@ -321,7 +321,7 @@ function RecruitmentTierSection({
       <div className="flex items-center gap-2 mb-1">
         <Users className="h-5 w-5 text-indigo-500" />
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-          <FormattedMessage id="chatter.progression.recruitment.title" defaultMessage="Paliers de Recrutement" />
+          <FormattedMessage id="chatter.progression.recruitment.title" defaultMessage="Paliers de Recrutement d'Équipe" />
         </h2>
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">

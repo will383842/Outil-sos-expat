@@ -102,7 +102,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'team',
     targetSelector: '[data-tour="team-card"]',
     title: 'Build Your Team',
-    description: 'Recruit other chatters and earn passive income! Get $1 for every call your N1 recruits make, and $0.50 for N2.',
+    description: 'Recruit other chatters and earn passive income! Get {{n1Amount}} for every call your N1 recruits make, and {{n2Amount}} for N2.',
     icon: <Users className="w-6 h-6 text-indigo-500" />,
     position: 'top',
   },
@@ -283,6 +283,8 @@ interface TourTooltipProps {
   totalSteps: number;
   targetRect: DOMRect | null;
   callAmountRange: string;
+  n1Amount: string;
+  n2Amount: string;
   onNext: () => void;
   onPrev: () => void;
   onSkip: () => void;
@@ -296,6 +298,8 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   totalSteps,
   targetRect,
   callAmountRange,
+  n1Amount,
+  n2Amount,
   onNext,
   onPrev,
   onSkip,
@@ -321,7 +325,10 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   }, [targetRect, step.position]);
 
   const title = intl.formatMessage({ id: `chatter.tour.${step.id}.title`, defaultMessage: step.title });
-  const description = intl.formatMessage({ id: `chatter.tour.${step.id}.description`, defaultMessage: step.description }).replace(/\{\{callAmountRange\}\}/g, callAmountRange);
+  const description = intl.formatMessage({ id: `chatter.tour.${step.id}.description`, defaultMessage: step.description })
+    .replace(/\{\{callAmountRange\}\}/g, callAmountRange)
+    .replace(/\{\{n1Amount\}\}/g, n1Amount)
+    .replace(/\{\{n2Amount\}\}/g, n2Amount);
 
   // Arrow styles based on position
   const arrowStyles: Record<string, string> = {
@@ -533,14 +540,17 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
   const { dashboardData } = useChatterData();
   const configData = dashboardData?.config;
 
-  // Dynamic commission range from config (cents → dollars)
-  const callAmountRange = useMemo(() => {
+  // Dynamic commission amounts from config (cents → dollars)
+  const { callAmountRange, n1Amount, n2Amount } = useMemo(() => {
     const expatAmt = (configData?.commissionClientCallAmountExpat ?? 300) / 100;
     const lawyerAmt = (configData?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
-    return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
-  }, [configData?.commissionClientCallAmountExpat, configData?.commissionClientCallAmountLawyer]);
+    const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
+    const n1 = `$${((configData?.commissionN1CallAmount ?? 100) / 100).toFixed(2).replace(/\.00$/, '')}`;
+    const n2 = `$${((configData?.commissionN2CallAmount ?? 50) / 100).toFixed(2)}`;
+    return { callAmountRange: range, n1Amount: n1, n2Amount: n2 };
+  }, [configData]);
 
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -704,6 +714,8 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
               totalSteps={TOUR_STEPS.length}
               targetRect={targetRect}
               callAmountRange={callAmountRange}
+              n1Amount={n1Amount}
+              n2Amount={n2Amount}
               onNext={handleNext}
               onPrev={handlePrev}
               onSkip={handleSkip}

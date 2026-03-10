@@ -75,8 +75,8 @@ export const adminConfig = {
  */
 export const chatterAdminConfig = {
   region: "us-central1" as const,
-  memory: "256MiB" as const,  // QUOTA FIX: 512MiB→256MiB to fix "Quota exceeded for total allowable memory per project per region"
-  cpu: 0.083,  // QUOTA FIX: 0.5→0.083 (memory ≤ 256MiB allows lower cpu)
+  memory: "512MiB" as const,  // FIX: 256MiB OOM — Node22+Firebase SDK uses ~255MiB at startup
+  cpu: 0.5,  // Required when memory > 256MiB
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,
@@ -89,8 +89,8 @@ export const chatterAdminConfig = {
  */
 export const affiliateAdminConfig = {
   region: "us-central1" as const,
-  memory: "256MiB" as const,  // QUOTA FIX: 512MiB→256MiB to fix "Quota exceeded for total allowable memory per project per region"
-  cpu: 0.083,  // QUOTA FIX: 0.5→0.083 (memory ≤ 256MiB allows lower cpu)
+  memory: "512MiB" as const,  // FIX: 256MiB OOM — Node22+Firebase SDK uses ~255MiB at startup
+  cpu: 0.5,  // Required when memory > 256MiB
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,

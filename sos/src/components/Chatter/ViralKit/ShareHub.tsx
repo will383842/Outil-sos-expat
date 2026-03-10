@@ -11,7 +11,7 @@
  * - Drag to dismiss (mobile)
  */
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
   X,
@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useViralKit, type ShareLinkType, type MessageCategory } from "@/hooks/useViralKit";
+import { useChatterData } from "@/contexts/ChatterDataContext";
 import { lockScroll, unlockScroll } from "@/utils/scrollLockManager";
 import { UI, ANIMATION } from "@/components/Chatter/designTokens";
 import { FacebookShareGuide } from "./FacebookShareGuide";
@@ -65,14 +66,8 @@ const PlatformIcon: React.FC<{ id: string; className?: string; style?: React.CSS
 };
 
 // ============================================================================
-// LINK TYPE CONFIG
+// LINK TYPE CONFIG — built dynamically inside component from admin config
 // ============================================================================
-
-const LINK_TYPES: { type: ShareLinkType; icon: React.ReactNode; labelId: string; defaultLabel: string; earningsId: string; defaultEarnings: string }[] = [
-  { type: "client", icon: <Users className="w-4 h-4" />, labelId: "chatter.share.hub.clientLink", defaultLabel: "Client ($10/appel)", earningsId: "chatter.share.hub.clientEarnings", defaultEarnings: "$10/appel" },
-  { type: "recruitment", icon: <UserPlus className="w-4 h-4" />, labelId: "chatter.share.hub.recruitmentLink", defaultLabel: "Recrutement ($5/appel)", earningsId: "chatter.share.hub.recruitmentEarnings", defaultEarnings: "$5/appel" },
-  { type: "provider", icon: <Briefcase className="w-4 h-4" />, labelId: "chatter.share.hub.providerLink", defaultLabel: "Provider ($5/appel)", earningsId: "chatter.share.hub.providerEarnings", defaultEarnings: "$5/appel" },
-];
 
 // Category config
 const CATEGORY_CONFIG: Record<MessageCategory | "all", { emoji: string; labelId: string; defaultLabel: string }> = {
@@ -98,6 +93,19 @@ interface ShareHubProps {
 export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLinkType }) => {
   const intl = useIntl();
   const t = (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage });
+  const { dashboardData } = useChatterData();
+  const cfg = dashboardData?.config;
+
+  // Build LINK_TYPES dynamically from admin config (never hardcoded)
+  const clientAmt = ((cfg?.commissionClientCallAmount ?? 300) / 100).toFixed(0);
+  const n1Amt = ((cfg?.commissionN1CallAmount ?? 100) / 100).toFixed(0);
+  const providerAmt = ((cfg?.commissionProviderCallAmount ?? 500) / 100).toFixed(0);
+
+  const LINK_TYPES = useMemo(() => [
+    { type: "client" as ShareLinkType, icon: <Users className="w-4 h-4" />, labelId: "chatter.share.hub.clientLink", defaultLabel: "Client", earningsId: "chatter.share.hub.clientEarnings", defaultEarnings: `$${clientAmt}/appel`, earningsAmount: clientAmt },
+    { type: "recruitment" as ShareLinkType, icon: <UserPlus className="w-4 h-4" />, labelId: "chatter.share.hub.recruitmentLink", defaultLabel: "Recrutement equipe", earningsId: "chatter.share.hub.recruitmentEarnings", defaultEarnings: `$${n1Amt}/appel`, earningsAmount: n1Amt },
+    { type: "provider" as ShareLinkType, icon: <Briefcase className="w-4 h-4" />, labelId: "chatter.share.hub.providerLink", defaultLabel: "Prestataire", earningsId: "chatter.share.hub.providerEarnings", defaultEarnings: `$${providerAmt}/appel`, earningsAmount: providerAmt },
+  ], [clientAmt, n1Amt, providerAmt]);
 
   const {
     activeLinkType,
@@ -256,7 +264,7 @@ export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLink
                 >
                   {lt.icon}
                   <span className="hidden sm:inline">{t(lt.labelId, lt.defaultLabel)}</span>
-                  <span className="sm:hidden">{t(lt.earningsId, lt.defaultEarnings)}</span>
+                  <span className="sm:hidden">{intl.formatMessage({ id: lt.earningsId, defaultMessage: lt.defaultEarnings }, { amount: lt.earningsAmount })}</span>
                 </button>
               ))}
             </div>

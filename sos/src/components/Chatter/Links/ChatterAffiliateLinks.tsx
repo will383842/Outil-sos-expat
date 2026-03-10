@@ -48,14 +48,17 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
   const [copiedRecruitment, setCopiedRecruitment] = useState(false);
   const [copiedProvider, setCopiedProvider] = useState(false);
 
-  // Dynamic commission range from config (cents → dollars)
-  const callAmountRange = useMemo(() => {
+  // Dynamic commission amounts from config (cents → dollars)
+  const { callAmountRange, n1CallAmount, providerCallAmount } = useMemo(() => {
     const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
     const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
-    return minAmt === maxAmt ? `${minAmt}$` : `${minAmt}-${maxAmt}$`;
-  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
+    const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-$${maxAmt}`;
+    const n1Amt = (config?.commissionN1CallAmount ?? 100) / 100;
+    const providerAmt = (config?.commissionProviderCallAmount ?? 500) / 100;
+    return { callAmountRange: range, n1CallAmount: n1Amt, providerCallAmount: providerAmt };
+  }, [config]);
 
   // Copy link to clipboard
   const copyLink = async (link: string, type: 'client' | 'recruitment' | 'provider') => {
@@ -165,7 +168,8 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-sm dark:text-gray-400 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.client.commission"
-            defaultMessage={`Commission : ${callAmountRange} par appel payé`}
+            defaultMessage="Commission : {amount} par appel payé"
+            values={{ amount: callAmountRange }}
           />
         </p>
       </div>
@@ -182,7 +186,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                 <FormattedMessage id="chatter.links.recruitment.title" defaultMessage="Recruter équipe" />
               </h3>
               <p className="text-sm dark:text-gray-400">
-                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez d'autres chatters dans votre équipe et gagnez $5/appel N1" />
+                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez d'autres chatters dans votre équipe et gagnez ${amount}/appel N1" values={{ amount: n1CallAmount }} />
               </p>
             </div>
           </div>
@@ -249,7 +253,8 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-sm dark:text-gray-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.recruitment.commission"
-            defaultMessage="Commission : $1 par appel N1"
+            defaultMessage="Commission : ${amount} par appel N1"
+            values={{ amount: n1CallAmount }}
           />
         </p>
       </div>
@@ -266,7 +271,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
                 <FormattedMessage id="chatter.links.provider.title" defaultMessage="Recruter prestataires" />
               </h3>
               <p className="text-sm dark:text-gray-400">
-                <FormattedMessage id="chatter.links.provider.desc" defaultMessage="Recrutez des avocats ou expatriés et gagnez $5/appel pendant 6 mois" />
+                <FormattedMessage id="chatter.links.provider.desc" defaultMessage="Recrutez des avocats ou expatriés et gagnez ${amount}/appel pendant 6 mois" values={{ amount: providerCallAmount }} />
               </p>
             </div>
           </div>
@@ -333,7 +338,8 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
         <p className="text-sm dark:text-gray-400 bg-teal-50 dark:bg-teal-900/20 rounded-lg px-3 py-2">
           💰 <FormattedMessage
             id="chatter.links.provider.commission"
-            defaultMessage="Commission : $5 par appel du prestataire recruté (pendant 6 mois)"
+            defaultMessage="Commission : ${amount} par appel du prestataire recruté (pendant 6 mois)"
+            values={{ amount: providerCallAmount }}
           />
         </p>
       </div>

@@ -43,7 +43,7 @@ function ensureInitialized() {
  * Get all training modules with user progress
  */
 export const getChatterTrainingModules = onCall(
-  { ...adminConfig, memory: "256MiB", cpu: 0.083, timeoutSeconds: 30 },
+  { ...adminConfig, memory: "512MiB", cpu: 0.5, timeoutSeconds: 30 },  // FIX: 256MiB OOM (Node22+Firebase SDK ~255MiB base)
   async (request): Promise<GetTrainingModulesResponse> => {
     ensureInitialized();
 
@@ -164,7 +164,7 @@ export const getChatterTrainingModules = onCall(
  * Get full module content with slides and quiz
  */
 export const getChatterTrainingModuleContent = onCall(
-  { ...adminConfig, memory: "256MiB", cpu: 0.083, timeoutSeconds: 30 },
+  { ...adminConfig, memory: "512MiB", cpu: 0.5, timeoutSeconds: 30 },  // FIX: 256MiB OOM (Node22+Firebase SDK ~255MiB base)
   async (request): Promise<GetTrainingModuleContentResponse> => {
     ensureInitialized();
 
@@ -335,7 +335,7 @@ export const getChatterTrainingModuleContent = onCall(
  * Update slide progress
  */
 export const updateChatterTrainingProgress = onCall(
-  { ...adminConfig, memory: "256MiB", cpu: 0.083, timeoutSeconds: 30 },
+  { ...adminConfig, memory: "512MiB", cpu: 0.5, timeoutSeconds: 30 },  // FIX: 256MiB OOM (Node22+Firebase SDK ~255MiB base)
   async (request): Promise<{ success: boolean }> => {
     ensureInitialized();
 
@@ -391,7 +391,7 @@ export const updateChatterTrainingProgress = onCall(
  * Submit quiz answers and check for module completion
  */
 export const submitChatterTrainingQuiz = onCall(
-  { ...adminConfig, memory: "256MiB", cpu: 0.083, timeoutSeconds: 60 },
+  { ...adminConfig, memory: "512MiB", cpu: 0.5, timeoutSeconds: 60 },  // FIX: 256MiB OOM
   async (request): Promise<SubmitTrainingQuizResponse> => {
     ensureInitialized();
 
@@ -653,7 +653,7 @@ export const submitChatterTrainingQuiz = onCall(
  * Get certificate details
  */
 export const getChatterTrainingCertificate = onCall(
-  { ...adminConfig, memory: "256MiB", cpu: 0.083, timeoutSeconds: 30 },
+  { ...adminConfig, memory: "512MiB", cpu: 0.5, timeoutSeconds: 30 },  // FIX: 256MiB OOM (Node22+Firebase SDK ~255MiB base)
   async (request): Promise<GetTrainingCertificateResponse> => {
     ensureInitialized();
 

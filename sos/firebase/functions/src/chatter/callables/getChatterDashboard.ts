@@ -97,10 +97,11 @@ function ensureInitialized() {
 export const getChatterDashboard = onCall(
   {
     region: "us-central1",
-    memory: "256MiB",
+    memory: "512MiB",  // FIX: 256MiB OOM (261MiB used at runtime)
+    cpu: 0.5,          // Required when memory > 256MiB
     timeoutSeconds: 30,
-    maxInstances: 20,
-    minInstances: 1, // Anti cold-start: keep 1 instance warm (~$5/month)
+    maxInstances: 10,  // Reduced from 20 to save quota
+    minInstances: 0,   // Reduced from 1 to free quota in us-central1
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetChatterDashboardResponse> => {

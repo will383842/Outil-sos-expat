@@ -792,7 +792,7 @@ function ChatterHowToEarn() {
               />
               <CommissionRow
                 icon={<Share2 className="h-4 w-4" />}
-                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitBonus', defaultMessage: 'Bonus recrutement' })}
+                label={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitBonus', defaultMessage: 'Bonus recrutement équipe' })}
                 amount={formatCents(recruitBonusAmount)}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.recruitDesc', defaultMessage: 'filleul recrute qqun' })}
                 color="text-teal-600 dark:text-teal-400"

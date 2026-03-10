@@ -4,7 +4,7 @@
  * Uses useChatterData() Context
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
@@ -20,11 +20,11 @@ import {
 } from 'lucide-react';
 import type { ChatterLeaderboardEntry } from '@/types/chatter';
 
-// Podium prizes
-const PRIZES = [
-  { rank: 1, amount: '$200', bonus: '2x', gradient: 'from-yellow-400 to-amber-600', icon: Crown, shadow: 'shadow-amber-500/20' },
-  { rank: 2, amount: '$100', bonus: '1.5x', gradient: 'from-gray-300 to-gray-500', icon: Medal, shadow: 'shadow-gray-500/20' },
-  { rank: 3, amount: '$50', bonus: '1.15x', gradient: 'from-orange-400 to-amber-700', icon: Star, shadow: 'shadow-orange-500/20' },
+// Podium prizes gradient/icon config (amounts are dynamic from admin config)
+const PRIZE_STYLES = [
+  { rank: 1, gradient: 'from-yellow-400 to-amber-600', icon: Crown, shadow: 'shadow-amber-500/20' },
+  { rank: 2, gradient: 'from-gray-300 to-gray-500', icon: Medal, shadow: 'shadow-gray-500/20' },
+  { rank: 3, gradient: 'from-orange-400 to-amber-700', icon: Star, shadow: 'shadow-orange-500/20' },
 ];
 
 export default function ChatterLeaderboard() {
@@ -40,6 +40,23 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
   const navigate = useLocaleNavigate();
   const { dashboardData } = useChatterData();
   const chatter = dashboardData?.chatter;
+  const config = dashboardData?.config;
+
+  // Dynamic prizes from admin config
+  const PRIZES = useMemo(() => {
+    const prizes = config?.monthlyCompetitionPrizes;
+    const p1 = ((prizes?.first ?? 20000) / 100).toFixed(0);
+    const p2 = ((prizes?.second ?? 10000) / 100).toFixed(0);
+    const p3 = ((prizes?.third ?? 5000) / 100).toFixed(0);
+    const m1 = prizes?.firstMultiplier ?? 2;
+    const m2 = prizes?.secondMultiplier ?? 1.5;
+    const m3 = prizes?.thirdMultiplier ?? 1.15;
+    return [
+      { ...PRIZE_STYLES[0], amount: `$${p1}`, bonus: `${m1}x` },
+      { ...PRIZE_STYLES[1], amount: `$${p2}`, bonus: `${m2}x` },
+      { ...PRIZE_STYLES[2], amount: `$${p3}`, bonus: `${m3}x` },
+    ];
+  }, [config]);
 
   const [leaderboard, setLeaderboard] = useState<ChatterLeaderboardEntry[]>([]);
   const [isLoadingBoard, setIsLoadingBoard] = useState(true);
@@ -222,7 +239,8 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
           <p className="text-sm text-slate-600 dark:text-slate-400">
             <FormattedMessage
               id="chatter.leaderboard.eligibility"
-              defaultMessage="Les 3 premiers gagnent $200, $100 et $50 de bonus ! Minimum $200 de gains pour participer."
+              defaultMessage="Les 3 premiers gagnent {p1}, {p2} et {p3} de bonus ! Minimum $200 de gains pour participer."
+              values={{ p1: PRIZES[0].amount, p2: PRIZES[1].amount, p3: PRIZES[2].amount }}
             />
           </p>
         </div>
@@ -320,11 +338,11 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
         </h3>
         <div className="relative">
           {[
-            { level: 1, threshold: 0, name: 'Rookie', bonus: 'x1' },
-            { level: 2, threshold: 100, name: 'Challenger', bonus: 'x1.1' },
-            { level: 3, threshold: 500, name: 'Pro', bonus: 'x1.2' },
-            { level: 4, threshold: 2000, name: 'Expert', bonus: 'x1.35' },
-            { level: 5, threshold: 5000, name: 'Légende', bonus: 'x1.5' },
+            { level: 1, threshold: 0, name: 'Rookie' },
+            { level: 2, threshold: 100, name: 'Challenger' },
+            { level: 3, threshold: 500, name: 'Pro' },
+            { level: 4, threshold: 2000, name: 'Expert' },
+            { level: 5, threshold: 5000, name: 'Légende' },
           ].map((step, index, arr) => {
             const currentLevel = chatter?.level || 1;
             const isPast = step.level < currentLevel;
@@ -372,13 +390,6 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
                   <div className="flex items-center gap-3 mt-0.5">
                     <span className={`text-xs ${isCurrent ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'}`}>
                       ${step.threshold.toLocaleString()}
-                    </span>
-                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                      isPast || isCurrent
-                        ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400'
-                        : 'bg-slate-100 dark:bg-white/5 text-slate-400'
-                    }`}>
-                      <FormattedMessage id="chatter.progression.roadmap.bonus" defaultMessage="Bonus {multiplier}" values={{ multiplier: step.bonus }} />
                     </span>
                   </div>
                 </div>

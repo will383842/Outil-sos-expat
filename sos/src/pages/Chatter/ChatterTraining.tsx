@@ -210,7 +210,7 @@ function ChatterTrainingContent() {
           <div className="flex items-center gap-2 mb-1">
             <UserPlus className="w-4 h-4 text-violet-600 dark:text-violet-400" />
             <span className="text-sm font-bold text-violet-700 dark:text-violet-300">
-              <FormattedMessage id="chatter.training.links.recruitment" defaultMessage="Recruitment link" />
+              <FormattedMessage id="chatter.training.links.recruitment" defaultMessage="Team recruitment link" />
             </span>
             <span className="ml-auto text-sm font-black text-violet-600 dark:text-violet-400">${n1CallAmount}<span className="text-xs font-medium opacity-70"><FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" /></span></span>
           </div>

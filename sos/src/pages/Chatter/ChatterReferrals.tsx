@@ -224,7 +224,7 @@ function ChatterReferralsContent() {
       {/* Commission rates reminder */}
       <div className={`${UI.card} p-4`}>
         <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
-          <FormattedMessage id="chatter.sponsor.rates" defaultMessage="Vos gains par recrutement" />
+          <FormattedMessage id="chatter.sponsor.rates" defaultMessage="Vos gains par recrutement d'équipe" />
         </h4>
         <div className="space-y-2 text-sm">
           {[

@@ -305,7 +305,7 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
         <div className="rounded-xl p-3 bg-violet-500/15 border border-violet-500/25">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-bold text-violet-300 uppercase tracking-wider">
-              <FormattedMessage id="chatter.sidebar.recruitLink" defaultMessage="Lien recrutement" />
+              <FormattedMessage id="chatter.sidebar.recruitLink" defaultMessage="Lien recrutement équipe" />
             </span>
             {commissionN1Call > 0 && (
               <span className="text-[11px] font-bold text-violet-400">
@@ -518,7 +518,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
       <Layout showFooter={false}>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
           {/* Skeleton StickyBar */}
-          <div className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
             <div className="max-w-7xl mx-auto px-3 py-2">
               <div className="flex gap-2">
                 <div className="flex-1 h-16 rounded-xl bg-white/[0.04] animate-pulse" />
@@ -678,7 +678,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
 
             {/* DESKTOP SIDEBAR */}
             <aside className="hidden lg:block">
-              <div className="sticky top-4 bg-slate-900/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl shadow-black/30">
+              <div className="sticky top-24 bg-slate-900/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl shadow-black/30">
                 <SidebarContent {...sidebarProps} />
               </div>
             </aside>
