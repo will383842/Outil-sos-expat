@@ -386,6 +386,20 @@ export const getChatterDashboard = onCall(
       // 8. Unread notifications (already fetched in parallel)
       const unreadNotifications = notificationsQuery.data().count;
 
+      // 8b. Self-healing: generate affiliateCodeProvider if missing (pre-migration chatters)
+      let affiliateCodeProvider = chatter.affiliateCodeProvider;
+      if (!affiliateCodeProvider && chatter.affiliateCodeClient) {
+        affiliateCodeProvider = `PROV-${chatter.affiliateCodeClient}`;
+        // Write back to Firestore (fire-and-forget, don't block response)
+        db.collection("chatters").doc(uid).update({
+          affiliateCodeProvider,
+          updatedAt: Timestamp.now(),
+        }).catch((err: unknown) => {
+          logger.warn("[getChatterDashboard] Self-healing affiliateCodeProvider failed", { uid, error: err });
+        });
+        logger.info("[getChatterDashboard] Self-healed affiliateCodeProvider", { uid, affiliateCodeProvider });
+      }
+
       // 9. Build response
       const response: GetChatterDashboardResponse = {
         chatter: {
@@ -407,7 +421,7 @@ export const getChatterDashboard = onCall(
           levelProgress: chatter.levelProgress,
           affiliateCodeClient: chatter.affiliateCodeClient,
           affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
-          affiliateCodeProvider: chatter.affiliateCodeProvider,
+          affiliateCodeProvider: affiliateCodeProvider,
           totalEarned: chatter.totalEarned,
           availableBalance: chatter.availableBalance,
           pendingBalance: chatter.pendingBalance,
