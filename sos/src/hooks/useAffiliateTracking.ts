@@ -13,7 +13,9 @@
  * by keeping the ?ref= param visible in the URL throughout the session.
  */
 
-import { getStoredReferralCode } from "../utils/referralStorage";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getStoredReferralCode, getBestAvailableReferralCode } from "../utils/referralStorage";
 
 const AFFILIATE_STORAGE_KEY = "sos_affiliate_ref";
 const AFFILIATE_PARAM = "ref";
@@ -63,7 +65,7 @@ export function captureAffiliateRef(): void {
     if (sessionStorage.getItem(AFFILIATE_STORAGE_KEY)) return;
 
     // Priority 3: Restore from localStorage (user closed tab, came back within 30 days)
-    const storedCode = getStoredReferralCode("client");
+    const storedCode = getStoredReferralCode("client") || getBestAvailableReferralCode("client");
     if (storedCode) {
       setAffiliateRef(storedCode);
     }
@@ -108,15 +110,55 @@ export function appendAffiliateRef(path: string): string {
  *
  * Place this once in App.tsx inside the Router.
  * This is the SAFETY NET that catches ALL navigation methods.
- */
-/**
- * AffiliateRefSync - DISABLED (2026-03-10)
  *
- * Was causing infinite redirect loops with LocaleRouter.
- * Not needed: referral codes are already persisted in localStorage (30 days)
- * via ReferralCodeCapture + useReferralCapture + AffiliatePathCapture.
- * The ?ref= in URL was purely cosmetic.
+ * Anti-loop protection:
+ * - Uses a ref to track the last URL we navigated TO, preventing re-triggering
+ * - Skips injection if we JUST navigated (debounce via lastNavTime)
+ * - Never navigates more than once per pathname change
  */
 export function AffiliateRefSync(): null {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const lastInjectedPath = useRef<string>("");
+  const isNavigating = useRef(false);
+
+  useEffect(() => {
+    // Guard: if WE just triggered this navigation, skip
+    if (isNavigating.current) {
+      isNavigating.current = false;
+      return;
+    }
+
+    const ref = getAffiliateRef();
+    if (!ref) return;
+
+    // Skip admin/marketing routes
+    if (location.pathname.includes("/admin") || location.pathname.includes("/marketing")) return;
+
+    // Skip affiliate capture routes (they handle their own redirect)
+    if (/^\/(ref|rec|prov)\//.test(location.pathname)) return;
+    // Also skip locale-prefixed affiliate routes
+    if (/^\/[^/]+\/(ref|rec|prov)\//.test(location.pathname)) return;
+
+    // Already has ref in URL — nothing to do
+    const currentParams = new URLSearchParams(location.search);
+    if (currentParams.has(AFFILIATE_PARAM)) return;
+
+    // Anti-loop: don't inject twice for the same pathname
+    const fullPath = location.pathname + location.search;
+    if (lastInjectedPath.current === location.pathname) return;
+
+    // Inject ?ref= into URL
+    lastInjectedPath.current = location.pathname;
+    currentParams.set(AFFILIATE_PARAM, ref);
+    const newSearch = `?${currentParams.toString()}`;
+
+    isNavigating.current = true;
+    navigate(
+      { pathname: location.pathname, search: newSearch, hash: location.hash },
+      { replace: true }
+    );
+  }, [location.pathname]); // Only react to pathname changes, NOT search changes
+
   return null;
 }
