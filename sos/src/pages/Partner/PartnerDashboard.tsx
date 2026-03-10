@@ -2,7 +2,7 @@
  * PartnerDashboard - Main dashboard page for partners
  */
 
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Percent,
   Copy,
+  CheckCircle,
   ExternalLink,
   ArrowRight,
   Loader2,
@@ -57,9 +58,13 @@ const PartnerDashboard: React.FC = () => {
     }
   }, [isLoading, isPartner, navigate]);
 
+  const [linkCopied, setLinkCopied] = useState(false);
+
   const copyToClipboard = async (text: string) => {
     const success = await clipboardCopy(text);
     if (success) {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
     } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
@@ -182,11 +187,16 @@ const PartnerDashboard: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => copyToClipboard(affiliateLink)}
-                  className="flex-1 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                  className={`flex-1 min-h-[48px] text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
+                    linkCopied ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
-                  <Copy className="w-5 h-5" />
+                  {linkCopied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   <span>
-                    <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                    {linkCopied
+                      ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
+                      : <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                    }
                   </span>
                 </button>
                 <a

@@ -28,6 +28,7 @@ import {
   Crown,
   Menu,
   Copy,
+  Check,
   PiggyBank,
   TrendingUp,
   ArrowUpRight,
@@ -118,9 +119,16 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
   const hasPendingWithdrawal = !!pendingWithdrawalId;
   const belowThreshold = !canWithdraw && !hasPendingWithdrawal;
 
-  const handleCopy = useCallback(async (text: string, label: string) => {
-    const ok = await copyToClipboard(text);
-    if (ok) toast.success(`${label} copie !`);
+  const [copiedType, setCopiedType] = useState<'client' | 'recruitment' | 'provider' | null>(null);
+
+  const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment' | 'provider') => {
+    if (!url?.trim()) return;
+    const ok = await copyToClipboard(url);
+    if (ok) {
+      setCopiedType(type);
+      setTimeout(() => setCopiedType(null), 2000);
+      toast.success('Lien copié !');
+    }
   }, []);
 
   const handleShare = useCallback(async (url: string) => {
@@ -128,7 +136,7 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
       try { await navigator.share({ title: 'SOS Expat', url }); } catch { /* cancelled */ }
     } else {
       const ok = await copyToClipboard(url);
-      if (ok) toast.success('Lien copie !');
+      if (ok) toast.success('Lien copié !');
     }
   }, []);
 
@@ -285,11 +293,15 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
               {clientCode || '---'}
             </code>
             <button
-              onClick={() => handleCopy(clientCode, 'Code')}
-              className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-              aria-label="Copy"
+              onClick={() => handleCopy(clientShareUrl, 'client')}
+              className={`p-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
+                copiedType === 'client'
+                  ? 'bg-emerald-500/30 text-emerald-200 scale-110'
+                  : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 active:scale-95'
+              }`}
+              aria-label={copiedType === 'client' ? 'Copied' : 'Copy'}
             >
-              <Copy className="w-3.5 h-3.5" />
+              {copiedType === 'client' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={() => handleShare(clientShareUrl)}
@@ -322,11 +334,15 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
               {recruitmentCode || '---'}
             </code>
             <button
-              onClick={() => handleCopy(recruitmentCode, 'Code')}
-              className="p-1.5 rounded-lg bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-              aria-label="Copy"
+              onClick={() => handleCopy(recruitmentShareUrl, 'recruitment')}
+              className={`p-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
+                copiedType === 'recruitment'
+                  ? 'bg-violet-500/30 text-violet-200 scale-110'
+                  : 'bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 active:scale-95'
+              }`}
+              aria-label={copiedType === 'recruitment' ? 'Copied' : 'Copy'}
             >
-              <Copy className="w-3.5 h-3.5" />
+              {copiedType === 'recruitment' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={() => handleShare(recruitmentShareUrl)}
@@ -359,11 +375,15 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
               {providerCode || '---'}
             </code>
             <button
-              onClick={() => handleCopy(providerCode, 'Code')}
-              className="p-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-              aria-label="Copy"
+              onClick={() => handleCopy(providerShareUrl, 'provider')}
+              className={`p-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
+                copiedType === 'provider'
+                  ? 'bg-teal-500/30 text-teal-200 scale-110'
+                  : 'bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 active:scale-95'
+              }`}
+              aria-label={copiedType === 'provider' ? 'Copied' : 'Copy'}
             >
-              <Copy className="w-3.5 h-3.5" />
+              {copiedType === 'provider' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={() => handleShare(providerShareUrl)}

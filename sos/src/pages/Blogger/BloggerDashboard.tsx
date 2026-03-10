@@ -2,7 +2,7 @@
  * BloggerDashboard - Main dashboard page for bloggers
  */
 
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { trackMetaViewContent, trackMetaLead } from '@/utils/metaPixel';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -71,9 +71,15 @@ const BloggerDashboard: React.FC = () => {
     trackMetaViewContent({ content_name: 'blogger_dashboard', content_category: 'affiliate' });
   }, []);
 
-  const copyToClipboard = async (text: string) => {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const copyToClipboard = async (text: string, type?: string) => {
     const success = await clipboardCopy(text);
     if (success) {
+      if (type) {
+        setCopiedCode(type);
+        setTimeout(() => setCopiedCode(null), 2000);
+      }
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
     } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
@@ -262,12 +268,17 @@ const BloggerDashboard: React.FC = () => {
                 />
                 <div className="flex gap-2">
                   <button
-                    onClick={() => copyToClipboard(clientShareUrl)}
-                    className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    onClick={() => copyToClipboard(clientShareUrl, 'client')}
+                    className={`flex-1 min-h-[48px] text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
+                      copiedCode === 'client' ? 'bg-green-600' : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
                   >
-                    <Copy className="w-5 h-5" />
+                    {copiedCode === 'client' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     <span className="sm:inline">
-                      <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                      {copiedCode === 'client'
+                        ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
+                        : <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                      }
                     </span>
                   </button>
                   <a
@@ -302,12 +313,17 @@ const BloggerDashboard: React.FC = () => {
                 />
                 <div className="flex gap-2">
                   <button
-                    onClick={() => copyToClipboard(recruitmentShareUrl)}
-                    className="flex-1 min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                    onClick={() => copyToClipboard(recruitmentShareUrl, 'recruit')}
+                    className={`flex-1 min-h-[48px] text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
+                      copiedCode === 'recruit' ? 'bg-green-600' : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
                   >
-                    <Copy className="w-5 h-5" />
+                    {copiedCode === 'recruit' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     <span className="sm:inline">
-                      <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                      {copiedCode === 'recruit'
+                        ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
+                        : <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                      }
                     </span>
                   </button>
                   <a
@@ -342,12 +358,17 @@ const BloggerDashboard: React.FC = () => {
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => copyToClipboard(providerShareUrl)}
-                      className="flex-1 min-h-[48px] bg-teal-600 hover:bg-teal-700 text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98]"
+                      onClick={() => copyToClipboard(providerShareUrl, 'provider')}
+                      className={`flex-1 min-h-[48px] text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
+                        copiedCode === 'provider' ? 'bg-green-600' : 'bg-teal-600 hover:bg-teal-700'
+                      }`}
                     >
-                      <Copy className="w-5 h-5" />
+                      {copiedCode === 'provider' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                       <span className="sm:inline">
-                        <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                        {copiedCode === 'provider'
+                          ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
+                          : <FormattedMessage id="common.copy" defaultMessage="Copier" />
+                        }
                       </span>
                     </button>
                     <a

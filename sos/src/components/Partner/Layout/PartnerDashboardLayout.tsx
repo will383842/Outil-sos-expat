@@ -25,6 +25,7 @@ import {
   Menu,
   X,
   Copy,
+  Check,
 } from 'lucide-react';
 
 interface PartnerDashboardLayoutProps {
@@ -100,10 +101,14 @@ const PartnerDashboardLayout: React.FC<PartnerDashboardLayoutProps> = ({ childre
     }
   }, [logout, navigate]);
 
+  const [linkCopied, setLinkCopied] = useState(false);
+
   const copyAffiliateLink = async () => {
     if (!affiliateLink) return;
     const success = await copyToClipboard(affiliateLink);
     if (success) {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
       toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
     } else {
       toast.error(intl.formatMessage({ id: 'common.copyFailed', defaultMessage: 'Copy failed' }));
@@ -171,10 +176,12 @@ const PartnerDashboardLayout: React.FC<PartnerDashboardLayoutProps> = ({ childre
                 />
                 <button
                   onClick={copyAffiliateLink}
-                  className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                  title={intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copier' })}
+                  className={`p-1.5 text-white rounded-lg transition-all ${
+                    linkCopied ? 'bg-green-600 scale-110' : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
+                  }`}
+                  title={intl.formatMessage({ id: linkCopied ? 'common.copied' : 'common.copy', defaultMessage: linkCopied ? 'Copié !' : 'Copier' })}
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
