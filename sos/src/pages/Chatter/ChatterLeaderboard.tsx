@@ -48,9 +48,9 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
     const p1 = ((prizes?.first ?? 20000) / 100).toFixed(0);
     const p2 = ((prizes?.second ?? 10000) / 100).toFixed(0);
     const p3 = ((prizes?.third ?? 5000) / 100).toFixed(0);
-    const m1 = prizes?.firstMultiplier ?? 2;
-    const m2 = prizes?.secondMultiplier ?? 1.5;
-    const m3 = prizes?.thirdMultiplier ?? 1.15;
+    const m1 = 2;
+    const m2 = 1.5;
+    const m3 = 1.15;
     return [
       { ...PRIZE_STYLES[0], amount: `$${p1}`, bonus: `${m1}x` },
       { ...PRIZE_STYLES[1], amount: `$${p2}`, bonus: `${m2}x` },
