@@ -261,7 +261,12 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
   if (redirectTo) {
     // CRITICAL: Preserve query params (e.g., ?ref=CODE) during locale redirects
     const redirectWithQuery = `${redirectTo}${location.search || ''}${location.hash || ''}`;
-    console.log("🔷 [LocaleRouter] REDIRECTING to:", redirectWithQuery, "from:", location.pathname + location.search);
+    console.warn("🔷 [LocaleRouter] REDIRECTING", {
+      from: location.pathname + location.search,
+      to: redirectWithQuery,
+      language,
+      localeParam: params.locale,
+    });
     return <Navigate to={redirectWithQuery} replace />;
   }
 

@@ -1044,7 +1044,7 @@ const App: React.FC = () => {
             <ErrorBoundary>
             {/* ✅ FIX: ProviderOnlineManager monté au niveau global pour tracking sur toutes les pages */}
             <ProviderOnlineManager>
-            <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
+            <Suspense fallback={(() => { console.warn("🟡 [App] Suspense fallback ACTIVE — lazy component loading..."); return <LoadingSpinner size="large" color="red" />; })()}>
               {/* Routes de l'app */}
               <Routes>
                 {/* Root redirect to locale */}

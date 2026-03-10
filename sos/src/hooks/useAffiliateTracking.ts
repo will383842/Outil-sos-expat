@@ -111,24 +111,56 @@ export function appendAffiliateRef(path: string): string {
  * Place this once in App.tsx inside the Router.
  * This is the SAFETY NET that catches ALL navigation methods.
  */
+let _affiliateRefSyncCount = 0;
+
 export function AffiliateRefSync(): null {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
+    _affiliateRefSyncCount++;
+    const callNum = _affiliateRefSyncCount;
     const ref = getAffiliateRef();
-    if (!ref) return;
+
+    console.warn(`🔴 [AffiliateRefSync] #${callNum} FIRED`, {
+      ref,
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash,
+    });
+
+    if (!ref) {
+      console.warn(`🔴 [AffiliateRefSync] #${callNum} → NO REF, skipping`);
+      return;
+    }
 
     // Skip admin routes
-    if (location.pathname.includes("/admin")) return;
+    if (location.pathname.includes("/admin")) {
+      console.warn(`🔴 [AffiliateRefSync] #${callNum} → ADMIN route, skipping`);
+      return;
+    }
 
     // Check if ref is already in the current URL
     const currentParams = new URLSearchParams(location.search);
-    if (currentParams.has(AFFILIATE_PARAM)) return;
+    if (currentParams.has(AFFILIATE_PARAM)) {
+      console.warn(`🔴 [AffiliateRefSync] #${callNum} → REF already in URL, skipping`);
+      return;
+    }
+
+    // SAFETY: Prevent infinite loop — max 3 navigations
+    if (_affiliateRefSyncCount > 10) {
+      console.error(`🔴 [AffiliateRefSync] #${callNum} → LOOP DETECTED, aborting!`);
+      return;
+    }
 
     // Inject the ref param into the current URL
     currentParams.set(AFFILIATE_PARAM, ref);
     const newSearch = `?${currentParams.toString()}`;
+
+    console.warn(`🔴 [AffiliateRefSync] #${callNum} → NAVIGATING to add ref`, {
+      from: location.pathname + location.search,
+      to: location.pathname + newSearch,
+    });
 
     // Use replace to avoid polluting browser history
     navigate(
