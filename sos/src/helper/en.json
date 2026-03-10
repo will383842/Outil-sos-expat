@@ -4583,6 +4583,8 @@
   "admin.toolbox.backlinkEngine.description": "Blog prospecting, automatic enrichment, personalized email outreach campaigns via MailWizz, backlink tracking and weekly verification.",
   "admin.toolbox.emailEngineCold": "Email Engine COLD",
   "admin.toolbox.emailEngineCold.description": "Cold email infrastructure: IP warmup management, PowerMTA orchestration, bounce processing, blacklist monitoring and deliverability alerts.",
+  "admin.toolbox.motivationEngine": "Motivation Engine",
+  "admin.toolbox.motivationEngine.description": "Chatter gamification and motivation platform: automated sequences, badges, missions, leaderboards, streaks, multi-language Telegram/WhatsApp messaging.",
   "admin.toolbox.iaTool": "Provider AI Tool",
   "admin.toolbox.iaTool.description": "AI assistant for providers: call management support, suggestions and service optimization.",
   "admin.toolbox.mailwizzBackend": "MailWizz - Administration",

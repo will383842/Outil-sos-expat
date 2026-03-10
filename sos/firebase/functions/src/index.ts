@@ -3512,15 +3512,9 @@ export { consolidatedSecurityDaily } from './scheduled/consolidatedSecurityDaily
 // --- TWILIO : twilioRecordingWebhook manquant ---
 export { twilioRecordingWebhook } from './Webhooks/twilioWebhooks';
 
-// --- PAYMENT : fonctions sous noms originaux ---
-// (également déployées sous alias paymentXxx via le bloc payment ci-dessus)
-export { savePaymentMethod } from './payment/callables/savePaymentMethod';
-export { getPaymentMethods } from './payment/callables/getPaymentMethods';
-export { deletePaymentMethod } from './payment/callables/deletePaymentMethod';
-export { setDefaultPaymentMethod } from './payment/callables/setDefaultPaymentMethod';
-export { cancelWithdrawal } from './payment/callables/cancelWithdrawal';
-export { getWithdrawalStatus } from './payment/callables/getWithdrawalStatus';
-export { getWithdrawalHistory } from './payment/callables/getWithdrawalHistory';
+// --- PAYMENT : fonctions admin sous noms originaux (europe-west1) ---
+// Les 7 user callables legacy (europe-west3) ont été supprimées pour libérer le quota mem_allocation.
+// Le frontend utilise désormais exclusivement les alias paymentXxx.
 export { adminApproveWithdrawal } from './payment/callables/admin/approveWithdrawal';
 export { adminRejectWithdrawal } from './payment/callables/admin/rejectWithdrawal';
 export { adminGetPaymentConfig } from './payment/callables/admin/getPaymentConfig';

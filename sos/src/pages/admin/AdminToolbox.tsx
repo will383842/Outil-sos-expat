@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Database, ExternalLink, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
+import { Bot, Database, ExternalLink, Flame, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -11,6 +11,7 @@ const MULTI_DASHBOARD_URL = "https://multi.sos-expat.com";
 const IA_TOOL_URL = "https://ia.sos-expat.com";
 const SCRAPER_PRO_URL = "https://scraper.providers-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
+const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
 
 interface ToolCard {
   id: string;
@@ -95,6 +96,15 @@ const tools: ToolCard[] = [
     url: EMAIL_ENGINE_URL,
     icon: <Server className="h-8 w-8" />,
     color: "bg-cyan-700",
+    status: "live",
+  },
+  {
+    id: "motivation-engine",
+    titleKey: "admin.toolbox.motivationEngine",
+    descriptionKey: "admin.toolbox.motivationEngine.description",
+    url: MOTIVATION_ENGINE_URL,
+    icon: <Flame className="h-8 w-8" />,
+    color: "bg-amber-600",
     status: "live",
   },
 ];

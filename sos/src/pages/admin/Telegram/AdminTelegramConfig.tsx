@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { telegramEngineApi } from "../../../config/telegramEngine";
-import AdminLayout from "../../../components/admin/AdminLayout";
-import TelegramNav from "../../../components/Telegram/TelegramNav";
 import {
   Bot,
   CheckCircle,
@@ -140,10 +138,7 @@ const AdminTelegramConfig: React.FC = () => {
   }
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6 max-w-3xl">
-        <TelegramNav />
-
+      <div className="space-y-6">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Configuration</h2>
           <p className="text-sm text-gray-500 mt-1">Paramètres du bot et des notifications Telegram</p>
@@ -256,7 +251,6 @@ const AdminTelegramConfig: React.FC = () => {
           </button>
         </div>
       </div>
-    </AdminLayout>
   );
 };
 

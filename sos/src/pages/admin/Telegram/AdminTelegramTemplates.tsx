@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { telegramEngineApi } from "../../../config/telegramEngine";
-import AdminLayout from "../../../components/admin/AdminLayout";
-import TelegramNav from "../../../components/Telegram/TelegramNav";
 import {
   Save,
   RefreshCw,
@@ -30,6 +28,7 @@ const EVENT_LABELS: Record<string, string> = {
   negative_review: "Avis négatif",
   security_alert: "Alerte sécurité",
   withdrawal_request: "Demande de retrait",
+  captain_application: "Candidature Captain",
 };
 
 const AdminTelegramTemplates: React.FC = () => {
@@ -149,6 +148,9 @@ const AdminTelegramTemplates: React.FC = () => {
       IP_ADDRESS: "192.168.1.1", DETAILS: "Unusual location",
       USER_NAME: "Julie M.", USER_TYPE_FR: "Influencer",
       AMOUNT: "150", PAYMENT_METHOD: "Bank Transfer",
+      CANDIDATE_NAME: "Ahmed K.", WHATSAPP: "+212612345678",
+      MOTIVATION_PREVIEW: "Je souhaite aider les expatriés...",
+      HAS_CV: "Oui",
     };
     for (const v of variables) {
       const regex = new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, "g");
@@ -170,10 +172,7 @@ const AdminTelegramTemplates: React.FC = () => {
   const eventIds = Object.keys(templates);
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6 max-w-4xl">
-        <TelegramNav />
-
+      <div className="space-y-6">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Templates</h2>
           <p className="text-sm text-gray-500 mt-1">Gérez vos modèles de notifications Telegram</p>
@@ -305,7 +304,6 @@ const AdminTelegramTemplates: React.FC = () => {
           })}
         </div>
       </div>
-    </AdminLayout>
   );
 };
 
