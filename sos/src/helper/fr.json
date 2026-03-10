@@ -2993,6 +2993,8 @@
   "admin.menu.telegramTemplates.description": "Éditeur de templates",
   "admin.menu.thresholds": "Seuils fiscaux",
   "admin.menu.thresholds.description": "Surveillance des seuils internationaux",
+  "admin.menu.telegram": "Telegram",
+  "admin.menu.telegram.description": "Notifications, campagnes et monitoring Telegram",
   "admin.menu.toolbox": "Boîte à Outils",
   "admin.menu.toolbox.description": "Outils externes et intégrations",
   "admin.menu.training": "Formations",

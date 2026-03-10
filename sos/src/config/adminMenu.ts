@@ -54,6 +54,7 @@ import {
   // Toolbox icons
   Wrench,
   Inbox,
+  Send,
   // Affiliate icons
   Handshake,
   UserPlus,
@@ -1117,6 +1118,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/ia",
         icon: Bot,
         descriptionKey: "admin.menu.iaManagement.description",
+      },
+      {
+        id: "telegram-admin",
+        labelKey: "admin.menu.telegram",
+        path: "/admin/toolbox/telegram",
+        icon: Send,
+        badge: "NEW",
+        descriptionKey: "admin.menu.telegram.description",
       },
       {
         id: "toolbox",

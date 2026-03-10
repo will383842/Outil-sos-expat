@@ -2993,6 +2993,8 @@
   "admin.menu.telegramTemplates.description": "Template editor",
   "admin.menu.thresholds": "Tax Thresholds",
   "admin.menu.thresholds.description": "International threshold monitoring",
+  "admin.menu.telegram": "Telegram",
+  "admin.menu.telegram.description": "Telegram notifications, campaigns and monitoring",
   "admin.menu.toolbox": "Toolbox",
   "admin.menu.toolbox.description": "External tools and integrations",
   "admin.menu.training": "Training",
