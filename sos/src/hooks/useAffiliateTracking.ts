@@ -13,8 +13,6 @@
  * by keeping the ?ref= param visible in the URL throughout the session.
  */
 
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { getStoredReferralCode } from "../utils/referralStorage";
 
 const AFFILIATE_STORAGE_KEY = "sos_affiliate_ref";
@@ -111,63 +109,14 @@ export function appendAffiliateRef(path: string): string {
  * Place this once in App.tsx inside the Router.
  * This is the SAFETY NET that catches ALL navigation methods.
  */
-let _affiliateRefSyncCount = 0;
-
+/**
+ * AffiliateRefSync - DISABLED (2026-03-10)
+ *
+ * Was causing infinite redirect loops with LocaleRouter.
+ * Not needed: referral codes are already persisted in localStorage (30 days)
+ * via ReferralCodeCapture + useReferralCapture + AffiliatePathCapture.
+ * The ?ref= in URL was purely cosmetic.
+ */
 export function AffiliateRefSync(): null {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    _affiliateRefSyncCount++;
-    const callNum = _affiliateRefSyncCount;
-    const ref = getAffiliateRef();
-
-    console.warn(`🔴 [AffiliateRefSync] #${callNum} FIRED`, {
-      ref,
-      pathname: location.pathname,
-      search: location.search,
-      hash: location.hash,
-    });
-
-    if (!ref) {
-      console.warn(`🔴 [AffiliateRefSync] #${callNum} → NO REF, skipping`);
-      return;
-    }
-
-    // Skip admin routes
-    if (location.pathname.includes("/admin")) {
-      console.warn(`🔴 [AffiliateRefSync] #${callNum} → ADMIN route, skipping`);
-      return;
-    }
-
-    // Check if ref is already in the current URL
-    const currentParams = new URLSearchParams(location.search);
-    if (currentParams.has(AFFILIATE_PARAM)) {
-      console.warn(`🔴 [AffiliateRefSync] #${callNum} → REF already in URL, skipping`);
-      return;
-    }
-
-    // SAFETY: Prevent infinite loop — max 3 navigations
-    if (_affiliateRefSyncCount > 10) {
-      console.error(`🔴 [AffiliateRefSync] #${callNum} → LOOP DETECTED, aborting!`);
-      return;
-    }
-
-    // Inject the ref param into the current URL
-    currentParams.set(AFFILIATE_PARAM, ref);
-    const newSearch = `?${currentParams.toString()}`;
-
-    console.warn(`🔴 [AffiliateRefSync] #${callNum} → NAVIGATING to add ref`, {
-      from: location.pathname + location.search,
-      to: location.pathname + newSearch,
-    });
-
-    // Use replace to avoid polluting browser history
-    navigate(
-      { pathname: location.pathname, search: newSearch, hash: location.hash },
-      { replace: true }
-    );
-  }, [location.pathname, location.search]); // React to path AND search changes (guarded by early return above)
-
   return null;
 }
