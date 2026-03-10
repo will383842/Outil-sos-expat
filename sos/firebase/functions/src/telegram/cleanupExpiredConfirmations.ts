@@ -64,6 +64,16 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
         try {
           await db.runTransaction(async (transaction) => {
             // === ALL READS FIRST (Firestore requirement) ===
+            // Read the withdrawal doc to get totalDebited (includes $3 fee)
+            const withdrawalRef = db
+              .collection(confirmation.collection)
+              .doc(confirmation.withdrawalId);
+            const withdrawalSnap = await transaction.get(withdrawalRef);
+            const withdrawalData = withdrawalSnap.exists ? withdrawalSnap.data() : null;
+
+            // Use totalDebited (amount + fee) for correct refund
+            const refundAmount = withdrawalData?.totalDebited || confirmation.amount;
+
             // For affiliate role, read the payout doc to get commissionIds
             let payoutSnap: FirebaseFirestore.DocumentSnapshot | null = null;
             if (confirmation.role === "affiliate") {
@@ -80,10 +90,6 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
             });
 
             // 2. Cancel withdrawal + refund balance
-            const withdrawalRef = db
-              .collection(confirmation.collection)
-              .doc(confirmation.withdrawalId);
-
             transaction.update(withdrawalRef, {
               status: "cancelled",
               cancelledAt: now.toDate().toISOString(),
@@ -96,11 +102,11 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
               }),
             });
 
-            // 3. Refund balance
+            // 3. Refund balance (using totalDebited to include the $3 fee)
             if (confirmation.role === "groupAdmin") {
               const gaRef = db.collection("group_admins").doc(confirmation.userId);
               transaction.update(gaRef, {
-                availableBalance: FieldValue.increment(confirmation.amount),
+                availableBalance: FieldValue.increment(refundAmount),
                 pendingWithdrawalId: null,
                 updatedAt: now,
               });
@@ -108,7 +114,7 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
               // Affiliate: balance is on users/{userId} doc + restore commissions
               const userRef = db.collection("users").doc(confirmation.userId);
               transaction.update(userRef, {
-                availableBalance: FieldValue.increment(confirmation.amount),
+                availableBalance: FieldValue.increment(refundAmount),
                 pendingPayoutId: null,
                 updatedAt: now,
               });
@@ -126,17 +132,20 @@ export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
                 }
               }
             } else {
-              // Chatter/Influencer/Blogger: refund to their collection
+              // Chatter/Influencer/Blogger/Captain/Partner: refund to their collection
               const roleCollections: Record<string, string> = {
                 chatter: "chatters",
                 influencer: "influencers",
                 blogger: "bloggers",
+                captain: "chatters",
+                partner: "partners",
               };
               const col = roleCollections[confirmation.role];
               if (col) {
                 const roleRef = db.collection(col).doc(confirmation.userId);
                 transaction.update(roleRef, {
-                  availableBalance: FieldValue.increment(confirmation.amount),
+                  availableBalance: FieldValue.increment(refundAmount),
+                  pendingWithdrawalId: null,
                   updatedAt: now,
                 });
               }

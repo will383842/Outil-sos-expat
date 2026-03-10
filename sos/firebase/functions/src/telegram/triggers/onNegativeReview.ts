@@ -20,8 +20,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
 import type { NegativeReviewVars } from "../types";
 
@@ -337,19 +335,8 @@ export const telegramOnNegativeReview = onDocumentCreated(
         time: variables.TIME,
       });
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const success = await telegramNotificationService.sendNotification(
-      //   "negative_review",
-      //   variables
-      // );
-      // if (success) {
-      //   logger.info(`${LOG_PREFIX} Notification sent successfully for review ${reviewId}`);
-      // } else {
-      //   logger.warn(`${LOG_PREFIX} Failed to send notification for review ${reviewId}`);
-      // }
-
-      // 6. Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("negative.review", reviewData.clientId, {
+      // 6. Forward to Telegram Engine
+      await forwardEventToEngine("negative.review", reviewData.clientId, {
         reviewId,
         rating,
         comment: reviewData.comment,

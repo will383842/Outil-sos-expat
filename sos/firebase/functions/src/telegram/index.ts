@@ -14,7 +14,6 @@ export { telegramOnNewCaptainApplication } from "./triggers/onNewCaptainApplicat
 export { telegramDailyReport } from "./scheduled/dailyReport";
 
 // Callables (admin)
-export { telegram_sendTestNotification } from "./callables/sendTestNotification";
 export {
   telegram_updateConfig,
   telegram_getConfig,
@@ -41,8 +40,8 @@ export { monitorTelegramUsage } from "./queue/monitor";
 export { processTelegramCampaigns } from "./queue/campaignProcessor";
 export { enqueueTelegramMessage, enqueueTelegramNotification } from "./queue/enqueue";
 
-// Service (for internal use)
-export { telegramNotificationService, TelegramNotificationService } from "./TelegramNotificationService";
+// Forward to Engine
+export { forwardEventToEngine } from "./forwardToEngine";
 
 // Types (re-export for convenience)
 export * from "./types";

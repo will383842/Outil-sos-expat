@@ -14,6 +14,7 @@ export { telegramOnNewContactMessage } from './telegram/triggers/onNewContactMes
 export { telegramOnSecurityAlert } from './telegram/triggers/onSecurityAlert';
 export { telegramOnNegativeReview } from './telegram/triggers/onNegativeReview';
 export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalRequest';
+export { telegramOnNewCaptainApplication } from './telegram/triggers/onNewCaptainApplication';
 
 // Scheduled
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';

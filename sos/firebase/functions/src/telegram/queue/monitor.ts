@@ -43,13 +43,13 @@ async function countSubscribers(db: admin.firestore.Firestore): Promise<{
   total: number;
   breakdown: TelegramSubscriberStats['breakdown'];
 }> {
-  // Count telegram_id across all affiliate collections + admin config
-  // Using where(field, '>', '') instead of '!= null' to avoid composite index requirement (W8)
+  // Count telegramId across all affiliate collections + admin config
+  // Field name is camelCase (set by telegramOnboarding.ts)
   const collections = [
-    { name: 'chatters', field: 'telegram_id' },
-    { name: 'influencers', field: 'telegram_id' },
-    { name: 'bloggers', field: 'telegram_id' },
-    { name: 'group_admins', field: 'telegram_id' },
+    { name: 'chatters', field: 'telegramId' },
+    { name: 'influencers', field: 'telegramId' },
+    { name: 'bloggers', field: 'telegramId' },
+    { name: 'group_admins', field: 'telegramId' },
   ];
 
   const breakdown: NonNullable<TelegramSubscriberStats['breakdown']> = {
@@ -70,8 +70,8 @@ async function countSubscribers(db: admin.firestore.Firestore): Promise<{
   // Run all counts in parallel
   const countPromises = collections.map(async ({ name, field }, i) => {
     try {
-      // Two separate queries: one for active status, count those with telegram_id
-      // Using where(field, '>', 0) for numeric telegram_id (more index-friendly than '!= null')
+      // Two separate queries: one for active status, count those with telegramId
+      // Using where(field, '>', 0) for numeric telegramId (more index-friendly than '!= null')
       const snap = await db
         .collection(name)
         .where('status', '==', 'active')

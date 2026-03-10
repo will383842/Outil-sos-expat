@@ -8,11 +8,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
-// [MIGRATION LARAVEL] Type kept for reference
-// import type { CaptainApplicationVars } from "../types";
 
 const LOG_PREFIX = "[telegramOnNewCaptainApplication]";
 
@@ -51,19 +47,8 @@ export const telegramOnNewCaptainApplication = onDocumentCreated(
       const country = data.country || "N/A";
       const motivation = data.motivation || "";
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const success = await telegramNotificationService.sendNotification(
-      //   "captain_application",
-      //   variables
-      // );
-      // if (success) {
-      //   logger.info(`${LOG_PREFIX} Notification sent`, { applicationId });
-      // } else {
-      //   logger.warn(`${LOG_PREFIX} Failed to send notification`, { applicationId });
-      // }
-
-      // Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("captain.application", undefined, {
+      // Forward to Telegram Engine
+      await forwardEventToEngine("captain.application", undefined, {
         applicationId,
         name,
         whatsapp,

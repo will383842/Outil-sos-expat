@@ -8,7 +8,7 @@
  * - Listens to call_sessions/{sessionId} document updates
  * - Only triggers when status changes TO "completed" (not already completed)
  * - Applies minimum duration filter (default 60 seconds = 1 minute)
- * - Sends notification via TelegramNotificationService
+ * - Forwards event to Telegram Engine
  * - Handles errors gracefully without throwing
  */
 
@@ -18,8 +18,6 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
 import { getRoleFrench } from "../types";
 
@@ -280,21 +278,8 @@ export const telegramOnCallCompleted = onDocumentUpdated(
         variables,
       });
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const minDurationMinutes = minDurationSeconds / 60;
-      // const success = await telegramNotificationService.sendNotification(
-      //   "call_completed",
-      //   variables,
-      //   { minDuration: minDurationMinutes }
-      // );
-      // if (success) {
-      //   logger.info(`${LOG_PREFIX} Notification sent successfully`, { sessionId });
-      // } else {
-      //   logger.warn(`${LOG_PREFIX} Notification not sent`, { sessionId });
-      // }
-
-      // 9. Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("call.completed", clientId, {
+      // 9. Forward to Telegram Engine
+      await forwardEventToEngine("call.completed", clientId, {
         sessionId,
         clientName,
         providerName,

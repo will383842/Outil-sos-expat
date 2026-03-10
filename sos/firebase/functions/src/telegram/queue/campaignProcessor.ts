@@ -53,7 +53,7 @@ function parseTargetAudience(targetAudience: string): string[] | "all" {
 export const processTelegramCampaigns = onSchedule(
   {
     schedule: "*/5 * * * *", // Every 5 minutes (optimized from every minute - saves ~80% invocations)
-    region: "europe-west1",
+    region: "europe-west3",
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 240, // Increased to process larger batches per run
@@ -207,8 +207,8 @@ async function enqueueNextBatch(
     // All users with telegram_id
     let q = db
       .collection("users")
-      .where("telegram_id", "!=", "")
-      .orderBy("telegram_id")
+      .where("telegramId", "!=", "")
+      .orderBy("telegramId")
       .orderBy(admin.firestore.FieldPath.documentId());
 
     if (lastProcessedUserId) {
@@ -227,9 +227,9 @@ async function enqueueNextBatch(
     for (const role of roles) {
       let q = db
         .collection("users")
-        .where("telegram_id", "!=", "")
+        .where("telegramId", "!=", "")
         .where("role", "==", role)
-        .orderBy("telegram_id")
+        .orderBy("telegramId")
         .orderBy(admin.firestore.FieldPath.documentId());
 
       if (lastProcessedUserId) {
@@ -257,7 +257,7 @@ async function enqueueNextBatch(
 
   for (const userDoc of allUserDocs) {
     const userData = userDoc.data();
-    const chatId = userData.telegram_id;
+    const chatId = userData.telegramId;
     if (!chatId) continue;
 
     try {

@@ -24,8 +24,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
 import type { PaymentReceivedVars } from "../types";
 
@@ -262,15 +260,8 @@ export const telegramOnPayPalPaymentReceived = onDocumentWritten(
         paymentMethod: "PayPal",
       });
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const success = await telegramNotificationService.sendNotification(
-      //   "payment_received",
-      //   variables,
-      //   { minAmount: minAmount }
-      // );
-
-      // 8. Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("paypal.payment", undefined, {
+      // 8. Forward to Telegram Engine
+      await forwardEventToEngine("paypal.payment", undefined, {
         orderId,
         amount: totalAmountEur,
         commission: commissionAmountEur,

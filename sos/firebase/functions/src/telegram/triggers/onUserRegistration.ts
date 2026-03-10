@@ -14,8 +14,6 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
 import { ROLE_TRANSLATIONS_FR, UserRole } from "../types";
 
@@ -171,19 +169,8 @@ export async function handleTelegramUserRegistration(event: any) {
         variables,
       });
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const success = await telegramNotificationService.sendNotification(
-      //   "new_registration",
-      //   variables
-      // );
-      // if (success) {
-      //   logger.info("[telegramOnUserRegistration] Notification sent successfully", { userId });
-      // } else {
-      //   logger.warn("[telegramOnUserRegistration] Failed to send notification", { userId });
-      // }
-
-      // 6. Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("user.registered", userId, {
+      // 6. Forward to Telegram Engine
+      await forwardEventToEngine("user.registered", userId, {
         displayName: email,
         email,
         role,

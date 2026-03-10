@@ -15,8 +15,6 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
 import type { SecurityAlertVars } from "../types";
 
@@ -196,19 +194,8 @@ export const telegramOnSecurityAlert = onDocumentCreated(
         variables,
       });
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const success = await telegramNotificationService.sendNotification(
-      //   "security_alert",
-      //   variables
-      // );
-      // if (success) {
-      //   logger.info(`${LOG_PREFIX} Notification sent successfully`, { alertId });
-      // } else {
-      //   logger.warn(`${LOG_PREFIX} Failed to send notification`, { alertId });
-      // }
-
-      // 6. Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("security.alert", undefined, {
+      // 6. Forward to Telegram Engine
+      await forwardEventToEngine("security.alert", undefined, {
         alertId,
         alertType,
         userEmail,

@@ -20,8 +20,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
-// import { telegramNotificationService } from "../TelegramNotificationService";
 import { forwardEventToEngine } from "../forwardToEngine";
 import type { WithdrawalRequestVars } from "../types";
 
@@ -363,19 +361,8 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
         time: variables.TIME,
       });
 
-      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
-      // const success = await telegramNotificationService.sendNotification(
-      //   "withdrawal_request",
-      //   variables
-      // );
-      // if (success) {
-      //   logger.info(`${LOG_PREFIX} Notification sent successfully for withdrawal ${withdrawalId}`);
-      // } else {
-      //   logger.warn(`${LOG_PREFIX} Failed to send notification for withdrawal ${withdrawalId}`);
-      // }
-
-      // 7. Forward to Telegram Engine (Laravel primary)
-      forwardEventToEngine("withdrawal.requested", withdrawalData.userId, {
+      // 7. Forward to Telegram Engine
+      await forwardEventToEngine("withdrawal.requested", withdrawalData.userId, {
         withdrawalId,
         amount,
         userType: withdrawalData.userType,

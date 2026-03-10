@@ -17,8 +17,9 @@ import * as admin from 'firebase-admin';
 import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { TELEGRAM_BOT_TOKEN } from '../../lib/secrets';
-import { telegramNotificationService } from '../TelegramNotificationService';
-import { DailyReportVars } from '../types';
+import { enqueueTelegramMessage } from '../queue/enqueue';
+import { forwardEventToEngine } from '../forwardToEngine';
+import { I18N_TEMPLATES } from '../templates';
 
 // ============================================================================
 // CONSTANTS
@@ -389,9 +390,9 @@ export const telegramDailyReport = onSchedule(
         ? paymentResult.totalCommissionActual
         : totalPayments * COMMISSION_RATE_FALLBACK;
 
-      // 5. Build template variables
+      // 5. Build report message from template
       const now = new Date();
-      const variables: DailyReportVars = {
+      const variables: Record<string, string> = {
         DATE: formatDateParis(now),
         DAILY_CA: totalPayments.toFixed(2),
         DAILY_COMMISSION: commission.toFixed(2),
@@ -402,36 +403,42 @@ export const telegramDailyReport = onSchedule(
 
       logger.info(`${LOG_PREFIX} Report variables:`, variables);
 
-      // 6. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification('daily_report', variables);
+      // 6. Get admin chat ID and send directly via queue
+      const configDoc = await db.collection('telegram_admin_config').doc('settings').get();
+      const recipientChatId = configDoc.exists ? configDoc.data()?.recipientChatId : null;
+
+      if (!recipientChatId) {
+        logger.warn(`${LOG_PREFIX} No recipientChatId configured, skipping`);
+        return;
+      }
+
+      // Render template with variables
+      let message = I18N_TEMPLATES.fr.daily_report.template;
+      for (const [key, value] of Object.entries(variables)) {
+        message = message.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value);
+      }
+
+      // Enqueue via Telegram queue
+      await enqueueTelegramMessage(recipientChatId, message, {
+        parseMode: 'Markdown',
+        priority: 'realtime',
+        sourceEventType: 'daily_report',
+      });
+
+      // Also forward to Telegram Engine
+      await forwardEventToEngine('daily.report', undefined, variables);
 
       // 7. Log execution result
       const executionTime = Date.now() - startTime;
+      logger.info(`${LOG_PREFIX} Daily report sent successfully in ${executionTime}ms`);
 
-      if (success) {
-        logger.info(`${LOG_PREFIX} Daily report sent successfully in ${executionTime}ms`);
-
-        // Log to system_logs for monitoring
-        await db.collection('system_logs').add({
-          type: 'telegram_daily_report',
-          success: true,
-          data: variables,
-          executionTimeMs: executionTime,
-          createdAt: admin.firestore.Timestamp.now(),
-        });
-      } else {
-        logger.error(`${LOG_PREFIX} Failed to send daily report`);
-
-        // Log error to system_logs
-        await db.collection('system_logs').add({
-          type: 'telegram_daily_report',
-          success: false,
-          data: variables,
-          error: 'Notification service returned false',
-          executionTimeMs: executionTime,
-          createdAt: admin.firestore.Timestamp.now(),
-        });
-      }
+      await db.collection('system_logs').add({
+        type: 'telegram_daily_report',
+        success: true,
+        data: variables,
+        executionTimeMs: executionTime,
+        createdAt: admin.firestore.Timestamp.now(),
+      });
     } catch (error) {
       const executionTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

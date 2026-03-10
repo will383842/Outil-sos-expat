@@ -333,6 +333,8 @@ export async function handleWithdrawalCallback(
     return;
   }
 
+  const now = Timestamp.now();
+
   // Check expiry — P1-02 FIX: also cancel the withdrawal and refund balance
   if (confirmation.expiresAt.toMillis() < Date.now()) {
     try {
@@ -399,8 +401,6 @@ export async function handleWithdrawalCallback(
     }
     return;
   }
-
-  const now = Timestamp.now();
   const amountFormatted = (confirmation.amount / 100).toFixed(2);
 
   if (action === "confirm") {
