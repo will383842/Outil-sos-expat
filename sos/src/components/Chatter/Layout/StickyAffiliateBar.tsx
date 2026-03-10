@@ -15,6 +15,8 @@ const StickyAffiliateBar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const lastScrollY = useRef(0);
+  const barRef = useRef<HTMLDivElement>(null);
+  const isTransitioning = useRef(false);
 
   const affiliateCodeClient = dashboardData?.chatter?.affiliateCodeClient ?? '';
   const affiliateCodeRecruitment = dashboardData?.chatter?.affiliateCodeRecruitment ?? '';
@@ -37,23 +39,70 @@ const StickyAffiliateBar: React.FC = () => {
   }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer, config?.commissionProviderCallAmount, config?.commissionN1CallAmount]);
 
   // Collapse on scroll down, expand on scroll up
-  // Uses a delta threshold to prevent feedback loops caused by the sticky bar's
-  // own height change shifting content and re-triggering scroll events.
+  // Compensates scroll position to prevent content jumping
   useEffect(() => {
     const handleScroll = () => {
+      if (isTransitioning.current) return;
       const currentScrollY = window.scrollY;
       const delta = currentScrollY - lastScrollY.current;
-      // Only react to intentional scrolls (delta > threshold), not layout-shift micro-scrolls
-      if (delta > 12 && currentScrollY > 80) {
+      if (delta > 12 && currentScrollY > 80 && !collapsed) {
+        isTransitioning.current = true;
+        // Measure height before collapse
+        const heightBefore = barRef.current?.offsetHeight ?? 0;
         setCollapsed(true);
-      } else if (delta < -12) {
+        // After React renders, compensate scroll position
+        requestAnimationFrame(() => {
+          const heightAfter = barRef.current?.offsetHeight ?? 0;
+          const diff = heightBefore - heightAfter;
+          if (diff > 0) {
+            window.scrollBy(0, -diff);
+          }
+          lastScrollY.current = window.scrollY;
+          isTransitioning.current = false;
+        });
+      } else if (delta < -12 && collapsed) {
+        isTransitioning.current = true;
+        const heightBefore = barRef.current?.offsetHeight ?? 0;
         setCollapsed(false);
+        requestAnimationFrame(() => {
+          const heightAfter = barRef.current?.offsetHeight ?? 0;
+          const diff = heightAfter - heightBefore;
+          if (diff > 0) {
+            window.scrollBy(0, diff);
+          }
+          lastScrollY.current = window.scrollY;
+          isTransitioning.current = false;
+        });
+      } else {
+        lastScrollY.current = currentScrollY;
       }
-      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, [collapsed]);
+
+  // Manual toggle handlers (button clicks) — also compensate scroll
+  const handleManualCollapse = useCallback(() => {
+    const heightBefore = barRef.current?.offsetHeight ?? 0;
+    setCollapsed(true);
+    requestAnimationFrame(() => {
+      const heightAfter = barRef.current?.offsetHeight ?? 0;
+      const diff = heightBefore - heightAfter;
+      if (diff > 0) window.scrollBy(0, -diff);
+      lastScrollY.current = window.scrollY;
+    });
+  }, []);
+
+  const handleManualExpand = useCallback(() => {
+    const heightBefore = barRef.current?.offsetHeight ?? 0;
+    setCollapsed(false);
+    requestAnimationFrame(() => {
+      const heightAfter = barRef.current?.offsetHeight ?? 0;
+      const diff = heightAfter - heightBefore;
+      if (diff > 0) window.scrollBy(0, diff);
+      lastScrollY.current = window.scrollY;
+    });
   }, []);
 
   const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment' | 'provider') => {
@@ -128,10 +177,10 @@ const StickyAffiliateBar: React.FC = () => {
     }
   }, [intl]);
 
-  // ── COLLAPSED: minimal bar with compact copy buttons (provider hidden on narrow screens) ──
-  if (collapsed) {
-    return (
-      <div className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
+  return (
+    <div ref={barRef} className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
+      {/* ── COLLAPSED: compact copy buttons ── */}
+      {collapsed && (
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-center gap-1.5 flex-wrap">
           <button
             onClick={() => handleCopy(clientShareUrl ?? '', 'client')}
@@ -180,96 +229,94 @@ const StickyAffiliateBar: React.FC = () => {
           </button>
 
           <button
-            onClick={() => { setCollapsed(false); lastScrollY.current = window.scrollY + 200; }}
+            onClick={handleManualExpand}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white transition-colors"
             aria-label="Expand"
           >
             <ChevronDown className="w-4 h-4" />
           </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  // ── EXPANDED: full link cards ──
-  return (
-    <div className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06] will-change-[height] transition-all duration-200">
-      <div className="max-w-7xl mx-auto px-3 py-2">
-        <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
+      {/* ── EXPANDED: full link cards ── */}
+      {!collapsed && (
+        <div className="max-w-7xl mx-auto px-3 py-2">
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
 
-          {/* ── Client link card ── */}
-          <LinkCard
-            type="client"
-            icon={<Users className="w-4 h-4 text-emerald-400" />}
-            label={intl.formatMessage({ id: 'chatter.bar.clientLabel', defaultMessage: 'Client link' })}
-            commission={callAmountRange}
-            commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
-            code={affiliateCodeClient}
-            count={totalClients}
-            copied={copiedClient}
-            colorScheme="emerald"
-            onCopy={() => handleCopy(clientShareUrl ?? '', 'client')}
-            onShare={() => handleShare(clientShareUrl ?? '', 'client')}
-            tooltip={intl.formatMessage({
-              id: 'chatter.bar.clientTooltip',
-              defaultMessage: 'Share this link. When someone calls a provider through your link, you earn {amount} per paid call.',
-            }, { amount: callAmountRange })}
-          />
+            {/* ── Client link card ── */}
+            <LinkCard
+              type="client"
+              icon={<Users className="w-4 h-4 text-emerald-400" />}
+              label={intl.formatMessage({ id: 'chatter.bar.clientLabel', defaultMessage: 'Client link' })}
+              commission={callAmountRange}
+              commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
+              code={affiliateCodeClient}
+              count={totalClients}
+              copied={copiedClient}
+              colorScheme="emerald"
+              onCopy={() => handleCopy(clientShareUrl ?? '', 'client')}
+              onShare={() => handleShare(clientShareUrl ?? '', 'client')}
+              tooltip={intl.formatMessage({
+                id: 'chatter.bar.clientTooltip',
+                defaultMessage: 'Share this link. When someone calls a provider through your link, you earn {amount} per paid call.',
+              }, { amount: callAmountRange })}
+            />
 
-          {/* Divider (desktop) */}
-          <div className="hidden sm:block w-px bg-white/[0.06] shrink-0 self-stretch" />
+            {/* Divider (desktop) */}
+            <div className="hidden sm:block w-px bg-white/[0.06] shrink-0 self-stretch" />
 
-          {/* ── Recruitment link card ── */}
-          <LinkCard
-            type="recruitment"
-            icon={<UserPlus className="w-4 h-4 text-violet-400" />}
-            label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruit team' })}
-            commission={`$${n1CallAmount}`}
-            commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
-            code={affiliateCodeRecruitment}
-            count={totalRecruits}
-            copied={copiedRecruitment}
-            colorScheme="violet"
-            onCopy={() => handleCopy(recruitmentShareUrl ?? '', 'recruitment')}
-            onShare={() => handleShare(recruitmentShareUrl ?? '', 'recruitment')}
-            tooltip={intl.formatMessage({
-              id: 'chatter.bar.recruitmentTooltip',
-              defaultMessage: 'Share this link to recruit other chatters to your team. When your recruits generate calls, you earn ${amount} per call (N1 commission, forever).',
-            }, { amount: `$${n1CallAmount}` })}
-          />
+            {/* ── Recruitment link card ── */}
+            <LinkCard
+              type="recruitment"
+              icon={<UserPlus className="w-4 h-4 text-violet-400" />}
+              label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruit team' })}
+              commission={`$${n1CallAmount}`}
+              commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
+              code={affiliateCodeRecruitment}
+              count={totalRecruits}
+              copied={copiedRecruitment}
+              colorScheme="violet"
+              onCopy={() => handleCopy(recruitmentShareUrl ?? '', 'recruitment')}
+              onShare={() => handleShare(recruitmentShareUrl ?? '', 'recruitment')}
+              tooltip={intl.formatMessage({
+                id: 'chatter.bar.recruitmentTooltip',
+                defaultMessage: 'Share this link to recruit other chatters to your team. When your recruits generate calls, you earn ${amount} per call (N1 commission, forever).',
+              }, { amount: `$${n1CallAmount}` })}
+            />
 
-          {/* Divider (desktop) */}
-          <div className="hidden sm:block w-px bg-white/[0.06] shrink-0 self-stretch" />
+            {/* Divider (desktop) */}
+            <div className="hidden sm:block w-px bg-white/[0.06] shrink-0 self-stretch" />
 
-          {/* ── Provider link card ── */}
-          <LinkCard
-            type="provider"
-            icon={<Briefcase className="w-4 h-4 text-teal-400" />}
-            label={intl.formatMessage({ id: 'chatter.bar.providerLabel', defaultMessage: 'Recruit providers' })}
-            commission={`$${providerCallAmount}`}
-            commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
-            code={affiliateCodeProvider}
-            count={totalProviderRecruits}
-            copied={copiedProvider}
-            colorScheme="teal"
-            onCopy={() => handleCopy(providerShareUrl ?? '', 'provider')}
-            onShare={() => handleShare(providerShareUrl ?? '', 'provider')}
-            tooltip={intl.formatMessage({
-              id: 'chatter.bar.providerTooltip',
-              defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive paid calls, you earn ${amount} per call for 6 months.',
-            }, { amount: providerCallAmount })}
-          />
+            {/* ── Provider link card ── */}
+            <LinkCard
+              type="provider"
+              icon={<Briefcase className="w-4 h-4 text-teal-400" />}
+              label={intl.formatMessage({ id: 'chatter.bar.providerLabel', defaultMessage: 'Recruit providers' })}
+              commission={`$${providerCallAmount}`}
+              commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
+              code={affiliateCodeProvider}
+              count={totalProviderRecruits}
+              copied={copiedProvider}
+              colorScheme="teal"
+              onCopy={() => handleCopy(providerShareUrl ?? '', 'provider')}
+              onShare={() => handleShare(providerShareUrl ?? '', 'provider')}
+              tooltip={intl.formatMessage({
+                id: 'chatter.bar.providerTooltip',
+                defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive paid calls, you earn ${amount} per call for 6 months.',
+              }, { amount: providerCallAmount })}
+            />
+          </div>
+
+          {/* Collapse button (mobile only) */}
+          <button
+            onClick={handleManualCollapse}
+            className="sm:hidden w-full flex items-center justify-center gap-1 pt-1 pb-0.5 text-[10px] text-slate-500 active:text-slate-300 transition-colors"
+          >
+            <ChevronUp className="w-3 h-3" />
+            <FormattedMessage id="chatter.bar.collapse" defaultMessage="Collapse" />
+          </button>
         </div>
-
-        {/* Collapse button (mobile only) */}
-        <button
-          onClick={() => setCollapsed(true)}
-          className="sm:hidden w-full flex items-center justify-center gap-1 pt-1 pb-0.5 text-[10px] text-slate-500 active:text-slate-300 transition-colors"
-        >
-          <ChevronUp className="w-3 h-3" />
-          <FormattedMessage id="chatter.bar.collapse" defaultMessage="Collapse" />
-        </button>
-      </div>
+      )}
     </div>
   );
 };
