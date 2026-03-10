@@ -263,6 +263,9 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
               <p className="text-sm font-medium text-slate-900 dark:text-white">
                 <FormattedMessage id="chatter.activation.telegramBonus" defaultMessage="BONUS : Liez Telegram = +$50 offerts" />
               </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                <FormattedMessage id="chatter.activation.telegramUnlockCondition" defaultMessage="Debloque apres $150 de commissions client" />
+              </p>
               {onNavigateToTelegram && (
                 <button
                   onClick={onNavigateToTelegram}

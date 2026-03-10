@@ -247,6 +247,10 @@ body.wizard-scroll-lock {
     overflow-x: hidden !important;
     max-width: 100% !important;
     width: 100% !important;
+  }
+  /* position:relative only on html/#root — NOT body, because ScrollLockManager
+     needs to set body { position: fixed } for modals/drawers */
+  html, #root {
     position: relative !important;
   }
 

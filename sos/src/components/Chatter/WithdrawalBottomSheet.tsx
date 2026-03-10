@@ -59,12 +59,8 @@ const WithdrawalBottomSheet: React.FC<WithdrawalBottomSheetProps> = ({ isOpen, o
   useEffect(() => {
     if (isOpen) {
       lockScroll();
-    } else {
-      unlockScroll();
+      return () => unlockScroll();
     }
-    return () => {
-      if (isOpen) unlockScroll();
-    };
   }, [isOpen]);
 
   // Reset state when closed

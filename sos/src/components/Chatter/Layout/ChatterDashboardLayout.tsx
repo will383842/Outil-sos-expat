@@ -45,7 +45,7 @@ import { ShareHub } from '@/components/Chatter/ViralKit/ShareHub';
 import { UI, CHATTER_THEME, LEVEL_COLORS } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
-import { lockScroll, unlockScroll } from '@/utils/scrollLockManager';
+import { lockScroll, unlockScroll, forceUnlockScroll } from '@/utils/scrollLockManager';
 
 interface ChatterDashboardLayoutProps {
   children: ReactNode;
@@ -483,16 +483,17 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     }
   }, [logout, navigate, loggingOut, loginRoute]);
 
+  // Safety: force-clear any stuck scroll locks from previous pages on mount
+  useEffect(() => {
+    forceUnlockScroll();
+  }, []);
+
   // Lock body scroll when drawer is open (via centralized ScrollLockManager)
   useEffect(() => {
     if (isDrawerOpen) {
       lockScroll();
-    } else {
-      unlockScroll();
+      return () => unlockScroll();
     }
-    return () => {
-      if (isDrawerOpen) unlockScroll();
-    };
   }, [isDrawerOpen]);
 
   // Translated routes (6 main + captain + extras)
@@ -683,7 +684,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
             </aside>
 
             {/* MAIN CONTENT */}
-            <main className="min-w-0 pb-24 lg:pb-0 [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]">
+            <main className="min-w-0 pb-24 lg:pb-0">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
