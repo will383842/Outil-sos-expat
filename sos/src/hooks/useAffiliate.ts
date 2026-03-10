@@ -656,14 +656,14 @@ export function getStoredReferralCode(): string | null {
 export function getStoredReferralTracking(): ReferralTracking | null {
   const stored = getStored('client');
   if (!stored) return null;
-  return {
-    code: stored.code,
-    utmSource: stored.utmSource,
-    utmMedium: stored.utmMedium,
-    utmCampaign: stored.utmCampaign,
-    landingPage: stored.landingPage,
-    capturedAt: stored.capturedAt,
-  };
+  // Filter out undefined values — Firestore rejects them
+  const tracking: Record<string, string> = { code: stored.code };
+  if (stored.utmSource) tracking.utmSource = stored.utmSource;
+  if (stored.utmMedium) tracking.utmMedium = stored.utmMedium;
+  if (stored.utmCampaign) tracking.utmCampaign = stored.utmCampaign;
+  if (stored.landingPage) tracking.landingPage = stored.landingPage;
+  if (stored.capturedAt) tracking.capturedAt = stored.capturedAt;
+  return tracking as unknown as ReferralTracking;
 }
 
 /**
