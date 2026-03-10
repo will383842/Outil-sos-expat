@@ -246,7 +246,7 @@ const BloggerDashboard: React.FC = () => {
             <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-green-100 dark:to-green-800/20 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm dark:text-white font-semibold">
-                  <FormattedMessage id="blogger.dashboard.clientLink" defaultMessage="Lien client (10$/appel)" />
+                  <FormattedMessage id="blogger.dashboard.clientLink" defaultMessage="Lien client ({amount}$/appel)" values={{ amount: ((dashboardData?.config?.commissionClientAmount ?? 1000) / 100).toFixed(0) }} />
                 </span>
                 <span className="text-sm dark:text-green-300 font-bold bg-green-200 dark:bg-green-800/50 px-3 py-1.5 rounded-full">
                   {blogger.affiliateCodeClient}
@@ -286,7 +286,7 @@ const BloggerDashboard: React.FC = () => {
             <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-blue-100 dark:to-blue-800/20 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm dark:text-white font-semibold">
-                  <FormattedMessage id="blogger.dashboard.recruitLink" defaultMessage="Lien recrutement (5$/appel, 6 mois)" />
+                  <FormattedMessage id="blogger.dashboard.recruitLink" defaultMessage="Lien recrutement ({amount}$/appel, {months} mois)" values={{ amount: ((dashboardData?.config?.commissionRecruitmentAmount ?? 500) / 100).toFixed(0), months: dashboardData?.config?.recruitmentWindowMonths ?? 6 }} />
                 </span>
                 <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
                   {blogger.affiliateCodeRecruitment}

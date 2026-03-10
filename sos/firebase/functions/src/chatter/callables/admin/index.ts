@@ -917,6 +917,9 @@ export const adminUpdateChatterConfig = onCall(
         "monthlyCompetitionPrizes",
         "trainingEnabled",
         "isChatterListingPageVisible",
+        "telegramBonusAmount",
+        "piggyBankUnlockThreshold",
+        "competitionEligibilityMinimum",
       ];
 
       const sanitizedUpdates: Record<string, unknown> = {};

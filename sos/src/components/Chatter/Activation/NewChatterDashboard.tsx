@@ -261,13 +261,13 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
               <Send className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-              <FormattedMessage id="chatter.new.telegramTitle" defaultMessage="Liez Telegram = $50 offerts" />
+              <FormattedMessage id="chatter.new.telegramTitle" defaultMessage="Liez Telegram = {bonus} offerts" values={{ bonus: `$${((config?.telegramBonusAmount || 5000) / 100).toFixed(0)}` }} />
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
               <FormattedMessage id="chatter.new.telegramDesc" defaultMessage="Bonus credite immediatement a la liaison" />
             </p>
             <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">
-              <FormattedMessage id="chatter.new.telegramUnlockCondition" defaultMessage="Unlocked after $150 in client commissions" />
+              <FormattedMessage id="chatter.new.telegramUnlockCondition" defaultMessage="Unlocked after {threshold} in client commissions" values={{ threshold: `$${((config?.piggyBankUnlockThreshold || 15000) / 100).toFixed(0)}` }} />
             </p>
             <button
               onClick={onNavigateToTelegram}

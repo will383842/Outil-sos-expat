@@ -13,7 +13,8 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { Chatter, ChatterNotification } from "../types";
+import { Chatter, ChatterNotification, REFERRAL_CONFIG } from "../types";
+import { getChatterConfig } from "../chatterConfig";
 import { calculateParrainN2 } from "../services/chatterReferralService";
 import { updateChatterChallengeScore } from "../scheduled/weeklyChallenges";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
@@ -56,6 +57,10 @@ export const chatterOnChatterCreated = onDocumentCreated(
     const now = Timestamp.now();
 
     try {
+      // Load config for dynamic amounts
+      const chatterConfigSettings = await getChatterConfig();
+      const telegramBonusAmt = `$${((chatterConfigSettings.telegramBonus?.amount ?? REFERRAL_CONFIG.TELEGRAM_BONUS.AMOUNT) / 100).toFixed(0)}`;
+
       // 1. Create welcome notification
       const notification: ChatterNotification = {
         id: "", // Will be set by Firestore
@@ -73,17 +78,17 @@ export const chatterOnChatterCreated = onDocumentCreated(
           zh: "欢迎加入 SOS-Expat Chatters！",
           ar: "مرحبًا بك في SOS-Expat Chatters!",
         },
-        message: "Votre compte est actif ! Connectez votre Telegram pour recevoir vos notifications et un bonus de 50$.",
+        message: `Votre compte est actif ! Connectez votre Telegram pour recevoir vos notifications et un bonus de ${telegramBonusAmt}.`,
         messageTranslations: {
-          fr: "Votre compte est actif ! Connectez votre Telegram pour recevoir vos notifications et un bonus de 50$.",
-          en: "Your account is active! Connect your Telegram to receive notifications and a $50 bonus.",
-          es: "¡Tu cuenta está activa! Conecta tu Telegram para recibir notificaciones y un bono de $50.",
-          de: "Ihr Konto ist aktiv! Verbinden Sie Ihr Telegram, um Benachrichtigungen und einen $50-Bonus zu erhalten.",
-          pt: "Sua conta está ativa! Conecte seu Telegram para receber notificações e um bônus de $50.",
-          ru: "Ваш аккаунт активен! Подключите Telegram, чтобы получать уведомления и бонус $50.",
-          hi: "आपका खाता सक्रिय है! सूचनाएं और $50 बोनस प्राप्त करने के लिए अपना टेलीग्राम कनेक्ट करें।",
-          zh: "您的账户已激活！连接您的 Telegram 以接收通知和 $50 奖金。",
-          ar: "حسابك نشط! اربط حساب Telegram الخاص بك لتلقي الإشعارات ومكافأة بقيمة 50$.",
+          fr: `Votre compte est actif ! Connectez votre Telegram pour recevoir vos notifications et un bonus de ${telegramBonusAmt}.`,
+          en: `Your account is active! Connect your Telegram to receive notifications and a ${telegramBonusAmt} bonus.`,
+          es: `¡Tu cuenta está activa! Conecta tu Telegram para recibir notificaciones y un bono de ${telegramBonusAmt}.`,
+          de: `Ihr Konto ist aktiv! Verbinden Sie Ihr Telegram, um Benachrichtigungen und einen ${telegramBonusAmt}-Bonus zu erhalten.`,
+          pt: `Sua conta está ativa! Conecte seu Telegram para receber notificações e um bônus de ${telegramBonusAmt}.`,
+          ru: `Ваш аккаунт активен! Подключите Telegram, чтобы получать уведомления и бонус ${telegramBonusAmt}.`,
+          hi: `आपका खाता सक्रिय है! सूचनाएं और ${telegramBonusAmt} बोनस प्राप्त करने के लिए अपना टेलीग्राम कनेक्ट करें।`,
+          zh: `您的账户已激活！连接您的 Telegram 以接收通知和 ${telegramBonusAmt} 奖金。`,
+          ar: `حسابك نشط! اربط حساب Telegram الخاص بك لتلقي الإشعارات ومكافأة بقيمة ${telegramBonusAmt}.`,
         },
         actionUrl: "/chatter/telegram",
         isRead: false,

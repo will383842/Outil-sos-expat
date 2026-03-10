@@ -56,7 +56,7 @@ const CATEGORY_CONFIG: CategoryConfig[] = [
   {
     key: 'clientReferrals',
     labelKey: 'influencer.earnings.clientReferrals',
-    defaultLabel: 'Client Referrals ($10/client)',
+    defaultLabel: 'Client Referrals',
     barGradient: 'from-red-500 to-orange-500',
     bgColor: 'bg-red-100 dark:bg-red-900/30',
     textColor: 'text-red-600 dark:text-red-400',
@@ -65,7 +65,7 @@ const CATEGORY_CONFIG: CategoryConfig[] = [
   {
     key: 'recruitmentCommissions',
     labelKey: 'influencer.earnings.recruitmentCommissions',
-    defaultLabel: 'Partner Commissions ($5/call)',
+    defaultLabel: 'Partner Commissions',
     barGradient: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',
     textColor: 'text-purple-600 dark:text-purple-400',

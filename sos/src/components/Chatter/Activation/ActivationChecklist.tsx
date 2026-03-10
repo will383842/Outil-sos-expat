@@ -261,10 +261,10 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-slate-900 dark:text-white">
-                <FormattedMessage id="chatter.activation.telegramBonus" defaultMessage="BONUS : Liez Telegram = +$50 offerts" />
+                <FormattedMessage id="chatter.activation.telegramBonus" defaultMessage="BONUS : Liez Telegram = +{bonus} offerts" values={{ bonus: `$${((config?.telegramBonusAmount || 5000) / 100).toFixed(0)}` }} />
               </p>
               <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                <FormattedMessage id="chatter.activation.telegramUnlockCondition" defaultMessage="Debloque apres $150 de commissions client" />
+                <FormattedMessage id="chatter.activation.telegramUnlockCondition" defaultMessage="Debloque apres {threshold} de commissions client" values={{ threshold: `$${((config?.piggyBankUnlockThreshold || 15000) / 100).toFixed(0)}` }} />
               </p>
               {onNavigateToTelegram && (
                 <button

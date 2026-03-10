@@ -14,6 +14,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 
 import { findChatterByRecruitmentCode, findChatterByProviderCode } from "../utils";
 import { Chatter, ChatterRecruitedProvider, ChatterNotification } from "../types";
+import { getChatterConfig } from "../chatterConfig";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -171,6 +172,11 @@ export async function handleChatterProviderRegistered(event: any) {
         updatedAt: now,
       });
 
+      // Load config for dynamic amounts
+      const chatterCfg = await getChatterConfig();
+      const recruitAmt = `$${((chatterCfg.gains?.providerCall ?? 500) / 100).toFixed(0)}`;
+      const recruitWindow = chatterCfg.gains?.recruitmentWindowMonths ?? 6;
+
       // Create notification for chatter
       const notificationRef = db.collection("chatter_notifications").doc();
 
@@ -190,17 +196,17 @@ export async function handleChatterProviderRegistered(event: any) {
           zh: "新服务商已招募！",
           ar: "تم تجنيد مزوّد جديد!",
         },
-        message: `${providerName} s'est inscrit avec votre lien de recrutement. Vous gagnerez $5 sur chaque appel pendant 6 mois.`,
+        message: `${providerName} s'est inscrit avec votre lien de recrutement. Vous gagnerez ${recruitAmt} sur chaque appel pendant ${recruitWindow} mois.`,
         messageTranslations: {
-          fr: `${providerName} s'est inscrit avec votre lien de recrutement. Vous gagnerez $5 sur chaque appel pendant 6 mois.`,
-          en: `${providerName} registered via your link. You'll earn $5 on each call for 6 months.`,
-          es: `${providerName} se registró a través de tu enlace. Ganarás $5 por cada llamada durante 6 meses.`,
-          de: `${providerName} hat sich über Ihren Link registriert. Sie verdienen $5 pro Anruf für 6 Monate.`,
-          pt: `${providerName} registrou-se pelo seu link. Você ganhará $5 por cada chamada durante 6 meses.`,
-          ru: `${providerName} зарегистрировался по вашей ссылке. Вы будете получать $5 за каждый звонок в течение 6 месяцев.`,
-          hi: `${providerName} आपके लिंक से पंजीकृत हुआ। आप 6 महीने तक हर कॉल पर $5 कमाएंगे।`,
-          zh: `${providerName} 通过您的链接注册。您将在6个月内每次通话赚取 $5。`,
-          ar: `${providerName} سجّل عبر رابطك. ستحصل على $5 عن كل مكالمة لمدة 6 أشهر.`,
+          fr: `${providerName} s'est inscrit avec votre lien de recrutement. Vous gagnerez ${recruitAmt} sur chaque appel pendant ${recruitWindow} mois.`,
+          en: `${providerName} registered via your link. You'll earn ${recruitAmt} on each call for ${recruitWindow} months.`,
+          es: `${providerName} se registró a través de tu enlace. Ganarás ${recruitAmt} por cada llamada durante ${recruitWindow} meses.`,
+          de: `${providerName} hat sich über Ihren Link registriert. Sie verdienen ${recruitAmt} pro Anruf für ${recruitWindow} Monate.`,
+          pt: `${providerName} registrou-se pelo seu link. Você ganhará ${recruitAmt} por cada chamada durante ${recruitWindow} meses.`,
+          ru: `${providerName} зарегистрировался по вашей ссылке. Вы будете получать ${recruitAmt} за каждый звонок в течение ${recruitWindow} месяцев.`,
+          hi: `${providerName} आपके लिंक से पंजीकृत हुआ। आप ${recruitWindow} महीने तक हर कॉल पर ${recruitAmt} कमाएंगे।`,
+          zh: `${providerName} 通过您的链接注册。您将在${recruitWindow}个月内每次通话赚取 ${recruitAmt}。`,
+          ar: `${providerName} سجّل عبر رابطك. ستحصل على ${recruitAmt} عن كل مكالمة لمدة ${recruitWindow} أشهر.`,
         },
         actionUrl: "/chatter/dashboard",
         isRead: false,

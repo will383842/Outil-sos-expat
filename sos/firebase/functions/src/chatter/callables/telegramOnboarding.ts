@@ -782,9 +782,9 @@ export const telegramChatterBotWebhook = onRequest(
         await sendTelegramMessage(
           chatId,
           "👋 <b>Bienvenue sur SOS-Expat!</b>\n\n" +
-            "Pour connecter votre compte et recevoir votre <b>bonus de $50</b>, " +
+            `Pour connecter votre compte et recevoir votre <b>bonus de $${((REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000) / 100).toFixed(0)}</b>, ` +
             "utilisez le lien fourni dans l'application.\n\n" +
-            "💰 Ce bonus sera débloqué dès que vous atteindrez $150 de commissions!"
+            `💰 Ce bonus sera débloqué dès que vous atteindrez $${((REFERRAL_CONFIG.TELEGRAM_BONUS?.UNLOCK_THRESHOLD || 15000) / 100).toFixed(0)} de commissions!`
         );
         res.status(200).send("OK");
         return;

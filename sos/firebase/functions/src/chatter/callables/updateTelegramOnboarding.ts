@@ -10,6 +10,7 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
+import { REFERRAL_CONFIG } from "../types";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -101,7 +102,7 @@ export const updateTelegramOnboarding = onCall(
       return {
         success: true,
         message: input.hasTelegram
-          ? "Welcome! You're eligible for the $50 bonus."
+          ? `Welcome! You're eligible for the $${((REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000) / 100).toFixed(0)} bonus.`
           : "Onboarding completed. You can add Telegram later.",
       };
     } catch (error) {

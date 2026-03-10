@@ -138,19 +138,30 @@ export function getFilleulProgressPercent(clientEarnings: number): {
   };
 }
 
+/** Default milestones (fallback when config not available) */
+const DEFAULT_MILESTONES: Array<{ count: number; bonus: number }> = [
+  { count: 5, bonus: 1500 },
+  { count: 10, bonus: 3500 },
+  { count: 20, bonus: 7500 },
+  { count: 50, bonus: 25000 },
+  { count: 100, bonus: 60000 },
+  { count: 500, bonus: 400000 },
+];
+
 /**
- * Format tier bonus display
+ * Format tier bonus display (cents → dollar string)
  */
-export function formatTierBonus(tier: number): string {
-  const bonuses: Record<number, string> = {
-    5: "$15",
-    10: "$35",
-    20: "$75",
-    50: "$250",
-    100: "$600",
-    500: "$4,000",
-  };
-  return bonuses[tier] || "";
+export function formatTierBonus(
+  tier: number,
+  milestones?: Array<{ count: number; bonus: number }>
+): string {
+  const ms = milestones ?? DEFAULT_MILESTONES;
+  const match = ms.find((m) => m.count === tier);
+  if (!match) return "";
+  const dollars = match.bonus / 100;
+  return dollars >= 1000
+    ? `$${dollars.toLocaleString("en-US")}`
+    : `$${dollars}`;
 }
 
 /**
@@ -158,16 +169,18 @@ export function formatTierBonus(tier: number): string {
  */
 export function getNextTierInfo(
   qualifiedCount: number,
-  paidTiers: number[]
+  paidTiers: number[],
+  milestones?: Array<{ count: number; bonus: number }>
 ): { tier: number; needed: number; bonus: string } | null {
-  const tiers = [5, 10, 20, 50, 100, 500];
+  const ms = milestones ?? DEFAULT_MILESTONES;
+  const tiers = ms.map((m) => m.count);
 
   for (const tier of tiers) {
     if (!paidTiers.includes(tier) && qualifiedCount < tier) {
       return {
         tier,
         needed: tier - qualifiedCount,
-        bonus: formatTierBonus(tier),
+        bonus: formatTierBonus(tier, ms),
       };
     }
   }

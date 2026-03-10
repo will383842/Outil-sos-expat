@@ -78,7 +78,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'balance',
     targetSelector: '[data-tour="balance-card"]',
     title: 'Track Your Earnings',
-    description: 'This is your piggy bank! Watch your earnings grow here. Once you reach $20, you can withdraw your money.',
+    description: 'This is your piggy bank! Watch your earnings grow here. Once you reach the minimum, you can withdraw your money.',
     icon: <Wallet className="w-6 h-6 text-green-500" />,
     position: 'left',
   },
@@ -118,7 +118,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'leaderboard',
     targetSelector: '[data-tour="leaderboard"]',
     title: 'Compete & Win',
-    description: 'Check the leaderboard to see how you rank. Top 3 chatters each month win cash prizes ($200, $100, $50)!',
+    description: 'Check the leaderboard to see how you rank. Top 3 chatters each month win cash prizes ({{p1}}, {{p2}}, {{p3}})!',
     icon: <Trophy className="w-6 h-6 text-yellow-500" />,
     position: 'bottom',
   },
@@ -285,6 +285,9 @@ interface TourTooltipProps {
   callAmountRange: string;
   n1Amount: string;
   n2Amount: string;
+  p1: string;
+  p2: string;
+  p3: string;
   onNext: () => void;
   onPrev: () => void;
   onSkip: () => void;
@@ -300,6 +303,9 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   callAmountRange,
   n1Amount,
   n2Amount,
+  p1,
+  p2,
+  p3,
   onNext,
   onPrev,
   onSkip,
@@ -328,7 +334,10 @@ const TourTooltip: React.FC<TourTooltipProps> = ({
   const description = intl.formatMessage({ id: `chatter.tour.${step.id}.description`, defaultMessage: step.description })
     .replace(/\{\{callAmountRange\}\}/g, callAmountRange)
     .replace(/\{\{n1Amount\}\}/g, n1Amount)
-    .replace(/\{\{n2Amount\}\}/g, n2Amount);
+    .replace(/\{\{n2Amount\}\}/g, n2Amount)
+    .replace(/\{\{p1\}\}/g, p1)
+    .replace(/\{\{p2\}\}/g, p2)
+    .replace(/\{\{p3\}\}/g, p3);
 
   // Arrow styles based on position
   const arrowStyles: Record<string, string> = {
@@ -541,7 +550,7 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
   const configData = dashboardData?.config;
 
   // Dynamic commission amounts from config (cents → dollars)
-  const { callAmountRange, n1Amount, n2Amount } = useMemo(() => {
+  const { callAmountRange, n1Amount, n2Amount, p1, p2, p3 } = useMemo(() => {
     const expatAmt = (configData?.commissionClientCallAmountExpat ?? 300) / 100;
     const lawyerAmt = (configData?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
@@ -549,7 +558,11 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
     const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
     const n1 = `$${((configData?.commissionN1CallAmount ?? 100) / 100).toFixed(2).replace(/\.00$/, '')}`;
     const n2 = `$${((configData?.commissionN2CallAmount ?? 50) / 100).toFixed(2)}`;
-    return { callAmountRange: range, n1Amount: n1, n2Amount: n2 };
+    const prizes = configData?.monthlyCompetitionPrizes;
+    const prize1 = `$${((prizes?.first ?? 20000) / 100).toFixed(0)}`;
+    const prize2 = `$${((prizes?.second ?? 10000) / 100).toFixed(0)}`;
+    const prize3 = `$${((prizes?.third ?? 5000) / 100).toFixed(0)}`;
+    return { callAmountRange: range, n1Amount: n1, n2Amount: n2, p1: prize1, p2: prize2, p3: prize3 };
   }, [configData]);
 
   const [isActive, setIsActive] = useState(false);
@@ -716,6 +729,9 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
               callAmountRange={callAmountRange}
               n1Amount={n1Amount}
               n2Amount={n2Amount}
+              p1={p1}
+              p2={p2}
+              p3={p3}
               onNext={handleNext}
               onPrev={handlePrev}
               onSkip={handleSkip}

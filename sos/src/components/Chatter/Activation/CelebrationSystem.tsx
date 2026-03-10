@@ -55,6 +55,7 @@ function vibrate() {
 
 export function useCelebrations() {
   const { dashboardData, commissions } = useChatterData();
+  const config = dashboardData?.config;
   const prevDataRef = useRef<typeof dashboardData>(null);
   const initialLoadDone = useRef(false);
 
@@ -115,48 +116,54 @@ export function useCelebrations() {
       );
     }
 
-    // First referral
+    // First referral — dynamic N1 amount from config
+    const n1Amt = ((config?.commissionN1CallAmount ?? 100) / 100).toFixed(2).replace(/\.00$/, '');
     if ((chatter.totalRecruits || 0) >= 1 && (prev?.totalRecruits || 0) === 0) {
-      celebrate('first_referral', 'Votre premier filleul ! Chaque appel = $1 pour vous', 'medium');
+      celebrate('first_referral', `Votre premier filleul ! Chaque appel = $${n1Amt} pour vous`, 'medium');
     }
 
-    // Tier milestones (5, 10, 20, 50, 100, 500 qualified referrals)
-    const tierThresholds = [5, 10, 20, 50, 100, 500];
-    const tierBonuses: Record<number, number> = { 5: 15, 10: 35, 20: 75, 50: 250, 100: 600, 500: 4000 };
-    for (const threshold of tierThresholds) {
+    // Tier milestones (from config or defaults)
+    const configMilestones = config?.recruitmentMilestones ?? [
+      { count: 5, bonus: 1500 }, { count: 10, bonus: 3500 }, { count: 20, bonus: 7500 },
+      { count: 50, bonus: 25000 }, { count: 100, bonus: 60000 }, { count: 500, bonus: 400000 },
+    ];
+    for (const milestone of configMilestones) {
       if (
-        (chatter.qualifiedReferralsCount || 0) >= threshold &&
-        (prev?.qualifiedReferralsCount || 0) < threshold
+        (chatter.qualifiedReferralsCount || 0) >= milestone.count &&
+        (prev?.qualifiedReferralsCount || 0) < milestone.count
       ) {
         celebrate(
-          `tier_${threshold}`,
-          `Bravo ! $${tierBonuses[threshold]} de bonus tier debloques !`,
+          `tier_${milestone.count}`,
+          `Bravo ! $${(milestone.bonus / 100).toLocaleString()} de bonus tier debloques !`,
           'medium'
         );
       }
     }
 
-    // Piggy bank unlock ($150 in client earnings)
-    // We track this via the piggy bank progression
+    // Piggy bank unlock — dynamic threshold from config
+    const piggyThreshold = config?.piggyBankUnlockThreshold ?? 15000;
+    const telegramBonus = ((config?.telegramBonusAmount ?? 5000) / 100).toFixed(0);
     if (chatter.telegramOnboardingCompleted) {
       const clientEarnings = commissions
         .filter((c) => c.type === 'client_call' && c.status !== 'cancelled')
         .reduce((sum, c) => sum + (c.amount || 0), 0);
 
-      if (clientEarnings >= 15000 && !hasCelebrated('piggy_unlocked')) {
-        celebrate('piggy_unlocked', '$50 de bonus liberes ! Retirez-les maintenant', 'heavy');
+      if (clientEarnings >= piggyThreshold && !hasCelebrated('piggy_unlocked')) {
+        celebrate('piggy_unlocked', `$${telegramBonus} de bonus liberes ! Retirez-les maintenant`, 'heavy');
       }
     }
 
-    // Top 3 monthly
+    // Top 3 monthly — dynamic prizes from config
     if (chatter.currentMonthRank && chatter.currentMonthRank <= 3) {
       const monthKey = new Date().toISOString().slice(0, 7);
       const celebId = `top3_${monthKey}_rank${chatter.currentMonthRank}`;
       if (!hasCelebrated(celebId)) {
-        const prizes: Record<number, number> = { 1: 200, 2: 100, 3: 50 };
+        const competitionPrizes = config?.monthlyCompetitionPrizes ?? { first: 20000, second: 10000, third: 5000 };
+        const prizeMap: Record<number, number> = { 1: competitionPrizes.first, 2: competitionPrizes.second, 3: competitionPrizes.third };
+        const prizeAmount = ((prizeMap[chatter.currentMonthRank] || 5000) / 100).toFixed(0);
         celebrate(
           celebId,
-          `Vous etes #${chatter.currentMonthRank} ce mois ! $${prizes[chatter.currentMonthRank]} de bonus !`,
+          `Vous etes #${chatter.currentMonthRank} ce mois ! $${prizeAmount} de bonus !`,
           'heavy'
         );
       }

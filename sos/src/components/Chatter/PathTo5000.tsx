@@ -108,7 +108,7 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
     { ...DEFAULT_MILESTONES_BASE[1], description: intl.formatMessage({ id: 'chatter.path.milestone.500', defaultMessage: '50 clients or 5 active referrals' }) },
     { ...DEFAULT_MILESTONES_BASE[2], description: intl.formatMessage({ id: 'chatter.path.milestone.1000', defaultMessage: '100 clients or 10 active referrals' }) },
     { ...DEFAULT_MILESTONES_BASE[3], description: intl.formatMessage({ id: 'chatter.path.milestone.2500', defaultMessage: 'Team of 25 + tier bonuses' }) },
-    { ...DEFAULT_MILESTONES_BASE[4], description: intl.formatMessage({ id: 'chatter.path.milestone.5000', defaultMessage: '50+ qualified referrals = $4,000 Bonus!' }) },
+    { ...DEFAULT_MILESTONES_BASE[4], description: intl.formatMessage({ id: 'chatter.path.milestone.5000', defaultMessage: '50+ qualified referrals = {bonus} Bonus!' }, { bonus: `$${((COMMISSIONS.TIER_500 || 400000) / 100).toLocaleString()}` }) },
   ], [intl]);
 
   // Calculate progress
@@ -390,14 +390,12 @@ const PathTo5000: React.FC<PathTo5000Props> = ({
           <FormattedMessage id="chatter.pathTo5000.tierBonuses" defaultMessage="Bonus de Paliers (Filleuls Qualifies)" />
         </h3>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {[
-            { count: 5, bonus: '$15' },
-            { count: 10, bonus: '$35' },
-            { count: 20, bonus: '$75' },
-            { count: 50, bonus: '$250' },
-            { count: 100, bonus: '$600' },
-            { count: 500, bonus: '$4,000', highlight: true },
-          ].map((tier) => (
+          {(() => {
+            const ms = recruitmentMilestones && recruitmentMilestones.length > 0
+              ? recruitmentMilestones
+              : [{ count: 5, bonus: 1500 }, { count: 10, bonus: 3500 }, { count: 20, bonus: 7500 }, { count: 50, bonus: 25000 }, { count: 100, bonus: 60000 }, { count: 500, bonus: 400000 }];
+            return ms.map((m, idx) => ({ count: m.count, bonus: `$${(m.bonus / 100).toLocaleString()}`, highlight: idx === ms.length - 1 }));
+          })().map((tier) => (
             <div
               key={tier.count}
               className={`p-3 rounded-xl text-center transition-all ${ANIMATION.normal} ${

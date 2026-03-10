@@ -16,6 +16,7 @@ import { GroupAdmin, GroupAdminNotification } from "../types";
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
 import { generateWelcomeEmail } from "../../email/welcomeTemplates";
 import { createN1RecruitBonusCommission } from "../services/groupAdminCommissionService";
+import { getGroupAdminConfig } from "../groupAdminConfig";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -47,6 +48,12 @@ export const onGroupAdminCreated = onDocumentCreated(
     try {
       const batch = db.batch();
       const now = Timestamp.now();
+      const config = await getGroupAdminConfig();
+      const clientAmtLawyer = `$${((config.commissionClientAmountLawyer ?? 500) / 100).toFixed(0)}`;
+      const clientAmtExpat = `$${((config.commissionClientAmountExpat ?? 300) / 100).toFixed(0)}`;
+      const activationAmt = `$${((config.commissionActivationBonusAmount ?? 500) / 100).toFixed(0)}`;
+      const n1CallAmt = `$${((config.commissionN1CallAmount ?? 100) / 100).toFixed(0)}`;
+      const activationCalls = config.activationCallsRequired ?? 2;
 
       // 1. Create welcome notification
       const welcomeNotificationRef = db.collection("group_admin_notifications").doc();
@@ -66,17 +73,17 @@ export const onGroupAdminCreated = onDocumentCreated(
           zh: "欢迎加入 SOS-Expat Group Admin 计划！",
           ar: "!مرحبًا بك في برنامج Group Admin SOS-Expat",
         },
-        message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link to earn $5/call (lawyer) or $3/call (expat).`,
+        message: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link to earn ${clientAmtLawyer}/call (lawyer) or ${clientAmtExpat}/call (expat).`,
         messageTranslations: {
-          fr: `Félicitations ${groupAdminData.firstName} ! Votre compte a été créé. Partagez votre lien d'affiliation pour gagner 5$/appel (avocat) ou 3$/appel (expatrié).`,
-          en: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link to earn $5/call (lawyer) or $3/call (expat).`,
-          es: `¡Felicidades ${groupAdminData.firstName}! Tu cuenta ha sido creada. Comparte tu enlace de afiliación para ganar $5/llamada (abogado) o $3/llamada (expat).`,
-          de: `Herzlichen Glückwunsch ${groupAdminData.firstName}! Ihr Konto wurde erstellt. Teilen Sie Ihren Affiliate-Link und verdienen Sie $5/Anruf (Anwalt) oder $3/Anruf (Expat).`,
-          pt: `Parabéns ${groupAdminData.firstName}! Sua conta foi criada. Compartilhe seu link de afiliação para ganhar $5/chamada (advogado) ou $3/chamada (expat).`,
-          ru: `Поздравляем ${groupAdminData.firstName}! Ваш аккаунт создан. Делитесь партнёрской ссылкой и зарабатывайте $5/звонок (юрист) или $3/звонок (экспат).`,
-          hi: `बधाई ${groupAdminData.firstName}! आपका खाता बन गया है। अपना एफिलिएट लिंक शेयर करें — $5/कॉल (वकील) या $3/कॉल (प्रवासी) कमाएं।`,
-          zh: `恭喜 ${groupAdminData.firstName}！您的帐户已创建。分享您的推广链接，每次律师通话赚取 $5，每次外籍人士通话赚取 $3。`,
-          ar: `تهانينا ${groupAdminData.firstName}! تم إنشاء حسابك. شارك رابط الإحالة لتكسب 5$/مكالمة (محامي) أو 3$/مكالمة (مغترب).`,
+          fr: `Félicitations ${groupAdminData.firstName} ! Votre compte a été créé. Partagez votre lien d'affiliation pour gagner ${clientAmtLawyer}/appel (avocat) ou ${clientAmtExpat}/appel (expatrié).`,
+          en: `Congratulations ${groupAdminData.firstName}! Your account has been created. Start sharing your affiliate link to earn ${clientAmtLawyer}/call (lawyer) or ${clientAmtExpat}/call (expat).`,
+          es: `¡Felicidades ${groupAdminData.firstName}! Tu cuenta ha sido creada. Comparte tu enlace de afiliación para ganar ${clientAmtLawyer}/llamada (abogado) o ${clientAmtExpat}/llamada (expat).`,
+          de: `Herzlichen Glückwunsch ${groupAdminData.firstName}! Ihr Konto wurde erstellt. Teilen Sie Ihren Affiliate-Link und verdienen Sie ${clientAmtLawyer}/Anruf (Anwalt) oder ${clientAmtExpat}/Anruf (Expat).`,
+          pt: `Parabéns ${groupAdminData.firstName}! Sua conta foi criada. Compartilhe seu link de afiliação para ganhar ${clientAmtLawyer}/chamada (advogado) ou ${clientAmtExpat}/chamada (expat).`,
+          ru: `Поздравляем ${groupAdminData.firstName}! Ваш аккаунт создан. Делитесь партнёрской ссылкой и зарабатывайте ${clientAmtLawyer}/звонок (юрист) или ${clientAmtExpat}/звонок (экспат).`,
+          hi: `बधाई ${groupAdminData.firstName}! आपका खाता बन गया है। अपना एफिलिएट लिंक शेयर करें — ${clientAmtLawyer}/कॉल (वकील) या ${clientAmtExpat}/कॉल (प्रवासी) कमाएं।`,
+          zh: `恭喜 ${groupAdminData.firstName}！您的帐户已创建。分享您的推广链接，每次律师通话赚取 ${clientAmtLawyer}，每次外籍人士通话赚取 ${clientAmtExpat}。`,
+          ar: `تهانينا ${groupAdminData.firstName}! تم إنشاء حسابك. شارك رابط الإحالة لتكسب ${clientAmtLawyer}/مكالمة (محامي) أو ${clientAmtExpat}/مكالمة (مغترب).`,
         },
         data: {
           affiliateCodeClient: groupAdminData.affiliateCodeClient,
@@ -157,17 +164,17 @@ export const onGroupAdminCreated = onDocumentCreated(
               zh: "新管理员已招募！",
               ar: "!تم تجنيد مشرف جديد",
             },
-            message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they make their first 2 referrals, then $1 per call from their members.`,
+            message: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn ${activationAmt} when they make their first ${activationCalls} referrals, then ${n1CallAmt} per call from their members.`,
             messageTranslations: {
-              fr: `${groupAdminData.firstName} ${groupAdminData.lastName} a rejoint via votre lien de recrutement ! Vous gagnerez 5$ à leur activation (2 parrainages), puis 1$ par appel de leurs membres.`,
-              en: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn $5 when they make their first 2 referrals, then $1 per call from their members.`,
-              es: `${groupAdminData.firstName} ${groupAdminData.lastName} se unió a través de tu enlace. Ganarás $5 cuando hagan sus primeras 2 referencias, luego $1 por cada llamada de sus miembros.`,
-              de: `${groupAdminData.firstName} ${groupAdminData.lastName} ist beigetreten! Sie verdienen $5 bei ihrer Aktivierung (2 Empfehlungen), dann $1 pro Anruf ihrer Mitglieder.`,
-              pt: `${groupAdminData.firstName} ${groupAdminData.lastName} entrou pelo seu link! Você ganhará $5 na ativação deles (2 indicações), depois $1 por chamada dos membros deles.`,
-              ru: `${groupAdminData.firstName} ${groupAdminData.lastName} присоединился! Вы получите $5 при активации (2 реферала), затем $1 за каждый звонок их участников.`,
-              hi: `${groupAdminData.firstName} ${groupAdminData.lastName} जुड़ गए! उनके पहले 2 रेफरल पर $5 मिलेंगे, फिर उनके सदस्यों के प्रत्येक कॉल पर $1।`,
-              zh: `${groupAdminData.firstName} ${groupAdminData.lastName} 已加入！他们完成首次2次推荐时您获得$5，之后每次成员通话获得$1。`,
-              ar: `${groupAdminData.firstName} ${groupAdminData.lastName} انضم! ستحصل على 5$ عند تفعيلهم (إحالتان)، ثم 1$ لكل مكالمة من أعضائهم.`,
+              fr: `${groupAdminData.firstName} ${groupAdminData.lastName} a rejoint via votre lien de recrutement ! Vous gagnerez ${activationAmt} à leur activation (${activationCalls} parrainages), puis ${n1CallAmt} par appel de leurs membres.`,
+              en: `${groupAdminData.firstName} ${groupAdminData.lastName} has joined through your recruitment link! You'll earn ${activationAmt} when they make their first ${activationCalls} referrals, then ${n1CallAmt} per call from their members.`,
+              es: `${groupAdminData.firstName} ${groupAdminData.lastName} se unió a través de tu enlace. Ganarás ${activationAmt} cuando hagan sus primeras ${activationCalls} referencias, luego ${n1CallAmt} por cada llamada de sus miembros.`,
+              de: `${groupAdminData.firstName} ${groupAdminData.lastName} ist beigetreten! Sie verdienen ${activationAmt} bei ihrer Aktivierung (${activationCalls} Empfehlungen), dann ${n1CallAmt} pro Anruf ihrer Mitglieder.`,
+              pt: `${groupAdminData.firstName} ${groupAdminData.lastName} entrou pelo seu link! Você ganhará ${activationAmt} na ativação deles (${activationCalls} indicações), depois ${n1CallAmt} por chamada dos membros deles.`,
+              ru: `${groupAdminData.firstName} ${groupAdminData.lastName} присоединился! Вы получите ${activationAmt} при активации (${activationCalls} реферала), затем ${n1CallAmt} за каждый звонок их участников.`,
+              hi: `${groupAdminData.firstName} ${groupAdminData.lastName} जुड़ गए! उनके पहले ${activationCalls} रेफरल पर ${activationAmt} मिलेंगे, फिर उनके सदस्यों के प्रत्येक कॉल पर ${n1CallAmt}।`,
+              zh: `${groupAdminData.firstName} ${groupAdminData.lastName} 已加入！他们完成首次${activationCalls}次推荐时您获得${activationAmt}，之后每次成员通话获得${n1CallAmt}。`,
+              ar: `${groupAdminData.firstName} ${groupAdminData.lastName} انضم! ستحصل على ${activationAmt} عند تفعيلهم (${activationCalls} إحالات)، ثم ${n1CallAmt} لكل مكالمة من أعضائهم.`,
             },
             data: {
               recruitedId: groupAdminId,

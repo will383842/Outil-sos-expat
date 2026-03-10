@@ -270,8 +270,9 @@ function YourNextGoal({
     goalIcon = <Phone className="h-5 w-5" />;
     goalColor = 'text-green-500';
   } else if (!chatter?.hasTelegram) {
-    goalMessage = intl.formatMessage({ id: 'chatter.howToEarn.nextGoal.telegram', defaultMessage: 'Liez Telegram pour débloquer $50 de bonus' });
-    goalReward = '$50';
+    const tgBonus = formatCents(config?.telegramBonusAmount || 5000);
+    goalMessage = intl.formatMessage({ id: 'chatter.howToEarn.nextGoal.telegram', defaultMessage: 'Liez Telegram pour débloquer {bonus} de bonus' }, { bonus: tgBonus });
+    goalReward = tgBonus;
     goalIcon = <MessageCircle className="h-5 w-5" />;
     goalColor = 'text-blue-500';
   } else if (referralStats?.nextTierBonus && referralStats.nextTierBonus.filleulsNeeded <= 5) {
@@ -284,19 +285,22 @@ function YourNextGoal({
     goalColor = 'text-indigo-500';
   } else if (chatter?.currentMonthRank != null && chatter.currentMonthRank > 3 && chatter.currentMonthRank <= 10) {
     const placesToClimb = chatter.currentMonthRank - 3;
+    const compPrizes = config?.monthlyCompetitionPrizes ?? { first: 20000, second: 10000, third: 5000 };
+    const prizeRange = `$${(compPrizes.third / 100).toFixed(0)}-${(compPrizes.first / 100).toFixed(0)}`;
     goalMessage = intl.formatMessage(
-      { id: 'chatter.howToEarn.nextGoal.top3', defaultMessage: 'Top {rank} — montez de {count} places pour $50-200 !' },
-      { rank: chatter.currentMonthRank, count: placesToClimb }
+      { id: 'chatter.howToEarn.nextGoal.top3', defaultMessage: 'Top {rank} — montez de {count} places pour {prizes} !' },
+      { rank: chatter.currentMonthRank, count: placesToClimb, prizes: prizeRange }
     );
-    goalReward = '$50-200';
+    goalReward = prizeRange;
     goalIcon = <Trophy className="h-5 w-5" />;
     goalColor = 'text-yellow-500';
   } else if (piggyBank && piggyBank.progressPercent >= 60 && !piggyBank.isUnlocked) {
+    const tgBonus2 = formatCents(config?.telegramBonusAmount || 5000);
     goalMessage = intl.formatMessage(
-      { id: 'chatter.howToEarn.nextGoal.piggyBank', defaultMessage: 'Encore {amount} pour débloquer votre tirelire de $50' },
-      { amount: formatCents(piggyBank.amountToUnlock) }
+      { id: 'chatter.howToEarn.nextGoal.piggyBank', defaultMessage: 'Encore {amount} pour débloquer votre tirelire de {bonus}' },
+      { amount: formatCents(piggyBank.amountToUnlock), bonus: tgBonus2 }
     );
-    goalReward = '$50';
+    goalReward = tgBonus2;
     goalIcon = <Zap className="h-5 w-5" />;
     goalColor = 'text-purple-500';
     progressPercent = piggyBank.progressPercent;
@@ -417,9 +421,11 @@ function ProviderRecruitmentSection({
 function MonthlyCompetitionSection({
   currentMonthRank,
   competitionPrizes,
+  competitionEligibilityMinimum,
 }: {
   currentMonthRank: number | null;
   competitionPrizes?: { first: number; second: number; third: number };
+  competitionEligibilityMinimum?: number;
 }) {
   const intl = useIntl();
 
@@ -469,7 +475,7 @@ function MonthlyCompetitionSection({
       )}
 
       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2">
-        <FormattedMessage id="chatter.howToEarn.competition.eligibility" defaultMessage="Minimum $200 de commissions cumulées (vous + votre équipe) pour être éligible" />
+        <FormattedMessage id="chatter.howToEarn.competition.eligibility" defaultMessage="Minimum {amount} de commissions cumulées (vous + votre équipe) pour être éligible" values={{ amount: formatCents(competitionEligibilityMinimum || 20000) }} />
       </p>
     </div>
   );
@@ -800,7 +806,11 @@ function ChatterHowToEarn() {
               <CommissionRow
                 icon={<TrendingUp className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierBonuses', defaultMessage: 'Bonus paliers' })}
-                amount="$15→$4K"
+                amount={(() => {
+                  const ms = config?.recruitmentMilestones ?? [{ count: 5, bonus: 1500 }, { count: 500, bonus: 400000 }];
+                  const first = ms[0]; const last = ms[ms.length - 1];
+                  return `$${(first.bonus / 100).toFixed(0)}→$${((last.bonus / 100) / 1000).toFixed(0)}K`;
+                })()}
                 detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.tierDesc', defaultMessage: '5 à 500 recrues' })}
                 color="text-indigo-600 dark:text-indigo-400"
               />
@@ -835,8 +845,8 @@ function ChatterHowToEarn() {
               <CommissionRow
                 icon={<MessageCircle className="h-4 w-4" />}
                 label={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegram', defaultMessage: 'Bonus Telegram' })}
-                amount="$50"
-                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegramDesc', defaultMessage: 'lier Telegram + $150 ventes' })}
+                amount={formatCents(config?.telegramBonusAmount || 5000)}
+                detail={intl.formatMessage({ id: 'chatter.howToEarn.comm.telegramDesc', defaultMessage: 'lier Telegram + {threshold} ventes' }, { threshold: formatCents(config?.piggyBankUnlockThreshold || 15000) })}
                 color="text-sky-600 dark:text-sky-400"
               />
             </div>
@@ -855,6 +865,7 @@ function ChatterHowToEarn() {
       <MonthlyCompetitionSection
         currentMonthRank={dashboardData?.chatter?.currentMonthRank ?? null}
         competitionPrizes={config?.monthlyCompetitionPrizes}
+        competitionEligibilityMinimum={config?.competitionEligibilityMinimum}
       />
 
       {/* ============================================================ */}

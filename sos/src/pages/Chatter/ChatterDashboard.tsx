@@ -252,7 +252,8 @@ const BelowFoldSection: React.FC = () => {
   const piggyBankData = useMemo(() => {
     if (!chatter) return null;
     const clientEarnings = (chatter.commissionsByType?.client_call?.amount || 0);
-    const unlockThreshold = 15000; // $150 in cents
+    const unlockThreshold = dashboardData?.config?.piggyBankUnlockThreshold ?? 15000;
+    const bonusAmount = dashboardData?.config?.telegramBonusAmount ?? 5000;
     const progressPercent = unlockThreshold > 0 ? Math.min((clientEarnings / unlockThreshold) * 100, 100) : 0;
     return {
       isUnlocked: clientEarnings >= unlockThreshold,
@@ -260,7 +261,7 @@ const BelowFoldSection: React.FC = () => {
       unlockThreshold,
       progressPercent,
       amountToUnlock: Math.max(unlockThreshold - clientEarnings, 0),
-      totalPending: 5000, // $50 bonus in cents
+      totalPending: bonusAmount,
       message: clientEarnings >= unlockThreshold ? 'Debloques !' : `Encore $${((unlockThreshold - clientEarnings) / 100).toFixed(0)}`,
     };
   }, [chatter]);

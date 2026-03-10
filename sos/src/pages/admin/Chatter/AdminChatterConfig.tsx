@@ -79,6 +79,11 @@ interface ChatterConfig {
   recruitmentMilestones?: Array<{ count: number; bonus: number }>;
   // Monthly Competition Prizes
   monthlyCompetitionPrizes?: { first: number; second: number; third: number };
+  // Competition eligibility
+  competitionEligibilityMinimum?: number;
+  // Telegram Bonus
+  telegramBonusAmount?: number;
+  piggyBankUnlockThreshold?: number;
 }
 
 const AdminChatterConfig: React.FC = () => {
@@ -606,6 +611,64 @@ const AdminChatterConfig: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+          {/* Eligibility minimum */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Seuil minimum d'éligibilité (cents)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={formData.competitionEligibilityMinimum ?? config?.competitionEligibilityMinimum ?? 20000}
+                onChange={(e) => handleChange('competitionEligibilityMinimum', parseInt(e.target.value) || 0)}
+                className={UI.input}
+                min={0}
+                step={1000}
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">= {formatCents(formData.competitionEligibilityMinimum ?? config?.competitionEligibilityMinimum ?? 20000)} min. de commissions pour participer</p>
+          </div>
+        </div>
+
+        {/* Telegram Bonus */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+            <Star className="w-5 h-5 text-blue-500" />
+            Bonus Telegram (Tirelire)
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            Bonus crédité à la tirelire quand le chatter connecte son Telegram. Débloqué après un seuil de commissions.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Montant du bonus (cents)
+              </label>
+              <input
+                type="number"
+                value={formData.telegramBonusAmount ?? config?.telegramBonusAmount ?? 5000}
+                onChange={(e) => handleChange('telegramBonusAmount', parseInt(e.target.value) || 0)}
+                className={UI.input}
+                min={0}
+                step={500}
+              />
+              <p className="mt-1 text-xs text-gray-500">= {formatCents(formData.telegramBonusAmount ?? config?.telegramBonusAmount ?? 5000)} crédité à la tirelire</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Seuil de déblocage (cents)
+              </label>
+              <input
+                type="number"
+                value={formData.piggyBankUnlockThreshold ?? config?.piggyBankUnlockThreshold ?? 15000}
+                onChange={(e) => handleChange('piggyBankUnlockThreshold', parseInt(e.target.value) || 0)}
+                className={UI.input}
+                min={0}
+                step={1000}
+              />
+              <p className="mt-1 text-xs text-gray-500">= {formatCents(formData.piggyBankUnlockThreshold ?? config?.piggyBankUnlockThreshold ?? 15000)} de commissions pour débloquer</p>
+            </div>
           </div>
         </div>
       </div>

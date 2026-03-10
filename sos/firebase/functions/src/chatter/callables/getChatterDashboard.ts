@@ -391,13 +391,13 @@ export const getChatterDashboard = onCall(
       if (!affiliateCodeProvider && chatter.affiliateCodeClient) {
         affiliateCodeProvider = `PROV-${chatter.affiliateCodeClient}`;
         // Write back to Firestore (fire-and-forget, don't block response)
-        db.collection("chatters").doc(uid).update({
+        db.collection("chatters").doc(userId).update({
           affiliateCodeProvider,
           updatedAt: Timestamp.now(),
         }).catch((err: unknown) => {
-          logger.warn("[getChatterDashboard] Self-healing affiliateCodeProvider failed", { uid, error: err });
+          logger.warn("[getChatterDashboard] Self-healing affiliateCodeProvider failed", { userId, error: err });
         });
-        logger.info("[getChatterDashboard] Self-healed affiliateCodeProvider", { uid, affiliateCodeProvider });
+        logger.info("[getChatterDashboard] Self-healed affiliateCodeProvider", { userId, affiliateCodeProvider });
       }
 
       // 9. Build response
@@ -503,6 +503,9 @@ export const getChatterDashboard = onCall(
           withdrawalFeeCents: withdrawalFee,
           recruitmentMilestones: config.recruitmentMilestones ?? DEFAULT_CHATTER_CONFIG.recruitmentMilestones,
           monthlyCompetitionPrizes: config.monthlyCompetitionPrizes ?? DEFAULT_CHATTER_CONFIG.monthlyCompetitionPrizes,
+          telegramBonusAmount: config.telegramBonusAmount ?? REFERRAL_CONFIG.TELEGRAM_BONUS.AMOUNT,
+          piggyBankUnlockThreshold: config.piggyBankUnlockThreshold ?? REFERRAL_CONFIG.TELEGRAM_BONUS.UNLOCK_THRESHOLD,
+          competitionEligibilityMinimum: config.competitionEligibilityMinimum ?? 20000,
         },
         // Commission Plan info (deferred — only in full mode)
         commissionPlan: level === "full" && chatter.commissionPlanId ? {
@@ -545,9 +548,9 @@ export const getChatterDashboard = onCall(
         // Piggy Bank - Bonus pending unlock (sync calculation, no await needed)
         piggyBank: (() => {
           const clientEarnings = getClientEarnings(chatter);
-          const unlockThreshold = REFERRAL_CONFIG.TELEGRAM_BONUS.UNLOCK_THRESHOLD;
+          const unlockThreshold = config.piggyBankUnlockThreshold ?? REFERRAL_CONFIG.TELEGRAM_BONUS.UNLOCK_THRESHOLD;
 
-          const telegramBonusAmount = REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT || 5000;
+          const telegramBonusAmount = config.telegramBonusAmount ?? REFERRAL_CONFIG.TELEGRAM_BONUS?.AMOUNT ?? 5000;
           const hasTelegram = chatter.hasTelegram === true && chatter.telegramId;
           const telegramBonusPending = hasTelegram && !chatter.telegramBonusPaid ? telegramBonusAmount : 0;
 
@@ -566,7 +569,7 @@ export const getChatterDashboard = onCall(
             message: isUnlocked
               ? totalPending > 0
                 ? `$${(totalPending / 100).toFixed(0)} Telegram bonus ready to claim`
-                : "Connect Telegram to get a $50 bonus!"
+                : `Connect Telegram to get a $${(telegramBonusAmount / 100).toFixed(0)} bonus!`
               : `Earn $${(amountToUnlock / 100).toFixed(0)} more in client commissions to unlock your $${(totalPending / 100).toFixed(0)} bonus`,
           };
         })(),

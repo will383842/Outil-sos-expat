@@ -286,7 +286,7 @@ const GroupAdminDashboard: React.FC = () => {
               <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-indigo-100 dark:to-indigo-800/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Lien de recrutement (5$ activation + 1$/appel membres)" />
+                    <FormattedMessage id="groupAdmin.dashboard.recruitLink" defaultMessage="Lien de recrutement ({activationAmt}$ activation + {n1Amt}$/appel membres)" values={{ activationAmt: ((config?.commissionActivationBonusAmount ?? 500) / 100).toFixed(0), n1Amt: ((config?.commissionN1CallAmount ?? 100) / 100).toFixed(0) }} />
                   </span>
                   <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
                     {profile.affiliateCodeRecruitment}

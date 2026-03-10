@@ -1114,6 +1114,17 @@ export interface ChatterConfig {
   /** Fixed dollar prizes for monthly Top 3 competition (cents) */
   monthlyCompetitionPrizes?: { first: number; second: number; third: number };
 
+  // ---- Telegram Bonus ----
+
+  /** Telegram bonus amount credited to piggy bank (cents) */
+  telegramBonusAmount?: number;
+
+  /** Piggy bank unlock threshold — total commissions needed (cents) */
+  piggyBankUnlockThreshold?: number;
+
+  /** Minimum commissions to qualify for monthly competition (cents) */
+  competitionEligibilityMinimum?: number;
+
   // ---- Directory ----
 
   /** Whether the public chatter directory page is visible */
@@ -2522,6 +2533,9 @@ export interface GetChatterDashboardResponse {
     | "levelBonuses"
     | "recruitmentMilestones"
     | "monthlyCompetitionPrizes"
+    | "telegramBonusAmount"
+    | "piggyBankUnlockThreshold"
+    | "competitionEligibilityMinimum"
   > & {
     /** Withdrawal fee in cents (from admin_config/fees) */
     withdrawalFeeCents: number;

@@ -16,6 +16,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
+import { invalidateChatterConfigCache } from "./utils/chatterConfigService";
 
 // ============================================================================
 // TYPES
@@ -59,8 +60,12 @@ export interface ChatterConfigSettings {
    * Commission/gains amounts (all in cents)
    */
   gains: {
-    /** Commission for chatter's own client call (default: 1000 = $10) */
+    /** Commission for chatter's own client call — generic fallback (default: 300 = $3) */
     clientCall: number;
+    /** Commission for client call with lawyer provider (default: 500 = $5) */
+    clientCallLawyer: number;
+    /** Commission for client call with expat provider (default: 300 = $3) */
+    clientCallExpat: number;
     /** Commission for N1 filleul's call (default: 100 = $1) */
     n1Call: number;
     /** Commission for N2 filleul's call (default: 50 = $0.50) */
@@ -69,6 +74,16 @@ export interface ChatterConfigSettings {
     activationBonus: number;
     /** Bonus when N1 recruits someone who activates (default: 100 = $1) */
     n1RecruitBonus: number;
+    /** Commission for recruited provider's calls — generic fallback (default: 500 = $5) */
+    providerCall: number;
+    /** Commission for recruited provider's calls — lawyer (default: 500 = $5) */
+    providerCallLawyer: number;
+    /** Commission for recruited provider's calls — expat (default: 300 = $3) */
+    providerCallExpat: number;
+    /** Calls required for filleul activation (anti-fraud, default: 2) */
+    activationCallsRequired: number;
+    /** Recruitment commission window in months (default: 6) */
+    recruitmentWindowMonths: number;
   };
 
   /**
@@ -100,6 +115,45 @@ export interface ChatterConfigSettings {
     1: number;  // Default: 2.0 (commissions doubled)
     2: number;  // Default: 1.5 (commissions +50%)
     3: number;  // Default: 1.15 (commissions +15%)
+  };
+
+  /**
+   * Captain Chatter configuration
+   */
+  captain: {
+    /** Commission per call — lawyer provider (default: 300 = $3) */
+    callAmountLawyer: number;
+    /** Commission per call — expat provider (default: 200 = $2) */
+    callAmountExpat: number;
+    /** Monthly tier bonuses: array of { name, minCalls, bonus (cents) } */
+    tiers: Array<{ name: string; minCalls: number; bonus: number }>;
+    /** Quality bonus amount in cents (default: 10000 = $100) */
+    qualityBonusAmount: number;
+    /** Min active N1 recruits for quality bonus (default: 10) */
+    qualityBonusMinRecruits: number;
+    /** Min monthly team commissions in cents for quality bonus (default: 10000 = $100) */
+    qualityBonusMinCommissions: number;
+  };
+
+  /**
+   * Monthly competition prizes (cash amounts in cents, in addition to multipliers)
+   */
+  competitionPrizes: {
+    first: number;   // Default: 20000 ($200)
+    second: number;  // Default: 10000 ($100)
+    third: number;   // Default: 5000 ($50)
+    /** Minimum cumulative commissions (cents) to be eligible for competition (default: 20000 = $200) */
+    eligibilityMinimum: number;
+  };
+
+  /**
+   * Telegram bonus configuration
+   */
+  telegramBonus: {
+    /** Bonus amount credited when linking Telegram (cents, default: 5000 = $50) */
+    amount: number;
+    /** Direct client commissions needed to unlock the bonus (cents, default: 15000 = $150) */
+    unlockThreshold: number;
   };
 
   /**
@@ -137,11 +191,18 @@ export const DEFAULT_CHATTER_CONFIG_SETTINGS: Omit<
   },
 
   gains: {
-    clientCall: 300,       // $3 (fallback, overridden by lawyer/expat specific amounts)
-    n1Call: 100,           // $1
-    n2Call: 50,            // $0.50
-    activationBonus: 500,  // $5
-    n1RecruitBonus: 100,   // $1
+    clientCall: 300,           // $3 (fallback, overridden by lawyer/expat specific amounts)
+    clientCallLawyer: 500,     // $5
+    clientCallExpat: 300,      // $3
+    n1Call: 100,               // $1
+    n2Call: 50,                // $0.50
+    activationBonus: 500,      // $5
+    n1RecruitBonus: 100,       // $1
+    providerCall: 500,         // $5
+    providerCallLawyer: 500,   // $5
+    providerCallExpat: 300,    // $3
+    activationCallsRequired: 2,
+    recruitmentWindowMonths: 6,
   },
 
   tierBonuses: {
@@ -163,6 +224,33 @@ export const DEFAULT_CHATTER_CONFIG_SETTINGS: Omit<
     1: 2.0,   // 2x commissions next month
     2: 1.5,   // 1.5x commissions next month
     3: 1.15,  // 1.15x commissions next month
+  },
+
+  captain: {
+    callAmountLawyer: 300,    // $3
+    callAmountExpat: 200,     // $2
+    tiers: [
+      { name: "Bronze", minCalls: 20, bonus: 2500 },
+      { name: "Argent", minCalls: 50, bonus: 5000 },
+      { name: "Or", minCalls: 100, bonus: 10000 },
+      { name: "Platine", minCalls: 200, bonus: 20000 },
+      { name: "Diamant", minCalls: 400, bonus: 40000 },
+    ],
+    qualityBonusAmount: 10000,          // $100
+    qualityBonusMinRecruits: 10,
+    qualityBonusMinCommissions: 10000,  // $100
+  },
+
+  competitionPrizes: {
+    first: 20000,   // $200
+    second: 10000,  // $100
+    third: 5000,    // $50
+    eligibilityMinimum: 20000, // $200 minimum to be eligible
+  },
+
+  telegramBonus: {
+    amount: 5000,          // $50
+    unlockThreshold: 15000, // $150 in client commissions
   },
 
   flashBonus: {
@@ -513,13 +601,13 @@ export const adminUpdateChatterConfigSettings = onCall(
     // Check admin authentication
     await assertAdmin(request.auth);
 
-    const { thresholds, gains, tierBonuses, monthlyTop, flashBonus } = request.data || {};
+    const { thresholds, gains, tierBonuses, monthlyTop, flashBonus, captain, competitionPrizes, telegramBonus } = request.data || {};
 
     // Validate input
-    if (!thresholds && !gains && !tierBonuses && !monthlyTop && !flashBonus) {
+    if (!thresholds && !gains && !tierBonuses && !monthlyTop && !flashBonus && !captain && !competitionPrizes && !telegramBonus) {
       throw new HttpsError(
         "invalid-argument",
-        "At least one config section must be provided (thresholds, gains, tierBonuses, monthlyTop, or flashBonus)"
+        "At least one config section must be provided"
       );
     }
 
@@ -558,6 +646,29 @@ export const adminUpdateChatterConfigSettings = onCall(
         };
       }
 
+      if (captain) {
+        updates.captain = {
+          ...currentConfig.captain,
+          ...captain,
+          // Preserve tiers array if provided
+          tiers: captain.tiers || currentConfig.captain?.tiers || [],
+        };
+      }
+
+      if (competitionPrizes) {
+        updates.competitionPrizes = {
+          ...currentConfig.competitionPrizes,
+          ...competitionPrizes,
+        };
+      }
+
+      if (telegramBonus) {
+        updates.telegramBonus = {
+          ...currentConfig.telegramBonus,
+          ...telegramBonus,
+        };
+      }
+
       if (flashBonus) {
         // Convert endsAt if provided as ISO string
         let endsAt = flashBonus.endsAt;
@@ -572,8 +683,61 @@ export const adminUpdateChatterConfigSettings = onCall(
         };
       }
 
-      // Perform update
+      // Perform update (writes to chatter_config/settings)
       const updatedConfig = await updateChatterConfig(updates, request.auth!.uid);
+
+      // ── Dual-write to chatter_config/current (used by commission services) ──
+      try {
+        const db = getDb();
+        const g = updatedConfig.gains;
+        const cap = updatedConfig.captain;
+        const comp = updatedConfig.competitionPrizes;
+        const currentDocUpdates: Record<string, unknown> = {
+          // Map gains → flat ChatterConfig fields
+          commissionClientCallAmount: g.clientCall,
+          commissionClientCallAmountLawyer: g.clientCallLawyer,
+          commissionClientCallAmountExpat: g.clientCallExpat,
+          commissionN1CallAmount: g.n1Call,
+          commissionN2CallAmount: g.n2Call,
+          commissionActivationBonusAmount: g.activationBonus,
+          commissionN1RecruitBonusAmount: g.n1RecruitBonus,
+          commissionProviderCallAmount: g.providerCall,
+          commissionProviderCallAmountLawyer: g.providerCallLawyer,
+          commissionProviderCallAmountExpat: g.providerCallExpat,
+          activationCallsRequired: g.activationCallsRequired,
+          recruitmentWindowMonths: g.recruitmentWindowMonths,
+          // Captain
+          commissionCaptainCallAmountLawyer: cap?.callAmountLawyer,
+          commissionCaptainCallAmountExpat: cap?.callAmountExpat,
+          captainTiers: cap?.tiers,
+          captainQualityBonusAmount: cap?.qualityBonusAmount,
+          captainQualityBonusMinRecruits: cap?.qualityBonusMinRecruits,
+          captainQualityBonusMinCommissions: cap?.qualityBonusMinCommissions,
+          // Competition prizes
+          monthlyCompetitionPrizes: comp ? { first: comp.first, second: comp.second, third: comp.third } : undefined,
+          competitionEligibilityMinimum: updatedConfig.competitionPrizes?.eligibilityMinimum,
+          // Telegram bonus
+          telegramBonusAmount: updatedConfig.telegramBonus?.amount,
+          piggyBankUnlockThreshold: updatedConfig.telegramBonus?.unlockThreshold,
+          // Top multipliers
+          top1BonusMultiplier: updatedConfig.monthlyTop[1],
+          top2BonusMultiplier: updatedConfig.monthlyTop[2],
+          top3BonusMultiplier: updatedConfig.monthlyTop[3],
+          // Meta
+          updatedAt: Timestamp.now(),
+          updatedBy: request.auth!.uid,
+        };
+        // Remove undefined values
+        Object.keys(currentDocUpdates).forEach((k) => {
+          if (currentDocUpdates[k] === undefined) delete currentDocUpdates[k];
+        });
+        await db.collection("chatter_config").doc("current").set(currentDocUpdates, { merge: true });
+        // Invalidate the commission service cache so it picks up new values immediately
+        invalidateChatterConfigCache();
+        logger.info("[adminUpdateChatterConfigSettings] Dual-write to chatter_config/current OK");
+      } catch (dualWriteErr) {
+        logger.error("[adminUpdateChatterConfigSettings] Dual-write to current failed (settings updated OK):", dualWriteErr);
+      }
 
       logger.info("[adminUpdateChatterConfigSettings] Config updated", {
         updatedBy: request.auth!.uid,

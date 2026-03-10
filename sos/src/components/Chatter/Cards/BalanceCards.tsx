@@ -70,7 +70,7 @@ const BalanceCards: React.FC<BalanceCardsProps> = ({ onNavigateToWithdraw, class
       icon: <Lock className="w-4 h-4" />,
       variant: BALANCE_VARIANTS.locked,
       tooltip: chatter?.telegramOnboardingCompleted
-        ? intl.formatMessage({ id: 'chatter.balance.tooltip.lockedTelegram', defaultMessage: 'Earn $150 in client commissions to unlock your $50 Telegram bonus' })
+        ? intl.formatMessage({ id: 'chatter.balance.tooltip.lockedTelegram', defaultMessage: 'Earn {threshold} in client commissions to unlock your {bonus} Telegram bonus' }, { threshold: `$${((dashboardData?.config?.piggyBankUnlockThreshold || 15000) / 100).toFixed(0)}`, bonus: `$${((dashboardData?.config?.telegramBonusAmount || 5000) / 100).toFixed(0)}` })
         : intl.formatMessage({ id: 'chatter.balance.tooltip.lockedValidated', defaultMessage: 'Validated balance, available soon' }),
       action: null,
     },
