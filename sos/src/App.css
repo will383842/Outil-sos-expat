@@ -174,7 +174,8 @@ body {
   touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
   /* overscroll-behavior: none - REMOVED: was blocking wheel scroll on some browsers */
-  overflow-x: hidden;
+  /* ✅ FIX 2026-03-10: clip instead of hidden — hidden creates a scroll container that traps touch events on mobile */
+  overflow-x: clip;
 }
 
 /* Sélection de texte */

@@ -72,7 +72,7 @@ const StickyAffiliateBar: React.FC = () => {
       navigator.vibrate?.(50);
       const msgIds: Record<string, { id: string; defaultMessage: string }> = {
         client: { id: 'chatter.bar.copiedClient', defaultMessage: 'Client link copied!' },
-        recruitment: { id: 'chatter.bar.copiedRecruitment', defaultMessage: 'Recruitment link copied!' },
+        recruitment: { id: 'chatter.bar.copiedRecruitment', defaultMessage: 'Provider recruitment link copied!' },
         provider: { id: 'chatter.bar.copiedProvider', defaultMessage: 'Provider link copied!' },
       };
       toast.success(intl.formatMessage(msgIds[type]));
@@ -154,7 +154,7 @@ const StickyAffiliateBar: React.FC = () => {
             <UserPlus className="w-3.5 h-3.5 shrink-0" />
             {copiedRecruitment ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span className="whitespace-nowrap">
-              <FormattedMessage id="chatter.bar.collapsedRecruitment" defaultMessage="Recruit ${amount}/call" values={{ amount: providerCallAmount }} />
+              <FormattedMessage id="chatter.bar.collapsedRecruitment" defaultMessage="Recruit providers ${amount}/call" values={{ amount: providerCallAmount }} />
             </span>
           </button>
 
@@ -218,7 +218,7 @@ const StickyAffiliateBar: React.FC = () => {
           <LinkCard
             type="recruitment"
             icon={<UserPlus className="w-4 h-4 text-violet-400" />}
-            label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruitment link' })}
+            label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruit providers' })}
             commission={`$${providerCallAmount}`}
             commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
             code={affiliateCodeRecruitment}

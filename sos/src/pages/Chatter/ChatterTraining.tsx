@@ -4,7 +4,7 @@
  * All content is i18n-ready with FormattedMessage / intl.formatMessage
  */
 
-import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import toast from 'react-hot-toast';
 import {
@@ -84,9 +84,11 @@ function ChatterTrainingContent() {
   const {
     modules,
     isLoading: trainingLoading,
+    isLoadingModule,
     loadModuleContent,
     submitQuiz,
     currentModule,
+    error: trainingError,
   } = useChatterTraining();
 
   const {
@@ -94,6 +96,11 @@ function ChatterTrainingContent() {
     isLoading: resourcesLoading,
     fetchResources,
   } = useChatterResources();
+
+  // Fetch resources on mount
+  useEffect(() => {
+    fetchResources();
+  }, [fetchResources]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -137,11 +144,11 @@ function ChatterTrainingContent() {
   }, [providerShareUrl, intl]);
 
   const handleOpenModule = useCallback(async (moduleId: string) => {
-    await loadModuleContent(moduleId);
     setViewingModule(moduleId);
     setSelectedSlide(0);
     setQuizAnswers({});
     setQuizResult(null);
+    await loadModuleContent(moduleId);
   }, [loadModuleContent]);
 
   // ══════════════════════════════════════════════════════════════
@@ -803,38 +810,55 @@ function ChatterTrainingContent() {
             <FormattedMessage id="chatter.training.modules.title" defaultMessage="Training modules" />
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {modules.map((mod: TrainingModuleListItem) => (
-              <button
-                key={mod.id}
-                onClick={() => handleOpenModule(mod.id)}
-                disabled={mod.prerequisites.length > 0 && !mod.progress?.isStarted}
-                className={`${UI.card} p-4 text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <span className="px-2 py-0.5 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 text-[10px] font-medium rounded-full uppercase">
-                    {mod.category || 'general'}
-                  </span>
-                  {mod.prerequisites.length > 0 && !mod.progress?.isStarted ? (
-                    <Lock className="w-4 h-4 text-slate-400" />
-                  ) : mod.progress?.isCompleted ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  ) : null}
-                </div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{mod.title}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {mod.progress?.totalSlides || 0} slides · {mod.estimatedMinutes || 5}min
-                </p>
-                {mod.progress && mod.progress.isStarted && !mod.progress.isCompleted && mod.progress.totalSlides > 0 && (
-                  <div className="mt-2 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(mod.progress.currentSlideIndex / mod.progress.totalSlides) * 100}%` }} />
+            {modules.map((mod: TrainingModuleListItem) => {
+              // Check if prerequisites are met: all prerequisite modules must be completed
+              const prerequisitesNotMet = mod.prerequisites.length > 0 &&
+                mod.prerequisites.some((prereqId: string) => {
+                  const prereqMod = modules.find((m) => m.id === prereqId);
+                  return !prereqMod?.progress?.isCompleted;
+                });
+
+              return (
+                <button
+                  key={mod.id}
+                  onClick={() => handleOpenModule(mod.id)}
+                  disabled={prerequisitesNotMet}
+                  className={`${UI.card} ${UI.cardHover} p-4 text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm cursor-pointer`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="px-2 py-0.5 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 text-[10px] font-medium rounded-full uppercase">
+                      {mod.category || 'general'}
+                    </span>
+                    {prerequisitesNotMet ? (
+                      <Lock className="w-4 h-4 text-slate-400" />
+                    ) : mod.progress?.isCompleted ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : null}
                   </div>
-                )}
-              </button>
-            ))}
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{mod.title}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {mod.progress?.totalSlides || 0} slides · {mod.estimatedMinutes || 5}min
+                  </p>
+                  {mod.progress && mod.progress.isStarted && !mod.progress.isCompleted && mod.progress.totalSlides > 0 && (
+                    <div className="mt-2 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(mod.progress.currentSlideIndex / mod.progress.totalSlides) * 100}%` }} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
-      {!trainingLoading && (!modules || modules.length === 0) && (
+      {!trainingLoading && trainingError && (
+        <div className={`${UI.card} p-4 bg-red-50/50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20`}>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+            <p className="text-sm text-red-700 dark:text-red-400">{trainingError}</p>
+          </div>
+        </div>
+      )}
+      {!trainingLoading && !trainingError && (!modules || modules.length === 0) && (
         <EmptyStateCard
           icon={<BookOpen className="w-7 h-7" />}
           title={<FormattedMessage id="chatter.training.modules.emptyTitle" defaultMessage="Modules coming soon" />}
@@ -1003,21 +1027,47 @@ function ChatterTrainingContent() {
       <SwipeTabContainer tabs={tabs} />
 
       {/* Module viewer modal */}
-      {viewingModule && currentModule && (
-        <ModuleViewer
-          module={currentModule}
-          selectedSlide={selectedSlide}
-          onSlideChange={setSelectedSlide}
-          quizAnswers={quizAnswers}
-          onQuizAnswer={(qId, answer) => setQuizAnswers(prev => ({ ...prev, [qId]: answer }))}
-          quizResult={quizResult}
-          onSubmitQuiz={async () => {
-            const answersArray = Object.entries(quizAnswers).map(([questionId, answerId]) => ({ questionId, answerId }));
-            const result = await submitQuiz(viewingModule, answersArray);
-            if (result) setQuizResult(result);
-          }}
-          onClose={() => { setViewingModule(null); setQuizResult(null); }}
-        />
+      {viewingModule && (
+        isLoadingModule ? (
+          <div className="fixed inset-0 z-50 bg-white dark:bg-slate-900 flex flex-col items-center justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mb-4" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              <FormattedMessage id="chatter.training.loadingModule" defaultMessage="Loading module..." />
+            </p>
+            <button
+              onClick={() => { setViewingModule(null); setQuizResult(null); }}
+              className={`mt-4 ${UI.button.secondary} px-4 py-2 text-sm`}
+            >
+              <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
+            </button>
+          </div>
+        ) : trainingError ? (
+          <div className="fixed inset-0 z-50 bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-6">
+            <AlertTriangle className="w-10 h-10 text-amber-500 mb-4" />
+            <p className="text-sm text-slate-700 dark:text-slate-300 text-center mb-4">{trainingError}</p>
+            <button
+              onClick={() => { setViewingModule(null); setQuizResult(null); }}
+              className={`${UI.button.primary} px-6 py-2 text-sm`}
+            >
+              <FormattedMessage id="common.close" defaultMessage="Close" />
+            </button>
+          </div>
+        ) : currentModule ? (
+          <ModuleViewer
+            module={currentModule}
+            selectedSlide={selectedSlide}
+            onSlideChange={setSelectedSlide}
+            quizAnswers={quizAnswers}
+            onQuizAnswer={(qId, answer) => setQuizAnswers(prev => ({ ...prev, [qId]: answer }))}
+            quizResult={quizResult}
+            onSubmitQuiz={async () => {
+              const answersArray = Object.entries(quizAnswers).map(([questionId, answerId]) => ({ questionId, answerId }));
+              const result = await submitQuiz(viewingModule, answersArray);
+              if (result) setQuizResult(result);
+            }}
+            onClose={() => { setViewingModule(null); setQuizResult(null); }}
+          />
+        ) : null
       )}
     </div>
   );
