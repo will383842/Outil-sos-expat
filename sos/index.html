@@ -5,6 +5,18 @@
   <!-- 📱 META MOBILE FIRST -->
   <meta charset="UTF-8" />
 
+  <!-- 🛡️ TELEGRAM WEBVIEW ERROR SUPPRESSOR - Must be FIRST script -->
+  <script>
+    // Suppress Telegram WebView frame_start.js errors (removeChild on non-child node)
+    // This is a known Telegram bug, not our code. Prevent it from crashing the app.
+    window.addEventListener('error', function (e) {
+      if (e.filename && e.filename.includes('frame_start')) {
+        e.preventDefault();
+        return true;
+      }
+    });
+  </script>
+
   <!-- ✅ META DOMAIN VERIFICATION (Meta/Facebook) -->
   <meta name="facebook-domain-verification" content="057touek5k457zdszlkor3eq1amj1l" />
 

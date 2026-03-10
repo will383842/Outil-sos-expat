@@ -179,10 +179,10 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                <FormattedMessage id="chatter.links.recruitment.title" defaultMessage="Lien Recrutement" />
+                <FormattedMessage id="chatter.links.recruitment.title" defaultMessage="Recruter équipe" />
               </h3>
               <p className="text-sm dark:text-gray-400">
-                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez d'autres chatters et gagnez $1/appel N1" />
+                <FormattedMessage id="chatter.links.recruitment.desc" defaultMessage="Recrutez d'autres chatters dans votre équipe et gagnez $5/appel N1" />
               </p>
             </div>
           </div>
@@ -233,8 +233,8 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
               <button
                 onClick={() => shareLink(
                   recruitmentLinkUrl,
-                  intl.formatMessage({ id: 'chatter.links.recruitment.share.title', defaultMessage: 'Devenez prestataire SOS-Expat' }),
-                  intl.formatMessage({ id: 'chatter.links.recruitment.share.text', defaultMessage: 'Rejoignez notre réseau et aidez les expatriés' })
+                  intl.formatMessage({ id: 'chatter.links.recruitment.share.title', defaultMessage: 'Rejoins notre équipe SOS-Expat' }),
+                  intl.formatMessage({ id: 'chatter.links.recruitment.share.text', defaultMessage: 'Rejoins notre équipe de chatters et gagne des commissions' })
                 )}
                 className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium rounded-xl min-h-[48px] flex items-center justify-center active:scale-[0.98] transition-all"
                 title={intl.formatMessage({ id: 'common.share' })}
@@ -263,7 +263,7 @@ const ChatterAffiliateLinks: React.FC<ChatterAffiliateLinksProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                <FormattedMessage id="chatter.links.provider.title" defaultMessage="Lien Prestataire" />
+                <FormattedMessage id="chatter.links.provider.title" defaultMessage="Recruter prestataires" />
               </h3>
               <p className="text-sm dark:text-gray-400">
                 <FormattedMessage id="chatter.links.provider.desc" defaultMessage="Recrutez des avocats ou expatriés et gagnez $5/appel pendant 6 mois" />

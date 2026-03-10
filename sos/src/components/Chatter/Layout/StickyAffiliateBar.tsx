@@ -72,8 +72,8 @@ const StickyAffiliateBar: React.FC = () => {
       navigator.vibrate?.(50);
       const msgIds: Record<string, { id: string; defaultMessage: string }> = {
         client: { id: 'chatter.bar.copiedClient', defaultMessage: 'Client link copied!' },
-        recruitment: { id: 'chatter.bar.copiedRecruitment', defaultMessage: 'Provider recruitment link copied!' },
-        provider: { id: 'chatter.bar.copiedProvider', defaultMessage: 'Provider link copied!' },
+        recruitment: { id: 'chatter.bar.copiedRecruitment', defaultMessage: 'Team recruitment link copied!' },
+        provider: { id: 'chatter.bar.copiedProvider', defaultMessage: 'Provider recruitment link copied!' },
       };
       toast.success(intl.formatMessage(msgIds[type]));
     } else {
@@ -93,7 +93,7 @@ const StickyAffiliateBar: React.FC = () => {
     }
     const titles: Record<string, string> = {
       client: 'SOS Expat - Assistance',
-      recruitment: 'SOS Expat - Rejoins-nous',
+      recruitment: 'SOS Expat - Rejoins notre équipe',
       provider: 'SOS Expat - Devenez prestataire',
     };
     const title = titles[type];
@@ -154,7 +154,7 @@ const StickyAffiliateBar: React.FC = () => {
             <UserPlus className="w-3.5 h-3.5 shrink-0" />
             {copiedRecruitment ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span className="whitespace-nowrap">
-              <FormattedMessage id="chatter.bar.collapsedRecruitment" defaultMessage="Recruit providers ${amount}/call" values={{ amount: providerCallAmount }} />
+              <FormattedMessage id="chatter.bar.collapsedRecruitment" defaultMessage="Team ${amount}/call" values={{ amount: providerCallAmount }} />
             </span>
           </button>
 
@@ -218,7 +218,7 @@ const StickyAffiliateBar: React.FC = () => {
           <LinkCard
             type="recruitment"
             icon={<UserPlus className="w-4 h-4 text-violet-400" />}
-            label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruit providers' })}
+            label={intl.formatMessage({ id: 'chatter.bar.recruitmentLabel', defaultMessage: 'Recruit team' })}
             commission={`$${providerCallAmount}`}
             commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
             code={affiliateCodeRecruitment}
@@ -229,7 +229,7 @@ const StickyAffiliateBar: React.FC = () => {
             onShare={() => handleShare(recruitmentShareUrl ?? '', 'recruitment')}
             tooltip={intl.formatMessage({
               id: 'chatter.bar.recruitmentTooltip',
-              defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive calls, you earn $5 per call for 6 months.',
+              defaultMessage: 'Share this link to recruit other chatters to your team. When your recruits generate calls, you earn $5 per call (N1 commission).',
             })}
           />
 
@@ -240,7 +240,7 @@ const StickyAffiliateBar: React.FC = () => {
           <LinkCard
             type="provider"
             icon={<Briefcase className="w-4 h-4 text-teal-400" />}
-            label={intl.formatMessage({ id: 'chatter.bar.providerLabel', defaultMessage: 'Provider link' })}
+            label={intl.formatMessage({ id: 'chatter.bar.providerLabel', defaultMessage: 'Recruit providers' })}
             commission={`$${providerCallAmount}`}
             commissionSuffix={intl.formatMessage({ id: 'chatter.bar.perCall', defaultMessage: '/call' })}
             code={affiliateCodeProvider}
@@ -251,7 +251,7 @@ const StickyAffiliateBar: React.FC = () => {
             onShare={() => handleShare(providerShareUrl ?? '', 'provider')}
             tooltip={intl.formatMessage({
               id: 'chatter.bar.providerTooltip',
-              defaultMessage: 'Share this link with providers (lawyers, expats). When they register and receive paid calls, you earn per call.',
+              defaultMessage: 'Share this link with providers (lawyers, expats). When they sign up and receive paid calls, you earn $5 per call for 6 months.',
             })}
           />
         </div>
