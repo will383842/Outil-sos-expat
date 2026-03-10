@@ -14,7 +14,6 @@ import DarkPasswordInput from '../shared/DarkPasswordInput';
 import DarkPhoneInput from '../shared/DarkPhoneInput';
 import DarkCheckbox from '../shared/DarkCheckbox';
 import { FieldError, FieldSuccess } from '../shared/FieldFeedback';
-import FAQSection from '../shared/FAQSection';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
@@ -735,9 +734,6 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
           </Link>
         </p>
       </footer>
-
-      {/* FAQ */}
-      <FAQSection theme={theme} intl={intl} faqCount={8} />
 
       {/* Trust Badges */}
       <TrustBadges />
