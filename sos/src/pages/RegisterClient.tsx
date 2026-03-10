@@ -41,16 +41,6 @@ const isAllowedRedirect = (url: string): boolean => {
 // =============================================================================
 const GOOGLE_TIMEOUT = 5000;
 
-const FAQ_KEYS = [
-  { q: 'registerClient.faq.q1', a: 'registerClient.faq.a1' },
-  { q: 'registerClient.faq.q2', a: 'registerClient.faq.a2' },
-  { q: 'registerClient.faq.q3', a: 'registerClient.faq.a3' },
-  { q: 'registerClient.faq.q4', a: 'registerClient.faq.a4' },
-  { q: 'registerClient.faq.q5', a: 'registerClient.faq.a5' },
-  { q: 'registerClient.faq.q6', a: 'registerClient.faq.a6' },
-  { q: 'registerClient.faq.q7', a: 'registerClient.faq.a7' },
-  { q: 'registerClient.faq.q8', a: 'registerClient.faq.a8' },
-] as const;
 
 // =============================================================================
 // HELPERS
@@ -230,18 +220,6 @@ const RegisterClient: React.FC = () => {
             telephone: intl.formatMessage({ id: 'registerClient.seo.supportPhone' }),
             availableLanguage: availableLanguages,
           },
-        },
-        {
-          '@type': intl.formatMessage({ id: 'registerClient.seo.schemaType.faqPage' }),
-          '@id': `${currentUrl}#faq`,
-          mainEntity: FAQ_KEYS.map(faq => ({
-            '@type': intl.formatMessage({ id: 'registerClient.seo.schemaType.question' }),
-            name: intl.formatMessage({ id: faq.q }),
-            acceptedAnswer: {
-              '@type': intl.formatMessage({ id: 'registerClient.seo.schemaType.answer' }),
-              text: intl.formatMessage({ id: faq.a }),
-            },
-          })),
         },
         {
           '@type': intl.formatMessage({ id: 'registerClient.seo.schemaType.service' }),

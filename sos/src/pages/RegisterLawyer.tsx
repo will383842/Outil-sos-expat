@@ -17,7 +17,6 @@ import { getStoredReferralTracking } from '../hooks/useAffiliate';
 import { getStoredReferralCode, getBestAvailableReferralCode } from '../utils/referralStorage';
 
 import LawyerRegisterForm from '../components/registration/lawyer/LawyerRegisterForm';
-import FAQSection from '../components/registration/shared/FAQSection';
 import { getTheme } from '../components/registration/shared/theme';
 
 const theme = getTheme('lawyer');
@@ -151,14 +150,6 @@ const RegisterLawyer: React.FC = () => {
           },
         },
         {
-          '@type': 'FAQPage',
-          mainEntity: Array.from({ length: 8 }, (_, i) => ({
-            '@type': 'Question',
-            name: intl.formatMessage({ id: `registerLawyer.faq.q${i + 1}` }),
-            acceptedAnswer: { '@type': 'Answer', text: intl.formatMessage({ id: `registerLawyer.faq.a${i + 1}` }) },
-          })),
-        },
-        {
           '@type': 'Service',
           serviceType: intl.formatMessage({ id: 'registerLawyer.seo.serviceType' }),
           provider: { '@type': 'Organization', '@id': `${baseUrl}/#organization` },
@@ -241,7 +232,6 @@ const RegisterLawyer: React.FC = () => {
             getStoredReferralTracking={getStoredReferralTracking}
           />
 
-          <FAQSection theme={theme} intl={intl} />
         </main>
 
         {/* Footer */}
