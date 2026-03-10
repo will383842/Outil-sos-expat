@@ -171,8 +171,8 @@ export async function handleTelegramUserRegistration(event: any) {
 
       // 6. Forward to Telegram Engine
       await forwardEventToEngine("user.registered", userId, {
-        displayName: email,
         email,
+        phone: phoneNumber,
         role,
         country,
       });

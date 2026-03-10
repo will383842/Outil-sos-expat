@@ -198,8 +198,11 @@ export const telegramOnNewProvider = onDocumentCreated(
       // 7. Forward to Telegram Engine
       await forwardEventToEngine("new.provider", profileId, {
         displayName,
-        role,
+        firstName: profileData.firstName || "",
+        lastName: profileData.lastName || "",
+        providerType: role,
         email,
+        phone: phoneNumber,
         country,
       });
     } catch (error) {
