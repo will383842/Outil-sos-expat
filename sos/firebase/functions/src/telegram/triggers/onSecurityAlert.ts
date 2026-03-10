@@ -14,7 +14,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 
-import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../../lib/secrets";
 import { forwardEventToEngine } from "../forwardToEngine";
 import type { SecurityAlertVars } from "../types";
 
@@ -137,7 +137,7 @@ export const telegramOnSecurityAlert = onDocumentCreated(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    secrets: [TELEGRAM_BOT_TOKEN],
+    secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET],
   },
   async (event) => {
     const alertId = event.params.alertId;

@@ -16,7 +16,7 @@
 import * as admin from 'firebase-admin';
 import { onSchedule, ScheduledEvent } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
-import { TELEGRAM_BOT_TOKEN } from '../../lib/secrets';
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from '../../lib/secrets';
 import { enqueueTelegramMessage } from '../queue/enqueue';
 import { forwardEventToEngine } from '../forwardToEngine';
 import { I18N_TEMPLATES } from '../templates';
@@ -353,7 +353,7 @@ export const telegramDailyReport = onSchedule(
     memory: '256MiB',
     cpu: 0.083,
     timeoutSeconds: 120,
-    secrets: [TELEGRAM_BOT_TOKEN],
+    secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET],
   },
   async (_event: ScheduledEvent) => {
     const startTime = Date.now();

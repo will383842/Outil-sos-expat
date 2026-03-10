@@ -17,7 +17,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../../lib/secrets";
 import { forwardEventToEngine } from "../forwardToEngine";
 import { getRoleFrench } from "../types";
 
@@ -175,7 +175,7 @@ export const telegramOnCallCompleted = onDocumentUpdated(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
-    secrets: [TELEGRAM_BOT_TOKEN],
+    secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET],
   },
   async (event) => {
     ensureInitialized();

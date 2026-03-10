@@ -24,6 +24,7 @@ import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
 import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
 import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 import { forwardEventToEngine } from "../../telegram/forwardToEngine";
+import { TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../../lib/secrets";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -1086,6 +1087,7 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
     memory: "256MiB",
     cpu: 0.083,
     timeoutSeconds: 60,
+    secrets: [TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET],
   },
   async (event) => {
     ensureInitialized();

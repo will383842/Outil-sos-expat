@@ -268,6 +268,16 @@ export const TELEGRAM_WEBHOOK_SECRET = defineSecret("TELEGRAM_WEBHOOK_SECRET");
 export const TELEGRAM_SECRETS = [TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET];
 
 // ============================================================================
+// TELEGRAM ENGINE SECRETS (Laravel Engine for notifications)
+// ============================================================================
+
+export const TELEGRAM_ENGINE_URL_SECRET = defineSecret("TELEGRAM_ENGINE_URL");
+export const TELEGRAM_ENGINE_API_KEY_SECRET = defineSecret("TELEGRAM_ENGINE_API_KEY");
+
+/** Telegram Engine secrets for functions that call forwardEventToEngine */
+export const TELEGRAM_ENGINE_SECRETS = [TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET];
+
+// ============================================================================
 // GETTERS WITH FALLBACK TO process.env (for emulator/local dev)
 // ============================================================================
 

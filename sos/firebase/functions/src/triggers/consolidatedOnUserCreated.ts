@@ -44,7 +44,7 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 // Secret imports (needed for the secrets array in trigger config)
-import { TELEGRAM_BOT_TOKEN } from "../lib/secrets";
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../lib/secrets";
 import {
   GOOGLE_ADS_CUSTOMER_ID,
   GOOGLE_ADS_LEAD_CONVERSION_ID,
@@ -71,6 +71,8 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     timeoutSeconds: 120,
     secrets: [
       TELEGRAM_BOT_TOKEN,
+      TELEGRAM_ENGINE_URL_SECRET,
+      TELEGRAM_ENGINE_API_KEY_SECRET,
       GOOGLE_ADS_CUSTOMER_ID,
       GOOGLE_ADS_LEAD_CONVERSION_ID,
       GOOGLE_ADS_DEVELOPER_TOKEN,
@@ -86,174 +88,75 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     const userId = event.params.userId;
     const results: Record<string, "ok" | "skipped" | string> = {};
 
-    // Run all 11 handlers independently with try/catch isolation.
-    // Dynamic imports keep cold-start overhead minimal.
-    // ORDER: Telegram FIRST (lightweight, admin-visible), then critical handlers, then tracking.
+    // ✅ OPTIMISÉ: 3 vagues parallèles au lieu de 11 séquentiels (~5x plus rapide)
+    // Chaque handler est isolé par try/catch pour éviter les cascades d'erreurs.
 
-    // 1. Telegram admin notification (PRIORITY - lightweight, must not be starved by other handlers)
-    try {
-      const { handleTelegramUserRegistration } = await import(
-        "../telegram/triggers/onUserRegistration"
-      );
-      await handleTelegramUserRegistration(event);
-      results.telegram = "ok";
-    } catch (error) {
-      results.telegram = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Telegram handler failed", {
-        userId,
-        error,
-      });
-    }
+    // Helper pour exécuter un handler avec isolation d'erreur
+    const safeRun = async (name: string, fn: () => Promise<void>) => {
+      try {
+        await fn();
+        results[name] = "ok";
+      } catch (error) {
+        results[name] = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error(`[consolidatedOnUserCreated] ${name} handler failed`, { userId, error });
+      }
+    };
 
-    // 2. Sync Role Claims (CRITICAL - sets Firebase Custom Claims for auth)
-    try {
-      const { handleSyncClaimsCreated } = await import(
-        "./syncRoleClaims"
-      );
-      await handleSyncClaimsCreated(event);
-      results.syncClaims = "ok";
-    } catch (error) {
-      results.syncClaims = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Sync claims handler failed", {
-        userId,
-        error,
-      });
-    }
+    // VAGUE 1: Handlers critiques (Claims + Telegram + Affiliate) — tous indépendants
+    await Promise.all([
+      safeRun("telegram", async () => {
+        const { handleTelegramUserRegistration } = await import("../telegram/triggers/onUserRegistration");
+        await handleTelegramUserRegistration(event);
+      }),
+      safeRun("syncClaims", async () => {
+        const { handleSyncClaimsCreated } = await import("./syncRoleClaims");
+        await handleSyncClaimsCreated(event);
+      }),
+      safeRun("affiliate", async () => {
+        const { handleAffiliateUserCreated } = await import("../affiliate/triggers/onUserCreated");
+        await handleAffiliateUserCreated(event);
+      }),
+    ]);
 
-    // 3. Affiliate handler (generates affiliate code, resolves referrer, fraud detection)
-    try {
-      const { handleAffiliateUserCreated } = await import(
-        "../affiliate/triggers/onUserCreated"
-      );
-      await handleAffiliateUserCreated(event);
-      results.affiliate = "ok";
-    } catch (error) {
-      results.affiliate = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Affiliate handler failed", {
-        userId,
-        error,
-      });
-    }
+    // VAGUE 2: Referral tracking handlers — tous indépendants entre eux
+    await Promise.all([
+      safeRun("chatterProvider", async () => {
+        const { handleChatterProviderRegistered } = await import("../chatter/triggers/onProviderRegistered");
+        await handleChatterProviderRegistered(event);
+      }),
+      safeRun("chatterClient", async () => {
+        const { handleChatterClientRegistered } = await import("../chatter/triggers/onProviderRegistered");
+        await handleChatterClientRegistered(event);
+      }),
+      safeRun("influencer", async () => {
+        const { handleInfluencerProviderRegistered } = await import("../influencer/triggers/onProviderRegistered");
+        await handleInfluencerProviderRegistered(event);
+      }),
+      safeRun("bloggerProvider", async () => {
+        const { handleBloggerProviderRegistered } = await import("../blogger/triggers/onProviderRegistered");
+        await handleBloggerProviderRegistered(event);
+      }),
+      safeRun("groupAdminProvider", async () => {
+        const { handleGroupAdminProviderRegistered } = await import("../groupAdmin/triggers/onProviderRegistered");
+        await handleGroupAdminProviderRegistered(event);
+      }),
+    ]);
 
-    // 4. Chatter - provider recruited (links provider to recruiting chatter)
-    try {
-      const { handleChatterProviderRegistered } = await import(
-        "../chatter/triggers/onProviderRegistered"
-      );
-      await handleChatterProviderRegistered(event);
-      results.chatterProvider = "ok";
-    } catch (error) {
-      results.chatterProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Chatter provider handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 5. Chatter - client referred (links client to referring chatter)
-    try {
-      const { handleChatterClientRegistered } = await import(
-        "../chatter/triggers/onProviderRegistered"
-      );
-      await handleChatterClientRegistered(event);
-      results.chatterClient = "ok";
-    } catch (error) {
-      results.chatterClient = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Chatter client handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 6. Influencer - provider recruited (creates referral tracking)
-    try {
-      const { handleInfluencerProviderRegistered } = await import(
-        "../influencer/triggers/onProviderRegistered"
-      );
-      await handleInfluencerProviderRegistered(event);
-      results.influencer = "ok";
-    } catch (error) {
-      results.influencer = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Influencer handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 7. Blogger - provider recruited (creates recruitment tracking in blogger_recruited_providers)
-    try {
-      const { handleBloggerProviderRegistered } = await import(
-        "../blogger/triggers/onProviderRegistered"
-      );
-      await handleBloggerProviderRegistered(event);
-      results.bloggerProvider = "ok";
-    } catch (error) {
-      results.bloggerProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Blogger provider handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 8. GroupAdmin - provider recruited (creates recruitment tracking in group_admin_recruited_providers)
-    try {
-      const { handleGroupAdminProviderRegistered } = await import(
-        "../groupAdmin/triggers/onProviderRegistered"
-      );
-      await handleGroupAdminProviderRegistered(event);
-      results.groupAdminProvider = "ok";
-    } catch (error) {
-      results.groupAdminProvider = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] GroupAdmin provider handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 9. Email Marketing - MailWizz subscriber + welcome email
-    try {
-      const { handleEmailMarketingRegistration } = await import(
-        "../emailMarketing/functions/userLifecycle"
-      );
-      await handleEmailMarketingRegistration(event);
-      results.emailMarketing = "ok";
-    } catch (error) {
-      results.emailMarketing = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Email marketing handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 10. Google Ads SignUp tracking
-    try {
-      const { handleGoogleAdsSignUp } = await import(
-        "./googleAdsTracking"
-      );
-      await handleGoogleAdsSignUp(event);
-      results.googleAds = "ok";
-    } catch (error) {
-      results.googleAds = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Google Ads handler failed", {
-        userId,
-        error,
-      });
-    }
-
-    // 11. Meta CAPI Registration tracking
-    try {
-      const { handleCAPIRegistration } = await import(
-        "./capiTracking"
-      );
-      await handleCAPIRegistration(event);
-      results.metaCAPI = "ok";
-    } catch (error) {
-      results.metaCAPI = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnUserCreated] Meta CAPI handler failed", {
-        userId,
-        error,
-      });
-    }
+    // VAGUE 3: Tracking externe (Email, Google Ads, Meta CAPI) — tous indépendants
+    await Promise.all([
+      safeRun("emailMarketing", async () => {
+        const { handleEmailMarketingRegistration } = await import("../emailMarketing/functions/userLifecycle");
+        await handleEmailMarketingRegistration(event);
+      }),
+      safeRun("googleAds", async () => {
+        const { handleGoogleAdsSignUp } = await import("./googleAdsTracking");
+        await handleGoogleAdsSignUp(event);
+      }),
+      safeRun("metaCAPI", async () => {
+        const { handleCAPIRegistration } = await import("./capiTracking");
+        await handleCAPIRegistration(event);
+      }),
+    ]);
 
     logger.info("[consolidatedOnUserCreated] All handlers completed", {
       userId,
