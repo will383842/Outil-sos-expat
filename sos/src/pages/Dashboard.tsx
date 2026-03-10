@@ -764,10 +764,9 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
     Array<{ value: string; label: string }>
   >((baseProfile.languages || []).map((l) => ({ value: l, label: l })));
 
-  // Redirect si pas loggé
+  // Redirect si pas loggé (preserve ?ref= tracking)
   useEffect(() => {
-    if (!user) navigate("/login");
-    // ✅ P0 FIX: Remove verbose logging
+    if (!user) navigate("/login" + (window.location.search || ""));
   }, [user, navigate]);
 
   // ✅ Set userDataReady to true once user is loaded
@@ -2165,10 +2164,22 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                               // ✅ FIX: Use setSearchParams to update tab - more reliable than navigate
                               dashboardLog.tab(`Switching to tab: ${item.key}`, { from: activeTab, to: item.key });
                               if (item.key === 'profile') {
-                                // For profile tab, remove the tab param entirely
-                                setSearchParams({});
+                                // For profile tab, remove the tab param but preserve ?ref= tracking
+                                setSearchParams(prev => {
+                                  const next = new URLSearchParams();
+                                  const ref = prev.get('ref');
+                                  if (ref) next.set('ref', ref);
+                                  return next;
+                                });
                               } else {
-                                setSearchParams({ tab: item.key });
+                                // Preserve ?ref= tracking when switching tabs
+                                setSearchParams(prev => {
+                                  const next = new URLSearchParams();
+                                  next.set('tab', item.key);
+                                  const ref = prev.get('ref');
+                                  if (ref) next.set('ref', ref);
+                                  return next;
+                                });
                               }
                               // Also update activeTab immediately for instant UI feedback
                               setActiveTab(item.key as TabType);

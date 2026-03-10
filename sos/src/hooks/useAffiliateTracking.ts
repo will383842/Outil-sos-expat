@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { getStoredReferralCode, getBestAvailableReferralCode } from "../utils/referralStorage";
 
 const AFFILIATE_STORAGE_KEY = "sos_affiliate_ref";
@@ -113,24 +113,16 @@ export function appendAffiliateRef(path: string): string {
  * Place this once in App.tsx inside the Router.
  * This is the SAFETY NET that catches ALL navigation methods.
  *
- * Anti-loop protection:
- * - Uses a ref to track the last URL we navigated TO, preventing re-triggering
- * - Skips injection if we JUST navigated (debounce via lastNavTime)
- * - Never navigates more than once per pathname change
+ * PERF FIX: Uses window.history.replaceState() instead of navigate()
+ * to modify the URL WITHOUT triggering React re-renders (32+ components).
+ * The referral code is always available in localStorage/sessionStorage
+ * for registration pages, so React Router doesn't need to know about ?ref=.
  */
 export function AffiliateRefSync(): null {
   const location = useLocation();
-  const navigate = useNavigate();
   const lastInjectedPath = useRef<string>("");
-  const isNavigating = useRef(false);
 
   useEffect(() => {
-    // Guard: if WE just triggered this navigation, skip
-    if (isNavigating.current) {
-      isNavigating.current = false;
-      return;
-    }
-
     const ref = getAffiliateRef();
     if (!ref) return;
 
@@ -143,24 +135,19 @@ export function AffiliateRefSync(): null {
     if (/^\/[^/]+\/(ref|rec|prov)\//.test(location.pathname)) return;
 
     // Already has ref in URL — nothing to do
-    const currentParams = new URLSearchParams(location.search);
-    if (currentParams.has(AFFILIATE_PARAM)) return;
+    // Check actual browser URL (not React Router state) since we use replaceState
+    const browserParams = new URLSearchParams(window.location.search);
+    if (browserParams.has(AFFILIATE_PARAM)) return;
 
     // Anti-loop: don't inject twice for the same pathname
-    const fullPath = location.pathname + location.search;
     if (lastInjectedPath.current === location.pathname) return;
 
-    // Inject ?ref= into URL
+    // Inject ?ref= into browser URL WITHOUT React re-render
     lastInjectedPath.current = location.pathname;
-    currentParams.set(AFFILIATE_PARAM, ref);
-    const newSearch = `?${currentParams.toString()}`;
-
-    isNavigating.current = true;
-    navigate(
-      { pathname: location.pathname, search: newSearch, hash: location.hash },
-      { replace: true }
-    );
-  }, [location.pathname]); // Only react to pathname changes, NOT search changes
+    browserParams.set(AFFILIATE_PARAM, ref);
+    const newUrl = `${window.location.pathname}?${browserParams.toString()}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [location.pathname]); // Only react to pathname changes
 
   return null;
 }

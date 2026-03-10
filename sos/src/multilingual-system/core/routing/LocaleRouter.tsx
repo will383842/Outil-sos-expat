@@ -20,6 +20,7 @@ import {
   findChildRouteBySegment,
 } from "./localeRoutes";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import { devLog, devWarn } from "../../../utils/devLog";
 
 interface LocaleRouterProps {
   children: React.ReactNode;
@@ -37,7 +38,7 @@ function computeRedirectPath(
   localeParam?: string
 ): { redirectTo: string | null; newLang: Language | null } {
   // P0 DEBUG: Log all inputs for debugging routing issues
-  console.log("🔷 [LocaleRouter] computeRedirectPath called:", {
+  devLog("🔷 [LocaleRouter] computeRedirectPath called:", {
     pathname,
     language,
     localeParam,
@@ -54,14 +55,14 @@ function computeRedirectPath(
 
   // Skip locale handling for admin routes
   if (pathname.startsWith("/admin") || pathname.startsWith("/marketing")) {
-    console.log("🔷 [LocaleRouter] Skipping admin/marketing route");
+    devLog("🔷 [LocaleRouter] Skipping admin/marketing route");
     return { redirectTo: null, newLang: null };
   }
 
   // Skip locale handling for affiliate path-based links (/ref/X/CODE, /rec/X/CODE, /prov/X/CODE)
   // These are handled by AffiliatePathCapture routes in App.tsx
   if (/^\/(ref|rec|prov)\//.test(pathname)) {
-    console.log("🔷 [LocaleRouter] Skipping affiliate path route:", pathname);
+    devLog("🔷 [LocaleRouter] Skipping affiliate path route:", pathname);
     return { redirectTo: null, newLang: null };
   }
 
@@ -75,7 +76,7 @@ function computeRedirectPath(
   // This prevents Google from indexing /en-us/ and /en-us as separate pages
   if (decodedPathname.length > 1 && decodedPathname.endsWith('/')) {
     const normalizedPath = decodedPathname.slice(0, -1);
-    console.log("🔷 [LocaleRouter] Removing trailing slash:", decodedPathname, "->", normalizedPath);
+    devLog("🔷 [LocaleRouter] Removing trailing slash:", decodedPathname, "->", normalizedPath);
     return { redirectTo: normalizedPath, newLang: null };
   }
 
@@ -84,7 +85,7 @@ function computeRedirectPath(
   if (hasLegacyLocalePrefix(decodedPathname)) {
     const legacyResult = parseLegacyLocaleFromPath(decodedPathname);
     if (legacyResult.shouldRedirect && legacyResult.newPath) {
-      console.log("🔷 [LocaleRouter] Redirecting legacy URL:", {
+      devLog("🔷 [LocaleRouter] Redirecting legacy URL:", {
         from: decodedPathname,
         to: legacyResult.newPath,
         detectedLang: legacyResult.detectedLang,
@@ -113,7 +114,7 @@ function computeRedirectPath(
   if (localeParam && invalidLocaleCombinations[localeParam]) {
     const correctLocale = invalidLocaleCombinations[localeParam];
     const { pathWithoutLocale } = parseLocaleFromPath(decodedPathname);
-    console.log("🔷 [LocaleRouter] Redirecting invalid locale combo:", localeParam, "->", correctLocale);
+    devLog("🔷 [LocaleRouter] Redirecting invalid locale combo:", localeParam, "->", correctLocale);
     return { redirectTo: `/${correctLocale}${pathWithoutLocale}`, newLang: null };
   }
 
@@ -137,7 +138,7 @@ function computeRedirectPath(
       // This looks like /xx-yy/zz/... where zz might be a language code
       const potentialLangCodes = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'zh', 'hi', 'ar'];
       if (potentialLangCodes.includes(firstSegment)) {
-        console.log("🔷 [LocaleRouter] Detected MALFORMED double-locale URL:", {
+        devLog("🔷 [LocaleRouter] Detected MALFORMED double-locale URL:", {
           pathname: decodedPathname,
           firstLocale: localeParam,
           secondLang: firstSegment,
@@ -221,7 +222,7 @@ function computeRedirectPath(
   }
 
   // Path is valid, no redirect needed
-  console.log("🔷 [LocaleRouter] Path is valid, no redirect needed:", decodedPathname);
+  devLog("🔷 [LocaleRouter] Path is valid, no redirect needed:", decodedPathname);
   return { redirectTo: null, newLang: null };
 }
 
@@ -261,7 +262,7 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
   if (redirectTo) {
     // CRITICAL: Preserve query params (e.g., ?ref=CODE) during locale redirects
     const redirectWithQuery = `${redirectTo}${location.search || ''}${location.hash || ''}`;
-    console.warn("🔷 [LocaleRouter] REDIRECTING", {
+    devWarn("🔷 [LocaleRouter] REDIRECTING", {
       from: location.pathname + location.search,
       to: redirectWithQuery,
       language,
