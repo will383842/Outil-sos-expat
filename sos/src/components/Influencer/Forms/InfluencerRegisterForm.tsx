@@ -601,7 +601,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         await refreshUser();
         setTimeout(() => {
           navigate(`/${getTranslatedRouteSlug('influencer-telegram' as RouteKey, langCode)}`, { replace: true });
-        }, 2000);
+        }, 500);
       }
     } catch (err: unknown) {
       onRegistrationStateChange?.(false);

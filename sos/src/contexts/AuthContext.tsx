@@ -2106,9 +2106,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // Sans cela, les règles Firestore voient request.auth == null → permission-denied
       devLog("[DEBUG] " + "🔄 REGISTER: Token refresh pour Firestore...");
       await cred.user.getIdToken(true);
-      devLog("[DEBUG] " + "⏱️ REGISTER: Waiting 2s for Firestore sync (increased from 1s)...");
-      // ✅ AUGMENTÉ de 1s à 2s: connexions lentes (3G/4G) nécessitent plus de temps
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      devLog("[DEBUG] " + "⏱️ REGISTER: Waiting 500ms for Firestore sync (optimized from 2s)...");
+      // ✅ OPTIMISÉ: getIdToken(true) force le refresh token, 500ms de marge pour réseaux lents (3G/4G)
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       let finalProfilePhotoURL = '/default-avatar.png';
       if (userData.profilePhoto?.startsWith('data:image')) {

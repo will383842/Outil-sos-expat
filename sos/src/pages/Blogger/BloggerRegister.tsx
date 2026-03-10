@@ -548,7 +548,7 @@ const BloggerRegister: React.FC = () => {
         await refreshUser();
         setTimeout(() => {
           navigate(telegramRoute, { replace: true });
-        }, 2000);
+        }, 500);
       } else {
         setError(result.data.message);
       }

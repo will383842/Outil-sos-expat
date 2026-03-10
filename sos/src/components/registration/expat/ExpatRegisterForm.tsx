@@ -512,10 +512,10 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
         clearStoredReferral('client');
 
-        // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+        // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
         setTimeout(() => {
           navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
-        }, 300);
+        }, 50);
         return;
       }
 
@@ -556,10 +556,10 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
       clearStoredReferral('client');
 
-      // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+      // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
       setTimeout(() => {
         navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
-      }, 1500);
+      }, 50);
 
     } catch (err: unknown) {
       console.error('[ExpatRegisterForm] ❌ ERREUR INSCRIPTION', {

@@ -580,8 +580,8 @@ export const registerInfluencer = onCall(
         totalDuration: Date.now() - startTime
       });
 
-      // ✅ NOUVEAU : Notify Backlink Engine to stop prospecting campaigns
-      await notifyBacklinkEngineUserRegistered({
+      // ✅ Fire-and-forget: Notify Backlink Engine (non-bloquant pour la réponse)
+      notifyBacklinkEngineUserRegistered({
         email: input.email.toLowerCase(),
         userId,
         userType: "influencer",

@@ -390,7 +390,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       setIsRedirecting(true);
       hasNavigatedRef.current = true;
 
-      // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+      // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
       setTimeout(() => {
         navigate(redirect, {
           replace: true,
@@ -399,7 +399,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
             type: 'success',
           },
         });
-      }, 300);
+      }, 50);
     } catch (err) {
       console.log('[ClientRegisterForm] ❌ ERROR:', {
         errorType: err?.constructor?.name,

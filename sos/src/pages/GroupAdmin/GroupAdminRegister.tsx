@@ -234,7 +234,7 @@ const GroupAdminRegister: React.FC = () => {
 
         setTimeout(() => {
           navigate(telegramRoute, { replace: true });
-        }, 3000);
+        }, 500);
       }
     } catch (err: unknown) {
       const e = err as Error & { code?: string };

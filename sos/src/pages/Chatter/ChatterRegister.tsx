@@ -241,10 +241,10 @@ const ChatterRegister: React.FC = () => {
       await setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'chatter_registration', country: data.country });
 
-      // Redirect to dashboard after short delay (Telegram is optional, required only for withdrawals)
+      // Redirect to dashboard after brief success display
       setTimeout(() => {
         navigate(dashboardRoute, { replace: true });
-      }, 2000);
+      }, 500);
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
 

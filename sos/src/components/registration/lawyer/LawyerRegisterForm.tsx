@@ -508,10 +508,10 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
         clearStoredReferral('client');
 
-        // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+        // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
         setTimeout(() => {
           navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
-        }, 300);
+        }, 50);
         return;
       }
 
@@ -552,10 +552,10 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
       clearStoredReferral('client');
 
-      // Attendre 1.5s pour laisser Firebase Auth & Firestore se synchroniser
+      // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
       setTimeout(() => {
         navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
-      }, 1500);
+      }, 50);
 
     } catch (err: unknown) {
       console.error('[LawyerRegisterForm] ❌ ERREUR INSCRIPTION', {
