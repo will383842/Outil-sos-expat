@@ -30,7 +30,7 @@ import { useReferralCapture } from './hooks/useAffiliate';
 import { migrateFromLegacyStorage, storeReferralCode } from './utils/referralStorage';
 import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
-import { captureAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
+import { captureAffiliateRef, setAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 import enMessages from "./helper/en.json";
 import esMessages from "./helper/es.json";
@@ -747,9 +747,12 @@ const AffiliatePathCapture: React.FC<{
 
   // Store synchronously before navigate — localStorage writes are synchronous
   if (code) {
-    storeReferralCode(code.toUpperCase(), actorType, codeType, {
+    const upperCode = code.toUpperCase();
+    storeReferralCode(upperCode, actorType, codeType, {
       landingPage: window.location.pathname,
     });
+    // Update sessionStorage so AffiliateRefSync uses the LATEST clicked link
+    setAffiliateRef(upperCode);
   }
 
   const locale = getLocaleString(language);

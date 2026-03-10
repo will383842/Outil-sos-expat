@@ -33,9 +33,11 @@ export function getAffiliateRef(): string | null {
 }
 
 /**
- * Store the affiliate code in sessionStorage
+ * Store the affiliate code in sessionStorage.
+ * Called by AffiliatePathCapture when a new affiliate link is clicked,
+ * so sessionStorage always reflects the LATEST clicked link.
  */
-function setAffiliateRef(ref: string): void {
+export function setAffiliateRef(ref: string): void {
   try {
     if (typeof window === "undefined") return;
     sessionStorage.setItem(AFFILIATE_STORAGE_KEY, ref);
