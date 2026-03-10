@@ -160,6 +160,16 @@ export async function handleCallCompleted(
 
       const chatterId = clientData.referredByChatterId;
 
+      // SECURITY: Block self-referral — chatter cannot earn commissions on their own calls
+      if (chatterId === session.clientId) {
+        logger.warn("[chatterOnCallCompleted] Self-referral blocked", {
+          chatterId,
+          clientId: session.clientId,
+          sessionId,
+        });
+        return;
+      }
+
       // Get chatter document
       const chatterDoc = await db.collection("chatters").doc(chatterId).get();
       if (!chatterDoc.exists) {
