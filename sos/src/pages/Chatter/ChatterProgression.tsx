@@ -64,14 +64,21 @@ const LEVEL_COLORS: Record<number, { bg: string; text: string; gradient: string 
 // RECRUITMENT TIER CONFIG
 // ============================================================================
 
-const RECRUITMENT_MILESTONES = [
-  { count: 5, bonus: '$15' },
-  { count: 10, bonus: '$35' },
-  { count: 20, bonus: '$75' },
-  { count: 50, bonus: '$250' },
-  { count: 100, bonus: '$600' },
-  { count: 500, bonus: '$4,000' },
+const DEFAULT_milestones: Array<{ count: number; bonus: number }> = [
+  { count: 5, bonus: 1500 },
+  { count: 10, bonus: 3500 },
+  { count: 20, bonus: 7500 },
+  { count: 50, bonus: 25000 },
+  { count: 100, bonus: 60000 },
+  { count: 500, bonus: 400000 },
 ];
+
+function formatCentsShort(cents: number): string {
+  const dollars = cents / 100;
+  return dollars >= 1000
+    ? `$${dollars.toLocaleString('en-US')}`
+    : `$${dollars}`;
+}
 
 // ============================================================================
 // CAPTAIN TIER CONFIG
@@ -303,17 +310,19 @@ function LevelProgressionSection({
 function RecruitmentTierSection({
   qualifiedCount,
   paidTierBonuses,
+  milestones,
 }: {
   qualifiedCount: number;
   paidTierBonuses: number[];
+  milestones: Array<{ count: number; bonus: number }>;
 }) {
   const intl = useIntl();
   const nextTier = useMemo(
-    () => getNextTierInfo(qualifiedCount, paidTierBonuses),
-    [qualifiedCount, paidTierBonuses]
+    () => getNextTierInfo(qualifiedCount, paidTierBonuses, milestones),
+    [qualifiedCount, paidTierBonuses, milestones]
   );
 
-  const maxMilestone = RECRUITMENT_MILESTONES[RECRUITMENT_MILESTONES.length - 1].count;
+  const maxMilestone = milestones[milestones.length - 1].count;
   const progressPercent = Math.min(100, (qualifiedCount / maxMilestone) * 100);
 
   return (
@@ -344,7 +353,7 @@ function RecruitmentTierSection({
           style={{ width: `${progressPercent}%` }}
         />
         {/* Milestone markers */}
-        {RECRUITMENT_MILESTONES.map((m) => {
+        {milestones.map((m) => {
           const pos = (m.count / maxMilestone) * 100;
           const achieved = qualifiedCount >= m.count;
           return (
@@ -354,7 +363,7 @@ function RecruitmentTierSection({
                 achieved ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
               }`}
               style={{ left: `${pos}%`, transform: `translate(-50%, -50%)` }}
-              title={`${m.count} recrues → ${m.bonus}`}
+              title={`${m.count} recrues → ${formatCentsShort(m.bonus)}`}
             />
           );
         })}
@@ -362,7 +371,7 @@ function RecruitmentTierSection({
 
       {/* Milestone labels */}
       <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mb-4">
-        {RECRUITMENT_MILESTONES.map((m) => (
+        {milestones.map((m) => (
           <span
             key={m.count}
             className={qualifiedCount >= m.count ? 'text-green-600 dark:text-green-400 font-semibold' : ''}
@@ -753,6 +762,7 @@ function ChatterProgression() {
       <RecruitmentTierSection
         qualifiedCount={dashboardData?.referralStats?.qualifiedFilleulsN1 ?? 0}
         paidTierBonuses={tierProgress?.paidTierBonuses ?? []}
+        milestones={config?.recruitmentMilestones ?? DEFAULT_milestones}
       />
 
       {/* 3. Overall Stats */}

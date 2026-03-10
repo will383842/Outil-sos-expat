@@ -502,6 +502,12 @@ export interface ChatterConfig {
     level4: number;
     level5: number;
   };
+  /** Telegram bonus amount in cents (e.g. 5000 = $50) */
+  telegramBonusAmount?: number;
+  /** Piggy bank unlock threshold in cents (e.g. 15000 = $150) */
+  piggyBankUnlockThreshold?: number;
+  /** Minimum earnings to qualify for monthly competition (cents) */
+  competitionEligibilityMinimum?: number;
   /** Bonus milestones for reaching X active recruits (cents) */
   recruitmentMilestones?: Array<{ count: number; bonus: number }>;
   /** Fixed prizes for monthly Top 3 competition (cents) */

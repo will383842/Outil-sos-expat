@@ -579,6 +579,7 @@ export interface BloggerDashboardData {
     commissionClientAmount: number;
     commissionRecruitmentAmount: number;
     minimumWithdrawalAmount: number;
+    recruitmentWindowMonths?: number;
   };
   commissionPlan?: {
     id: string;
