@@ -24,7 +24,9 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import type { PaymentReceivedVars } from "../types";
 
 // ============================================================================
@@ -260,25 +262,27 @@ export const telegramOnPayPalPaymentReceived = onDocumentWritten(
         paymentMethod: "PayPal",
       });
 
-      // 8. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "payment_received",
-        variables,
-        { minAmount: minAmount }
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "payment_received",
+      //   variables,
+      //   { minAmount: minAmount }
+      // );
 
-      if (success) {
-        logger.info(`${LOG_PREFIX} Notification sent successfully for PayPal order ${orderId}`);
+      // 8. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("paypal.payment", undefined, {
+        orderId,
+        amount: totalAmountEur,
+        commission: commissionAmountEur,
+        currency: orderData.capturedCurrency || "EUR",
+      });
 
-        // 9. Mark notification as sent to prevent duplicates
-        const db = getFirestore();
-        await db.collection("paypal_orders").doc(orderId).update({
-          telegramNotificationSent: true,
-          telegramNotificationSentAt: new Date(),
-        });
-      } else {
-        logger.warn(`${LOG_PREFIX} Failed to send notification for PayPal order ${orderId}`);
-      }
+      // 9. Mark notification as sent to prevent duplicates
+      const db = getFirestore();
+      await db.collection("paypal_orders").doc(orderId).update({
+        telegramNotificationSent: true,
+        telegramNotificationSentAt: new Date(),
+      });
     } catch (error) {
       // Log error but don't throw - we don't want to retry the trigger
       logger.error(`${LOG_PREFIX} Error processing PayPal order ${orderId}:`, {

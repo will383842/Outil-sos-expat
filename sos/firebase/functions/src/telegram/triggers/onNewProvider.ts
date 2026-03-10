@@ -14,7 +14,9 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import { ROLE_TRANSLATIONS_FR, UserRole } from "../types";
 
 // ============================================================================
@@ -195,21 +197,24 @@ export const telegramOnNewProvider = onDocumentCreated(
         variables,
       });
 
-      // 7. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "new_provider",
-        variables
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "new_provider",
+      //   variables
+      // );
+      // if (success) {
+      //   logger.info("[telegramOnNewProvider] Notification sent successfully", { profileId });
+      // } else {
+      //   logger.warn("[telegramOnNewProvider] Failed to send notification", { profileId });
+      // }
 
-      if (success) {
-        logger.info("[telegramOnNewProvider] Notification sent successfully", {
-          profileId,
-        });
-      } else {
-        logger.warn("[telegramOnNewProvider] Failed to send notification", {
-          profileId,
-        });
-      }
+      // 7. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("new.provider", profileId, {
+        displayName,
+        role,
+        email,
+        country,
+      });
     } catch (error) {
       // Graceful error handling - log but don't throw
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

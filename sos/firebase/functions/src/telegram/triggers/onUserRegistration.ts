@@ -14,7 +14,9 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import { ROLE_TRANSLATIONS_FR, UserRole } from "../types";
 
 // ============================================================================
@@ -33,6 +35,9 @@ const ALLOWED_ROLES: UserRole[] = [
   "influencer",
   "blogger",
   "groupAdmin",
+  "captain",
+  "captainChatter",
+  "partner",
 ];
 
 /**
@@ -166,21 +171,24 @@ export async function handleTelegramUserRegistration(event: any) {
         variables,
       });
 
-      // 6. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "new_registration",
-        variables
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "new_registration",
+      //   variables
+      // );
+      // if (success) {
+      //   logger.info("[telegramOnUserRegistration] Notification sent successfully", { userId });
+      // } else {
+      //   logger.warn("[telegramOnUserRegistration] Failed to send notification", { userId });
+      // }
 
-      if (success) {
-        logger.info("[telegramOnUserRegistration] Notification sent successfully", {
-          userId,
-        });
-      } else {
-        logger.warn("[telegramOnUserRegistration] Failed to send notification", {
-          userId,
-        });
-      }
+      // 6. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("user.registered", userId, {
+        displayName: email,
+        email,
+        role,
+        country,
+      });
     } catch (error) {
       // Graceful error handling - log but don't throw
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

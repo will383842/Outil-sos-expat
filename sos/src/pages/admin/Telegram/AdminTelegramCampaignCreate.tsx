@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import { useNavigate } from "react-router-dom";
 import {
   Send,
@@ -54,8 +53,10 @@ const AdminTelegramCampaignCreate: React.FC = () => {
         params.scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
       }
 
-      const res = await httpsCallable(functions, "telegram_createCampaign")(params);
-      const data = res.data as { ok: boolean; campaignId: string; targetCount: number };
+      const data = await telegramEngineApi<{ ok: boolean; campaignId: string; targetCount: number }>("/campaigns", {
+        method: "POST",
+        body: params as Record<string, unknown>,
+      });
 
       if (data.ok) {
         navigate("/admin/toolbox/telegram/campaigns");

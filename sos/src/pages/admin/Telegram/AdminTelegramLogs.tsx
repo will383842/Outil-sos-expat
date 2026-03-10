@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import {
   CheckCircle,
   XCircle,
@@ -47,17 +46,16 @@ const AdminTelegramLogs: React.FC = () => {
     async (startAfter?: string | null) => {
       setLoading(true);
       try {
-        const params: Record<string, unknown> = { limit: PAGE_SIZE };
-        if (filterEvent) params.eventType = filterEvent;
-        if (filterStatus) params.status = filterStatus;
-        if (startAfter) params.startAfter = startAfter;
+        const queryParams: Record<string, string> = { limit: PAGE_SIZE.toString() };
+        if (filterEvent) queryParams.eventType = filterEvent;
+        if (filterStatus) queryParams.status = filterStatus;
+        if (startAfter) queryParams.startAfter = startAfter;
 
-        const res = await httpsCallable(functions, "telegram_getNotificationLogs")(params);
-        const data = res.data as {
+        const data = await telegramEngineApi<{
           logs: LogEntry[];
           nextCursor: string | null;
           count: number;
-        };
+        }>("/logs", { params: queryParams });
         setLogs(data.logs);
         setCursor(data.nextCursor);
       } catch (err) {

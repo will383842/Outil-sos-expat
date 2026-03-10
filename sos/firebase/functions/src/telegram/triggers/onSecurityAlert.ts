@@ -15,7 +15,9 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import type { SecurityAlertVars } from "../types";
 
 // ============================================================================
@@ -194,21 +196,26 @@ export const telegramOnSecurityAlert = onDocumentCreated(
         variables,
       });
 
-      // 6. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "security_alert",
-        variables
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "security_alert",
+      //   variables
+      // );
+      // if (success) {
+      //   logger.info(`${LOG_PREFIX} Notification sent successfully`, { alertId });
+      // } else {
+      //   logger.warn(`${LOG_PREFIX} Failed to send notification`, { alertId });
+      // }
 
-      if (success) {
-        logger.info(`${LOG_PREFIX} Notification sent successfully`, {
-          alertId,
-        });
-      } else {
-        logger.warn(`${LOG_PREFIX} Failed to send notification`, {
-          alertId,
-        });
-      }
+      // 6. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("security.alert", undefined, {
+        alertId,
+        alertType,
+        userEmail,
+        ipAddress,
+        country,
+        details,
+      });
     } catch (error) {
       // Graceful error handling - log but don't throw
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

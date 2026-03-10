@@ -3346,32 +3346,20 @@ export { telegramOnNegativeReview } from './telegram/triggers/onNegativeReview';
 export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalRequest';
 export { telegramOnNewCaptainApplication } from './telegram/triggers/onNewCaptainApplication';
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';
-export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
-export {
-  telegram_updateConfig,
-  telegram_getConfig,
-  telegram_getChatId,
-  telegram_validateBot,
-  telegram_updateTemplate,
-  telegram_getTemplates,
-} from './telegram/callables/updateTelegramConfig';
-export {
-  telegram_getNotificationLogs,
-  telegram_getQueueStats,
-  telegram_getSubscriberStats,
-} from './telegram/callables/adminQueries';
-export {
-  telegram_createCampaign,
-  telegram_getCampaigns,
-  telegram_cancelCampaign,
-  telegram_getCampaignDetail,
-} from './telegram/callables/campaigns';
-
-// ========== TELEGRAM ADMIN ACTIONS (dead letter reprocessing + one-off messaging) ==========
-export {
-  telegram_reprocessDeadLetters,
-  telegram_sendOneOff,
-} from './telegram/callables/adminActions';
+// [MIGRATION LARAVEL] All admin callables disabled — admin console now calls Laravel API directly
+// This removes ~16 Firebase Functions. Kept as comments for safety rollback.
+// export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
+// export { telegram_updateConfig, telegram_getConfig, telegram_getChatId,
+//   telegram_validateBot, telegram_updateTemplate, telegram_getTemplates,
+// } from './telegram/callables/updateTelegramConfig';
+// export { telegram_getNotificationLogs, telegram_getQueueStats,
+//   telegram_getSubscriberStats,
+// } from './telegram/callables/adminQueries';
+// export { telegram_createCampaign, telegram_getCampaigns,
+//   telegram_cancelCampaign, telegram_getCampaignDetail,
+// } from './telegram/callables/campaigns';
+// export { telegram_reprocessDeadLetters, telegram_sendOneOff,
+// } from './telegram/callables/adminActions';
 
 // ========== TELEGRAM QUEUE (global rate-limited queue + monitoring) ==========
 export { processTelegramQueue } from './telegram/queue/processor';

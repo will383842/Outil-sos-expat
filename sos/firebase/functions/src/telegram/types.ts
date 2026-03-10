@@ -39,7 +39,10 @@ export type UserRole =
   | 'chatter'
   | 'influencer'
   | 'blogger'
-  | 'groupAdmin';
+  | 'groupAdmin'
+  | 'captain'
+  | 'captainChatter'
+  | 'partner';
 
 /**
  * Traductions francaises des roles utilisateur
@@ -47,12 +50,15 @@ export type UserRole =
  */
 export const ROLE_TRANSLATIONS_FR: Record<UserRole, string> = {
   lawyer: 'Avocat',
-  expat: 'Expatrie',
+  expat: 'Expatrié',
   client: 'Client',
   chatter: 'Chatter',
   influencer: 'Influenceur',
   blogger: 'Blogueur',
   groupAdmin: 'Admin de Groupe',
+  captain: 'Capitaine',
+  captainChatter: 'Capitaine Chatter',
+  partner: 'Partenaire',
 };
 
 /**

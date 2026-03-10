@@ -371,6 +371,7 @@ export type RouteKey =
   | "partner-profile"    // /partner/profil -> /partner/profile, etc.
   | "partner-payments"   // /partner/paiements -> /partner/payments, etc.
   | "partner-suspended"  // /partner/suspendu -> /partner/suspended, etc.
+  | "partner-telegram"   // /partner/telegram -> /partner/telegram, etc.
   | "press";             // /presse -> /press, /prensa, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
@@ -1620,6 +1621,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "partner/tingzhi",
     hi: "partner/nilambit",
     ar: "partner/معلق",
+  },
+  "partner-telegram": {
+    fr: "partner/telegram",
+    en: "partner/telegram",
+    es: "partner/telegram",
+    de: "partner/telegram",
+    ru: "partner/telegram",
+    pt: "partner/telegram",
+    ch: "partner/telegram",
+    hi: "partner/telegram",
+    ar: "partner/telegram",
   },
   "groupadmin-register": {
     fr: "groupadmin/inscription",

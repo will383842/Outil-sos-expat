@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import { RefreshCw } from "lucide-react";
 import {
   PieChart,
@@ -34,8 +33,8 @@ const AdminTelegramSubscribers: React.FC = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const res = await httpsCallable(functions, "telegram_getSubscriberStats")({});
-      setStats(res.data as SubscriberStats);
+      const data = await telegramEngineApi<SubscriberStats>("/subscriber-stats");
+      setStats(data);
     } catch (err) {
       console.error("Failed to load subscriber stats:", err);
     } finally {

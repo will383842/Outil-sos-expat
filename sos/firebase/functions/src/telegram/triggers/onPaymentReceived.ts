@@ -25,7 +25,9 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import type { PaymentReceivedVars } from "../types";
 
 // ============================================================================
@@ -320,25 +322,28 @@ export const telegramOnPaymentReceived = onDocumentWritten(
         statusChanged: `${previousStatus || "new"} -> ${status}`,
       });
 
-      // 8. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "payment_received",
-        variables,
-        { minAmount: minAmount }
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "payment_received",
+      //   variables,
+      //   { minAmount: minAmount }
+      // );
 
-      if (success) {
-        logger.info(`${LOG_PREFIX} Notification sent successfully for payment ${paymentId}`);
+      // 8. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("payment.received", undefined, {
+        paymentId,
+        amount: totalAmountEur,
+        commission: commissionAmountEur,
+        currency: paymentData.currency || "EUR",
+        status,
+      });
 
-        // 9. Mark notification as sent to prevent duplicates
-        const db = getFirestore();
-        await db.collection("payments").doc(paymentId).update({
-          telegramNotificationSent: true,
-          telegramNotificationSentAt: new Date(),
-        });
-      } else {
-        logger.warn(`${LOG_PREFIX} Failed to send notification for payment ${paymentId}`);
-      }
+      // 9. Mark notification as sent to prevent duplicates
+      const db = getFirestore();
+      await db.collection("payments").doc(paymentId).update({
+        telegramNotificationSent: true,
+        telegramNotificationSentAt: new Date(),
+      });
     } catch (error) {
       // Log error but don't throw - we don't want to retry the trigger
       logger.error(`${LOG_PREFIX} Error processing payment ${paymentId}:`, {

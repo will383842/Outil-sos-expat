@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import TelegramNav from "../../../components/Telegram/TelegramNav";
 import {
@@ -45,8 +44,7 @@ const AdminTelegramTemplates: React.FC = () => {
   const loadTemplates = async () => {
     setLoading(true);
     try {
-      const res = await httpsCallable(functions, "telegram_getTemplates")({});
-      const data = res.data as { templates: Record<string, TemplateData> };
+      const data = await telegramEngineApi<{ templates: Record<string, TemplateData> }>("/templates");
       setTemplates(data.templates);
     } catch (err) {
       console.error("Failed to load templates:", err);
@@ -72,10 +70,12 @@ const AdminTelegramTemplates: React.FC = () => {
     setSaving(eventId);
     setMessage(null);
     try {
-      await httpsCallable(functions, "telegram_updateTemplate")({
-        eventId,
-        template: editingTemplate,
-        enabled: templates[eventId]?.enabled ?? true,
+      await telegramEngineApi(`/templates/${eventId}`, {
+        method: "PUT",
+        body: {
+          template: editingTemplate,
+          enabled: templates[eventId]?.enabled ?? true,
+        },
       });
       setTemplates((prev) => ({
         ...prev,
@@ -98,9 +98,9 @@ const AdminTelegramTemplates: React.FC = () => {
     const current = templates[eventId];
     if (!current) return;
     try {
-      await httpsCallable(functions, "telegram_updateTemplate")({
-        eventId,
-        enabled: !current.enabled,
+      await telegramEngineApi(`/templates/${eventId}`, {
+        method: "PUT",
+        body: { enabled: !current.enabled },
       });
       setTemplates((prev) => ({
         ...prev,
@@ -115,10 +115,10 @@ const AdminTelegramTemplates: React.FC = () => {
     setTesting(eventId);
     setMessage(null);
     try {
-      const res = await httpsCallable(functions, "telegram_sendTestNotification")({
-        eventType: eventId,
+      const data = await telegramEngineApi<{ success: boolean; error?: string }>("/test-notification", {
+        method: "POST",
+        body: { eventType: eventId },
       });
-      const data = res.data as { success: boolean; error?: string };
       if (data.success) {
         setMessage({ type: "success", text: "Message test envoyé" });
       } else {

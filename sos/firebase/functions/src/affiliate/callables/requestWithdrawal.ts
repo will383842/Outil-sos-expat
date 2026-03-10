@@ -88,10 +88,15 @@ export const requestWithdrawal = onCall(
 
       const userData = userDoc.data()!;
 
-      // 5. Validate user has affiliate code
+      // 5. Validate user has affiliate code (client, lawyer, expat also use affiliate system)
       if (!userData.affiliateCode) {
         throw new HttpsError("failed-precondition", "User is not an affiliate");
       }
+
+      // 5a. Determine the actual userType for this withdrawal
+      const userRole = userData.role || "affiliate";
+      const AFFILIATE_ROLES = ["affiliate", "client", "lawyer", "expat"];
+      const effectiveUserType = AFFILIATE_ROLES.includes(userRole) ? userRole : "affiliate";
 
       // 5b. Verify Telegram is connected (required for withdrawal 2FA + marketing ID capture)
       if (!userData.telegramId) {
@@ -152,7 +157,7 @@ export const requestWithdrawal = onCall(
         const monthlyPayoutsQuery = await db
           .collection("payment_withdrawals")
           .where("userId", "==", userId)
-          .where("userType", "==", "affiliate")
+          .where("userType", "==", effectiveUserType)
           .where("requestedAt", ">=", startOfMonth.toISOString())
           .get();
 
@@ -172,7 +177,7 @@ export const requestWithdrawal = onCall(
         const monthlyPayoutsQuery = await db
           .collection("payment_withdrawals")
           .where("userId", "==", userId)
-          .where("userType", "==", "affiliate")
+          .where("userType", "==", effectiveUserType)
           .where("requestedAt", ">=", startOfMonth.toISOString())
           .where("status", "in", ["pending", "approved", "processing", "completed"])
           .get();
@@ -284,7 +289,7 @@ export const requestWithdrawal = onCall(
           id: withdrawalRef.id,
           // User info
           userId,
-          userType: "affiliate",
+          userType: effectiveUserType,
           userEmail: freshUserData.email,
           userName,
           // Amount
@@ -357,7 +362,7 @@ export const requestWithdrawal = onCall(
       const confirmResult = await sendWithdrawalConfirmation({
         withdrawalId: withdrawalRef.id,
         userId,
-        role: "affiliate" as WithdrawalConfirmationRole,
+        role: effectiveUserType as WithdrawalConfirmationRole,
         collection: "payment_withdrawals",
         amount: actualAmount,
         paymentMethod: "Wise / Bank Transfer",

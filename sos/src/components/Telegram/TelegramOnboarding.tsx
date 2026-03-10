@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 // Types
-type TelegramRole = 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate';
+type TelegramRole = 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate' | 'client' | 'lawyer' | 'expat' | 'captain' | 'partner';
 
 interface TelegramOnboardingProps {
   role: TelegramRole;
@@ -90,7 +90,27 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
     },
     affiliate: {
       title: title || '💼 Liez votre Telegram',
-      subtitle: subtitle || 'Recevez vos notifications d affiliation',
+      subtitle: subtitle || 'Recevez vos notifications d\'affiliation',
+    },
+    client: {
+      title: title || '📱 Connectez votre Telegram',
+      subtitle: subtitle || 'Suivez vos commissions de parrainage et gérez vos retraits',
+    },
+    lawyer: {
+      title: title || '⚖️ Liez votre Telegram',
+      subtitle: subtitle || 'Notifications de commissions et retraits sécurisés',
+    },
+    expat: {
+      title: title || '🌍 Connectez Telegram',
+      subtitle: subtitle || 'Gérez vos commissions d\'affiliation depuis Telegram',
+    },
+    captain: {
+      title: title || '🎖️ Liez votre Telegram',
+      subtitle: subtitle || 'Gérez vos bonus de capitaine et retraits depuis Telegram',
+    },
+    partner: {
+      title: title || '🤝 Connectez votre Telegram',
+      subtitle: subtitle || 'Suivez vos revenus partenaire et confirmez vos retraits',
     },
   };
 

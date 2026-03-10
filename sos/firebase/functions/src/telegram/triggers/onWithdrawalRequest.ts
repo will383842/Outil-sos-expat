@@ -20,7 +20,9 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import type { WithdrawalRequestVars } from "../types";
 
 // ============================================================================
@@ -46,6 +48,11 @@ const USER_TYPE_TRANSLATIONS_FR: Record<string, string> = {
   blogger: "Blogueur",
   group_admin: "Admin Groupe",
   partner: "Partenaire",
+  client: "Client",
+  lawyer: "Avocat",
+  expat: "Prestataire",
+  captain: "Capitaine",
+  captainChatter: "Capitaine Chatter",
 };
 
 // ============================================================================
@@ -356,21 +363,26 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
         time: variables.TIME,
       });
 
-      // 7. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "withdrawal_request",
-        variables
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "withdrawal_request",
+      //   variables
+      // );
+      // if (success) {
+      //   logger.info(`${LOG_PREFIX} Notification sent successfully for withdrawal ${withdrawalId}`);
+      // } else {
+      //   logger.warn(`${LOG_PREFIX} Failed to send notification for withdrawal ${withdrawalId}`);
+      // }
 
-      if (success) {
-        logger.info(
-          `${LOG_PREFIX} Notification sent successfully for withdrawal ${withdrawalId}`
-        );
-      } else {
-        logger.warn(
-          `${LOG_PREFIX} Failed to send notification for withdrawal ${withdrawalId}`
-        );
-      }
+      // 7. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("withdrawal.requested", withdrawalData.userId, {
+        withdrawalId,
+        amount,
+        userType: withdrawalData.userType,
+        userName,
+        methodType: withdrawalData.methodType,
+        provider: withdrawalData.provider,
+      });
     } catch (error) {
       // Log error but don't throw - we don't want to retry the trigger
       logger.error(`${LOG_PREFIX} Error processing withdrawal ${withdrawalId}:`, {

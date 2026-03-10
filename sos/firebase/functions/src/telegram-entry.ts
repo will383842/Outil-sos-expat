@@ -18,37 +18,24 @@ export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalReq
 // Scheduled
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';
 
-// Callables (admin config)
-export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
-export {
-  telegram_updateConfig,
-  telegram_getConfig,
-  telegram_getChatId,
-  telegram_validateBot,
-  telegram_updateTemplate,
-  telegram_getTemplates,
-} from './telegram/callables/updateTelegramConfig';
-
-// Callables (admin queries)
-export {
-  telegram_getNotificationLogs,
-  telegram_getQueueStats,
-  telegram_getSubscriberStats,
-} from './telegram/callables/adminQueries';
-
-// Callables (admin actions)
-export {
-  telegram_reprocessDeadLetters,
-  telegram_sendOneOff,
-} from './telegram/callables/adminActions';
-
-// Callables (campaigns)
-export {
-  telegram_createCampaign,
-  telegram_getCampaigns,
-  telegram_cancelCampaign,
-  telegram_getCampaignDetail,
-} from './telegram/callables/campaigns';
+// [MIGRATION LARAVEL] All admin callables disabled — admin console now calls Laravel API directly
+// This removes ~16 Firebase Functions. Kept as comments for safety rollback.
+//
+// export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
+// export {
+//   telegram_updateConfig, telegram_getConfig, telegram_getChatId,
+//   telegram_validateBot, telegram_updateTemplate, telegram_getTemplates,
+// } from './telegram/callables/updateTelegramConfig';
+// export {
+//   telegram_getNotificationLogs, telegram_getQueueStats, telegram_getSubscriberStats,
+// } from './telegram/callables/adminQueries';
+// export {
+//   telegram_reprocessDeadLetters, telegram_sendOneOff,
+// } from './telegram/callables/adminActions';
+// export {
+//   telegram_createCampaign, telegram_getCampaigns,
+//   telegram_cancelCampaign, telegram_getCampaignDetail,
+// } from './telegram/callables/campaigns';
 
 // Queue processors
 export { processTelegramQueue } from './telegram/queue/processor';

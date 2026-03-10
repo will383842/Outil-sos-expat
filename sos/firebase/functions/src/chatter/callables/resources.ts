@@ -35,8 +35,8 @@ interface GetChatterResourcesResponse {
 export const getChatterResources = onCall(
   {
     region: "us-central1",
-    memory: "512MiB",  // FIX: 256MiB caused OOM at startup
-    cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
+    memory: "256MiB",
+    cpu: 0.083,
     timeoutSeconds: 30,
     maxInstances: 1,
     cors: ALLOWED_ORIGINS,
@@ -141,7 +141,7 @@ export const downloadChatterResource = onCall(
     memory: "512MiB",  // FIX: 256MiB caused OOM at startup
     cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 30,
-    maxInstances: 1,
+    maxInstances: 2,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; downloadUrl: string }> => {
@@ -228,7 +228,7 @@ export const copyChatterResourceText = onCall(
     memory: "512MiB",  // FIX: 256MiB caused OOM at startup
     cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 30,
-    maxInstances: 1,
+    maxInstances: 2,
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<{ success: boolean; content: string }> => {

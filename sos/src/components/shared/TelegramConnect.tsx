@@ -24,7 +24,7 @@ import { copyToClipboard } from '@/utils/clipboard';
 // ============================================================================
 
 interface TelegramConnectProps {
-  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate' | 'partner';
+  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat' | 'captain';
   onConnected: () => void;
 }
 

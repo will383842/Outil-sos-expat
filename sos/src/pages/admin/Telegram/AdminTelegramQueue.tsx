@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import {
   RefreshCw,
   AlertTriangle,
@@ -31,8 +30,8 @@ const AdminTelegramQueue: React.FC = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const res = await httpsCallable(functions, "telegram_getQueueStats")({});
-      setStats(res.data as QueueStats);
+      const data = await telegramEngineApi<QueueStats>("/queue-stats");
+      setStats(data);
     } catch (err) {
       console.error("Failed to load queue stats:", err);
     } finally {

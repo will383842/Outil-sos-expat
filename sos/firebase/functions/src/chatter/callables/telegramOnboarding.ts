@@ -33,7 +33,7 @@ import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 /**
  * Supported roles for Telegram onboarding
  */
-export type TelegramOnboardingRole = "chatter" | "influencer" | "blogger" | "groupAdmin" | "affiliate";
+export type TelegramOnboardingRole = "chatter" | "influencer" | "blogger" | "groupAdmin" | "affiliate" | "client" | "lawyer" | "expat" | "captain" | "partner";
 
 /**
  * Status of a Telegram onboarding link
@@ -196,6 +196,7 @@ async function getUserRole(userId: string): Promise<TelegramOnboardingRole | nul
   // Map role to TelegramOnboardingRole
   switch (role) {
     case "chatter":
+    case "captainChatter":
       return "chatter";
     case "influencer":
       return "influencer";
@@ -203,6 +204,14 @@ async function getUserRole(userId: string): Promise<TelegramOnboardingRole | nul
       return "blogger";
     case "groupAdmin":
       return "groupAdmin";
+    case "partner":
+      return "partner";
+    case "client":
+      return "client";
+    case "lawyer":
+      return "lawyer";
+    case "expat":
+      return "expat";
     default:
       // Any user with an affiliate code can use Telegram onboarding
       if (userData?.affiliateCode) {
@@ -664,7 +673,7 @@ export const telegramChatterBotWebhook = onRequest(
       if (text === "/balance" || text === "/solde") {
         const db = getDb();
         // Search across ALL affiliate role collections (not just chatters)
-        const roleCollections = ["chatters", "influencers", "bloggers", "group_admins"];
+        const roleCollections = ["chatters", "influencers", "bloggers", "group_admins", "partners"];
         let foundData: FirebaseFirestore.DocumentData | null = null;
         let foundRole = "";
 
@@ -706,7 +715,7 @@ export const telegramChatterBotWebhook = onRequest(
       if (text === "/stats" || text === "/statistiques") {
         const db = getDb();
         // Search across ALL affiliate role collections
-        const roleCollections = ["chatters", "influencers", "bloggers", "group_admins"];
+        const roleCollections = ["chatters", "influencers", "bloggers", "group_admins", "partners"];
         let foundData: FirebaseFirestore.DocumentData | null = null;
         let foundRole = "";
 
@@ -865,7 +874,9 @@ export const telegramChatterBotWebhook = onRequest(
         influencer: "influencers",
         blogger: "bloggers",
         groupAdmin: "group_admins",
-        // affiliate: no separate collection (uses users/ doc directly)
+        partner: "partners",
+        captain: "chatters", // captains are in chatters collection
+        // affiliate, client, lawyer, expat: no separate collection (uses users/ doc directly)
       };
 
       try {
@@ -1131,6 +1142,8 @@ export const skipTelegramOnboarding = onCall(
         influencer: "influencers",
         blogger: "bloggers",
         groupAdmin: "group_admins",
+        partner: "partners",
+        captain: "chatters",
       };
 
       const roleCollection = roleCollections[role];

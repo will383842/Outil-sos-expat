@@ -29,7 +29,7 @@ export type PaymentMethodType = 'bank_transfer' | 'mobile_money' | 'wise';
 /**
  * User types that can request withdrawals from the system
  */
-export type PaymentUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat';
+export type PaymentUserType = 'chatter' | 'influencer' | 'blogger' | 'group_admin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat' | 'captain';
 
 /**
  * Detailed withdrawal status for professional tracking

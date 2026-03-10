@@ -28,11 +28,14 @@ export async function forwardEventToEngine(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
 
-    await fetch(`${engineUrl}/api/webhooks/event`, {
+    // Convert eventType to kebab-case for URL (e.g. "user.registered" → "user-registered")
+    const eventSlug = eventType.replace(/[._]/g, "-");
+
+    await fetch(`${engineUrl}/api/events/${eventSlug}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": apiKey,
+        "X-Engine-Secret": apiKey,
       },
       body: JSON.stringify({ eventType, sosUserId, payload, idempotencyKey }),
       signal: controller.signal,

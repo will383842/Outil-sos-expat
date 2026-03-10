@@ -23,6 +23,7 @@ import {
 import { sendZoho } from "../../notificationPipeline/providers/email/zohoSmtp";
 import { enqueueTelegramMessage } from "../../telegram/queue/enqueue";
 import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
+import { forwardEventToEngine } from "../../telegram/forwardToEngine";
 
 // Lazy initialization
 function ensureInitialized() {
@@ -385,7 +386,7 @@ async function createUserNotification(
   await notificationRef.set(notification);
 
   // For affiliates, clients, lawyers, expats — also write to inapp_notifications
-  const inappTypes: PaymentUserType[] = ['affiliate', 'client', 'lawyer', 'expat'];
+  const inappTypes: PaymentUserType[] = ['affiliate', 'client', 'lawyer', 'expat', 'partner'];
   if (inappTypes.includes(withdrawal.userType as PaymentUserType)) {
     try {
       const inappRef = db.collection('inapp_notifications').doc();
@@ -1188,6 +1189,17 @@ export const paymentOnWithdrawalStatusChanged = onDocumentUpdated(
         newStatus,
       }).catch((err) => {
         logger.warn("[onWithdrawalStatusChanged] Failed to notify Motivation Engine", { error: err });
+      });
+
+      // 7. Forward to Telegram Engine (fire-and-forget)
+      forwardEventToEngine("withdrawal.status", withdrawal.userId, {
+        withdrawalId,
+        amount: withdrawal.amount,
+        oldStatus,
+        newStatus,
+        userType: withdrawal.userType,
+        userName: withdrawal.userName,
+        method: withdrawal.provider,
       });
 
       logger.info("[onWithdrawalStatusChanged] Status change processing complete", {

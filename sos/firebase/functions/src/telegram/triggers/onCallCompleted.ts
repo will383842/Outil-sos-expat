@@ -18,7 +18,9 @@ import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import { getRoleFrench } from "../types";
 
 // ============================================================================
@@ -278,21 +280,28 @@ export const telegramOnCallCompleted = onDocumentUpdated(
         variables,
       });
 
-      // 9. Send notification via TelegramNotificationService
-      // The service handles config checking, template rendering, and sending
-      // minDuration filter is in minutes, so convert from seconds
-      const minDurationMinutes = minDurationSeconds / 60;
-      const success = await telegramNotificationService.sendNotification(
-        "call_completed",
-        variables,
-        { minDuration: minDurationMinutes }
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const minDurationMinutes = minDurationSeconds / 60;
+      // const success = await telegramNotificationService.sendNotification(
+      //   "call_completed",
+      //   variables,
+      //   { minDuration: minDurationMinutes }
+      // );
+      // if (success) {
+      //   logger.info(`${LOG_PREFIX} Notification sent successfully`, { sessionId });
+      // } else {
+      //   logger.warn(`${LOG_PREFIX} Notification not sent`, { sessionId });
+      // }
 
-      if (success) {
-        logger.info(`${LOG_PREFIX} Notification sent successfully`, { sessionId });
-      } else {
-        logger.warn(`${LOG_PREFIX} Notification not sent (may be disabled or filtered)`, { sessionId });
-      }
+      // 9. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("call.completed", clientId, {
+        sessionId,
+        clientName,
+        providerName,
+        providerType: providerType || "unknown",
+        durationSeconds,
+        durationMinutes,
+      });
 
     } catch (error) {
       // Handle errors gracefully - don't throw to avoid trigger retries for notification failures

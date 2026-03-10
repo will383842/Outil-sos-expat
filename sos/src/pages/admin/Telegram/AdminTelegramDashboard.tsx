@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -46,13 +45,13 @@ const AdminTelegramDashboard: React.FC = () => {
     setLoading(true);
     try {
       const [botRes, queueRes, subRes] = await Promise.all([
-        httpsCallable(functions, "telegram_validateBot")({}),
-        httpsCallable(functions, "telegram_getQueueStats")({}),
-        httpsCallable(functions, "telegram_getSubscriberStats")({}),
+        telegramEngineApi<{ ok: boolean; botUsername?: string }>("/validate-bot", { method: "POST" }),
+        telegramEngineApi<QueueStats>("/queue-stats"),
+        telegramEngineApi<SubscriberStats>("/subscriber-stats"),
       ]);
-      setBotStatus(botRes.data as { ok: boolean; botUsername?: string });
-      setQueueStats(queueRes.data as QueueStats);
-      setSubscriberStats(subRes.data as SubscriberStats);
+      setBotStatus(botRes);
+      setQueueStats(queueRes);
+      setSubscriberStats(subRes);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
     } finally {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import { useNavigate } from "react-router-dom";
 import {
   Megaphone,
@@ -46,10 +45,9 @@ const AdminTelegramCampaigns: React.FC = () => {
   const loadCampaigns = async () => {
     setLoading(true);
     try {
-      const params: Record<string, unknown> = { limit: 50 };
-      if (filterStatus) params.status = filterStatus;
-      const res = await httpsCallable(functions, "telegram_getCampaigns")(params);
-      const data = res.data as { campaigns: Campaign[] };
+      const queryParams: Record<string, string> = { limit: "50" };
+      if (filterStatus) queryParams.status = filterStatus;
+      const data = await telegramEngineApi<{ campaigns: Campaign[] }>("/campaigns", { params: queryParams });
       setCampaigns(data.campaigns);
     } catch (err) {
       console.error("Failed to load campaigns:", err);
@@ -65,7 +63,7 @@ const AdminTelegramCampaigns: React.FC = () => {
   const handleCancel = async (id: string) => {
     setCancelling(id);
     try {
-      await httpsCallable(functions, "telegram_cancelCampaign")({ campaignId: id });
+      await telegramEngineApi(`/campaigns/${id}/cancel`, { method: "POST" });
       setCampaigns((prev) =>
         prev.map((c) => (c.id === id ? { ...c, status: "cancelled" } : c))
       );

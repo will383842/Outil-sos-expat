@@ -20,7 +20,9 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { TELEGRAM_BOT_TOKEN } from "../../lib/secrets";
-import { telegramNotificationService } from "../TelegramNotificationService";
+// [MIGRATION LARAVEL] Old Firebase notification service — kept as safety net
+// import { telegramNotificationService } from "../TelegramNotificationService";
+import { forwardEventToEngine } from "../forwardToEngine";
 import type { NegativeReviewVars } from "../types";
 
 // ============================================================================
@@ -335,17 +337,27 @@ export const telegramOnNegativeReview = onDocumentCreated(
         time: variables.TIME,
       });
 
-      // 6. Send notification via TelegramNotificationService
-      const success = await telegramNotificationService.sendNotification(
-        "negative_review",
-        variables
-      );
+      // [MIGRATION LARAVEL] Old Firebase notification — disabled, Laravel is now primary
+      // const success = await telegramNotificationService.sendNotification(
+      //   "negative_review",
+      //   variables
+      // );
+      // if (success) {
+      //   logger.info(`${LOG_PREFIX} Notification sent successfully for review ${reviewId}`);
+      // } else {
+      //   logger.warn(`${LOG_PREFIX} Failed to send notification for review ${reviewId}`);
+      // }
 
-      if (success) {
-        logger.info(`${LOG_PREFIX} Notification sent successfully for review ${reviewId}`);
-      } else {
-        logger.warn(`${LOG_PREFIX} Failed to send notification for review ${reviewId}`);
-      }
+      // 6. Forward to Telegram Engine (Laravel primary)
+      forwardEventToEngine("negative.review", reviewData.clientId, {
+        reviewId,
+        rating,
+        comment: reviewData.comment,
+        clientId: reviewData.clientId,
+        providerId: reviewData.providerId,
+        clientName,
+        providerName,
+      });
     } catch (error) {
       // Log error but don't throw - we don't want to retry the trigger
       logger.error(`${LOG_PREFIX} Error processing review ${reviewId}:`, {

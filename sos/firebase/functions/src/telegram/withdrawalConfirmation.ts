@@ -21,7 +21,7 @@ import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 // ============================================================================
 
 // Note: Keep in sync with TelegramOnboardingRole in chatter/callables/telegramOnboarding.ts
-export type WithdrawalConfirmationRole = "chatter" | "influencer" | "blogger" | "groupAdmin" | "affiliate";
+export type WithdrawalConfirmationRole = "chatter" | "influencer" | "blogger" | "groupAdmin" | "affiliate" | "client" | "lawyer" | "expat" | "captain" | "partner";
 
 export type WithdrawalConfirmationStatus = "pending" | "confirmed" | "cancelled" | "expired";
 
@@ -237,6 +237,11 @@ export async function sendWithdrawalConfirmation(
     blogger: "Blogueur",
     groupAdmin: "Admin Groupe",
     affiliate: "Affilié",
+    client: "Client",
+    lawyer: "Avocat",
+    expat: "Prestataire",
+    captain: "Capitaine",
+    partner: "Partenaire",
   };
 
   const message =
@@ -364,6 +369,11 @@ export async function handleWithdrawalCallback(
               blogger: "bloggers",
               groupAdmin: "group_admins",
               affiliate: "users",
+              client: "users",
+              lawyer: "users",
+              expat: "users",
+              captain: "chatters",
+              partner: "partners",
             };
             const col = roleCollections[confirmation.role];
             if (col) {
@@ -496,11 +506,13 @@ export async function handleWithdrawalCallback(
           }
         }
       } else {
-        // Chatter/Influencer/Blogger: refund to their collection
+        // Chatter/Influencer/Blogger/Captain/Partner: refund to their collection
         const roleCollections: Record<string, string> = {
           chatter: "chatters",
           influencer: "influencers",
           blogger: "bloggers",
+          captain: "chatters",
+          partner: "partners",
         };
         const col = roleCollections[confirmation.role];
         if (col) {

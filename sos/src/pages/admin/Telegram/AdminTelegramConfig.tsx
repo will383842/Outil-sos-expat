@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../../config/firebase";
+import { telegramEngineApi } from "../../../config/telegramEngine";
 import AdminLayout from "../../../components/admin/AdminLayout";
 import TelegramNav from "../../../components/Telegram/TelegramNav";
 import {
@@ -60,12 +59,11 @@ const AdminTelegramConfig: React.FC = () => {
     setLoading(true);
     try {
       const [configRes, botRes] = await Promise.all([
-        httpsCallable(functions, "telegram_getConfig")({}),
-        httpsCallable(functions, "telegram_validateBot")({}),
+        telegramEngineApi<{ exists: boolean; data: ConfigData }>("/config"),
+        telegramEngineApi<{ ok: boolean; botUsername?: string }>("/validate-bot", { method: "POST" }),
       ]);
-      const data = configRes.data as { exists: boolean; data: ConfigData };
-      setConfig(data.data);
-      setBotStatus(botRes.data as { ok: boolean; botUsername?: string });
+      setConfig(configRes.data);
+      setBotStatus(botRes);
     } catch (err) {
       console.error("Failed to load config:", err);
       setMessage({ type: "error", text: "Erreur de chargement de la configuration" });
@@ -83,9 +81,12 @@ const AdminTelegramConfig: React.FC = () => {
     setSaving(true);
     setMessage(null);
     try {
-      await httpsCallable(functions, "telegram_updateConfig")({
-        recipientChatId: config.recipientChatId || undefined,
-        notifications: config.notifications,
+      await telegramEngineApi("/config", {
+        method: "PUT",
+        body: {
+          recipientChatId: config.recipientChatId || undefined,
+          notifications: config.notifications,
+        },
       });
       setMessage({ type: "success", text: "Configuration sauvegardée" });
     } catch (err) {
@@ -100,8 +101,7 @@ const AdminTelegramConfig: React.FC = () => {
     setChatIdSearching(true);
     setMessage(null);
     try {
-      const res = await httpsCallable(functions, "telegram_getChatId")({});
-      const data = res.data as { ok: boolean; chatId?: string; error?: string };
+      const data = await telegramEngineApi<{ ok: boolean; chatId?: string; error?: string }>("/get-chat-id", { method: "POST" });
       if (data.ok && data.chatId) {
         setConfig((prev) => (prev ? { ...prev, recipientChatId: data.chatId! } : prev));
         setMessage({ type: "success", text: `Chat ID détecté : ${data.chatId}` });

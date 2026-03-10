@@ -226,6 +226,7 @@ const PartnerWidgets = lazy(() => import('./pages/Partner/PartnerWidgets'));
 const PartnerProfile = lazy(() => import('./pages/Partner/PartnerProfile'));
 const PartnerPayments = lazy(() => import('./pages/Partner/PartnerPayments'));
 const PartnerSuspended = lazy(() => import('./pages/Partner/PartnerSuspended'));
+const PartnerTelegramOnboarding = lazy(() => import('./pages/Partner/PartnerTelegramOnboarding'));
 const PartnerLanding = lazy(() => import('./pages/Partners/PartnerLanding'));
 const PartnersPage = lazy(() => import('./pages/Partners/PartnersPage'));
 
@@ -484,6 +485,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/group-admin/suspendu", component: GroupAdminSuspended, protected: true, role: 'groupAdmin', translated: "groupadmin-suspended" },
 
   // Partner System Routes - Protected routes for commercial partners (NO public registration - admin creates accounts)
+  { path: "/partner/telegram", component: PartnerTelegramOnboarding, protected: true, role: 'partner', translated: "partner-telegram" },
   { path: "/partner/tableau-de-bord", component: PartnerDashboard, protected: true, role: 'partner', translated: "partner-dashboard" },
   { path: "/partner/gains", component: PartnerEarnings, protected: true, role: 'partner', translated: "partner-earnings" },
   { path: "/partner/statistiques", component: PartnerClicks, protected: true, role: 'partner', translated: "partner-clicks" },
