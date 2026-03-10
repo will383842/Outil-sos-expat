@@ -12,11 +12,8 @@ const StickyAffiliateBar: React.FC = () => {
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruitment, setCopiedRecruitment] = useState(false);
   const [copiedProvider, setCopiedProvider] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-
-  const lastScrollY = useRef(0);
-  const barRef = useRef<HTMLDivElement>(null);
-  const isTransitioning = useRef(false);
+  // Start collapsed on mobile to save space, expanded on desktop
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth < 640);
 
   const affiliateCodeClient = dashboardData?.chatter?.affiliateCodeClient ?? '';
   const affiliateCodeRecruitment = dashboardData?.chatter?.affiliateCodeRecruitment ?? '';
@@ -38,72 +35,9 @@ const StickyAffiliateBar: React.FC = () => {
     return { callAmountRange: range, providerCallAmount: providerAmt, n1CallAmount: n1Amt };
   }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer, config?.commissionProviderCallAmount, config?.commissionN1CallAmount]);
 
-  // Collapse on scroll down, expand on scroll up
-  // Compensates scroll position to prevent content jumping
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isTransitioning.current) return;
-      const currentScrollY = window.scrollY;
-      const delta = currentScrollY - lastScrollY.current;
-      if (delta > 12 && currentScrollY > 80 && !collapsed) {
-        isTransitioning.current = true;
-        // Measure height before collapse
-        const heightBefore = barRef.current?.offsetHeight ?? 0;
-        setCollapsed(true);
-        // After React renders, compensate scroll position
-        requestAnimationFrame(() => {
-          const heightAfter = barRef.current?.offsetHeight ?? 0;
-          const diff = heightBefore - heightAfter;
-          if (diff > 0) {
-            window.scrollBy(0, -diff);
-          }
-          lastScrollY.current = window.scrollY;
-          isTransitioning.current = false;
-        });
-      } else if (delta < -12 && collapsed) {
-        isTransitioning.current = true;
-        const heightBefore = barRef.current?.offsetHeight ?? 0;
-        setCollapsed(false);
-        requestAnimationFrame(() => {
-          const heightAfter = barRef.current?.offsetHeight ?? 0;
-          const diff = heightAfter - heightBefore;
-          if (diff > 0) {
-            window.scrollBy(0, diff);
-          }
-          lastScrollY.current = window.scrollY;
-          isTransitioning.current = false;
-        });
-      } else {
-        lastScrollY.current = currentScrollY;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [collapsed]);
-
-  // Manual toggle handlers (button clicks) — also compensate scroll
-  const handleManualCollapse = useCallback(() => {
-    const heightBefore = barRef.current?.offsetHeight ?? 0;
-    setCollapsed(true);
-    requestAnimationFrame(() => {
-      const heightAfter = barRef.current?.offsetHeight ?? 0;
-      const diff = heightBefore - heightAfter;
-      if (diff > 0) window.scrollBy(0, -diff);
-      lastScrollY.current = window.scrollY;
-    });
-  }, []);
-
-  const handleManualExpand = useCallback(() => {
-    const heightBefore = barRef.current?.offsetHeight ?? 0;
-    setCollapsed(false);
-    requestAnimationFrame(() => {
-      const heightAfter = barRef.current?.offsetHeight ?? 0;
-      const diff = heightAfter - heightBefore;
-      if (diff > 0) window.scrollBy(0, diff);
-      lastScrollY.current = window.scrollY;
-    });
-  }, []);
+  // Manual toggle only — no auto-collapse on scroll to avoid content jumping on mobile
+  const handleManualCollapse = useCallback(() => setCollapsed(true), []);
+  const handleManualExpand = useCallback(() => setCollapsed(false), []);
 
   const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment' | 'provider') => {
     if (!url?.trim()) {
@@ -178,7 +112,7 @@ const StickyAffiliateBar: React.FC = () => {
   }, [intl]);
 
   return (
-    <div ref={barRef} className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
+    <div className="sticky top-20 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-white/[0.06]">
       {/* ── COLLAPSED: compact copy buttons ── */}
       {collapsed && (
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-center gap-1.5 flex-wrap">
