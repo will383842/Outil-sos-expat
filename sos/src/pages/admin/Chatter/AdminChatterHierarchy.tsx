@@ -410,6 +410,18 @@ const AdminChatterHierarchy: React.FC = () => {
     window.open(`/admin/chatters/${node.id}`, '_blank');
   };
 
+  // Search filter helper (must be defined BEFORE useMemo that uses it)
+  const matchesSearch = useCallback((node: ChatterTreeNode): boolean => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      node.firstName.toLowerCase().includes(q) ||
+      node.lastName.toLowerCase().includes(q) ||
+      node.email.toLowerCase().includes(q) ||
+      node.id.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
   // Filtered data (search + filter)
   const filteredTeams = useMemo(() => {
     if (!data) return [];
@@ -434,18 +446,6 @@ const AdminChatterHierarchy: React.FC = () => {
     if (!searchQuery) return data.orphans;
     return data.orphans.filter(o => matchesSearch(o));
   }, [data, filter, searchQuery, matchesSearch]);
-
-  // Search filter helper
-  const matchesSearch = useCallback((node: ChatterTreeNode): boolean => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      node.firstName.toLowerCase().includes(q) ||
-      node.lastName.toLowerCase().includes(q) ||
-      node.email.toLowerCase().includes(q) ||
-      node.id.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
 
   if (loading) {
     return (

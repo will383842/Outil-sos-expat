@@ -552,8 +552,9 @@ const AdminChattersList: React.FC = () => {
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
   }, [waConfig]);
 
-  // Debounced search
+  // Debounced search — reset selection when query changes
   useEffect(() => {
+    setSelectedIds(new Set());
     const timer = setTimeout(() => {
       if (page === 1) {
         fetchChatters();
@@ -642,9 +643,10 @@ const AdminChattersList: React.FC = () => {
       link.href = URL.createObjectURL(blob);
       link.download = `chatters_export_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
+      toast.success('Export CSV téléchargé');
     } catch (err: any) {
       console.error('Export error:', err);
-      setError(err.message || 'Export failed');
+      toast.error(err.message || 'Erreur lors de l\'export');
     } finally {
       setExporting(false);
     }
@@ -956,7 +958,7 @@ const AdminChattersList: React.FC = () => {
                         <FormattedMessage id="admin.chatters.col.earnings" defaultMessage="Gains" />
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
-                        <FormattedMessage id="admin.chatters.col.conversions" defaultMessage="Conv." />
+                        <span title="Clients / Recrut\u00e9s"><FormattedMessage id="admin.chatters.col.conversions" defaultMessage="Conv." /></span>
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
                         <FormattedMessage id="admin.chatters.col.lastLogin" defaultMessage="Dernière connexion" />
@@ -1019,7 +1021,7 @@ const AdminChattersList: React.FC = () => {
                             {chatter.recruitedBy ? (
                               <span className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400" title={`Parrain: ${chatter.recruitedByName || chatter.recruitedBy}`}>
                                 <GitBranch className="w-3 h-3" />
-                                <span className="truncate max-w-[100px]">{chatter.recruitedByName || 'Parrain'}</span>
+                                <span className="truncate max-w-[130px]">{chatter.recruitedByName || 'Parrain'}</span>
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-xs text-gray-400">
@@ -1030,7 +1032,7 @@ const AdminChattersList: React.FC = () => {
                             {chatter.captainId && (
                               <span className="inline-flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400" title={`Captain: ${chatter.captainName || chatter.captainId}`}>
                                 <Star className="w-3 h-3 fill-purple-500 text-purple-500" />
-                                <span className="truncate max-w-[100px]">{chatter.captainName || 'Captain'}</span>
+                                <span className="truncate max-w-[130px]">{chatter.captainName || 'Captain'}</span>
                               </span>
                             )}
                             {chatter.role === 'captainChatter' && (
@@ -1105,7 +1107,9 @@ const AdminChattersList: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           {visibilityLoading.get(chatter.id) ? (
-                            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                            <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-700 opacity-60">
+                              <Loader2 className="w-4 h-4 animate-spin text-gray-400 mx-auto" />
+                            </div>
                           ) : (
                             <button
                               onClick={() => handleToggleVisibility(chatter.id, chatter.isVisible ?? false)}
@@ -1129,7 +1133,7 @@ const AdminChattersList: React.FC = () => {
                               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                             >
                               {featuredLoading === chatter.id
-                                ? <span className="animate-spin inline-block w-3 h-3 border border-current rounded-full border-t-transparent" />
+                                ? <span className="animate-spin inline-block w-4 h-4 border border-current rounded-full border-t-transparent" />
                                 : <Star className={`w-4 h-4 ${chatter.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                               }
                             </button>
@@ -1743,7 +1747,7 @@ const AdminChattersList: React.FC = () => {
                       onFocus={() => setReassignCaptainDropdownOpen(true)}
                       placeholder="Rechercher un capitaine..."
                     />
-                    {reassignCaptainDropdownOpen && reassignCaptainSearch.length >= 1 && (
+                    {reassignCaptainDropdownOpen && reassignCaptainSearch.length >= 2 && (
                       <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl">
                         {chatters
                           .filter(c => {
