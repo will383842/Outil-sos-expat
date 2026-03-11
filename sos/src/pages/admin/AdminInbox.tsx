@@ -1,17 +1,20 @@
 /**
- * AdminInbox - Centre de notifications unifie
+ * AdminInbox - Centre de notifications unifie avec reponse + archivage
  *
  * Agregation temps reel de tous les messages entrants :
- * - Demandes de retrait (payment_withdrawals) — EN PREMIER, URGENT
+ * - Demandes de retrait (payment_withdrawals)
  * - Candidatures Captain (captain_applications)
  * - Messages contact (contact_messages)
  * - Feedbacks utilisateurs (user_feedback)
  * - Candidatures Partenaire (partner_applications)
  *
- * Permet de voir en un coup d'oeil tous les items non traites.
+ * Fonctionnalites:
+ * - Repondre directement par email depuis l'inbox
+ * - Archiver les messages traites
+ * - Onglet "Archives" par categorie
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
 import {
   collection,
@@ -39,14 +42,20 @@ import {
   Globe,
   Wallet,
   DollarSign,
+  Send,
+  Archive,
+  ArchiveRestore,
+  Loader2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { sendInboxReply } from '../../api/sendInboxReply';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 type InboxCategory = 'all' | 'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner';
+type ViewMode = 'active' | 'archived';
 
 interface InboxItem {
   id: string;
@@ -54,14 +63,26 @@ interface InboxItem {
   title: string;
   subtitle: string;
   detail: string;
+  email: string;
   status: string;
   createdAt: Date | null;
   link: string;
   raw: Record<string, unknown>;
+  hasReply: boolean;
+  existingReply: string;
 }
 
+// Collection name mapping
+const COLLECTION_MAP: Record<string, string> = {
+  withdrawal: 'payment_withdrawals',
+  captain: 'captain_applications',
+  contact: 'contact_messages',
+  feedback: 'user_feedback',
+  partner: 'partner_applications',
+};
+
 // ============================================================================
-// WITHDRAWAL HELPERS
+// HELPERS
 // ============================================================================
 
 const USER_TYPE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -76,9 +97,7 @@ const USER_TYPE_LABELS: Record<string, { label: string; color: string; bg: strin
   expat: { label: 'Expat', color: 'text-sky-700', bg: 'bg-sky-100' },
 };
 
-const formatCentsToUSD = (cents: number): string => {
-  return `$${(cents / 100).toFixed(2)}`;
-};
+const formatCentsToUSD = (cents: number): string => `$${(cents / 100).toFixed(2)}`;
 
 // ============================================================================
 // CATEGORY CONFIG
@@ -138,204 +157,252 @@ const AdminInbox: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
   const [items, setItems] = useState<InboxItem[]>([]);
+  const [archivedItems, setArchivedItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingArchived, setLoadingArchived] = useState(false);
   const [activeFilter, setActiveFilter] = useState<InboxCategory>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('active');
 
-  // Real-time listeners for all 5 collections
+  // Reply state
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+  const [sendingReply, setSendingReply] = useState<Record<string, boolean>>({});
+  const [archiving, setArchiving] = useState<Record<string, boolean>>({});
+
+  // ---- Extract email from raw data per category ----
+  const getEmail = (category: string, raw: Record<string, unknown>): string => {
+    switch (category) {
+      case 'contact': return (raw.email as string) || '';
+      case 'feedback': return (raw.email as string) || '';
+      case 'partner': return (raw.email as string) || '';
+      case 'captain': return (raw.email as string) || (raw.whatsapp as string) || '';
+      case 'withdrawal': return (raw.userEmail as string) || '';
+      default: return '';
+    }
+  };
+
+  const getRecipientName = (category: string, raw: Record<string, unknown>): string => {
+    switch (category) {
+      case 'contact': return (raw.name as string)?.split(' ')[0] || '';
+      case 'feedback': return (raw.userName as string) || (raw.email as string)?.split('@')[0] || '';
+      case 'partner': return (raw.firstName as string) || '';
+      case 'captain': return (raw.name as string)?.split(' ')[0] || '';
+      case 'withdrawal': return (raw.userName as string) || '';
+      default: return '';
+    }
+  };
+
+  // ---- Build InboxItem from doc ----
+  const buildItem = useCallback((d: { id: string; data: () => Record<string, unknown> }, category: InboxItem['category']): InboxItem => {
+    const data = d.data();
+    const email = getEmail(category, data);
+    const hasReply = !!(data.adminReply || data.reply);
+    const existingReply = (data.adminReply as string) || (data.reply as string) || '';
+
+    switch (category) {
+      case 'withdrawal': {
+        const userType = (data.userType as string) || 'affiliate';
+        const amount = (data.amount as number) || 0;
+        const fee = (data.withdrawalFee as number) || 0;
+        const totalDebited = (data.totalDebited as number) || amount + fee;
+        const method = data.provider === 'wise' ? 'Wise' : data.provider === 'flutterwave' ? 'Mobile Money' : data.methodType === 'bank_transfer' ? 'Virement' : 'Manuel';
+        return {
+          id: `withdrawal_${d.id}`, category, email, hasReply, existingReply,
+          title: `${data.userName || data.userEmail || 'N/A'} — ${formatCentsToUSD(amount)}`,
+          subtitle: `${(USER_TYPE_LABELS[userType] || USER_TYPE_LABELS.affiliate).label} · ${method} · Total: ${formatCentsToUSD(totalDebited)}`,
+          detail: fee > 0
+            ? `Montant: ${formatCentsToUSD(amount)} + Frais: ${formatCentsToUSD(fee)} = Total: ${formatCentsToUSD(totalDebited)}\nMethode: ${method}\nEmail: ${data.userEmail || 'N/A'}`
+            : `Montant: ${formatCentsToUSD(amount)}\nMethode: ${method}\nEmail: ${data.userEmail || 'N/A'}`,
+          status: (data.status as string) || 'pending',
+          createdAt: data.requestedAt ? new Date(data.requestedAt as number) : null,
+          link: '/admin/payments',
+          raw: { ...data, _docId: d.id, _userType: userType },
+        };
+      }
+      case 'captain':
+        return {
+          id: `captain_${d.id}`, category, email, hasReply, existingReply,
+          title: (data.name as string) || 'N/A',
+          subtitle: `${data.country || '?'} - ${data.whatsapp || '?'}`,
+          detail: (data.motivation as string) || '',
+          status: (data.status as string) || 'pending',
+          createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || null,
+          link: '/admin/team/captains/recruitment',
+          raw: { ...data, _docId: d.id },
+        };
+      case 'contact':
+        return {
+          id: `contact_${d.id}`, category, email, hasReply, existingReply,
+          title: (data.name as string) || (data.email as string) || 'N/A',
+          subtitle: (data.email as string) || '',
+          detail: (data.message as string) || '',
+          status: 'unread',
+          createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || null,
+          link: '/admin/contact-messages',
+          raw: { ...data, _docId: d.id },
+        };
+      case 'feedback': {
+        const typeLabel = data.type === 'bug' ? 'Bug' : data.type === 'ux_friction' ? 'UX' : data.type === 'suggestion' ? 'Suggestion' : 'Autre';
+        return {
+          id: `feedback_${d.id}`, category, email, hasReply, existingReply,
+          title: `[${typeLabel}] ${data.pageName || data.pageUrl || ''}`.trim(),
+          subtitle: (data.email as string) || '',
+          detail: (data.description as string) || '',
+          status: (data.status as string) || 'new',
+          createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || null,
+          link: '/admin/feedback',
+          raw: { ...data, _docId: d.id },
+        };
+      }
+      case 'partner':
+        return {
+          id: `partner_${d.id}`, category, email, hasReply, existingReply,
+          title: `${data.firstName || ''} ${data.lastName || ''}`.trim() || (data.email as string) || 'N/A',
+          subtitle: `${data.websiteName || data.websiteUrl || ''} - ${data.country || '?'}`,
+          detail: (data.message as string) || (data.websiteDescription as string) || '',
+          status: (data.status as string) || 'pending',
+          createdAt: data.createdAt ? new Date(data.createdAt as string) : null,
+          link: '/admin/partners/applications',
+          raw: { ...data, _docId: d.id },
+        };
+    }
+  }, []);
+
+  // ---- ACTIVE items real-time listeners ----
   useEffect(() => {
     const unsubs: (() => void)[] = [];
 
-    // 0. WITHDRAWAL REQUESTS (pending) — PRIORITE #1
-    const qWithdrawal = query(
+    const addListener = (
+      cat: InboxItem['category'],
+      q: ReturnType<typeof query>,
+    ) => {
+      unsubs.push(
+        onSnapshot(q, (snap) => {
+          const newItems = snap.docs.map((d) => buildItem(d as unknown as { id: string; data: () => Record<string, unknown> }, cat));
+          setItems((prev) => {
+            const others = prev.filter((i) => i.category !== cat);
+            return [...others, ...newItems].sort(sortByDate);
+          });
+          setLoading(false);
+        }, (err) => {
+          console.error(`Inbox ${cat} listener error:`, err);
+          setLoading(false);
+        })
+      );
+    };
+
+    // Withdrawal (pending, not archived)
+    addListener('withdrawal', query(
       collection(db, 'payment_withdrawals'),
       where('status', '==', 'pending'),
       orderBy('requestedAt', 'desc'),
       limit(50)
-    );
-    unsubs.push(
-      onSnapshot(qWithdrawal, (snap) => {
-        const withdrawalItems: InboxItem[] = snap.docs.map((d) => {
-          const data = d.data();
-          const userType = data.userType || 'affiliate';
-          const typeInfo = USER_TYPE_LABELS[userType] || USER_TYPE_LABELS.affiliate;
-          const amount = data.amount || 0;
-          const fee = data.withdrawalFee || 0;
-          const totalDebited = data.totalDebited || amount + fee;
-          const method = data.provider === 'wise' ? 'Wise' : data.provider === 'flutterwave' ? 'Mobile Money' : data.methodType === 'bank_transfer' ? 'Virement' : 'Manuel';
+    ));
 
-          return {
-            id: `withdrawal_${d.id}`,
-            category: 'withdrawal' as const,
-            title: `${data.userName || data.userEmail || 'N/A'} — ${formatCentsToUSD(amount)}`,
-            subtitle: `${typeInfo.label} · ${method} · Total debite: ${formatCentsToUSD(totalDebited)}`,
-            detail: fee > 0
-              ? `Montant: ${formatCentsToUSD(amount)} + Frais: ${formatCentsToUSD(fee)} = Total: ${formatCentsToUSD(totalDebited)}\nMethode: ${method}\nEmail: ${data.userEmail || 'N/A'}`
-              : `Montant: ${formatCentsToUSD(amount)}\nMethode: ${method}\nEmail: ${data.userEmail || 'N/A'}`,
-            status: 'pending',
-            createdAt: data.requestedAt ? new Date(data.requestedAt) : null,
-            link: '/admin/payments',
-            raw: { ...data, _docId: d.id, _userType: userType },
-          };
-        });
-        setItems((prev) => {
-          const others = prev.filter((i) => i.category !== 'withdrawal');
-          return [...others, ...withdrawalItems].sort(sortByDate);
-        });
-        setLoading(false);
-      }, (err) => { console.error('Inbox withdrawal listener error:', err); setLoading(false); })
-    );
-
-    // 1. Captain applications (pending/contacted)
-    const qCaptain = query(
+    // Captain (pending/contacted, not archived)
+    addListener('captain', query(
       collection(db, 'captain_applications'),
       where('status', 'in', ['pending', 'contacted']),
       orderBy('createdAt', 'desc'),
       limit(50)
-    );
-    unsubs.push(
-      onSnapshot(qCaptain, (snap) => {
-        const captainItems: InboxItem[] = snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: `captain_${d.id}`,
-            category: 'captain' as const,
-            title: data.name || 'N/A',
-            subtitle: `${data.country || '?'} - ${data.whatsapp || '?'}`,
-            detail: data.motivation || '',
-            status: data.status || 'pending',
-            createdAt: data.createdAt?.toDate?.() || null,
-            link: '/admin/team/captains/recruitment',
-            raw: { ...data, _docId: d.id },
-          };
-        });
-        setItems((prev) => {
-          const others = prev.filter((i) => i.category !== 'captain');
-          return [...others, ...captainItems].sort(sortByDate);
-        });
-        setLoading(false);
-      }, (err) => { console.error('Inbox captain listener error:', err); setLoading(false); })
-    );
+    ));
 
-    // 2. Contact messages (unread)
-    const qContact = query(
+    // Contact (unread)
+    addListener('contact', query(
       collection(db, 'contact_messages'),
       where('isRead', '==', false),
       orderBy('createdAt', 'desc'),
       limit(50)
-    );
-    unsubs.push(
-      onSnapshot(qContact, (snap) => {
-        const contactItems: InboxItem[] = snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: `contact_${d.id}`,
-            category: 'contact' as const,
-            title: data.name || data.email || 'N/A',
-            subtitle: data.email || '',
-            detail: data.message || '',
-            status: 'unread',
-            createdAt: data.createdAt?.toDate?.() || null,
-            link: '/admin/contact-messages',
-            raw: { ...data, _docId: d.id },
-          };
-        });
-        setItems((prev) => {
-          const others = prev.filter((i) => i.category !== 'contact');
-          return [...others, ...contactItems].sort(sortByDate);
-        });
-        setLoading(false);
-      }, (err) => { console.error('Inbox contact listener error:', err); setLoading(false); })
-    );
+    ));
 
-    // 3. Feedback (new/in_progress)
-    const qFeedback = query(
+    // Feedback (new/in_progress)
+    addListener('feedback', query(
       collection(db, 'user_feedback'),
       where('status', 'in', ['new', 'in_progress']),
       orderBy('createdAt', 'desc'),
       limit(50)
-    );
-    unsubs.push(
-      onSnapshot(qFeedback, (snap) => {
-        const feedbackItems: InboxItem[] = snap.docs.map((d) => {
-          const data = d.data();
-          const typeLabel = data.type === 'bug' ? 'Bug' : data.type === 'ux_friction' ? 'UX' : data.type === 'suggestion' ? 'Suggestion' : 'Autre';
-          return {
-            id: `feedback_${d.id}`,
-            category: 'feedback' as const,
-            title: `[${typeLabel}] ${data.pageName || data.pageUrl || ''}`.trim(),
-            subtitle: data.email || '',
-            detail: data.description || '',
-            status: data.status || 'new',
-            createdAt: data.createdAt?.toDate?.() || null,
-            link: '/admin/feedback',
-            raw: { ...data, _docId: d.id },
-          };
-        });
-        setItems((prev) => {
-          const others = prev.filter((i) => i.category !== 'feedback');
-          return [...others, ...feedbackItems].sort(sortByDate);
-        });
-        setLoading(false);
-      }, (err) => { console.error('Inbox feedback listener error:', err); setLoading(false); })
-    );
+    ));
 
-    // 4. Partner applications (pending/contacted)
-    const qPartner = query(
+    // Partner (pending/contacted)
+    addListener('partner', query(
       collection(db, 'partner_applications'),
       where('status', 'in', ['pending', 'contacted']),
       orderBy('createdAt', 'desc'),
       limit(50)
-    );
-    unsubs.push(
-      onSnapshot(qPartner, (snap) => {
-        const partnerItems: InboxItem[] = snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: `partner_${d.id}`,
-            category: 'partner' as const,
-            title: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email || 'N/A',
-            subtitle: `${data.websiteName || data.websiteUrl || ''} - ${data.country || '?'}`,
-            detail: data.message || data.websiteDescription || '',
-            status: data.status || 'pending',
-            createdAt: data.createdAt ? new Date(data.createdAt) : null,
-            link: '/admin/partners/applications',
-            raw: { ...data, _docId: d.id },
-          };
-        });
-        setItems((prev) => {
-          const others = prev.filter((i) => i.category !== 'partner');
-          return [...others, ...partnerItems].sort(sortByDate);
-        });
-        setLoading(false);
-      }, (err) => { console.error('Inbox partner listener error:', err); setLoading(false); })
-    );
+    ));
 
     return () => unsubs.forEach((u) => u());
-  }, []);
+  }, [buildItem]);
 
+  // ---- ARCHIVED items listener (loaded on demand) ----
+  useEffect(() => {
+    if (viewMode !== 'archived') return;
+    setLoadingArchived(true);
+    const unsubs: (() => void)[] = [];
+
+    const addArchivedListener = (
+      cat: InboxItem['category'],
+      q: ReturnType<typeof query>,
+    ) => {
+      unsubs.push(
+        onSnapshot(q, (snap) => {
+          const newItems = snap.docs.map((d) => buildItem(d as unknown as { id: string; data: () => Record<string, unknown> }, cat));
+          setArchivedItems((prev) => {
+            const others = prev.filter((i) => i.category !== cat);
+            return [...others, ...newItems].sort(sortByDate);
+          });
+          setLoadingArchived(false);
+        }, (err) => {
+          console.error(`Archived ${cat} listener error:`, err);
+          setLoadingArchived(false);
+        })
+      );
+    };
+
+    // Archived = isArchived == true for each collection
+    addArchivedListener('contact', query(
+      collection(db, 'contact_messages'),
+      where('isArchived', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    ));
+
+    addArchivedListener('feedback', query(
+      collection(db, 'user_feedback'),
+      where('isArchived', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    ));
+
+    addArchivedListener('captain', query(
+      collection(db, 'captain_applications'),
+      where('isArchived', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    ));
+
+    addArchivedListener('partner', query(
+      collection(db, 'partner_applications'),
+      where('isArchived', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    ));
+
+    addArchivedListener('withdrawal', query(
+      collection(db, 'payment_withdrawals'),
+      where('isArchived', '==', true),
+      orderBy('requestedAt', 'desc'),
+      limit(100)
+    ));
+
+    return () => unsubs.forEach((u) => u());
+  }, [viewMode, buildItem]);
+
+  // ---- Helpers ----
   const sortByDate = (a: InboxItem, b: InboxItem) => {
     const da = a.createdAt?.getTime() || 0;
     const db2 = b.createdAt?.getTime() || 0;
     return db2 - da;
-  };
-
-  const filtered = activeFilter === 'all' ? items : items.filter((i) => i.category === activeFilter);
-
-  const counts = {
-    all: items.length,
-    withdrawal: items.filter((i) => i.category === 'withdrawal').length,
-    captain: items.filter((i) => i.category === 'captain').length,
-    contact: items.filter((i) => i.category === 'contact').length,
-    feedback: items.filter((i) => i.category === 'feedback').length,
-    partner: items.filter((i) => i.category === 'partner').length,
-  };
-
-  const markContactRead = async (docId: string) => {
-    try {
-      await updateDoc(doc(db, 'contact_messages', docId), { isRead: true });
-      toast.success('Marque comme lu');
-    } catch { toast.error('Erreur'); }
   };
 
   const formatDate = (d: Date | null) => {
@@ -349,6 +416,81 @@ const AdminInbox: React.FC = () => {
     const days = Math.floor(hours / 24);
     if (days < 7) return `${days}j`;
     return d.toLocaleDateString(intl.locale, { day: '2-digit', month: 'short' });
+  };
+
+  // ---- Actions ----
+  const handleReply = async (item: InboxItem) => {
+    const text = replyTexts[item.id]?.trim();
+    if (!text) return;
+    if (!item.email || !item.email.includes('@')) {
+      toast.error('Pas d\'email pour ce destinataire');
+      return;
+    }
+
+    setSendingReply((p) => ({ ...p, [item.id]: true }));
+    try {
+      const docId = item.raw._docId as string;
+      const collName = COLLECTION_MAP[item.category];
+      const result = await sendInboxReply({
+        collection: collName,
+        docId,
+        to: item.email,
+        recipientName: getRecipientName(item.category, item.raw),
+        originalMessage: item.detail,
+        adminReply: text,
+      });
+
+      if (result.success) {
+        toast.success('Reponse envoyee !');
+        setReplyTexts((p) => ({ ...p, [item.id]: '' }));
+      } else {
+        toast.error(result.error || 'Erreur');
+      }
+    } catch {
+      toast.error('Erreur lors de l\'envoi');
+    } finally {
+      setSendingReply((p) => ({ ...p, [item.id]: false }));
+    }
+  };
+
+  const handleArchive = async (item: InboxItem, archive: boolean) => {
+    setArchiving((p) => ({ ...p, [item.id]: true }));
+    try {
+      const docId = item.raw._docId as string;
+      const collName = COLLECTION_MAP[item.category];
+      await updateDoc(doc(db, collName, docId), {
+        isArchived: archive,
+        ...(archive && item.category === 'contact' ? { isRead: true } : {}),
+      });
+      toast.success(archive ? 'Archive !' : 'Desarchive !');
+      if (expandedId === item.id) setExpandedId(null);
+    } catch (err) {
+      console.error('Archive error:', err);
+      toast.error('Erreur');
+    } finally {
+      setArchiving((p) => ({ ...p, [item.id]: false }));
+    }
+  };
+
+  const markContactRead = async (docId: string) => {
+    try {
+      await updateDoc(doc(db, 'contact_messages', docId), { isRead: true });
+      toast.success('Marque comme lu');
+    } catch { toast.error('Erreur'); }
+  };
+
+  // ---- Derived state ----
+  const displayItems = viewMode === 'active' ? items : archivedItems;
+  const filtered = activeFilter === 'all' ? displayItems : displayItems.filter((i) => i.category === activeFilter);
+  const isLoading = viewMode === 'active' ? loading : loadingArchived;
+
+  const counts = {
+    all: displayItems.length,
+    withdrawal: displayItems.filter((i) => i.category === 'withdrawal').length,
+    captain: displayItems.filter((i) => i.category === 'captain').length,
+    contact: displayItems.filter((i) => i.category === 'contact').length,
+    feedback: displayItems.filter((i) => i.category === 'feedback').length,
+    partner: displayItems.filter((i) => i.category === 'partner').length,
   };
 
   const statusBadge = (item: InboxItem) => {
@@ -367,7 +509,6 @@ const AdminInbox: React.FC = () => {
     );
   };
 
-  // Badge for withdrawal userType (chatter, influencer, blogger, etc.)
   const userTypeBadge = (userType: string) => {
     const info = USER_TYPE_LABELS[userType] || { label: userType, color: 'text-gray-700', bg: 'bg-gray-100' };
     return (
@@ -376,6 +517,10 @@ const AdminInbox: React.FC = () => {
       </span>
     );
   };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
     <AdminLayout>
@@ -391,28 +536,51 @@ const AdminInbox: React.FC = () => {
                 <FormattedMessage id="admin.inbox.title" defaultMessage="Inbox" />
               </h1>
               <p className="text-sm text-gray-500">
-                <FormattedMessage
-                  id="admin.inbox.subtitle"
-                  defaultMessage="{count} element(s) en attente"
-                  values={{ count: items.length }}
-                />
+                {viewMode === 'active'
+                  ? <FormattedMessage id="admin.inbox.subtitle" defaultMessage="{count} element(s) en attente" values={{ count: items.length }} />
+                  : `${archivedItems.length} archive(s)`
+                }
               </p>
             </div>
           </div>
 
-          {/* Withdrawal alert banner */}
-          {counts.withdrawal > 0 && (
-            <button
-              onClick={() => setActiveFilter('withdrawal')}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold hover:bg-red-100 transition-colors animate-pulse"
-            >
-              <DollarSign className="w-4 h-4" />
-              {counts.withdrawal} retrait{counts.withdrawal > 1 ? 's' : ''} en attente
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Withdrawal alert */}
+            {viewMode === 'active' && counts.withdrawal > 0 && (
+              <button
+                onClick={() => { setActiveFilter('withdrawal'); setViewMode('active'); }}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold hover:bg-red-100 transition-colors animate-pulse"
+              >
+                <DollarSign className="w-4 h-4" />
+                {counts.withdrawal} retrait{counts.withdrawal > 1 ? 's' : ''} en attente
+              </button>
+            )}
+
+            {/* Active / Archived toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setViewMode('active')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  viewMode === 'active' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Inbox className="w-3.5 h-3.5 inline mr-1" />
+                Actifs ({items.length})
+              </button>
+              <button
+                onClick={() => setViewMode('archived')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  viewMode === 'archived' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Archive className="w-3.5 h-3.5 inline mr-1" />
+                Archives
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Category filters — withdrawal EN PREMIER */}
+        {/* Category filters */}
         <div className="flex flex-wrap gap-2">
           {(['all', 'withdrawal', 'captain', 'contact', 'feedback', 'partner'] as InboxCategory[]).map((cat) => {
             const isActive = activeFilter === cat;
@@ -440,7 +608,7 @@ const AdminInbox: React.FC = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 min-h-[44px] ${
                   isActive
                     ? `${cfg.bg} ${cfg.color} border ${cfg.border}`
-                    : cat === 'withdrawal' && count > 0
+                    : cat === 'withdrawal' && count > 0 && viewMode === 'active'
                       ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold'
                       : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-transparent'
                 }`}
@@ -453,15 +621,23 @@ const AdminInbox: React.FC = () => {
         </div>
 
         {/* Items */}
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-12 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
             <FormattedMessage id="admin.inbox.loading" defaultMessage="Chargement..." />
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <Inbox className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+            {viewMode === 'archived' ? (
+              <Archive className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+            ) : (
+              <Inbox className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+            )}
             <p className="text-gray-400 font-medium">
-              <FormattedMessage id="admin.inbox.empty" defaultMessage="Aucun element en attente" />
+              {viewMode === 'archived'
+                ? 'Aucun message archive'
+                : <FormattedMessage id="admin.inbox.empty" defaultMessage="Aucun element en attente" />
+              }
             </p>
           </div>
         ) : (
@@ -469,35 +645,42 @@ const AdminInbox: React.FC = () => {
             {filtered.map((item) => {
               const cfg = CATEGORY_CONFIG[item.category];
               const isExpanded = expandedId === item.id;
+              const isSending = sendingReply[item.id];
+              const isArchivingItem = archiving[item.id];
+              const replyText = replyTexts[item.id] || '';
+
               return (
                 <div
                   key={item.id}
                   className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
-                    item.category === 'withdrawal'
+                    item.category === 'withdrawal' && viewMode === 'active'
                       ? 'border-red-200 bg-red-50/30'
-                      : 'border-gray-200'
+                      : item.hasReply
+                        ? 'border-green-200 bg-green-50/20'
+                        : 'border-gray-200'
                   }`}
                 >
+                  {/* Header row */}
                   <div
                     className="flex items-start gap-3 p-4 cursor-pointer"
                     onClick={() => setExpandedId(isExpanded ? null : item.id)}
                   >
-                    {/* Category icon */}
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
                       <span className={cfg.color}>{cfg.icon}</span>
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-900 text-sm truncate">{item.title}</span>
                         {statusBadge(item)}
                         {item.category === 'withdrawal' && typeof item.raw._userType === 'string' && userTypeBadge(item.raw._userType)}
+                        {item.hasReply && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
+                            repondu
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{item.subtitle}</p>
                     </div>
-
-                    {/* Time + chevron */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {formatDate(item.createdAt)}
@@ -508,13 +691,49 @@ const AdminInbox: React.FC = () => {
 
                   {/* Expanded detail */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                    <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+                      {/* Original message */}
                       {item.detail && (
-                        <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 mb-3 whitespace-pre-wrap line-clamp-6">
+                        <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap line-clamp-6">
                           {item.detail}
                         </p>
                       )}
-                      <div className="flex items-center gap-2 flex-wrap">
+
+                      {/* Existing reply */}
+                      {item.hasReply && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <p className="text-[11px] text-green-600 font-semibold mb-1 uppercase">Reponse envoyee</p>
+                          <p className="text-sm text-green-800 whitespace-pre-wrap">{item.existingReply}</p>
+                        </div>
+                      )}
+
+                      {/* Reply textarea (if has email and no reply yet) */}
+                      {item.email && item.email.includes('@') && !item.hasReply && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Mail className="w-3 h-3" />
+                            Repondre a {item.email}
+                          </div>
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyTexts((p) => ({ ...p, [item.id]: e.target.value }))}
+                            placeholder="Ecrire votre reponse..."
+                            className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none"
+                            rows={3}
+                          />
+                          <button
+                            onClick={() => handleReply(item)}
+                            disabled={isSending || !replyText.trim()}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[36px]"
+                          >
+                            {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                            {isSending ? 'Envoi...' : 'Envoyer la reponse'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 flex-wrap pt-1">
                         <button
                           onClick={() => navigate(item.link)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors min-h-[36px]"
@@ -523,16 +742,39 @@ const AdminInbox: React.FC = () => {
                           <FormattedMessage id="admin.inbox.viewDetail" defaultMessage="Voir en detail" />
                         </button>
 
-                        {item.category === 'contact' && (
+                        {/* Archive / Unarchive */}
+                        {viewMode === 'active' ? (
+                          <button
+                            onClick={() => handleArchive(item, true)}
+                            disabled={isArchivingItem}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors min-h-[36px] disabled:opacity-50"
+                          >
+                            {isArchivingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                            Archiver
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleArchive(item, false)}
+                            disabled={isArchivingItem}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium hover:bg-amber-100 transition-colors min-h-[36px] disabled:opacity-50"
+                          >
+                            {isArchivingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArchiveRestore className="w-3.5 h-3.5" />}
+                            Desarchiver
+                          </button>
+                        )}
+
+                        {/* Mark as read (contact only, active view) */}
+                        {item.category === 'contact' && viewMode === 'active' && (
                           <button
                             onClick={() => markContactRead(item.raw._docId as string)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors min-h-[36px]"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            <FormattedMessage id="admin.inbox.markRead" defaultMessage="Marquer comme lu" />
+                            Marquer comme lu
                           </button>
                         )}
 
+                        {/* WhatsApp (captain) */}
                         {item.category === 'captain' && !!item.raw.whatsapp && (
                           <a
                             href={`https://wa.me/${(item.raw.whatsapp as string).replace(/[^0-9]/g, '')}`}
@@ -544,6 +786,7 @@ const AdminInbox: React.FC = () => {
                           </a>
                         )}
 
+                        {/* CV (captain) */}
                         {item.category === 'captain' && !!item.raw.cvUrl && (
                           <a
                             href={item.raw.cvUrl as string}
@@ -555,6 +798,7 @@ const AdminInbox: React.FC = () => {
                           </a>
                         )}
 
+                        {/* Website (partner) */}
                         {item.category === 'partner' && !!item.raw.websiteUrl && (
                           <a
                             href={item.raw.websiteUrl as string}
@@ -567,6 +811,7 @@ const AdminInbox: React.FC = () => {
                           </a>
                         )}
 
+                        {/* Email link (partner) */}
                         {item.category === 'partner' && !!item.raw.email && (
                           <a
                             href={`mailto:${item.raw.email as string}`}

@@ -891,6 +891,9 @@ export { notifyAfterPayment } from "./notifications/notifyAfterPayment";
 // Contact reply (admin responds to contact form messages)
 export { sendContactReply } from "./sendContactReplyFunction";
 
+// Generic inbox reply (admin responds to any inbox message)
+export { sendInboxReply } from "./admin/sendInboxReply";
+
 // Exports additionnels
 export * from "./notificationPipeline/worker";
 export * from "./admin/callables";
