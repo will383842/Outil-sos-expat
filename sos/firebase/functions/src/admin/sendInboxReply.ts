@@ -6,6 +6,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { sendZoho } from '../notificationPipeline/providers/email/zohoSmtp';
+import { EMAIL_USER, EMAIL_PASS } from '../lib/secrets';
 
 const db = getFirestore();
 
@@ -88,6 +89,7 @@ export const sendInboxReply = onCall<InboxReplyRequest>(
   {
     region: 'europe-west1',
     memory: '256MiB',
+    secrets: [EMAIL_USER, EMAIL_PASS],
   },
   async (request) => {
     if (!request.auth) {

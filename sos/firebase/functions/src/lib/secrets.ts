@@ -268,6 +268,16 @@ export const TELEGRAM_WEBHOOK_SECRET = defineSecret("TELEGRAM_WEBHOOK_SECRET");
 export const TELEGRAM_SECRETS = [TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET];
 
 // ============================================================================
+// TELEGRAM INBOX BOT (separate bot for admin inbox notifications)
+// ============================================================================
+
+export const TELEGRAM_INBOX_BOT_TOKEN = defineSecret("TELEGRAM_INBOX_BOT_TOKEN");
+export const TELEGRAM_INBOX_CHAT_ID = defineSecret("TELEGRAM_INBOX_CHAT_ID");
+
+/** Telegram Inbox bot secrets */
+export const TELEGRAM_INBOX_SECRETS = [TELEGRAM_INBOX_BOT_TOKEN, TELEGRAM_INBOX_CHAT_ID];
+
+// ============================================================================
 // TELEGRAM ENGINE SECRETS (Laravel Engine for notifications)
 // ============================================================================
 
