@@ -493,7 +493,7 @@ const InfluencerDashboard: React.FC = () => {
           role="influencer"
           language={influencer?.language || 'en'}
           country={influencer?.country || ''}
-          alreadyClicked={(influencer as any)?.whatsappGroupClicked || false}
+          alreadyClicked={influencer?.whatsappGroupClicked || false}
         />
 
         {/* ================================================================ */}

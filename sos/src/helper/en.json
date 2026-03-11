@@ -2778,6 +2778,8 @@
   "admin.menu.chattersConfig.description": "Chatter program settings",
   "admin.menu.chattersWhatsappGroups": "WhatsApp Groups",
   "admin.menu.chattersWhatsappGroups.description": "Manage chatter WhatsApp groups",
+  "admin.menu.whatsappSupervision": "WhatsApp Supervision",
+  "admin.menu.whatsappSupervision.description": "Assign and manage WhatsApp group managers",
   "admin.menu.chattersCountries": "Chatter Countries",
   "admin.menu.chattersCountries.description": "Chatter distribution by country",
   "admin.menu.chattersCountryRotation": "Country Rotation",

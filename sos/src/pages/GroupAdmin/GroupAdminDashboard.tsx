@@ -184,6 +184,7 @@ const GroupAdminDashboard: React.FC = () => {
                 role="groupAdmin"
                 language={langCode}
                 country={profile.country || ''}
+                alreadyClicked={profile.whatsappGroupClicked || false}
               />
             </div>
           )}

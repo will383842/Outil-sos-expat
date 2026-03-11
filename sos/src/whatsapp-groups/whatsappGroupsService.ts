@@ -1,0 +1,249 @@
+/**
+ * WhatsApp Groups - Service
+ * Lecture/écriture Firestore pour les groupes WhatsApp
+ * Scalable pour tous les rôles : chatter, influencer, blogger, groupAdmin
+ *
+ * Résolution du groupe (priorité, 6 niveaux) :
+ *   1. Groupe continent + langue exacte du user (ex: "Chatter Afrique FR")
+ *   2. Groupe continent + langue déduite du pays (ex: pays=CM → langue=fr)
+ *   3. Groupe langue du user (type: "language", fallback)
+ *   4. Groupe langue déduite du pays (via COUNTRY_TO_LANGUAGE)
+ *   5. Groupe par défaut du rôle (defaultGroupIds[role])
+ *   6. Premier groupe enabled du rôle
+ *
+ * Aucune Cloud Function nécessaire — accès direct Firestore
+ */
+
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, orderBy, startAt, endAt, getDocs, limit } from 'firebase/firestore';
+import { db } from '@/config/firebase';
+import type { WhatsAppGroupsConfig, WhatsAppGroup, WhatsAppRole, WhatsAppGroupManager } from './types';
+import { COUNTRY_TO_LANGUAGE, COUNTRY_TO_CONTINENT, ALL_CONTINENTS, SUPPORTED_LANGUAGES, ROLE_LABELS } from './types';
+
+const CONFIG_DOC_PATH = 'admin_config/whatsapp_groups';
+
+/** Collection Firestore par rôle (pour écrire le tracking) */
+const ROLE_COLLECTION: Record<WhatsAppRole, string> = {
+  chatter: 'chatters',
+  influencer: 'influencers',
+  blogger: 'bloggers',
+  groupAdmin: 'group_admins',
+  client: 'users',
+  lawyer: 'users',
+  expat: 'users',
+};
+
+// ============================================================================
+// LECTURE CONFIG
+// ============================================================================
+
+/** Récupère la config des groupes WhatsApp depuis Firestore */
+export async function getWhatsAppGroupsConfig(): Promise<WhatsAppGroupsConfig | null> {
+  try {
+    const snap = await getDoc(doc(db, CONFIG_DOC_PATH));
+    if (!snap.exists()) return null;
+    return snap.data() as WhatsAppGroupsConfig;
+  } catch (err) {
+    console.error('[WhatsApp Groups] Error fetching config:', err);
+    return null;
+  }
+}
+
+/**
+ * Trouve le bon groupe WhatsApp pour un utilisateur.
+ *
+ * Logique de résolution (priorité, 6 niveaux) :
+ *   1. Continent + langue exacte (ex: "Chatter Afrique FR" pour un user FR en Afrique)
+ *   2. Continent + langue déduite du pays (ex: pays=CM → langue=fr → "Chatter Afrique FR")
+ *   3. Groupe langue du user (type "language", fallback)
+ *   4. Groupe langue déduite du pays (type "language", fallback)
+ *   5. Groupe par défaut du rôle (defaultGroupIds[role])
+ *   6. Premier groupe enabled du rôle
+ */
+export function findGroupForUser(
+  config: WhatsAppGroupsConfig,
+  role: WhatsAppRole,
+  language: string,
+  country: string
+): WhatsAppGroup | null {
+  const roleGroups = config.groups.filter((g) => g.role === role && g.enabled);
+  if (roleGroups.length === 0) return null;
+
+  const upperCountry = country?.toUpperCase();
+  const continent = COUNTRY_TO_CONTINENT[upperCountry];
+  const countryLang = COUNTRY_TO_LANGUAGE[upperCountry];
+
+  // 1. Continent + langue exacte du user
+  if (continent) {
+    const exactMatch = roleGroups.find(
+      (g) => g.type === 'continent' && g.continentCode === continent && g.language === language
+    );
+    if (exactMatch) return exactMatch;
+  }
+
+  // 2. Continent + langue déduite du pays
+  if (continent && countryLang && countryLang !== language) {
+    const countryLangMatch = roleGroups.find(
+      (g) => g.type === 'continent' && g.continentCode === continent && g.language === countryLang
+    );
+    if (countryLangMatch) return countryLangMatch;
+  }
+
+  // 3. Groupe langue du user (fallback type "language")
+  const langGroup = roleGroups.find(
+    (g) => g.type === 'language' && g.language === language
+  );
+  if (langGroup) return langGroup;
+
+  // 4. Groupe langue déduite du pays (fallback type "language")
+  if (countryLang && countryLang !== language) {
+    const countryLangGroup = roleGroups.find(
+      (g) => g.type === 'language' && g.language === countryLang
+    );
+    if (countryLangGroup) return countryLangGroup;
+  }
+
+  // 5. Groupe par défaut du rôle
+  const defaultId = config.defaultGroupIds?.[role];
+  if (defaultId) {
+    const defaultGroup = roleGroups.find((g) => g.id === defaultId);
+    if (defaultGroup) return defaultGroup;
+  }
+
+  // 6. Premier groupe available
+  return roleGroups[0] || null;
+}
+
+// ============================================================================
+// TRACKING (frontend — écriture sur le doc de l'affilié)
+// ============================================================================
+
+/** Marque que l'utilisateur a cliqué sur "Rejoindre le groupe WhatsApp" */
+export async function trackWhatsAppGroupClick(
+  role: WhatsAppRole,
+  userId: string,
+  groupId?: string,
+  country?: string
+): Promise<void> {
+  const roleCollection = ROLE_COLLECTION[role];
+  try {
+    await setDoc(doc(db, roleCollection, userId), {
+      whatsappGroupClicked: true,
+      whatsappGroupClickedAt: serverTimestamp(),
+      ...(groupId && { whatsappGroupId: groupId }),
+      ...(country && { whatsappGroupCountry: country }),
+    }, { merge: true });
+  } catch (err) {
+    console.error(`[WhatsApp Groups] Error tracking click for ${role}:`, err);
+  }
+}
+
+// ============================================================================
+// RECHERCHE MANAGERS (admin — recherche dans la collection chatters)
+// ============================================================================
+
+/** Recherche des chatters par email pour les assigner comme managers */
+export async function searchChattersForManager(searchTerm: string): Promise<WhatsAppGroupManager[]> {
+  const term = searchTerm.toLowerCase().trim();
+  if (term.length < 2) return [];
+
+  try {
+    const chattersRef = collection(db, 'chatters');
+    const q = query(
+      chattersRef,
+      orderBy('email'),
+      startAt(term),
+      endAt(term + '\uf8ff'),
+      limit(10)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        uid: d.id,
+        displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Sans nom',
+        email: data.email || '',
+        phone: data.phone || '',
+      };
+    });
+  } catch (err) {
+    console.error('[WhatsApp Groups] Error searching chatters:', err);
+    return [];
+  }
+}
+
+// ============================================================================
+// ADMIN — Sauvegarde config
+// ============================================================================
+
+/** Sauvegarde la config des groupes WhatsApp (admin uniquement) */
+export async function saveWhatsAppGroupsConfig(
+  config: WhatsAppGroupsConfig,
+  adminUid: string
+): Promise<void> {
+  await setDoc(doc(db, CONFIG_DOC_PATH), {
+    ...config,
+    updatedAt: serverTimestamp(),
+    updatedBy: adminUid,
+  });
+}
+
+// ============================================================================
+// AUTO-SEED — Génère les groupes par défaut
+// ============================================================================
+
+/** Génère les groupes fallback par langue pour un rôle (liens vides, disabled) */
+export function generateLanguageFallbackGroups(role: WhatsAppRole): WhatsAppGroup[] {
+  return SUPPORTED_LANGUAGES.map((lang) => ({
+    id: `${role}_lang_${lang.code}`,
+    name: `${ROLE_LABELS[role]} ${lang.name} ${lang.flag}`,
+    link: '',
+    language: lang.code,
+    role,
+    type: 'language' as const,
+    enabled: false,
+  }));
+}
+
+/**
+ * Génère les groupes continent × langue pour un rôle (7 continents × 9 langues = 63 groupes).
+ * Chaque groupe combine un continent et une langue (ex: "Chatter 🌍 Afrique 🇫🇷").
+ * Tous générés disabled et sans lien — l'admin active ceux qu'il veut.
+ */
+export function generateContinentGroups(role: WhatsAppRole): WhatsAppGroup[] {
+  const groups: WhatsAppGroup[] = [];
+  for (const c of ALL_CONTINENTS) {
+    for (const lang of SUPPORTED_LANGUAGES) {
+      groups.push({
+        id: `${role}_continent_${c.code}_${lang.code}`,
+        name: `${ROLE_LABELS[role]} ${c.emoji} ${c.name} ${lang.flag}`,
+        link: '',
+        language: lang.code,
+        role,
+        type: 'continent' as const,
+        continentCode: c.code,
+        enabled: false,
+      });
+    }
+  }
+  return groups;
+}
+
+/** Génère un groupe continent + langue individuel pour un rôle */
+export function createContinentGroup(
+  role: WhatsAppRole,
+  continentCode: string,
+  languageCode: string = 'en',
+): WhatsAppGroup {
+  const continent = ALL_CONTINENTS.find((c) => c.code === continentCode);
+  const lang = SUPPORTED_LANGUAGES.find((l) => l.code === languageCode);
+  return {
+    id: `${role}_continent_${continentCode}_${languageCode}`,
+    name: `${ROLE_LABELS[role]} ${continent?.emoji || '🌐'} ${continent?.name || continentCode} ${lang?.flag || ''}`,
+    link: '',
+    language: languageCode,
+    role,
+    type: 'continent',
+    continentCode,
+    enabled: false,
+  };
+}

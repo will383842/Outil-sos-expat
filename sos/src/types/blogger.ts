@@ -149,6 +149,12 @@ export interface Blogger {
   telegramBonusCredited?: boolean;
   telegramBonusAmount?: number;
 
+  // WhatsApp Group
+  whatsappGroupClicked?: boolean;
+  whatsappGroupClickedAt?: string;
+  whatsappGroupId?: string;
+  whatsappGroupCountry?: string;
+
   // Timestamps
   createdAt: string;
   updatedAt: string;

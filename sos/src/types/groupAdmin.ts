@@ -193,6 +193,12 @@ export interface GroupAdmin {
   telegramBonusCredited?: boolean;
   telegramBonusAmount?: number;
 
+  // WhatsApp Group
+  whatsappGroupClicked?: boolean;
+  whatsappGroupClickedAt?: FirebaseDate;
+  whatsappGroupId?: string;
+  whatsappGroupCountry?: string;
+
   createdAt: FirebaseDate;
   updatedAt: FirebaseDate;
   lastLoginAt?: FirebaseDate | null;

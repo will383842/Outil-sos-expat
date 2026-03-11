@@ -2215,6 +2215,7 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/country-rotation",
       "/admin/chatters/resources",
       "/admin/chatters/whatsapp-groups",
+      "/admin/chatters/whatsapp-supervision",
       "/admin/influencers",
       "/admin/influencers/:influencerId",
       "/admin/influencers/payments",

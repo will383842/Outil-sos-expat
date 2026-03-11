@@ -1959,8 +1959,8 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
             userId={user.id || (user as any).uid}
             role={user.role as WhatsAppRole}
             language={language || 'fr'}
-            country={(user as any).currentCountry || (user as any).country || ''}
-            alreadyClicked={(user as any).whatsappGroupClicked === true}
+            country={user.currentCountry || user.country || ''}
+            alreadyClicked={user.whatsappGroupClicked === true}
           />
         </div>
       )}

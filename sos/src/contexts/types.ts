@@ -67,6 +67,12 @@ export interface User {
   telegramOnboardingAt?: string;
   telegramLinkedAt?: string;
 
+  // WhatsApp Group
+  whatsappGroupClicked?: boolean;
+  whatsappGroupClickedAt?: string;
+  whatsappGroupId?: string;
+  whatsappGroupCountry?: string;
+
   // Stripe KYC
   stripeAccountId?: string;
   kycStatus?:
