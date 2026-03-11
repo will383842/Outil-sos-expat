@@ -179,10 +179,10 @@ const TreeNode: React.FC<{
 
         {/* Inactivity warning */}
         {node.status === 'active' && (neverLoggedIn || isInactive30d) && (
-          <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" title="Inactif >30j" />
+          <span title="Inactif >30j"><AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" /></span>
         )}
         {node.status === 'active' && !neverLoggedIn && !isInactive30d && isInactive7d && (
-          <Clock className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0" title="Inactif >7j" />
+          <span title="Inactif >7j"><Clock className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0" /></span>
         )}
 
         {/* Stats (compact) */}

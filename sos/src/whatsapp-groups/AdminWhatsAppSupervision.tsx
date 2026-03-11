@@ -438,8 +438,8 @@ const AdminWhatsAppSupervision: React.FC = () => {
 
     const updatedManager: WhatsAppGroupManager = {
       ...manager,
-      assignedAt: new Date().toISOString(),
-      assignedBy: user.uid,
+      assignedAt: new Date().toISOString() as unknown as import('firebase/firestore').Timestamp,
+      assignedBy: user.uid || '',
     };
 
     const updatedGroups = config.groups.map((g) => {
@@ -451,7 +451,7 @@ const AdminWhatsAppSupervision: React.FC = () => {
 
     setSaving(true);
     try {
-      await saveWhatsAppGroupsConfig(updatedConfig, user.uid);
+      await saveWhatsAppGroupsConfig(updatedConfig, user.uid || '');
       setConfig(updatedConfig);
       toast.success('Manager assigne avec succes');
       setAssignModal(null);
@@ -475,7 +475,7 @@ const AdminWhatsAppSupervision: React.FC = () => {
 
     setSaving(true);
     try {
-      await saveWhatsAppGroupsConfig(updatedConfig, user.uid);
+      await saveWhatsAppGroupsConfig(updatedConfig, user.uid || '');
       setConfig(updatedConfig);
       toast.success('Manager retire');
     } catch {

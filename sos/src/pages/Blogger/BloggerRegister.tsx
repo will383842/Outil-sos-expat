@@ -585,10 +585,10 @@ const BloggerRegister: React.FC = () => {
   if (showWhatsApp && user) {
     return (
       <WhatsAppGroupScreen
-        userId={user.uid}
+        userId={user.uid || ''}
         role="blogger"
-        language={registrationData?.language || 'en'}
-        country={registrationData?.country || ''}
+        language={registrationData?.language ?? 'en'}
+        country={registrationData?.country ?? ''}
         onContinue={handleWhatsAppContinue}
       />
     );

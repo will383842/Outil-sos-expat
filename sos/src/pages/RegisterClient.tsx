@@ -387,7 +387,7 @@ const RegisterClient: React.FC = () => {
   if (showWhatsApp && user && registrationData) {
     return (
       <WhatsAppGroupScreen
-        userId={user.id || user.uid}
+        userId={user.id || user.uid || ''}
         role="client"
         language={registrationData.language}
         country={registrationData.country}

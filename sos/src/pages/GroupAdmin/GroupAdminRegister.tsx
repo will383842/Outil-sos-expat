@@ -276,7 +276,7 @@ const GroupAdminRegister: React.FC = () => {
   if (showWhatsApp && registrationData && user) {
     return (
       <WhatsAppGroupScreen
-        userId={user.uid}
+        userId={user.uid || ''}
         role="groupAdmin"
         language={registrationData.language}
         country={registrationData.country}

@@ -180,7 +180,7 @@ const GroupAdminDashboard: React.FC = () => {
           {user && (
             <div className="mb-8">
               <WhatsAppBanner
-                userId={user.uid}
+                userId={user.uid || ''}
                 role="groupAdmin"
                 language={langCode}
                 country={profile.country || ''}
