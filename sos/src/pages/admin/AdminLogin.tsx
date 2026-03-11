@@ -10,7 +10,7 @@ import { useIntl } from 'react-intl';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { user: authUser, authInitialized } = useAuth();
+  const { user: authUser, authInitialized, isFullyReady } = useAuth();
   const intl = useIntl();
 
   // P0 SECURITY FIX: Removed hardcoded credentials and admin whitelist - 2025-12-29
@@ -26,21 +26,23 @@ const AdminLogin: React.FC = () => {
   const hasNavigatedRef = useRef(false);
 
   // Surveiller AuthContext pour naviguer quand user.role === 'admin'
+  // FIX: Use isFullyReady (not authInitialized) to align with ProtectedRoute
+  // This prevents redirect loop: ProtectedRoute timeout → login → auto-redirect → loop
   useEffect(() => {
-    if (pendingNavigation && authInitialized && authUser?.role === 'admin' && !hasNavigatedRef.current) {
+    if (pendingNavigation && isFullyReady && authUser?.role === 'admin' && !hasNavigatedRef.current) {
       hasNavigatedRef.current = true;
       setPendingNavigation(false);
       navigate('/admin/dashboard');
     }
-  }, [pendingNavigation, authInitialized, authUser?.role, navigate]);
+  }, [pendingNavigation, isFullyReady, authUser?.role, navigate]);
 
   // Check if user is already logged in and is admin (via AuthContext)
   useEffect(() => {
-    if (authInitialized && authUser?.role === 'admin' && !hasNavigatedRef.current) {
+    if (isFullyReady && authUser?.role === 'admin' && !hasNavigatedRef.current) {
       hasNavigatedRef.current = true;
       navigate('/admin/dashboard');
     }
-  }, [authInitialized, authUser?.role, navigate]);
+  }, [isFullyReady, authUser?.role, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

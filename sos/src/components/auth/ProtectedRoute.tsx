@@ -60,7 +60,7 @@ const MIN_AUTH_WAIT_MS = 150;
  * P0 FIX: Timeout de sécurité maximum pour éviter page blanche infinie
  * Si l'auth n'est toujours pas prête après ce délai, on redirige vers login
  */
-const MAX_AUTH_WAIT_MS = 5000;
+const MAX_AUTH_WAIT_MS = 10000;
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -139,6 +139,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   const checkAuthorization = useCallback(async () => {
     if (!user) {
+      // FIX: If we reached here via timeout (not normal auth flow),
+      // show error instead of redirecting to prevent redirect loop
+      if (hasExceededMaxWait && !isFullyReady) {
+        devWarn('🔐 [ProtectedRoute] ⚠️ Timeout reached without user - showing error instead of redirect');
+        setAuthState('error');
+        setError('Délai de connexion dépassé. Veuillez rafraîchir la page.');
+        return;
+      }
       setAuthState('unauthorized');
       return;
     }
@@ -170,7 +178,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       setError(err instanceof Error ? err.message : 'Authorization failed');
       setAuthState('error');
     }
-  }, [user, allowedRoles, location.pathname]);
+  }, [user, allowedRoles, location.pathname, hasExceededMaxWait, isFullyReady]);
 
   useEffect(() => {
     if (shouldCheckAuth) {
@@ -224,18 +232,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         );
 
       case 'error':
-        if (showError) {
+        // FIX: Always show retry UI when error came from timeout (prevents redirect loop)
+        // Only redirect to login for non-timeout errors when showError is false
+        if (showError || hasExceededMaxWait) {
           return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4">
               <div className="text-center">
                 <h2 className="text-xl font-semibold text-red-600 mb-2">{intl.formatMessage({ id: 'auth.accessError' })}</h2>
                 <p className="text-gray-600 mb-4">{error || intl.formatMessage({ id: 'auth.unableVerify' })}</p>
-                <button
-                  onClick={() => checkAuthorization()}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  {intl.formatMessage({ id: 'action.retry' })}
-                </button>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => checkAuthorization()}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    {intl.formatMessage({ id: 'action.retry' })}
+                  </button>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                  >
+                    {intl.formatMessage({ id: 'action.refresh', defaultMessage: 'Rafraîchir' })}
+                  </button>
+                </div>
               </div>
             </div>
           );
