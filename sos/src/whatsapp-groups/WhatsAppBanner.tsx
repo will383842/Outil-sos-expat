@@ -33,7 +33,6 @@ const WhatsAppBanner: React.FC<WhatsAppBannerProps> = ({
 
   useEffect(() => {
     if (alreadyClicked) return;
-    // Verifier si deja dismiss dans cette session
     const dismissKey = `whatsapp_banner_dismissed_${userId}`;
     if (sessionStorage.getItem(dismissKey)) {
       setDismissed(true);
@@ -62,38 +61,33 @@ const WhatsAppBanner: React.FC<WhatsAppBannerProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 border border-[#25D366]/20 p-4 sm:p-5 mb-4">
-      {/* Dismiss */}
+    <div className="relative rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-4 mb-4">
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="absolute top-2 right-2 p-1 text-emerald-400 dark:text-emerald-600 rounded min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         <X className="w-4 h-4" />
       </button>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 pr-8">
-        {/* Icon */}
-        <div className="w-10 h-10 rounded-xl bg-[#25D366] flex items-center justify-center flex-shrink-0">
-          <WhatsAppIcon className="w-5 h-5 text-white" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pr-8">
+        <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0">
+          <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
         </div>
 
-        {/* Text */}
-        <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+        <p className="text-sm text-emerald-800 dark:text-emerald-200 flex-1">
           <FormattedMessage
             id="whatsapp.dashboard.banner"
             defaultMessage="Rejoignez notre groupe WhatsApp pour recevoir des astuces et echanger avec la communaute !"
           />
         </p>
 
-        {/* CTA */}
         <button
           onClick={handleJoin}
-          className="px-4 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap min-h-[44px] flex items-center gap-2"
+          className="px-4 py-2 bg-[#25D366] text-white text-sm font-semibold rounded-lg whitespace-nowrap min-h-[44px]"
         >
-          <WhatsAppIcon className="w-4 h-4" />
           <FormattedMessage
             id="whatsapp.dashboard.banner.button"
-            defaultMessage="Rejoindre le groupe"
+            defaultMessage="Rejoindre"
           />
         </button>
       </div>

@@ -8,7 +8,7 @@
  * Scalable : supporte chatter, influencer, blogger, groupAdmin
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import {
@@ -23,6 +23,10 @@ import {
   Globe,
   ArrowDown,
   Users,
+  MoreHorizontal,
+  Copy,
+  Check,
+  Info,
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { WhatsAppIcon } from './WhatsAppGroupScreen';
@@ -37,12 +41,6 @@ import { seedWhatsAppGroups } from './seedWhatsAppGroups';
 import type { WhatsAppGroupsConfig, WhatsAppGroup, WhatsAppRole, WhatsAppGroupManager } from './types';
 import { SUPPORTED_LANGUAGES, ROLE_LABELS, ALL_CONTINENTS } from './types';
 
-const UI = {
-  card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
-  input: "w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all min-h-[44px]",
-  label: "block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5",
-};
-
 const ALL_ROLES: WhatsAppRole[] = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'client', 'lawyer', 'expat'];
 
 /** Rôles qui utilisent des groupes continent (tous les pays couverts par 7 groupes) */
@@ -56,114 +54,90 @@ const DEFAULT_CONFIG: WhatsAppGroupsConfig = {
   defaultGroupIds: { chatter: '', influencer: '', blogger: '', groupAdmin: '', client: '', lawyer: '', expat: '' },
 };
 
-/** Composant pour un groupe (continent ou langue) */
-const GroupRow: React.FC<{
+/* ------------------------------------------------------------------ */
+/*  Dropdown menu for row actions                                      */
+/* ------------------------------------------------------------------ */
+const RowActions: React.FC<{
   group: WhatsAppGroup;
-  isDefault: boolean;
-  managers: WhatsAppGroupManager[];
-  onUpdate: (updates: Partial<WhatsAppGroup>) => void;
   onRemove: () => void;
-  onSetDefault: () => void;
-}> = ({ group, isDefault, managers, onUpdate, onRemove, onSetDefault }) => (
-  <div
-    className={`p-3 sm:p-4 rounded-xl border transition-all ${
-      group.enabled
-        ? 'border-[#25D366]/30 bg-[#25D366]/5'
-        : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
+}> = ({ group, onRemove }) => {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const copyLink = () => {
+    if (group.link) {
+      navigator.clipboard.writeText(group.link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-1.5 rounded-md text-zinc-400 dark:text-zinc-500"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 w-40 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1">
+          <button
+            onClick={copyLink}
+            disabled={!group.link}
+            className="w-full px-3 py-1.5 text-left text-sm text-zinc-700 dark:text-zinc-300 flex items-center gap-2 disabled:opacity-40"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+            Copier lien
+          </button>
+          <button
+            onClick={() => { onRemove(); setOpen(false); }}
+            className="w-full px-3 py-1.5 text-left text-sm text-red-600 dark:text-red-400 flex items-center gap-2"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Supprimer
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  Toggle switch                                                      */
+/* ------------------------------------------------------------------ */
+const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void }> = ({ checked, onChange }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    onClick={() => onChange(!checked)}
+    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent ${
+      checked ? 'bg-[#25D366]' : 'bg-zinc-300 dark:bg-zinc-600'
     }`}
   >
-    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 items-end">
-      {/* Nom */}
-      <div className="sm:col-span-4">
-        <label className={UI.label}>Nom du groupe</label>
-        <input
-          type="text"
-          value={group.name}
-          onChange={(e) => onUpdate({ name: e.target.value })}
-          placeholder={group.type === 'continent' ? 'Chatters Afrique' : 'Chatters Français'}
-          className={UI.input}
-        />
-      </div>
-
-      {/* Langue */}
-      <div className="sm:col-span-2">
-        <label className={UI.label}>Langue</label>
-        <select
-          value={group.language}
-          onChange={(e) => onUpdate({ language: e.target.value })}
-          className={UI.input}
-        >
-          {SUPPORTED_LANGUAGES.map((lang) => (
-            <option key={lang.code} value={lang.code}>
-              {lang.flag} {lang.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Lien WhatsApp */}
-      <div className="sm:col-span-4">
-        <label className={UI.label}>Lien d'invitation</label>
-        <input
-          type="url"
-          value={group.link}
-          onChange={(e) => onUpdate({ link: e.target.value })}
-          placeholder="https://chat.whatsapp.com/..."
-          className={`${UI.input} ${group.enabled && !group.link ? 'border-amber-400 dark:border-amber-600' : ''}`}
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="sm:col-span-2 flex items-center gap-2 flex-wrap">
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={group.enabled}
-            onChange={(e) => onUpdate({ enabled: e.target.checked })}
-            className="w-4 h-4 rounded border-gray-300 text-[#25D366] focus:ring-[#25D366]"
-          />
-          <span className="text-xs text-gray-600 dark:text-gray-400">Actif</span>
-        </label>
-        <label className="flex items-center gap-1.5 cursor-pointer" title="Groupe par défaut">
-          <input
-            type="radio"
-            checked={isDefault}
-            onChange={onSetDefault}
-            className="w-4 h-4 border-gray-300 text-[#25D366] focus:ring-[#25D366]"
-          />
-          <span className="text-xs text-gray-600 dark:text-gray-400">Déf.</span>
-        </label>
-        <button
-          onClick={onRemove}
-          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors ml-auto min-h-[36px] min-w-[36px] flex items-center justify-center"
-          title="Supprimer"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-
-    {/* Managers */}
-    {managers.length > 0 && (
-      <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50 flex items-center gap-2 flex-wrap">
-        <Users className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-        {managers.map((m) => (
-          <span
-            key={m.uid}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs"
-            title={`${m.email}${m.phone ? ` • ${m.phone}` : ''}`}
-          >
-            <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-              {m.displayName.charAt(0).toUpperCase()}
-            </span>
-            {m.displayName}
-          </span>
-        ))}
-      </div>
-    )}
-  </div>
+    <span
+      className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ${
+        checked ? 'translate-x-4' : 'translate-x-0'
+      }`}
+    />
+  </button>
 );
 
+/* ------------------------------------------------------------------ */
+/*  Main component                                                     */
+/* ------------------------------------------------------------------ */
 const AdminWhatsAppGroups: React.FC = () => {
   const { user } = useAuth();
   const [config, setConfig] = useState<WhatsAppGroupsConfig>(DEFAULT_CONFIG);
@@ -225,6 +199,10 @@ const AdminWhatsAppGroups: React.FC = () => {
 
   const showContinentSection = isContinentRole(activeRole);
   const showLanguageSection = true; // Tous les rôles ont des groupes langue
+
+  // Stats
+  const totalActive = config.groups.filter((g) => g.enabled).length;
+  const totalGroups = config.groups.length;
 
   // --- Groupe CRUD ---
   const updateGroup = (groupId: string, updates: Partial<WhatsAppGroup>) => {
@@ -330,42 +308,183 @@ const AdminWhatsAppGroups: React.FC = () => {
     }
   };
 
+  /* ---------------------------------------------------------------- */
+  /*  Render helpers                                                    */
+  /* ---------------------------------------------------------------- */
+
+  const renderTableRow = (group: WhatsAppGroup) => {
+    const isDefault = config.defaultGroupIds[activeRole] === group.id;
+    const langInfo = SUPPORTED_LANGUAGES.find((l) => l.code === group.language);
+    const continentInfo = ALL_CONTINENTS.find((c) => c.code === group.continentCode);
+    const managers = group.managers || [];
+    const linkValid = group.link.startsWith('https://chat.whatsapp.com/');
+
+    return (
+      <tr key={group.id} className={`border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${!group.enabled ? 'opacity-50' : ''}`}>
+        {/* Status toggle */}
+        <td className="px-3 py-3">
+          <Toggle checked={group.enabled} onChange={(v) => updateGroup(group.id, { enabled: v })} />
+        </td>
+
+        {/* Name */}
+        <td className="px-3 py-3">
+          <input
+            type="text"
+            value={group.name}
+            onChange={(e) => updateGroup(group.id, { name: e.target.value })}
+            placeholder="Nom du groupe"
+            className="w-full bg-zinc-50 dark:bg-zinc-800/50 rounded-md px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:ring-1 focus:ring-[#25D366] focus:border-transparent focus:outline-none"
+          />
+        </td>
+
+        {/* Language */}
+        <td className="px-3 py-3">
+          <select
+            value={group.language}
+            onChange={(e) => updateGroup(group.id, { language: e.target.value })}
+            className="bg-zinc-50 dark:bg-zinc-800/50 rounded-md px-2 py-1 text-sm text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 focus:ring-1 focus:ring-[#25D366] focus:border-transparent focus:outline-none cursor-pointer"
+          >
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.flag} {lang.name}
+              </option>
+            ))}
+          </select>
+        </td>
+
+        {/* Type badge */}
+        <td className="px-3 py-3">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+            group.type === 'continent'
+              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+          }`}>
+            {group.type === 'continent' ? 'Continent' : 'Langue'}
+          </span>
+        </td>
+
+        {/* Continent */}
+        <td className="px-3 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+          {continentInfo ? `${continentInfo.emoji} ${continentInfo.name}` : '—'}
+        </td>
+
+        {/* Link */}
+        <td className="px-3 py-3">
+          <input
+            type="url"
+            value={group.link}
+            onChange={(e) => updateGroup(group.id, { link: e.target.value })}
+            placeholder="https://chat.whatsapp.com/..."
+            className={`w-full bg-zinc-50 dark:bg-zinc-800/50 rounded-md px-2 py-1 text-sm focus:outline-none ${
+              group.enabled && group.link && !linkValid
+                ? 'text-red-500 border border-red-300 focus:ring-1 focus:ring-red-400 focus:border-transparent'
+                : 'text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 focus:ring-1 focus:ring-[#25D366] focus:border-transparent'
+            }`}
+          />
+        </td>
+
+        {/* Default radio */}
+        <td className="px-3 py-3 text-center">
+          <input
+            type="radio"
+            checked={isDefault}
+            onChange={() => updateConfig({
+              defaultGroupIds: { ...config.defaultGroupIds, [activeRole]: group.id },
+            })}
+            className="w-3.5 h-3.5 text-[#25D366] border-zinc-300 dark:border-zinc-600 focus:ring-[#25D366] focus:ring-offset-0 cursor-pointer"
+          />
+        </td>
+
+        {/* Managers */}
+        <td className="px-3 py-3 text-center">
+          {managers.length > 0 ? (
+            <span className="inline-flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400" title={managers.map((m) => m.displayName).join(', ')}>
+              <Users className="w-3.5 h-3.5" />
+              {managers.length}
+            </span>
+          ) : (
+            <span className="text-sm text-zinc-300 dark:text-zinc-600">0</span>
+          )}
+        </td>
+
+        {/* Actions */}
+        <td className="px-3 py-3">
+          <RowActions group={group} onRemove={() => removeGroup(group.id)} />
+        </td>
+      </tr>
+    );
+  };
+
+  const renderTable = (groups: WhatsAppGroup[], sectionLabel?: string) => {
+    if (groups.length === 0) return null;
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-16">Actif</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Nom</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-32">Langue</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-24">Type</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-36">Continent</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Lien</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-14 text-center">Def.</th>
+              <th className="px-3 py-2.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-16 text-center">Mgrs</th>
+              <th className="px-3 py-2.5 w-12"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map((g) => renderTableRow(g))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  /* ---------------------------------------------------------------- */
+  /*  JSX                                                              */
+  /* ---------------------------------------------------------------- */
+
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+
+        {/* ---- Header ---- */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
-                <WhatsAppIcon className="w-6 h-6 text-[#25D366]" />
-              </div>
+            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-3">
+              <WhatsAppIcon className="w-7 h-7 text-[#25D366]" />
               Groupes WhatsApp
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              {showContinentSection
-                ? 'Groupes par continent (prioritaires) + groupes par langue (fallback).'
-                : 'Groupes par langue — un groupe par langue supportée.'}
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              {totalActive} actifs sur {totalGroups} groupes configurés
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={handleSeedAll}
               disabled={seeding || saving}
-              className="px-3 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all min-h-[44px] bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+              className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 disabled:opacity-50"
               title="Importer les 68 groupes pré-configurés"
             >
               {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowDown className="w-4 h-4" />}
               Seed 68
             </button>
-            <button onClick={fetchConfig} disabled={loading} className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors min-h-[44px]" title="Rafraîchir">
-              <RefreshCw className={`w-5 h-5 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
+            <button
+              onClick={fetchConfig}
+              disabled={loading}
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900"
+              title="Rafraîchir"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={handleSave}
               disabled={saving || !hasChanges}
-              className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all min-h-[44px] ${
-                hasChanges ? 'bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-lg shadow-[#25D366]/20' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                hasChanges
+                  ? 'bg-[#25D366] text-white'
+                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
               }`}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -375,230 +494,215 @@ const AdminWhatsAppGroups: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-[#25D366] animate-spin" />
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-6 h-6 text-[#25D366] animate-spin" />
           </div>
         ) : (
           <>
-            {/* How it works */}
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-700 dark:text-green-300 flex gap-3">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <strong>Logique de résolution (5 niveaux) :</strong>
-                <ol className="list-decimal list-inside mt-1 space-y-0.5">
-                  <li>Groupe continent du user (déduit du pays via mapping)</li>
-                  <li>Groupe langue du user (langue sélectionnée à l'inscription)</li>
-                  <li>Groupe langue déduite du pays (via mapping pays → langue)</li>
-                  <li>Groupe par défaut du rôle (radio "Déf.")</li>
-                  <li>Premier groupe actif du rôle</li>
-                </ol>
-                {showContinentSection ? (
-                  <p className="mt-1 text-green-600 dark:text-green-400">
-                    Chatters : 7 continents couvrent tous les pays + 9 langues en fallback.
-                  </p>
-                ) : (
-                  <p className="mt-1 text-green-600 dark:text-green-400">
-                    Pour ce rôle, seuls les groupes par langue sont utilisés (niveaux 2-5).
-                  </p>
-                )}
+            {/* ---- Segmented control (role tabs) ---- */}
+            <div className="mb-8">
+              <div className="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 gap-0.5 overflow-x-auto">
+                {ALL_ROLES.map((role) => {
+                  const count = config.groups.filter((g) => g.role === role && g.enabled).length;
+                  const isActive = activeRole === role;
+                  return (
+                    <button
+                      key={role}
+                      onClick={() => setActiveRole(role)}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap flex items-center gap-1.5 ${
+                        isActive
+                          ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-600 shadow-sm'
+                          : 'text-zinc-500 dark:text-zinc-400'
+                      }`}
+                    >
+                      {ROLE_LABELS[role]}
+                      {count > 0 && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          isActive
+                            ? 'bg-[#25D366]/10 text-[#25D366]'
+                            : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                        }`}>
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Tabs par rôle */}
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-              {ALL_ROLES.map((role) => {
-                const count = config.groups.filter((g) => g.role === role && g.enabled).length;
-                const total = config.groups.filter((g) => g.role === role).length;
-                return (
-                  <button
-                    key={role}
-                    onClick={() => setActiveRole(role)}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all min-h-[44px] flex items-center gap-2 ${
-                      activeRole === role
-                        ? 'bg-[#25D366] text-white shadow-lg shadow-[#25D366]/20'
-                        : 'bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-white/10 border border-gray-200 dark:border-gray-700'
-                    }`}
-                  >
-                    {ROLE_LABELS[role]}
-                    {total > 0 && (
-                      <span className={`px-1.5 py-0.5 rounded-full text-xs ${
-                        activeRole === role ? 'bg-white/20' : 'bg-gray-200 dark:bg-gray-700'
-                      }`}>{count}/{total}</span>
+            {/* ---- CONTINENT section (chatter only) ---- */}
+            {showContinentSection && (
+              <div className="mb-6">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/50 rounded-xl">
+                  {/* Section header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-5 h-5 text-[#25D366]" />
+                      <div>
+                        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          Groupes continent x langue
+                        </h2>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{continentGroups.length} groupes</p>
+                      </div>
+                    </div>
+                    {continentGroups.length === 0 && (
+                      <button
+                        onClick={autoSeedContinentGroups}
+                        className="px-3 py-1.5 bg-[#25D366] text-white text-sm font-medium rounded-lg flex items-center gap-1.5"
+                      >
+                        <Wand2 className="w-3.5 h-3.5" />
+                        Auto-generer ({ALL_CONTINENTS.length} x {SUPPORTED_LANGUAGES.length})
+                      </button>
                     )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* ============ SECTION CONTINENT (chatter uniquement) ============ */}
-            {showContinentSection && (
-              <div className={`${UI.card} p-4 sm:p-6 mb-4`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-[#25D366]" />
-                    Groupes continent × langue
-                    <span className="text-xs font-normal text-gray-500 ml-1">({continentGroups.length})</span>
-                  </h2>
-                  {continentGroups.length === 0 && (
-                    <button
-                      onClick={autoSeedContinentGroups}
-                      className="px-3 py-2 bg-[#25D366] hover:bg-[#20BD5A] text-white text-sm font-medium rounded-xl flex items-center gap-1.5 transition-colors min-h-[40px]"
-                    >
-                      <Wand2 className="w-4 h-4" />
-                      Auto-générer ({ALL_CONTINENTS.length} × {SUPPORTED_LANGUAGES.length} = {ALL_CONTINENTS.length * SUPPORTED_LANGUAGES.length})
-                    </button>
-                  )}
-                </div>
-
-                {/* Liste des groupes continent organisés par continent */}
-                {continentGroups.length > 0 ? (
-                  <div className="space-y-4 mb-4">
-                    {ALL_CONTINENTS.map((c) => {
-                      const groups = continentGroupsByContinent.get(c.code);
-                      if (!groups || groups.length === 0) return null;
-                      const activeCount = groups.filter((g) => g.enabled).length;
-                      return (
-                        <div key={c.code}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-base">{c.emoji}</span>
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{c.name}</span>
-                            <span className="text-xs text-gray-400">({activeCount}/{groups.length} actifs)</span>
-                          </div>
-                          <div className="space-y-2 pl-1 border-l-2 border-[#25D366]/20 ml-2">
-                            {groups.map((group) => (
-                              <GroupRow
-                                key={group.id}
-                                group={group}
-                                isDefault={config.defaultGroupIds[activeRole] === group.id}
-                                managers={group.managers || []}
-                                onUpdate={(u) => updateGroup(group.id, u)}
-                                onRemove={() => removeGroup(group.id)}
-                                onSetDefault={() => updateConfig({
-                                  defaultGroupIds: { ...config.defaultGroupIds, [activeRole]: group.id },
-                                })}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
-                ) : (
-                  <div className="text-center py-10 mb-4">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#25D366]/10 flex items-center justify-center">
-                      <Globe className="w-7 h-7 text-[#25D366]" />
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 mb-1">Aucun groupe continent × langue.</p>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">
-                      Cliquez "Auto-générer" pour créer les {ALL_CONTINENTS.length * SUPPORTED_LANGUAGES.length} combinaisons.
-                    </p>
-                  </div>
-                )}
 
-                {/* Ajouter un groupe continent + langue manuellement */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> Ajouter un groupe continent + langue
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <select
-                      value={newContinentCode}
-                      onChange={(e) => setNewContinentCode(e.target.value)}
-                      className={`${UI.input} flex-1`}
-                    >
-                      <option value="">Continent...</option>
-                      {ALL_CONTINENTS.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.emoji} {c.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={newContinentLang}
-                      onChange={(e) => setNewContinentLang(e.target.value)}
-                      className={`${UI.input} sm:max-w-[180px]`}
-                    >
-                      <option value="">Langue...</option>
-                      {SUPPORTED_LANGUAGES.map((lang) => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.flag} {lang.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={addContinentGroup}
-                      disabled={!newContinentCode || !newContinentLang}
-                      className="px-5 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors min-h-[44px] whitespace-nowrap"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Ajouter
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Flèche de fallback (chatters : continent → langue) */}
-            {showContinentSection && (
-              <div className="flex justify-center my-2">
-                <div className="flex items-center gap-2 text-gray-400 text-xs">
-                  <ArrowDown className="w-4 h-4" />
-                  <span>Si pas de groupe continent, fallback vers :</span>
-                  <ArrowDown className="w-4 h-4" />
-                </div>
-              </div>
-            )}
-
-            {/* ============ SECTION LANGUE ============ */}
-            {showLanguageSection && (
-              <div className={`${UI.card} p-4 sm:p-6`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Languages className={`w-5 h-5 ${showContinentSection ? 'text-amber-500' : 'text-[#25D366]'}`} />
-                    Groupes par langue
-                    {showContinentSection && <span className="text-xs font-normal text-amber-500 ml-1">(fallback)</span>}
-                    <span className="text-xs font-normal text-gray-500 ml-1">({languageGroups.length}/{SUPPORTED_LANGUAGES.length})</span>
-                  </h2>
-                  {languageGroups.length === 0 && (
-                    <button
-                      onClick={autoSeedLanguageFallbacks}
-                      className="px-3 py-2 bg-[#25D366] hover:bg-[#20BD5A] text-white text-sm font-medium rounded-xl flex items-center gap-1.5 transition-colors min-h-[40px]"
-                    >
-                      <Wand2 className="w-4 h-4" />
-                      Auto-générer ({SUPPORTED_LANGUAGES.length} langues)
-                    </button>
-                  )}
-                </div>
-
-                {languageGroups.length === 0 ? (
-                  <div className="text-center py-10">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#25D366]/10 flex items-center justify-center">
-                      <Languages className="w-7 h-7 text-[#25D366]" />
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 mb-1">Aucun groupe langue.</p>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">
-                      Cliquez "Auto-générer" pour créer les {SUPPORTED_LANGUAGES.length} groupes.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {languageGroups.map((group) => (
-                      <GroupRow
-                        key={group.id}
-                        group={group}
-                        isDefault={config.defaultGroupIds[activeRole] === group.id}
-                        managers={group.managers || []}
-                        onUpdate={(u) => updateGroup(group.id, u)}
-                        onRemove={() => removeGroup(group.id)}
-                        onSetDefault={() => updateConfig({
-                          defaultGroupIds: { ...config.defaultGroupIds, [activeRole]: group.id },
+                  {/* Content */}
+                  <div className="p-6">
+                    {continentGroups.length > 0 ? (
+                      <div className="space-y-8">
+                        {ALL_CONTINENTS.map((c) => {
+                          const groups = continentGroupsByContinent.get(c.code);
+                          if (!groups || groups.length === 0) return null;
+                          const activeCount = groups.filter((g) => g.enabled).length;
+                          return (
+                            <div key={c.code}>
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-base">{c.emoji}</span>
+                                <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{c.name}</span>
+                                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                                  {activeCount}/{groups.length} actifs
+                                </span>
+                              </div>
+                              {renderTable(groups)}
+                            </div>
+                          );
                         })}
-                      />
-                    ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <Globe className="w-8 h-8 text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">Aucun groupe continent.</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                          Cliquez "Auto-generer" pour creer les {ALL_CONTINENTS.length * SUPPORTED_LANGUAGES.length} combinaisons.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Manual add form */}
+                  <div className="px-6 pb-6">
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-700">
+                      <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-3 flex items-center gap-1.5">
+                        <Plus className="w-3.5 h-3.5" /> Ajouter un groupe continent + langue
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <select
+                          value={newContinentCode}
+                          onChange={(e) => setNewContinentCode(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#25D366]"
+                        >
+                          <option value="">Continent...</option>
+                          {ALL_CONTINENTS.map((c) => (
+                            <option key={c.code} value={c.code}>{c.emoji} {c.name}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={newContinentLang}
+                          onChange={(e) => setNewContinentLang(e.target.value)}
+                          className="sm:w-44 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#25D366]"
+                        >
+                          <option value="">Langue...</option>
+                          {SUPPORTED_LANGUAGES.map((lang) => (
+                            <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={addContinentGroup}
+                          disabled={!newContinentCode || !newContinentLang}
+                          className="px-4 py-2 bg-[#25D366] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Ajouter
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* Fallback arrow (chatters) */}
+            {showContinentSection && (
+              <div className="flex justify-center my-3">
+                <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 text-xs">
+                  <ArrowDown className="w-3.5 h-3.5" />
+                  <span>Fallback si pas de groupe continent</span>
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            )}
+
+            {/* ---- LANGUAGE section ---- */}
+            {showLanguageSection && (
+              <div className="mb-6">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/50 rounded-xl">
+                  {/* Section header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <Languages className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
+                      <div>
+                        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          Groupes par langue
+                          {showContinentSection && (
+                            <span className="ml-2 text-xs font-normal text-zinc-400">(fallback)</span>
+                          )}
+                        </h2>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {languageGroups.length}/{SUPPORTED_LANGUAGES.length} langues
+                        </p>
+                      </div>
+                    </div>
+                    {languageGroups.length === 0 && (
+                      <button
+                        onClick={autoSeedLanguageFallbacks}
+                        className="px-3 py-1.5 bg-[#25D366] text-white text-sm font-medium rounded-lg flex items-center gap-1.5"
+                      >
+                        <Wand2 className="w-3.5 h-3.5" />
+                        Auto-generer ({SUPPORTED_LANGUAGES.length} langues)
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    {languageGroups.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Languages className="w-8 h-8 text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">Aucun groupe langue.</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                          Cliquez "Auto-generer" pour creer les {SUPPORTED_LANGUAGES.length} groupes.
+                        </p>
+                      </div>
+                    ) : (
+                      renderTable(languageGroups)
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ---- Info box ---- */}
+            <div className="flex items-start gap-3 px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 rounded-lg text-xs text-zinc-500 dark:text-zinc-400">
+              <Info className="w-4 h-4 shrink-0 mt-0.5 text-zinc-400" />
+              <div>
+                <span className="font-medium text-zinc-600 dark:text-zinc-300">Resolution (5 niveaux) :</span>{' '}
+                1. Continent du user &rarr; 2. Langue du user &rarr; 3. Langue deduite du pays &rarr; 4. Groupe par defaut du role &rarr; 5. Premier groupe actif.
+                {showContinentSection
+                  ? ' Chatters : 7 continents + 9 langues en fallback.'
+                  : ' Ce role utilise uniquement les groupes par langue (niveaux 2-5).'}
+              </div>
+            </div>
           </>
         )}
       </div>

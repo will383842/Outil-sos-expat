@@ -530,6 +530,20 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: Bell,
         descriptionKey: "admin.menu.notifications.description",
       },
+      {
+        id: "whatsapp-groups",
+        labelKey: "admin.menu.chattersWhatsappGroups",
+        path: "/admin/marketing/whatsapp-groups",
+        icon: MessageCircle,
+        descriptionKey: "admin.menu.chattersWhatsappGroups.description",
+      },
+      {
+        id: "whatsapp-supervision",
+        labelKey: "admin.menu.whatsappSupervision",
+        path: "/admin/marketing/whatsapp-supervision",
+        icon: ClipboardList,
+        descriptionKey: "admin.menu.whatsappSupervision.description",
+      },
     ],
   },
 
@@ -700,20 +714,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: TrendingDown,
             badge: "NEW",
             descriptionKey: "admin.menu.chattersFunnel.description",
-          },
-          {
-            id: "chatters-whatsapp-groups",
-            labelKey: "admin.menu.chattersWhatsappGroups",
-            path: "/admin/chatters/whatsapp-groups",
-            icon: MessageCircle,
-            descriptionKey: "admin.menu.chattersWhatsappGroups.description",
-          },
-          {
-            id: "chatters-whatsapp-supervision",
-            labelKey: "admin.menu.whatsappSupervision",
-            path: "/admin/chatters/whatsapp-supervision",
-            icon: ClipboardList,
-            descriptionKey: "admin.menu.whatsappSupervision.description",
           },
           {
             id: "chatters-config",

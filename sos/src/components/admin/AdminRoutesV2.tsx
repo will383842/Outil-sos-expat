@@ -1436,7 +1436,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="chatters/whatsapp-groups"
+        path="marketing/whatsapp-groups"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminWhatsAppGroups />
@@ -1444,7 +1444,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="chatters/whatsapp-supervision"
+        path="marketing/whatsapp-supervision"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminWhatsAppSupervision />
@@ -2214,8 +2214,8 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/commissions",
       "/admin/chatters/country-rotation",
       "/admin/chatters/resources",
-      "/admin/chatters/whatsapp-groups",
-      "/admin/chatters/whatsapp-supervision",
+      "/admin/marketing/whatsapp-groups",
+      "/admin/marketing/whatsapp-supervision",
       "/admin/influencers",
       "/admin/influencers/:influencerId",
       "/admin/influencers/payments",
