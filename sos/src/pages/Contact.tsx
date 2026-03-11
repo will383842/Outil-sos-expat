@@ -1008,37 +1008,18 @@ const Contact: React.FC = () => {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center py-8 px-4">
-          {/* Fond animé avec particules */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-300/10 to-green-300/10 rounded-full blur-3xl animate-pulse delay-500" />
-          </div>
+
 
           <div className="relative z-10 max-w-md w-full">
             <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-emerald-100 p-8 text-center">
               {/* Animation de succès */}
               <div className="flex justify-center mb-6">
-                <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center shadow-xl animate-bounce">
+                <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center shadow-xl">
                   <CheckCircle className="w-12 h-12 text-white" />
                 </div>
               </div>
 
-              {/* Confetti effect */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-8 left-8 text-2xl animate-ping">
-                  🎉
-                </div>
-                <div className="absolute top-12 right-12 text-xl animate-pulse delay-300">
-                  ✨
-                </div>
-                <div className="absolute bottom-16 left-12 text-lg animate-bounce delay-500">
-                  🌟
-                </div>
-                <div className="absolute bottom-20 right-8 text-xl animate-pulse delay-700">
-                  💫
-                </div>
-              </div>
+
 
               <h2 className="text-3xl font-black text-gray-900 mb-4">
                 {t.messageSent}

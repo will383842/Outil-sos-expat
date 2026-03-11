@@ -54,7 +54,7 @@ const SEO_CONSTANTS = {
   SITE_NAME: "SOS Expat",
   BASE_URL: "https://sos-expat.com",
   LOGO_URL: "https://sos-expat.com/sos-logo.webp",
-  OG_IMAGE_URL: "https://sos-expat.com/og-image.jpg",
+  OG_IMAGE_URL: "https://sos-expat.com/og-image.png",
   TWITTER_HANDLE: "@sosexpat",
   SOCIAL: {
     facebook: "https://facebook.com/sosexpat",

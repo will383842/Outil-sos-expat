@@ -89,7 +89,7 @@ export const baseTemplate = (
   <meta property="og:url" content="${appUrl}">
   <meta property="og:title" content="${t.title} - ${t.subtitle}">
   <meta property="og:description" content="Votre compagnon de voyage pour explorer le monde en toute sécurité">
-  <meta property="og:image" content="https://sos-expat.app/assets/og-image.jpg">
+  <meta property="og:image" content="https://sos-expat.app/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="SOS Expat">

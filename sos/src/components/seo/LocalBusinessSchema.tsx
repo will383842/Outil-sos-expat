@@ -84,7 +84,7 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
   businessType = 'ProfessionalService',
   url = 'https://sos-expat.com',
   logo = 'https://sos-expat.com/sos-logo.webp',
-  image = 'https://sos-expat.com/og-image.jpg',
+  image = 'https://sos-expat.com/og-image.png',
   telephone,
   email = '',
   priceRange = '€€',

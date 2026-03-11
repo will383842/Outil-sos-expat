@@ -674,7 +674,7 @@ const Testimonials: React.FC = () => {
         <meta property="og:title" content={`${intl.formatMessage({ id: "testy.hero.titleFirst" })} ${intl.formatMessage({ id: "testy.hero.titleSecond" })} | SOS Expat`} />
         <meta property="og:description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
         <meta property="og:url" content={`${SEO_BASE_URL}/${language}/testimonials`} />
-        <meta property="og:image" content={`${SEO_BASE_URL}/og-image.jpg`} />
+        <meta property="og:image" content={`${SEO_BASE_URL}/og-image.png`} />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
