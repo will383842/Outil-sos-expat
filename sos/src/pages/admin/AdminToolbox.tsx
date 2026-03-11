@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Database, ExternalLink, Flame, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
+import { Bot, Briefcase, Database, ExternalLink, Flame, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -12,6 +12,7 @@ const IA_TOOL_URL = "https://ia.sos-expat.com";
 const SCRAPER_PRO_URL = "https://scraper.providers-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
+const JOB_ADS_TRACKER_URL = "/tools/suivi-annonces-emploi.html";
 
 interface ToolCard {
   id: string;
@@ -105,6 +106,15 @@ const tools: ToolCard[] = [
     url: MOTIVATION_ENGINE_URL,
     icon: <Flame className="h-8 w-8" />,
     color: "bg-amber-600",
+    status: "live",
+  },
+  {
+    id: "job-ads-tracker",
+    titleKey: "Gestion Annonces Emploi",
+    descriptionKey: "Suivi des offres d'emploi, couverture pays, sites, statistiques et analytics",
+    url: JOB_ADS_TRACKER_URL,
+    icon: <Briefcase className="h-8 w-8" />,
+    color: "bg-teal-600",
     status: "live",
   },
 ];
