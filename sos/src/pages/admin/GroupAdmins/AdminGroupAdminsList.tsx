@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
-import { functionsAffiliate } from '@/config/firebase';
+import { functionsAffiliate, functions } from '@/config/firebase';
 import toast from 'react-hot-toast';
 import {
   Users,
@@ -30,6 +30,16 @@ import {
   Shield,
   Star,
   Eye,
+  Edit3,
+  Phone,
+  Save,
+  AlertCircle,
+  Mail,
+  Languages,
+  Ban as BanIcon,
+  PlayCircle,
+  Trash2,
+  MoreVertical,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { StatusBadge } from '@/components/admin/StatusBadge';
@@ -70,6 +80,75 @@ const GROUP_SIZES = [
   { code: '50k-100k', name: '50k - 100k' },
   { code: 'gt100k', name: '> 100k' },
 ];
+
+// Countries list (ISO 3166-1)
+const COUNTRIES = [
+  { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
+  { code: 'AD', name: 'Andorra' }, { code: 'AO', name: 'Angola' }, { code: 'AG', name: 'Antigua' },
+  { code: 'AR', name: 'Argentina' }, { code: 'AM', name: 'Armenia' }, { code: 'AU', name: 'Australia' },
+  { code: 'AT', name: 'Austria' }, { code: 'AZ', name: 'Azerbaijan' }, { code: 'BS', name: 'Bahamas' },
+  { code: 'BH', name: 'Bahrain' }, { code: 'BD', name: 'Bangladesh' }, { code: 'BB', name: 'Barbados' },
+  { code: 'BY', name: 'Belarus' }, { code: 'BE', name: 'Belgium' }, { code: 'BZ', name: 'Belize' },
+  { code: 'BJ', name: 'Benin' }, { code: 'BT', name: 'Bhutan' }, { code: 'BO', name: 'Bolivia' },
+  { code: 'BA', name: 'Bosnia' }, { code: 'BW', name: 'Botswana' }, { code: 'BR', name: 'Brazil' },
+  { code: 'BN', name: 'Brunei' }, { code: 'BG', name: 'Bulgaria' }, { code: 'BF', name: 'Burkina Faso' },
+  { code: 'BI', name: 'Burundi' }, { code: 'CV', name: 'Cabo Verde' }, { code: 'KH', name: 'Cambodia' },
+  { code: 'CM', name: 'Cameroon' }, { code: 'CA', name: 'Canada' }, { code: 'CF', name: 'Central African Rep.' },
+  { code: 'TD', name: 'Chad' }, { code: 'CL', name: 'Chile' }, { code: 'CN', name: 'China' },
+  { code: 'CO', name: 'Colombia' }, { code: 'KM', name: 'Comoros' }, { code: 'CG', name: 'Congo' },
+  { code: 'CD', name: 'DR Congo' }, { code: 'CR', name: 'Costa Rica' }, { code: 'CI', name: "Côte d'Ivoire" },
+  { code: 'HR', name: 'Croatia' }, { code: 'CU', name: 'Cuba' }, { code: 'CY', name: 'Cyprus' },
+  { code: 'CZ', name: 'Czechia' }, { code: 'DK', name: 'Denmark' }, { code: 'DJ', name: 'Djibouti' },
+  { code: 'DM', name: 'Dominica' }, { code: 'DO', name: 'Dominican Rep.' }, { code: 'EC', name: 'Ecuador' },
+  { code: 'EG', name: 'Egypt' }, { code: 'SV', name: 'El Salvador' }, { code: 'GQ', name: 'Eq. Guinea' },
+  { code: 'ER', name: 'Eritrea' }, { code: 'EE', name: 'Estonia' }, { code: 'SZ', name: 'Eswatini' },
+  { code: 'ET', name: 'Ethiopia' }, { code: 'FJ', name: 'Fiji' }, { code: 'FI', name: 'Finland' },
+  { code: 'FR', name: 'France' }, { code: 'GA', name: 'Gabon' }, { code: 'GM', name: 'Gambia' },
+  { code: 'GE', name: 'Georgia' }, { code: 'DE', name: 'Germany' }, { code: 'GH', name: 'Ghana' },
+  { code: 'GR', name: 'Greece' }, { code: 'GD', name: 'Grenada' }, { code: 'GT', name: 'Guatemala' },
+  { code: 'GN', name: 'Guinea' }, { code: 'GW', name: 'Guinea-Bissau' }, { code: 'GY', name: 'Guyana' },
+  { code: 'HT', name: 'Haiti' }, { code: 'HN', name: 'Honduras' }, { code: 'HU', name: 'Hungary' },
+  { code: 'IS', name: 'Iceland' }, { code: 'IN', name: 'India' }, { code: 'ID', name: 'Indonesia' },
+  { code: 'IR', name: 'Iran' }, { code: 'IQ', name: 'Iraq' }, { code: 'IE', name: 'Ireland' },
+  { code: 'IL', name: 'Israel' }, { code: 'IT', name: 'Italy' }, { code: 'JM', name: 'Jamaica' },
+  { code: 'JP', name: 'Japan' }, { code: 'JO', name: 'Jordan' }, { code: 'KZ', name: 'Kazakhstan' },
+  { code: 'KE', name: 'Kenya' }, { code: 'KI', name: 'Kiribati' }, { code: 'KP', name: 'North Korea' },
+  { code: 'KR', name: 'South Korea' }, { code: 'KW', name: 'Kuwait' }, { code: 'KG', name: 'Kyrgyzstan' },
+  { code: 'LA', name: 'Laos' }, { code: 'LV', name: 'Latvia' }, { code: 'LB', name: 'Lebanon' },
+  { code: 'LS', name: 'Lesotho' }, { code: 'LR', name: 'Liberia' }, { code: 'LY', name: 'Libya' },
+  { code: 'LI', name: 'Liechtenstein' }, { code: 'LT', name: 'Lithuania' }, { code: 'LU', name: 'Luxembourg' },
+  { code: 'MG', name: 'Madagascar' }, { code: 'MW', name: 'Malawi' }, { code: 'MY', name: 'Malaysia' },
+  { code: 'MV', name: 'Maldives' }, { code: 'ML', name: 'Mali' }, { code: 'MT', name: 'Malta' },
+  { code: 'MH', name: 'Marshall Islands' }, { code: 'MR', name: 'Mauritania' }, { code: 'MU', name: 'Mauritius' },
+  { code: 'MX', name: 'Mexico' }, { code: 'FM', name: 'Micronesia' }, { code: 'MD', name: 'Moldova' },
+  { code: 'MC', name: 'Monaco' }, { code: 'MN', name: 'Mongolia' }, { code: 'ME', name: 'Montenegro' },
+  { code: 'MA', name: 'Morocco' }, { code: 'MZ', name: 'Mozambique' }, { code: 'MM', name: 'Myanmar' },
+  { code: 'NA', name: 'Namibia' }, { code: 'NR', name: 'Nauru' }, { code: 'NP', name: 'Nepal' },
+  { code: 'NL', name: 'Netherlands' }, { code: 'NZ', name: 'New Zealand' }, { code: 'NI', name: 'Nicaragua' },
+  { code: 'NE', name: 'Niger' }, { code: 'NG', name: 'Nigeria' }, { code: 'MK', name: 'North Macedonia' },
+  { code: 'NO', name: 'Norway' }, { code: 'OM', name: 'Oman' }, { code: 'PK', name: 'Pakistan' },
+  { code: 'PW', name: 'Palau' }, { code: 'PA', name: 'Panama' }, { code: 'PG', name: 'Papua New Guinea' },
+  { code: 'PY', name: 'Paraguay' }, { code: 'PE', name: 'Peru' }, { code: 'PH', name: 'Philippines' },
+  { code: 'PL', name: 'Poland' }, { code: 'PT', name: 'Portugal' }, { code: 'QA', name: 'Qatar' },
+  { code: 'RO', name: 'Romania' }, { code: 'RU', name: 'Russia' }, { code: 'RW', name: 'Rwanda' },
+  { code: 'KN', name: 'Saint Kitts' }, { code: 'LC', name: 'Saint Lucia' }, { code: 'VC', name: 'Saint Vincent' },
+  { code: 'WS', name: 'Samoa' }, { code: 'SM', name: 'San Marino' }, { code: 'ST', name: 'São Tomé' },
+  { code: 'SA', name: 'Saudi Arabia' }, { code: 'SN', name: 'Senegal' }, { code: 'RS', name: 'Serbia' },
+  { code: 'SC', name: 'Seychelles' }, { code: 'SL', name: 'Sierra Leone' }, { code: 'SG', name: 'Singapore' },
+  { code: 'SK', name: 'Slovakia' }, { code: 'SI', name: 'Slovenia' }, { code: 'SB', name: 'Solomon Islands' },
+  { code: 'SO', name: 'Somalia' }, { code: 'ZA', name: 'South Africa' }, { code: 'SS', name: 'South Sudan' },
+  { code: 'ES', name: 'Spain' }, { code: 'LK', name: 'Sri Lanka' }, { code: 'SD', name: 'Sudan' },
+  { code: 'SR', name: 'Suriname' }, { code: 'SE', name: 'Sweden' }, { code: 'CH', name: 'Switzerland' },
+  { code: 'SY', name: 'Syria' }, { code: 'TW', name: 'Taiwan' }, { code: 'TJ', name: 'Tajikistan' },
+  { code: 'TZ', name: 'Tanzania' }, { code: 'TH', name: 'Thailand' }, { code: 'TL', name: 'Timor-Leste' },
+  { code: 'TG', name: 'Togo' }, { code: 'TO', name: 'Tonga' }, { code: 'TT', name: 'Trinidad' },
+  { code: 'TN', name: 'Tunisia' }, { code: 'TR', name: 'Turkey' }, { code: 'TM', name: 'Turkmenistan' },
+  { code: 'TV', name: 'Tuvalu' }, { code: 'UG', name: 'Uganda' }, { code: 'UA', name: 'Ukraine' },
+  { code: 'AE', name: 'UAE' }, { code: 'GB', name: 'United Kingdom' }, { code: 'US', name: 'United States' },
+  { code: 'UY', name: 'Uruguay' }, { code: 'UZ', name: 'Uzbekistan' }, { code: 'VU', name: 'Vanuatu' },
+  { code: 'VA', name: 'Vatican' }, { code: 'VE', name: 'Venezuela' }, { code: 'VN', name: 'Vietnam' },
+  { code: 'YE', name: 'Yemen' }, { code: 'ZM', name: 'Zambia' }, { code: 'ZW', name: 'Zimbabwe' },
+].sort((a, b) => a.name.localeCompare(b.name));
 
 interface GroupAdmin {
   id: string;
@@ -124,16 +203,59 @@ const AdminGroupAdminsList: React.FC = () => {
   const [stats, setStats] = useState<GroupAdminListResponse['stats']>();
   const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
   const [visibilityLoading, setVisibilityLoading] = useState<Map<string, boolean>>(new Map());
+  // Edit profile modal
+  interface EditProfileState {
+    isOpen: boolean;
+    admin: GroupAdmin | null;
+    fields: {
+      firstName: string; lastName: string; email: string; phone: string;
+      country: string; language: string; groupName: string; groupUrl: string;
+      groupType: string; groupSize: string; groupCountry: string; groupLanguage: string; adminNotes: string;
+    };
+  }
+  const [editModal, setEditModal] = useState<EditProfileState>({
+    isOpen: false, admin: null,
+    fields: { firstName: '', lastName: '', email: '', phone: '', country: '', language: '', groupName: '', groupUrl: '', groupType: '', groupSize: '', groupCountry: '', groupLanguage: '', adminNotes: '' },
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
+  const openEditModal = useCallback((a: GroupAdmin) => {
+    setEditModal({
+      isOpen: true, admin: a,
+      fields: {
+        firstName: a.firstName || '', lastName: a.lastName || '', email: a.email || '',
+        phone: (a as any).phone || '', country: (a as any).country || '', language: (a as any).language || '',
+        groupName: a.groupName || '', groupUrl: a.groupUrl || '', groupType: a.groupType || '',
+        groupSize: a.groupSize || '', groupCountry: a.groupCountry || '', groupLanguage: (a as any).groupLanguage || '',
+        adminNotes: (a as any).adminNotes || '',
+      },
+    });
+  }, []);
+
+  const handleEditField = useCallback((field: string, value: string) => {
+    setEditModal(prev => ({ ...prev, fields: { ...prev.fields, [field]: value } }));
+  }, []);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  // Per-row moderation action modal
+  const [actionModal, setActionModal] = useState<{
+    groupAdmin: any;
+    action: 'suspend' | 'ban' | 'reactivate' | 'delete';
+  } | null>(null);
+  const [actionReason, setActionReason] = useState('');
+  const [actionConfirmText, setActionConfirmText] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const limit = 20;
 
   const toggleFeatured = async (id: string, current: boolean) => {
     setFeaturedLoading(id);
     try {
-      const fn = httpsCallable(functionsAffiliate, 'setProviderBadge');
+      const fn = httpsCallable(functions, 'setProviderBadge');
       await fn({ providerId: id, isFeatured: !current });
       setGroupAdmins((prev) => prev.map((x) => x.id === id ? { ...x, isFeatured: !current } : x));
       toast.success(!current ? 'Badge attribué ✓' : 'Badge retiré');
@@ -192,9 +314,48 @@ const AdminGroupAdminsList: React.FC = () => {
     }
   }, [page, searchQuery, statusFilter, groupTypeFilter, groupSizeFilter, intl]);
 
+  const handleSaveProfile = useCallback(async () => {
+    if (!editModal.admin) return;
+    setEditLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminProfile');
+      const updates: Record<string, any> = { groupAdminId: editModal.admin.id };
+      const orig = editModal.admin as any;
+      const f = editModal.fields;
+      if (f.firstName !== (orig.firstName || '')) updates.firstName = f.firstName;
+      if (f.lastName !== (orig.lastName || '')) updates.lastName = f.lastName;
+      if (f.email !== (orig.email || '')) updates.email = f.email;
+      if (f.phone !== (orig.phone || '')) updates.phone = f.phone;
+      if (f.country !== (orig.country || '')) updates.country = f.country;
+      if (f.language !== (orig.language || '')) updates.language = f.language;
+      if (f.groupName !== (orig.groupName || '')) updates.groupName = f.groupName;
+      if (f.groupUrl !== (orig.groupUrl || '')) updates.groupUrl = f.groupUrl;
+      if (f.groupType !== (orig.groupType || '')) updates.groupType = f.groupType;
+      if (f.groupSize !== (orig.groupSize || '')) updates.groupSize = f.groupSize;
+      if (f.groupCountry !== (orig.groupCountry || '')) updates.groupCountry = f.groupCountry;
+      if (f.groupLanguage !== (orig.groupLanguage || '')) updates.groupLanguage = f.groupLanguage;
+      if (f.adminNotes !== (orig.adminNotes || '')) updates.adminNotes = f.adminNotes;
+
+      if (Object.keys(updates).length <= 1) { toast.error('Aucune modification'); setEditLoading(false); return; }
+      await fn(updates);
+      toast.success('Profil mis à jour');
+      setEditModal(prev => ({ ...prev, isOpen: false }));
+      fetchGroupAdmins();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally { setEditLoading(false); }
+  }, [editModal, fetchGroupAdmins]);
+
   useEffect(() => {
     fetchGroupAdmins();
   }, [fetchGroupAdmins]);
+
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handler = () => setOpenDropdownId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openDropdownId]);
 
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds);
@@ -245,6 +406,47 @@ const AdminGroupAdminsList: React.FC = () => {
       console.error('Export error:', err);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleAction = async () => {
+    if (!actionModal) return;
+    const { groupAdmin, action } = actionModal;
+
+    if ((action === 'suspend' || action === 'ban' || action === 'delete') && !actionReason.trim()) {
+      toast.error('Une raison est requise');
+      return;
+    }
+
+    if (action === 'delete' && actionConfirmText !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (action === 'delete') {
+        const fn = httpsCallable(functionsAffiliate, 'adminDeleteGroupAdmin');
+        await fn({ groupAdminId: groupAdmin.id, reason: actionReason.trim() });
+        toast.success('GroupAdmin supprimé');
+      } else {
+        const fn = httpsCallable(functionsAffiliate, 'adminUpdateGroupAdminStatus');
+        const newStatus = action === 'suspend' ? 'suspended' : action === 'ban' ? 'banned' : 'active';
+        await fn({ groupAdminId: groupAdmin.id, status: newStatus, reason: actionReason });
+        toast.success(
+          action === 'suspend' ? 'GroupAdmin suspendu' :
+          action === 'ban' ? 'GroupAdmin banni' :
+          'GroupAdmin réactivé'
+        );
+      }
+      setActionModal(null);
+      setActionReason('');
+      setActionConfirmText('');
+      fetchGroupAdmins();
+    } catch (err: any) {
+      toast.error('Erreur: ' + (err.message || err));
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -493,6 +695,83 @@ const AdminGroupAdminsList: React.FC = () => {
                                 : <Star className={`w-4 h-4 ${admin.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                               }
                             </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openEditModal(admin); }}
+                              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                              title="Modifier le profil"
+                            >
+                              <Edit3 className="w-4 h-4 text-indigo-500" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); window.open(`/group-admin/tableau-de-bord?userId=${admin.id}`, '_blank'); }}
+                              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                              title="Voir le dashboard"
+                            >
+                              <ExternalLink className="w-4 h-4 text-blue-500" />
+                            </button>
+                            {/* Per-row moderation actions (dropdown) */}
+                            <div className="relative">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === admin.id ? null : admin.id); }}
+                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Actions"
+                              >
+                                <MoreVertical className="w-4 h-4 text-gray-400" />
+                              </button>
+                              {openDropdownId === admin.id && (
+                                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50" onClick={(e) => e.stopPropagation()}>
+                                  {admin.status === 'active' && (
+                                    <>
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'suspend' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
+                                      >
+                                        <Pause className="w-4 h-4" /> Suspendre
+                                      </button>
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'ban' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                      >
+                                        <BanIcon className="w-4 h-4" /> Bannir
+                                      </button>
+                                    </>
+                                  )}
+                                  {admin.status === 'suspended' && (
+                                    <>
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'reactivate' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                      >
+                                        <PlayCircle className="w-4 h-4" /> Réactiver
+                                      </button>
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'ban' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                      >
+                                        <BanIcon className="w-4 h-4" /> Bannir
+                                      </button>
+                                    </>
+                                  )}
+                                  {admin.status === 'banned' && (
+                                    <>
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'reactivate' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                      >
+                                        <PlayCircle className="w-4 h-4" /> Réactiver
+                                      </button>
+                                      <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'delete' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                      >
+                                        <Trash2 className="w-4 h-4" /> Supprimer
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             <ChevronRight className="w-5 h-5 text-gray-400" />
                           </div>
                         </td>
@@ -523,6 +802,245 @@ const AdminGroupAdminsList: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* ========== EDIT PROFILE MODAL ========== */}
+      {editModal.isOpen && editModal.admin && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Edit3 className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Modifier — {editModal.admin.firstName} {editModal.admin.lastName}
+                </h3>
+              </div>
+              <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prénom</label>
+                  <input type="text" value={editModal.fields.firstName} onChange={(e) => handleEditField('firstName', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
+                  <input type="text" value={editModal.fields.lastName} onChange={(e) => handleEditField('lastName', e.target.value)} className={UI.input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Mail className="w-3.5 h-3.5 inline mr-1" />Email</label>
+                  <input type="email" value={editModal.fields.email} onChange={(e) => handleEditField('email', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Phone className="w-3.5 h-3.5 inline mr-1" />Téléphone</label>
+                  <input type="tel" value={editModal.fields.phone} onChange={(e) => handleEditField('phone', e.target.value)} placeholder="+33 6 12 34 56 78" className={UI.input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Globe className="w-3.5 h-3.5 inline mr-1" />Pays</label>
+                  <select value={editModal.fields.country} onChange={(e) => handleEditField('country', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Languages className="w-3.5 h-3.5 inline mr-1" />Langue</label>
+                  <select value={editModal.fields.language} onChange={(e) => handleEditField('language', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                  </select>
+                </div>
+              </div>
+              <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-400 pt-2">Informations du groupe</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom du groupe</label>
+                  <input type="text" value={editModal.fields.groupName} onChange={(e) => handleEditField('groupName', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL du groupe</label>
+                  <input type="url" value={editModal.fields.groupUrl} onChange={(e) => handleEditField('groupUrl', e.target.value)} placeholder="https://facebook.com/groups/..." className={UI.input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type de groupe</label>
+                  <select value={editModal.fields.groupType} onChange={(e) => handleEditField('groupType', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {GROUP_TYPES.map(t => <option key={t.code} value={t.code}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Taille du groupe</label>
+                  <select value={editModal.fields.groupSize} onChange={(e) => handleEditField('groupSize', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {GROUP_SIZES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pays du groupe</label>
+                  <select value={editModal.fields.groupCountry} onChange={(e) => handleEditField('groupCountry', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Langue du groupe</label>
+                  <input type="text" value={editModal.fields.groupLanguage} onChange={(e) => handleEditField('groupLanguage', e.target.value)} placeholder="fr, en..." className={UI.input} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><AlertCircle className="w-3.5 h-3.5 inline mr-1" />Notes admin (internes)</label>
+                <textarea value={editModal.fields.adminNotes} onChange={(e) => handleEditField('adminNotes', e.target.value)} className={`${UI.input} min-h-[80px] resize-y`} rows={3} placeholder="Notes visibles uniquement par les admins..." />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))} className={`${UI.button.secondary} px-4 py-2 text-sm`} disabled={editLoading}>Annuler</button>
+              <button onClick={handleSaveProfile} disabled={editLoading} className={`${UI.button.primary} px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50`}>
+                {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========== ACTION MODAL (Suspend / Ban / Reactivate / Delete) ========== */}
+      {actionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md">
+            <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between ${
+              actionModal.action === 'delete' ? 'bg-red-50 dark:bg-red-900/20' :
+              actionModal.action === 'ban' ? 'bg-red-50 dark:bg-red-900/20' :
+              actionModal.action === 'suspend' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+              'bg-green-50 dark:bg-green-900/20'
+            }`}>
+              <div className="flex items-center gap-3">
+                {actionModal.action === 'suspend' && <Pause className="w-5 h-5 text-yellow-600" />}
+                {actionModal.action === 'ban' && <BanIcon className="w-5 h-5 text-red-600" />}
+                {actionModal.action === 'reactivate' && <PlayCircle className="w-5 h-5 text-green-600" />}
+                {actionModal.action === 'delete' && <Trash2 className="w-5 h-5 text-red-600" />}
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {actionModal.action === 'suspend' && 'Suspendre le GroupAdmin'}
+                  {actionModal.action === 'ban' && 'Bannir le GroupAdmin'}
+                  {actionModal.action === 'reactivate' && 'Réactiver le GroupAdmin'}
+                  {actionModal.action === 'delete' && 'Supprimer le GroupAdmin'}
+                </h3>
+              </div>
+              <button onClick={() => { setActionModal(null); setActionReason(''); }} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {actionModal.action === 'suspend' && (
+                  <>Vous allez suspendre <strong>{actionModal.groupAdmin.firstName} {actionModal.groupAdmin.lastName}</strong>. Ce GroupAdmin ne pourra plus accéder à son dashboard.</>
+                )}
+                {actionModal.action === 'ban' && (
+                  <>Vous allez bannir <strong>{actionModal.groupAdmin.firstName} {actionModal.groupAdmin.lastName}</strong>. Ce GroupAdmin sera définitivement bloqué.</>
+                )}
+                {actionModal.action === 'reactivate' && (
+                  <>Vous allez réactiver <strong>{actionModal.groupAdmin.firstName} {actionModal.groupAdmin.lastName}</strong>. Ce GroupAdmin pourra de nouveau accéder à son dashboard.</>
+                )}
+                {actionModal.action === 'delete' && (
+                  <>Vous allez supprimer définitivement <strong>{actionModal.groupAdmin.firstName} {actionModal.groupAdmin.lastName}</strong>. Cette action est irréversible.</>
+                )}
+              </p>
+
+              {actionModal.action === 'delete' && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 rounded-xl">
+                  <p className="text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    Attention : cette suppression est irréversible. Les documents group_admins et users seront supprimés.
+                  </p>
+                </div>
+              )}
+
+              {actionModal.action !== 'reactivate' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Raison <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={actionReason}
+                    onChange={(e) => setActionReason(e.target.value)}
+                    className={`${UI.input} min-h-[80px] resize-y`}
+                    rows={3}
+                    placeholder={
+                      actionModal.action === 'suspend' ? 'Ex: Non-respect des conditions, inactivité prolongée...' :
+                      actionModal.action === 'ban' ? 'Ex: Fraude, spam, violation grave des CGU...' :
+                      'Ex: Contenu inapproprié, compte frauduleux...'
+                    }
+                  />
+                </div>
+              )}
+
+              {actionModal.action === 'reactivate' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raison (optionnelle)</label>
+                  <textarea
+                    value={actionReason}
+                    onChange={(e) => setActionReason(e.target.value)}
+                    className={`${UI.input} min-h-[60px] resize-y`}
+                    rows={2}
+                    placeholder="Ex: Après vérification, le compte est légitime..."
+                  />
+                </div>
+              )}
+
+              {actionModal.action === 'delete' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tapez <strong>SUPPRIMER</strong> pour confirmer
+                  </label>
+                  <input
+                    type="text"
+                    value={actionConfirmText}
+                    onChange={(e) => setActionConfirmText(e.target.value)}
+                    placeholder="SUPPRIMER"
+                    className={`${UI.input} text-sm`}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button
+                onClick={() => { setActionModal(null); setActionReason(''); setActionConfirmText(''); }}
+                className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                disabled={actionLoading}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleAction}
+                disabled={actionLoading || (actionModal.action === 'delete' && actionConfirmText !== 'SUPPRIMER')}
+                className={`${
+                  actionModal.action === 'reactivate' ? 'bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-all' :
+                  actionModal.action === 'suspend' ? 'bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-xl transition-all' :
+                  UI.button.danger
+                } px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50`}
+              >
+                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  <>
+                    {actionModal.action === 'suspend' && <Pause className="w-4 h-4" />}
+                    {actionModal.action === 'ban' && <BanIcon className="w-4 h-4" />}
+                    {actionModal.action === 'reactivate' && <PlayCircle className="w-4 h-4" />}
+                    {actionModal.action === 'delete' && <Trash2 className="w-4 h-4" />}
+                  </>
+                )}
+                {actionModal.action === 'suspend' && 'Suspendre'}
+                {actionModal.action === 'ban' && 'Bannir'}
+                {actionModal.action === 'reactivate' && 'Réactiver'}
+                {actionModal.action === 'delete' && 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

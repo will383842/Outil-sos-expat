@@ -38,6 +38,38 @@ const VALID_LANGUAGES: SupportedChatterLanguage[] = [
   "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
+// Map country codes to representative timezones for smart send optimization
+function countryToTimezone(country: string): string | null {
+  const map: Record<string, string> = {
+    FR: "Europe/Paris", DE: "Europe/Berlin", ES: "Europe/Madrid",
+    PT: "Europe/Lisbon", IT: "Europe/Rome", BE: "Europe/Brussels",
+    CH: "Europe/Zurich", NL: "Europe/Amsterdam", AT: "Europe/Vienna",
+    GB: "Europe/London", IE: "Europe/Dublin", SE: "Europe/Stockholm",
+    NO: "Europe/Oslo", DK: "Europe/Copenhagen", FI: "Europe/Helsinki",
+    PL: "Europe/Warsaw", CZ: "Europe/Prague", RO: "Europe/Bucharest",
+    GR: "Europe/Athens", HU: "Europe/Budapest", BG: "Europe/Sofia",
+    HR: "Europe/Zagreb", LU: "Europe/Luxembourg",
+    US: "America/New_York", CA: "America/Toronto", MX: "America/Mexico_City",
+    BR: "America/Sao_Paulo", AR: "America/Argentina/Buenos_Aires",
+    CO: "America/Bogota", CL: "America/Santiago", PE: "America/Lima",
+    RU: "Europe/Moscow", UA: "Europe/Kiev",
+    CN: "Asia/Shanghai", JP: "Asia/Tokyo", KR: "Asia/Seoul",
+    IN: "Asia/Kolkata", PK: "Asia/Karachi", BD: "Asia/Dhaka",
+    TH: "Asia/Bangkok", VN: "Asia/Ho_Chi_Minh", PH: "Asia/Manila",
+    ID: "Asia/Jakarta", MY: "Asia/Kuala_Lumpur", SG: "Asia/Singapore",
+    AE: "Asia/Dubai", SA: "Asia/Riyadh", QA: "Asia/Qatar",
+    KW: "Asia/Kuwait", BH: "Asia/Bahrain", OM: "Asia/Muscat",
+    EG: "Africa/Cairo", MA: "Africa/Casablanca", TN: "Africa/Tunis",
+    DZ: "Africa/Algiers", NG: "Africa/Lagos", KE: "Africa/Nairobi",
+    ZA: "Africa/Johannesburg", GH: "Africa/Accra", SN: "Africa/Dakar",
+    CI: "Africa/Abidjan", CM: "Africa/Douala", TZ: "Africa/Dar_es_Salaam",
+    AU: "Australia/Sydney", NZ: "Pacific/Auckland",
+    TR: "Europe/Istanbul", IL: "Asia/Jerusalem", LB: "Asia/Beirut",
+    JO: "Asia/Amman", IQ: "Asia/Baghdad",
+  };
+  return map[country?.toUpperCase()] || null;
+}
+
 // Valid platforms
 const VALID_PLATFORMS: ChatterPlatform[] = [
   "facebook", "instagram", "twitter", "linkedin", "tiktok", "youtube",
@@ -704,10 +736,11 @@ export const registerChatter = onCall(
       notifyMotivationEngine("chatter.registered", userId, {
         email: input.email.toLowerCase(),
         displayName: `${input.firstName.trim()} ${input.lastName.trim()}`,
-        phone: input.phone?.trim(),
+        phone: input.phone?.trim() || null,
+        whatsappPhone: input.whatsapp?.trim() || input.phone?.trim() || null,
         language: input.language,
         country: input.country,
-        timezone: "UTC",
+        timezone: countryToTimezone(input.country) || "UTC",
         affiliateCodeClient,
         affiliateCodeRecruitment,
         referrerUid: recruitedBy || null,

@@ -181,6 +181,7 @@ interface InfluencerRegisterFormProps {
   referralCode?: string;
   onEmailAlreadyExists?: (email: string) => void;
   onRegistrationStateChange?: (isRegistering: boolean) => void;
+  onSuccess?: (data: { language: string; country: string }) => void;
 }
 
 // ============================================================================
@@ -190,6 +191,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
   referralCode = '',
   onEmailAlreadyExists,
   onRegistrationStateChange,
+  onSuccess,
 }) => {
   const intl = useIntl();
   const navigate = useLocaleNavigate();
@@ -599,9 +601,14 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
         trackGoogleAdsSignUp({ method: 'email', content_name: 'influencer_registration', country: formData.country });
 
         await refreshUser();
-        setTimeout(() => {
-          navigate(`/${getTranslatedRouteSlug('influencer-telegram' as RouteKey, langCode)}`, { replace: true });
-        }, 500);
+
+        if (onSuccess) {
+          onSuccess({ language: formData.language || 'en', country: formData.country || '' });
+        } else {
+          setTimeout(() => {
+            navigate(`/${getTranslatedRouteSlug('influencer-telegram' as RouteKey, langCode)}`, { replace: true });
+          }, 500);
+        }
       }
     } catch (err: unknown) {
       onRegistrationStateChange?.(false);

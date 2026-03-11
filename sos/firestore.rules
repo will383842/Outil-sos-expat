@@ -481,7 +481,7 @@ service cloud.firestore {
     // P0 FIX: pricing and chatter_config are publicly readable (public landing pages)
     // Other admin_config documents (aaa_payout, etc.) require admin access
     match /admin_config/{docId} {
-      allow read: if docId == 'pricing' || docId == 'chatter_config' || isAdmin();
+      allow read: if docId == 'pricing' || docId == 'chatter_config' || docId == 'whatsapp_groups' || isAdmin();
       allow write: if isAdmin();
     }
 
@@ -3207,6 +3207,13 @@ service cloud.firestore {
                     && request.resource.data.whatsapp.matches('^\\+[1-9][0-9]{6,14}$');
       // Read, update, delete: admin only
       allow read, update, delete: if isAdmin();
+    }
+
+    // ================= PARTNER APPLICATIONS =================
+    // Candidatures Partenaires - lecture/update/delete admin only
+    match /partner_applications/{applicationId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if true;
     }
 
     match /ssr_cache/{docId} {

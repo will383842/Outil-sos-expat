@@ -308,6 +308,11 @@ export interface ChatterData {
   legal_ip_address?: string | null;
   legal_user_agent?: string | null;
 
+  // WhatsApp Groups
+  whatsappGroupClicked?: boolean;
+  whatsappGroupId?: string | null;
+  whatsappGroupCountry?: string | null;
+
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;

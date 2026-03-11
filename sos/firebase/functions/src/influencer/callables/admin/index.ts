@@ -1045,6 +1045,9 @@ export const adminBulkInfluencerAction = onCall(
 
 export { adminToggleInfluencerVisibility } from "./toggleVisibility";
 
+// Re-export delete callable
+export { adminDeleteInfluencer } from "./deleteInfluencer";
+
 // ============================================================================
 // GET INFLUENCER WITHDRAWALS (Admin)
 // Lists all influencer withdrawals from payment_withdrawals with pagination,

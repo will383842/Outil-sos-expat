@@ -11,6 +11,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { useBlogger } from '@/hooks/useBlogger';
+import { WhatsAppBanner } from '@/whatsapp-groups';
 import toast from 'react-hot-toast';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import {
@@ -113,6 +114,15 @@ const BloggerDashboard: React.FC = () => {
   return (
     <BloggerDashboardLayout>
       <div className="space-y-6">
+        {/* WhatsApp Group Banner */}
+        <WhatsAppBanner
+          userId={user?.uid || ''}
+          role="blogger"
+          language={blogger?.language || 'en'}
+          country={blogger?.country || ''}
+          alreadyClicked={blogger?.whatsappGroupClicked || false}
+        />
+
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-6 text-white">
           <div className="flex items-start justify-between gap-4">

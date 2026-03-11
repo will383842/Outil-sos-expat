@@ -30,8 +30,24 @@ export const getBloggerDashboard = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    const uid = request.auth.uid;
     const db = getFirestore();
+
+    // Admin impersonation: allow admin to view any blogger's dashboard
+    const requestedUserId = request.data?.userId as string | undefined;
+    let uid = request.auth.uid;
+    let isAdminView = false;
+
+    if (requestedUserId && requestedUserId !== request.auth.uid) {
+      const callerRole = request.auth.token?.role as string | undefined;
+      if (callerRole !== "admin" && callerRole !== "superadmin") {
+        const callerDoc = await db.collection("users").doc(request.auth.uid).get();
+        if (!callerDoc.exists || !["admin", "superadmin"].includes(callerDoc.data()?.role)) {
+          throw new HttpsError("permission-denied", "Admin access required to view other users' dashboards");
+        }
+      }
+      uid = requestedUserId;
+      isAdminView = true;
+    }
 
     try {
       // 2. Get blogger profile
@@ -98,10 +114,12 @@ export const getBloggerDashboard = onCall(
         };
       }
 
-      // 7. Update last login
-      await db.collection("bloggers").doc(uid).update({
-        lastLoginAt: Timestamp.now(),
-      });
+      // 7. Update last login - skip for admin view
+      if (!isAdminView) {
+        await db.collection("bloggers").doc(uid).update({
+          lastLoginAt: Timestamp.now(),
+        });
+      }
 
       // 8. Build response (exclude sensitive fields)
       const { paymentDetails, adminNotes, ...bloggerPublic } = blogger;
@@ -125,6 +143,7 @@ export const getBloggerDashboard = onCall(
         recentCommissions,
         monthlyStats,
         unreadNotifications,
+        isAdminView,
         config: {
           // Use lockedRates (lifetime rate lock) when available, fallback to global config
           commissionClientAmount: blogger.lockedRates?.commissionClientAmount ?? config.commissionClientAmount,

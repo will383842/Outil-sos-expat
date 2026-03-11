@@ -36,6 +36,7 @@ export {
   adminProcessWithdrawal,
   adminUpdateChatterStatus,
   adminUpdateChatterProfile,
+  adminGetChatterHierarchy,
 } from "./admin";
 
 // Public directory

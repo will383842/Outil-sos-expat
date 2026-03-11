@@ -87,6 +87,8 @@ interface ExpatRegisterFormProps {
   trackMetaComplete: (data: Record<string, unknown>) => void;
   trackAdRegistration: (data: Record<string, unknown>) => void;
   getStoredReferralTracking: () => unknown;
+  /** Called on successful registration instead of navigating (for WhatsApp screen) */
+  onSuccess?: (data: { language: string; country: string }) => void;
 }
 
 const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
@@ -104,6 +106,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
   trackMetaComplete,
   trackAdRegistration,
   getStoredReferralTracking,
+  onSuccess,
 }) => {
   const intl = useIntl();
   const lang = language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'pt' | 'ch' | 'ar';
@@ -512,6 +515,11 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
         clearStoredReferral('client');
 
+        if (onSuccess) {
+          onSuccess({ language, country: form.currentPresenceCountry });
+          return;
+        }
+
         // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
         setTimeout(() => {
           navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerExpat.success.registered' }), type: 'success' } });
@@ -555,6 +563,11 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       setGoogleAdsUserData({ email: form.email, firstName: form.firstName, lastName: form.lastName, country: form.currentPresenceCountry });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
       clearStoredReferral('client');
+
+      if (onSuccess) {
+        onSuccess({ language, country: form.currentPresenceCountry });
+        return;
+      }
 
       // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
       setTimeout(() => {

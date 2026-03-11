@@ -57,6 +57,8 @@ interface ClientRegisterFormProps {
   trackMetaComplete: (data: Record<string, unknown>) => void;
   trackAdRegistration: (data: Record<string, unknown>) => void;
   getStoredReferralTracking: () => unknown;
+  /** Called on successful registration instead of navigating (for WhatsApp screen) */
+  onSuccess?: (data: { language: string; country: string }) => void;
 }
 
 // ---------- Trust Badges ----------
@@ -104,6 +106,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
   trackMetaComplete,
   trackAdRegistration,
   getStoredReferralTracking,
+  onSuccess,
 }) => {
   const intl = useIntl();
   const lang = language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'pt' | 'ch' | 'ar';
@@ -390,6 +393,12 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
       setIsRedirecting(true);
       hasNavigatedRef.current = true;
 
+      // If onSuccess callback provided (e.g. for WhatsApp screen), use it instead of navigating
+      if (onSuccess) {
+        onSuccess({ language: language, country: phoneCountry || '' });
+        return;
+      }
+
       // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
       setTimeout(() => {
         navigate(redirect, {
@@ -432,7 +441,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
     }
   }, [
     form, isSubmitting, validateAll, onRegister, navigate, redirect, intl,
-    referralCode, trackMetaComplete, trackAdRegistration, getStoredReferralTracking,
+    referralCode, trackMetaComplete, trackAdRegistration, getStoredReferralTracking, onSuccess, language,
   ]);
 
   const effectiveLoading = isLoading || isSubmitting || googleLoading;

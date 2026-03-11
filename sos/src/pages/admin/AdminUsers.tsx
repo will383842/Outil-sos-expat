@@ -36,8 +36,11 @@ import {
   Users as UsersIcon,
   ExternalLink,
   ShieldCheck,
+  Edit3,
+  Save,
 } from 'lucide-react';
 
+import { httpsCallable } from 'firebase/functions';
 import {
   collection,
   getDocs,
@@ -54,7 +57,7 @@ import {
   Timestamp,
   QueryConstraint,
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db, functions, functionsAffiliate } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import AdminErrorState from '../../components/admin/AdminErrorState';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -201,9 +204,19 @@ const AdminUsers: React.FC = () => {
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState<boolean>(false);
 
-  // État pour édition rapide dans le modal
-  const [editMode, setEditMode] = useState<boolean>(false);
-  const [editedUser, setEditedUser] = useState<Partial<AdminUser>>({});
+  // État pour édition de profil
+  interface EditProfileFields {
+    firstName: string; lastName: string; email: string; phone: string;
+    phoneCountryCode: string; country: string; currentCountry: string;
+    languages: string; adminNotes: string;
+  }
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFields, setEditFields] = useState<EditProfileFields>({
+    firstName: '', lastName: '', email: '', phone: '', phoneCountryCode: '',
+    country: '', currentCountry: '', languages: '', adminNotes: '',
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editTargetUser, setEditTargetUser] = useState<AdminUser | null>(null);
 
   // Sync selectedRole when navigating between /users/chatters, /users/influencers, etc.
   useEffect(() => {
@@ -296,34 +309,99 @@ const AdminUsers: React.FC = () => {
     void fetchUsers();
   }, [currentUser, navigate, selectedRole, selectedCountry, sortField, sortDirection, page]);
 
-  const handleEditUser = (userId: string) => {
-    navigate(`/admin/users/${userId}/edit`);
+  const handleEditUser = (user: AdminUser) => {
+    setEditTargetUser(user);
+    setEditFields({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      phoneCountryCode: user.phoneCountryCode || '',
+      country: user.country || '',
+      currentCountry: user.currentCountry || '',
+      languages: (user.languages || user.spokenLanguages || []).join(', '),
+      adminNotes: (user as any).adminNotes || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editTargetUser) return;
+    setEditLoading(true);
+    try {
+      // For client/lawyer/expat use adminUpdateUserProfile (europe-west1)
+      // For affiliates redirect to their specific admin page
+      const role = editTargetUser.role;
+      if (['client', 'lawyer', 'expat'].includes(role)) {
+        const fn = httpsCallable(functions, 'adminUpdateUserProfile');
+        const updates: Record<string, any> = { userId: editTargetUser.id, role };
+        if (editFields.firstName !== (editTargetUser.firstName || '')) updates.firstName = editFields.firstName;
+        if (editFields.lastName !== (editTargetUser.lastName || '')) updates.lastName = editFields.lastName;
+        if (editFields.email !== (editTargetUser.email || '')) updates.email = editFields.email;
+        if (editFields.phone !== (editTargetUser.phone || '')) updates.phone = editFields.phone;
+        if (editFields.phoneCountryCode !== (editTargetUser.phoneCountryCode || '')) updates.phoneCountryCode = editFields.phoneCountryCode;
+        if (editFields.country !== (editTargetUser.country || '')) updates.country = editFields.country;
+        if (editFields.currentCountry !== (editTargetUser.currentCountry || '')) updates.currentCountry = editFields.currentCountry;
+        const newLangs = editFields.languages.split(',').map(s => s.trim()).filter(Boolean);
+        const oldLangs = editTargetUser.languages || editTargetUser.spokenLanguages || [];
+        if (JSON.stringify(newLangs) !== JSON.stringify(oldLangs)) updates.languages = newLangs;
+        if (editFields.adminNotes !== ((editTargetUser as any).adminNotes || '')) updates.adminNotes = editFields.adminNotes;
+
+        if (Object.keys(updates).length <= 2) { toast.error('Aucune modification'); setEditLoading(false); return; }
+        await fn(updates);
+      } else {
+        // Direct Firestore update for other roles
+        const userRef = doc(db, 'users', editTargetUser.id);
+        const updates: Record<string, any> = {};
+        if (editFields.firstName !== (editTargetUser.firstName || '')) updates.firstName = editFields.firstName;
+        if (editFields.lastName !== (editTargetUser.lastName || '')) updates.lastName = editFields.lastName;
+        if (editFields.email !== (editTargetUser.email || '')) updates.email = editFields.email;
+        if (editFields.phone !== (editTargetUser.phone || '')) updates.phone = editFields.phone;
+        if (editFields.country !== (editTargetUser.country || '')) updates.country = editFields.country;
+        if (editFields.adminNotes !== ((editTargetUser as any).adminNotes || '')) updates.adminNotes = editFields.adminNotes;
+
+        if (Object.keys(updates).length === 0) { toast.error('Aucune modification'); setEditLoading(false); return; }
+        updates.updatedAt = serverTimestamp();
+        await updateDoc(userRef, updates);
+      }
+
+      toast.success('Profil mis à jour');
+      setShowEditModal(false);
+      // Refresh users
+      setPage(1);
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally { setEditLoading(false); }
   };
 
   const handleViewDashboard = (user: AdminUser) => {
-    // Navigate to the appropriate dashboard based on role
-    // Routes must match App.tsx path definitions (FR default paths)
+    let url = '';
     switch (user.role) {
       case 'lawyer':
       case 'expat':
       case 'client':
-        navigate(`/dashboard?userId=${user.id}`);
+        url = `/dashboard?userId=${user.id}`;
         break;
       case 'chatter':
-        navigate(`/chatter/tableau-de-bord?userId=${user.id}`);
+        url = `/chatter/tableau-de-bord?userId=${user.id}`;
         break;
       case 'influencer':
-        navigate(`/influencer/tableau-de-bord?userId=${user.id}`);
+        url = `/influencer/tableau-de-bord?userId=${user.id}`;
         break;
       case 'blogger':
-        navigate(`/blogger/tableau-de-bord?userId=${user.id}`);
+        url = `/blogger/tableau-de-bord?userId=${user.id}`;
         break;
       case 'groupAdmin':
-        navigate(`/group-admin/tableau-de-bord?userId=${user.id}`);
+        url = `/group-admin/tableau-de-bord?userId=${user.id}`;
+        break;
+      case 'partner':
+        url = `/admin/partners/${user.id}`;
         break;
       default:
-        navigate(`/admin/users/${user.id}/edit`);
+        return;
     }
+    window.open(url, '_blank');
   };
 
   const getRoleLabel = (role: Role): string => {
@@ -1342,7 +1420,7 @@ const AdminUsers: React.FC = () => {
                             Voir
                           </Button>
                           {/* Bouton Dashboard - Accès au dashboard du profil */}
-                          {u.role !== 'admin' && u.role !== 'groupAdmin' && (
+                          {u.role !== 'admin' && (
                             <Button
                               size="small"
                               variant="outline"
@@ -1356,8 +1434,9 @@ const AdminUsers: React.FC = () => {
                           <Button
                             size="small"
                             className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleEditUser(u.id)}
+                            onClick={() => handleEditUser(u)}
                           >
+                            <Edit3 size={14} className="mr-1" />
                             Modifier
                           </Button>
                           {u.isBanned ? (
@@ -1596,7 +1675,7 @@ const AdminUsers: React.FC = () => {
                 Fermer
               </Button>
 
-              {selectedUser.role !== 'admin' && selectedUser.role !== 'groupAdmin' && (
+              {selectedUser.role !== 'admin' && (
                 <Button
                   onClick={() => {
                     setShowUserModal(false);
@@ -1612,11 +1691,11 @@ const AdminUsers: React.FC = () => {
               <Button
                 onClick={() => {
                   setShowUserModal(false);
-                  handleEditUser(selectedUser.id);
+                  handleEditUser(selectedUser);
                 }}
                 className="bg-green-600 hover:bg-green-700"
               >
-                <UserCog size={16} className="mr-2" />
+                <Edit3 size={16} className="mr-2" />
                 Modifier
               </Button>
             </div>
@@ -1712,6 +1791,83 @@ const AdminUsers: React.FC = () => {
               </Button>
               <Button onClick={confirmBanUser} className="bg-orange-600 hover:bg-orange-700" loading={isActionLoading}>
                 Bannir l'utilisateur
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ========== EDIT PROFILE MODAL ========== */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={`Modifier le profil — ${editTargetUser?.firstName || ''} ${editTargetUser?.lastName || ''}`}
+      >
+        {editTargetUser && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                <input type="text" value={editFields.firstName} onChange={(e) => setEditFields(prev => ({ ...prev, firstName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                <input type="text" value={editFields.lastName} onChange={(e) => setEditFields(prev => ({ ...prev, lastName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1"><Mail size={14} className="inline mr-1" />Email</label>
+              <input type="email" value={editFields.email} onChange={(e) => setEditFields(prev => ({ ...prev, email: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1"><Phone size={14} className="inline mr-1" />Téléphone</label>
+                <input type="tel" value={editFields.phone} onChange={(e) => setEditFields(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+33 6 12 34 56 78"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Indicatif pays</label>
+                <input type="text" value={editFields.phoneCountryCode} onChange={(e) => setEditFields(prev => ({ ...prev, phoneCountryCode: e.target.value }))}
+                  placeholder="+33"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1"><Globe size={14} className="inline mr-1" />Pays d'origine</label>
+                <input type="text" value={editFields.country} onChange={(e) => setEditFields(prev => ({ ...prev, country: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1"><MapPin size={14} className="inline mr-1" />Pays actuel</label>
+                <input type="text" value={editFields.currentCountry} onChange={(e) => setEditFields(prev => ({ ...prev, currentCountry: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1"><Languages size={14} className="inline mr-1" />Langues (séparées par virgule)</label>
+              <input type="text" value={editFields.languages} onChange={(e) => setEditFields(prev => ({ ...prev, languages: e.target.value }))}
+                placeholder="fr, en, es"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1"><AlertTriangle size={14} className="inline mr-1" />Notes admin (internes)</label>
+              <textarea value={editFields.adminNotes} onChange={(e) => setEditFields(prev => ({ ...prev, adminNotes: e.target.value }))}
+                rows={3} placeholder="Notes visibles uniquement par les admins..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-y" />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button onClick={() => setShowEditModal(false)} variant="outline" disabled={editLoading}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveProfile} className="bg-green-600 hover:bg-green-700" loading={editLoading}>
+                <Save size={16} className="mr-2" />
+                Enregistrer
               </Button>
             </div>
           </div>

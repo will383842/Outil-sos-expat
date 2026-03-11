@@ -1,7 +1,7 @@
 // src/pages/RegisterExpat.tsx
 // Thin shell: SEO (JSON-LD, meta, OG) + orchestration → ExpatRegisterForm wizard
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../multilingual-system';
 import { Heart, Shield } from 'lucide-react';
@@ -18,6 +18,7 @@ import { getStoredReferralCode, getBestAvailableReferralCode } from '../utils/re
 
 import ExpatRegisterForm from '../components/registration/expat/ExpatRegisterForm';
 import { getTheme } from '../components/registration/shared/theme';
+import { WhatsAppGroupScreen } from '../whatsapp-groups';
 
 const theme = getTheme('expat');
 
@@ -29,11 +30,25 @@ const RegisterExpat: React.FC = () => {
   const redirect = searchParams.get('redirect') || '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
   const referralCode = searchParams.get('ref') || getStoredReferralCode('client') || getBestAvailableReferralCode('client') || '';
-  const { register, isLoading } = useAuth();
+  const { register, isLoading, user } = useAuth();
   const { language } = useApp();
   const lang = language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'pt' | 'ch' | 'ar';
 
   const { honeypotValue, setHoneypotValue, validateHuman, stats } = useAntiBot();
+
+  // WhatsApp screen state
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{ language: string; country: string } | null>(null);
+
+  const handleRegistrationSuccess = useCallback((data: { language: string; country: string }) => {
+    setRegistrationData(data);
+    setShowWhatsApp(true);
+  }, []);
+
+  const handleWhatsAppContinue = useCallback(() => {
+    setShowWhatsApp(false);
+    navigate(redirect, { replace: true });
+  }, [navigate, redirect]);
 
   // Meta Pixel: Track StartRegistration
   useEffect(() => {
@@ -173,6 +188,19 @@ const RegisterExpat: React.FC = () => {
     scriptTag.textContent = JSON.stringify(jsonLd);
   }, [intl, lang]);
 
+  // WhatsApp screen after registration
+  if (showWhatsApp && user && registrationData) {
+    return (
+      <WhatsAppGroupScreen
+        userId={user.id || (user as any).uid}
+        role="expat"
+        language={registrationData.language}
+        country={registrationData.country}
+        onContinue={handleWhatsAppContinue}
+      />
+    );
+  }
+
   return (
     <Layout>
       <div className={`min-h-screen bg-gradient-to-b ${theme.bgGradient}`}>
@@ -230,6 +258,7 @@ const RegisterExpat: React.FC = () => {
             trackMetaComplete={trackMetaCompleteRegistration}
             trackAdRegistration={trackAdRegistration}
             getStoredReferralTracking={getStoredReferralTracking}
+            onSuccess={handleRegistrationSuccess}
           />
 
         </main>

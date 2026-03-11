@@ -29,6 +29,9 @@ import {
   TrendingUp,
   MousePointerClick,
   Phone,
+  PlayCircle,
+  Trash2,
+  MoreVertical,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -106,6 +109,31 @@ const AdminPartnersList: React.FC = () => {
   const [stats, setStats] = useState<PartnerListResponse['stats']>();
   const [exporting, setExporting] = useState(false);
 
+  // Action modal state
+  type PartnerAction = 'suspend' | 'ban' | 'reactivate' | 'delete';
+  const [actionModal, setActionModal] = useState<{
+    isOpen: boolean;
+    partner: PartnerListItem | null;
+    action: PartnerAction | null;
+    reason: string;
+    confirmText: string;
+  }>({ isOpen: false, partner: null, action: null, reason: '', confirmText: '' });
+  const [actionLoading, setActionLoading] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handler = () => setOpenDropdownId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openDropdownId]);
+
+  const openActionModal = useCallback((partner: PartnerListItem, action: PartnerAction) => {
+    setOpenDropdownId(null);
+    setActionModal({ isOpen: true, partner, action, reason: '', confirmText: '' });
+  }, []);
+
   const limit = 20;
 
   const fetchPartners = useCallback(async () => {
@@ -130,6 +158,52 @@ const AdminPartnersList: React.FC = () => {
       setLoading(false);
     }
   }, [page, statusFilter, searchQuery]);
+
+  const executeAction = useCallback(async () => {
+    if (!actionModal.partner || !actionModal.action) return;
+    if (['suspend', 'ban', 'delete'].includes(actionModal.action) && !actionModal.reason.trim()) {
+      toast.error('Veuillez entrer une raison');
+      return;
+    }
+    if (actionModal.action === 'delete' && actionModal.confirmText !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (actionModal.action === 'delete') {
+        const fn = httpsCallable(functionsAffiliate, 'adminDeletePartner');
+        await fn({ partnerId: actionModal.partner.id, reason: actionModal.reason.trim() });
+        toast.success('Partenaire supprimé définitivement');
+      } else {
+        const statusMap: Record<string, string> = {
+          suspend: 'suspended',
+          ban: 'banned',
+          reactivate: 'active',
+        };
+        const fn = httpsCallable(functionsAffiliate, 'adminTogglePartnerStatus');
+        await fn({
+          partnerId: actionModal.partner.id,
+          status: statusMap[actionModal.action],
+          suspensionReason: actionModal.reason,
+        });
+        const actionLabels: Record<string, string> = {
+          suspend: 'Partenaire suspendu',
+          ban: 'Partenaire banni',
+          reactivate: 'Partenaire réactivé',
+        };
+        toast.success(actionLabels[actionModal.action] || 'Action effectuée');
+      }
+      setActionModal(prev => ({ ...prev, isOpen: false }));
+      fetchPartners();
+    } catch (err: any) {
+      console.error('Error executing action:', err);
+      toast.error(err.message || "Erreur lors de l'action");
+    } finally {
+      setActionLoading(false);
+    }
+  }, [actionModal, fetchPartners]);
 
   useEffect(() => {
     fetchPartners();
@@ -300,7 +374,9 @@ const AdminPartnersList: React.FC = () => {
                         <FormattedMessage id={`admin.partners.table.${col}`} defaultMessage={col} />
                       </th>
                     ))}
-                    <th className="px-4 py-3" />
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -350,7 +426,97 @@ const AdminPartnersList: React.FC = () => {
                           {(partner.conversionRate * 100).toFixed(1)}%
                         </td>
                         <td className="px-4 py-3">
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/admin/partners/${partner.id}`); }}
+                              className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                              title="Voir détails"
+                            >
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            </button>
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(openDropdownId === partner.id ? null : partner.id);
+                                }}
+                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Actions"
+                              >
+                                <MoreVertical className="w-4 h-4 text-gray-400" />
+                              </button>
+                              {openDropdownId === partner.id && (
+                                <div
+                                  className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    onClick={() => { setOpenDropdownId(null); navigate(`/admin/partners/${partner.id}`); }}
+                                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-600"
+                                  >
+                                    <ExternalLink className="w-4 h-4" />
+                                    Voir détails
+                                  </button>
+                                  <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                                  {partner.status === 'active' && (
+                                    <>
+                                      <button
+                                        onClick={() => openActionModal(partner, 'suspend')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-yellow-600"
+                                      >
+                                        <Pause className="w-4 h-4" />
+                                        Suspendre
+                                      </button>
+                                      <button
+                                        onClick={() => openActionModal(partner, 'ban')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-red-600"
+                                      >
+                                        <Ban className="w-4 h-4" />
+                                        Bannir
+                                      </button>
+                                    </>
+                                  )}
+                                  {partner.status === 'suspended' && (
+                                    <>
+                                      <button
+                                        onClick={() => openActionModal(partner, 'reactivate')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-green-600"
+                                      >
+                                        <PlayCircle className="w-4 h-4" />
+                                        Réactiver
+                                      </button>
+                                      <button
+                                        onClick={() => openActionModal(partner, 'ban')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-red-600"
+                                      >
+                                        <Ban className="w-4 h-4" />
+                                        Bannir
+                                      </button>
+                                    </>
+                                  )}
+                                  {partner.status === 'banned' && (
+                                    <>
+                                      <button
+                                        onClick={() => openActionModal(partner, 'reactivate')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-green-600"
+                                      >
+                                        <PlayCircle className="w-4 h-4" />
+                                        Réactiver
+                                      </button>
+                                      <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                                      <button
+                                        onClick={() => openActionModal(partner, 'delete')}
+                                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                        Supprimer
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -386,6 +552,153 @@ const AdminPartnersList: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Action Confirmation Modal */}
+      {actionModal.isOpen && actionModal.partner && actionModal.action && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${
+            actionModal.action === 'delete' ? 'bg-red-50 dark:bg-red-900/20' :
+            actionModal.action === 'ban' ? 'bg-orange-50 dark:bg-orange-900/20' :
+            actionModal.action === 'suspend' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+            'bg-green-50 dark:bg-green-900/20'
+          }`}>
+            {/* Header */}
+            <div className="p-6 pb-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  {actionModal.action === 'delete' && <Trash2 className="w-5 h-5 text-red-600" />}
+                  {actionModal.action === 'ban' && <Ban className="w-5 h-5 text-orange-600" />}
+                  {actionModal.action === 'suspend' && <Pause className="w-5 h-5 text-yellow-600" />}
+                  {actionModal.action === 'reactivate' && <PlayCircle className="w-5 h-5 text-green-600" />}
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {actionModal.action === 'delete' && 'Supprimer le partenaire'}
+                    {actionModal.action === 'ban' && 'Bannir le partenaire'}
+                    {actionModal.action === 'suspend' && 'Suspendre le partenaire'}
+                    {actionModal.action === 'reactivate' && 'Réactiver le partenaire'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setActionModal(prev => ({ ...prev, isOpen: false }))}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              {/* Partner info */}
+              <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-white/5 rounded-xl mb-4">
+                {actionModal.partner.websiteLogo ? (
+                  <img src={actionModal.partner.websiteLogo} alt="" className="w-10 h-10 rounded-lg object-contain" />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-cyan-400" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {actionModal.partner.firstName} {actionModal.partner.lastName}
+                  </p>
+                  <p className="text-sm text-gray-500">{actionModal.partner.websiteName}</p>
+                  <p className="text-xs text-gray-400">{actionModal.partner.email}</p>
+                </div>
+                <span className={`ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                  STATUS_CONFIG[actionModal.partner.status]?.color || ''
+                }`}>
+                  {actionModal.partner.status}
+                </span>
+              </div>
+
+              {/* Reason textarea (required for suspend, ban, delete) */}
+              {['suspend', 'ban', 'delete'].includes(actionModal.action) && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Raison <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={actionModal.reason}
+                    onChange={(e) => setActionModal(prev => ({ ...prev, reason: e.target.value }))}
+                    placeholder="Expliquez la raison de cette action..."
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                  />
+                </div>
+              )}
+
+              {/* Delete confirmation */}
+              {actionModal.action === 'delete' && (
+                <div className="mb-4">
+                  <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl mb-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-red-800 dark:text-red-200">
+                        Cette action est <strong>irréversible</strong>. Le partenaire et son compte utilisateur seront supprimés définitivement.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tapez <strong>SUPPRIMER</strong> pour confirmer
+                  </label>
+                  <input
+                    type="text"
+                    value={actionModal.confirmText}
+                    onChange={(e) => setActionModal(prev => ({ ...prev, confirmText: e.target.value }))}
+                    placeholder="SUPPRIMER"
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  />
+                </div>
+              )}
+
+              {/* Action descriptions */}
+              {actionModal.action === 'suspend' && (
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
+                  Le partenaire ne pourra plus accéder à son dashboard ni générer de commissions. Son compte reste intact.
+                </p>
+              )}
+              {actionModal.action === 'ban' && (
+                <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
+                  Le partenaire sera définitivement banni. Son lien affilié cessera de fonctionner.
+                </p>
+              )}
+              {actionModal.action === 'reactivate' && (
+                <p className="text-sm text-green-700 dark:text-green-300 mb-4">
+                  Le partenaire retrouvera l'accès complet à son dashboard et pourra générer des commissions.
+                </p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 px-6 py-4 bg-white/40 dark:bg-white/5">
+              <button
+                onClick={() => setActionModal(prev => ({ ...prev, isOpen: false }))}
+                className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                disabled={actionLoading}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={executeAction}
+                disabled={
+                  actionLoading ||
+                  (['suspend', 'ban', 'delete'].includes(actionModal.action) && !actionModal.reason.trim()) ||
+                  (actionModal.action === 'delete' && actionModal.confirmText !== 'SUPPRIMER')
+                }
+                className={`px-4 py-2 text-sm font-medium rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 ${
+                  actionModal.action === 'delete' ? 'bg-red-500 hover:bg-red-600 text-white' :
+                  actionModal.action === 'ban' ? 'bg-orange-500 hover:bg-orange-600 text-white' :
+                  actionModal.action === 'suspend' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
+                  'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                {actionLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {actionModal.action === 'delete' && 'Supprimer définitivement'}
+                {actionModal.action === 'ban' && 'Bannir'}
+                {actionModal.action === 'suspend' && 'Suspendre'}
+                {actionModal.action === 'reactivate' && 'Réactiver'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

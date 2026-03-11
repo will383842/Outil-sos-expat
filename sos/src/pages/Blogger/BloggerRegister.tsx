@@ -54,6 +54,7 @@ import {
   CheckCircle,
   PenTool,
 } from 'lucide-react';
+import { WhatsAppGroupScreen } from '@/whatsapp-groups';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -240,6 +241,8 @@ const BloggerRegister: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{language: string; country: string} | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
@@ -546,9 +549,8 @@ const BloggerRegister: React.FC = () => {
         trackGoogleAdsSignUp({ method: 'email', content_name: 'blogger_registration', country: formData.country });
 
         await refreshUser();
-        setTimeout(() => {
-          navigate(telegramRoute, { replace: true });
-        }, 500);
+        setRegistrationData({ language: formData.language || 'en', country: formData.country || '' });
+        setShowWhatsApp(true);
       } else {
         setError(result.data.message);
       }
@@ -572,6 +574,25 @@ const BloggerRegister: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  // ============================================================================
+  // RENDER: WhatsApp group screen (post-registration)
+  // ============================================================================
+  const handleWhatsAppContinue = () => {
+    navigate(telegramRoute, { replace: true });
+  };
+
+  if (showWhatsApp && user) {
+    return (
+      <WhatsAppGroupScreen
+        userId={user.uid}
+        role="blogger"
+        language={registrationData?.language || 'en'}
+        country={registrationData?.country || ''}
+        onContinue={handleWhatsAppContinue}
+      />
+    );
+  }
 
   // ============================================================================
   // RENDER: Role conflict

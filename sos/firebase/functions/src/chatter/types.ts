@@ -464,6 +464,20 @@ export interface Chatter {
   /** When the Telegram bonus was paid out */
   telegramBonusPaidAt?: Timestamp | null;
 
+  // ---- WhatsApp Group ----
+
+  /** Whether the chatter clicked "Join WhatsApp group" after registration */
+  whatsappGroupClicked?: boolean;
+
+  /** When the chatter clicked "Join WhatsApp group" */
+  whatsappGroupClickedAt?: Timestamp | null;
+
+  /** WhatsApp group country code (if country-specific groups) */
+  whatsappGroupCountry?: string;
+
+  /** WhatsApp group ID that was joined */
+  whatsappGroupId?: string;
+
   // ---- Timestamps ----
 
   /** Registration date */
@@ -2636,6 +2650,7 @@ export interface GetChatterDashboardResponse {
     /** Current day of month (1-31) */
     currentDayOfMonth: number;
   };
+  isAdminView?: boolean;
 }
 
 export interface RequestWithdrawalInput {

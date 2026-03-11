@@ -37,6 +37,7 @@ export {
   adminPartnerApplicationsList,
   adminUpdatePartnerApplication,
   adminConvertApplicationToPartner,
+  adminDeletePartner,
 } from "./callables/admin";
 
 // Triggers

@@ -2105,3 +2105,6 @@ export const adminGetBloggerWithdrawals = onCall(
     }
   }
 );
+
+// Re-export delete callable
+export { adminDeleteBlogger } from "./deleteBlogger";

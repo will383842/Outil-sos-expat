@@ -1350,6 +1350,7 @@ export interface GroupAdminDashboardResponse {
     rateLockDate?: string;
     isLifetimeLock: boolean;
   } | null;
+  isAdminView?: boolean;
 }
 
 /**

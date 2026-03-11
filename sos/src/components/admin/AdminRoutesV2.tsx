@@ -376,6 +376,16 @@ const AdminChatterFunnel = lazy(
 const AdminChattersResources = lazy(
   () => import("../../pages/admin/Chatters/AdminChattersResources")
 );
+const AdminChatterHierarchy = lazy(
+  () => import("../../pages/admin/Chatter/AdminChatterHierarchy")
+);
+
+const AdminWhatsAppGroups = lazy(
+  () => import("../../whatsapp-groups/AdminWhatsAppGroups")
+);
+const AdminWhatsAppSupervision = lazy(
+  () => import("../../whatsapp-groups/AdminWhatsAppSupervision")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -1417,6 +1427,30 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="chatters/hierarchy"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminChatterHierarchy />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/whatsapp-groups"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminWhatsAppGroups />
+          </Suspense>
+        }
+      />
+      <Route
+        path="chatters/whatsapp-supervision"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminWhatsAppSupervision />
+          </Suspense>
+        }
+      />
 
       {/* 📢 INFLUENCERS */}
       <Route
@@ -2180,6 +2214,7 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/commissions",
       "/admin/chatters/country-rotation",
       "/admin/chatters/resources",
+      "/admin/chatters/whatsapp-groups",
       "/admin/influencers",
       "/admin/influencers/:influencerId",
       "/admin/influencers/payments",

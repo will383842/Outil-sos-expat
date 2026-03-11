@@ -32,6 +32,7 @@ import MicroObjectiveCard from '@/components/Chatter/Activation/MicroObjectiveCa
 import { CelebrationProvider } from '@/components/Chatter/Activation/CelebrationSystem';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import DashboardSkeleton from '@/components/Chatter/Cards/DashboardSkeleton';
+import { WhatsAppBanner } from '@/whatsapp-groups';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
 
@@ -178,6 +179,17 @@ const ChatterDashboardContent: React.FC = () => {
     return (
       <>
         <CelebrationProvider />
+        {chatter && (
+          <div className="px-4 pt-4">
+            <WhatsAppBanner
+              userId={chatter.id}
+              role="chatter"
+              language={chatter.language || langCode}
+              country={chatter.country || ''}
+              alreadyClicked={chatter.whatsappGroupClicked}
+            />
+          </div>
+        )}
         <NewChatterDashboard
           onNavigateToTelegram={() => navigate(telegramRoute)}
         />
@@ -192,6 +204,17 @@ const ChatterDashboardContent: React.FC = () => {
 
       <div className="px-4 py-4 space-y-4">
         {/* === ABOVE THE FOLD === */}
+
+        {/* WhatsApp Group Banner (hidden if already joined) */}
+        {chatter && (
+          <WhatsAppBanner
+            userId={chatter.id}
+            role="chatter"
+            language={chatter.language || langCode}
+            country={chatter.country || ''}
+            alreadyClicked={chatter.whatsappGroupClicked}
+          />
+        )}
 
         {/* Hero Earnings Card */}
         <HeroEarningsCard />

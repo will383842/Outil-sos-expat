@@ -32,6 +32,15 @@ import {
   Star,
   Eye,
   EyeOff,
+  ExternalLink,
+  Edit3,
+  Phone,
+  Save,
+  AlertCircle,
+  PlayCircle,
+  Trash2,
+  ShieldOff,
+  MoreVertical,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -170,6 +179,101 @@ const AdminInfluencersList: React.FC = () => {
     }
   };
 
+  // Edit profile modal
+  interface EditProfileState {
+    isOpen: boolean;
+    influencer: Influencer | null;
+    fields: {
+      firstName: string; lastName: string; email: string; phone: string;
+      country: string; language: string; platforms: string; communitySize: string; niche: string; adminNotes: string;
+    };
+  }
+  const [editModal, setEditModal] = useState<EditProfileState>({
+    isOpen: false, influencer: null,
+    fields: { firstName: '', lastName: '', email: '', phone: '', country: '', language: '', platforms: '', communitySize: '', niche: '', adminNotes: '' },
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
+  // Moderation action modal
+  const [actionModal, setActionModal] = useState<{
+    influencer: Influencer;
+    action: 'suspend' | 'ban' | 'reactivate' | 'delete';
+  } | null>(null);
+  const [actionReason, setActionReason] = useState('');
+  const [actionConfirmText, setActionConfirmText] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handler = () => setOpenDropdownId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openDropdownId]);
+
+  // Exécuter une action de modération
+  const handleModerationAction = async () => {
+    if (!actionModal) return;
+    const { influencer, action } = actionModal;
+
+    // Raison requise pour suspend, ban, delete
+    if (['suspend', 'ban', 'delete'].includes(action) && !actionReason.trim()) {
+      toast.error('Veuillez indiquer une raison');
+      return;
+    }
+
+    // Confirmation "SUPPRIMER" requise pour delete
+    if (action === 'delete' && actionConfirmText !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (action === 'delete') {
+        // Suppression via callable ou Firestore direct
+        const fn = httpsCallable(functionsAffiliate, 'adminDeleteInfluencer');
+        await fn({ influencerId: influencer.id, reason: actionReason.trim() });
+        toast.success(`Influenceur ${influencer.firstName} ${influencer.lastName} supprimé`);
+      } else {
+        const statusMap = { suspend: 'suspended', ban: 'banned', reactivate: 'active' } as const;
+        const fn = httpsCallable(functionsAffiliate, 'adminUpdateInfluencerStatus');
+        await fn({
+          influencerId: influencer.id,
+          status: statusMap[action],
+          ...(action !== 'reactivate' && { reason: actionReason.trim() }),
+        });
+        const actionLabels = { suspend: 'suspendu', ban: 'banni', reactivate: 'réactivé' };
+        toast.success(`Influenceur ${influencer.firstName} ${influencer.lastName} ${actionLabels[action]}`);
+      }
+      setActionModal(null);
+      setActionReason('');
+      setActionConfirmText('');
+      fetchInfluencers();
+    } catch (err: any) {
+      console.error('Moderation action error:', err);
+      toast.error(err.message || 'Erreur lors de l\'action de modération');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openEditModal = useCallback((inf: Influencer) => {
+    setEditModal({
+      isOpen: true, influencer: inf,
+      fields: {
+        firstName: inf.firstName || '', lastName: inf.lastName || '', email: inf.email || '',
+        phone: (inf as any).phone || '', country: inf.country || '', language: inf.language || '',
+        platforms: (inf.platforms || []).join(', '), communitySize: String(inf.communitySize || ''),
+        niche: (inf as any).niche || '', adminNotes: (inf as any).adminNotes || '',
+      },
+    });
+  }, []);
+
+  const handleEditField = useCallback((field: string, value: string) => {
+    setEditModal(prev => ({ ...prev, fields: { ...prev.fields, [field]: value } }));
+  }, []);
+
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -212,6 +316,36 @@ const AdminInfluencersList: React.FC = () => {
       setLoading(false);
     }
   }, [page, statusFilter, countryFilter, languageFilter, searchQuery]);
+
+  const handleSaveProfile = useCallback(async () => {
+    if (!editModal.influencer) return;
+    setEditLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdateInfluencerProfile');
+      const updates: Record<string, any> = { influencerId: editModal.influencer.id };
+      const orig = editModal.influencer as any;
+      if (editModal.fields.firstName !== (orig.firstName || '')) updates.firstName = editModal.fields.firstName;
+      if (editModal.fields.lastName !== (orig.lastName || '')) updates.lastName = editModal.fields.lastName;
+      if (editModal.fields.email !== (orig.email || '')) updates.email = editModal.fields.email;
+      if (editModal.fields.phone !== (orig.phone || '')) updates.phone = editModal.fields.phone;
+      if (editModal.fields.country !== (orig.country || '')) updates.country = editModal.fields.country;
+      if (editModal.fields.language !== (orig.language || '')) updates.language = editModal.fields.language;
+      if (editModal.fields.niche !== (orig.niche || '')) updates.niche = editModal.fields.niche;
+      if (editModal.fields.adminNotes !== (orig.adminNotes || '')) updates.adminNotes = editModal.fields.adminNotes;
+      const newPlatforms = editModal.fields.platforms.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (JSON.stringify(newPlatforms) !== JSON.stringify(orig.platforms || [])) updates.platforms = newPlatforms;
+      const newSize = editModal.fields.communitySize ? parseInt(editModal.fields.communitySize) : undefined;
+      if (newSize !== undefined && newSize !== (orig.communitySize || 0)) updates.communitySize = newSize;
+
+      if (Object.keys(updates).length <= 1) { toast.error('Aucune modification'); setEditLoading(false); return; }
+      await fn(updates);
+      toast.success('Profil mis à jour');
+      setEditModal(prev => ({ ...prev, isOpen: false }));
+      fetchInfluencers();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally { setEditLoading(false); }
+  }, [editModal, fetchInfluencers]);
 
   useEffect(() => {
     fetchInfluencers();
@@ -737,6 +871,90 @@ const AdminInfluencersList: React.FC = () => {
                                   {influencer.isVisible ? 'Visible' : 'Masqué'}
                                 </span>
                               </div>
+                              {/* Moderation dropdown */}
+                              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === influencer.id ? null : influencer.id); }}
+                                  className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                  title="Actions de modération"
+                                >
+                                  <MoreVertical className="w-4 h-4 text-gray-500" />
+                                </button>
+                                {openDropdownId === influencer.id && (
+                                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50">
+                                    <button
+                                      onClick={() => { setOpenDropdownId(null); window.open(`/influencer/tableau-de-bord?userId=${influencer.id}`, '_blank'); }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                    >
+                                      <ExternalLink className="w-4 h-4" /> Voir dashboard
+                                    </button>
+                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                                    {influencer.status === 'active' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'suspend' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
+                                        >
+                                          <Pause className="w-4 h-4" /> Suspendre
+                                        </button>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'ban' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <ShieldOff className="w-4 h-4" /> Bannir
+                                        </button>
+                                      </>
+                                    )}
+                                    {influencer.status === 'suspended' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'reactivate' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                        >
+                                          <PlayCircle className="w-4 h-4" /> Reactiver
+                                        </button>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'ban' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <ShieldOff className="w-4 h-4" /> Bannir
+                                        </button>
+                                      </>
+                                    )}
+                                    {influencer.status === 'banned' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'reactivate' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                        >
+                                          <PlayCircle className="w-4 h-4" /> Reactiver
+                                        </button>
+                                        <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'delete' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <Trash2 className="w-4 h-4" /> Supprimer
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openEditModal(influencer); }}
+                                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Modifier le profil"
+                              >
+                                <Edit3 className="w-4 h-4 text-indigo-500" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); window.open(`/influencer/tableau-de-bord?userId=${influencer.id}`, '_blank'); }}
+                                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Voir le dashboard"
+                              >
+                                <ExternalLink className="w-4 h-4 text-blue-500" />
+                              </button>
                               <button
                                 onClick={() => navigate(`/admin/influencers/${influencer.id}`)}
                                 className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
@@ -801,6 +1019,196 @@ const AdminInfluencersList: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* ========== EDIT PROFILE MODAL ========== */}
+      {editModal.isOpen && editModal.influencer && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Edit3 className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Modifier — {editModal.influencer.firstName} {editModal.influencer.lastName}
+                </h3>
+              </div>
+              <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prénom</label>
+                  <input type="text" value={editModal.fields.firstName} onChange={(e) => handleEditField('firstName', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
+                  <input type="text" value={editModal.fields.lastName} onChange={(e) => handleEditField('lastName', e.target.value)} className={UI.input} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Mail className="w-3.5 h-3.5 inline mr-1" />Email</label>
+                <input type="email" value={editModal.fields.email} onChange={(e) => handleEditField('email', e.target.value)} className={UI.input} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Phone className="w-3.5 h-3.5 inline mr-1" />Téléphone</label>
+                <input type="tel" value={editModal.fields.phone} onChange={(e) => handleEditField('phone', e.target.value)} placeholder="+33 6 12 34 56 78" className={UI.input} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Globe className="w-3.5 h-3.5 inline mr-1" />Pays</label>
+                  <select value={editModal.fields.country} onChange={(e) => handleEditField('country', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Languages className="w-3.5 h-3.5 inline mr-1" />Langue</label>
+                  <select value={editModal.fields.language} onChange={(e) => handleEditField('language', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plateformes (séparées par virgule)</label>
+                  <input type="text" value={editModal.fields.platforms} onChange={(e) => handleEditField('platforms', e.target.value)} placeholder="instagram, tiktok, youtube" className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Taille communauté</label>
+                  <input type="number" value={editModal.fields.communitySize} onChange={(e) => handleEditField('communitySize', e.target.value)} placeholder="10000" className={UI.input} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Niche</label>
+                <input type="text" value={editModal.fields.niche} onChange={(e) => handleEditField('niche', e.target.value)} placeholder="Voyage, expatriation..." className={UI.input} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><AlertCircle className="w-3.5 h-3.5 inline mr-1" />Notes admin (internes)</label>
+                <textarea value={editModal.fields.adminNotes} onChange={(e) => handleEditField('adminNotes', e.target.value)} className={`${UI.input} min-h-[80px] resize-y`} rows={3} placeholder="Notes visibles uniquement par les admins..." />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))} className={`${UI.button.secondary} px-4 py-2 text-sm`} disabled={editLoading}>Annuler</button>
+              <button onClick={handleSaveProfile} disabled={editLoading} className={`${UI.button.primary} px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50`}>
+                {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========== MODERATION ACTION MODAL ========== */}
+      {actionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md">
+            <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between rounded-t-2xl ${
+              actionModal.action === 'suspend' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+              actionModal.action === 'ban' ? 'bg-red-50 dark:bg-red-900/20' :
+              actionModal.action === 'reactivate' ? 'bg-green-50 dark:bg-green-900/20' :
+              'bg-red-50 dark:bg-red-900/20'
+            }`}>
+              <div className="flex items-center gap-3">
+                {actionModal.action === 'suspend' && <Pause className="w-5 h-5 text-yellow-600" />}
+                {actionModal.action === 'ban' && <ShieldOff className="w-5 h-5 text-red-600" />}
+                {actionModal.action === 'reactivate' && <PlayCircle className="w-5 h-5 text-green-600" />}
+                {actionModal.action === 'delete' && <Trash2 className="w-5 h-5 text-red-600" />}
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {actionModal.action === 'suspend' && 'Suspendre l\'influenceur'}
+                  {actionModal.action === 'ban' && 'Bannir l\'influenceur'}
+                  {actionModal.action === 'reactivate' && 'Réactiver l\'influenceur'}
+                  {actionModal.action === 'delete' && 'Supprimer l\'influenceur'}
+                </h3>
+              </div>
+              <button onClick={() => { setActionModal(null); setActionReason(''); }} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {actionModal.action === 'suspend' && (
+                  <>Vous allez suspendre <strong>{actionModal.influencer.firstName} {actionModal.influencer.lastName}</strong>. L'influenceur ne pourra plus accéder à son dashboard ni générer de commissions.</>
+                )}
+                {actionModal.action === 'ban' && (
+                  <>Vous allez bannir <strong>{actionModal.influencer.firstName} {actionModal.influencer.lastName}</strong>. Cette action est plus sévère qu'une suspension.</>
+                )}
+                {actionModal.action === 'reactivate' && (
+                  <>Vous allez réactiver <strong>{actionModal.influencer.firstName} {actionModal.influencer.lastName}</strong>. L'influenceur retrouvera l'accès à toutes ses fonctionnalités.</>
+                )}
+                {actionModal.action === 'delete' && (
+                  <span className="text-red-600 dark:text-red-400 font-medium">
+                    Vous allez supprimer définitivement <strong>{actionModal.influencer.firstName} {actionModal.influencer.lastName}</strong>. Cette action est irréversible.
+                  </span>
+                )}
+              </p>
+              {actionModal.action !== 'reactivate' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Raison {actionModal.action === 'delete' ? '(obligatoire)' : '(obligatoire)'}
+                  </label>
+                  <textarea
+                    value={actionReason}
+                    onChange={(e) => setActionReason(e.target.value)}
+                    className={`${UI.input} min-h-[80px] resize-y`}
+                    rows={3}
+                    placeholder={
+                      actionModal.action === 'suspend' ? 'Ex: Violation des conditions, inactivité prolongée...' :
+                      actionModal.action === 'ban' ? 'Ex: Fraude détectée, comportement abusif...' :
+                      'Ex: Compte frauduleux, demande de suppression...'
+                    }
+                  />
+                </div>
+              )}
+              {actionModal.action === 'delete' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tapez <strong>SUPPRIMER</strong> pour confirmer
+                  </label>
+                  <input
+                    type="text"
+                    value={actionConfirmText}
+                    onChange={(e) => setActionConfirmText(e.target.value)}
+                    placeholder="SUPPRIMER"
+                    className={`${UI.input} text-sm`}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button
+                onClick={() => { setActionModal(null); setActionReason(''); setActionConfirmText(''); }}
+                className={`${UI.button.secondary} px-4 py-2 text-sm`}
+                disabled={actionLoading}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleModerationAction}
+                disabled={actionLoading || (['suspend', 'ban', 'delete'].includes(actionModal.action) && !actionReason.trim()) || (actionModal.action === 'delete' && actionConfirmText !== 'SUPPRIMER')}
+                className={`${
+                  actionModal.action === 'reactivate' ? 'bg-green-500 hover:bg-green-600' :
+                  actionModal.action === 'suspend' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                  'bg-red-500 hover:bg-red-600'
+                } text-white font-medium rounded-xl transition-all px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50`}
+              >
+                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  <>
+                    {actionModal.action === 'suspend' && <Pause className="w-4 h-4" />}
+                    {actionModal.action === 'ban' && <ShieldOff className="w-4 h-4" />}
+                    {actionModal.action === 'reactivate' && <PlayCircle className="w-4 h-4" />}
+                    {actionModal.action === 'delete' && <Trash2 className="w-4 h-4" />}
+                  </>
+                )}
+                {actionModal.action === 'suspend' && 'Suspendre'}
+                {actionModal.action === 'ban' && 'Bannir'}
+                {actionModal.action === 'reactivate' && 'Réactiver'}
+                {actionModal.action === 'delete' && 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

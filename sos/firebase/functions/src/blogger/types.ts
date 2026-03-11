@@ -1492,6 +1492,7 @@ export interface GetBloggerDashboardResponse {
     rateLockDate?: string;
     isLifetimeLock: boolean;
   } | null;
+  isAdminView?: boolean;
 }
 
 /**

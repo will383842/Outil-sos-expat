@@ -1651,6 +1651,7 @@ export interface GetInfluencerDashboardResponse {
     rateLockDate?: string;
     isLifetimeLock: boolean;
   } | null;
+  isAdminView?: boolean;
 }
 
 export interface RequestInfluencerWithdrawalInput {

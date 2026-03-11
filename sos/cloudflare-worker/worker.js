@@ -1009,6 +1009,19 @@ async function handleRequest(request, env, ctx) {
       '\u0627\u0644\u0623\u0633\u0626\u0644\u0629-\u0627\u0644\u0634\u0627\u0626\u0639\u0629': 'ar', // الأسئلة-الشائعة
     };
 
+    // Provider role slug prefixes (e.g., "anwalt-ee" starts with "anwalt" → German)
+    // Used to detect cross-locale profile URLs like /es-es/anwalt-ee/burak-xz4uk7
+    const ROLE_PREFIX_TO_LANG = {
+      // Lawyer role translations (9 supported languages)
+      'avocat': 'fr', 'lawyer': 'en', 'abogado': 'es', 'anwalt': 'de',
+      'advogado': 'pt', 'advokat': 'ru', 'lushi': 'zh', 'vakil': 'hi',
+      // Arabic lawyer (محام) — handled via Unicode below
+      '\u0645\u062D\u0627\u0645': 'ar',
+      // Expat/helper role translations
+      'expatrie': 'fr', 'expat': null, // 'expat' used by multiple langs, skip
+      'expatriado': null, // used by both es and pt, skip
+    };
+
     if (restPath) {
       let firstSlug;
       try {
@@ -1016,6 +1029,8 @@ async function handleRequest(request, env, ctx) {
       } catch (_e) {
         firstSlug = restPath.split('/').filter(Boolean)[0];
       }
+
+      // 1. Exact match on route slugs (help center, FAQ)
       if (firstSlug && SLUG_TO_LANG[firstSlug] !== undefined) {
         const slugLang = SLUG_TO_LANG[firstSlug];
         if (slugLang && slugLang !== urlLang) {
@@ -1027,6 +1042,22 @@ async function handleRequest(request, env, ctx) {
             status: 301,
             headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true' },
           });
+        }
+      }
+
+      // 2. Prefix match on provider role slugs (e.g., "anwalt-ee" starts with "anwalt")
+      // Profile URLs: /{locale}/{role-country}/{name-id} → first segment is role-country
+      if (firstSlug) {
+        for (const [prefix, prefixLang] of Object.entries(ROLE_PREFIX_TO_LANG)) {
+          if (prefixLang && firstSlug.startsWith(prefix + '-') && prefixLang !== urlLang) {
+            const correctCountry = LANG_TO_DEFAULT_COUNTRY[prefixLang] || prefixLang;
+            const redirectUrl = `${url.origin}/${prefixLang}-${correctCountry}${restPath}${url.search}`;
+            console.log(`[WORKER] Cross-lang role redirect: ${pathname} -> /${prefixLang}-${correctCountry}${restPath}`);
+            return new Response(null, {
+              status: 301,
+              headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true' },
+            });
+          }
         }
       }
     }

@@ -67,7 +67,11 @@ export {
   adminToggleGroupAdminVisibility,
   // Public callables
   getGroupAdminDirectory,
+  // Admin delete
+  adminDeleteGroupAdmin,
 } from "./callables";
+
+export { adminUpdateGroupAdminProfile } from "./callables/admin/updateProfile";
 
 // Services
 export {

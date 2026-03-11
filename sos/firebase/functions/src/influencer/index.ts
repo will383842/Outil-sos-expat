@@ -97,9 +97,12 @@ export {
   adminDuplicateInfluencerPromotion,
   // Admin withdrawals
   adminGetInfluencerWithdrawals,
+  // Admin delete
+  adminDeleteInfluencer,
 } from "./callables/admin";
 
 export { adminToggleInfluencerVisibility } from "./callables/admin/toggleVisibility";
+export { adminUpdateInfluencerProfile } from "./callables/admin/updateProfile";
 
 // ============================================================================
 // PUBLIC CALLABLES

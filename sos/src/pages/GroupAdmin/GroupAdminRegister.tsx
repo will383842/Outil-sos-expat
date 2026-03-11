@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import GroupAdminRegisterForm from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
 import type { GroupAdminRegistrationData } from '@/components/GroupAdmin/Forms/GroupAdminRegisterForm';
+import { WhatsAppGroupScreen } from '@/whatsapp-groups';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
@@ -42,6 +43,8 @@ const GroupAdminRegister: React.FC = () => {
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState('');
   const [affiliateCodes, setAffiliateCodes] = useState<{ client: string; recruitment: string } | null>(null);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{language: string; country: string} | null>(null);
 
   // Referral code handling
   const referralCodeFromUrl = useMemo(() => {
@@ -232,9 +235,9 @@ const GroupAdminRegister: React.FC = () => {
         await setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
         trackGoogleAdsSignUp({ method: 'email', content_name: 'groupadmin_registration', country: data.country });
 
-        setTimeout(() => {
-          navigate(telegramRoute, { replace: true });
-        }, 500);
+        // Save registration data and show WhatsApp group screen before Telegram
+        setRegistrationData({ language: data.language, country: data.country });
+        setShowWhatsApp(true);
       }
     } catch (err: unknown) {
       const e = err as Error & { code?: string };
@@ -264,6 +267,23 @@ const GroupAdminRegister: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // WhatsApp group screen (shown after successful registration, before Telegram)
+  const handleWhatsAppContinue = () => {
+    navigate(telegramRoute, { replace: true });
+  };
+
+  if (showWhatsApp && registrationData && user) {
+    return (
+      <WhatsAppGroupScreen
+        userId={user.uid}
+        role="groupAdmin"
+        language={registrationData.language}
+        country={registrationData.country}
+        onContinue={handleWhatsAppContinue}
+      />
+    );
+  }
 
   // Loading state
   if (!authInitialized) {

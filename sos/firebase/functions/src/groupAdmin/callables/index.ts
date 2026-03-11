@@ -61,6 +61,8 @@ export {
   adminDuplicateGroupAdminPromotion,
   // Visibility
   adminToggleGroupAdminVisibility,
+  // Delete
+  adminDeleteGroupAdmin,
 } from "./admin";
 
 // Public Callables

@@ -333,6 +333,7 @@ export interface GetPartnerDashboardResponse {
     earnings: number;
   }[];
   notifications: PartnerNotification[];
+  isAdminView?: boolean;
 }
 
 // ============================================================

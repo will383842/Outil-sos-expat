@@ -1035,6 +1035,8 @@ export const busySafetyTimeoutTask = onRequest(
 // ========================================
 // FONCTIONS ADMIN (V2)
 // ========================================
+export { adminUpdateUserProfile } from './admin/updateUserProfile';
+
 export const adminUpdateStatus = onCall(
   {
     ...emergencyConfig,
@@ -2063,7 +2065,10 @@ export {
 export * from './seo';
 
 // ========== SITEMAP GENERATOR (Advanced 3-level system) ==========
-export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from './sitemap';
+// DISABLED 2026-03-10: Legacy 3-level sitemap generator creates 1773 sitemaps with invalid
+// locale combos (es-ee, de-br, ar-dj, etc.) that cause 5xx errors and soft 404s in Google.
+// The NEW sitemap system (seo/sitemaps.ts) handles everything correctly with VALID_LOCALES whitelist.
+// export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from './sitemap';
 
 // ========== META DYNAMIC ADS - PROVIDER CATALOG FEED ==========
 // HTTP endpoint: https://europe-west1-sos-expat.cloudfunctions.net/providerCatalogFeed
@@ -2957,6 +2962,8 @@ export {
   adminBulkChatterAction,
   adminManageChatter,
   adminUpdateChatterProfile,
+  adminReassignChatter,
+  adminGetChatterHierarchy,
   // Admin Country Rotation
   adminAdvanceCycleV2, // Renamed from adminAdvanceCycle (old Cloud Run service stuck in deletion)
   adminUpdateCycleThreshold,
@@ -3105,6 +3112,7 @@ export {
   adminDuplicateInfluencerPromotion,
   // Admin - Visibility Toggle
   adminToggleInfluencerVisibility,
+  adminUpdateInfluencerProfile,
   // Admin withdrawals
   adminGetInfluencerWithdrawals,
   // Admin commission rules, fraud config, export, rate history, bulk actions
@@ -3113,6 +3121,8 @@ export {
   adminUpdateAntiFraudConfig,
   adminExportInfluencers,
   adminBulkInfluencerAction,
+  // Admin delete
+  adminDeleteInfluencer,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -3190,12 +3200,15 @@ export {
 
   // Admin visibility toggle
   adminToggleBloggerVisibility,
+  adminUpdateBloggerProfile,
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // bloggerValidatePendingCommissions,  // → consolidatedValidateCommissions
   // bloggerReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
   bloggerUpdateMonthlyRankings,
   bloggerDeactivateExpiredRecruitments,
   bloggerFinalizeMonthlyRankings,
+  // Admin delete
+  adminDeleteBlogger,
 } from './blogger';
 
 // ========== CENTRALIZED PAYMENT SYSTEM ==========
@@ -3287,11 +3300,14 @@ export {
   adminDuplicateGroupAdminPromotion,
   // Visibility
   adminToggleGroupAdminVisibility,
+  adminUpdateGroupAdminProfile,
   // Public directory
   getGroupAdminDirectory,
   // Triggers
   // onCallCompletedGroupAdmin,  // → consolidatedOnCallCompleted
   onGroupAdminCreated,
+  // Admin delete
+  adminDeleteGroupAdmin,
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // validatePendingGroupAdminCommissions,  // → consolidatedValidateCommissions
   // releaseValidatedGroupAdminCommissions,  // → consolidatedReleaseCommissions
@@ -3327,6 +3343,8 @@ export {
   adminPartnerApplicationsList,
   adminUpdatePartnerApplication,
   adminConvertApplicationToPartner,
+  // Admin delete
+  adminDeletePartner,
   // Triggers
   onPartnerCreated,
   // Scheduled

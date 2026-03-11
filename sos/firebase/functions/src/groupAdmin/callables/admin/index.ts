@@ -50,3 +50,5 @@ export {
 export {
   adminToggleGroupAdminVisibility,
 } from "./toggleVisibility";
+
+export { adminDeleteGroupAdmin } from "./deleteGroupAdmin";

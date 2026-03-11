@@ -3,7 +3,7 @@
  * Handles the sign-up process with form validation
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -16,18 +16,38 @@ import ChatterRegisterForm from '@/components/Chatter/Forms/ChatterRegisterForm'
 import type { ChatterRegistrationData } from '@/components/Chatter/Forms/ChatterRegisterForm';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
-import { Star, ArrowLeft, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
+import { Star, ArrowLeft, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { logAnalyticsEvent } from '@/config/firebase';
 import { generateEventIdForType } from '@/utils/sharedEventId';
+import { WhatsAppGroupScreen } from '@/whatsapp-groups';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
   card: "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
 } as const;
+
+/** Fallback spinner with auto-redirect safety net */
+const SuccessFallbackRedirect: React.FC<{ dashboardRoute: string; navigate: (path: string, opts?: { replace?: boolean }) => void }> = ({ dashboardRoute, navigate }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => navigate(dashboardRoute, { replace: true }), 3000);
+    return () => clearTimeout(timer);
+  }, [dashboardRoute, navigate]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-950 via-gray-950 to-black px-4">
+      <div className="text-center max-w-md">
+        <div className="w-20 h-20 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+        <h2 className="text-3xl font-bold text-white mb-3">Inscription reussie !</h2>
+        <p className="text-lg text-gray-300 mb-2">Votre compte Chatter a ete cree avec succes.</p>
+        <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
+      </div>
+    </div>
+  );
+};
 
 const ChatterRegister: React.FC = () => {
   const intl = useIntl();
@@ -40,6 +60,8 @@ const ChatterRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{ language: string; country: string } | null>(null);
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string>('');
 
@@ -67,6 +89,11 @@ const ChatterRegister: React.FC = () => {
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;
   const dashboardRoute = `/${getTranslatedRouteSlug('chatter-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
+
+  // Callback stable pour le WhatsApp screen → dashboard
+  const handleWhatsAppContinue = useCallback(() => {
+    navigate(dashboardRoute, { replace: true });
+  }, [navigate, dashboardRoute]);
 
   // ============================================================================
   // ROLE CHECK: Redirect if user already has a role
@@ -220,6 +247,8 @@ const ChatterRegister: React.FC = () => {
       await refreshUser();
 
       setSuccess(true);
+      setRegistrationData({ language: data.language || 'en', country: data.country || '' });
+      setShowWhatsApp(true);
 
       // Meta Pixel + Firebase Analytics: Track CompleteRegistration + Ad Attribution + Advanced Matching
       logAnalyticsEvent('sign_up', { method: 'chatter_registration', country: data.country });
@@ -240,11 +269,6 @@ const ChatterRegister: React.FC = () => {
       // Google Ads: Enhanced Conversions + SignUp tracking
       await setGoogleAdsUserData({ email: data.email, firstName: data.firstName, lastName: data.lastName, country: data.country });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'chatter_registration', country: data.country });
-
-      // Redirect to dashboard after brief success display
-      setTimeout(() => {
-        navigate(dashboardRoute, { replace: true });
-      }, 500);
     } catch (err: unknown) {
       console.error('[ChatterRegister] Error:', err);
 
@@ -353,16 +377,17 @@ const ChatterRegister: React.FC = () => {
         <meta name="theme-color" content="#991B1B" />
       </Helmet>
 
-      {/* Écran de redirection après inscription réussie */}
-      {success ? (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-950 via-gray-950 to-black px-4">
-          <div className="text-center max-w-md">
-            <div className="w-20 h-20 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h2 className="text-3xl font-bold text-white mb-3">✅ Inscription réussie !</h2>
-            <p className="text-lg text-gray-300 mb-2">Votre compte Chatter a été créé avec succès.</p>
-            <p className="text-sm text-gray-400">Redirection vers votre tableau de bord...</p>
-          </div>
-        </div>
+      {/* Écran WhatsApp après inscription réussie */}
+      {success && showWhatsApp && user?.uid ? (
+        <WhatsAppGroupScreen
+          userId={user.uid}
+          role="chatter"
+          language={registrationData?.language || 'en'}
+          country={registrationData?.country || ''}
+          onContinue={handleWhatsAppContinue}
+        />
+      ) : success ? (
+        <SuccessFallbackRedirect dashboardRoute={dashboardRoute} navigate={navigate} />
       ) : (
         <div className="min-h-screen bg-gradient-to-b from-red-950 via-gray-950 to-black py-12 px-4">
         {/* Radial glow effect matching landing */}
@@ -392,21 +417,7 @@ const ChatterRegister: React.FC = () => {
             </p>
           </div>
 
-          {/* Success State */}
-          {success ? (
-            <div className={`${UI.card} p-8 text-center`}>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 border flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-400" />
-              </div>
-              <h2 className="text-xl font-bold mb-2 text-white">
-                <FormattedMessage id="chatter.register.success.title" defaultMessage="Inscription réussie !" />
-              </h2>
-              <p className="text-gray-400 mb-4">
-                <FormattedMessage id="chatter.register.success.subtitle" defaultMessage="Vous allez être redirigé vers votre tableau de bord..." />
-              </p>
-              <div className="w-6 h-6 mx-auto border-2 rounded-full animate-spin" />
-            </div>
-          ) : emailAlreadyExists ? (
+          {emailAlreadyExists ? (
             /* Email Already Exists - Show Login Prompt */
             <div className={`${UI.card} p-8 text-center`}>
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 border flex items-center justify-center">

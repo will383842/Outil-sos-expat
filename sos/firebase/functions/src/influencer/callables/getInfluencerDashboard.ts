@@ -46,8 +46,24 @@ export const getInfluencerDashboard = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    const userId = request.auth.uid;
     const db = getFirestore();
+
+    // Admin impersonation: allow admin to view any influencer's dashboard
+    const requestedUserId = request.data?.userId as string | undefined;
+    let userId = request.auth.uid;
+    let isAdminView = false;
+
+    if (requestedUserId && requestedUserId !== request.auth.uid) {
+      const callerRole = request.auth.token?.role as string | undefined;
+      if (callerRole !== "admin" && callerRole !== "superadmin") {
+        const callerDoc = await db.collection("users").doc(request.auth.uid).get();
+        if (!callerDoc.exists || !["admin", "superadmin"].includes(callerDoc.data()?.role)) {
+          throw new HttpsError("permission-denied", "Admin access required to view other users' dashboards");
+        }
+      }
+      userId = requestedUserId;
+      isAdminView = true;
+    }
 
     try {
       // 2. Get influencer data
@@ -157,10 +173,12 @@ export const getInfluencerDashboard = onCall(
 
       // 7. Config already fetched above for self-healing
 
-      // 8. Update last login
-      await db.collection("influencers").doc(userId).update({
-        lastLoginAt: Timestamp.now(),
-      });
+      // 8. Update last login - skip for admin view
+      if (!isAdminView) {
+        await db.collection("influencers").doc(userId).update({
+          lastLoginAt: Timestamp.now(),
+        });
+      }
 
       // 9. Build response (exclude sensitive fields)
       const {
@@ -174,6 +192,7 @@ export const getInfluencerDashboard = onCall(
         recentCommissions,
         monthlyStats,
         unreadNotifications,
+        isAdminView,
         config: {
           // Use lockedRates (lifetime rate lock) when available, fallback to global config
           commissionClientAmount: influencer.lockedRates?.commissionClientAmount ?? config.commissionClientAmount,

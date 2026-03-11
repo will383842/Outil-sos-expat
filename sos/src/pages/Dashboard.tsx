@@ -54,6 +54,8 @@ import DashboardGDPR from "../components/dashboard/DashboardGDPR";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useApp } from "../contexts/AppContext";
+import { WhatsAppBanner } from "../whatsapp-groups";
+import type { WhatsAppRole } from "../whatsapp-groups";
 import { updateUserProfile, logAuditEvent, getUserCallSessions } from "../utils/firestore";
 import { formatDateTime } from "../utils/localeFormatters";
 
@@ -1949,6 +1951,19 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
       {/* END OF KYC STATUS SECTION */}
       {/* ========================================== */}
       </div>
+
+      {/* WhatsApp Group Banner */}
+      {user && (user.role === 'client' || user.role === 'lawyer' || user.role === 'expat') && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <WhatsAppBanner
+            userId={user.id || (user as any).uid}
+            role={user.role as WhatsAppRole}
+            language={language || 'fr'}
+            country={(user as any).currentCountry || (user as any).country || ''}
+            alreadyClicked={(user as any).whatsappGroupClicked === true}
+          />
+        </div>
+      )}
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-rose-50/40 to-white dark:from-gray-950 dark:via-gray-950 dark:to-black">
         {/* Mobile Bottom Navigation */}

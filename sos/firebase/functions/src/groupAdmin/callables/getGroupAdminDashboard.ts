@@ -49,8 +49,24 @@ export const getGroupAdminDashboard = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    const userId = request.auth.uid;
     const db = getFirestore();
+
+    // Admin impersonation: allow admin to view any group admin's dashboard
+    const requestedUserId = request.data?.userId as string | undefined;
+    let userId = request.auth.uid;
+    let isAdminView = false;
+
+    if (requestedUserId && requestedUserId !== request.auth.uid) {
+      const callerRole = request.auth.token?.role as string | undefined;
+      if (callerRole !== "admin" && callerRole !== "superadmin") {
+        const callerDoc = await db.collection("users").doc(request.auth.uid).get();
+        if (!callerDoc.exists || !["admin", "superadmin"].includes(callerDoc.data()?.role)) {
+          throw new HttpsError("permission-denied", "Admin access required to view other users' dashboards");
+        }
+      }
+      userId = requestedUserId;
+      isAdminView = true;
+    }
 
     try {
       // 2. Get GroupAdmin profile
@@ -162,10 +178,12 @@ export const getGroupAdminDashboard = onCall(
         };
       });
 
-      // Update last login
-      await groupAdminDoc.ref.update({
-        lastLoginAt: Timestamp.now(),
-      });
+      // Update last login - skip for admin view
+      if (!isAdminView) {
+        await groupAdminDoc.ref.update({
+          lastLoginAt: Timestamp.now(),
+        });
+      }
 
       // Get global config and apply lockedRates override (Lifetime Rate Lock)
       const gaConfig = await getGroupAdminConfig();
@@ -177,6 +195,7 @@ export const getGroupAdminDashboard = onCall(
         recentRecruits,
         notifications,
         leaderboard,
+        isAdminView,
         config: {
           commissionClientCallAmount: profile.lockedRates?.commissionClientCallAmount ?? gaConfig.commissionClientCallAmount,
           commissionClientAmountLawyer: profile.lockedRates?.commissionClientAmountLawyer ?? gaConfig.commissionClientAmountLawyer,

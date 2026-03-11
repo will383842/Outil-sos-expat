@@ -237,14 +237,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   useEffect(() => {
     if (!user || user.role !== 'admin') return;
+    const safeCount = (q: ReturnType<typeof query>) =>
+      getCountFromServer(q).then((snap) => snap.data().count).catch(() => 0);
     Promise.all([
-      getCountFromServer(query(collection(db, 'captain_applications'), where('status', 'in', ['pending', 'contacted']))),
-      getCountFromServer(query(collection(db, 'contact_messages'), where('isRead', '==', false))),
-      getCountFromServer(query(collection(db, 'user_feedback'), where('status', 'in', ['new', 'in_progress']))),
-      getCountFromServer(query(collection(db, 'partner_applications'), where('status', 'in', ['pending', 'contacted']))),
+      safeCount(query(collection(db, 'captain_applications'), where('status', 'in', ['pending', 'contacted']))),
+      safeCount(query(collection(db, 'contact_messages'), where('isRead', '==', false))),
+      safeCount(query(collection(db, 'user_feedback'), where('status', 'in', ['new', 'in_progress']))),
+      safeCount(query(collection(db, 'partner_applications'), where('status', 'in', ['pending', 'contacted']))),
     ])
       .then(([cap, contact, feedback, partner]) => {
-        setInboxCount(cap.data().count + contact.data().count + feedback.data().count + partner.data().count);
+        setInboxCount(cap + contact + feedback + partner);
       })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps

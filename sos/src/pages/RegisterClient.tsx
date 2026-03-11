@@ -21,6 +21,7 @@ import { getStoredReferralTracking, clearStoredReferral } from '../hooks/useAffi
 import { getStoredReferralCode as getStoredRefCode, getBestAvailableReferralCode } from '../utils/referralStorage';
 
 import ClientRegisterForm from '../components/registration/client/ClientRegisterForm';
+import { WhatsAppGroupScreen } from '../whatsapp-groups';
 
 // =============================================================================
 // SECURITY: Redirect whitelist
@@ -78,6 +79,10 @@ const RegisterClient: React.FC = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
   const googleTimeoutRef = useRef<number | null>(null);
+
+  // WhatsApp screen state
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{ language: string; country: string } | null>(null);
 
   // ===========================================================================
   // Meta Pixel: Track StartRegistration on mount
@@ -280,11 +285,11 @@ const RegisterClient: React.FC = () => {
   // during createUserWithEmailAndPassword → onAuthStateChanged race condition
   const isRegisteringRef = React.useRef(false);
   useEffect(() => {
-    if (isFullyReady && user && !isRegisteringRef.current) {
+    if (isFullyReady && user && !isRegisteringRef.current && !showWhatsApp) {
       sessionStorage.removeItem('loginRedirect');
       navigate(redirect, { replace: true });
     }
-  }, [isFullyReady, user, navigate, redirect]);
+  }, [isFullyReady, user, navigate, redirect, showWhatsApp]);
 
   // ===========================================================================
   // Google signup handler (kept in shell for auth context access)
@@ -364,6 +369,34 @@ const RegisterClient: React.FC = () => {
   }, [register]);
 
   // ===========================================================================
+  // WhatsApp success handler
+  // ===========================================================================
+  const handleRegistrationSuccess = useCallback((data: { language: string; country: string }) => {
+    setRegistrationData(data);
+    setShowWhatsApp(true);
+  }, []);
+
+  const handleWhatsAppContinue = useCallback(() => {
+    setShowWhatsApp(false);
+    navigate(redirect, { replace: true });
+  }, [navigate, redirect]);
+
+  // ===========================================================================
+  // RENDER: WhatsApp screen after registration
+  // ===========================================================================
+  if (showWhatsApp && user && registrationData) {
+    return (
+      <WhatsAppGroupScreen
+        userId={user.id || user.uid}
+        role="client"
+        language={registrationData.language}
+        country={registrationData.country}
+        onContinue={handleWhatsAppContinue}
+      />
+    );
+  }
+
+  // ===========================================================================
   // RENDER: Loading
   // ===========================================================================
   const effectiveLoading = isLoading || googleLoading;
@@ -410,6 +443,7 @@ const RegisterClient: React.FC = () => {
           trackMetaComplete={trackMetaCompleteRegistration}
           trackAdRegistration={trackAdRegistration}
           getStoredReferralTracking={getStoredReferralTracking}
+          onSuccess={handleRegistrationSuccess}
         />
       </main>
     </Layout>

@@ -37,8 +37,24 @@ export const getPartnerDashboard = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    const userId = request.auth.uid;
     const db = getFirestore();
+
+    // Admin impersonation: allow admin to view any partner's dashboard
+    const requestedUserId = request.data?.userId as string | undefined;
+    let userId = request.auth.uid;
+    let isAdminView = false;
+
+    if (requestedUserId && requestedUserId !== request.auth.uid) {
+      const callerRole = request.auth.token?.role as string | undefined;
+      if (callerRole !== "admin" && callerRole !== "superadmin") {
+        const callerDoc = await db.collection("users").doc(request.auth.uid).get();
+        if (!callerDoc.exists || !["admin", "superadmin"].includes(callerDoc.data()?.role)) {
+          throw new HttpsError("permission-denied", "Admin access required to view other users' dashboards");
+        }
+      }
+      userId = requestedUserId;
+      isAdminView = true;
+    }
 
     try {
       // 1. Get partner profile
@@ -49,10 +65,12 @@ export const getPartnerDashboard = onCall(
 
       const partner = partnerDoc.data() as Partner;
 
-      // Update last login
-      await db.collection("partners").doc(userId).update({
-        lastLoginAt: Timestamp.now(),
-      });
+      // Update last login - skip for admin view
+      if (!isAdminView) {
+        db.collection("partners").doc(userId).update({
+          lastLoginAt: Timestamp.now(),
+        }).catch(() => {});
+      }
 
       // 2. Get recent commissions (last 10)
       const commissionsSnap = await db
@@ -168,6 +186,7 @@ export const getPartnerDashboard = onCall(
         recentClicks,
         monthlyStats,
         notifications,
+        isAdminView,
       };
     } catch (error) {
       if (error instanceof HttpsError) throw error;

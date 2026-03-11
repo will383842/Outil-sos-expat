@@ -37,6 +37,12 @@ import {
 // Re-export manageChatter
 export { adminManageChatter } from "./manageChatter";
 
+// Re-export reassign chatter
+export { adminReassignChatter } from "./reassignChatter";
+
+// Re-export hierarchy
+export { adminGetChatterHierarchy } from "./getHierarchy";
+
 // Lazy initialization
 function ensureInitialized() {
   if (!getApps().length) {
@@ -139,7 +145,9 @@ export const adminGetChattersList = onCall(
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
+          phone: data.phone || null,
           country: data.country,
+          language: data.language || null,
           status: data.status,
           level: data.level,
           totalEarned: data.totalEarned,
@@ -151,6 +159,9 @@ export const adminGetChattersList = onCall(
           isFeatured: featuredMap[doc.id] ?? false,
           isVisible: data.isVisible ?? false,
           photoUrl: data.photoUrl,
+          whatsappGroupClicked: data.whatsappGroupClicked ?? false,
+          whatsappGroupId: data.whatsappGroupId || null,
+          whatsappGroupCountry: data.whatsappGroupCountry || null,
         };
       });
 
@@ -1344,6 +1355,7 @@ export const adminUpdateChatterProfile = onCall(
       if (updates.lastName) userUpdates.lastName = updates.lastName;
       if (updates.email) userUpdates.email = updates.email;
       if (updates.phone) userUpdates.phone = updates.phone;
+      if (updates.country) userUpdates.country = updates.country;
       if (Object.keys(userUpdates).length > 0) {
         userUpdates.updatedAt = Timestamp.now();
         await db.collection("users").doc(input.chatterId).update(userUpdates);

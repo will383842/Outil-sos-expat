@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import type { InfluencerCommission } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
+import { WhatsAppBanner } from '@/whatsapp-groups';
 
 // ============================================================================
 // CRITICAL ABOVE-FOLD COMPONENTS - Loaded synchronously
@@ -483,6 +484,17 @@ const InfluencerDashboard: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* ================================================================ */}
+        {/* WHATSAPP GROUP BANNER */}
+        {/* ================================================================ */}
+        <WhatsAppBanner
+          userId={user?.uid || ''}
+          role="influencer"
+          language={influencer?.language || 'en'}
+          country={influencer?.country || ''}
+          alreadyClicked={(influencer as any)?.whatsappGroupClicked || false}
+        />
 
         {/* ================================================================ */}
         {/* MOTIVATION WIDGET */}

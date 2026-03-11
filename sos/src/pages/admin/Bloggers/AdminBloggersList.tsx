@@ -33,6 +33,14 @@ import {
   FileText,
   ExternalLink,
   Star,
+  Edit3,
+  Phone,
+  Save,
+  AlertCircle,
+  Ban as BanIcon,
+  Trash2,
+  PlayCircle,
+  MoreVertical,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -165,6 +173,58 @@ const AdminBloggersList: React.FC = () => {
     }
   };
 
+  // Edit profile modal
+  interface EditProfileState {
+    isOpen: boolean;
+    blogger: Blogger | null;
+    fields: {
+      firstName: string; lastName: string; email: string; phone: string;
+      country: string; language: string; blogUrl: string; blogName: string;
+      blogLanguage: string; blogCountry: string; blogTheme: string; blogTraffic: string; adminNotes: string;
+    };
+  }
+  const [editModal, setEditModal] = useState<EditProfileState>({
+    isOpen: false, blogger: null,
+    fields: { firstName: '', lastName: '', email: '', phone: '', country: '', language: '', blogUrl: '', blogName: '', blogLanguage: '', blogCountry: '', blogTheme: '', blogTraffic: '', adminNotes: '' },
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
+  // Action modal (suspend, ban, reactivate, delete)
+  const [actionModal, setActionModal] = useState<{
+    blogger: any;
+    action: 'suspend' | 'ban' | 'reactivate' | 'delete';
+  } | null>(null);
+  const [actionReason, setActionReason] = useState('');
+  const [actionConfirmText, setActionConfirmText] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Dropdown menu for moderation actions
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handler = () => setOpenDropdownId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openDropdownId]);
+
+  const openEditModal = useCallback((b: Blogger) => {
+    setEditModal({
+      isOpen: true, blogger: b,
+      fields: {
+        firstName: b.firstName || '', lastName: b.lastName || '', email: b.email || '',
+        phone: (b as any).phone || '', country: (b as any).country || '', language: (b as any).language || '',
+        blogUrl: b.blogUrl || '', blogName: b.blogName || '', blogLanguage: b.blogLanguage || '',
+        blogCountry: b.blogCountry || '', blogTheme: (b as any).blogTheme || '', blogTraffic: b.blogTraffic || '',
+        adminNotes: (b as any).adminNotes || '',
+      },
+    });
+  }, []);
+
+  const handleEditField = useCallback((field: string, value: string) => {
+    setEditModal(prev => ({ ...prev, fields: { ...prev.fields, [field]: value } }));
+  }, []);
+
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -207,6 +267,81 @@ const AdminBloggersList: React.FC = () => {
       setLoading(false);
     }
   }, [page, statusFilter, countryFilter, languageFilter, searchQuery]);
+
+  const handleSaveProfile = useCallback(async () => {
+    if (!editModal.blogger) return;
+    setEditLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdateBloggerProfile');
+      const updates: Record<string, any> = { bloggerId: editModal.blogger.id };
+      const orig = editModal.blogger as any;
+      const fields = editModal.fields;
+      if (fields.firstName !== (orig.firstName || '')) updates.firstName = fields.firstName;
+      if (fields.lastName !== (orig.lastName || '')) updates.lastName = fields.lastName;
+      if (fields.email !== (orig.email || '')) updates.email = fields.email;
+      if (fields.phone !== (orig.phone || '')) updates.phone = fields.phone;
+      if (fields.country !== (orig.country || '')) updates.country = fields.country;
+      if (fields.language !== (orig.language || '')) updates.language = fields.language;
+      if (fields.blogUrl !== (orig.blogUrl || '')) updates.blogUrl = fields.blogUrl;
+      if (fields.blogName !== (orig.blogName || '')) updates.blogName = fields.blogName;
+      if (fields.blogLanguage !== (orig.blogLanguage || '')) updates.blogLanguage = fields.blogLanguage;
+      if (fields.blogCountry !== (orig.blogCountry || '')) updates.blogCountry = fields.blogCountry;
+      if (fields.blogTheme !== (orig.blogTheme || '')) updates.blogTheme = fields.blogTheme;
+      if (fields.blogTraffic !== (orig.blogTraffic || '')) updates.blogTraffic = fields.blogTraffic;
+      if (fields.adminNotes !== (orig.adminNotes || '')) updates.adminNotes = fields.adminNotes;
+
+      if (Object.keys(updates).length <= 1) { toast.error('Aucune modification'); setEditLoading(false); return; }
+      await fn(updates);
+      toast.success('Profil mis à jour');
+      setEditModal(prev => ({ ...prev, isOpen: false }));
+      fetchBloggers();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally { setEditLoading(false); }
+  }, [editModal, fetchBloggers]);
+
+  const handleAction = async () => {
+    if (!actionModal) return;
+    const { blogger, action } = actionModal;
+
+    if ((action === 'suspend' || action === 'ban' || action === 'delete') && !actionReason.trim()) {
+      toast.error('Une raison est requise');
+      return;
+    }
+
+    if (action === 'delete' && actionConfirmText !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (action === 'delete') {
+        const fn = httpsCallable(functionsAffiliate, 'adminDeleteBlogger');
+        await fn({ bloggerId: blogger.id, reason: actionReason.trim() });
+        toast.success('Blogueur supprimé définitivement');
+      } else {
+        const fn = httpsCallable(functionsAffiliate, 'adminUpdateBloggerStatus');
+        await fn({
+          bloggerId: blogger.id,
+          status: action === 'suspend' ? 'suspended' : action === 'ban' ? 'banned' : 'active',
+          reason: actionReason,
+        });
+        toast.success(
+          action === 'suspend' ? 'Blogueur suspendu' :
+          action === 'ban' ? 'Blogueur bloqué' : 'Blogueur réactivé'
+        );
+      }
+      setActionModal(null);
+      setActionReason('');
+      setActionConfirmText('');
+      fetchBloggers();
+    } catch (err: any) {
+      toast.error('Erreur: ' + (err.message || err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchBloggers();
@@ -764,6 +899,83 @@ const AdminBloggersList: React.FC = () => {
                                 }
                               </button>
                               <button
+                                onClick={(e) => { e.stopPropagation(); openEditModal(blogger); }}
+                                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Modifier le profil"
+                              >
+                                <Edit3 className="w-4 h-4 text-indigo-500" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); window.open(`/blogger/tableau-de-bord?userId=${blogger.id}`, '_blank'); }}
+                                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                title="Voir le dashboard"
+                              >
+                                <ExternalLink className="w-4 h-4 text-blue-500" />
+                              </button>
+                              {/* Moderation dropdown */}
+                              <div className="relative">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === blogger.id ? null : blogger.id); }}
+                                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                                  title="Actions"
+                                >
+                                  <MoreVertical className="w-4 h-4 text-gray-400" />
+                                </button>
+                                {openDropdownId === blogger.id && (
+                                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50" onClick={(e) => e.stopPropagation()}>
+                                    {blogger.status === 'active' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ blogger, action: 'suspend' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
+                                        >
+                                          <Pause className="w-4 h-4" /> Suspendre
+                                        </button>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ blogger, action: 'ban' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <BanIcon className="w-4 h-4" /> Bannir
+                                        </button>
+                                      </>
+                                    )}
+                                    {blogger.status === 'suspended' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ blogger, action: 'reactivate' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                        >
+                                          <PlayCircle className="w-4 h-4" /> Réactiver
+                                        </button>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ blogger, action: 'ban' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <BanIcon className="w-4 h-4" /> Bannir
+                                        </button>
+                                      </>
+                                    )}
+                                    {blogger.status === 'banned' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ blogger, action: 'reactivate' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                        >
+                                          <PlayCircle className="w-4 h-4" /> Réactiver
+                                        </button>
+                                        <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                                        <button
+                                          onClick={() => { setOpenDropdownId(null); setActionModal({ blogger, action: 'delete' }); }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                        >
+                                          <Trash2 className="w-4 h-4" /> Supprimer
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <button
                                 onClick={() => navigate(`/admin/bloggers/${blogger.id}`)}
                                 className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
                               >
@@ -827,6 +1039,177 @@ const AdminBloggersList: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* ========== EDIT PROFILE MODAL ========== */}
+      {editModal.isOpen && editModal.blogger && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-purple-50 dark:bg-purple-900/20 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Edit3 className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Modifier — {editModal.blogger.firstName} {editModal.blogger.lastName}
+                </h3>
+              </div>
+              <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prénom</label>
+                  <input type="text" value={editModal.fields.firstName} onChange={(e) => handleEditField('firstName', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
+                  <input type="text" value={editModal.fields.lastName} onChange={(e) => handleEditField('lastName', e.target.value)} className={UI.input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Mail className="w-3.5 h-3.5 inline mr-1" />Email</label>
+                  <input type="email" value={editModal.fields.email} onChange={(e) => handleEditField('email', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Phone className="w-3.5 h-3.5 inline mr-1" />Téléphone</label>
+                  <input type="tel" value={editModal.fields.phone} onChange={(e) => handleEditField('phone', e.target.value)} placeholder="+33 6 12 34 56 78" className={UI.input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Globe className="w-3.5 h-3.5 inline mr-1" />Pays</label>
+                  <select value={editModal.fields.country} onChange={(e) => handleEditField('country', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><Languages className="w-3.5 h-3.5 inline mr-1" />Langue</label>
+                  <select value={editModal.fields.language} onChange={(e) => handleEditField('language', e.target.value)} className={UI.select}>
+                    <option value="">— Sélectionner —</option>
+                    {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <h4 className="text-sm font-semibold text-purple-700 dark:text-purple-400 pt-2">Informations du blog</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom du blog</label>
+                  <input type="text" value={editModal.fields.blogName} onChange={(e) => handleEditField('blogName', e.target.value)} className={UI.input} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL du blog</label>
+                  <input type="url" value={editModal.fields.blogUrl} onChange={(e) => handleEditField('blogUrl', e.target.value)} placeholder="https://..." className={UI.input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Langue du blog</label>
+                  <select value={editModal.fields.blogLanguage} onChange={(e) => handleEditField('blogLanguage', e.target.value)} className={UI.select}>
+                    <option value="">—</option>
+                    {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pays du blog</label>
+                  <select value={editModal.fields.blogCountry} onChange={(e) => handleEditField('blogCountry', e.target.value)} className={UI.select}>
+                    <option value="">—</option>
+                    {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trafic</label>
+                  <input type="text" value={editModal.fields.blogTraffic} onChange={(e) => handleEditField('blogTraffic', e.target.value)} placeholder="10k/mois" className={UI.input} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Thème du blog</label>
+                <input type="text" value={editModal.fields.blogTheme} onChange={(e) => handleEditField('blogTheme', e.target.value)} placeholder="Voyage, expatriation..." className={UI.input} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><AlertCircle className="w-3.5 h-3.5 inline mr-1" />Notes admin (internes)</label>
+                <textarea value={editModal.fields.adminNotes} onChange={(e) => handleEditField('adminNotes', e.target.value)} className={`${UI.input} min-h-[80px] resize-y`} rows={3} placeholder="Notes visibles uniquement par les admins..." />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))} className={`${UI.button.secondary} px-4 py-2 text-sm`} disabled={editLoading}>Annuler</button>
+              <button onClick={handleSaveProfile} disabled={editLoading} className={`${UI.button.primary} px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50`}>
+                {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========== ACTION MODAL (Suspend/Ban/Reactivate/Delete) ========== */}
+      {actionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              {actionModal.action === 'suspend' ? 'Suspendre' :
+               actionModal.action === 'ban' ? 'Bloquer' :
+               actionModal.action === 'reactivate' ? 'Réactiver' : 'Supprimer'} {actionModal.blogger.firstName} {actionModal.blogger.lastName}
+            </h3>
+            {actionModal.action !== 'reactivate' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raison *</label>
+                <textarea
+                  className={`${UI.input} min-h-[80px] resize-y`}
+                  rows={3}
+                  value={actionReason}
+                  onChange={e => setActionReason(e.target.value)}
+                  placeholder="Raison de l'action..."
+                />
+              </div>
+            )}
+            {actionModal.action === 'delete' && (
+              <>
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-800 dark:text-red-300 text-sm">
+                  Cette action est irréversible. Le compte sera définitivement supprimé.
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tapez <strong>SUPPRIMER</strong> pour confirmer
+                  </label>
+                  <input
+                    type="text"
+                    value={actionConfirmText}
+                    onChange={(e) => setActionConfirmText(e.target.value)}
+                    placeholder="SUPPRIMER"
+                    className={`${UI.input} text-sm`}
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setActionModal(null); setActionReason(''); setActionConfirmText(''); }}
+                className={`${UI.button.secondary} px-4 py-2 text-sm`}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleAction}
+                disabled={actionLoading || (actionModal.action === 'delete' && actionConfirmText !== 'SUPPRIMER')}
+                className={`px-4 py-2 text-sm text-white rounded-xl font-medium transition-all disabled:opacity-50 ${
+                  actionModal.action === 'reactivate'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : actionModal.action === 'suspend'
+                    ? 'bg-yellow-600 hover:bg-yellow-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {actionLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> En cours...
+                  </span>
+                ) : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

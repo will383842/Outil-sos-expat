@@ -72,6 +72,8 @@ export {
   adminDeleteBloggerGuideBestPractice,
   // Admin withdrawals
   adminGetBloggerWithdrawals,
+  // Admin delete
+  adminDeleteBlogger,
 } from "./admin/index";
 
 // Public directory

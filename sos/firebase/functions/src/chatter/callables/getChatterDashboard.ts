@@ -112,8 +112,24 @@ export const getChatterDashboard = onCall(
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    const userId = request.auth.uid;
     const db = getFirestore();
+
+    // Admin impersonation: allow admin to view any chatter's dashboard
+    const requestedUserId = request.data?.userId as string | undefined;
+    let userId = request.auth.uid;
+    let isAdminView = false;
+
+    if (requestedUserId && requestedUserId !== request.auth.uid) {
+      const callerRole = request.auth.token?.role as string | undefined;
+      if (callerRole !== "admin" && callerRole !== "superadmin") {
+        const callerDoc = await db.collection("users").doc(request.auth.uid).get();
+        if (!callerDoc.exists || !["admin", "superadmin"].includes(callerDoc.data()?.role)) {
+          throw new HttpsError("permission-denied", "Admin access required to view other users' dashboards");
+        }
+      }
+      userId = requestedUserId;
+      isAdminView = true;
+    }
 
     // Support 2-level payload: 'essential' skips heavy trend calculations
     const level: "essential" | "full" = request.data?.level === "essential" ? "essential" : "full";
@@ -128,10 +144,12 @@ export const getChatterDashboard = onCall(
 
       const chatter = chatterDoc.data() as Chatter;
 
-      // Update last login (fire-and-forget, don't block the response)
-      db.collection("chatters").doc(userId).update({
-        lastLoginAt: Timestamp.now(),
-      }).catch(() => {});
+      // Update last login (fire-and-forget, don't block the response) - skip for admin view
+      if (!isAdminView) {
+        db.collection("chatters").doc(userId).update({
+          lastLoginAt: Timestamp.now(),
+        }).catch(() => {});
+      }
 
       // 3. Run all independent queries in parallel
       const now = new Date();
@@ -474,6 +492,10 @@ export const getChatterDashboard = onCall(
           isVisible: chatter.isVisible ?? true,
           hasTelegram: chatter.hasTelegram || false,
           telegramId: chatter.telegramId ?? undefined,
+          // WhatsApp Groups
+          whatsappGroupClicked: chatter.whatsappGroupClicked || false,
+          whatsappGroupId: chatter.whatsappGroupId || undefined,
+          whatsappGroupCountry: chatter.whatsappGroupCountry || undefined,
         },
         recentCommissions,
         monthlyStats: {
@@ -588,7 +610,7 @@ export const getChatterDashboard = onCall(
         availableBalance: chatter.availableBalance,
       });
 
-      return response;
+      return { ...response, isAdminView };
     } catch (error) {
       if (error instanceof HttpsError) {
         throw error;

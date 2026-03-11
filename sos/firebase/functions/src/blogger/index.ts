@@ -108,7 +108,12 @@ export {
   adminCreateBloggerArticle,
   adminUpdateBloggerArticle,
   adminDeleteBloggerArticle,
+
+  // Admin delete
+  adminDeleteBlogger,
 } from "./callables";
+
+export { adminUpdateBloggerProfile } from "./callables/admin/updateProfile";
 
 // ============================================================================
 // TRIGGERS

@@ -48,6 +48,7 @@ import {
   // New icons for added pages
   Mail,
   ClipboardCheck,
+  ClipboardList,
   LogIn,
   PieChart,
   Cloud,
@@ -63,6 +64,7 @@ import {
   // Chatter icons
   MessageCircle,
   Crown,
+  GitBranch,
   // Training icons
   GraduationCap,
   // Blogger icons
@@ -626,6 +628,13 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.chattersList.description",
           },
           {
+            id: "chatters-hierarchy",
+            labelKey: "admin.menu.chattersHierarchy",
+            path: "/admin/chatters/hierarchy",
+            icon: GitBranch,
+            descriptionKey: "admin.menu.chattersHierarchy.description",
+          },
+          {
             id: "chatters-captains",
             labelKey: "admin.menu.chattersCaptains",
             path: "/admin/team/captains/recruitment",
@@ -691,6 +700,20 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: TrendingDown,
             badge: "NEW",
             descriptionKey: "admin.menu.chattersFunnel.description",
+          },
+          {
+            id: "chatters-whatsapp-groups",
+            labelKey: "admin.menu.chattersWhatsappGroups",
+            path: "/admin/chatters/whatsapp-groups",
+            icon: MessageCircle,
+            descriptionKey: "admin.menu.chattersWhatsappGroups.description",
+          },
+          {
+            id: "chatters-whatsapp-supervision",
+            labelKey: "admin.menu.whatsappSupervision",
+            path: "/admin/chatters/whatsapp-supervision",
+            icon: ClipboardList,
+            descriptionKey: "admin.menu.whatsappSupervision.description",
           },
           {
             id: "chatters-config",

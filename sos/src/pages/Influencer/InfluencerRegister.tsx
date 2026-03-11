@@ -4,7 +4,7 @@
  * Features: role conflict check, email-already-exists UI, referral code banner
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -18,6 +18,7 @@ import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLin
 import InfluencerRegisterForm from '@/components/Influencer/Forms/InfluencerRegisterForm';
 import { CheckCircle, Gift, Users, Image, Megaphone, ArrowLeft, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferralCode, getBestAvailableReferralCode } from '@/utils/referralStorage';
+import { WhatsAppGroupScreen } from '@/whatsapp-groups';
 
 const UI = {
   card: "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
@@ -35,6 +36,8 @@ const InfluencerRegister: React.FC = () => {
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{ language: string; country: string } | null>(null);
 
   // Referral code handling
   const referralCodeFromUrl = useMemo(() => {
@@ -57,6 +60,17 @@ const InfluencerRegister: React.FC = () => {
   const dashboardRoute = `/${getTranslatedRouteSlug('influencer-dashboard' as RouteKey, langCode)}`;
   const loginRoute = `/${getTranslatedRouteSlug('login' as RouteKey, langCode)}`;
 
+  // WhatsApp continue handler → navigate to Telegram onboarding
+  const handleWhatsAppContinue = useCallback(() => {
+    navigate(telegramRoute, { replace: true });
+  }, [navigate, telegramRoute]);
+
+  // Success handler from InfluencerRegisterForm → show WhatsApp screen
+  const handleRegistrationSuccess = useCallback((data: { language: string; country: string }) => {
+    setRegistrationData(data);
+    setShowWhatsApp(true);
+  }, []);
+
   // Role check
   const userRole = user?.role;
   const hasExistingRole = userRole && ['blogger', 'chatter', 'influencer', 'groupAdmin', 'lawyer', 'expat', 'client'].includes(userRole);
@@ -69,11 +83,12 @@ const InfluencerRegister: React.FC = () => {
   // IMPORTANT: !isRegistering prevents premature redirect during registration
   // Without it, register() sets role='influencer' → isAlreadyInfluencer becomes true →
   // useEffect fires and navigates to dashboard BEFORE registerInfluencer() Cloud Function is called
+  // !showWhatsApp prevents redirect while WhatsApp group screen is shown post-registration
   useEffect(() => {
-    if (authInitialized && !authLoading && !isRegistering && isAlreadyInfluencer) {
+    if (authInitialized && !authLoading && !isRegistering && !showWhatsApp && isAlreadyInfluencer) {
       navigate(dashboardRoute, { replace: true });
     }
-  }, [authInitialized, authLoading, isRegistering, isAlreadyInfluencer, navigate, dashboardRoute]);
+  }, [authInitialized, authLoading, isRegistering, showWhatsApp, isAlreadyInfluencer, navigate, dashboardRoute]);
 
   // Role conflict
   if (authInitialized && !authLoading && hasExistingRole && !isAlreadyInfluencer) {
@@ -112,6 +127,19 @@ const InfluencerRegister: React.FC = () => {
           </div>
         </div>
       </Layout>
+    );
+  }
+
+  // WhatsApp screen after successful registration
+  if (showWhatsApp && user) {
+    return (
+      <WhatsAppGroupScreen
+        userId={user.uid}
+        role="influencer"
+        language={registrationData?.language || 'en'}
+        country={registrationData?.country || ''}
+        onContinue={handleWhatsAppContinue}
+      />
     );
   }
 
@@ -263,6 +291,7 @@ const InfluencerRegister: React.FC = () => {
                       setExistingEmail(email);
                     }}
                     onRegistrationStateChange={setIsRegistering}
+                    onSuccess={handleRegistrationSuccess}
                   />
                 </div>
               </div>

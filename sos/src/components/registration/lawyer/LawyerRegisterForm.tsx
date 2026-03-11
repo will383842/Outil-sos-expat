@@ -92,6 +92,8 @@ interface LawyerRegisterFormProps {
   trackMetaComplete: (data: Record<string, unknown>) => void;
   trackAdRegistration: (data: Record<string, unknown>) => void;
   getStoredReferralTracking: () => unknown;
+  /** Called on successful registration instead of navigating (for WhatsApp screen) */
+  onSuccess?: (data: { language: string; country: string }) => void;
 }
 
 const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
@@ -109,6 +111,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
   trackMetaComplete,
   trackAdRegistration,
   getStoredReferralTracking,
+  onSuccess,
 }) => {
   const intl = useIntl();
   const lang = language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'pt' | 'ch' | 'ar';
@@ -508,6 +511,11 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
         clearStoredReferral('client');
 
+        if (onSuccess) {
+          onSuccess({ language, country: form.currentCountry });
+          return;
+        }
+
         // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
         setTimeout(() => {
           navigate(redirect, { replace: true, state: { message: intl.formatMessage({ id: 'registerLawyer.success.registered' }), type: 'success' } });
@@ -551,6 +559,11 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       setGoogleAdsUserData({ email: form.email, firstName: fn, lastName: ln, country: form.currentCountry });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
       clearStoredReferral('client');
+
+      if (onSuccess) {
+        onSuccess({ language, country: form.currentCountry });
+        return;
+      }
 
       // Micro-délai pour laisser React rendre l'écran "Inscription réussie !" avant de naviguer
       setTimeout(() => {

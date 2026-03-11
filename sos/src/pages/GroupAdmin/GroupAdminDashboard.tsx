@@ -11,6 +11,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroupAdmin } from '@/hooks/useGroupAdmin';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
+import { WhatsAppBanner } from '@/whatsapp-groups';
 import SEOHead from '@/components/layout/SEOHead';
 import {
   DollarSign,
@@ -174,6 +175,18 @@ const GroupAdminDashboard: React.FC = () => {
               />
             </Suspense>
           </div>
+
+          {/* WhatsApp Group Banner */}
+          {user && (
+            <div className="mb-8">
+              <WhatsAppBanner
+                userId={user.uid}
+                role="groupAdmin"
+                language={langCode}
+                country={profile.country || ''}
+              />
+            </div>
+          )}
 
           {/* Balance Cards */}
           <div className="grid md:grid-cols-3 gap-6 mb-8">

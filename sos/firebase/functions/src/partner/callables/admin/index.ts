@@ -14,3 +14,4 @@ export { adminManagePartnerWidgets } from "./managePartnerWidgets";
 export { adminPartnerApplicationsList } from "./partnerApplicationsList";
 export { adminUpdatePartnerApplication } from "./updatePartnerApplication";
 export { adminConvertApplicationToPartner } from "./convertApplicationToPartner";
+export { adminDeletePartner } from "./deletePartner";

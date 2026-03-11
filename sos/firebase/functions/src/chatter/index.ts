@@ -88,6 +88,8 @@ export {
   adminBulkChatterAction,
   adminManageChatter,
   adminUpdateChatterProfile,
+  adminReassignChatter,
+  adminGetChatterHierarchy,
 } from "./callables/admin";
 
 // ============================================================================
