@@ -169,6 +169,11 @@ interface Chatter {
   whatsappGroupClicked?: boolean;
   whatsappGroupId?: string | null;
   whatsappGroupCountry?: string | null;
+  recruitedBy?: string | null;
+  recruitedByName?: string | null;
+  captainId?: string | null;
+  captainName?: string | null;
+  role?: string | null;
 }
 
 interface BalanceInfo {
@@ -942,6 +947,9 @@ const AdminChattersList: React.FC = () => {
                         <FormattedMessage id="admin.chatters.col.status" defaultMessage="Statut" />
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                        Affiliation
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
                         <FormattedMessage id="admin.chatters.col.level" defaultMessage="Niveau" />
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
@@ -1005,6 +1013,33 @@ const AdminChattersList: React.FC = () => {
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <StatusBadge status={mapChatterStatus(chatter.status)} label={chatter.status} size="sm" />
+                        </td>
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
+                          <div className="flex flex-col gap-0.5">
+                            {chatter.recruitedBy ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400" title={`Parrain: ${chatter.recruitedByName || chatter.recruitedBy}`}>
+                                <GitBranch className="w-3 h-3" />
+                                <span className="truncate max-w-[100px]">{chatter.recruitedByName || 'Parrain'}</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                <GitBranch className="w-3 h-3" />
+                                <span>Orphelin</span>
+                              </span>
+                            )}
+                            {chatter.captainId && (
+                              <span className="inline-flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400" title={`Captain: ${chatter.captainName || chatter.captainId}`}>
+                                <Star className="w-3 h-3 fill-purple-500 text-purple-500" />
+                                <span className="truncate max-w-[100px]">{chatter.captainName || 'Captain'}</span>
+                              </span>
+                            )}
+                            {chatter.role === 'captainChatter' && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                Captain
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -1632,10 +1667,10 @@ const AdminChattersList: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               {reassignModal.chatter.firstName} {reassignModal.chatter.lastName}
               {reassignModal.chatter.recruitedBy && (
-                <span> — Parrain actuel: <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{reassignModal.chatter.recruitedBy}</code></span>
+                <span> — Parrain actuel: <strong className="text-indigo-600 dark:text-indigo-400">{reassignModal.chatter.recruitedByName || reassignModal.chatter.recruitedBy}</strong></span>
               )}
               {reassignModal.chatter.captainId && (
-                <span> — Capitaine actuel: <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{reassignModal.chatter.captainId}</code></span>
+                <span> — Capitaine actuel: <strong className="text-purple-600 dark:text-purple-400">{reassignModal.chatter.captainName || reassignModal.chatter.captainId}</strong></span>
               )}
             </p>
 

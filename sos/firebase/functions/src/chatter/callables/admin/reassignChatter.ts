@@ -181,19 +181,21 @@ export const adminReassignChatter = onCall(
         const oldParentDoc = await oldParentRef.get();
         if (oldParentDoc.exists) {
           const oldParent = oldParentDoc.data() as Chatter;
-          const currentCount = oldParent.qualifiedReferralsCount || 0;
-          if (currentCount > 0) {
-            await oldParentRef.update({
-              qualifiedReferralsCount: FieldValue.increment(-1),
-              updatedAt: Timestamp.now(),
-            });
+          const updates: Record<string, unknown> = {
+            totalRecruits: FieldValue.increment(-1),
+            updatedAt: Timestamp.now(),
+          };
+          if ((oldParent.qualifiedReferralsCount || 0) > 0) {
+            updates.qualifiedReferralsCount = FieldValue.increment(-1);
           }
+          await oldParentRef.update(updates);
         }
       }
 
       // Update new parent's referral counts (increment)
       if (newRecruitedBy) {
         await db.collection("chatters").doc(newRecruitedBy).update({
+          totalRecruits: FieldValue.increment(1),
           qualifiedReferralsCount: FieldValue.increment(1),
           updatedAt: Timestamp.now(),
         });

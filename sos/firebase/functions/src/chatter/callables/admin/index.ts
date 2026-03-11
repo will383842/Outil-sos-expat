@@ -138,6 +138,25 @@ export const adminGetChattersList = onCall(
         if (doc.exists) featuredMap[doc.id] = doc.data()?.isFeatured === true;
       });
 
+      // Collect unique parent/captain IDs to resolve names in a single batch
+      const relatedIds = new Set<string>();
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data() as Chatter;
+        if (data.recruitedBy) relatedIds.add(data.recruitedBy);
+        if (data.captainId) relatedIds.add(data.captainId);
+      });
+      const nameMap: Record<string, string> = {};
+      if (relatedIds.size > 0) {
+        const relatedRefs = Array.from(relatedIds).map((id) => db.collection("chatters").doc(id));
+        const relatedDocs = await db.getAll(...relatedRefs);
+        relatedDocs.forEach((doc) => {
+          if (doc.exists) {
+            const d = doc.data() as Chatter;
+            nameMap[doc.id] = `${d.firstName || ""} ${d.lastName || ""}`.trim();
+          }
+        });
+      }
+
       let chatters = snapshot.docs.map((doc) => {
         const data = doc.data() as Chatter;
         return {
@@ -162,6 +181,11 @@ export const adminGetChattersList = onCall(
           whatsappGroupClicked: data.whatsappGroupClicked ?? false,
           whatsappGroupId: data.whatsappGroupId || null,
           whatsappGroupCountry: data.whatsappGroupCountry || null,
+          recruitedBy: data.recruitedBy || null,
+          recruitedByName: data.recruitedBy ? (nameMap[data.recruitedBy] || null) : null,
+          captainId: data.captainId || null,
+          captainName: data.captainId ? (nameMap[data.captainId] || null) : null,
+          role: data.role || null,
         };
       });
 
