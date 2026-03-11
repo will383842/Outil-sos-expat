@@ -756,49 +756,9 @@ const Contact: React.FC = () => {
       }
 
       const responseData = await response.json();
-      const docId = responseData.id;
+      const docId = responseData.messageId;
 
-      // Notification admin
-      await addDoc(collection(db, "admin_notifications"), {
-        type: "new_contact_message",
-        title: `${t.pageTitle} - ${formData.firstName} ${formData.lastName}`,
-        message: `${formData.firstName} ${formData.lastName} - ${formData.subject}`,
-        category: formData.category,
-        priority: formData.category === "urgent" ? "high" : "normal",
-        isExistingUser: userInfo.isExistingUser,
-        contactMessageId: docId,
-        userEmail: formData.email,
-        userPhone: `${finalPhoneCode}${formData.phoneNumber}`,
-        createdAt: serverTimestamp(),
-        read: false,
-        actionRequired: true,
-        preview: {
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          subject: formData.subject,
-          category: formData.category,
-          languages: spokenLanguagesString,
-          originCountry: formData.originCountry,
-          interventionCountry: formData.interventionCountry,
-          message: formData.message.substring(0, 150) + "...",
-        },
-      });
-
-      // Track Meta Pixel Contact - formulaire contact soumis avec succes
-      const contactEventId = generateEventIdForType('contact');
-      trackMetaContact({
-        content_name: 'contact_form_submitted',
-        content_category: formData.category || 'general',
-        country: formData.originCountry || formData.interventionCountry,
-        eventID: contactEventId,
-      });
-
-      // Track Ad Attribution Contact (Firestore - pour dashboard admin)
-      trackAdContact({
-        contentName: 'contact_form_submitted',
-        contentCategory: formData.category || 'general',
-      });
-
+      // Message envoyé avec succès — afficher la page de confirmation immédiatement
       setIsSubmitted(true);
 
       // Reset du formulaire
@@ -820,6 +780,51 @@ const Contact: React.FC = () => {
       setAcceptTerms(false);
       setFormErrors({});
       setShowErrors(false);
+
+      // Opérations non-critiques (ne bloquent pas le message de succès)
+      try {
+        await addDoc(collection(db, "admin_notifications"), {
+          type: "new_contact_message",
+          title: `${t.pageTitle} - ${formData.firstName} ${formData.lastName}`,
+          message: `${formData.firstName} ${formData.lastName} - ${formData.subject}`,
+          category: formData.category,
+          priority: formData.category === "urgent" ? "high" : "normal",
+          isExistingUser: userInfo.isExistingUser,
+          contactMessageId: docId,
+          userEmail: formData.email,
+          userPhone: `${finalPhoneCode}${formData.phoneNumber}`,
+          createdAt: serverTimestamp(),
+          read: false,
+          actionRequired: true,
+          preview: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            subject: formData.subject,
+            category: formData.category,
+            languages: spokenLanguagesString,
+            originCountry: formData.originCountry,
+            interventionCountry: formData.interventionCountry,
+            message: formData.message.substring(0, 150) + "...",
+          },
+        });
+      } catch (notifErr) {
+        console.warn("Non-critical: admin notification failed", notifErr);
+      }
+
+      // Track Meta Pixel Contact - formulaire contact soumis avec succes
+      const contactEventId = generateEventIdForType('contact');
+      trackMetaContact({
+        content_name: 'contact_form_submitted',
+        content_category: formData.category || 'general',
+        country: formData.originCountry || formData.interventionCountry,
+        eventID: contactEventId,
+      });
+
+      // Track Ad Attribution Contact (Firestore - pour dashboard admin)
+      trackAdContact({
+        contentName: 'contact_form_submitted',
+        contentCategory: formData.category || 'general',
+      });
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error(t.errorSending);

@@ -183,7 +183,7 @@ const AdminInbox: React.FC = () => {
           return [...others, ...withdrawalItems].sort(sortByDate);
         });
         setLoading(false);
-      }, (err) => { console.error('Inbox withdrawal listener error:', err); })
+      }, (err) => { console.error('Inbox withdrawal listener error:', err); setLoading(false); })
     );
 
     // 1. Captain applications (pending/contacted)
@@ -214,7 +214,7 @@ const AdminInbox: React.FC = () => {
           return [...others, ...captainItems].sort(sortByDate);
         });
         setLoading(false);
-      }, (err) => { console.error('Inbox captain listener error:', err); })
+      }, (err) => { console.error('Inbox captain listener error:', err); setLoading(false); })
     );
 
     // 2. Contact messages (unread)
@@ -244,7 +244,8 @@ const AdminInbox: React.FC = () => {
           const others = prev.filter((i) => i.category !== 'contact');
           return [...others, ...contactItems].sort(sortByDate);
         });
-      }, (err) => { console.error('Inbox contact listener error:', err); })
+        setLoading(false);
+      }, (err) => { console.error('Inbox contact listener error:', err); setLoading(false); })
     );
 
     // 3. Feedback (new/in_progress)
@@ -275,7 +276,8 @@ const AdminInbox: React.FC = () => {
           const others = prev.filter((i) => i.category !== 'feedback');
           return [...others, ...feedbackItems].sort(sortByDate);
         });
-      }, (err) => { console.error('Inbox feedback listener error:', err); })
+        setLoading(false);
+      }, (err) => { console.error('Inbox feedback listener error:', err); setLoading(false); })
     );
 
     // 4. Partner applications (pending/contacted)
@@ -305,7 +307,8 @@ const AdminInbox: React.FC = () => {
           const others = prev.filter((i) => i.category !== 'partner');
           return [...others, ...partnerItems].sort(sortByDate);
         });
-      }, (err) => { console.error('Inbox partner listener error:', err); })
+        setLoading(false);
+      }, (err) => { console.error('Inbox partner listener error:', err); setLoading(false); })
     );
 
     return () => unsubs.forEach((u) => u());
