@@ -68,6 +68,8 @@ export function findGroupForUser(
   const roleGroups = config.groups.filter((g) => g.role === role && g.enabled);
   if (roleGroups.length === 0) return null;
 
+  // Normalise ch→zh (app uses "ch" for Chinese, WhatsApp groups use "zh")
+  const lang = language === 'ch' ? 'zh' : language;
   const upperCountry = country?.toUpperCase();
   const continent = COUNTRY_TO_CONTINENT[upperCountry];
   const countryLang = COUNTRY_TO_LANGUAGE[upperCountry];
@@ -75,13 +77,13 @@ export function findGroupForUser(
   // 1. Continent + langue exacte du user
   if (continent) {
     const exactMatch = roleGroups.find(
-      (g) => g.type === 'continent' && g.continentCode === continent && g.language === language
+      (g) => g.type === 'continent' && g.continentCode === continent && g.language === lang
     );
     if (exactMatch) return exactMatch;
   }
 
   // 2. Continent + langue déduite du pays
-  if (continent && countryLang && countryLang !== language) {
+  if (continent && countryLang && countryLang !== lang) {
     const countryLangMatch = roleGroups.find(
       (g) => g.type === 'continent' && g.continentCode === continent && g.language === countryLang
     );
@@ -90,12 +92,12 @@ export function findGroupForUser(
 
   // 3. Groupe langue du user (fallback type "language")
   const langGroup = roleGroups.find(
-    (g) => g.type === 'language' && g.language === language
+    (g) => g.type === 'language' && g.language === lang
   );
   if (langGroup) return langGroup;
 
   // 4. Groupe langue déduite du pays (fallback type "language")
-  if (countryLang && countryLang !== language) {
+  if (countryLang && countryLang !== lang) {
     const countryLangGroup = roleGroups.find(
       (g) => g.type === 'language' && g.language === countryLang
     );

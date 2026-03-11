@@ -33,6 +33,7 @@ import {
   generateContinentGroups,
   createContinentGroup,
 } from './whatsappGroupsService';
+import { seedWhatsAppGroups } from './seedWhatsAppGroups';
 import type { WhatsAppGroupsConfig, WhatsAppGroup, WhatsAppRole, WhatsAppGroupManager } from './types';
 import { SUPPORTED_LANGUAGES, ROLE_LABELS, ALL_CONTINENTS } from './types';
 
@@ -168,6 +169,7 @@ const AdminWhatsAppGroups: React.FC = () => {
   const [config, setConfig] = useState<WhatsAppGroupsConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeRole, setActiveRole] = useState<WhatsAppRole>('chatter');
 
@@ -280,6 +282,27 @@ const AdminWhatsAppGroups: React.FC = () => {
     setNewContinentLang('');
   };
 
+  // --- Seed all 68 groups from embedded config ---
+  const handleSeedAll = async () => {
+    if (config.groups.length > 0) {
+      const confirmed = window.confirm(
+        `⚠️ Cela va REMPLACER les ${config.groups.length} groupes existants par les 68 groupes pré-configurés (50 avec liens). Continuer ?`
+      );
+      if (!confirmed) return;
+    }
+    setSeeding(true);
+    try {
+      const result = await seedWhatsAppGroups(user?.uid || '');
+      toast.success(`${result.total} groupes importés (${result.enabled} actifs, ${result.disabled} inactifs)`);
+      await fetchConfig();
+    } catch (err) {
+      console.error('[Admin WhatsApp] Seed error:', err);
+      toast.error('Erreur lors du seed');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   // --- Save ---
   const handleSave = async () => {
     const enabledGroups = config.groups.filter((g) => g.enabled);
@@ -326,6 +349,15 @@ const AdminWhatsAppGroups: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleSeedAll}
+              disabled={seeding || saving}
+              className="px-3 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all min-h-[44px] bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+              title="Importer les 68 groupes pré-configurés"
+            >
+              {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowDown className="w-4 h-4" />}
+              Seed 68
+            </button>
             <button onClick={fetchConfig} disabled={loading} className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors min-h-[44px]" title="Rafraîchir">
               <RefreshCw className={`w-5 h-5 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
             </button>
