@@ -501,6 +501,71 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
+      // --- Sous-section : Ressources (tous rôles) ---
+      {
+        id: "resources-sub",
+        labelKey: "admin.menu.resourcesSub",
+        icon: FolderOpen,
+        descriptionKey: "admin.menu.resourcesSub.description",
+        children: [
+          {
+            id: "chatters-resources",
+            labelKey: "admin.menu.chattersResources",
+            path: "/admin/chatters/resources",
+            icon: MessageCircle,
+            descriptionKey: "admin.menu.chattersResources.description",
+          },
+          {
+            id: "influencers-resources",
+            labelKey: "admin.menu.influencersResources",
+            path: "/admin/influencers/resources",
+            icon: Megaphone,
+            descriptionKey: "admin.menu.influencersResources.description",
+          },
+          {
+            id: "bloggers-resources",
+            labelKey: "admin.menu.bloggersResources",
+            path: "/admin/bloggers/resources",
+            icon: FileText,
+            descriptionKey: "admin.menu.bloggersResources.description",
+          },
+          {
+            id: "bloggers-guide",
+            labelKey: "admin.menu.bloggersGuide",
+            path: "/admin/bloggers/guide",
+            icon: BookOpen,
+            descriptionKey: "admin.menu.bloggersGuide.description",
+          },
+          {
+            id: "bloggers-widgets",
+            labelKey: "admin.menu.bloggersWidgets",
+            path: "/admin/bloggers/widgets",
+            icon: Code,
+            descriptionKey: "admin.menu.bloggersWidgets.description",
+          },
+          {
+            id: "groupadmins-resources",
+            labelKey: "admin.menu.groupAdminsResources",
+            path: "/admin/group-admins/resources",
+            icon: UsersRound,
+            descriptionKey: "admin.menu.groupAdminsResources.description",
+          },
+          {
+            id: "partners-widgets",
+            labelKey: "admin.menu.partnersWidgets",
+            path: "/admin/partners/widgets",
+            icon: Handshake,
+            descriptionKey: "admin.menu.partnersWidgets.description",
+          },
+          {
+            id: "press-resources",
+            labelKey: "admin.menu.pressResources",
+            path: "/admin/press/resources",
+            icon: Newspaper,
+            descriptionKey: "admin.menu.pressResources.description",
+          },
+        ],
+      },
       // --- Sous-section : Communication ---
       {
         id: "communication-sub",
@@ -741,14 +806,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.influencersLeaderboard.description",
           },
           {
-            id: "influencers-resources",
-            labelKey: "admin.menu.influencersResources",
-            path: "/admin/influencers/resources",
-            icon: FolderOpen,
-            badge: "NEW",
-            descriptionKey: "admin.menu.influencersResources.description",
-          },
-          {
             id: "influencers-promotions",
             labelKey: "admin.menu.influencersPromotions",
             path: "/admin/influencers/promotions",
@@ -803,36 +860,12 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.bloggersPayments.description",
           },
           {
-            id: "bloggers-resources",
-            labelKey: "admin.menu.bloggersResources",
-            path: "/admin/bloggers/resources",
-            icon: FolderOpen,
-            badge: "NEW",
-            descriptionKey: "admin.menu.bloggersResources.description",
-          },
-          {
-            id: "bloggers-guide",
-            labelKey: "admin.menu.bloggersGuide",
-            path: "/admin/bloggers/guide",
-            icon: BookOpen,
-            badge: "NEW",
-            descriptionKey: "admin.menu.bloggersGuide.description",
-          },
-          {
             id: "bloggers-articles",
             labelKey: "admin.menu.bloggersArticles",
             path: "/admin/bloggers/articles",
             icon: FileText,
             badge: "NEW",
             descriptionKey: "admin.menu.bloggersArticles.description",
-          },
-          {
-            id: "bloggers-widgets",
-            labelKey: "admin.menu.bloggersWidgets",
-            path: "/admin/bloggers/widgets",
-            icon: Code,
-            badge: "NEW",
-            descriptionKey: "admin.menu.bloggersWidgets.description",
           },
           {
             id: "bloggers-analytics",
@@ -887,13 +920,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/group-admins/payments",
             icon: Wallet,
             descriptionKey: "admin.menu.groupAdminsPayments.description",
-          },
-          {
-            id: "groupadmins-resources",
-            labelKey: "admin.menu.groupAdminsResources",
-            path: "/admin/group-admins/resources",
-            icon: FolderOpen,
-            descriptionKey: "admin.menu.groupAdminsResources.description",
           },
           {
             id: "groupadmins-posts",
@@ -966,12 +992,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: Wallet,
           },
           {
-            id: "partners-widgets",
-            labelKey: "admin.menu.partnersWidgets",
-            path: "/admin/partners/widgets",
-            icon: Code,
-          },
-          {
             id: "partners-config",
             labelKey: "admin.menu.partnersConfig",
             path: "/admin/partners/config",
@@ -1010,14 +1030,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         icon: Newspaper,
         descriptionKey: "admin.menu.press.description",
         children: [
-          {
-            id: "press-resources",
-            labelKey: "admin.menu.pressResources",
-            path: "/admin/press/resources",
-            icon: Image,
-            badge: "NEW",
-            descriptionKey: "admin.menu.pressResources.description",
-          },
           {
             id: "press-releases",
             labelKey: "admin.menu.pressReleases",
