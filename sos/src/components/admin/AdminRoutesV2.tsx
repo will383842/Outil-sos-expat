@@ -468,10 +468,10 @@ const AdminGroupAdminsPromotions = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPromotions")
 );
 const AdminGroupAdminAnalytics = lazy(
-  () => import("../../pages/admin/GroupAdmin/AdminGroupAdminAnalytics")
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminAnalytics")
 );
 const AdminGroupAdminFraud = lazy(
-  () => import("../../pages/admin/GroupAdmin/AdminGroupAdminFraud")
+  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminFraud")
 );
 
 // ===== LAZY IMPORTS - PARTNERS =====

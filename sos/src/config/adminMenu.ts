@@ -749,6 +749,13 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.influencersResources.description",
           },
           {
+            id: "influencers-promotions",
+            labelKey: "admin.menu.influencersPromotions",
+            path: "/admin/influencers/promotions",
+            icon: Percent,
+            descriptionKey: "admin.menu.influencersPromotions.description",
+          },
+          {
             id: "influencers-analytics",
             labelKey: "admin.menu.influencersAnalytics",
             path: "/admin/influencers/analytics",

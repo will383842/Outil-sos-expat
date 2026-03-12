@@ -2890,6 +2890,8 @@
   "admin.menu.influencersPayments.description": "Gestion des paiements influenceurs",
   "admin.menu.influencersResources": "Ressources Influenceurs",
   "admin.menu.influencersResources.description": "Ressources et guides pour influenceurs",
+  "admin.menu.influencersPromotions": "Promotions Influenceurs",
+  "admin.menu.influencersPromotions.description": "Gérer les promotions et codes promo influenceurs",
   "admin.menu.influencersAnalytics": "Analytics Influenceurs",
   "admin.menu.influencersAnalytics.description": "Tableau de bord analytique du programme influenceurs",
   "admin.menu.influencersFraud": "Fraude Influenceurs",
