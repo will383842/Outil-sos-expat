@@ -185,8 +185,8 @@ const CountryStep: React.FC<{
     e.preventDefault();
     pointerHandledRef.current = true;
     handleSelect(code);
-    // Reset after a tick to allow onClick to check
-    setTimeout(() => { pointerHandledRef.current = false; }, 300);
+    // Reset quickly — 50ms is enough to skip the synthetic click
+    requestAnimationFrame(() => { pointerHandledRef.current = false; });
   }, [handleSelect]);
 
   const handleClick = useCallback((code: string) => {
@@ -323,7 +323,7 @@ const LanguageStep: React.FC<{
     e.preventDefault();
     langPointerHandledRef.current = true;
     handleToggle(code);
-    setTimeout(() => { langPointerHandledRef.current = false; }, 300);
+    requestAnimationFrame(() => { langPointerHandledRef.current = false; });
   }, [handleToggle]);
 
   const handleLangClick = useCallback((code: string) => {
@@ -511,18 +511,19 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   const wizardRef = useRef<HTMLDivElement>(null);
 
   // Prevent body scroll bleed-through on iOS:
-  // Block touchmove on non-scrollable wizard areas (header, footer, search zone)
-  // but allow it inside [data-wizard-scroll] containers (country/language lists)
+  // Only block touchmove on the wizard's own header/footer chrome areas.
+  // The content area (which contains [data-wizard-scroll], search bar, etc.)
+  // uses overflow-hidden + flex layout to contain scrolling, so we only need
+  // to block on the decorative/navigation chrome that sits outside the content.
   useEffect(() => {
     const el = wizardRef.current;
     if (!el || !isOpen) return;
 
     const handleTouchMove = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
-      // Allow touch events inside scrollable containers
-      if (target.closest('[data-wizard-scroll]')) return;
-      // Allow touch events on inputs and their containers (search bar)
-      if (target.closest('input') || target.tagName === 'INPUT' || target.closest('[role="search"]')) return;
+      // Allow everything inside the main content area (scrollable lists, search, buttons)
+      if (target.closest('[data-wizard-content]')) return;
+      // Block only on header/footer chrome to prevent body scroll bleed
       e.preventDefault();
     };
 
@@ -610,13 +611,14 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   if (!isOpen) return null;
 
-  // z-50 ensures wizard is above SOSCall mobile header (z-40) but below main header (z-60) and mobile menu (z-55)
+  // z-[65] puts wizard above the main header (z-60) so touch events reach the wizard content,
+  // but below the mobile header bar (z-70) which visually sits above the wizard.
   // top uses calc() with safe-area-inset-top for PWA standalone mode (iPhone notch, Android cutout)
   return (
     <div
       ref={wizardRef}
       data-wizard
-      className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col"
+      className="fixed inset-x-0 bottom-0 z-[65] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col"
       style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))', touchAction: 'auto' }}
     >
 
@@ -626,7 +628,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
       </div>
 
       {/* ===== CONTENU SCROLLABLE ===== */}
-      <div className="flex-1 overflow-hidden px-5 py-5 flex flex-col min-h-0 max-w-md mx-auto w-full">
+      <div data-wizard-content className="flex-1 overflow-hidden px-5 py-5 flex flex-col min-h-0 max-w-md mx-auto w-full">
         {step === 1 && (
           <CountryStep
             selectedCountry={selectedCountry}
