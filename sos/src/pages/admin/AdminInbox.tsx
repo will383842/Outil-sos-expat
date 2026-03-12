@@ -24,6 +24,7 @@ import {
   where,
   limit,
   updateDoc,
+  deleteDoc,
   doc,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -46,6 +47,10 @@ import {
   Archive,
   ArchiveRestore,
   Loader2,
+  Trash2,
+  CheckSquare,
+  Square,
+  X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { sendInboxReply } from '../../api/sendInboxReply';
@@ -168,6 +173,9 @@ const AdminInbox: React.FC = () => {
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [sendingReply, setSendingReply] = useState<Record<string, boolean>>({});
   const [archiving, setArchiving] = useState<Record<string, boolean>>({});
+  const [deleting, setDeleting] = useState<Record<string, boolean>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // ---- Extract email from raw data per category ----
   const getEmail = (category: string, raw: Record<string, unknown>): string => {
@@ -278,7 +286,9 @@ const AdminInbox: React.FC = () => {
     ) => {
       unsubs.push(
         onSnapshot(q, (snap) => {
-          const newItems = snap.docs.map((d) => buildItem(d as unknown as { id: string; data: () => Record<string, unknown> }, cat));
+          const newItems = snap.docs
+            .filter((d) => !(d.data() as Record<string, unknown>).isArchived)
+            .map((d) => buildItem(d as unknown as { id: string; data: () => Record<string, unknown> }, cat));
           setItems((prev) => {
             const others = prev.filter((i) => i.category !== cat);
             return [...others, ...newItems].sort(sortByDate);
@@ -479,6 +489,89 @@ const AdminInbox: React.FC = () => {
     } catch { toast.error('Erreur'); }
   };
 
+  const handleDelete = async (item: InboxItem) => {
+    if (!confirm('Supprimer definitivement ce message ?')) return;
+    setDeleting((p) => ({ ...p, [item.id]: true }));
+    try {
+      const docId = item.raw._docId as string;
+      const collName = COLLECTION_MAP[item.category];
+      await deleteDoc(doc(db, collName, docId));
+      toast.success('Supprime !');
+      if (expandedId === item.id) setExpandedId(null);
+      setSelectedIds((prev) => { const next = new Set(prev); next.delete(item.id); return next; });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setDeleting((p) => ({ ...p, [item.id]: false }));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((i) => i.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Supprimer definitivement ${selectedIds.size} message(s) ?`)) return;
+    setBulkDeleting(true);
+    const currentItems = viewMode === 'active' ? items : archivedItems;
+    try {
+      const promises = Array.from(selectedIds).map((id) => {
+        const item = currentItems.find((i) => i.id === id);
+        if (!item) return Promise.resolve();
+        const docId = item.raw._docId as string;
+        const collName = COLLECTION_MAP[item.category];
+        return deleteDoc(doc(db, collName, docId));
+      });
+      await Promise.all(promises);
+      toast.success(`${selectedIds.size} message(s) supprime(s)`);
+      setSelectedIds(new Set());
+      setExpandedId(null);
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      toast.error('Erreur lors de la suppression en lot');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    if (selectedIds.size === 0) return;
+    const archive = viewMode === 'active';
+    const currentItems = viewMode === 'active' ? items : archivedItems;
+    try {
+      const promises = Array.from(selectedIds).map((id) => {
+        const item = currentItems.find((i) => i.id === id);
+        if (!item) return Promise.resolve();
+        const docId = item.raw._docId as string;
+        const collName = COLLECTION_MAP[item.category];
+        return updateDoc(doc(db, collName, docId), {
+          isArchived: archive,
+          ...(archive && item.category === 'contact' ? { isRead: true } : {}),
+        });
+      });
+      await Promise.all(promises);
+      toast.success(`${selectedIds.size} message(s) ${archive ? 'archive(s)' : 'desarchive(s)'}`);
+      setSelectedIds(new Set());
+    } catch (err) {
+      console.error('Bulk archive error:', err);
+      toast.error('Erreur');
+    }
+  };
+
   // ---- Derived state ----
   const displayItems = viewMode === 'active' ? items : archivedItems;
   const filtered = activeFilter === 'all' ? displayItems : displayItems.filter((i) => i.category === activeFilter);
@@ -620,6 +713,45 @@ const AdminInbox: React.FC = () => {
           })}
         </div>
 
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+            <span className="text-sm font-semibold text-indigo-800">
+              {selectedIds.size} selectionne(s)
+            </span>
+            <button
+              onClick={handleBulkArchive}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 border border-gray-200 transition-colors"
+            >
+              {viewMode === 'active' ? <Archive className="w-3.5 h-3.5" /> : <ArchiveRestore className="w-3.5 h-3.5" />}
+              {viewMode === 'active' ? 'Archiver' : 'Desarchiver'}
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+            >
+              {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Supprimer
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="inline-flex items-center gap-1 px-2 py-1.5 text-gray-500 text-xs hover:text-gray-700"
+            >
+              <X className="w-3.5 h-3.5" />
+              Annuler
+            </button>
+            <div className="ml-auto">
+              <button
+                onClick={selectAll}
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                {selectedIds.size === filtered.length ? 'Tout deselectionner' : 'Tout selectionner'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Items */}
         {isLoading ? (
           <div className="text-center py-12 text-gray-400">
@@ -661,31 +793,81 @@ const AdminInbox: React.FC = () => {
                   }`}
                 >
                   {/* Header row */}
-                  <div
-                    className="flex items-start gap-3 p-4 cursor-pointer"
-                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
-                      <span className={cfg.color}>{cfg.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-gray-900 text-sm truncate">{item.title}</span>
-                        {statusBadge(item)}
-                        {item.category === 'withdrawal' && typeof item.raw._userType === 'string' && userTypeBadge(item.raw._userType)}
-                        {item.hasReply && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
-                            repondu
-                          </span>
-                        )}
+                  <div className="flex items-start gap-2 p-4">
+                    {/* Checkbox */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
+                      className="flex-shrink-0 mt-1.5 text-gray-400 hover:text-indigo-600 transition-colors"
+                    >
+                      {selectedIds.has(item.id)
+                        ? <CheckSquare className="w-4 h-4 text-indigo-600" />
+                        : <Square className="w-4 h-4" />
+                      }
+                    </button>
+
+                    <div
+                      className="flex items-start gap-3 flex-1 min-w-0 cursor-pointer"
+                      onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                    >
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
+                        <span className={cfg.color}>{cfg.icon}</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">{item.subtitle}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-gray-900 text-sm truncate">{item.title}</span>
+                          {statusBadge(item)}
+                          {item.category === 'withdrawal' && typeof item.raw._userType === 'string' && userTypeBadge(item.raw._userType)}
+                          {item.hasReply && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
+                              repondu
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">{item.subtitle}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
+
+                    {/* Quick actions + time */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-xs text-gray-400 flex items-center gap-1 mr-1">
                         <Clock className="w-3 h-3" /> {formatDate(item.createdAt)}
                       </span>
-                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      {/* Quick archive */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleArchive(item, viewMode === 'active'); }}
+                        disabled={isArchivingItem}
+                        title={viewMode === 'active' ? 'Archiver' : 'Desarchiver'}
+                        className={`p-1.5 rounded-md transition-colors ${
+                          viewMode === 'active'
+                            ? 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                            : 'text-amber-400 hover:text-amber-700 hover:bg-amber-50'
+                        } disabled:opacity-50`}
+                      >
+                        {isArchivingItem
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : viewMode === 'active'
+                            ? <Archive className="w-3.5 h-3.5" />
+                            : <ArchiveRestore className="w-3.5 h-3.5" />
+                        }
+                      </button>
+                      {/* Quick delete */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(item); }}
+                        disabled={deleting[item.id]}
+                        title="Supprimer"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                      >
+                        {deleting[item.id]
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Trash2 className="w-3.5 h-3.5" />
+                        }
+                      </button>
+                      <div
+                        className="cursor-pointer p-1"
+                        onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                      >
+                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      </div>
                     </div>
                   </div>
 
@@ -762,6 +944,16 @@ const AdminInbox: React.FC = () => {
                             Desarchiver
                           </button>
                         )}
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => handleDelete(item)}
+                          disabled={deleting[item.id]}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors min-h-[36px] disabled:opacity-50"
+                        >
+                          {deleting[item.id] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                          Supprimer
+                        </button>
 
                         {/* Mark as read (contact only, active view) */}
                         {item.category === 'contact' && viewMode === 'active' && (
