@@ -2794,6 +2794,8 @@
   "admin.menu.chattersReferrals.description": "Parrainage de nouveaux chatters",
   "admin.menu.chattersUsers": "Chatters",
   "admin.menu.chattersUsers.description": "Gestion des chatters",
+  "admin.menu.whatsapp": "WhatsApp",
+  "admin.menu.whatsapp.description": "Gestion des groupes WhatsApp et supervision des managers",
   "admin.menu.chattersWhatsappGroups": "Groupes WhatsApp",
   "admin.menu.chattersWhatsappGroups.description": "Gérer les groupes WhatsApp des chatters",
   "admin.menu.clients": "Clients",
