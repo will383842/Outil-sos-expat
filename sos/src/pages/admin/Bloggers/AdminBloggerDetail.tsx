@@ -35,6 +35,7 @@ import {
   Eye,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { getLanguageName } from '../../../utils/formatters';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // Design tokens - Purple theme for Bloggers
@@ -310,7 +311,7 @@ const AdminBloggerDetail: React.FC = () => {
                 )}
                 <div className="flex items-center gap-3">
                   <Globe className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-700 dark:text-gray-300">{blogger.country} / {blogger.language}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{blogger.country} / {getLanguageName(blogger.language, 'fr') || blogger.language}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Calendar className="w-4 h-4 text-gray-400" />

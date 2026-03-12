@@ -32,6 +32,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { getLanguageName } from '../../../utils/formatters';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import { StatusBadge, type StatusType } from '@/components/admin/StatusBadge';
 
@@ -490,7 +491,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.language' })}</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{admin.language}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{getLanguageName(admin.language, 'fr') || admin.language}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.joined' })}</p>

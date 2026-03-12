@@ -23,6 +23,7 @@ import {
   Clock,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { getLanguageName } from '../../../utils/formatters';
 import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 // Design tokens
@@ -84,7 +85,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ message, language, onClose 
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Langue: {language.toUpperCase()}
+            Langue: {getLanguageName(language, 'fr') || language.toUpperCase()}
           </label>
           <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-4">
             <div

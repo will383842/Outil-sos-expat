@@ -32,6 +32,7 @@ import {
   Facebook,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { getLanguageName } from '../../../utils/formatters';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 
 // Design tokens
@@ -285,7 +286,7 @@ const AdminInfluencerDetail: React.FC = () => {
                 )}
                 <div className="flex items-center gap-3">
                   <Globe className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-700 dark:text-gray-300">{influencer.country} / {influencer.language}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{influencer.country} / {getLanguageName(influencer.language, 'fr') || influencer.language}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Calendar className="w-4 h-4 text-gray-400" />
