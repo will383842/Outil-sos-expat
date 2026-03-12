@@ -703,9 +703,9 @@ const ProfessionalDashboard: React.FC = () => {
         const status = (data.status as string) || 'unknown';
         const duration = (data.duration as number) || 0;
         const createdAt = data.metadata?.createdAt?.toDate?.() || data.createdAt?.toDate?.() || new Date();
-        const country = (data.metadata?.country as string) || (data.providerCountry as string) || 'Unknown';
-        const language = (data.metadata?.language as string) || (data.language as string) || 'Unknown';
-        const providerType = (data.providerType as string) || (data.metadata?.providerType as string) || 'Unknown';
+        const country = (data.metadata?.providerCountry as string) || (data.metadata?.country as string) || 'Unknown';
+        const language = (data.metadata?.clientLanguages?.[0] as string) || (data.metadata?.selectedLanguage as string) || (data.metadata?.language as string) || 'Unknown';
+        const providerType = (data.metadata?.providerType as string) || (data.providerType as string) || 'Unknown';
 
         totalCalls++;
         if (status === 'completed' || status === 'ended') {

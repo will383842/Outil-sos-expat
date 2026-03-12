@@ -485,7 +485,8 @@ export const createAndScheduleCallHTTPS = onCall(
         amount,
         requestId,
         clientLanguages: clientLanguages || ['fr'],
-        providerLanguages: providerLanguages || ['fr']
+        providerLanguages: providerLanguages || ['fr'],
+        providerCountry: providerData?.country || '',
       });
 
       console.log(`✅ [${requestId}] Session d'appel créée avec succès - ID: ${callSession.id}`);

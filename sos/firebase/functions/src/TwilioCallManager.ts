@@ -501,6 +501,7 @@ export class TwilioCallManager {
     requestId?: string;
     clientLanguages?: string[];
     providerLanguages?: string[];
+    providerCountry?: string;
   }): Promise<CallSessionState> {
     try {
       const BYPASS_VALIDATIONS = process.env.FUNCTIONS_EMULATOR === "true" && process.env.TEST_BYPASS_VALIDATIONS === "1";
@@ -589,6 +590,7 @@ export class TwilioCallManager {
           requestId: params.requestId,
           clientLanguages: params.clientLanguages || ["fr"],
           providerLanguages: params.providerLanguages || ["fr"],
+          ...(params.providerCountry ? { providerCountry: params.providerCountry } : {}),
         },
       };
 

@@ -37,6 +37,7 @@ interface CreateCallParams {
   providerLanguages?: string[];
   // ✅ CORRECTION: Ajouter le champ clientWhatsapp qui est maintenant envoyé par le frontend
   clientWhatsapp?: string;
+  providerCountry?: string;
 
   // Métadonnées optionnelles passées par l'étape de paiement (déjà converties/calculées)
   amountCents?: number; // en centimes, si fourni par l'amont (non utilisé pour des calculs ici)
@@ -477,7 +478,8 @@ export const createCallSession = async (
       amount: params.amount, // ✅ euros
       requestId: params.requestId,
       clientLanguages: params.clientLanguages,
-      providerLanguages: params.providerLanguages});
+      providerLanguages: params.providerLanguages,
+      providerCountry: params.providerCountry});
 
     await logCallRecord({
       callId: sessionId,
