@@ -1192,8 +1192,37 @@ export const adminMenuTree: AdminMenuItem[] = [
         labelKey: "admin.menu.telegram",
         path: "/admin/toolbox/telegram",
         icon: Send,
-        badge: "NEW",
         descriptionKey: "admin.menu.telegram.description",
+        children: [
+          {
+            id: "telegram-dashboard",
+            labelKey: "admin.menu.telegramDashboard",
+            path: "/admin/toolbox/telegram",
+            icon: BarChart3,
+            descriptionKey: "admin.menu.telegramDashboard.description",
+          },
+          {
+            id: "telegram-groups",
+            labelKey: "admin.menu.telegramGroups",
+            path: "/admin/toolbox/telegram/groups",
+            icon: Users,
+            descriptionKey: "admin.menu.telegramGroups.description",
+          },
+          {
+            id: "telegram-supervision",
+            labelKey: "admin.menu.telegramSupervision",
+            path: "/admin/toolbox/telegram/supervision",
+            icon: Shield,
+            descriptionKey: "admin.menu.telegramSupervision.description",
+          },
+          {
+            id: "telegram-bots",
+            labelKey: "admin.menu.telegramBots",
+            path: "/admin/toolbox/telegram/bots",
+            icon: Bot,
+            descriptionKey: "admin.menu.telegramBots.description",
+          },
+        ],
       },
       {
         id: "toolbox",

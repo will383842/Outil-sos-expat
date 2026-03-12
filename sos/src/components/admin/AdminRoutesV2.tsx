@@ -623,6 +623,9 @@ const AdminTelegramSubscribers = lazy(() => import("../../pages/admin/Telegram/A
 const AdminTelegramQueue = lazy(() => import("../../pages/admin/Telegram/AdminTelegramQueue"));
 const AdminTelegramLogs = lazy(() => import("../../pages/admin/Telegram/AdminTelegramLogs"));
 const AdminTelegramConfig = lazy(() => import("../../pages/admin/Telegram/AdminTelegramConfig"));
+const AdminTelegramGroups = lazy(() => import("../../pages/admin/Telegram/AdminTelegramGroups"));
+const AdminTelegramSupervision = lazy(() => import("../../pages/admin/Telegram/AdminTelegramSupervision"));
+const AdminTelegramBots = lazy(() => import("../../pages/admin/Telegram/AdminTelegramBots"));
 
 // ===== LAYOUT PROTÉGÉ ADMIN =====
 const AdminProtectedLayout: React.FC = () => (
@@ -1771,6 +1774,15 @@ const AdminRoutesV2: React.FC = () => {
 
         {/* Configuration */}
         <Route path="config" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramConfig /></Suspense>} />
+
+        {/* Groups */}
+        <Route path="groups" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramGroups /></Suspense>} />
+
+        {/* Supervision */}
+        <Route path="supervision" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramSupervision /></Suspense>} />
+
+        {/* Bots */}
+        <Route path="bots" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramBots /></Suspense>} />
       </Route>
 
       {/* ⚙️ CONFIG & OUTILS */}
