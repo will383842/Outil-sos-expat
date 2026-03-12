@@ -115,8 +115,8 @@ function escapeXml(str: string): string {
 export const sitemapProfiles = onRequest(
   {
     region: 'europe-west1',
-    memory: '512MiB',
-    cpu: 1,
+    memory: '256MiB',
+    cpu: 0.5,
     timeoutSeconds: 120,
     maxInstances: 5,
     minInstances: 0,
@@ -285,8 +285,8 @@ ${hreflangs}
 export const sitemapHelp = onRequest(
   {
     region: 'europe-west1',
-    memory: '512MiB',
-    cpu: 1,
+    memory: '256MiB',
+    cpu: 0.5,
     timeoutSeconds: 120,
     maxInstances: 3,
     minInstances: 0,
