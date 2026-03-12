@@ -239,7 +239,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     if (!user || user.role !== 'admin') return;
     // Count only NON-ARCHIVED items (filter client-side to avoid needing extra composite indexes)
     const safeActiveCount = (q: ReturnType<typeof query>) =>
-      getDocs(q).then((snap) => snap.docs.filter((d) => !d.data().isArchived).length).catch(() => 0);
+      getDocs(q).then((snap) => snap.docs.filter((d) => !(d.data() as Record<string, unknown>).isArchived).length).catch(() => 0);
     Promise.all([
       safeActiveCount(query(collection(db, 'captain_applications'), where('status', 'in', ['pending', 'contacted']))),
       safeActiveCount(query(collection(db, 'contact_messages'), where('isRead', '==', false))),
