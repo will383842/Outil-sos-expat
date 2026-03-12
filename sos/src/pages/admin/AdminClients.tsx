@@ -950,7 +950,7 @@ const AdminClients: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {client.language ? client.language.toUpperCase() : "—"}
+                        {client.language ? new Intl.DisplayNames([lang], { type: 'language' }).of(client.language.split('-')[0]) || client.language : "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

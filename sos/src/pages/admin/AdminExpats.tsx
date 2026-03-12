@@ -53,7 +53,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import AdminMapVisibilityToggle from "../../components/admin/AdminMapVisibilityToggle";
-import { getCountryName, getCountryFlag } from "../../utils/formatters";
+import { getCountryName, getCountryFlag, getLanguageName } from "../../utils/formatters";
 import TranslationModal from "../../components/admin/TranslationModal";
 
 /* ---------------------- Types ---------------------- */
@@ -816,7 +816,7 @@ const AdminExpats: React.FC = () => {
         return (
           <div className="text-sm text-gray-900 flex items-center">
             <LanguagesIcon className="w-4 h-4 mr-1 text-gray-400" />
-            <span title={e.languages.join(", ")}>{e.languages.slice(0, 2).join(", ")}{e.languages.length > 2 ? ` +${e.languages.length - 2}` : ""}</span>
+            <span title={e.languages.map(c => getLanguageName(c, intl.locale)).join(", ")}>{e.languages.slice(0, 2).map(c => getLanguageName(c, intl.locale)).join(", ")}{e.languages.length > 2 ? ` +${e.languages.length - 2}` : ""}</span>
           </div>
         );
       case "help":
@@ -1438,7 +1438,7 @@ const AdminExpats: React.FC = () => {
                 {drawerExpat.phone ? <div><strong>{t("phone")}:</strong> {drawerExpat.phone}</div> : null}
                 <div><strong>{t("country")}:</strong> {getCountryFlag(drawerExpat.country)} {drawerExpat.city ? `${drawerExpat.city}, ` : ""}{getCountryName(drawerExpat.country, intl.locale) || drawerExpat.country}</div>
                 {drawerExpat.originCountry ? <div><strong>{t("origin")}:</strong> {getCountryFlag(drawerExpat.originCountry)} {getCountryName(drawerExpat.originCountry, intl.locale) || drawerExpat.originCountry}</div> : null}
-                <div><strong>{t("langs")}:</strong> {drawerExpat.languages.join(", ") || "—"}</div>
+                <div><strong>{t("langs")}:</strong> {drawerExpat.languages.map(c => getLanguageName(c, intl.locale)).join(", ") || "—"}</div>
                 <div><strong>{t("help")}:</strong> {drawerExpat.helpDomains.join(", ") || "—"}</div>
                 <div><strong>{t("yearsInCountry")}:</strong> {drawerExpat.yearsInCountry || "—"}</div>
                 <div><strong>{t("expatSince")}:</strong> {fmtDate(drawerExpat.expatSince)}</div>

@@ -46,7 +46,7 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import TranslationModal from "../../components/admin/TranslationModal";
-import { getCountryName, getCountryFlag } from "../../utils/formatters";
+import { getCountryName, getCountryFlag, getLanguageName } from "../../utils/formatters";
 import { copyToClipboard } from '@/utils/clipboard';
 /* -------------------------------------------------- */
 
@@ -983,7 +983,7 @@ const AdminLawyers: React.FC = () => {
         return (
           <div style={cellStyleFor(col)} className="text-sm truncate flex items-center gap-2">
             <LanguagesIcon className="w-4 h-4 text-gray-400" />
-            {(l.languages || []).join(", ") || "—"}
+            {(l.languages || []).map(c => getLanguageName(c, "fr")).join(", ") || "—"}
           </div>
         );
       case "specialties":
