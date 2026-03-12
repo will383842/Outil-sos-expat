@@ -3024,6 +3024,8 @@
   "admin.menu.telegramTemplates.description": "Éditeur de templates",
   "admin.menu.telegramGroups": "Groupes Telegram",
   "admin.menu.telegramGroups.description": "Gérer les groupes Telegram par rôle et région",
+  "admin.menu.telegramManagers": "Managers Telegram",
+  "admin.menu.telegramManagers.description": "Assigner et gérer les managers des groupes",
   "admin.menu.telegramSupervision": "Supervision",
   "admin.menu.telegramSupervision.description": "Assigner et gérer les managers des groupes",
   "admin.menu.telegramBots": "Bots",

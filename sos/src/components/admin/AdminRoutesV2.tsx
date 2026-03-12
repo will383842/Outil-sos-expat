@@ -1432,6 +1432,32 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      {/* 📱 TELEGRAM (Groups, Managers, Bots — same level as WhatsApp) */}
+      <Route
+        path="marketing/telegram-groups"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramGroups />
+          </Suspense>
+        }
+      />
+      <Route
+        path="marketing/telegram-managers"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramSupervision />
+          </Suspense>
+        }
+      />
+      <Route
+        path="marketing/telegram-bots"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminTelegramBots />
+          </Suspense>
+        }
+      />
+
       {/* 📢 INFLUENCERS */}
       <Route
         path="influencers"
@@ -1774,15 +1800,6 @@ const AdminRoutesV2: React.FC = () => {
 
         {/* Configuration */}
         <Route path="config" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramConfig /></Suspense>} />
-
-        {/* Groups */}
-        <Route path="groups" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramGroups /></Suspense>} />
-
-        {/* Supervision */}
-        <Route path="supervision" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramSupervision /></Suspense>} />
-
-        {/* Bots */}
-        <Route path="bots" element={<Suspense fallback={<LoadingSpinner />}><AdminTelegramBots /></Suspense>} />
       </Route>
 
       {/* ⚙️ CONFIG & OUTILS */}
@@ -2204,6 +2221,9 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/resources",
       "/admin/marketing/whatsapp-groups",
       "/admin/marketing/whatsapp-supervision",
+      "/admin/marketing/telegram-groups",
+      "/admin/marketing/telegram-managers",
+      "/admin/marketing/telegram-bots",
       "/admin/influencers",
       "/admin/influencers/:influencerId",
       "/admin/influencers/payments",
