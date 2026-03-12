@@ -1,15 +1,15 @@
 /**
  * TelegramOnboarding - Composant générique pour lier Telegram
- * Utilisé par tous les rôles : chatter, influencer, blogger, groupAdmin
+ * Utilisé par tous les rôles : chatter, influencer, blogger, groupAdmin, etc.
+ *
+ * Appelle l'API Laravel Engine (pas Firebase) pour tout ce qui est Telegram.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FormattedMessage, useIntl } from 'react-intl';
 import { QRCodeSVG } from 'qrcode.react';
-import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../../contexts/AuthContext';
-import { functionsWest3 } from '../../config/firebase';
+import { telegramOnboardingApi } from '../../config/telegramEngine';
 import {
   CheckCircle,
   XCircle,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 // Types
-type TelegramRole = 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate' | 'client' | 'lawyer' | 'expat' | 'captain' | 'partner';
+type TelegramRole = 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'group_admin' | 'affiliate' | 'client' | 'lawyer' | 'expat' | 'captain' | 'captain_chatter' | 'partner';
 
 interface TelegramOnboardingProps {
   role: TelegramRole;
@@ -31,22 +31,25 @@ interface TelegramOnboardingProps {
   subtitle?: string;
 }
 
-interface TelegramLinkResponse {
+interface GenerateLinkResponse {
   success: boolean;
   code: string;
   deepLink: string;
-  qrCodeUrl: string;
   expiresAt: string;
-  message: string;
 }
 
-interface LinkStatusResponse {
+interface CheckStatusResponse {
   success: boolean;
-  status: 'pending' | 'linked' | 'expired';
+  status: 'none' | 'pending' | 'linked' | 'expired';
   isLinked: boolean;
   telegramId: number | null;
   telegramUsername: string | null;
-  telegramFirstName: string | null;
+}
+
+/** Convert frontend role names to Laravel API role names */
+function normalizeRole(role: TelegramRole): string {
+  if (role === 'groupAdmin') return 'group_admin';
+  return role;
 }
 
 const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
@@ -56,22 +59,19 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
   title,
   subtitle,
 }) => {
-  const intl = useIntl();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const functions = functionsWest3;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deepLink, setDeepLink] = useState<string>('');
   const [code, setCode] = useState<string>('');
-  const [expiresAt, setExpiresAt] = useState<string>('');
   const [checking, setChecking] = useState(false);
   const [isLinked, setIsLinked] = useState(false);
   const [telegramUsername, setTelegramUsername] = useState<string | null>(null);
 
   // Role-specific labels
-  const roleLabels: Record<TelegramRole, { title: string; subtitle: string }> = {
+  const roleLabels: Record<string, { title: string; subtitle: string }> = {
     chatter: {
       title: title || '🎉 Dernière étape : Liez votre Telegram',
       subtitle: subtitle || 'Recevez vos notifications de commissions et confirmez vos retraits en toute sécurité',
@@ -85,6 +85,10 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
       subtitle: subtitle || 'Notifications en temps réel et retraits sécurisés',
     },
     groupAdmin: {
+      title: title || '👥 Connectez Telegram',
+      subtitle: subtitle || 'Gérez votre communauté et vos gains depuis Telegram',
+    },
+    group_admin: {
       title: title || '👥 Connectez Telegram',
       subtitle: subtitle || 'Gérez votre communauté et vos gains depuis Telegram',
     },
@@ -108,13 +112,17 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
       title: title || '🎖️ Liez votre Telegram',
       subtitle: subtitle || 'Gérez vos bonus de capitaine et retraits depuis Telegram',
     },
+    captain_chatter: {
+      title: title || '🎖️ Liez votre Telegram',
+      subtitle: subtitle || 'Gérez vos bonus de capitaine chatter depuis Telegram',
+    },
     partner: {
       title: title || '🤝 Connectez votre Telegram',
       subtitle: subtitle || 'Suivez vos revenus partenaire et confirmez vos retraits',
     },
   };
 
-  const currentLabels = roleLabels[role];
+  const currentLabels = roleLabels[role] || roleLabels.chatter;
 
   // Generate Telegram link on mount
   useEffect(() => {
@@ -137,17 +145,20 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
       setLoading(true);
       setError(null);
 
-      const generateLinkFn = httpsCallable<{ role?: TelegramRole }, TelegramLinkResponse>(
-        functions,
-        'generateTelegramLink'
+      const result = await telegramOnboardingApi<GenerateLinkResponse>(
+        '/generate-link',
+        {
+          method: 'POST',
+          body: {
+            userId: user?.uid,
+            role: normalizeRole(role),
+          },
+        }
       );
 
-      const result = await generateLinkFn({ role });
-
-      if (result.data.success) {
-        setDeepLink(result.data.deepLink);
-        setCode(result.data.code);
-        setExpiresAt(result.data.expiresAt);
+      if (result.success) {
+        setDeepLink(result.deepLink);
+        setCode(result.code);
       } else {
         setError('Erreur lors de la génération du lien Telegram');
       }
@@ -165,16 +176,14 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
     try {
       setChecking(true);
 
-      const checkStatusFn = httpsCallable<void, LinkStatusResponse>(
-        functions,
-        'checkTelegramLinkStatus'
+      const result = await telegramOnboardingApi<CheckStatusResponse>(
+        '/check-status',
+        { method: 'GET' }
       );
 
-      const result = await checkStatusFn();
-
-      if (result.data.isLinked) {
+      if (result.isLinked) {
         setIsLinked(true);
-        setTelegramUsername(result.data.telegramUsername);
+        setTelegramUsername(result.telegramUsername);
 
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
@@ -190,8 +199,7 @@ const TelegramOnboarding: React.FC<TelegramOnboardingProps> = ({
 
   const handleSkip = async () => {
     try {
-      const skipFn = httpsCallable(functions, 'skipTelegramOnboarding');
-      await skipFn();
+      await telegramOnboardingApi('/skip', { method: 'POST' });
       navigate(skipPath);
     } catch (err) {
       console.error('Error skipping Telegram:', err);

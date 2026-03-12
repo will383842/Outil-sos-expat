@@ -124,7 +124,7 @@ interface CheckStatusOutput {
  */
 const TELEGRAM_CONFIG = {
   // Bot username (without @)
-  BOT_USERNAME: process.env.TELEGRAM_BOT_USERNAME || "SOSExpatChatterBot",
+  BOT_USERNAME: process.env.TELEGRAM_BOT_USERNAME || "sos_expat_onboarding_users_bot",
   // Link expiry in hours
   LINK_EXPIRY_HOURS: 24,
 };

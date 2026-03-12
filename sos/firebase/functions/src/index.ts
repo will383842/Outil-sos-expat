@@ -2930,11 +2930,11 @@ export {
   chatterRequestWithdrawal,
   updateChatterProfile,
   updateTelegramOnboarding,
-  // Telegram Deep Link + Webhook (new system)
-  generateTelegramLink,
-  checkTelegramLinkStatus,
-  skipTelegramOnboarding,
-  telegramChatterBotWebhook,
+  // Telegram Deep Link + Webhook — DISABLED: migrated to Laravel Engine
+  // generateTelegramLink,
+  // checkTelegramLinkStatus,
+  // skipTelegramOnboarding,
+  // telegramChatterBotWebhook,
   getReferralDashboard,
   getChatterRecruitedProviders,
   // Posts callables
@@ -3368,8 +3368,10 @@ export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalReq
 export { telegramOnNewCaptainApplication } from './telegram/triggers/onNewCaptainApplication';
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';
 
-// Admin Inbox Telegram notifications (separate bot)
-export { inboxNotifyContact, inboxNotifyFeedback, inboxNotifyCaptain, inboxNotifyPartner, inboxNotifyWithdrawal } from './telegram/triggers/onInboxNotification';
+// Admin Inbox Telegram notifications (via Engine — user_feedback & partner_applications)
+// contact_messages, captain_applications, withdrawal_requests already have dedicated triggers
+// that forward to the Engine. The Engine's multi-bot system routes to both main + inbox bots.
+export { inboxNotifyFeedback, inboxNotifyPartner } from './telegram/triggers/onInboxNotification';
 // [MIGRATION LARAVEL] All admin callables disabled — admin console now calls Laravel API directly
 // This removes ~16 Firebase Functions. Kept as comments for safety rollback.
 // export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';

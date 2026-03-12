@@ -7,8 +7,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { httpsCallable } from 'firebase/functions';
-import { functionsWest3 } from '@/config/firebase';
+import { telegramOnboardingApi } from '@/config/telegramEngine';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   MessageCircle,
   CheckCircle,
@@ -24,7 +24,7 @@ import { copyToClipboard } from '@/utils/clipboard';
 // ============================================================================
 
 interface TelegramConnectProps {
-  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat' | 'captain';
+  role: 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'group_admin' | 'affiliate' | 'partner' | 'client' | 'lawyer' | 'expat' | 'captain' | 'captain_chatter';
   onConnected: () => void;
 }
 
@@ -48,8 +48,15 @@ interface LinkStatusData {
 // COMPONENT
 // ============================================================================
 
+/** Convert frontend role names to Laravel API role names */
+function normalizeRole(role: string): string {
+  if (role === 'groupAdmin') return 'group_admin';
+  return role;
+}
+
 const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) => {
   const intl = useIntl();
+  const { user } = useAuth();
   const [step, setStep] = useState<'invite' | 'waiting' | 'success'>('invite');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,21 +77,16 @@ const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) 
     setError(null);
 
     try {
-      const generateTelegramLink = httpsCallable<{ role: string }, TelegramLinkData>(
-        functionsWest3,
-        'generateTelegramLink'
+      const data = await telegramOnboardingApi<TelegramLinkData>(
+        '/generate-link',
+        {
+          method: 'POST',
+          body: { userId: user?.uid, role: normalizeRole(role) },
+        }
       );
-      const result = await generateTelegramLink({ role });
-      const data = result.data;
 
       if (!data.success) {
         setError(intl.formatMessage({ id: 'telegram.connect.error.generate', defaultMessage: 'Impossible de générer le lien Telegram' }));
-        return;
-      }
-
-      // Already linked
-      if (!data.deepLink && data.message?.includes('already linked')) {
-        onConnected();
         return;
       }
 
@@ -110,13 +112,12 @@ const TelegramConnect: React.FC<TelegramConnectProps> = ({ role, onConnected }) 
 
     pollRef.current = setInterval(async () => {
       try {
-        const checkStatus = httpsCallable<void, LinkStatusData>(
-          functionsWest3,
-          'checkTelegramLinkStatus'
+        const result = await telegramOnboardingApi<LinkStatusData>(
+          '/check-status',
+          { method: 'GET' }
         );
-        const result = await checkStatus();
 
-        if (result.data.isLinked) {
+        if (result.isLinked) {
           if (pollRef.current) clearInterval(pollRef.current);
           setStep('success');
           setTimeout(() => onConnected(), 1500);

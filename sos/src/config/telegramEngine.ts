@@ -61,3 +61,46 @@ export async function telegramEngineApi<T = unknown>(
   const json = await response.json();
   return json as T;
 }
+
+/**
+ * Make an authenticated request to the Telegram Engine Onboarding API
+ * (uses /api/onboarding prefix instead of /api/admin)
+ */
+export async function telegramOnboardingApi<T = unknown>(
+  endpoint: string,
+  options: {
+    method?: "GET" | "POST" | "PUT" | "DELETE";
+    body?: Record<string, unknown>;
+    params?: Record<string, string>;
+  } = {}
+): Promise<T> {
+  const { method = "GET", body, params } = options;
+
+  const token = await getAuthToken();
+
+  let url = `${ENGINE_BASE_URL}/api/onboarding${endpoint}`;
+  if (params) {
+    const searchParams = new URLSearchParams(params);
+    url += `?${searchParams.toString()}`;
+  }
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Telegram Onboarding API error (${response.status}): ${errorText}`);
+  }
+
+  const json = await response.json();
+  return json as T;
+}

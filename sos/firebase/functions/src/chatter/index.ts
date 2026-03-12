@@ -28,13 +28,18 @@ export { requestWithdrawal as chatterRequestWithdrawal } from "./callables/reque
 export { updateChatterProfile } from "./callables/updateChatterProfile";
 export { updateTelegramOnboarding } from "./callables/updateTelegramOnboarding";
 
-// Telegram Onboarding (Deep Link + Webhook system)
-export {
-  generateTelegramLink,
-  checkTelegramLinkStatus,
-  skipTelegramOnboarding,
-  telegramChatterBotWebhook,
-} from "./callables/telegramOnboarding";
+// Telegram Onboarding — DISABLED: migrated to Laravel Engine (engine_telegram_sos_expat)
+// All Telegram onboarding is now handled by:
+//   - POST /api/onboarding/generate-link
+//   - GET  /api/onboarding/check-status
+//   - POST /api/onboarding/skip
+//   - POST /api/bot/onboarding-webhook
+// export {
+//   generateTelegramLink,
+//   checkTelegramLinkStatus,
+//   skipTelegramOnboarding,
+//   telegramChatterBotWebhook,
+// } from "./callables/telegramOnboarding";
 
 // Referral Dashboard
 export { getReferralDashboard } from "./callables/getReferralDashboard";
