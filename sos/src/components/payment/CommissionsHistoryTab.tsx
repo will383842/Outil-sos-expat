@@ -238,21 +238,32 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-4" style={{ minHeight: 520 }}>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4 h-[72px] animate-pulse" />
+          <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4 h-[72px] animate-pulse" />
+        </div>
+        <div className="h-8" />
+        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl overflow-hidden" style={{ minHeight: 400 }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="px-4 py-3 border-b border-gray-100 dark:border-white/5">
+              <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-full animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={{ minHeight: 520 }}>
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4">
+        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4 min-h-[72px]">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'commission.stats.totalEarned', defaultMessage: 'Total gagné' })}</p>
           <p className="text-xl font-bold text-gray-900 dark:text-white">{formatAmountUSD(totalEarned)}</p>
         </div>
-        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4">
+        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-4 min-h-[72px]">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{intl.formatMessage({ id: 'commission.stats.available', defaultMessage: 'Disponible' })}</p>
           <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatAmountUSD(available)}</p>
         </div>
@@ -307,12 +318,12 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-10 text-center">
+        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-10 text-center" style={{ minHeight: 300 }}>
           <TrendingUp className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
           <p className="text-gray-500 dark:text-gray-400">{intl.formatMessage({ id: 'commission.empty', defaultMessage: 'Aucune commission trouvée' })}</p>
         </div>
       ) : (
-        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl overflow-hidden">
+        <div className="bg-white/80 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl overflow-hidden" style={{ minHeight: 300 }}>
           {/* Header */}
           <div className="hidden sm:grid grid-cols-[1fr_2fr_3fr_auto_auto] gap-3 px-4 py-2 bg-gray-50 dark:bg-white/5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-white/5">
             <span>{intl.formatMessage({ id: 'commission.header.date', defaultMessage: 'Date' })}</span>
@@ -361,28 +372,26 @@ const CommissionsHistoryTab: React.FC<CommissionsHistoryTabProps> = ({
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <span className="text-sm text-gray-600 dark:text-gray-300">
-            Page {page} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+      {/* Pagination — always rendered to avoid layout shift */}
+      <div className={`flex items-center justify-center gap-3 h-10 ${totalPages <= 1 ? 'invisible' : ''}`}>
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+          className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <span className="text-sm text-gray-600 dark:text-gray-300">
+          Page {page} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={page === totalPages}
+          className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 };

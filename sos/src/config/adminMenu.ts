@@ -687,14 +687,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.chattersPromotions.description",
           },
           {
-            id: "chatters-country-rotation",
-            labelKey: "admin.menu.chattersCountryRotation",
-            path: "/admin/chatters/country-rotation",
-            icon: RotateCcw,
-            badge: "NEW",
-            descriptionKey: "admin.menu.chattersCountryRotation.description",
-          },
-          {
             id: "chatters-analytics",
             labelKey: "admin.menu.chattersAnalytics",
             path: "/admin/chatters/analytics",

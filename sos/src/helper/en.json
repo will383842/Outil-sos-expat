@@ -2782,8 +2782,6 @@
   "admin.menu.chattersConfig.description": "Chatter program settings",
   "admin.menu.chattersCountries": "Chatter Countries",
   "admin.menu.chattersCountries.description": "Chatter distribution by country",
-  "admin.menu.chattersCountryRotation": "Country Rotation",
-  "admin.menu.chattersCountryRotation.description": "Chatter country rotation settings",
   "admin.menu.chattersFraud": "Chatter Fraud",
   "admin.menu.chattersFraud.description": "Chatter fraud detection",
   "admin.menu.chattersHierarchy": "Chatter Hierarchy",

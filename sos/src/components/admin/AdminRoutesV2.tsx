@@ -361,9 +361,6 @@ const AdminChatterFraud = lazy(
 const AdminCommissionTracker = lazy(
   () => import("../../pages/admin/Chatter/AdminCommissionTracker")
 );
-const AdminChatterCountryRotation = lazy(
-  () => import("../../pages/admin/Chatter/AdminChatterCountryRotation")
-);
 const AdminChatterDripMessages = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterDripMessages")
 );
@@ -1387,14 +1384,6 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="chatters/country-rotation"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminChatterCountryRotation />
-          </Suspense>
-        }
-      />
-      <Route
         path="chatters/drip-messages"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -2212,7 +2201,6 @@ export const useAdminRouteValidation = () => {
       "/admin/chatters/payments",
       "/admin/chatters/config",
       "/admin/chatters/commissions",
-      "/admin/chatters/country-rotation",
       "/admin/chatters/resources",
       "/admin/marketing/whatsapp-groups",
       "/admin/marketing/whatsapp-supervision",
