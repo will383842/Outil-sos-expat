@@ -29,23 +29,7 @@ export {
   adminSeedInfluencerTrainingModules,
 } from "./adminTraining";
 
-// Resources Callables
-export {
-  getInfluencerResources,
-  downloadInfluencerResource,
-  copyInfluencerResourceText,
-} from "./resources";
-
-// Admin Resources Callables
-export {
-  adminGetInfluencerResources,
-  adminCreateInfluencerResource,
-  adminUpdateInfluencerResource,
-  adminDeleteInfluencerResource,
-  adminCreateInfluencerResourceText,
-  adminUpdateInfluencerResourceText,
-  adminDeleteInfluencerResourceText,
-} from "./admin/resources";
+// Resources Callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
 // Admin Callables
 export {

@@ -65,20 +65,4 @@ export {
   adminSearchChatters,
 } from "./admin/captain";
 
-// Resource Callables
-export {
-  getChatterResources,
-  downloadChatterResource,
-  copyChatterResourceText,
-} from "./resources";
-
-// Admin Resource Callables
-export {
-  adminGetChatterResources,
-  adminCreateChatterResource,
-  adminUpdateChatterResource,
-  adminDeleteChatterResource,
-  adminCreateChatterResourceText,
-  adminUpdateChatterResourceText,
-  adminDeleteChatterResourceText,
-} from "./admin/resources";
+// Resource Callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)

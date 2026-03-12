@@ -2932,18 +2932,7 @@ export {
   chatter_sendDripMessage,
   chatter_getDripStats,
   chatter_previewDripMessage,
-  // Resource callables
-  getChatterResources,
-  downloadChatterResource,
-  copyChatterResourceText,
-  // Admin Resource callables
-  adminGetChatterResources,
-  adminCreateChatterResource,
-  adminUpdateChatterResource,
-  adminDeleteChatterResource,
-  adminCreateChatterResourceText,
-  adminUpdateChatterResourceText,
-  adminDeleteChatterResourceText,
+  // Resource callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 } from './chatter';
 
 // ========== INFLUENCER SYSTEM ==========
@@ -2993,18 +2982,7 @@ export {
   adminDeleteInfluencerTrainingModule,
   // DISABLED 2026-01-30: One-time seed - removed to free quota
   // adminSeedInfluencerTrainingModules,
-  // Resources callables
-  getInfluencerResources,
-  downloadInfluencerResource,
-  copyInfluencerResourceText,
-  // Admin Resources callables
-  adminGetInfluencerResources,
-  adminCreateInfluencerResource,
-  adminUpdateInfluencerResource,
-  adminDeleteInfluencerResource,
-  adminCreateInfluencerResourceText,
-  adminUpdateInfluencerResourceText,
-  adminDeleteInfluencerResourceText,
+  // Resources callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   // Admin Promotions callables
   adminGetInfluencerPromotions,
   adminCreateInfluencerPromotion,
@@ -3044,14 +3022,7 @@ export {
   updateBloggerProfile,
   bloggerRequestWithdrawal,
   getBloggerLeaderboard,
-  // Resources (EXCLUSIVE)
-  getBloggerResources,
-  downloadBloggerResource,
-  copyBloggerResourceText,
-  // Guide (EXCLUSIVE)
-  getBloggerGuide,
-  copyBloggerGuideText,
-  trackBloggerGuideUsage,
+  // Resources, Guide — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   // Admin callables
   adminGetBloggersList,
   adminGetBloggerDetail,
@@ -3060,42 +3031,13 @@ export {
   adminGetBloggerConfig,
   adminUpdateBloggerConfig,
   adminGetBloggerConfigHistory,
-  adminCreateBloggerResource,
-  adminUpdateBloggerResource,
-  adminDeleteBloggerResource,
-  adminCreateBloggerResourceText,
-  adminCreateBloggerGuideTemplate,
-  adminUpdateBloggerGuideTemplate,
-  adminCreateBloggerGuideCopyText,
-  adminUpdateBloggerGuideCopyText,
-  adminCreateBloggerGuideBestPractice,
-  adminUpdateBloggerGuideBestPractice,
+  // Resource/Guide admin — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   adminExportBloggers,
   adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
-  // Admin GET resources/guide (NEW - were missing from exports)
-  adminGetBloggerResources,
-  adminGetBloggerGuide,
-  // Admin SAVE/DELETE resources & guide
-  adminSaveBloggerResourceFile,
-  adminSaveBloggerResourceText,
-  adminDeleteBloggerResourceFile,
-  adminDeleteBloggerResourceText,
-  adminSaveBloggerGuideTemplate,
-  adminSaveBloggerGuideCopyText,
-  adminSaveBloggerGuideBestPractice,
-  adminDeleteBloggerGuideTemplate,
-  adminDeleteBloggerGuideCopyText,
-  adminDeleteBloggerGuideBestPractice,
   // Admin withdrawals
   adminGetBloggerWithdrawals,
-  // Articles
-  getBloggerArticles,
-  copyBloggerArticle,
-  adminGetBloggerArticles,
-  adminCreateBloggerArticle,
-  adminUpdateBloggerArticle,
-  adminDeleteBloggerArticle,
+  // Articles — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
   // Public directory
   getBloggerDirectory,
@@ -3161,16 +3103,7 @@ export {
   getGroupAdminLeaderboard,
   updateGroupAdminProfile,
   requestGroupAdminWithdrawal,
-  // Resource callables
-  getGroupAdminResources,
-  getGroupAdminResourceContent,
-  getGroupAdminProcessedResourceContent,
-  trackGroupAdminResourceUsage,
-  // Post callables
-  getGroupAdminPosts,
-  getGroupAdminPostContent,
-  getGroupAdminProcessedPost,
-  trackGroupAdminPostUsage,
+  // Resource & Post callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   // Admin callables
   adminGetGroupAdminsList,
   adminGetGroupAdminDetail,
@@ -3180,14 +3113,7 @@ export {
   adminGetWithdrawalsList as adminGetGroupAdminWithdrawalsList,
   adminExportGroupAdmins,
   adminBulkGroupAdminAction,
-  adminCreateResource as adminCreateGroupAdminResource,
-  adminUpdateResource as adminUpdateGroupAdminResource,
-  adminDeleteResource as adminDeleteGroupAdminResource,
-  adminGetResourcesList as adminGetGroupAdminResourcesList,
-  adminCreatePost as adminCreateGroupAdminPost,
-  adminUpdatePost as adminUpdateGroupAdminPost,
-  adminDeletePost as adminDeleteGroupAdminPost,
-  adminGetPostsList as adminGetGroupAdminPostsList,
+  // adminCreate/Update/Delete Resource/Post — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
   adminGetGroupAdminConfigHistory,

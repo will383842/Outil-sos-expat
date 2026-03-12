@@ -47,15 +47,7 @@ export {
   getBloggerRecruits,
   getBloggerRecruitedProviders,
 
-  // Resources (EXCLUSIVE)
-  getBloggerResources,
-  downloadBloggerResource,
-  copyBloggerResourceText,
-
-  // Guide (EXCLUSIVE)
-  getBloggerGuide,
-  copyBloggerGuideText,
-  trackBloggerGuideUsage,
+  // Resources, Guide, Articles — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
   // Admin callables
   adminGetBloggersList,
@@ -65,32 +57,9 @@ export {
   adminGetBloggerConfig,
   adminUpdateBloggerConfig,
   adminGetBloggerConfigHistory,
-  adminCreateBloggerResource,
-  adminUpdateBloggerResource,
-  adminDeleteBloggerResource,
-  adminCreateBloggerResourceText,
-  adminCreateBloggerGuideTemplate,
-  adminUpdateBloggerGuideTemplate,
-  adminCreateBloggerGuideCopyText,
-  adminUpdateBloggerGuideCopyText,
-  adminCreateBloggerGuideBestPractice,
-  adminUpdateBloggerGuideBestPractice,
   adminExportBloggers,
   adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
-  // NEW: Admin GET/SAVE/DELETE functions
-  adminGetBloggerResources,
-  adminGetBloggerGuide,
-  adminSaveBloggerResourceFile,
-  adminSaveBloggerResourceText,
-  adminDeleteBloggerResourceFile,
-  adminDeleteBloggerResourceText,
-  adminSaveBloggerGuideTemplate,
-  adminSaveBloggerGuideCopyText,
-  adminSaveBloggerGuideBestPractice,
-  adminDeleteBloggerGuideTemplate,
-  adminDeleteBloggerGuideCopyText,
-  adminDeleteBloggerGuideBestPractice,
 
   // Admin withdrawals
   adminGetBloggerWithdrawals,
@@ -100,14 +69,6 @@ export {
 
   // Admin visibility toggle
   adminToggleBloggerVisibility,
-
-  // Articles
-  getBloggerArticles,
-  copyBloggerArticle,
-  adminGetBloggerArticles,
-  adminCreateBloggerArticle,
-  adminUpdateBloggerArticle,
-  adminDeleteBloggerArticle,
 
   // Admin delete
   adminDeleteBlogger,

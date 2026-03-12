@@ -24,16 +24,7 @@ export {
   requestGroupAdminWithdrawal,
   getGroupAdminRecruits,
   getGroupAdminRecruitedProviders,
-  // Resource callables
-  getGroupAdminResources,
-  getGroupAdminResourceContent,
-  getGroupAdminProcessedResourceContent,
-  trackGroupAdminResourceUsage,
-  // Post callables
-  getGroupAdminPosts,
-  getGroupAdminPostContent,
-  getGroupAdminProcessedPost,
-  trackGroupAdminPostUsage,
+  // Resource & Post callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   // Admin callables
   adminGetGroupAdminsList,
   adminGetGroupAdminDetail,
@@ -43,14 +34,7 @@ export {
   adminGetWithdrawalsList,
   adminExportGroupAdmins,
   adminBulkGroupAdminAction,
-  adminCreateResource,
-  adminUpdateResource,
-  adminDeleteResource,
-  adminGetResourcesList,
-  adminCreatePost,
-  adminUpdatePost,
-  adminDeletePost,
-  adminGetPostsList,
+  // adminCreate/Update/Delete Resource/Post — MIGRATED TO LARAVEL
   adminUpdateGroupAdminConfig,
   adminGetGroupAdminConfig,
   adminGetGroupAdminConfigHistory,

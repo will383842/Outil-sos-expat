@@ -19,6 +19,7 @@ import {
   DollarSign,
   BarChart3,
   Code,
+  FolderOpen,
   User,
   Wallet,
   LogOut,
@@ -72,6 +73,12 @@ const PartnerDashboardLayout: React.FC<PartnerDashboardLayoutProps> = ({ childre
       label: intl.formatMessage({ id: 'partner.menu.widgets', defaultMessage: 'Widgets' }),
       icon: <Code className="w-5 h-5" />,
       path: '/partner/widgets',
+    },
+    {
+      id: 'resources',
+      label: intl.formatMessage({ id: 'partner.menu.resources', defaultMessage: 'Ressources' }),
+      icon: <FolderOpen className="w-5 h-5" />,
+      path: '/partner/ressources',
     },
     {
       id: 'profile',

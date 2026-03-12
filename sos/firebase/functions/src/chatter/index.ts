@@ -86,26 +86,7 @@ export {
   adminGetChatterHierarchy,
 } from "./callables/admin";
 
-// ============================================================================
-// RESOURCE CALLABLES
-// ============================================================================
-
-export {
-  getChatterResources,
-  downloadChatterResource,
-  copyChatterResourceText,
-} from "./callables/resources";
-
-// Admin Resource Callables
-export {
-  adminGetChatterResources,
-  adminCreateChatterResource,
-  adminUpdateChatterResource,
-  adminDeleteChatterResource,
-  adminCreateChatterResourceText,
-  adminUpdateChatterResourceText,
-  adminDeleteChatterResourceText,
-} from "./callables/admin/resources";
+// Resource Callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
 // Public directory
 export { getChatterDirectory } from "./callables/public";

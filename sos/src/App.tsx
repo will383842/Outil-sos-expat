@@ -223,6 +223,7 @@ const PartnerDashboard = lazy(() => import('./pages/Partner/PartnerDashboard'));
 const PartnerEarnings = lazy(() => import('./pages/Partner/PartnerEarnings'));
 const PartnerClicks = lazy(() => import('./pages/Partner/PartnerClicks'));
 const PartnerWidgets = lazy(() => import('./pages/Partner/PartnerWidgets'));
+const PartnerResources = lazy(() => import('./pages/Partner/PartnerResources'));
 const PartnerProfile = lazy(() => import('./pages/Partner/PartnerProfile'));
 const PartnerPayments = lazy(() => import('./pages/Partner/PartnerPayments'));
 const PartnerSuspended = lazy(() => import('./pages/Partner/PartnerSuspended'));
@@ -490,6 +491,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/partner/gains", component: PartnerEarnings, protected: true, role: 'partner', translated: "partner-earnings" },
   { path: "/partner/statistiques", component: PartnerClicks, protected: true, role: 'partner', translated: "partner-clicks" },
   { path: "/partner/widgets", component: PartnerWidgets, protected: true, role: 'partner', translated: "partner-widgets" },
+  { path: "/partner/ressources", component: PartnerResources, protected: true, role: 'partner', translated: "partner-resources" },
   { path: "/partner/profil", component: PartnerProfile, protected: true, role: 'partner', translated: "partner-profile" },
   { path: "/partner/paiements", component: PartnerPayments, protected: true, role: 'partner', translated: "partner-payments" },
   { path: "/partner/suspendu", component: PartnerSuspended, protected: true, role: 'partner', translated: "partner-suspended" },

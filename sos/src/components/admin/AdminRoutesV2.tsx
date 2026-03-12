@@ -609,6 +609,9 @@ const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalyti
 const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
 const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
 
+// ===== LAZY IMPORTS - MARKETING (UNIFIED) =====
+const AdminMarketingResources = lazy(() => import("../../pages/admin/marketing/AdminMarketingResources"));
+
 // ===== LAZY IMPORTS - PRESS =====
 const AdminPressResources = lazy(() => import("../../pages/admin/AdminPressResources"));
 const AdminPressReleases = lazy(() => import("../../pages/admin/AdminPressReleases"));
@@ -2119,6 +2122,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="marketing/resources"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminMarketingResources />
+          </Suspense>
+        }
+      />
       <Route path="marketing" element={<Navigate to="marketing/templates-emails" replace />} />
 
       {/* 📰 PRESSE */}
@@ -2284,6 +2295,7 @@ export const useAdminRouteValidation = () => {
       "/admin/toolbox/telegram/queue",
       "/admin/toolbox/telegram/logs",
       "/admin/toolbox/telegram/config",
+      "/admin/marketing/resources",
     ];
     return validPaths.includes(path);
   };

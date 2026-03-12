@@ -502,6 +502,14 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.resourcesSub.description",
         children: [
           {
+            id: "marketing-resources-unified",
+            labelKey: "admin.menu.marketingResources",
+            path: "/admin/marketing/resources",
+            icon: FolderOpen,
+            badge: "NEW",
+            descriptionKey: "admin.menu.marketingResources.description",
+          },
+          {
             id: "chatters-resources",
             labelKey: "admin.menu.chattersResources",
             path: "/admin/chatters/resources",

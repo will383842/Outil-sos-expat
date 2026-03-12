@@ -48,26 +48,7 @@ export {
   adminSeedInfluencerTrainingModules,
 } from "./callables/adminTraining";
 
-// ============================================================================
-// RESOURCES CALLABLES
-// ============================================================================
-
-export {
-  getInfluencerResources,
-  downloadInfluencerResource,
-  copyInfluencerResourceText,
-} from "./callables/resources";
-
-// Admin Resources
-export {
-  adminGetInfluencerResources,
-  adminCreateInfluencerResource,
-  adminUpdateInfluencerResource,
-  adminDeleteInfluencerResource,
-  adminCreateInfluencerResourceText,
-  adminUpdateInfluencerResourceText,
-  adminDeleteInfluencerResourceText,
-} from "./callables/admin/resources";
+// Resources Callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
 // ============================================================================
 // ADMIN CALLABLES

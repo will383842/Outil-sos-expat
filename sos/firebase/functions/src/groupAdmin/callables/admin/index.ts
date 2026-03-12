@@ -13,19 +13,7 @@ export {
   adminBulkGroupAdminAction,
 } from "./groupAdmins";
 
-export {
-  adminCreateResource,
-  adminUpdateResource,
-  adminDeleteResource,
-  adminGetResourcesList,
-} from "./resources";
-
-export {
-  adminCreatePost,
-  adminUpdatePost,
-  adminDeletePost,
-  adminGetPostsList,
-} from "./posts";
+// Resources & Posts — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
 export {
   adminUpdateGroupAdminConfig,

@@ -368,6 +368,7 @@ export type RouteKey =
   | "partner-earnings"   // /partner/gains -> /partner/earnings, etc.
   | "partner-clicks"     // /partner/statistiques -> /partner/statistics, etc.
   | "partner-widgets"    // /partner/widgets -> /partner/widgets, etc.
+  | "partner-resources"  // /partner/ressources -> /partner/resources, etc.
   | "partner-profile"    // /partner/profil -> /partner/profile, etc.
   | "partner-payments"   // /partner/paiements -> /partner/payments, etc.
   | "partner-suspended"  // /partner/suspendu -> /partner/suspended, etc.
@@ -1588,6 +1589,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "partner/xiaozujian",
     hi: "partner/widgets",
     ar: "partner/أدوات",
+  },
+  "partner-resources": {
+    fr: "partner/ressources",
+    en: "partner/resources",
+    es: "partner/recursos",
+    de: "partner/ressourcen",
+    ru: "partner/resursy",
+    pt: "partner/recursos",
+    ch: "partner/ziyuan",
+    hi: "partner/sansadhan",
+    ar: "partner/الموارد",
   },
   "partner-profile": {
     fr: "partner/profil",

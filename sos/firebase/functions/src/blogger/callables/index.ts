@@ -11,29 +11,7 @@ export { getBloggerLeaderboard } from "./getBloggerLeaderboard";
 export { getBloggerRecruits } from "./getBloggerRecruits";
 export { getBloggerRecruitedProviders } from "./getRecruitedProviders";
 
-// Resources (EXCLUSIVE)
-export {
-  getBloggerResources,
-  downloadBloggerResource,
-  copyBloggerResourceText,
-} from "./resources";
-
-// Guide (EXCLUSIVE)
-export {
-  getBloggerGuide,
-  copyBloggerGuideText,
-  trackBloggerGuideUsage,
-} from "./guide";
-
-// Articles
-export {
-  getBloggerArticles,
-  copyBloggerArticle,
-  adminGetBloggerArticles,
-  adminCreateBloggerArticle,
-  adminUpdateBloggerArticle,
-  adminDeleteBloggerArticle,
-} from "./articles";
+// Resources, Guide, Articles — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
 
 // Admin callables
 export {
@@ -44,32 +22,10 @@ export {
   adminGetBloggerConfig,
   adminUpdateBloggerConfig,
   adminGetBloggerConfigHistory,
-  adminCreateBloggerResource,
-  adminUpdateBloggerResource,
-  adminDeleteBloggerResource,
-  adminCreateBloggerResourceText,
-  adminCreateBloggerGuideTemplate,
-  adminUpdateBloggerGuideTemplate,
-  adminCreateBloggerGuideCopyText,
-  adminUpdateBloggerGuideCopyText,
-  adminCreateBloggerGuideBestPractice,
-  adminUpdateBloggerGuideBestPractice,
+  // Resource/Guide admin — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
   adminExportBloggers,
   adminBulkBloggerAction,
   adminGetBloggerLeaderboard,
-  // NEW: Admin GET/SAVE/DELETE functions for console
-  adminGetBloggerResources,
-  adminGetBloggerGuide,
-  adminSaveBloggerResourceFile,
-  adminSaveBloggerResourceText,
-  adminDeleteBloggerResourceFile,
-  adminDeleteBloggerResourceText,
-  adminSaveBloggerGuideTemplate,
-  adminSaveBloggerGuideCopyText,
-  adminSaveBloggerGuideBestPractice,
-  adminDeleteBloggerGuideTemplate,
-  adminDeleteBloggerGuideCopyText,
-  adminDeleteBloggerGuideBestPractice,
   // Admin withdrawals
   adminGetBloggerWithdrawals,
   // Admin delete
