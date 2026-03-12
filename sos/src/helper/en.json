@@ -3013,7 +3013,7 @@
   "admin.menu.userFeedback.description": "Client and provider feedback",
   "admin.menu.users": "Users & Providers",
   "admin.menu.users.description": "Complete user management",
-  "admin.menu.whatsappSupervision": "WhatsApp Supervision",
+  "admin.menu.whatsappSupervision": "WhatsApp Managers",
   "admin.menu.whatsappSupervision.description": "Assign and manage WhatsApp group managers",
   "admin.metaAnalytics.alerts.highAnonymousRate": "Many anonymous users",
   "admin.metaAnalytics.alerts.highAnonymousRateDesc": "{rate}% of events are anonymous. Encourage login for better attribution.",
