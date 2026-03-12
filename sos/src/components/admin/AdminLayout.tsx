@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 import { buildBreadcrumb, getFinalMenu, type AdminMenuItem } from '../../config/adminMenu';
-import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, getCountFromServer, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import SidebarItem from './sidebar/SidebarItem';
 
@@ -237,13 +237,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   useEffect(() => {
     if (!user || user.role !== 'admin') return;
-    const safeCount = (q: ReturnType<typeof query>) =>
-      getCountFromServer(q).then((snap) => snap.data().count).catch(() => 0);
+    // Count only NON-ARCHIVED items (filter client-side to avoid needing extra composite indexes)
+    const safeActiveCount = (q: ReturnType<typeof query>) =>
+      getDocs(q).then((snap) => snap.docs.filter((d) => !d.data().isArchived).length).catch(() => 0);
     Promise.all([
-      safeCount(query(collection(db, 'captain_applications'), where('status', 'in', ['pending', 'contacted']))),
-      safeCount(query(collection(db, 'contact_messages'), where('isRead', '==', false))),
-      safeCount(query(collection(db, 'user_feedback'), where('status', 'in', ['new', 'in_progress']))),
-      safeCount(query(collection(db, 'partner_applications'), where('status', 'in', ['pending', 'contacted']))),
+      safeActiveCount(query(collection(db, 'captain_applications'), where('status', 'in', ['pending', 'contacted']))),
+      safeActiveCount(query(collection(db, 'contact_messages'), where('isRead', '==', false))),
+      safeActiveCount(query(collection(db, 'user_feedback'), where('status', 'in', ['new', 'in_progress']))),
+      safeActiveCount(query(collection(db, 'partner_applications'), where('status', 'in', ['pending', 'contacted']))),
     ])
       .then(([cap, contact, feedback, partner]) => {
         setInboxCount(cap + contact + feedback + partner);

@@ -198,22 +198,22 @@ const DEFAULT_WIDTHS: Record<ColId | "select" | "actions", number> = {
   actions: 420,
 };
 
-// Colonnes essentielles visibles par défaut (design épuré)
+// Colonnes essentielles visibles par défaut
 const DEFAULT_VISIBLE: Record<ColId, boolean> = {
   name: true,
   email: true,
   emailVerified: false,
-  phone: false,
+  phone: true,
   country: true,
   city: false,
   barId: false,
   barCountry: false,
-  languages: false,
+  languages: true,
   specialties: false,
   rating: true,
   reviews: false,
-  signup: false,
-  lastLogin: false,
+  signup: true,
+  lastLogin: true,
   accountStatus: true,
   validation: true,
   kyc: true,
@@ -247,7 +247,7 @@ const useColumnLayout = () => {
   const [visible, setVisible] = useState<Record<ColId, boolean>>(
     (() => {
       try {
-        const raw = localStorage.getItem("admin.lawyers.colVisible.v1");
+        const raw = localStorage.getItem("admin.lawyers.colVisible.v2");
         if (raw) return { ...DEFAULT_VISIBLE, ...(JSON.parse(raw) as Record<ColId, boolean>) };
       } catch { }
       return DEFAULT_VISIBLE;
@@ -263,7 +263,7 @@ const useColumnLayout = () => {
   }, [widths]);
 
   useEffect(() => {
-    localStorage.setItem("admin.lawyers.colVisible.v1", JSON.stringify(visible));
+    localStorage.setItem("admin.lawyers.colVisible.v2", JSON.stringify(visible));
   }, [visible]);
 
   const reset = () => {

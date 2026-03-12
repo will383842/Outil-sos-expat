@@ -155,6 +155,7 @@ interface GroupAdmin {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string | null;
   status: string;
   totalEarned: number;
   totalClients: number;
@@ -169,6 +170,8 @@ interface GroupAdmin {
   lastLoginAt?: string | null;
   isFeatured?: boolean;
   isVisible?: boolean;
+  recruitedBy?: string | null;
+  recruitedByName?: string | null;
 }
 
 interface GroupAdminListResponse {
@@ -239,6 +242,47 @@ const AdminGroupAdminsList: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  // Bulk delete
+  const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState('');
+  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteModal(true);
+  };
+
+  const executeBulkDelete = async () => {
+    if (bulkDeleteConfirm !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+    setBulkActionLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminDeleteGroupAdmin');
+      const ids = Array.from(selectedIds);
+      let successCount = 0;
+      for (const id of ids) {
+        try {
+          await fn({ groupAdminId: id, reason: bulkDeleteReason });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to delete group admin ${id}:`, err);
+        }
+      }
+      toast.success(`${successCount}/${ids.length} admins de groupe supprimés`);
+      setSelectedIds(new Set());
+      setBulkDeleteModal(false);
+      setBulkDeleteConfirm('');
+      setBulkDeleteReason('');
+      fetchGroupAdmins();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression en masse');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   // Per-row moderation action modal
   const [actionModal, setActionModal] = useState<{
@@ -595,6 +639,9 @@ const AdminGroupAdminsList: React.FC = () => {
               <button onClick={() => handleBulkAction('block')} disabled={bulkActionLoading} className={`${UI.button.danger} px-3 py-1 text-sm flex items-center gap-1`}>
                 <X className="w-4 h-4" /> {intl.formatMessage({ id: 'groupAdmin.admin.list.block' })}
               </button>
+              <button onClick={handleBulkDelete} disabled={bulkActionLoading} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center gap-1.5">
+                <Trash2 className="w-3.5 h-3.5" />Supprimer
+              </button>
             </div>
           </div>
         )}
@@ -618,6 +665,9 @@ const AdminGroupAdminsList: React.FC = () => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.group' })}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.typeSize' })}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.status' })}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Inscription</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">Tél.</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Parrain</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <span className="inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5" />Visible</span>
                       </th>
@@ -659,6 +709,27 @@ const AdminGroupAdminsList: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-4">{getGroupAdminStatusBadge(admin.status)}</td>
+                        <td className="px-4 py-4 hidden lg:table-cell">
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                            {admin.createdAt ? new Date(admin.createdAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 hidden xl:table-cell">
+                          {admin.phone ? (
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{admin.phone}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 hidden md:table-cell">
+                          {admin.recruitedBy ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400" title={`Parrain: ${admin.recruitedByName || admin.recruitedBy}`}>
+                              <span className="truncate max-w-[130px]">{admin.recruitedByName || 'Parrain'}</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
                         {/* Toggle visibilité */}
                         <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                           {visibilityLoading.get(admin.id) ? (
@@ -753,22 +824,20 @@ const AdminGroupAdminsList: React.FC = () => {
                                     </>
                                   )}
                                   {admin.status === 'banned' && (
-                                    <>
-                                      <button
-                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'reactivate' }); }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
-                                      >
-                                        <PlayCircle className="w-4 h-4" /> Réactiver
-                                      </button>
-                                      <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
-                                      <button
-                                        onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'delete' }); }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                      >
-                                        <Trash2 className="w-4 h-4" /> Supprimer
-                                      </button>
-                                    </>
+                                    <button
+                                      onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'reactivate' }); }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                    >
+                                      <PlayCircle className="w-4 h-4" /> Réactiver
+                                    </button>
                                   )}
+                                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                                  <button
+                                    onClick={() => { setOpenDropdownId(null); setActionModal({ groupAdmin: admin, action: 'delete' }); }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" /> Supprimer
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -1036,6 +1105,38 @@ const AdminGroupAdminsList: React.FC = () => {
                 {actionModal.action === 'ban' && 'Bannir'}
                 {actionModal.action === 'reactivate' && 'Réactiver'}
                 {actionModal.action === 'delete' && 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation modal */}
+      {bulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Supprimer {selectedIds.size} admin{selectedIds.size > 1 ? 's' : ''} de groupe ?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Cette action est irréversible. Tous les comptes, commissions, retraits et données associées seront définitivement supprimés.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raison</label>
+                <input type="text" value={bulkDeleteReason} onChange={(e) => setBulkDeleteReason(e.target.value)} placeholder="Raison de la suppression..." className={UI.input} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tapez SUPPRIMER pour confirmer</label>
+                <input type="text" value={bulkDeleteConfirm} onChange={(e) => setBulkDeleteConfirm(e.target.value)} placeholder="SUPPRIMER" className={UI.input} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => { setBulkDeleteModal(false); setBulkDeleteConfirm(''); setBulkDeleteReason(''); }} className={`${UI.button.secondary} px-4 py-2`}>Annuler</button>
+              <button onClick={executeBulkDelete} disabled={bulkActionLoading || bulkDeleteConfirm !== 'SUPPRIMER'} className="bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Supprimer définitivement
               </button>
             </div>
           </div>

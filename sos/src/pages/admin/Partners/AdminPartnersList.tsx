@@ -32,6 +32,7 @@ import {
   PlayCircle,
   Trash2,
   MoreVertical,
+  AlertCircle,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -54,6 +55,7 @@ interface PartnerListItem {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string | null;
   websiteName: string;
   websiteUrl: string;
   websiteLogo?: string;
@@ -68,6 +70,9 @@ interface PartnerListItem {
   conversionRate: number;
   totalEarned: number;
   createdAt: string;
+  lastLoginAt?: string | null;
+  recruitedBy?: string | null;
+  recruitedByName?: string | null;
 }
 
 interface PartnerListResponse {
@@ -108,6 +113,64 @@ const AdminPartnersList: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<PartnerListResponse['stats']>();
   const [exporting, setExporting] = useState(false);
+
+  // Selection & bulk delete
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState('');
+  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === partners.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(partners.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteModal(true);
+  };
+
+  const executeBulkDelete = async () => {
+    if (bulkDeleteConfirm !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminDeletePartner');
+      const ids = Array.from(selectedIds);
+      let successCount = 0;
+      for (const id of ids) {
+        try {
+          await fn({ partnerId: id, reason: bulkDeleteReason });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to delete partner ${id}:`, err);
+        }
+      }
+      toast.success(`${successCount}/${ids.length} partenaires supprimés`);
+      setSelectedIds(new Set());
+      setBulkDeleteModal(false);
+      setBulkDeleteConfirm('');
+      setBulkDeleteReason('');
+      fetchPartners();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression en masse');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // Action modal state
   type PartnerAction = 'suspend' | 'ban' | 'reactivate' | 'delete';
@@ -342,6 +405,17 @@ const AdminPartnersList: React.FC = () => {
           </div>
         </div>
 
+        {/* Bulk actions */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl">
+            <span className="text-sm font-medium text-cyan-700 dark:text-cyan-300">{selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''}</span>
+            <button onClick={handleBulkDelete} disabled={actionLoading} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center gap-1.5">
+              <Trash2 className="w-3.5 h-3.5" />Supprimer
+            </button>
+            <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded-lg">Désélectionner</button>
+          </div>
+        )}
+
         {/* Table */}
         {error ? (
           <div className={UI.card + ' p-8 text-center'}>
@@ -369,7 +443,19 @@ const AdminPartnersList: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-white/10">
-                    {['logo', 'website', 'code', 'status', 'clicks', 'calls', 'earnings', 'conversion'].map(col => (
+                    <th className="px-3 py-3 text-left">
+                      <input type="checkbox" checked={selectedIds.size === partners.length && partners.length > 0} onChange={selectAll} className="w-4 h-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500" />
+                    </th>
+                    {['logo', 'website', 'code', 'status'].map(col => (
+                      <th key={col} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <FormattedMessage id={`admin.partners.table.${col}`} defaultMessage={col} />
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Inscription</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">Tél.</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">Dernière co.</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Parrain</th>
+                    {['clicks', 'calls', 'earnings', 'conversion'].map(col => (
                       <th key={col} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         <FormattedMessage id={`admin.partners.table.${col}`} defaultMessage={col} />
                       </th>
@@ -387,8 +473,11 @@ const AdminPartnersList: React.FC = () => {
                       <tr
                         key={partner.id}
                         onClick={() => navigate(`/admin/partners/${partner.id}`)}
-                        className="hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                        className={`hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors ${selectedIds.has(partner.id) ? 'bg-cyan-50 dark:bg-cyan-900/10' : ''}`}
                       >
+                        <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                          <input type="checkbox" checked={selectedIds.has(partner.id)} onChange={() => toggleSelection(partner.id)} className="w-4 h-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500" />
+                        </td>
                         <td className="px-4 py-3">
                           {partner.websiteLogo ? (
                             <img src={partner.websiteLogo} alt="" className="w-8 h-8 rounded-lg object-contain" />
@@ -412,6 +501,22 @@ const AdminPartnersList: React.FC = () => {
                             <StatusIcon className="w-3 h-3" />
                             {partner.status}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">
+                          {new Date(partner.createdAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-4 py-3 hidden xl:table-cell">
+                          {partner.phone ? <span className="text-xs text-gray-600 dark:text-gray-400">{partner.phone}</span> : <span className="text-xs text-gray-400">—</span>}
+                        </td>
+                        <td className="px-4 py-3 hidden xl:table-cell">
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                            {partner.lastLoginAt ? new Date(partner.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 hidden md:table-cell">
+                          {partner.recruitedBy ? (
+                            <span className="text-xs text-indigo-600 dark:text-indigo-400 truncate max-w-[130px]">{partner.recruitedByName || 'Parrain'}</span>
+                          ) : <span className="text-xs text-gray-400">—</span>}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                           {partner.currentMonthStats.clicks.toLocaleString()}
@@ -694,6 +799,38 @@ const AdminPartnersList: React.FC = () => {
                 {actionModal.action === 'ban' && 'Bannir'}
                 {actionModal.action === 'suspend' && 'Suspendre'}
                 {actionModal.action === 'reactivate' && 'Réactiver'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation modal */}
+      {bulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Supprimer {selectedIds.size} partenaire{selectedIds.size > 1 ? 's' : ''} ?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Cette action est irréversible. Tous les comptes, commissions, widgets et données associées seront définitivement supprimés.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raison</label>
+                <input type="text" value={bulkDeleteReason} onChange={(e) => setBulkDeleteReason(e.target.value)} placeholder="Raison de la suppression..." className={UI.input} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tapez SUPPRIMER pour confirmer</label>
+                <input type="text" value={bulkDeleteConfirm} onChange={(e) => setBulkDeleteConfirm(e.target.value)} placeholder="SUPPRIMER" className={UI.input} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => { setBulkDeleteModal(false); setBulkDeleteConfirm(''); setBulkDeleteReason(''); }} className={`${UI.button.secondary} px-4 py-2`}>Annuler</button>
+              <button onClick={executeBulkDelete} disabled={actionLoading || bulkDeleteConfirm !== 'SUPPRIMER'} className="bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl px-4 py-2 flex items-center gap-2 disabled:opacity-50">
+                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Supprimer définitivement
               </button>
             </div>
           </div>

@@ -108,6 +108,9 @@ interface Influencer {
   lastLoginAt?: string | null;
   isFeatured?: boolean;
   isVisible?: boolean;
+  phone?: string | null;
+  recruitedBy?: string | null;
+  recruitedByName?: string | null;
 }
 
 interface InfluencerListResponse {
@@ -277,6 +280,45 @@ const AdminInfluencersList: React.FC = () => {
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState('');
+  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteModal(true);
+  };
+
+  const executeBulkDelete = async () => {
+    if (bulkDeleteConfirm !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+    setBulkActionLoading(true);
+    try {
+      const fn = httpsCallable(functionsAffiliate, 'adminDeleteInfluencer');
+      const ids = Array.from(selectedIds);
+      let successCount = 0;
+      for (const id of ids) {
+        try {
+          await fn({ influencerId: id, reason: bulkDeleteReason });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to delete influencer ${id}:`, err);
+        }
+      }
+      toast.success(`${successCount}/${ids.length} influenceurs supprimés`);
+      setSelectedIds(new Set());
+      setBulkDeleteModal(false);
+      setBulkDeleteConfirm('');
+      setBulkDeleteReason('');
+      fetchInfluencers();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression en masse');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   // Export
   const [exporting, setExporting] = useState(false);
@@ -704,6 +746,14 @@ const AdminInfluencersList: React.FC = () => {
                   <FormattedMessage id="admin.influencers.bulk.email" defaultMessage="Envoyer email" />
                 </button>
                 <button
+                  onClick={() => handleBulkDelete()}
+                  disabled={bulkActionLoading}
+                  className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Supprimer
+                </button>
+                <button
                   onClick={() => setSelectedIds(new Set())}
                   className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
@@ -758,6 +808,15 @@ const AdminInfluencersList: React.FC = () => {
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           <FormattedMessage id="admin.influencers.col.status" defaultMessage="Statut" />
+                        </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+                          Inscription
+                        </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                          Tél.
+                        </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                          Parrain
                         </th>
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                           <FormattedMessage id="admin.influencers.col.earnings" defaultMessage="Gains" />
@@ -821,6 +880,27 @@ const AdminInfluencersList: React.FC = () => {
                               {getStatusIcon(influencer.status)}
                               <span className="hidden sm:inline">{influencer.status}</span>
                             </span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                              {new Date(influencer.createdAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell">
+                            {influencer.phone ? (
+                              <span className="text-xs text-gray-600 dark:text-gray-400">{influencer.phone}</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
+                            {influencer.recruitedBy ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400" title={`Parrain: ${influencer.recruitedByName || influencer.recruitedBy}`}>
+                                <span className="truncate max-w-[130px]">{influencer.recruitedByName || 'Parrain'}</span>
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
                             <span className="font-medium text-green-600 dark:text-green-400 text-sm">
@@ -922,22 +1002,20 @@ const AdminInfluencersList: React.FC = () => {
                                       </>
                                     )}
                                     {influencer.status === 'banned' && (
-                                      <>
-                                        <button
-                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'reactivate' }); }}
-                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
-                                        >
-                                          <PlayCircle className="w-4 h-4" /> Reactiver
-                                        </button>
-                                        <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
-                                        <button
-                                          onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'delete' }); }}
-                                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                        >
-                                          <Trash2 className="w-4 h-4" /> Supprimer
-                                        </button>
-                                      </>
+                                      <button
+                                        onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'reactivate' }); }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                      >
+                                        <PlayCircle className="w-4 h-4" /> Reactiver
+                                      </button>
                                     )}
+                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                                    <button
+                                      onClick={() => { setOpenDropdownId(null); setActionModal({ influencer, action: 'delete' }); }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                    >
+                                      <Trash2 className="w-4 h-4" /> Supprimer
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -1204,6 +1282,36 @@ const AdminInfluencersList: React.FC = () => {
                 {actionModal.action === 'ban' && 'Bannir'}
                 {actionModal.action === 'reactivate' && 'Réactiver'}
                 {actionModal.action === 'delete' && 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {bulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Supprimer {selectedIds.size} influenceur{selectedIds.size > 1 ? 's' : ''} ?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Cette action est irréversible. Tous les comptes, commissions, retraits et données associées seront définitivement supprimés.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raison</label>
+                <input type="text" value={bulkDeleteReason} onChange={(e) => setBulkDeleteReason(e.target.value)} placeholder="Raison de la suppression..." className={UI.input} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tapez SUPPRIMER pour confirmer</label>
+                <input type="text" value={bulkDeleteConfirm} onChange={(e) => setBulkDeleteConfirm(e.target.value)} placeholder="SUPPRIMER" className={UI.input} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => { setBulkDeleteModal(false); setBulkDeleteConfirm(''); setBulkDeleteReason(''); }} className={`${UI.button.secondary} px-4 py-2`}>Annuler</button>
+              <button onClick={executeBulkDelete} disabled={bulkActionLoading || bulkDeleteConfirm !== 'SUPPRIMER'} className={`${UI.button.danger} px-4 py-2 flex items-center gap-2 disabled:opacity-50`}>
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Supprimer définitivement
               </button>
             </div>
           </div>

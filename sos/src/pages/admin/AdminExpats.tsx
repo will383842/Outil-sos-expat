@@ -14,6 +14,7 @@ import {
   Timestamp,
   startAfter,
   getCountFromServer,
+  writeBatch,
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
@@ -222,22 +223,22 @@ const DEFAULT_WIDTHS: Record<ColId, number> = {
   actions: 240,
 };
 
-// Colonnes essentielles visibles par défaut (design épuré)
+// Colonnes essentielles visibles par défaut
 const DEFAULT_VISIBLE: Record<ColId, boolean> = {
   select: true,
   name: true,
   email: true,
   emailVerified: false,
-  phone: false,
+  phone: true,
   country: true,
   city: false,
   origin: false,
-  languages: false,
+  languages: true,
   help: false,
   rating: true,
   reviews: false,
-  signup: false,
-  lastLogin: false,
+  signup: true,
+  lastLogin: true,
   yearsInCountry: false,
   expatSince: false,
   hourlyRate: false,
@@ -273,7 +274,7 @@ const useColumnLayout = () => {
   const [visible, setVisible] = useState<Record<ColId, boolean>>(
     (() => {
       try {
-        const raw = localStorage.getItem("admin.expats.colVisible.v1");
+        const raw = localStorage.getItem("admin.expats.colVisible.v2");
         if (raw) {
           const obj = JSON.parse(raw) as Record<string, boolean>;
           return { ...DEFAULT_VISIBLE, ...obj };
@@ -290,7 +291,7 @@ const useColumnLayout = () => {
     localStorage.setItem("admin.expats.colWidths.v1", JSON.stringify(widths));
   }, [widths]);
   useEffect(() => {
-    localStorage.setItem("admin.expats.colVisible.v1", JSON.stringify(visible));
+    localStorage.setItem("admin.expats.colVisible.v2", JSON.stringify(visible));
   }, [visible]);
 
   const reset = () => {
@@ -327,6 +328,8 @@ const AdminExpats: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [drawerExpat, setDrawerExpat] = useState<Expat | null>(null);
   const [confirm, setConfirm] = useState<{ action: string; ids: string[] } | null>(null);
+  const [reasonOpen, setReasonOpen] = useState<null | { type: "delete"; ids: string[] }>(null);
+  const [reasonText, setReasonText] = useState("");
 
   const { order, setOrder, widths, setWidths, visible, setVisible, reset: resetCols } = useColumnLayout();
 
@@ -643,9 +646,14 @@ const AdminExpats: React.FC = () => {
     setSelected((s) => (checked ? [...s, id] : s.filter((x) => x !== id)));
   const isAllSelected = expats.length > 0 && selected.length === expats.length;
 
-  const onBulk = async (action: "approve" | "reject" | "activate" | "suspend") => {
+  const onBulk = async (action: "approve" | "reject" | "activate" | "suspend" | "delete") => {
     const ids = selected;
     if (!ids.length) return;
+    if (action === "delete") {
+      setReasonOpen({ type: "delete", ids: selected });
+      setReasonText("");
+      return;
+    }
     const ops = ids.map(async (id) => {
       const updates: any = { updatedAt: new Date() };
       if (action === "approve") {
@@ -921,6 +929,16 @@ const AdminExpats: React.FC = () => {
             </button>
             <button className="text-gray-600 hover:text-gray-900" title={t("edit")}>
               <Edit size={16} />
+            </button>
+            <button
+              className="text-red-600 hover:text-red-900"
+              title="Supprimer"
+              onClick={() => {
+                setReasonOpen({ type: "delete", ids: [e.id] });
+                setReasonText("");
+              }}
+            >
+              <Trash2 size={16} />
             </button>
           </div>
         );
@@ -1320,6 +1338,10 @@ const AdminExpats: React.FC = () => {
                 <Button onClick={() => void onBulk("suspend")} className="bg-yellow-600 hover:bg-yellow-700 text-white">
                   {t("suspend")}
                 </Button>
+                <Button onClick={() => void onBulk("delete")} className="bg-red-600 hover:bg-red-700 text-white">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Supprimer ({selected.length})
+                </Button>
               </div>
             </div>
           </div>
@@ -1429,6 +1451,52 @@ const AdminExpats: React.FC = () => {
           </Modal>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      <Modal isOpen={!!reasonOpen} onClose={() => setReasonOpen(null)} title="Supprimer">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            {reasonOpen?.ids.length === 1
+              ? "Supprimer définitivement cet expat ?"
+              : `Supprimer définitivement ${reasonOpen?.ids.length} expats ?`}
+          </p>
+          <textarea
+            className="w-full border border-gray-300 rounded-md px-3 py-2"
+            rows={3}
+            value={reasonText}
+            placeholder="Raison (obligatoire, min 3 car.)"
+            onChange={(e) => setReasonText(e.target.value)}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setReasonOpen(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const ids = reasonOpen?.ids || [];
+                if (reasonText.trim().length < 3) return;
+                try {
+                  const batch = writeBatch(db);
+                  ids.forEach((id) => batch.delete(doc(db, "users", id)));
+                  await batch.commit();
+                  setReasonOpen(null);
+                  setReasonText("");
+                  setSelected([]);
+                  toast.success("Suppression réussie");
+                  await loadPage("init");
+                } catch (e) {
+                  console.error("Delete error", e);
+                  toast.error("Erreur lors de la suppression");
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Confirmer
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Translation Modal */}
       {translationModalOpen && (

@@ -144,16 +144,19 @@ export const adminGetInfluencersList = onCall(
 
       let influencers = pageDocs.map((doc) => {
         const data = doc.data() as Influencer;
+        const userData = userDocs.find((u) => u.id === doc.id)?.data();
         const item: {
           id: string; email: string; firstName: string; lastName: string;
-          country: string; status: InfluencerStatus; totalEarned: number;
+          phone: string | null; country: string; status: InfluencerStatus; totalEarned: number;
           totalClients: number; totalRecruits: number; currentMonthRank: number | null;
           createdAt: string; lastLoginAt: string | null; isVisible: boolean; photoUrl?: string; isFeatured: boolean;
+          recruitedBy: string | null; recruitedByName: string | null;
         } = {
           id: data.id,
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
+          phone: (data as any).phone || userData?.phone || null,
           country: data.country,
           status: data.status,
           totalEarned: data.totalEarned,
@@ -164,6 +167,8 @@ export const adminGetInfluencersList = onCall(
           lastLoginAt: data.lastLoginAt?.toDate?.()?.toISOString() || null,
           isVisible: data.isVisible ?? false,
           isFeatured: featuredMap[doc.id] ?? false,
+          recruitedBy: (data as any).recruitedBy || null,
+          recruitedByName: (data as any).recruitedByName || null,
         };
         if (data.photoUrl) item.photoUrl = data.photoUrl;
         return item;

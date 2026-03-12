@@ -675,6 +675,46 @@ const AdminChattersList: React.FC = () => {
     }
   };
 
+  const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState('');
+  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleteModal(true);
+  };
+
+  const executeBulkDelete = async () => {
+    if (bulkDeleteConfirm !== 'SUPPRIMER') {
+      toast.error('Tapez SUPPRIMER pour confirmer');
+      return;
+    }
+    setBulkActionLoading(true);
+    try {
+      const fn = httpsCallable(functions, 'adminManageChatter');
+      const ids = Array.from(selectedIds);
+      let successCount = 0;
+      for (const id of ids) {
+        try {
+          await fn({ chatterId: id, action: 'delete', reason: bulkDeleteReason });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to delete chatter ${id}:`, err);
+        }
+      }
+      toast.success(`${successCount}/${ids.length} chatters supprimés`);
+      setSelectedIds(new Set());
+      setBulkDeleteModal(false);
+      setBulkDeleteConfirm('');
+      setBulkDeleteReason('');
+      fetchChatters();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression en masse');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   // Toggle selection
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds);
@@ -890,6 +930,14 @@ const AdminChattersList: React.FC = () => {
                 <FormattedMessage id="admin.chatters.bulk.email" defaultMessage="Envoyer email" />
               </button>
               <button
+                onClick={() => handleBulkDelete()}
+                disabled={bulkActionLoading}
+                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Supprimer
+              </button>
+              <button
                 onClick={() => setSelectedIds(new Set())}
                 className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
@@ -941,6 +989,12 @@ const AdminChattersList: React.FC = () => {
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Chatter
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+                        Inscription
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                        Tél.
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
                         <FormattedMessage id="admin.chatters.col.country" defaultMessage="Pays" />
@@ -1004,6 +1058,18 @@ const AdminChattersList: React.FC = () => {
                               </p>
                             </div>
                           </div>
+                        </td>
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                            {new Date(chatter.createdAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        </td>
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell">
+                          {chatter.phone ? (
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{chatter.phone}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                           <div className="flex items-center gap-1.5">
@@ -1804,6 +1870,59 @@ const AdminChattersList: React.FC = () => {
               >
                 {reassignLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitBranch className="w-4 h-4" />}
                 Réassigner
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation modal */}
+      {bulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Supprimer {selectedIds.size} chatter{selectedIds.size > 1 ? 's' : ''} ?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Cette action est irréversible. Tous les comptes, commissions, retraits et données associées seront définitivement supprimés.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raison</label>
+                <input
+                  type="text"
+                  value={bulkDeleteReason}
+                  onChange={(e) => setBulkDeleteReason(e.target.value)}
+                  placeholder="Raison de la suppression..."
+                  className={UI.input}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tapez SUPPRIMER pour confirmer</label>
+                <input
+                  type="text"
+                  value={bulkDeleteConfirm}
+                  onChange={(e) => setBulkDeleteConfirm(e.target.value)}
+                  placeholder="SUPPRIMER"
+                  className={UI.input}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => { setBulkDeleteModal(false); setBulkDeleteConfirm(''); setBulkDeleteReason(''); }}
+                className={`${UI.button.secondary} px-4 py-2`}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={executeBulkDelete}
+                disabled={bulkActionLoading || bulkDeleteConfirm !== 'SUPPRIMER'}
+                className={`${UI.button.danger} px-4 py-2 flex items-center gap-2 disabled:opacity-50`}
+              >
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Supprimer définitivement
               </button>
             </div>
           </div>

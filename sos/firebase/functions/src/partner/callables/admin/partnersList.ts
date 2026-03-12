@@ -92,6 +92,7 @@ export const adminPartnersList = onCall(
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
+          phone: (data as any).phone || null,
           websiteName: data.websiteName,
           websiteUrl: data.websiteUrl,
           websiteCategory: data.websiteCategory,
@@ -104,6 +105,9 @@ export const adminPartnersList = onCall(
           totalCalls: data.totalCalls,
           availableBalance: data.availableBalance,
           createdAt: data.createdAt?.toDate?.().toISOString() || "",
+          lastLoginAt: (data as any).lastLoginAt?.toDate?.()?.toISOString() || null,
+          recruitedBy: (data as any).recruitedBy || null,
+          recruitedByName: (data as any).recruitedByName || null,
         };
       });
 

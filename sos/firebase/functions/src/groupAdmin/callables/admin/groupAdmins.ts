@@ -62,6 +62,7 @@ interface GroupAdminListItem {
   email: string;
   firstName: string;
   lastName: string;
+  phone: string | null;
   groupName: string;
   groupUrl: string;
   groupType: string;
@@ -74,9 +75,11 @@ interface GroupAdminListItem {
   availableBalance: number;
   totalClients: number;
   totalRecruits: number;
-  createdAt: Timestamp;
+  createdAt: string;
   lastLoginAt: string | null;
   isFeatured?: boolean;
+  recruitedBy: string | null;
+  recruitedByName: string | null;
 }
 
 interface GroupAdminStats {
@@ -149,11 +152,13 @@ export const adminGetGroupAdminsList = onCall(
 
       let allGroupAdmins = snapshot.docs.map((doc) => {
         const data = doc.data() as GroupAdmin;
+        const userData = userDocs.find((u) => u.id === doc.id)?.data();
         return {
           id: data.id,
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
+          phone: (data as any).phone || userData?.phone || null,
           groupName: data.groupName,
           groupUrl: data.groupUrl,
           groupType: data.groupType,
@@ -166,9 +171,11 @@ export const adminGetGroupAdminsList = onCall(
           availableBalance: data.availableBalance,
           totalClients: data.totalClients,
           totalRecruits: data.totalRecruits,
-          createdAt: data.createdAt,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || "",
           lastLoginAt: data.lastLoginAt?.toDate?.()?.toISOString() || null,
           isFeatured: featuredMap[doc.id] ?? false,
+          recruitedBy: (data as any).recruitedBy || null,
+          recruitedByName: (data as any).recruitedByName || null,
         };
       });
 

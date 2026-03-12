@@ -217,6 +217,7 @@ type Client = {
   totalSpent: number;
   emailVerified: boolean;
   phoneVerified?: boolean;
+  language?: string;
 };
 
 type FilterOptions = {
@@ -241,6 +242,8 @@ type FirestoreClientDoc = {
   totalSpent?: number;
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  language?: string;
+  preferredLanguage?: string;
   suspendedReason?: string;
   suspendedAt?: Timestamp;
 };
@@ -391,6 +394,7 @@ const AdminClients: React.FC = () => {
           totalSpent: data.totalSpent ?? 0,
           emailVerified: !!data.emailVerified,
           phoneVerified: !!data.phoneVerified,
+          language: data.language || data.preferredLanguage || undefined,
         };
       });
 
@@ -508,6 +512,7 @@ const AdminClients: React.FC = () => {
       CallsCount: c.callsCount,
       TotalSpent: c.totalSpent,
       EmailVerified: c.emailVerified ? "Yes" : "No",
+      Language: c.language ?? "",
     }));
     const headers = Object.keys(csvData[0]).join(";");
     const rows = csvData.map((r) => Object.values(r).join(";")).join("\n");
@@ -573,6 +578,7 @@ const AdminClients: React.FC = () => {
             totalSpent: data.totalSpent ?? 0,
             emailVerified: !!data.emailVerified,
             phoneVerified: !!data.phoneVerified,
+            language: data.language || data.preferredLanguage || undefined,
           };
         });
 
@@ -613,6 +619,7 @@ const AdminClients: React.FC = () => {
         CallsCount: c.callsCount,
         TotalSpent: c.totalSpent,
         EmailVerified: c.emailVerified ? "Yes" : "No",
+      Language: c.language ?? "",
       }));
       const headers = Object.keys(csvData[0]).join(";");
       const rows = csvData.map((r) => Object.values(r).join(";")).join("\n");
@@ -883,6 +890,9 @@ const AdminClients: React.FC = () => {
                       {t("tableLocation")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t("lang")}
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t("tableStatus")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -938,6 +948,9 @@ const AdminClients: React.FC = () => {
                           <MapPin size={14} className="mr-2 text-gray-400" />
                           <span>{client.city ? `${client.city}, ` : ""}{client.country || "—"}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {client.language ? client.language.toUpperCase() : "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

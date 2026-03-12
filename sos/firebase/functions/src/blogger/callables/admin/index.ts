@@ -127,11 +127,13 @@ export const adminGetBloggersList = onCall(
       // Format response
       const bloggers = docs.map(doc => {
         const data = doc.data() as Blogger;
+        const userData = userDocs.find((u) => u.id === doc.id)?.data();
         return {
           id: data.id,
           email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
+          phone: (data as any).phone || userData?.phone || null,
           country: data.country,
           status: data.status,
           blogUrl: data.blogUrl,
@@ -147,6 +149,8 @@ export const adminGetBloggersList = onCall(
           isFeatured: featuredMap[doc.id] ?? false,
           isVisible: data.isVisible ?? false,
           photoUrl: data.photoUrl,
+          recruitedBy: (data as any).recruitedBy || null,
+          recruitedByName: (data as any).recruitedByName || null,
         };
       });
 
