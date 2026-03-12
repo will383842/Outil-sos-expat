@@ -70,8 +70,8 @@ interface PartnerConfig {
 const DEFAULT_CONFIG: PartnerConfig = {
   isPartnerListingPageVisible: false,
   isPartnerFooterLinkVisible: false,
-  defaultCommissionPerCallLawyer: 500,
-  defaultCommissionPerCallExpat: 300,
+  defaultCommissionPerCallLawyer: 1000,
+  defaultCommissionPerCallExpat: 1000,
   defaultHoldPeriodDays: 7,
   defaultReleaseDelayHours: 24,
   defaultMinimumCallDuration: 60,

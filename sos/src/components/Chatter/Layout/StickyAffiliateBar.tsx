@@ -25,8 +25,8 @@ const StickyAffiliateBar: React.FC = () => {
   // Dynamic commission amounts from config (cents → dollars)
   const config = dashboardData?.config;
   const { callAmountRange, providerCallAmount, n1CallAmount } = useMemo(() => {
-    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
-    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 1000) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 1000) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
     const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;

@@ -97,7 +97,7 @@ export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLink
   const cfg = dashboardData?.config;
 
   // Build LINK_TYPES dynamically from admin config (never hardcoded)
-  const clientAmt = ((cfg?.commissionClientCallAmount ?? 300) / 100).toFixed(0);
+  const clientAmt = ((cfg?.commissionClientCallAmount ?? 1000) / 100).toFixed(0);
   const n1Amt = ((cfg?.commissionN1CallAmount ?? 100) / 100).toFixed(0);
   const providerAmt = ((cfg?.commissionProviderCallAmount ?? 500) / 100).toFixed(0);
 

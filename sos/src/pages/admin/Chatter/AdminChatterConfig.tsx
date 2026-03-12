@@ -377,14 +377,14 @@ const AdminChatterConfig: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    value={formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 500}
+                    value={formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 1000}
                     onChange={(e) => handleChange('commissionClientCallAmountLawyer', parseInt(e.target.value))}
                     className={UI.input}
                     min={0}
                     step={100}
                   />
                   <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    = {formatCents(formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 500)}
+                    = {formatCents(formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 1000)}
                   </span>
                 </div>
               </div>
@@ -393,14 +393,14 @@ const AdminChatterConfig: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    value={formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 300}
+                    value={formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 1000}
                     onChange={(e) => handleChange('commissionClientCallAmountExpat', parseInt(e.target.value))}
                     className={UI.input}
                     min={0}
                     step={100}
                   />
                   <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    = {formatCents(formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 300)}
+                    = {formatCents(formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 1000)}
                   </span>
                 </div>
               </div>

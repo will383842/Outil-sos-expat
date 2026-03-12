@@ -114,8 +114,8 @@ function ChatterTrainingContent() {
   const [copiedProvider, setCopiedProvider] = useState(false);
 
   // Commission amounts from config
-  const clientCallLawyer = (config?.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmount ?? 500) / 100;
-  const clientCallExpat = (config?.commissionClientCallAmountExpat ?? config?.commissionClientCallAmount ?? 300) / 100;
+  const clientCallLawyer = (config?.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmount ?? 1000) / 100;
+  const clientCallExpat = (config?.commissionClientCallAmountExpat ?? config?.commissionClientCallAmount ?? 1000) / 100;
   const n1CallAmount = (config?.commissionN1CallAmount ?? 100) / 100;
   const n2CallAmount = (config?.commissionN2CallAmount ?? 50) / 100;
   const activationBonus = (config?.commissionActivationBonusAmount ?? 500) / 100;

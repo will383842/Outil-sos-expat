@@ -130,9 +130,9 @@ const DEFAULT_CONFIG: ChatterConfigSettings = {
     maxAccountsPerIP: 3,
   },
   gains: {
-    clientCall: 300,
-    clientCallLawyer: 500,
-    clientCallExpat: 300,
+    clientCall: 1000,
+    clientCallLawyer: 1000,
+    clientCallExpat: 1000,
     n1Call: 100,
     n2Call: 50,
     activationBonus: 500,

@@ -420,7 +420,7 @@ const AdminCommissionTracker: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6" style={{ minHeight: '100vh' }}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -463,54 +463,68 @@ const AdminCommissionTracker: React.FC = () => {
           </div>
         </div>
 
-        {/* KPIs */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <UnifiedKPICard
-              title="Total Commissions"
-              value={formatCurrency(stats.totals.amount)}
-              icon={<DollarSign className="w-6 h-6 text-green-600" />}
-              colorTheme="green"
-              variant="glass"
-            />
-            <UnifiedKPICard
-              title="Pending"
-              value={formatCurrency(stats.totals.pending)}
-              icon={<Clock className="w-6 h-6 text-amber-600" />}
-              colorTheme="amber"
-              variant="glass"
-            />
-            <UnifiedKPICard
-              title="Available"
-              value={formatCurrency(stats.totals.available)}
-              icon={<CheckCircle className="w-6 h-6 text-blue-600" />}
-              colorTheme="blue"
-              variant="glass"
-            />
-            <UnifiedKPICard
-              title="Paid Out"
-              value={formatCurrency(stats.totals.paid)}
-              icon={<TrendingUp className="w-6 h-6 text-purple-600" />}
-              colorTheme="purple"
-              variant="glass"
-            />
-          </div>
-        )}
+        {/* KPIs — always rendered to prevent layout shift */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ minHeight: 120 }}>
+          <UnifiedKPICard
+            title="Total Commissions"
+            value={stats ? formatCurrency(stats.totals.amount) : '—'}
+            icon={<DollarSign className="w-6 h-6 text-green-600" />}
+            colorTheme="green"
+            variant="glass"
+          />
+          <UnifiedKPICard
+            title="Pending"
+            value={stats ? formatCurrency(stats.totals.pending) : '—'}
+            icon={<Clock className="w-6 h-6 text-amber-600" />}
+            colorTheme="amber"
+            variant="glass"
+          />
+          <UnifiedKPICard
+            title="Available"
+            value={stats ? formatCurrency(stats.totals.available) : '—'}
+            icon={<CheckCircle className="w-6 h-6 text-blue-600" />}
+            colorTheme="blue"
+            variant="glass"
+          />
+          <UnifiedKPICard
+            title="Paid Out"
+            value={stats ? formatCurrency(stats.totals.paid) : '—'}
+            icon={<TrendingUp className="w-6 h-6 text-purple-600" />}
+            colorTheme="purple"
+            variant="glass"
+          />
+        </div>
 
-        {/* Top Earners & Recent Activity */}
-        {stats && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Earners */}
-            <div className={UI.card + " p-6"}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-red-500" />
-                  Top 10 Earners
-                </h3>
-                <BarChart3 className="w-5 h-5 text-gray-400" />
-              </div>
-              <div className="space-y-3">
-                {stats.topEarners.slice(0, 5).map((earner, index) => (
+        {/* Top Earners & Commission by Type — always rendered */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ minHeight: 340 }}>
+          {/* Top Earners */}
+          <div className={UI.card + " p-6"}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-red-500" />
+                Top 10 Earners
+              </h3>
+              <BarChart3 className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="space-y-3">
+              {!stats ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10" />
+                      <div className="space-y-1.5">
+                        <div className="h-4 w-28 bg-gray-200 dark:bg-white/10 rounded" />
+                        <div className="h-3 w-20 bg-gray-200 dark:bg-white/10 rounded" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-right">
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-white/10 rounded ml-auto" />
+                      <div className="h-3 w-20 bg-gray-200 dark:bg-white/10 rounded ml-auto" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                stats.topEarners.slice(0, 5).map((earner, index) => (
                   <div
                     key={earner.chatterId}
                     className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl"
@@ -547,20 +561,32 @@ const AdminCommissionTracker: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
+          </div>
 
-            {/* Commission by Type */}
-            <div className={UI.card + " p-6"}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <PieChart className="w-5 h-5 text-blue-500" />
-                  By Commission Type
-                </h3>
-              </div>
-              <div className="space-y-3">
-                {Object.entries(stats.byType)
+          {/* Commission by Type */}
+          <div className={UI.card + " p-6"}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-blue-500" />
+                By Commission Type
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {!stats ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="space-y-1 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-white/10 rounded" />
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-white/10 rounded" />
+                    </div>
+                    <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full" />
+                  </div>
+                ))
+              ) : (
+                Object.entries(stats.byType)
                   .sort((a, b) => b[1].amount - a[1].amount)
                   .slice(0, 6)
                   .map(([commType, data]) => (
@@ -582,11 +608,11 @@ const AdminCommissionTracker: React.FC = () => {
                         />
                       </div>
                     </div>
-                  ))}
-              </div>
+                  ))
+              )}
             </div>
           </div>
-        )}
+        </div>
 
         {/* Filters */}
         <div className={UI.card + " p-4"}>
@@ -749,12 +775,39 @@ const AdminCommissionTracker: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                 {loading && commissions.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-                      <p className="mt-2 text-gray-500">Loading commissions...</p>
-                    </td>
-                  </tr>
+                  <>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-6 py-4">
+                          <div className="h-4 w-20 bg-gray-200 dark:bg-white/10 rounded mb-1.5" />
+                          <div className="h-3 w-32 bg-gray-200 dark:bg-white/10 rounded" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="h-4 w-24 bg-gray-200 dark:bg-white/10 rounded mb-1.5" />
+                          <div className="h-3 w-16 bg-gray-200 dark:bg-white/10 rounded" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-gray-200 dark:bg-white/10" />
+                            <div className="h-4 w-20 bg-gray-200 dark:bg-white/10 rounded" />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="h-4 w-16 bg-gray-200 dark:bg-white/10 rounded" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="h-6 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="h-4 w-20 bg-gray-200 dark:bg-white/10 rounded mb-1.5" />
+                          <div className="h-3 w-14 bg-gray-200 dark:bg-white/10 rounded" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-white/10 rounded" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
                 ) : commissions.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">

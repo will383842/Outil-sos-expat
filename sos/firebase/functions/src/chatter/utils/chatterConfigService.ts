@@ -301,7 +301,7 @@ function getClientCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'exp
   } else if (providerType === 'expat' && config.commissionClientCallAmountExpat != null) {
     return config.commissionClientCallAmountExpat;
   }
-  return config.commissionClientCallAmount || 300;
+  return config.commissionClientCallAmount || 1000;
 }
 
 /**
