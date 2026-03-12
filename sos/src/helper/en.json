@@ -2754,6 +2754,8 @@
   "admin.menu.bloggersPayments.description": "Blogger payment management",
   "admin.menu.bloggersResources": "Blogger Resources",
   "admin.menu.bloggersResources.description": "Resources for bloggers",
+  "admin.menu.bloggersResourcesGroup": "Blogger Resources",
+  "admin.menu.bloggersResourcesGroup.description": "All resources for bloggers",
   "admin.menu.bloggersUsers": "Bloggers",
   "admin.menu.bloggersUsers.description": "Manage bloggers",
   "admin.menu.bloggersAnalytics": "Blogger Analytics",
