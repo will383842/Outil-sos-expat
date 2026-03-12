@@ -281,31 +281,7 @@ export {
   resendPayPalVerificationCode,
 } from "./paypal/emailVerification";
 
-// Legal Documents Migrations
-// ENABLE TEMPORARILY to run, then re-comment to free Cloud Run quota
-// export { addTelegramClauseToAffiliateTerms } from "./migrations/migrateLegalDocuments";
-
-// KYC Templates Seed
-// DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
-// export { initKYCReminderTemplates } from "./seeds/kycReminderTemplates";
-
-// Unclaimed Funds Templates Seed
-// DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
-// export { initUnclaimedFundsTemplates } from "./seeds/unclaimedFundsTemplates";
-
-// PayPal Welcome Templates Seed (9 langues)
-// DISABLED 2026-01-30: One-time seed functions - removed to free Cloud Run quota
-// export { initPayPalWelcomeTemplates } from "./seeds/paypalWelcomeTemplates";
-
-// Early Disconnect Refund Templates Seed (9 langues)
-// P0 FIX 2026-02-03: Templates for notifying client & provider when call ends early and is refunded
-// SEEDED 2026-02-03 via scripts/seedEarlyDisconnectTemplates.js
-// Template file removed after seeding to reduce bundle size
-
-// Country Fiscal Configs Seed (200 countries + 64 USA/Canada subdivisions)
-// NOTE: Data already seeded via local script (scripts/seedCountryData.js)
-// Commented out to avoid Cloud Run CPU quota issues on deployment
-// export { initCountryConfigs, seedCountryConfigsHttp } from "./seeds/initCountryConfigs";
+// One-time seed/migration functions removed — already executed, freeing Cloud Run quota
 
 // P1-4 FIX: RefundManager & REFUND_CONFIG removed from exports (not Cloud Functions)
 
@@ -865,13 +841,10 @@ export { createAndScheduleCallHTTPS as createAndScheduleCall };
 export { createPaymentIntent } from "./createPaymentIntent";
 export { validateCouponCallable } from "./callables/validateCoupon";
 export { api } from "./adminApi";
-// REMOVED: testTwilioCall.ts deleted (P0 security risk - unauthenticated Twilio cost endpoint)
 export { twilioCallWebhook, twilioAmdTwiml, twilioGatherResponse } from "./Webhooks/twilioWebhooks";
 export { twilioConferenceWebhook } from "./Webhooks/TwilioConferenceWebhook";
 export { providerNoAnswerTwiML } from "./Webhooks/providerNoAnswerTwiML";
 export { enqueueMessageEvent } from "./messaging/enqueueMessageEvent";
-
-// REMOVED: unifiedWebhook deleted (P0 security - no signature validation, dead code duplicate of individual webhooks)
 
 // P0 SECURITY: Contact form with rate limiting (replaces direct Firestore writes)
 export { createContactMessage } from "./contact/createContactMessage";
@@ -879,13 +852,7 @@ export { createContactMessage } from "./contact/createContactMessage";
 // Meta CAPI Event Tracking (Search, ViewContent, AddToCart)
 export { trackCAPIEvent } from "./tracking/capiEvents";
 
-// Meta CAPI Connection Test
-// DISABLED: Dev/test function - not needed in production
-// export { testCAPIConnection } from "./monitoring/testCAPIConnection";
-
 // Utilitaires complémentaires
-// DISABLED 2026-01-30: One-time init function - removed to free Cloud Run quota
-// export { initializeMessageTemplates } from "./initializeMessageTemplates";
 export { notifyAfterPayment } from "./notifications/notifyAfterPayment";
 
 // Contact reply (admin responds to contact form messages)
@@ -949,28 +916,7 @@ export {
   // securityDailyReport,
 } from "./securityAlerts/triggers";
 
-// Detectors (pour utilisation dans d'autres fonctions)
-// AUDIT 2026-02-20: Disabled — these detectors are never called from any other module.
-// They are utility functions, not Cloud Functions, but their export forces loading the entire securityAlerts/detectors module.
-// Re-enable individual detectors when actually integrated into call flows.
-// export {
-//   detectBruteForce,
-//   detectUnusualLocation,
-//   detectPaymentFraud,
-//   detectCardTesting,
-//   detectMassAccountCreation,
-//   detectApiAbuse,
-//   detectInjectionAttempt,
-//   detectMultipleSessions,
-// } from "./securityAlerts/detectors";
-
-// Threat Score Service
-// AUDIT 2026-02-20: Disabled — never imported externally
-// export { threatScoreService } from "./securityAlerts/ThreatScoreService";
-
-// AI Chat - DEPRECATED: Now handled directly by Outil-sos-expat
-// The AI chat functionality is in Outil-sos-expat, not SOS
-// export { aiChatForProvider, getAiSuggestions } from "./ai/aiChatForProvider";
+// Security detectors, threat score, AI chat — disabled (never imported externally or handled by Outil)
 
 ultraLogger.info("EXPORTS", "Exports directs configurés");
 
@@ -1995,13 +1941,6 @@ export {
 // Fonctions supprimees: backupTwilioRecordings, retryFailedTwilioBackups,
 //                       triggerTwilioBackup, getTwilioBackupStats
 
-// ========== PHONE NUMBER ENCRYPTION MIGRATION ==========
-// AUDIT 2026-02-20: Disabled — one-shot migration already completed + generateEncryptionKey is a security risk as public endpoint
-// export {
-//   migratePhoneEncryption,
-//   getEncryptionStatus,
-//   generateEncryptionKey
-// } from './scheduled/migrateEncryption';
 
 // ========== FIREBASE AUTH BACKUP ==========
 export {
@@ -2067,23 +2006,11 @@ export {
 // ========== SEO - AUTO-INDEXATION ==========
 export * from './seo';
 
-// ========== SITEMAP GENERATOR (Advanced 3-level system) ==========
-// DISABLED 2026-03-10: Legacy 3-level sitemap generator creates 1773 sitemaps with invalid
-// locale combos (es-ee, de-br, ar-dj, etc.) that cause 5xx errors and soft 404s in Google.
-// The NEW sitemap system (seo/sitemaps.ts) handles everything correctly with VALID_LOCALES whitelist.
-// export { generateSitemaps, onProviderChange, scheduledSitemapGeneration } from './sitemap';
 
 // ========== META DYNAMIC ADS - PROVIDER CATALOG FEED ==========
 // HTTP endpoint: https://europe-west1-sos-expat.cloudfunctions.net/providerCatalogFeed
 // Generates CSV feed of active providers for Facebook Product Catalog
 export { providerCatalogFeed } from './providerCatalogFeed';
-
-// ========== TRANSLATION FUNCTIONS ==========
-// DISABLED 2026-01-31: Provider translation system temporarily disabled
-// To re-enable: uncomment these exports AND set PROVIDER_TRANSLATION: true in featureFlags.ts
-// export * from './translation/translateProvider';
-// export * from './translation/initializeProviderTranslation';
-// export * from './translation/updateProviderTranslation';
 
 // ========== EMAIL MARKETING AUTOMATION (MailWizz) ==========
 // handleUserRegistration,  // → consolidatedOnUserCreated
@@ -2109,7 +2036,7 @@ export {
   // stopAutoresponders, // CONSOLIDATED into consolidatedDailyEmails
   stopAutorespondersForUser,
 } from './emailMarketing/functions/stopAutoresponders';
-// export { detectInactiveUsers } from './emailMarketing/functions/inactiveUsers'; // CONSOLIDATED into consolidatedDailyEmails
+// detectInactiveUsers → consolidatedDailyEmails
 // Gamification triggers
 export { handleMilestoneReached, handleBadgeUnlocked } from './emailMarketing/functions/gamification';
 // Scheduled stats emails
@@ -2215,14 +2142,6 @@ export {
   onHelpArticleUpdated,
 } from './helpCenter/generateFAQ';
 
-// ========== HELP CENTER ARTICLES INITIALIZATION ==========
-// AUDIT 2026-02-20: Disabled — one-shot init already done. clearHelpArticles is a security risk (HTTP without auth, can wipe FAQs collection)
-// export {
-//   initSingleHelpArticle,
-//   initHelpArticlesBatch,
-//   checkHelpCategories,
-//   clearHelpArticles,
-// } from './helpCenter/initHelpArticles';
 
 // ========== INVOICE DOWNLOAD URL GENERATION ==========
 export const generateInvoiceDownloadUrl = onCall(
@@ -2433,14 +2352,7 @@ export {
   onSosProfileUpdated,
 } from './triggers/syncSosProfilesToOutil';
 
-// ========== P0 FIX: SYNC USER EMAIL TO SOS_PROFILES ==========
-// Synchronise automatiquement les changements d'email de users vers sos_profiles
-// Résout le problème où l'email modifié dans ProfileEdit n'était pas synchronisé
-// export { onUserEmailUpdated } from './triggers/syncUserEmailToSosProfiles';  // → consolidatedOnUserUpdated
-
-// ========== P0 FIX: SYNC ACCESS TO OUTIL-SOS-EXPAT ==========
-// Synchronise forcedAIAccess et freeTrialUntil vers Outil pour l'acces IA
-// export { onUserAccessUpdated } from './triggers/syncAccessToOutil';  // → consolidatedOnUserUpdated
+// onUserEmailUpdated + onUserAccessUpdated → consolidatedOnUserUpdated
 
 // ========== AUTOMATIC STRIPE EXPRESS ACCOUNT CREATION ==========
 export { onProviderCreated } from './triggers/onProviderCreated';
@@ -2477,9 +2389,6 @@ export { onBookingRequestCreated, retryOutilSync } from './triggers/syncBookings
 // ========== REVERSE SYNC: RECEIVE UPDATES FROM OUTIL-SOS-EXPAT ==========
 export { syncFromOutil } from './triggers/syncFromOutil';
 
-// ========== MIGRATIONS ==========
-// DISABLED 2026-01-30: One-time migration - removed to free Cloud Run quota
-// export { migrateProvidersToUid } from './migrations/migrateProvidersToUid';
 
 // ========== SSO - AUTHENTICATION CROSS-PROJECT ==========
 export { generateOutilToken } from './auth/generateOutilToken';
@@ -2495,13 +2404,6 @@ export { restoreUserRoles, syncAllCustomClaims, checkUserRole } from './admin/re
 // ========== PASSWORD RESET (CUSTOM BRANDED EMAIL) ==========
 export { sendCustomPasswordResetEmail } from './auth/passwordReset';
 
-// ========== STORAGE CONFIGURATION (ADMIN) ==========
-// AUDIT 2026-02-20: Disabled — one-shot storage config already applied (v1 functions)
-// export {
-//   enableStorageVersioning,
-//   configureStorageLifecycle,
-//   getStorageConfig
-// } from './admin/enableStorageVersioning';
 
 // ========== PAYMENT MONITORING (PHASE 4) ==========
 // Surveillance spécifique des flux de paiement Stripe/PayPal/Twilio
@@ -2605,9 +2507,6 @@ export {
   triggerThresholdRecalculation,
 } from './thresholds';
 
-// ========== MIGRATIONS ==========
-// DISABLED 2026-01-30: One-time migrations - removed to free Cloud Run quota
-// export { migrateProviderSlugs } from './migrations/migrateProviderSlugs';
 
 // ========== PROVIDER PROFILE VALIDATION WORKFLOW ==========
 // Complete validation workflow for provider profiles (lawyers/expats)
@@ -3356,7 +3255,7 @@ export {
 } from './partner';
 
 // ========== TELEGRAM NOTIFICATIONS ==========
-// export { telegramOnUserRegistration } from './telegram/triggers/onUserRegistration';  // → consolidatedOnUserCreated
+// telegramOnUserRegistration → consolidatedOnUserCreated
 export { telegramOnCallCompleted } from './telegram/triggers/onCallCompleted';
 export { telegramOnPaymentReceived } from './telegram/triggers/onPaymentReceived';
 export { telegramOnPayPalPaymentReceived } from './telegram/triggers/onPayPalPaymentReceived';
@@ -3372,20 +3271,7 @@ export { telegramDailyReport } from './telegram/scheduled/dailyReport';
 // contact_messages, captain_applications, withdrawal_requests already have dedicated triggers
 // that forward to the Engine. The Engine's multi-bot system routes to both main + inbox bots.
 export { inboxNotifyFeedback, inboxNotifyPartner } from './telegram/triggers/onInboxNotification';
-// [MIGRATION LARAVEL] All admin callables disabled — admin console now calls Laravel API directly
-// This removes ~16 Firebase Functions. Kept as comments for safety rollback.
-// export { telegram_sendTestNotification } from './telegram/callables/sendTestNotification';
-// export { telegram_updateConfig, telegram_getConfig, telegram_getChatId,
-//   telegram_validateBot, telegram_updateTemplate, telegram_getTemplates,
-// } from './telegram/callables/updateTelegramConfig';
-// export { telegram_getNotificationLogs, telegram_getQueueStats,
-//   telegram_getSubscriberStats,
-// } from './telegram/callables/adminQueries';
-// export { telegram_createCampaign, telegram_getCampaigns,
-//   telegram_cancelCampaign, telegram_getCampaignDetail,
-// } from './telegram/callables/campaigns';
-// export { telegram_reprocessDeadLetters, telegram_sendOneOff,
-// } from './telegram/callables/adminActions';
+// [MIGRATION LARAVEL] Telegram admin callables removed — admin console now calls Laravel API directly
 
 // ========== TELEGRAM QUEUE (global rate-limited queue + monitoring) ==========
 export { processTelegramQueue } from './telegram/queue/processor';
@@ -3524,9 +3410,6 @@ export {
   resetBillingCycleQuotas,
   cleanupExpiredDocuments,
 } from './subscription/scheduledTasks';
-
-// --- SCHEDULED : aggregateCostMetrics — CONSOLIDATED into consolidatedDailyMonitoring ---
-// export { aggregateCostMetrics } from './scheduled/aggregateCostMetrics';
 
 // ========== CONSOLIDATED SCHEDULED FUNCTIONS (Quota Optimization 2026-02-26) ==========
 // Merging multiple scheduled functions into fewer to reduce Cloud Run memory quota in europe-west3

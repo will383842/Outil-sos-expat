@@ -15,7 +15,9 @@ import { type Partner, PARTNER_CONSTANTS } from "../types";
 import { getPartnerConfig } from "../services/partnerConfigService";
 import { getPaymentService } from "../../payment/services/paymentService";
 import { getWithdrawalFee } from "../../services/feeCalculationService";
+import { sendWithdrawalConfirmation } from "../../telegram/withdrawalConfirmation";
 import { partnerConfig } from "../../lib/functionConfigs";
+import { TELEGRAM_SECRETS } from "../../lib/secrets";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 
 function ensureInitialized() {
@@ -33,8 +35,9 @@ export const partnerRequestWithdrawal = onCall(
   {
     ...partnerConfig,
     timeoutSeconds: 60,
+    secrets: [...TELEGRAM_SECRETS],
   },
-  async (request): Promise<{ success: boolean; withdrawalId: string }> => {
+  async (request): Promise<{ success: boolean; withdrawalId: string; telegramConfirmationRequired?: boolean }> => {
     ensureInitialized();
 
     if (!request.auth) {
@@ -59,6 +62,16 @@ export const partnerRequestWithdrawal = onCall(
       if (!config.withdrawalsEnabled) {
         throw new HttpsError("failed-precondition", "Withdrawals are currently disabled");
       }
+
+      // Verify Telegram is connected (required for withdrawal confirmation)
+      const userDoc = await db.doc(`users/${userId}`).get();
+      if (!userDoc.exists || !userDoc.data()?.telegramId) {
+        throw new HttpsError(
+          "failed-precondition",
+          "TELEGRAM_REQUIRED: You must connect Telegram before requesting a withdrawal"
+        );
+      }
+      const telegramId = userDoc.data()!.telegramId as number;
 
       const minimumAmount = config.minimumWithdrawalAmount || PARTNER_CONSTANTS.MIN_WITHDRAWAL_AMOUNT;
       const feeConfig = await getWithdrawalFee();
@@ -149,17 +162,68 @@ export const partnerRequestWithdrawal = onCall(
         updatedAt: Timestamp.now(),
       });
 
+      // 5. Send Telegram confirmation (double verification)
+      const methodLabels: Record<string, string> = {
+        paypal: "PayPal",
+        stripe: "Stripe",
+        wise: "Wise",
+        bank_transfer: "Virement bancaire",
+        mobile_money: "Mobile Money",
+      };
+
+      const confirmResult = await sendWithdrawalConfirmation({
+        withdrawalId: withdrawal.id,
+        userId,
+        role: "partner",
+        collection: "payment_withdrawals",
+        amount: input.amount,
+        paymentMethod: methodLabels[input.paymentMethodId] || input.paymentMethodId,
+        telegramId,
+      });
+
+      if (!confirmResult.success) {
+        // Telegram failed — cancel withdrawal and restore balance
+        logger.error("[partnerRequestWithdrawal] Telegram confirmation failed, rolling back", {
+          withdrawalId: withdrawal.id,
+        });
+
+        await db.collection("payment_withdrawals").doc(withdrawal.id).update({
+          status: "cancelled",
+          cancelledAt: new Date().toISOString(),
+          statusHistory: FieldValue.arrayUnion({
+            status: "cancelled",
+            timestamp: new Date().toISOString(),
+            actorType: "system",
+            note: "Auto-cancelled: failed to send Telegram confirmation",
+          }),
+        });
+
+        await db.collection("partners").doc(userId).update({
+          pendingWithdrawalId: null,
+          availableBalance: FieldValue.increment(totalDebited),
+          totalWithdrawn: FieldValue.increment(-input.amount),
+          updatedAt: Timestamp.now(),
+        });
+
+        throw new HttpsError(
+          "internal",
+          "Failed to send Telegram confirmation. Withdrawal cancelled."
+        );
+      }
+
       logger.info("[partnerRequestWithdrawal] Withdrawal requested", {
         partnerId: userId,
         withdrawalId: withdrawal.id,
         amount: input.amount,
         fee: withdrawalFee,
         totalDebited,
+        telegramConfirmation: true,
       });
 
       return {
         success: true,
         withdrawalId: withdrawal.id,
+        telegramConfirmationRequired: true,
       };
     } catch (error) {
       if (error instanceof HttpsError) throw error;

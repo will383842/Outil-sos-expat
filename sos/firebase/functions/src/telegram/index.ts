@@ -1,5 +1,4 @@
 // Triggers
-export { telegramOnUserRegistration } from "./triggers/onUserRegistration";
 export { telegramOnCallCompleted } from "./triggers/onCallCompleted";
 export { telegramOnPaymentReceived } from "./triggers/onPaymentReceived";
 export { telegramOnPayPalPaymentReceived } from "./triggers/onPayPalPaymentReceived";
@@ -12,27 +11,6 @@ export { telegramOnNewCaptainApplication } from "./triggers/onNewCaptainApplicat
 
 // Scheduled
 export { telegramDailyReport } from "./scheduled/dailyReport";
-
-// Callables (admin)
-export {
-  telegram_updateConfig,
-  telegram_getConfig,
-  telegram_getChatId,
-  telegram_validateBot,
-  telegram_updateTemplate,
-  telegram_getTemplates,
-} from "./callables/updateTelegramConfig";
-export {
-  telegram_getNotificationLogs,
-  telegram_getQueueStats,
-  telegram_getSubscriberStats,
-} from "./callables/adminQueries";
-export {
-  telegram_createCampaign,
-  telegram_getCampaigns,
-  telegram_cancelCampaign,
-  telegram_getCampaignDetail,
-} from "./callables/campaigns";
 
 // Queue (global rate-limited queue + monitoring)
 export { processTelegramQueue } from "./queue/processor";
