@@ -1057,6 +1057,96 @@ export { adminToggleInfluencerVisibility } from "./toggleVisibility";
 export { adminDeleteInfluencer } from "./deleteInfluencer";
 
 // ============================================================================
+// UPDATE INFLUENCER LOCKED RATES (Admin Override)
+// ============================================================================
+
+export const adminUpdateInfluencerLockedRates = onCall(
+  {
+    region: "us-central1",
+    memory: "256MiB",
+    cpu: 0.083,
+    timeoutSeconds: 30,
+    maxInstances: 1,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{ success: boolean; updatedRates: Record<string, number> }> => {
+    ensureInitialized();
+    const adminId = await checkAdmin(request.auth);
+
+    const db = getFirestore();
+    const { influencerId, lockedRates } = request.data as {
+      influencerId: string;
+      lockedRates: Record<string, number>;
+    };
+
+    if (!influencerId || typeof influencerId !== "string") {
+      throw new HttpsError("invalid-argument", "influencerId is required");
+    }
+    if (!lockedRates || typeof lockedRates !== "object") {
+      throw new HttpsError("invalid-argument", "lockedRates object is required");
+    }
+
+    const allowedKeys = [
+      "commissionClientAmount",
+      "commissionClientAmountLawyer",
+      "commissionClientAmountExpat",
+      "commissionRecruitmentAmount",
+      "commissionRecruitmentAmountLawyer",
+      "commissionRecruitmentAmountExpat",
+    ];
+
+    const sanitizedRates: Record<string, number> = {};
+    for (const key of allowedKeys) {
+      if (lockedRates[key] !== undefined) {
+        const value = Number(lockedRates[key]);
+        if (isNaN(value) || value < 0 || value > 100000) {
+          throw new HttpsError("invalid-argument", `Invalid value for ${key}: ${lockedRates[key]}. Must be 0-100000 cents.`);
+        }
+        sanitizedRates[key] = Math.round(value);
+      }
+    }
+
+    if (Object.keys(sanitizedRates).length === 0) {
+      throw new HttpsError("invalid-argument", "No valid rate keys provided");
+    }
+
+    try {
+      const influencerRef = db.collection("influencers").doc(influencerId);
+      const influencerDoc = await influencerRef.get();
+
+      if (!influencerDoc.exists) {
+        throw new HttpsError("not-found", `Influencer ${influencerId} not found`);
+      }
+
+      const currentData = influencerDoc.data()!;
+      const currentRates = currentData.lockedRates || {};
+      const mergedRates = { ...currentRates, ...sanitizedRates };
+
+      await influencerRef.update({
+        lockedRates: mergedRates,
+        ...(currentData.commissionPlanId ? {} : {
+          commissionPlanName: `Admin override by ${adminId}`,
+          rateLockDate: new Date().toISOString(),
+        }),
+      });
+
+      logger.info("[adminUpdateInfluencerLockedRates] Rates updated", {
+        influencerId,
+        adminId,
+        previousRates: currentRates,
+        newRates: mergedRates,
+      });
+
+      return { success: true, updatedRates: mergedRates };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error("[adminUpdateInfluencerLockedRates] Error", { error });
+      throw new HttpsError("internal", "Failed to update locked rates");
+    }
+  }
+);
+
+// ============================================================================
 // GET INFLUENCER WITHDRAWALS (Admin)
 // Lists all influencer withdrawals from payment_withdrawals with pagination,
 // status filter, search, and stats.

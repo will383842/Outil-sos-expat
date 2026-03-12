@@ -8,6 +8,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
+import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   User,
@@ -30,6 +31,7 @@ import {
   Facebook,
   Copy,
   RefreshCw,
+  Wallet,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { getLanguageName } from '../../../utils/formatters';
@@ -95,10 +97,25 @@ interface GroupAdminDetail {
   // Badges
   badges: string[];
 
+  // Commission Plan
+  lockedRates?: Record<string, number>;
+  commissionPlanName?: string;
+  rateLockDate?: string;
+
   // Timestamps
   createdAt: string;
   lastLoginAt?: string;
 }
+
+const GROUP_ADMIN_RATE_FIELDS = [
+  { key: 'commissionClientCallAmount', label: 'Client (générique)', default: 500 },
+  { key: 'commissionClientAmountLawyer', label: 'Client (avocat)', default: 500 },
+  { key: 'commissionClientAmountExpat', label: 'Client (expat)', default: 300 },
+  { key: 'commissionN1CallAmount', label: 'N1 (filleul)', default: 100 },
+  { key: 'commissionN2CallAmount', label: 'N2 (filleul N2)', default: 50 },
+  { key: 'commissionActivationBonusAmount', label: 'Bonus activation', default: 500 },
+  { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1', default: 100 },
+] as const;
 
 interface Commission {
   id: string;
@@ -137,6 +154,9 @@ const AdminGroupAdminDetail: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'recruits'>('overview');
+  const [ratesEditing, setRatesEditing] = useState(false);
+  const [ratesForm, setRatesForm] = useState<Record<string, number>>({});
+  const [ratesSaving, setRatesSaving] = useState(false);
   const [recruits, setRecruits] = useState<Recruit[]>([]);
   const [recruitsLoading, setRecruitsLoading] = useState(false);
 
@@ -227,6 +247,35 @@ const AdminGroupAdminDetail: React.FC = () => {
     clipboardCopy(text);
     setCopied(label);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  // Locked rates editing
+  const startEditRates = () => {
+    const currentRates: Record<string, number> = {};
+    for (const field of GROUP_ADMIN_RATE_FIELDS) {
+      currentRates[field.key] = admin?.lockedRates?.[field.key] ?? field.default;
+    }
+    setRatesForm(currentRates);
+    setRatesEditing(true);
+  };
+
+  const handleSaveRates = async () => {
+    if (!id) return;
+    setRatesSaving(true);
+    try {
+      const fn = httpsCallable<{ groupAdminId: string; lockedRates: Record<string, number> }, { success: boolean }>(
+        functionsAffiliate,
+        'adminUpdateGroupAdminLockedRates'
+      );
+      await fn({ groupAdminId: id, lockedRates: ratesForm });
+      toast.success('Taux mis à jour');
+      setRatesEditing(false);
+      await fetchDetails();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setRatesSaving(false);
+    }
   };
 
   const formatAmount = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -537,6 +586,71 @@ const AdminGroupAdminDetail: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Locked Rates (Commission Plan) */}
+            <div className={UI.card + " p-6"}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Wallet className="w-4 h-4" />
+                  Taux de commission (lockedRates)
+                </h3>
+                {!ratesEditing ? (
+                  <button onClick={startEditRates} className={`${UI.button.secondary} px-3 py-1.5 text-sm`}>
+                    Modifier
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button onClick={() => setRatesEditing(false)} className={`${UI.button.secondary} px-3 py-1.5 text-sm`} disabled={ratesSaving}>
+                      Annuler
+                    </button>
+                    <button onClick={handleSaveRates} className={`${UI.button.primary} px-3 py-1.5 text-sm`} disabled={ratesSaving}>
+                      {ratesSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sauvegarder'}
+                    </button>
+                  </div>
+                )}
+              </div>
+              {admin.commissionPlanName && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Plan: {admin.commissionPlanName} {admin.rateLockDate && `(verrouillé le ${formatDate(admin.rateLockDate)})`}
+                </p>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {GROUP_ADMIN_RATE_FIELDS.map(field => {
+                  const currentValue = admin.lockedRates?.[field.key];
+                  return (
+                    <div key={field.key} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                      <p className="text-[10px] uppercase font-medium text-gray-400 dark:text-gray-500 mb-1">{field.label}</p>
+                      {ratesEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-400">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={(ratesForm[field.key] / 100).toFixed(2)}
+                            onChange={(e) => setRatesForm(prev => ({
+                              ...prev,
+                              [field.key]: Math.round(parseFloat(e.target.value || '0') * 100),
+                            }))}
+                            className="w-full px-2 py-1 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                          />
+                        </div>
+                      ) : (
+                        <p className={`text-lg font-bold ${currentValue != null ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                          {currentValue != null ? formatAmount(currentValue) : `(${formatAmount(field.default)})`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {!admin.lockedRates && !ratesEditing && (
+                <p className="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Pas de taux verrouillés — utilise la config globale (entre parenthèses)
+                </p>
+              )}
             </div>
 
             {/* Recent Commissions */}

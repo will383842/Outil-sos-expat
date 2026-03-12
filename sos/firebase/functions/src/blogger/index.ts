@@ -72,6 +72,9 @@ export {
 
   // Admin delete
   adminDeleteBlogger,
+
+  // Admin locked rates
+  adminUpdateBloggerLockedRates,
 } from "./callables";
 
 export { adminUpdateBloggerProfile } from "./callables/admin/updateProfile";

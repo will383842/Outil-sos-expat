@@ -42,6 +42,8 @@ export {
   adminToggleGroupAdminVisibility,
   // Delete
   adminDeleteGroupAdmin,
+  // Locked rates
+  adminUpdateGroupAdminLockedRates,
 } from "./admin";
 
 // Public Callables

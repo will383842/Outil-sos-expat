@@ -10,6 +10,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useParams, useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
+import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   User,
@@ -33,6 +34,7 @@ import {
   FileText,
   Award,
   Eye,
+  Wallet,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { getLanguageName } from '../../../utils/formatters';
@@ -80,9 +82,21 @@ interface Blogger {
   badges: string[];
   currentStreak: number;
   longestStreak: number;
+  lockedRates?: Record<string, number>;
+  commissionPlanName?: string;
+  rateLockDate?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+const BLOGGER_RATE_FIELDS = [
+  { key: 'commissionClientAmount', label: 'Client (générique)', default: 1000 },
+  { key: 'commissionClientAmountLawyer', label: 'Client (avocat)', default: 1000 },
+  { key: 'commissionClientAmountExpat', label: 'Client (expat)', default: 1000 },
+  { key: 'commissionRecruitmentAmount', label: 'Recrutement (générique)', default: 500 },
+  { key: 'commissionRecruitmentAmountLawyer', label: 'Recrutement (avocat)', default: 500 },
+  { key: 'commissionRecruitmentAmountExpat', label: 'Recrutement (expat)', default: 500 },
+] as const;
 
 interface Commission {
   id: string;
@@ -132,6 +146,9 @@ const AdminBloggerDetail: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [copiedClient, setCopiedClient] = useState(false);
   const [copiedRecruit, setCopiedRecruit] = useState(false);
+  const [ratesEditing, setRatesEditing] = useState(false);
+  const [ratesForm, setRatesForm] = useState<Record<string, number>>({});
+  const [ratesSaving, setRatesSaving] = useState(false);
 
   // Fetch blogger details
   const fetchBlogger = useCallback(async () => {
@@ -193,6 +210,35 @@ const AdminBloggerDetail: React.FC = () => {
     } else {
       setCopiedRecruit(true);
       setTimeout(() => setCopiedRecruit(false), 2000);
+    }
+  };
+
+  // Locked rates editing
+  const startEditRates = () => {
+    const currentRates: Record<string, number> = {};
+    for (const field of BLOGGER_RATE_FIELDS) {
+      currentRates[field.key] = blogger?.lockedRates?.[field.key] ?? field.default;
+    }
+    setRatesForm(currentRates);
+    setRatesEditing(true);
+  };
+
+  const handleSaveRates = async () => {
+    if (!id) return;
+    setRatesSaving(true);
+    try {
+      const fn = httpsCallable<{ bloggerId: string; lockedRates: Record<string, number> }, { success: boolean }>(
+        functionsAffiliate,
+        'adminUpdateBloggerLockedRates'
+      );
+      await fn({ bloggerId: id, lockedRates: ratesForm });
+      toast.success('Taux mis à jour');
+      setRatesEditing(false);
+      await fetchBlogger();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setRatesSaving(false);
     }
   };
 
@@ -545,6 +591,71 @@ const AdminBloggerDetail: React.FC = () => {
 
           {/* Right Column - Activity */}
           <div className="space-y-6">
+            {/* Locked Rates (Commission Plan) */}
+            <div className={`${UI.card} p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Wallet className="w-4 h-4" />
+                  Taux de commission (lockedRates)
+                </h3>
+                {!ratesEditing ? (
+                  <button onClick={startEditRates} className={`${UI.button.secondary} px-3 py-1.5 text-sm`}>
+                    Modifier
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button onClick={() => setRatesEditing(false)} className={`${UI.button.secondary} px-3 py-1.5 text-sm`} disabled={ratesSaving}>
+                      Annuler
+                    </button>
+                    <button onClick={handleSaveRates} className={`${UI.button.primary} px-3 py-1.5 text-sm`} disabled={ratesSaving}>
+                      {ratesSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sauvegarder'}
+                    </button>
+                  </div>
+                )}
+              </div>
+              {blogger.commissionPlanName && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Plan: {blogger.commissionPlanName} {blogger.rateLockDate && `(verrouillé le ${new Date(blogger.rateLockDate).toLocaleDateString(intl.locale)})`}
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                {BLOGGER_RATE_FIELDS.map(field => {
+                  const currentValue = blogger.lockedRates?.[field.key];
+                  return (
+                    <div key={field.key} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                      <p className="text-[10px] uppercase font-medium text-gray-400 dark:text-gray-500 mb-1">{field.label}</p>
+                      {ratesEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-400">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={(ratesForm[field.key] / 100).toFixed(2)}
+                            onChange={(e) => setRatesForm(prev => ({
+                              ...prev,
+                              [field.key]: Math.round(parseFloat(e.target.value || '0') * 100),
+                            }))}
+                            className="w-full px-2 py-1 text-sm bg-white dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg"
+                          />
+                        </div>
+                      ) : (
+                        <p className={`text-lg font-bold ${currentValue != null ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                          {currentValue != null ? formatAmount(currentValue) : `(${formatAmount(field.default)})`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {!blogger.lockedRates && !ratesEditing && (
+                <p className="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Pas de taux verrouillés — utilise la config globale (entre parenthèses)
+                </p>
+              )}
+            </div>
+
             {/* Recent Commissions */}
             <div className={`${UI.card} p-6`}>
               <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">

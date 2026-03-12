@@ -3004,6 +3004,8 @@ export {
   adminBulkInfluencerAction,
   // Admin delete
   adminDeleteInfluencer,
+  // Admin locked rates
+  adminUpdateInfluencerLockedRates,
 } from './influencer';
 
 // ========== BLOGGER SYSTEM ==========
@@ -3054,6 +3056,8 @@ export {
   bloggerFinalizeMonthlyRankings,
   // Admin delete
   adminDeleteBlogger,
+  // Admin locked rates
+  adminUpdateBloggerLockedRates,
 } from './blogger';
 
 // ========== CENTRALIZED PAYMENT SYSTEM ==========
@@ -3137,6 +3141,8 @@ export {
   onGroupAdminCreated,
   // Admin delete
   adminDeleteGroupAdmin,
+  // Admin locked rates
+  adminUpdateGroupAdminLockedRates,
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // validatePendingGroupAdminCommissions,  // → consolidatedValidateCommissions
   // releaseValidatedGroupAdminCommissions,  // → consolidatedReleaseCommissions

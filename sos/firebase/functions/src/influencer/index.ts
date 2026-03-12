@@ -80,6 +80,8 @@ export {
   adminGetInfluencerWithdrawals,
   // Admin delete
   adminDeleteInfluencer,
+  // Admin locked rates
+  adminUpdateInfluencerLockedRates,
 } from "./callables/admin";
 
 export { adminToggleInfluencerVisibility } from "./callables/admin/toggleVisibility";

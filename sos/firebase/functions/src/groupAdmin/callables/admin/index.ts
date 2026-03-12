@@ -11,6 +11,7 @@ export {
   adminGetWithdrawalsList,
   adminExportGroupAdmins,
   adminBulkGroupAdminAction,
+  adminUpdateGroupAdminLockedRates,
 } from "./groupAdmins";
 
 // Resources & Posts — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)

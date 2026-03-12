@@ -53,6 +53,8 @@ export {
   getGroupAdminDirectory,
   // Admin delete
   adminDeleteGroupAdmin,
+  // Admin locked rates
+  adminUpdateGroupAdminLockedRates,
 } from "./callables";
 
 export { adminUpdateGroupAdminProfile } from "./callables/admin/updateProfile";

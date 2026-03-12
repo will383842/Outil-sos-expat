@@ -1044,3 +1044,100 @@ export const adminBulkGroupAdminAction = onCall(
     }
   }
 );
+
+// ============================================================================
+// UPDATE GROUP ADMIN LOCKED RATES (Admin Override)
+// ============================================================================
+
+export const adminUpdateGroupAdminLockedRates = onCall(
+  {
+    region: "us-central1",
+    memory: "256MiB",
+    cpu: 0.083,
+    timeoutSeconds: 30,
+    maxInstances: 1,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{ success: boolean; updatedRates: Record<string, number> }> => {
+    ensureInitialized();
+
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await verifyAdmin(request.auth.uid, request.auth.token);
+
+    const db = getFirestore();
+    const adminId = request.auth.uid;
+    const { groupAdminId, lockedRates } = request.data as {
+      groupAdminId: string;
+      lockedRates: Record<string, number>;
+    };
+
+    if (!groupAdminId || typeof groupAdminId !== "string") {
+      throw new HttpsError("invalid-argument", "groupAdminId is required");
+    }
+    if (!lockedRates || typeof lockedRates !== "object") {
+      throw new HttpsError("invalid-argument", "lockedRates object is required");
+    }
+
+    const allowedKeys = [
+      "commissionClientCallAmount",
+      "commissionClientAmountLawyer",
+      "commissionClientAmountExpat",
+      "commissionN1CallAmount",
+      "commissionN2CallAmount",
+      "commissionActivationBonusAmount",
+      "commissionN1RecruitBonusAmount",
+    ];
+
+    const sanitizedRates: Record<string, number> = {};
+    for (const key of allowedKeys) {
+      if (lockedRates[key] !== undefined) {
+        const value = Number(lockedRates[key]);
+        if (isNaN(value) || value < 0 || value > 100000) {
+          throw new HttpsError("invalid-argument", `Invalid value for ${key}: ${lockedRates[key]}. Must be 0-100000 cents.`);
+        }
+        sanitizedRates[key] = Math.round(value);
+      }
+    }
+
+    if (Object.keys(sanitizedRates).length === 0) {
+      throw new HttpsError("invalid-argument", "No valid rate keys provided");
+    }
+
+    try {
+      const groupAdminRef = db.collection("group_admins").doc(groupAdminId);
+      const groupAdminDoc = await groupAdminRef.get();
+
+      if (!groupAdminDoc.exists) {
+        throw new HttpsError("not-found", `GroupAdmin ${groupAdminId} not found`);
+      }
+
+      const currentData = groupAdminDoc.data()!;
+      const currentRates = currentData.lockedRates || {};
+      const mergedRates = { ...currentRates, ...sanitizedRates };
+
+      await groupAdminRef.update({
+        lockedRates: mergedRates,
+        ...(currentData.commissionPlanId ? {} : {
+          commissionPlanName: `Admin override by ${adminId}`,
+          rateLockDate: new Date().toISOString(),
+        }),
+      });
+
+      logger.info("[adminUpdateGroupAdminLockedRates] Rates updated", {
+        groupAdminId,
+        adminId,
+        previousRates: currentRates,
+        newRates: mergedRates,
+      });
+
+      return { success: true, updatedRates: mergedRates };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error("[adminUpdateGroupAdminLockedRates] Error", { error });
+      throw new HttpsError("internal", "Failed to update locked rates");
+    }
+  }
+);

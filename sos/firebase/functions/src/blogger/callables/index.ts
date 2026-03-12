@@ -30,6 +30,8 @@ export {
   adminGetBloggerWithdrawals,
   // Admin delete
   adminDeleteBlogger,
+  // Admin locked rates
+  adminUpdateBloggerLockedRates,
 } from "./admin/index";
 
 // Public directory

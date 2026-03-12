@@ -2115,3 +2115,97 @@ export const adminGetBloggerWithdrawals = onCall(
 
 // Re-export delete callable
 export { adminDeleteBlogger } from "./deleteBlogger";
+
+// ============================================================================
+// UPDATE BLOGGER LOCKED RATES (Admin Override)
+// ============================================================================
+
+export const adminUpdateBloggerLockedRates = onCall(
+  {
+    region: "us-central1",
+    memory: "256MiB",
+    cpu: 0.083,
+    timeoutSeconds: 30,
+    maxInstances: 1,
+    cors: ALLOWED_ORIGINS,
+  },
+  async (request): Promise<{ success: boolean; updatedRates: Record<string, number> }> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    await checkAdmin(request.auth.uid);
+
+    const db = getFirestore();
+    const adminId = request.auth.uid;
+    const { bloggerId, lockedRates } = request.data as {
+      bloggerId: string;
+      lockedRates: Record<string, number>;
+    };
+
+    if (!bloggerId || typeof bloggerId !== "string") {
+      throw new HttpsError("invalid-argument", "bloggerId is required");
+    }
+    if (!lockedRates || typeof lockedRates !== "object") {
+      throw new HttpsError("invalid-argument", "lockedRates object is required");
+    }
+
+    const allowedKeys = [
+      "commissionClientAmount",
+      "commissionClientAmountLawyer",
+      "commissionClientAmountExpat",
+      "commissionRecruitmentAmount",
+      "commissionRecruitmentAmountLawyer",
+      "commissionRecruitmentAmountExpat",
+    ];
+
+    const sanitizedRates: Record<string, number> = {};
+    for (const key of allowedKeys) {
+      if (lockedRates[key] !== undefined) {
+        const value = Number(lockedRates[key]);
+        if (isNaN(value) || value < 0 || value > 100000) {
+          throw new HttpsError("invalid-argument", `Invalid value for ${key}: ${lockedRates[key]}. Must be 0-100000 cents.`);
+        }
+        sanitizedRates[key] = Math.round(value);
+      }
+    }
+
+    if (Object.keys(sanitizedRates).length === 0) {
+      throw new HttpsError("invalid-argument", "No valid rate keys provided");
+    }
+
+    try {
+      const bloggerRef = db.collection("bloggers").doc(bloggerId);
+      const bloggerDoc = await bloggerRef.get();
+
+      if (!bloggerDoc.exists) {
+        throw new HttpsError("not-found", `Blogger ${bloggerId} not found`);
+      }
+
+      const currentData = bloggerDoc.data()!;
+      const currentRates = currentData.lockedRates || {};
+      const mergedRates = { ...currentRates, ...sanitizedRates };
+
+      await bloggerRef.update({
+        lockedRates: mergedRates,
+        ...(currentData.commissionPlanId ? {} : {
+          commissionPlanName: `Admin override by ${adminId}`,
+          rateLockDate: new Date().toISOString(),
+        }),
+      });
+
+      logger.info("[adminUpdateBloggerLockedRates] Rates updated", {
+        bloggerId,
+        adminId,
+        previousRates: currentRates,
+        newRates: mergedRates,
+      });
+
+      return { success: true, updatedRates: mergedRates };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      logger.error("[adminUpdateBloggerLockedRates] Error", { error });
+      throw new HttpsError("internal", "Failed to update locked rates");
+    }
+  }
+);
