@@ -304,7 +304,7 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.paymentsWithdrawals.description",
           },
           {
-            id: "affiliate-payouts",
+            id: "finance-affiliate-payouts",
             labelKey: "admin.menu.affiliatePayouts",
             path: "/admin/affiliates/payouts",
             icon: DollarSign,
