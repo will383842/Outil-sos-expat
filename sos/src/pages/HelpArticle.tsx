@@ -7,7 +7,7 @@ import SEOHead from "../components/layout/SEOHead";
 import { ArticleSchema, BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
-import { parseLocaleFromPath, getLocaleString, useLocaleNavigate, useLocalePath } from "../multilingual-system";
+import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug, useLocaleNavigate, useLocalePath } from "../multilingual-system";
 import {
   listHelpArticles,
   HelpArticle as HelpArticleType,
@@ -135,7 +135,8 @@ const HelpArticle: React.FC = () => {
     // Build new URL preserving the current country
     const countryCode = currentCountry || getLocaleString(language as any).split('-')[1] || 'fr';
     const newLocale = `${newLangCode}-${countryCode}`;
-    const newUrl = `/${newLocale}/centre-aide/${newSlug}`;
+    const translatedHelpCenter = getTranslatedRouteSlug("help-center" as any, newLangCode as any);
+    const newUrl = `/${newLocale}/${translatedHelpCenter}/${newSlug}`;
 
     // Navigate to the new URL
     navigate(newUrl, { replace: true });
@@ -255,14 +256,23 @@ const HelpArticle: React.FC = () => {
   const faqSchema = generateFAQSchema();
 
   // Locale-aware canonical and article URL
+  // IMPORTANT: Canonical URLs must be deterministic (no geolocation dependency).
+  // Use static default locale mapping instead of getLocaleString() which varies by user timezone.
+  const CANONICAL_LOCALES: Record<string, string> = {
+    fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+    pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+  };
   const { locale: urlLocale } = parseLocaleFromPath(location.pathname);
-  const currentLocale = urlLocale || getLocaleString(language as any);
-  const articleUrl = `https://sos-expat.com/${currentLocale}/centre-aide/${currentSlug}`;
+  const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
+  const currentLocale = urlLocale || defaultLocale;
+  const helpCenterSlug = getTranslatedRouteSlug("help-center" as any, langCode as any);
+  // Full absolute URL bypasses SEOHead's locale re-processing (no double normalization)
+  const articleUrl = `https://sos-expat.com/${defaultLocale}/${helpCenterSlug}/${currentSlug}`;
 
   // Breadcrumbs for structured data
   const breadcrumbs = [
     { name: intl.formatMessage({ id: "nav.home" }), url: "/" },
-    { name: intl.formatMessage({ id: "helpCenter.title" }), url: `/${currentLocale}/centre-aide` },
+    { name: intl.formatMessage({ id: "helpCenter.title" }), url: `/${currentLocale}/${helpCenterSlug}` },
     { name: title },
   ];
 
@@ -283,7 +293,7 @@ const HelpArticle: React.FC = () => {
       <SEOHead
         title={`${title} | SOS Expat`}
         description={excerpt}
-        canonicalUrl={`/centre-aide/${currentSlug}`}
+        canonicalUrl={`https://sos-expat.com/${defaultLocale}/${helpCenterSlug}/${currentSlug}`}
         author="Manon"
         contentType="article"
         ogType="article"
@@ -394,7 +404,7 @@ const HelpArticle: React.FC = () => {
                   return (
                     <Link
                       key={rel.id}
-                      to={`/${currentLocale}/centre-aide/${relSlug}`}
+                      to={`/${currentLocale}/${helpCenterSlug}/${relSlug}`}
                       className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 p-4 transition-all"
                     >
                       <span className="mt-1 flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/20 text-red-400">

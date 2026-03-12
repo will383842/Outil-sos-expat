@@ -129,6 +129,73 @@
 /zh-us /zh-cn 301
 
 # =============================================
+# Additional invalid locale combos found in Google Search Console (2026-03-12)
+# Covers exotic country codes and cross-language mismatches
+# =============================================
+/zh-ad/* /zh-cn/:splat 301
+/zh-ad /zh-cn 301
+/ch-ad/* /zh-cn/:splat 301
+/ch-ad /zh-cn 301
+/ch-dj/* /zh-cn/:splat 301
+/ch-dj /zh-cn 301
+/ch-cn/* /zh-cn/:splat 301
+/ch-cn /zh-cn 301
+/en-de/* /en-us/:splat 301
+/en-de /en-us 301
+/en-fr/* /en-us/:splat 301
+/en-fr /en-us 301
+/en-es/* /en-us/:splat 301
+/en-es /en-us 301
+/en-pt/* /en-us/:splat 301
+/en-pt /en-us 301
+/en-ru/* /en-us/:splat 301
+/en-ru /en-us 301
+/en-in/* /en-us/:splat 301
+/en-in /en-us 301
+/en-cn/* /en-us/:splat 301
+/en-cn /en-us 301
+/en-sa/* /en-us/:splat 301
+/en-sa /en-us 301
+/fr-ru/* /fr-fr/:splat 301
+/fr-ru /fr-fr 301
+/fr-es/* /fr-fr/:splat 301
+/fr-es /fr-fr 301
+/fr-pt/* /fr-fr/:splat 301
+/fr-pt /fr-fr 301
+/fr-in/* /fr-fr/:splat 301
+/fr-in /fr-fr 301
+/fr-cn/* /fr-fr/:splat 301
+/fr-cn /fr-fr 301
+/fr-sa/* /fr-fr/:splat 301
+/fr-sa /fr-fr 301
+/fr-ad/* /fr-fr/:splat 301
+/fr-ad /fr-fr 301
+/es-de/* /es-es/:splat 301
+/es-de /es-es 301
+/es-pt/* /es-es/:splat 301
+/es-pt /es-es 301
+/es-ru/* /es-es/:splat 301
+/es-ru /es-es 301
+/de-es/* /de-de/:splat 301
+/de-es /de-de 301
+/de-pt/* /de-de/:splat 301
+/de-pt /de-de 301
+/de-ru/* /de-de/:splat 301
+/de-ru /de-de 301
+/ru-de/* /ru-ru/:splat 301
+/ru-de /ru-ru 301
+/ru-es/* /ru-ru/:splat 301
+/ru-es /ru-ru 301
+/ru-pt/* /ru-ru/:splat 301
+/ru-pt /ru-ru 301
+/pt-de/* /pt-pt/:splat 301
+/pt-de /pt-pt 301
+/pt-es/* /pt-pt/:splat 301
+/pt-es /pt-pt 301
+/pt-ru/* /pt-pt/:splat 301
+/pt-ru /pt-pt 301
+
+# =============================================
 # Legacy blog/external URLs
 # =============================================
 /blog-expatnola/ /fr-fr/ 301

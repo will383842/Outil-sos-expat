@@ -2382,19 +2382,28 @@ const ProviderProfile: React.FC = () => {
     : `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()} ${intl.formatMessage({ id: "providerProfile.frenchSpeaking" })} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)}. ${descriptionText.slice(0, 120)}...`;
 
   const canonicalUrl = (() => {
-    // Use translated route slug based on current language
-    const routeKey = isLawyer ? "lawyer" : "expat";
-    const displayType = currentLang 
-      ? getTranslatedRouteSlug(routeKey, currentLang)
-      : (isLawyer ? "avocat" : "expatrie");
-    
+    // IMPORTANT: Canonical URLs must be deterministic (no geolocation dependency).
+    // Use static default locale mapping instead of getLocaleString() which varies by user timezone.
+    const CANONICAL_LOCALES: Record<string, string> = {
+      fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+      pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+    };
+    const defaultLocale = CANONICAL_LOCALES[currentLang || 'fr'] || 'fr-fr';
+
+    // Use roleCountry from URL params (e.g., "anwalt-thaïlande") to match the actual URL structure.
+    // Only fall back to translated route slug for legacy URLs without roleCountry.
+    const displayType = roleCountry || (currentLang
+      ? getTranslatedRouteSlug(isLawyer ? "lawyer" : "expat", currentLang)
+      : (isLawyer ? "avocat" : "expatrie"));
+
     // Use translated slug if available, otherwise generate from name
     const nameSlug = translation && !showOriginal && translation.slug
       ? translation.slug
       : (provider.slug || safeNormalize(provider.fullName || `${provider.firstName}-${provider.lastName}`));
-    
+
     const finalSlug = nameSlug.includes(provider.id || '') ? nameSlug : `${nameSlug}-${provider.id}`;
-    return `/${currentLocale || ''}/${displayType}/${finalSlug}`;
+    // Full absolute URL bypasses SEOHead's locale re-processing (no double normalization)
+    return `https://sos-expat.com/${defaultLocale}/${displayType}/${finalSlug}`;
   })();
 
   return (
