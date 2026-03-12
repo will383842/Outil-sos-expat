@@ -2962,6 +2962,8 @@
   "admin.menu.promoCodes.description": "Create, activate, track coupons",
   "admin.menu.providerStats": "Performance Stats",
   "admin.menu.providerStats.description": "Provider availability and call statistics",
+  "admin.menu.providerPerformance": "Provider Performance",
+  "admin.menu.providerPerformance.description": "Provider availability and call statistics",
   "admin.menu.providerValidation": "Provider Validation",
   "admin.menu.providerValidation.description": "Provider validation and KYC",
   "admin.menu.providers": "Providers",

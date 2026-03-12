@@ -2962,6 +2962,8 @@
   "admin.menu.promoCodes.description": "Créer, activer, suivre les coupons",
   "admin.menu.providerStats": "Stats Performance",
   "admin.menu.providerStats.description": "Disponibilité et statistiques d'appels des prestataires",
+  "admin.menu.providerPerformance": "Performances Prestataires",
+  "admin.menu.providerPerformance.description": "Disponibilité et statistiques d'appels des prestataires",
   "admin.menu.providerValidation": "Validation prestataires",
   "admin.menu.providerValidation.description": "Validation et KYC des prestataires",
   "admin.menu.providers": "Prestataires",
