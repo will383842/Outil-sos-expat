@@ -2867,8 +2867,9 @@ export {
   adminReassignChatter,
   adminGetChatterHierarchy,
   // Admin Country Rotation
-  adminAdvanceCycleV2, // Renamed from adminAdvanceCycle (old Cloud Run service stuck in deletion)
-  adminUpdateCycleThreshold,
+  // DEAD CODE, commented 2026-03-12 (zero frontend calls)
+  // adminAdvanceCycleV2,
+  // adminUpdateCycleThreshold,
   // Admin Posts
   adminGetPendingPosts,
   adminModeratePost,
@@ -3271,23 +3272,23 @@ export { repairOrphanedUser } from './callables/repairOrphanedUser';
 
 // --- CHATTER : fonctions absentes du bloc principal ---
 export {
-  // Country Rotation
-  assignCountriesToCurrentChatter,
-  adminGetCountryRotationStatus,
-  adminInitializeCountryRotation,
+  // Country Rotation — DEAD CODE, commented 2026-03-12 (zero frontend calls)
+  // assignCountriesToCurrentChatter,
+  // adminGetCountryRotationStatus,
+  // adminInitializeCountryRotation,
   // Chatter Config Settings
   adminGetChatterConfigSettings,
   adminInitializeChatterConfigSettings,
   adminToggleFlashBonus,
   adminUpdateChatterConfigSettings,
-  // Message Templates
-  getChatterMessageTemplates,
-  adminSeedMessageTemplates,
-  adminCreateMessageTemplate,
-  adminUpdateMessageTemplate,
-  adminDeleteMessageTemplate,
-  adminResetMessageTemplatesToDefaults,
-  initializeMessageTemplates,
+  // Message Templates — DEAD CODE, commented 2026-03-12 (zero frontend calls, zero backend usage)
+  // getChatterMessageTemplates,
+  // adminSeedMessageTemplates,
+  // adminCreateMessageTemplate,
+  // adminUpdateMessageTemplate,
+  // adminDeleteMessageTemplate,
+  // adminResetMessageTemplatesToDefaults,
+  // initializeMessageTemplates,
   // Push Notifications (FCM)
   chatterNotifyCommissionEarned,
   chatterNotifyTeamMemberActivated,
@@ -3324,8 +3325,8 @@ export {
   adminSearchChatters,
 } from './chatter';
 
-// getAvailableCountriesForChatter (absent de chatter/index.ts — export direct)
-export { getAvailableCountriesForChatter } from './chatter/callables/countryRotation';
+// getAvailableCountriesForChatter — DEAD CODE, commented 2026-03-12 (zero frontend calls)
+// export { getAvailableCountriesForChatter } from './chatter/callables/countryRotation';
 
 // --- BLOGGER : getBloggerRecruits + getRecruitedProviders ---
 export { getBloggerRecruits } from './blogger';

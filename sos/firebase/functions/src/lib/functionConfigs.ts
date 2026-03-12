@@ -75,8 +75,8 @@ export const adminConfig = {
  */
 export const chatterAdminConfig = {
   region: "us-central1" as const,
-  memory: "512MiB" as const,  // FIX: 256MiB OOM — Node22+Firebase SDK uses ~255MiB at startup
-  cpu: 0.5,  // Required when memory > 256MiB
+  memory: "256MiB" as const,  // QUOTA FIX: 512MiB exceeded region memory quota
+  cpu: 0.083,  // QUOTA FIX: 0.5 → 0.083 to stay under memory quota
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,
@@ -89,8 +89,8 @@ export const chatterAdminConfig = {
  */
 export const affiliateAdminConfig = {
   region: "us-central1" as const,
-  memory: "512MiB" as const,  // FIX: 256MiB OOM — Node22+Firebase SDK uses ~255MiB at startup
-  cpu: 0.5,  // Required when memory > 256MiB
+  memory: "256MiB" as const,  // QUOTA FIX: 512MiB exceeded region memory quota
+  cpu: 0.083,  // QUOTA FIX: 0.5 → 0.083 to stay under memory quota
   maxInstances: 1,
   minInstances: 0,
   concurrency: 1,

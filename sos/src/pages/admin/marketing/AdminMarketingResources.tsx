@@ -139,7 +139,11 @@ const ROLE_COLORS: Record<string, string> = {
 
 // ── Component ──
 
-const AdminMarketingResources: React.FC = () => {
+interface AdminMarketingResourcesProps {
+  initialRole?: MarketingRole;
+}
+
+const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initialRole }) => {
   // ── State ──
   const [resources, setResources] = useState<MarketingResourceAdmin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,7 +152,7 @@ const AdminMarketingResources: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   // Filters
-  const [filterRole, setFilterRole] = useState<MarketingRole | ''>('');
+  const [filterRole, setFilterRole] = useState<MarketingRole | ''>(initialRole || '');
   const [filterCategory, setFilterCategory] = useState<MarketingCategory | ''>('');
   const [filterActive, setFilterActive] = useState<'' | 'true' | 'false'>('');
   const [searchQuery, setSearchQuery] = useState('');

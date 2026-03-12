@@ -58,10 +58,10 @@ export {
   adminReorderTrainingModules as adminReorderChatterTrainingModules,
 } from "./callables/adminTraining";
 
-// Country Rotation (admin only - user callables removed)
-export {
-  assignCountriesToCurrentChatter,
-} from "./callables/countryRotation";
+// Country Rotation — DEAD CODE, commented 2026-03-12 (zero frontend calls)
+// export {
+//   assignCountriesToCurrentChatter,
+// } from "./callables/countryRotation";
 
 // ============================================================================
 // ADMIN CALLABLES
@@ -94,13 +94,13 @@ export { getChatterDirectory } from "./callables/public";
 // Admin visibility toggle
 export { adminToggleChatterVisibility } from "./callables/admin/toggleVisibility";
 
-// Admin Country Rotation
-export {
-  adminInitializeCountryRotation,
-  adminGetCountryRotationStatus,
-  adminAdvanceCycleV2,
-  adminUpdateCycleThreshold,
-} from "./callables/countryRotation";
+// Admin Country Rotation — DEAD CODE, commented 2026-03-12 (zero frontend calls)
+// export {
+//   adminInitializeCountryRotation,
+//   adminGetCountryRotationStatus,
+//   adminAdvanceCycleV2,
+//   adminUpdateCycleThreshold,
+// } from "./callables/countryRotation";
 
 // Admin Referral System
 export {
@@ -178,27 +178,25 @@ export {
   adminUpdateMeetingStatus,
 } from "./callables/zoom";
 
-// Message Templates Callables
-export {
-  getChatterMessageTemplates,
-  adminSeedMessageTemplates,
-  adminCreateMessageTemplate,
-  adminUpdateMessageTemplate,
-  adminDeleteMessageTemplate,
-  adminResetMessageTemplatesToDefaults,
-  initializeMessageTemplates,
-  // Service functions (for internal use)
-  getMessageTemplates,
-  getMessageTemplatesGrouped,
-  getMessageTemplateById,
-  createMessageTemplate,
-  updateMessageTemplate,
-  deleteMessageTemplate,
-  seedMessageTemplates,
-  resetMessageTemplatesToDefaults,
-  // Constants
-  DEFAULT_MESSAGE_TEMPLATES,
-} from "./messageTemplates";
+// Message Templates — DEAD CODE, commented 2026-03-12 (zero frontend calls, zero backend usage)
+// export {
+//   getChatterMessageTemplates,
+//   adminSeedMessageTemplates,
+//   adminCreateMessageTemplate,
+//   adminUpdateMessageTemplate,
+//   adminDeleteMessageTemplate,
+//   adminResetMessageTemplatesToDefaults,
+//   initializeMessageTemplates,
+//   getMessageTemplates,
+//   getMessageTemplatesGrouped,
+//   getMessageTemplateById,
+//   createMessageTemplate,
+//   updateMessageTemplate,
+//   deleteMessageTemplate,
+//   seedMessageTemplates,
+//   resetMessageTemplatesToDefaults,
+//   DEFAULT_MESSAGE_TEMPLATES,
+// } from "./messageTemplates";
 
 // ============================================================================
 // SCHEDULED FUNCTIONS

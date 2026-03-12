@@ -14,8 +14,6 @@ export { useChatterTraining } from './useChatterTraining';
 export { useInfluencer } from './useInfluencer';
 export { useInfluencerTraining } from './useInfluencerTraining';
 export { useBlogger } from './useBlogger';
-export { useBloggerResources } from './useBloggerResources';
-
 // Common hooks
 export { useTranslation } from './useTranslation';
 export { default as usePayment } from './usePayment';

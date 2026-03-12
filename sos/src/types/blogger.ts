@@ -446,57 +446,6 @@ export interface BloggerResourceText {
 }
 
 // ============================================================================
-// GUIDE (EXCLUSIVE)
-// ============================================================================
-
-export interface BloggerGuideTemplate {
-  id: string;
-  name: string;
-  nameTranslations?: Record<string, string>;
-  description?: string;
-  descriptionTranslations?: Record<string, string>;
-  content: string;
-  contentTranslations?: Record<string, string>;
-  targetAudience?: string;
-  recommendedWordCount?: number;
-  seoKeywords?: string[];
-  isActive: boolean;
-  order: number;
-  usageCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BloggerGuideCopyText {
-  id: string;
-  name: string;
-  nameTranslations?: Record<string, string>;
-  category: 'intro' | 'cta' | 'testimonial' | 'feature' | 'benefit' | 'conclusion';
-  content: string;
-  contentTranslations?: Record<string, string>;
-  characterCount: number;
-  isActive: boolean;
-  order: number;
-  copyCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface BloggerGuideBestPractice {
-  id: string;
-  title: string;
-  titleTranslations?: Record<string, string>;
-  content: string;
-  contentTranslations?: Record<string, string>;
-  category: 'seo' | 'writing' | 'promotion' | 'conversion' | 'monetization';
-  icon?: string;
-  isActive: boolean;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ============================================================================
 // CONFIGURATION
 // ============================================================================
 
@@ -686,39 +635,6 @@ export interface BloggerResourceFile {
 export interface BloggerResourcesData {
   files: BloggerResourceFile[];
   texts: BloggerResourceText[];
-}
-
-// Simplified types for Guide API response (used in frontend)
-export interface BloggerGuideTemplateResponse {
-  id: string;
-  title: string;
-  description?: string;
-  content: string;
-  targetAudience?: string;
-  recommendedWordCount?: number;
-  seoKeywords?: string[];
-}
-
-export interface BloggerGuideCopyTextResponse {
-  id: string;
-  title: string;
-  type: string;
-  content: string;
-  characterCount?: number;
-}
-
-export interface BloggerGuideBestPracticeResponse {
-  id: string;
-  title: string;
-  content: string;
-  priority?: 'high' | 'medium' | 'low';
-  examples?: string[];
-}
-
-export interface BloggerGuideData {
-  templates: BloggerGuideTemplateResponse[];
-  copyTexts: BloggerGuideCopyTextResponse[];
-  bestPractices: BloggerGuideBestPracticeResponse[];
 }
 
 // ============================================================================

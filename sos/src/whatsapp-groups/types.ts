@@ -1,7 +1,7 @@
 /**
  * WhatsApp Groups - Types
  * Module isolé et scalable pour la gestion des groupes WhatsApp
- * Supporte tous les rôles : chatter, influencer, blogger, groupAdmin
+ * Supporte tous les rôles : chatter, influencer, blogger, groupAdmin, client, lawyer, expat
  *
  * Logique de résolution (priorité, 6 niveaux) :
  *   1. Continent + langue exacte (ex: "Chatter 🌍 Afrique 🇫🇷")

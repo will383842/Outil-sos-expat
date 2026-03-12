@@ -171,29 +171,12 @@ const CountryStep: React.FC<{
   }, [sortedCountries, searchQuery]);
 
   // Dismiss keyboard and select country
-  // Use both onClick and onPointerUp for better mobile responsiveness
+  // touch-action: manipulation in CSS eliminates the 300ms click delay,
+  // so onClick alone gives instant response on mobile — no need for onPointerUp.
   const handleSelect = useCallback((code: string) => {
     searchInputRef.current?.blur();
     onSelect(code);
   }, [onSelect]);
-
-  // Prevent ghost clicks: track if selection came from pointer
-  const pointerHandledRef = useRef(false);
-  const handlePointerUp = useCallback((code: string, e: React.PointerEvent) => {
-    // Only handle touch events for faster response; mouse uses onClick
-    if (e.pointerType !== 'touch') return;
-    e.preventDefault();
-    pointerHandledRef.current = true;
-    handleSelect(code);
-    // Reset quickly — 50ms is enough to skip the synthetic click
-    requestAnimationFrame(() => { pointerHandledRef.current = false; });
-  }, [handleSelect]);
-
-  const handleClick = useCallback((code: string) => {
-    // Skip if already handled by pointerUp (touch)
-    if (pointerHandledRef.current) return;
-    handleSelect(code);
-  }, [handleSelect]);
 
   return (
     <>
@@ -232,8 +215,7 @@ const CountryStep: React.FC<{
             <button
               key={country.code}
               type="button"
-              onClick={() => handleClick(country.code)}
-              onPointerUp={(e) => handlePointerUp(country.code, e)}
+              onClick={() => handleSelect(country.code)}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2
                 text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -311,25 +293,12 @@ const LanguageStep: React.FC<{
   };
 
   // Dismiss keyboard and toggle language
+  // touch-action: manipulation in CSS eliminates the 300ms click delay,
+  // so onClick alone gives instant response on mobile — no need for onPointerUp.
   const handleToggle = useCallback((code: string) => {
     searchInputRef.current?.blur();
     onToggle(code);
   }, [onToggle]);
-
-  // Prevent ghost clicks: track if selection came from pointer
-  const langPointerHandledRef = useRef(false);
-  const handleLangPointerUp = useCallback((code: string, e: React.PointerEvent) => {
-    if (e.pointerType !== 'touch') return;
-    e.preventDefault();
-    langPointerHandledRef.current = true;
-    handleToggle(code);
-    requestAnimationFrame(() => { langPointerHandledRef.current = false; });
-  }, [handleToggle]);
-
-  const handleLangClick = useCallback((code: string) => {
-    if (langPointerHandledRef.current) return;
-    handleToggle(code);
-  }, [handleToggle]);
 
   return (
     <>
@@ -380,8 +349,7 @@ const LanguageStep: React.FC<{
               <button
                 key={lang.code}
                 type="button"
-                onClick={() => handleLangClick(lang.code)}
-                onPointerUp={(e) => handleLangPointerUp(lang.code, e)}
+                onClick={() => handleToggle(lang.code)}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2
                   text-left min-h-[52px] select-none cursor-pointer touch-manipulation

@@ -102,8 +102,8 @@ export async function seedWhatsAppGroupsFromJson(
 }
 
 /**
- * Données WhatsApp Groups — 68 groupes (50 configurés, 18 lawyer/expat sans lien)
- * Généré le 11/03/2026
+ * Données WhatsApp Groups — 68 groupes (68 configurés avec liens)
+ * Mis à jour le 12/03/2026
  */
 export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
   groups: {
@@ -167,27 +167,27 @@ export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
     client_lang_zh: { id: "client_lang_zh", role: "Client", type: "langue", name: "Client Zhongwen 🇨🇳", lang: "zh", inviteLink: "https://chat.whatsapp.com/Cj6StuEbg1lCIn5uiEK9wM", active: true, isDefault: false },
     client_lang_hi: { id: "client_lang_hi", role: "Client", type: "langue", name: "Client Hindi 🇮🇳", lang: "hi", inviteLink: "https://chat.whatsapp.com/Jk5m17BCxJREaYOqWyKMvr", active: true, isDefault: false },
 
-    // ========== AVOCATS (9 groupes — pas encore de liens) ==========
-    lawyer_lang_fr: { id: "lawyer_lang_fr", role: "Avocat", type: "langue", name: "Avocat Français 🇫🇷", lang: "fr", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_en: { id: "lawyer_lang_en", role: "Avocat", type: "langue", name: "Avocat English 🇬🇧", lang: "en", inviteLink: null, active: false, isDefault: true },
-    lawyer_lang_es: { id: "lawyer_lang_es", role: "Avocat", type: "langue", name: "Avocat Español 🇪🇸", lang: "es", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_pt: { id: "lawyer_lang_pt", role: "Avocat", type: "langue", name: "Avocat Português 🇧🇷", lang: "pt", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_de: { id: "lawyer_lang_de", role: "Avocat", type: "langue", name: "Avocat Deutsch 🇩🇪", lang: "de", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_ru: { id: "lawyer_lang_ru", role: "Avocat", type: "langue", name: "Avocat Russkiy 🇷🇺", lang: "ru", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_ar: { id: "lawyer_lang_ar", role: "Avocat", type: "langue", name: "Avocat Al-Arabiyya 🇸🇦", lang: "ar", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_zh: { id: "lawyer_lang_zh", role: "Avocat", type: "langue", name: "Avocat Zhongwen 🇨🇳", lang: "zh", inviteLink: null, active: false, isDefault: false },
-    lawyer_lang_hi: { id: "lawyer_lang_hi", role: "Avocat", type: "langue", name: "Avocat Hindi 🇮🇳", lang: "hi", inviteLink: null, active: false, isDefault: false },
+    // ========== AVOCATS (9 groupes par langue) ==========
+    lawyer_lang_fr: { id: "lawyer_lang_fr", role: "Avocat", type: "langue", name: "Avocat Français 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/KwKVJILGvIY7FYutvJYlVc", active: true, isDefault: false },
+    lawyer_lang_en: { id: "lawyer_lang_en", role: "Avocat", type: "langue", name: "Avocat English 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/KPVBNRJU9RSBhLwoFnHOYj", active: true, isDefault: true },
+    lawyer_lang_es: { id: "lawyer_lang_es", role: "Avocat", type: "langue", name: "Avocat Español 🇪🇸", lang: "es", inviteLink: "https://chat.whatsapp.com/BjjDAw1lkbbEB7T0w8Okbp", active: true, isDefault: false },
+    lawyer_lang_pt: { id: "lawyer_lang_pt", role: "Avocat", type: "langue", name: "Avocat Português 🇧🇷", lang: "pt", inviteLink: "https://chat.whatsapp.com/EbOouSl6OIELTPIIvdivvx", active: true, isDefault: false },
+    lawyer_lang_de: { id: "lawyer_lang_de", role: "Avocat", type: "langue", name: "Avocat Deutsch 🇩🇪", lang: "de", inviteLink: "https://chat.whatsapp.com/DoK1HV7IgPw1wRY0PugiGX", active: true, isDefault: false },
+    lawyer_lang_ru: { id: "lawyer_lang_ru", role: "Avocat", type: "langue", name: "Avocat Russkiy 🇷🇺", lang: "ru", inviteLink: "https://chat.whatsapp.com/GfXMxwQ9IreANeL9L6PvlQ", active: true, isDefault: false },
+    lawyer_lang_ar: { id: "lawyer_lang_ar", role: "Avocat", type: "langue", name: "Avocat Al-Arabiyya 🇸🇦", lang: "ar", inviteLink: "https://chat.whatsapp.com/LefbhJ3PtZLHFgMt2WJgob", active: true, isDefault: false },
+    lawyer_lang_zh: { id: "lawyer_lang_zh", role: "Avocat", type: "langue", name: "Avocat Zhongwen 🇨🇳", lang: "zh", inviteLink: "https://chat.whatsapp.com/DSyOW8ULYJy1mNGdLp6YyW", active: true, isDefault: false },
+    lawyer_lang_hi: { id: "lawyer_lang_hi", role: "Avocat", type: "langue", name: "Avocat Hindi 🇮🇳", lang: "hi", inviteLink: "https://chat.whatsapp.com/IwOY12dm4KQ8ATZNXULLCC", active: true, isDefault: false },
 
-    // ========== EXPATRIÉS AIDANTS (9 groupes — pas encore de liens) ==========
-    expat_lang_fr: { id: "expat_lang_fr", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Français 🇫🇷", lang: "fr", inviteLink: null, active: false, isDefault: false },
-    expat_lang_en: { id: "expat_lang_en", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant English 🇬🇧", lang: "en", inviteLink: null, active: false, isDefault: true },
-    expat_lang_es: { id: "expat_lang_es", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Español 🇪🇸", lang: "es", inviteLink: null, active: false, isDefault: false },
-    expat_lang_pt: { id: "expat_lang_pt", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Português 🇧🇷", lang: "pt", inviteLink: null, active: false, isDefault: false },
-    expat_lang_de: { id: "expat_lang_de", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Deutsch 🇩🇪", lang: "de", inviteLink: null, active: false, isDefault: false },
-    expat_lang_ru: { id: "expat_lang_ru", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Russkiy 🇷🇺", lang: "ru", inviteLink: null, active: false, isDefault: false },
-    expat_lang_ar: { id: "expat_lang_ar", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Al-Arabiyya 🇸🇦", lang: "ar", inviteLink: null, active: false, isDefault: false },
-    expat_lang_zh: { id: "expat_lang_zh", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Zhongwen 🇨🇳", lang: "zh", inviteLink: null, active: false, isDefault: false },
-    expat_lang_hi: { id: "expat_lang_hi", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Hindi 🇮🇳", lang: "hi", inviteLink: null, active: false, isDefault: false },
+    // ========== EXPATRIÉS AIDANTS (9 groupes par langue) ==========
+    expat_lang_fr: { id: "expat_lang_fr", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Français 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/CxspzVb4HRBGNTzzNu9giT", active: true, isDefault: false },
+    expat_lang_en: { id: "expat_lang_en", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant English 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/KcuVqyIx2Mg9HOeOmVaKEc", active: true, isDefault: true },
+    expat_lang_es: { id: "expat_lang_es", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Español 🇪🇸", lang: "es", inviteLink: "https://chat.whatsapp.com/EhGJL62Ie7J6xK1AbDXEGb", active: true, isDefault: false },
+    expat_lang_pt: { id: "expat_lang_pt", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Português 🇧🇷", lang: "pt", inviteLink: "https://chat.whatsapp.com/DIRSNWNTIeg9syWxa2LH6L", active: true, isDefault: false },
+    expat_lang_de: { id: "expat_lang_de", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Deutsch 🇩🇪", lang: "de", inviteLink: "https://chat.whatsapp.com/Hn2o0nBap2cFirFClbmKtF", active: true, isDefault: false },
+    expat_lang_ru: { id: "expat_lang_ru", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Russkiy 🇷🇺", lang: "ru", inviteLink: "https://chat.whatsapp.com/KuDbakUqANNJ8OtoOIdLP1", active: true, isDefault: false },
+    expat_lang_ar: { id: "expat_lang_ar", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Al-Arabiyya 🇸🇦", lang: "ar", inviteLink: "https://chat.whatsapp.com/Ke3O0Kqc29JG2kEpFhQU5t", active: true, isDefault: false },
+    expat_lang_zh: { id: "expat_lang_zh", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Zhongwen 🇨🇳", lang: "zh", inviteLink: "https://chat.whatsapp.com/BhIxBmI17yWH6bLrFC1yzJ", active: true, isDefault: false },
+    expat_lang_hi: { id: "expat_lang_hi", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Hindi 🇮🇳", lang: "hi", inviteLink: "https://chat.whatsapp.com/L6QT0JKJM0sKr4RcqWngFi", active: true, isDefault: false },
   },
 };
 

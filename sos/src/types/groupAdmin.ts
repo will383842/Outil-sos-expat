@@ -468,11 +468,6 @@ export interface GroupAdminResourcesResponse {
   categories: { category: GroupAdminResourceCategory; count: number }[];
 }
 
-export interface GroupAdminPostsResponse {
-  posts: GroupAdminPost[];
-  categories: { category: GroupAdminPostCategory; count: number }[];
-}
-
 export interface RequestWithdrawalRequest {
   amount: number;
   paymentMethod: GroupAdminPaymentMethod;

@@ -2,7 +2,7 @@
 
 **Date** : 2026-02-15
 **Déployé sur** : https://backlinks.life-expat.com
-**Login** : williamsjullin@gmail.com / MJMJsblanc19522008/*%$
+**Login** : voir les credentials dans le gestionnaire de mots de passe
 
 ---
 

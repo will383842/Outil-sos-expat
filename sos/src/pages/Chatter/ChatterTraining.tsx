@@ -20,7 +20,7 @@ import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboard
 import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useChatterTraining } from '@/hooks/useChatterTraining';
-import { useChatterResources } from '@/hooks/useChatterResources';
+import AffiliateResources from '@/components/affiliate/AffiliateResources';
 import { copyToClipboard } from '@/utils/clipboard';
 import EmptyStateCard from '@/components/Chatter/Activation/EmptyStateCard';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
@@ -31,29 +31,7 @@ import type {
   TrainingSlide,
   TrainingQuizQuestion,
   SubmitTrainingQuizResult,
-  ChatterResourceFile,
-  ChatterResourceText,
 } from '@/types/chatter';
-
-/** Unified resource item */
-interface ResourceItem {
-  id: string;
-  category: string;
-  type: string;
-  _kind: 'file' | 'text';
-  title?: string;
-  name?: string;
-  description?: string;
-  content?: string;
-  downloadUrl?: string;
-  thumbnailUrl?: string;
-  previewUrl?: string;
-  fileUrl?: string;
-  format?: string;
-  size?: number;
-  sizeFormatted?: string;
-  dimensions?: { width: number; height: number };
-}
 
 const formatCents = (cents: number) => `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 
@@ -91,19 +69,7 @@ function ChatterTrainingContent() {
     error: trainingError,
   } = useChatterTraining();
 
-  const {
-    resources: resourcesData,
-    isLoading: resourcesLoading,
-    fetchResources,
-  } = useChatterResources();
 
-  // Fetch resources on mount
-  useEffect(() => {
-    fetchResources();
-  }, [fetchResources]);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSlide, setSelectedSlide] = useState(0);
   const [viewingModule, setViewingModule] = useState<string | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
@@ -869,119 +835,10 @@ function ChatterTrainingContent() {
   );
 
   // ══════════════════════════════════════════════════════════════
-  // TAB 3: RESOURCES
+  // TAB 3: RESOURCES (unified via Laravel API)
   // ══════════════════════════════════════════════════════════════
-  const allResources = useMemo(() => {
-    if (!resourcesData) return [];
-    const files: ResourceItem[] = (resourcesData.files || []).map((f) => ({ ...f, _kind: 'file' as const }));
-    const texts: ResourceItem[] = (resourcesData.texts || []).map((t) => ({ ...t, _kind: 'text' as const }));
-    return [...files, ...texts];
-  }, [resourcesData]);
-
-  const categories = useMemo(() => {
-    const cats = new Set<string>();
-    allResources.forEach((r) => { if (r.category) cats.add(r.category); });
-    return Array.from(cats).sort();
-  }, [allResources]);
-
-  const filteredResources = useMemo(() => {
-    let items = allResources;
-    if (selectedCategory) items = items.filter((r) => r.category === selectedCategory);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      items = items.filter((r) =>
-        (r.title || r.name || '').toLowerCase().includes(q) ||
-        (r.description || '').toLowerCase().includes(q) ||
-        (r.content || '').toLowerCase().includes(q)
-      );
-    }
-    return items;
-  }, [allResources, selectedCategory, searchQuery]);
-
   const resourcesTab = (
-    <div className="space-y-4">
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder={intl.formatMessage({ id: 'chatter.resources.search', defaultMessage: 'Search...' })}
-        className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-base text-slate-900 dark:text-white placeholder-slate-400"
-      />
-      {categories.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          <button
-            onClick={() => setSelectedCategory('')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
-              !selectedCategory ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
-            }`}
-          >
-            <FormattedMessage id="common.all" defaultMessage="All" />
-          </button>
-          {categories.map((cat: string) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
-                selectedCategory === cat ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
-      {resourcesLoading && (
-        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>
-      )}
-      {filteredResources.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredResources.map((resource) => (
-            <div key={resource.id} className={`${UI.card} p-4`}>
-              {resource.type === 'image' && resource.thumbnailUrl && (
-                <img src={resource.thumbnailUrl} alt={resource.title} className="w-full h-32 object-cover rounded-lg mb-3" loading="lazy" />
-              )}
-              <div className="flex items-start gap-2">
-                <div className="flex-shrink-0 w-8 h-8 bg-slate-100 dark:bg-white/10 rounded-lg flex items-center justify-center">
-                  {resource._kind === 'text' ? <FileText className="w-4 h-4 text-slate-400" /> :
-                   resource.type === 'image' ? <ImageIcon className="w-4 h-4 text-slate-400" /> :
-                   resource.type === 'video' ? <Video className="w-4 h-4 text-slate-400" /> :
-                   <FileText className="w-4 h-4 text-slate-400" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-slate-900 dark:text-white truncate">{resource.title}</h4>
-                  {resource.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{resource.description}</p>}
-                </div>
-              </div>
-              <div className="flex gap-2 mt-3">
-                {resource.downloadUrl && (
-                  <a href={resource.downloadUrl} target="_blank" rel="noopener noreferrer" className={`${UI.button.primary} px-3 py-1.5 text-xs flex-1 text-center`}>
-                    <FormattedMessage id="common.download" defaultMessage="Download" />
-                  </a>
-                )}
-                {resource.content && (
-                  <button
-                    onClick={async () => {
-                      const success = await copyToClipboard(resource.content!);
-                      if (success) toast.success(intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }));
-                    }}
-                    className={`${UI.button.secondary} px-3 py-1.5 text-xs flex-1`}
-                  >
-                    <FormattedMessage id="common.copy" defaultMessage="Copy" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {!resourcesLoading && filteredResources.length === 0 && (
-        <EmptyStateCard
-          icon={<FolderOpen className="w-7 h-7" />}
-          title={<FormattedMessage id="chatter.resources.emptyTitle" defaultMessage="Resources coming soon" />}
-          description={<FormattedMessage id="chatter.resources.emptyDesc" defaultMessage="Images, pre-written texts, and sharing tools coming soon!" />}
-        />
-      )}
-    </div>
+    <AffiliateResources role="chatter" />
   );
 
   // ══════════════════════════════════════════════════════════════
