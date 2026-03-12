@@ -2275,6 +2275,15 @@ export const useAdminRouteValidation = () => {
       "/admin/marketing/landing-pages",
       "/admin/analytics/unified",
       "/admin/feedback",
+      "/admin/toolbox/telegram",
+      "/admin/toolbox/telegram/dashboard",
+      "/admin/toolbox/telegram/campaigns",
+      "/admin/toolbox/telegram/campaigns/create",
+      "/admin/toolbox/telegram/templates",
+      "/admin/toolbox/telegram/subscribers",
+      "/admin/toolbox/telegram/queue",
+      "/admin/toolbox/telegram/logs",
+      "/admin/toolbox/telegram/config",
     ];
     return validPaths.includes(path);
   };
