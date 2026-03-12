@@ -80,6 +80,9 @@ interface GroupAdminListItem {
   isFeatured?: boolean;
   recruitedBy: string | null;
   recruitedByName: string | null;
+  whatsappGroupClicked: boolean;
+  hasTelegram: boolean;
+  telegramId: number | null;
 }
 
 interface GroupAdminStats {
@@ -176,6 +179,9 @@ export const adminGetGroupAdminsList = onCall(
           isFeatured: featuredMap[doc.id] ?? false,
           recruitedBy: (data as any).recruitedBy || null,
           recruitedByName: (data as any).recruitedByName || null,
+          whatsappGroupClicked: (data as any).whatsappGroupClicked ?? false,
+          hasTelegram: (data as any).hasTelegram ?? false,
+          telegramId: (data as any).telegramId || null,
         };
       });
 

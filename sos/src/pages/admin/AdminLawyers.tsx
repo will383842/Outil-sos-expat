@@ -86,6 +86,9 @@ type Lawyer = {
   languages?: string[];
   rating?: number;
   reviewsCount?: number;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number | null;
 };
 
 type FilterOptions = {
@@ -134,6 +137,9 @@ type FirestoreLawyerDoc = {
   languages?: string[];
   rating?: number;
   reviewsCount?: number;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number;
 };
 
 /* ------------ Column layout (order + resizable widths + visibility) ------------- */
@@ -154,7 +160,9 @@ type ColId =
   | "lastLogin"
   | "accountStatus"
   | "validation"
-  | "kyc";
+  | "kyc"
+  | "whatsapp"
+  | "telegram";
 
 const DEFAULT_ORDER: ColId[] = [
   "name",
@@ -174,6 +182,8 @@ const DEFAULT_ORDER: ColId[] = [
   "accountStatus",
   "validation",
   "kyc",
+  "whatsapp",
+  "telegram",
 ];
 
 const DEFAULT_WIDTHS: Record<ColId | "select" | "actions", number> = {
@@ -195,6 +205,8 @@ const DEFAULT_WIDTHS: Record<ColId | "select" | "actions", number> = {
   accountStatus: 140,
   validation: 150,
   kyc: 200,
+  whatsapp: 60,
+  telegram: 60,
   actions: 420,
 };
 
@@ -217,6 +229,8 @@ const DEFAULT_VISIBLE: Record<ColId, boolean> = {
   accountStatus: true,
   validation: true,
   kyc: true,
+  whatsapp: true,
+  telegram: true,
 };
 
 const useColumnLayout = () => {
@@ -247,7 +261,7 @@ const useColumnLayout = () => {
   const [visible, setVisible] = useState<Record<ColId, boolean>>(
     (() => {
       try {
-        const raw = localStorage.getItem("admin.lawyers.colVisible.v2");
+        const raw = localStorage.getItem("admin.lawyers.colVisible.v3");
         if (raw) return { ...DEFAULT_VISIBLE, ...(JSON.parse(raw) as Record<ColId, boolean>) };
       } catch { }
       return DEFAULT_VISIBLE;
@@ -263,7 +277,7 @@ const useColumnLayout = () => {
   }, [widths]);
 
   useEffect(() => {
-    localStorage.setItem("admin.lawyers.colVisible.v2", JSON.stringify(visible));
+    localStorage.setItem("admin.lawyers.colVisible.v3", JSON.stringify(visible));
   }, [visible]);
 
   const reset = () => {
@@ -476,6 +490,9 @@ const AdminLawyers: React.FC = () => {
           languages: Array.isArray(v.languages) ? v.languages : [],
           rating: typeof v.rating === "number" ? v.rating : undefined,
           reviewsCount: typeof v.reviewsCount === "number" ? v.reviewsCount : undefined,
+          whatsappGroupClicked: !!v.whatsappGroupClicked,
+          hasTelegram: !!v.hasTelegram,
+          telegramId: v.telegramId || null,
         };
       });
 
@@ -1051,6 +1068,26 @@ const AdminLawyers: React.FC = () => {
             {l.kycStatus} {l.kycProvider === "stripe" ? `• ${t("syncedStripe")}` : ""}
           </div>
         );
+      case "whatsapp":
+        return (
+          <div style={cellStyleFor(col)} className="text-center">
+            {l.whatsappGroupClicked ? (
+              <span className="text-green-600" title="A rejoint le groupe WhatsApp">✓</span>
+            ) : (
+              <span className="text-red-400" title="N'a pas rejoint WhatsApp">✗</span>
+            )}
+          </div>
+        );
+      case "telegram":
+        return (
+          <div style={cellStyleFor(col)} className="text-center">
+            {l.hasTelegram ? (
+              <span className="text-green-600" title={`Telegram lié${l.telegramId ? ` (ID: ${l.telegramId})` : ''}`}>✓</span>
+            ) : (
+              <span className="text-red-400" title="Telegram non lié">✗</span>
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -1092,6 +1129,10 @@ const AdminLawyers: React.FC = () => {
         return t("tableValidation");
       case "kyc":
         return t("tableKyc");
+      case "whatsapp":
+        return "WA";
+      case "telegram":
+        return "TG";
     }
   };
 

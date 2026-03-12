@@ -172,6 +172,9 @@ interface GroupAdmin {
   isVisible?: boolean;
   recruitedBy?: string | null;
   recruitedByName?: string | null;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number | null;
 }
 
 interface GroupAdminListResponse {
@@ -674,6 +677,8 @@ const AdminGroupAdminsList: React.FC = () => {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.clients' })}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.earnings' })}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">{intl.formatMessage({ id: 'groupAdmin.admin.list.col.lastLogin', defaultMessage: 'Dernière connexion' })}</th>
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell" title="WhatsApp Group">WA</th>
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell" title="Telegram">TG</th>
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
@@ -752,6 +757,20 @@ const AdminGroupAdminsList: React.FC = () => {
                               ? new Date(admin.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })
                               : '—'}
                           </span>
+                        </td>
+                        <td className="px-3 py-3 text-center hidden md:table-cell">
+                          {admin.whatsappGroupClicked ? (
+                            <span className="text-green-600" title="A rejoint le groupe WhatsApp">&#10003;</span>
+                          ) : (
+                            <span className="text-red-400" title="N'a pas rejoint WhatsApp">&#10007;</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center hidden md:table-cell">
+                          {admin.hasTelegram ? (
+                            <span className="text-green-600" title={`Telegram lié${admin.telegramId ? ` (ID: ${admin.telegramId})` : ''}`}>&#10003;</span>
+                          ) : (
+                            <span className="text-red-400" title="Telegram non lié">&#10007;</span>
+                          )}
                         </td>
                         <td className="px-4 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">

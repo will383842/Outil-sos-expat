@@ -218,6 +218,9 @@ type Client = {
   emailVerified: boolean;
   phoneVerified?: boolean;
   language?: string;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number | null;
 };
 
 type FilterOptions = {
@@ -244,6 +247,9 @@ type FirestoreClientDoc = {
   phoneVerified?: boolean;
   language?: string;
   preferredLanguage?: string;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number;
   suspendedReason?: string;
   suspendedAt?: Timestamp;
 };
@@ -395,6 +401,9 @@ const AdminClients: React.FC = () => {
           emailVerified: !!data.emailVerified,
           phoneVerified: !!data.phoneVerified,
           language: data.language || data.preferredLanguage || undefined,
+          whatsappGroupClicked: !!data.whatsappGroupClicked,
+          hasTelegram: !!data.hasTelegram,
+          telegramId: data.telegramId || null,
         };
       });
 
@@ -898,6 +907,8 @@ const AdminClients: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t("tableActivity")}
                     </th>
+                    <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell" title="WhatsApp Group">WA</th>
+                    <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell" title="Telegram">TG</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t("tableActions")}
                     </th>
@@ -985,6 +996,20 @@ const AdminClients: React.FC = () => {
                             {client.callsCount} {t("callsSpend").split(" ")[0]} • {client.totalSpent.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                           </div>
                         </div>
+                      </td>
+                      <td className="px-3 py-4 text-center hidden md:table-cell">
+                        {client.whatsappGroupClicked ? (
+                          <span className="text-green-600" title="A rejoint le groupe WhatsApp">✓</span>
+                        ) : (
+                          <span className="text-red-400" title="N'a pas rejoint WhatsApp">✗</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-4 text-center hidden md:table-cell">
+                        {client.hasTelegram ? (
+                          <span className="text-green-600" title={`Telegram lié${client.telegramId ? ` (ID: ${client.telegramId})` : ''}`}>✓</span>
+                        ) : (
+                          <span className="text-red-400" title="Telegram non lié">✗</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <div className="relative inline-flex items-center justify-end gap-2">

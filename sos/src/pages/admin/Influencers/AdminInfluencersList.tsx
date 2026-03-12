@@ -111,6 +111,9 @@ interface Influencer {
   phone?: string | null;
   recruitedBy?: string | null;
   recruitedByName?: string | null;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number | null;
 }
 
 interface InfluencerListResponse {
@@ -827,6 +830,8 @@ const AdminInfluencersList: React.FC = () => {
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
                           <FormattedMessage id="admin.influencers.col.lastLogin" defaultMessage="Dernière connexion" />
                         </th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell" title="WhatsApp Group">WA</th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell" title="Telegram">TG</th>
                         <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Actions
                         </th>
@@ -920,6 +925,20 @@ const AdminInfluencersList: React.FC = () => {
                                 ? new Date(influencer.lastLoginAt).toLocaleDateString(intl.locale, { day: 'numeric', month: 'short', year: 'numeric' })
                                 : '—'}
                             </span>
+                          </td>
+                          <td className="px-3 py-3 text-center hidden md:table-cell">
+                            {influencer.whatsappGroupClicked ? (
+                              <span className="text-green-600" title="A rejoint le groupe WhatsApp">&#10003;</span>
+                            ) : (
+                              <span className="text-red-400" title="N'a pas rejoint WhatsApp">&#10007;</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center hidden md:table-cell">
+                            {influencer.hasTelegram ? (
+                              <span className="text-green-600" title={`Telegram lié${influencer.telegramId ? ` (ID: ${influencer.telegramId})` : ''}`}>&#10003;</span>
+                            ) : (
+                              <span className="text-red-400" title="Telegram non lié">&#10007;</span>
+                            )}
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">

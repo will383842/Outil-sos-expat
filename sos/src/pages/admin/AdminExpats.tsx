@@ -89,6 +89,9 @@ interface Expat {
   helpDomains: string[];
   description?: string;
   hourlyRate?: number;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number | null;
 }
 
 interface FilterOptions {
@@ -147,6 +150,9 @@ type FirestoreExpatDoc = {
   bio?: string | object;
   hourlyRate?: number;
   pricePerHour?: number;
+  whatsappGroupClicked?: boolean;
+  hasTelegram?: boolean;
+  telegramId?: number;
 };
 
 /* ---------------------- Colonnes ---------------------- */
@@ -172,6 +178,8 @@ type ColId =
   | "map"
   | "accountStatus"
   | "validation"
+  | "whatsapp"
+  | "telegram"
   | "actions";
 
 const DEFAULT_ORDER: ColId[] = [
@@ -195,6 +203,8 @@ const DEFAULT_ORDER: ColId[] = [
   "map",
   "accountStatus",
   "validation",
+  "whatsapp",
+  "telegram",
   "actions",
 ];
 
@@ -220,6 +230,8 @@ const DEFAULT_WIDTHS: Record<ColId, number> = {
   map: 120,
   accountStatus: 160,
   validation: 150,
+  whatsapp: 60,
+  telegram: 60,
   actions: 240,
 };
 
@@ -246,6 +258,8 @@ const DEFAULT_VISIBLE: Record<ColId, boolean> = {
   map: true,
   accountStatus: true,
   validation: true,
+  whatsapp: true,
+  telegram: true,
   actions: true,
 };
 
@@ -274,7 +288,7 @@ const useColumnLayout = () => {
   const [visible, setVisible] = useState<Record<ColId, boolean>>(
     (() => {
       try {
-        const raw = localStorage.getItem("admin.expats.colVisible.v2");
+        const raw = localStorage.getItem("admin.expats.colVisible.v3");
         if (raw) {
           const obj = JSON.parse(raw) as Record<string, boolean>;
           return { ...DEFAULT_VISIBLE, ...obj };
@@ -291,7 +305,7 @@ const useColumnLayout = () => {
     localStorage.setItem("admin.expats.colWidths.v1", JSON.stringify(widths));
   }, [widths]);
   useEffect(() => {
-    localStorage.setItem("admin.expats.colVisible.v2", JSON.stringify(visible));
+    localStorage.setItem("admin.expats.colVisible.v3", JSON.stringify(visible));
   }, [visible]);
 
   const reset = () => {
@@ -567,6 +581,9 @@ const AdminExpats: React.FC = () => {
       helpDomains: data.helpDomains || data.expertiseDomains || data.servicesOffered || [],
       description: (typeof data.bio === 'string' ? data.bio : data.description) || "",
       hourlyRate: data.hourlyRate || data.pricePerHour,
+      whatsappGroupClicked: !!data.whatsappGroupClicked,
+      hasTelegram: !!data.hasTelegram,
+      telegramId: data.telegramId || null,
     };
   };
 
@@ -895,6 +912,26 @@ const AdminExpats: React.FC = () => {
             </select>
           </div>
         );
+      case "whatsapp":
+        return (
+          <div className="text-center">
+            {e.whatsappGroupClicked ? (
+              <span className="text-green-600" title="A rejoint le groupe WhatsApp">✓</span>
+            ) : (
+              <span className="text-red-400" title="N'a pas rejoint WhatsApp">✗</span>
+            )}
+          </div>
+        );
+      case "telegram":
+        return (
+          <div className="text-center">
+            {e.hasTelegram ? (
+              <span className="text-green-600" title={`Telegram lié${e.telegramId ? ` (ID: ${e.telegramId})` : ''}`}>✓</span>
+            ) : (
+              <span className="text-red-400" title="Telegram non lié">✗</span>
+            )}
+          </div>
+        );
       case "actions":
         return (
           <div className="flex items-center justify-end space-x-2">
@@ -1005,6 +1042,8 @@ const AdminExpats: React.FC = () => {
       map: t("map"),
       accountStatus: t("accountStatus"),
       validation: t("validation"),
+      whatsapp: "WA",
+      telegram: "TG",
       actions: t("actions"),
     };
     return map[col] || col;

@@ -169,6 +169,9 @@ export const adminGetInfluencersList = onCall(
           isFeatured: featuredMap[doc.id] ?? false,
           recruitedBy: (data as any).recruitedBy || null,
           recruitedByName: (data as any).recruitedByName || null,
+          whatsappGroupClicked: (data as any).whatsappGroupClicked ?? false,
+          hasTelegram: (data as any).hasTelegram ?? false,
+          telegramId: (data as any).telegramId || null,
         };
         if (data.photoUrl) item.photoUrl = data.photoUrl;
         return item;
