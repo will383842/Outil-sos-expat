@@ -95,9 +95,9 @@ async function seedCommissionPlans() {
     priority: 1, // Low priority (base plan)
 
     chatterRates: {
-      commissionClientCallAmount: 1000, // $10 fallback
-      commissionClientCallAmountLawyer: 1000, // $10 for lawyer
-      commissionClientCallAmountExpat: 1000, // $10 for expat
+      commissionClientCallAmount: 300, // $3 fallback
+      commissionClientCallAmountLawyer: 500, // $5 for lawyer
+      commissionClientCallAmountExpat: 300, // $3 for expat
       commissionN1CallAmount: 100,
       commissionN2CallAmount: 50,
       commissionActivationBonusAmount: 500,

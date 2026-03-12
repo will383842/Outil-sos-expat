@@ -227,7 +227,7 @@ const AdminInbox: React.FC = () => {
           detail: (data.motivation as string) || '',
           status: (data.status as string) || 'pending',
           createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || null,
-          link: '/admin/team/captains/recruitment',
+          link: '/admin/chatters/captains',
           raw: { ...data, _docId: d.id },
         };
       case 'contact':

@@ -60,11 +60,11 @@ export interface ChatterConfigSettings {
    * Commission/gains amounts (all in cents)
    */
   gains: {
-    /** Commission for chatter's own client call — generic fallback (default: 1000 = $10) */
+    /** Commission for chatter's own client call — generic fallback (default: 300 = $3) */
     clientCall: number;
-    /** Commission for client call with lawyer provider (default: 1000 = $10) */
+    /** Commission for client call with lawyer provider (default: 500 = $5) */
     clientCallLawyer: number;
-    /** Commission for client call with expat provider (default: 1000 = $10) */
+    /** Commission for client call with expat provider (default: 300 = $3) */
     clientCallExpat: number;
     /** Commission for N1 filleul's call (default: 100 = $1) */
     n1Call: number;
@@ -191,9 +191,9 @@ export const DEFAULT_CHATTER_CONFIG_SETTINGS: Omit<
   },
 
   gains: {
-    clientCall: 1000,           // $10 (fallback, overridden by lawyer/expat specific amounts)
-    clientCallLawyer: 1000,     // $10
-    clientCallExpat: 1000,      // $10
+    clientCall: 300,            // $3 (fallback, actual rate set in Firestore via admin console)
+    clientCallLawyer: 500,      // $5
+    clientCallExpat: 300,       // $3
     n1Call: 100,               // $1
     n2Call: 50,                // $0.50
     activationBonus: 500,      // $5

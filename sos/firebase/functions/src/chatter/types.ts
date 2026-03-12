@@ -1183,15 +1183,15 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   trainingEnabled: true,
 
   // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
-  commissionClientCallAmount: 1000,        // $10 - Direct client call (fallback, overridden by lawyer/expat specific amounts)
+  commissionClientCallAmount: 300,         // $3 - Direct client call (fallback, overridden by Firestore admin config)
   commissionN1CallAmount: 100,            // $1 - N1 referral makes a call
   commissionN2CallAmount: 50,             // $0.50 - N2 referral makes a call
   commissionActivationBonusAmount: 500,   // $5 - After referral's 2nd client call
   commissionN1RecruitBonusAmount: 100,    // $1 - N1 recruits someone who activates
   activationCallsRequired: 2,             // 2 calls to activate (anti-fraud)
   commissionProviderCallAmount: 500,      // $5 - Provider recruitment call
-  commissionClientCallAmountLawyer: 1000,  // $10 - Client call with lawyer
-  commissionClientCallAmountExpat: 1000,   // $10 - Client call with expat
+  commissionClientCallAmountLawyer: 500,   // $5 - Client call with lawyer
+  commissionClientCallAmountExpat: 300,    // $3 - Client call with expat
   commissionProviderCallAmountLawyer: 500, // $5 - Provider call with lawyer
   commissionProviderCallAmountExpat: 300,  // $3 - Provider call with expat
   commissionCaptainCallAmountLawyer: 300, // $3 - Captain call with lawyer

@@ -46,8 +46,8 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
 
   // Dynamic commission range from config (cents → dollars)
   const callAmountRange = useMemo(() => {
-    const expatAmt = (config?.commissionClientCallAmountExpat ?? 1000) / 100;
-    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 1000) / 100;
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
     return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;

@@ -42,12 +42,12 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
 
     // Dynamic commission amounts from config (cents → dollars)
     const minCallAmount = Math.min(
-      (config?.commissionClientCallAmountExpat ?? 1000),
-      (config?.commissionClientCallAmountLawyer ?? 1000)
+      (config?.commissionClientCallAmountExpat ?? 300),
+      (config?.commissionClientCallAmountLawyer ?? 500)
     ) / 100;
     const maxCallAmount = Math.max(
-      (config?.commissionClientCallAmountExpat ?? 1000),
-      (config?.commissionClientCallAmountLawyer ?? 1000)
+      (config?.commissionClientCallAmountExpat ?? 300),
+      (config?.commissionClientCallAmountLawyer ?? 500)
     ) / 100;
     const callAmountRange = minCallAmount === maxCallAmount
       ? `$${minCallAmount}`

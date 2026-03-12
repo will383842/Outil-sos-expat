@@ -551,8 +551,8 @@ const DashboardTour: React.FC<DashboardTourProps> = ({
 
   // Dynamic commission amounts from config (cents → dollars)
   const { callAmountRange, n1Amount, n2Amount, p1, p2, p3 } = useMemo(() => {
-    const expatAmt = (configData?.commissionClientCallAmountExpat ?? 1000) / 100;
-    const lawyerAmt = (configData?.commissionClientCallAmountLawyer ?? 1000) / 100;
+    const expatAmt = (configData?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (configData?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
     const range = minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;

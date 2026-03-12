@@ -108,9 +108,9 @@ interface ChatterDetail {
 }
 
 const RATE_FIELDS = [
-  { key: 'commissionClientCallAmount', label: 'Client (générique)', default: 1000 },
-  { key: 'commissionClientCallAmountLawyer', label: 'Client (avocat)', default: 1000 },
-  { key: 'commissionClientCallAmountExpat', label: 'Client (expat)', default: 1000 },
+  { key: 'commissionClientCallAmount', label: 'Client (générique)', default: 300 },
+  { key: 'commissionClientCallAmountLawyer', label: 'Client (avocat)', default: 500 },
+  { key: 'commissionClientCallAmountExpat', label: 'Client (expat)', default: 300 },
   { key: 'commissionN1CallAmount', label: 'N1 (filleul)', default: 100 },
   { key: 'commissionN2CallAmount', label: 'N2 (filleul N2)', default: 50 },
   { key: 'commissionActivationBonusAmount', label: 'Bonus activation', default: 500 },

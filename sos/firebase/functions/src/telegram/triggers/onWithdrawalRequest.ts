@@ -361,14 +361,22 @@ export const telegramOnWithdrawalRequest = onDocumentCreated(
         time: variables.TIME,
       });
 
-      // 7. Forward to Telegram Engine
+      // 7. Forward to Telegram Engine (all formatted data)
       await forwardEventToEngine("withdrawal.requested", withdrawalData.userId, {
         withdrawalId,
         amount,
-        userType: withdrawalData.userType,
         userName,
+        userType: withdrawalData.userType,
         methodType: withdrawalData.methodType,
         provider: withdrawalData.provider,
+        // Pre-formatted fields for the template
+        paymentMethod: paymentMethod,
+        paymentDetails: paymentDetails,
+        country: country,
+        // Raw payment details for extra context
+        bankName: withdrawalData.paymentDetails?.bankName,
+        accountHolderName: withdrawalData.paymentDetails?.accountHolderName || withdrawalData.paymentDetails?.accountName,
+        phoneNumber: withdrawalData.paymentDetails?.phoneNumber,
       });
     } catch (error) {
       // Log error but don't throw - we don't want to retry the trigger

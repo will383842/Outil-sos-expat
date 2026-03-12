@@ -193,7 +193,7 @@ export async function createCommission(
       switch (type) {
         // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
         case "client_call":
-          baseAmount = config.commissionClientCallAmount || config.commissionClientAmount || 1000;
+          baseAmount = config.commissionClientCallAmount || config.commissionClientAmount || 300;
           break;
         case "n1_call":
           baseAmount = config.commissionN1CallAmount || 100;
@@ -219,7 +219,7 @@ export async function createCommission(
           break;
         // LEGACY types (kept for backward compatibility)
         case "client_referral":
-          baseAmount = config.commissionClientAmount || config.commissionClientCallAmount || 1000;
+          baseAmount = config.commissionClientAmount || config.commissionClientCallAmount || 300;
           break;
         case "recruitment":
           baseAmount = config.commissionRecruitmentAmount || 500;

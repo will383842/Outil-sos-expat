@@ -407,7 +407,7 @@ const AdminDashboard: React.FC = () => {
                 </button>
                 {pendingCaptainCount > 0 && (
                   <button
-                    onClick={() => navigate("/admin/team/captains/recruitment")}
+                    onClick={() => navigate("/admin/chatters/captains")}
                     className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-md text-sm hover:bg-amber-100 transition-colors flex items-center gap-1.5"
                   >
                     <Crown size={14} />

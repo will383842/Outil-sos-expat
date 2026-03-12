@@ -27,8 +27,8 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
   // Dynamic commission range from config (cents → dollars)
   const callAmountRange = useMemo(() => {
-    const expatAmt = (config?.commissionClientCallAmountExpat ?? 1000) / 100;
-    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 1000) / 100;
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
     const minAmt = Math.min(expatAmt, lawyerAmt);
     const maxAmt = Math.max(expatAmt, lawyerAmt);
     return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
@@ -36,8 +36,8 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
   // Dynamic revenue examples based on average commission
   const revenueExamples = useMemo(() => {
-    const expatAmt = (config?.commissionClientCallAmountExpat ?? 1000) / 100;
-    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 1000) / 100;
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
     const avgAmount = (expatAmt + lawyerAmt) / 2;
     return [
       { calls: 5, weekly: true, monthly: Math.round(5 * 4 * avgAmount) },

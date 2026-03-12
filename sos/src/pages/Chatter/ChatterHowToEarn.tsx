@@ -254,7 +254,7 @@ function YourNextGoal({
   let progressPercent: number | null = null;
 
   const config = dashboardData?.config;
-  const goalClientCallAmount = config?.commissionClientCallAmount || 1000;
+  const goalClientCallAmount = config?.commissionClientCallAmount || 300;
   const goalLawyerAmount = config?.commissionClientCallAmountLawyer || goalClientCallAmount;
   const goalExpatAmount = config?.commissionClientCallAmountExpat || goalClientCallAmount;
 
@@ -596,7 +596,7 @@ function ChatterHowToEarn() {
 
   // Config-based amounts (use lockedRates/config from backend, fallback to defaults)
   const config = dashboardData?.config;
-  const clientCallAmount = config?.commissionClientCallAmount || 1000;
+  const clientCallAmount = config?.commissionClientCallAmount || 300;
   const clientCallAmountLawyer = config?.commissionClientCallAmountLawyer || clientCallAmount;
   const clientCallAmountExpat = config?.commissionClientCallAmountExpat || clientCallAmount;
   const n1CallAmount = config?.commissionN1CallAmount || 100;
