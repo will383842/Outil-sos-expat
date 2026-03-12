@@ -29,6 +29,7 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
+import AdminLayout from '../../../components/admin/AdminLayout';
 import {
   fetchTelegramGroups,
   updateTelegramGroup,
@@ -428,6 +429,7 @@ const AdminTelegramGroups: React.FC = () => {
   );
 
   return (
+    <AdminLayout>
     <div className="bg-zinc-50 dark:bg-zinc-950 min-h-screen">
       <div className="max-w-7xl mx-auto px-6 py-8">
 
@@ -648,6 +650,7 @@ const AdminTelegramGroups: React.FC = () => {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 };
 

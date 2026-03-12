@@ -30,6 +30,7 @@ import {
   addGroupManager,
   removeGroupManager,
 } from './telegramGroupsApi';
+import AdminLayout from '../../../components/admin/AdminLayout';
 import type {
   TelegramGroup,
   TelegramGroupManager,
@@ -288,6 +289,7 @@ const AdminTelegramSupervision: React.FC = () => {
   // -------------------------------------------------------------------------
 
   return (
+    <AdminLayout>
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-6">
@@ -670,6 +672,7 @@ const AdminTelegramSupervision: React.FC = () => {
         />
       )}
     </div>
+    </AdminLayout>
   );
 };
 

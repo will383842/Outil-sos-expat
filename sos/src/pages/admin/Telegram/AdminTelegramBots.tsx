@@ -18,6 +18,7 @@ import {
   validateTelegramBot,
   testTelegramBot,
 } from "./telegramGroupsApi";
+import AdminLayout from "../../../components/admin/AdminLayout";
 
 /** Mask a token: show first 4 and last 3 chars */
 function maskToken(token: string): string {
@@ -186,15 +187,18 @@ const AdminTelegramBots: React.FC = () => {
 
   if (loading) {
     return (
+      <AdminLayout>
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
         <span className="ml-3 text-gray-500">Chargement des bots...</span>
       </div>
+      </AdminLayout>
     );
   }
 
   if (error) {
     return (
+      <AdminLayout>
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
         <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-2" />
         <p className="text-red-700 font-medium">{error}</p>
@@ -205,10 +209,12 @@ const AdminTelegramBots: React.FC = () => {
           Reessayer
         </button>
       </div>
+      </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -438,6 +444,7 @@ const AdminTelegramBots: React.FC = () => {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 };
 
