@@ -5,10 +5,15 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getApps, initializeApp } from 'firebase-admin/app';
 import { sendZoho } from '../notificationPipeline/providers/email/zohoSmtp';
 import { EMAIL_USER, EMAIL_PASS } from '../lib/secrets';
 
-const db = getFirestore();
+function ensureInitialized() {
+  if (!getApps().length) {
+    initializeApp();
+  }
+}
 
 const ALLOWED_COLLECTIONS = [
   'contact_messages',
@@ -92,6 +97,9 @@ export const sendInboxReply = onCall<InboxReplyRequest>(
     secrets: [EMAIL_USER, EMAIL_PASS],
   },
   async (request) => {
+    ensureInitialized();
+    const db = getFirestore();
+
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentification requise');
     }

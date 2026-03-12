@@ -335,7 +335,8 @@ export const adminGetResourcesList = onCall(
     const input = request.data as GetResourcesListInput;
 
     try {
-      let query = db.collection("group_admin_resources").orderBy("order", "asc");
+      // Use simple queries to avoid composite index requirements
+      let query: FirebaseFirestore.Query = db.collection("group_admin_resources");
 
       if (input.category && input.category !== "all") {
         query = query.where("category", "==", input.category);
@@ -351,7 +352,10 @@ export const adminGetResourcesList = onCall(
 
       const snapshot = await query.get();
 
-      const resources = snapshot.docs.map((doc) => doc.data() as GroupAdminResource);
+      // Sort client-side to avoid composite index requirement
+      const resources = snapshot.docs
+        .map((doc) => doc.data() as GroupAdminResource)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
       return { resources };
     } catch (error) {
