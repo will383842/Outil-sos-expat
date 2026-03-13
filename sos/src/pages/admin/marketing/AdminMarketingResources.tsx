@@ -114,6 +114,18 @@ const LANGUAGES = [
   { code: 'hi', label: 'हिन्दी' },
 ];
 
+const AVAILABLE_PLACEHOLDERS = [
+  { value: '{{AFFILIATE_LINK}}', label: 'Lien client', example: 'https://sos-expat.com/?ref=ABC123' },
+  { value: '{{RECRUITMENT_LINK}}', label: 'Lien recrutement', example: 'https://sos-expat.com/chatter/register?ref=XYZ' },
+  { value: '{{PROVIDER_LINK}}', label: 'Lien prestataire', example: 'https://sos-expat.com/register-provider?ref=ABC123' },
+  { value: '{{AFFILIATE_CODE}}', label: 'Code affilie', example: 'ABC123' },
+  { value: '{{GROUP_NAME}}', label: 'Nom du groupe', example: 'Expats France' },
+  { value: '{{ADMIN_NAME}}', label: 'Nom complet', example: 'Jean Dupont' },
+  { value: '{{ADMIN_FIRST_NAME}}', label: 'Prenom', example: 'Jean' },
+  { value: '{{DISCOUNT_AMOUNT}}', label: 'Reduction montant', example: '5$' },
+  { value: '{{DISCOUNT_PERCENT}}', label: 'Reduction %', example: '5%' },
+];
+
 const UI = {
   card: 'bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg',
   button: {
@@ -896,21 +908,49 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                 </div>
               </div>
 
-              {/* Placeholders (comma-separated) */}
+              {/* Placeholders (clickable variable chips) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Placeholders (separes par des virgules)
+                  Variables dynamiques
                 </label>
-                <input
-                  type="text"
-                  value={(editing.data.placeholders || []).join(', ')}
-                  onChange={(e) => updateEditField(
-                    'placeholders',
-                    e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-                  )}
-                  className={UI.input}
-                  placeholder="{{AFFILIATE_LINK}}, {{GROUP_NAME}}, ..."
-                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  Cliquez pour activer/desactiver. Les variables actives seront remplacees automatiquement dans le contenu pour chaque utilisateur.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_PLACEHOLDERS.map((ph) => {
+                    const isActive = (editing.data.placeholders || []).includes(ph.value);
+                    return (
+                      <button
+                        key={ph.value}
+                        type="button"
+                        onClick={() => {
+                          const current = editing.data.placeholders || [];
+                          const updated = isActive
+                            ? current.filter((p) => p !== ph.value)
+                            : [...current, ph.value];
+                          updateEditField('placeholders', updated);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                          isActive
+                            ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 ring-1 ring-red-300'
+                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                        }`}
+                        title={ph.example}
+                      >
+                        {isActive && <Check className="w-3 h-3" />}
+                        <code>{ph.value}</code>
+                        <span className="text-[10px] opacity-70">{ph.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {(editing.data.placeholders || []).length > 0 && (
+                  <div className="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2">
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      <strong>{(editing.data.placeholders || []).length} variable(s) active(s)</strong> — utilisez ces tags dans le champ "Contenu" ci-dessus, ils seront remplaces par les vraies valeurs de chaque utilisateur.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Save */}
