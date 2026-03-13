@@ -130,9 +130,9 @@ export function AffiliateRefSync(): null {
     if (location.pathname.includes("/admin") || location.pathname.includes("/marketing")) return;
 
     // Skip affiliate capture routes (they handle their own redirect)
-    if (/^\/(ref|rec|prov)\//.test(location.pathname)) return;
+    if (/^\/(ref|rec|prov|r)\//.test(location.pathname)) return;
     // Also skip locale-prefixed affiliate routes
-    if (/^\/[^/]+\/(ref|rec|prov)\//.test(location.pathname)) return;
+    if (/^\/[^/]+\/(ref|rec|prov|r)\//.test(location.pathname)) return;
 
     // Already has ref in URL — nothing to do
     // Check actual browser URL (not React Router state) since we use replaceState

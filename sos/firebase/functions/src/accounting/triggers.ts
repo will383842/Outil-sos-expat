@@ -377,6 +377,45 @@ export const onAffiliateCommissionCreated = onDocumentCreated(
 );
 
 // =============================================================================
+// TRIGGER: UNIFIED COMMISSION CREATED
+// =============================================================================
+
+/**
+ * Map referrerRole from unified commission to accounting AffiliateUserType
+ */
+function mapRoleToUserType(referrerRole: string): AffiliateUserType {
+  switch (referrerRole) {
+    case 'chatter':
+    case 'captainChatter':
+      return 'chatter';
+    case 'influencer':
+      return 'influencer';
+    case 'blogger':
+      return 'blogger';
+    case 'groupAdmin':
+      return 'group_admin';
+    default:
+      return 'affiliate';
+  }
+}
+
+export const onUnifiedCommissionCreated = onDocumentCreated(
+  { document: 'commissions/{commissionId}', ...TRIGGER_CONFIG },
+  async (event) => {
+    const docData = event.data?.data();
+    if (!docData) return;
+
+    const userType = mapRoleToUserType((docData.referrerRole as string) || '');
+    await handleCommissionCreated(
+      event.params.commissionId,
+      userType,
+      'commissions',
+      docData
+    );
+  }
+);
+
+// =============================================================================
 // TRIGGER: RETRAIT AFFILIE COMPLETE
 // =============================================================================
 

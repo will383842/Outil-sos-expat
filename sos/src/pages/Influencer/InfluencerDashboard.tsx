@@ -46,14 +46,15 @@ const InfluencerLiveActivityFeed = lazy(() =>
 const InfluencerEarningsBreakdownCard = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerEarningsBreakdownCard').then(m => ({ default: m.InfluencerEarningsBreakdownCard }))
 );
+const UnifiedAffiliateDashboard = lazy(() => import('@/components/unified/UnifiedAffiliateDashboard'));
 const InfluencerTeamCard = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerTeamCard').then(m => ({ default: m.InfluencerTeamCard }))
 );
 const NotificationBell = lazy(() =>
   import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
-const InfluencerAffiliateLinks = lazy(() =>
-  import('@/components/Influencer/Links/InfluencerAffiliateLinks')
+const UnifiedLinkWithEarnings = lazy(() =>
+  import('@/components/unified/UnifiedLinkWithEarnings')
 );
 const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
 
@@ -506,6 +507,13 @@ const InfluencerDashboard: React.FC = () => {
         </Suspense>
 
         {/* ================================================================ */}
+        {/* UNIFIED AFFILIATE (Phase 8) */}
+        {/* ================================================================ */}
+        <Suspense fallback={null}>
+          <UnifiedAffiliateDashboard compact showBalance={false} showHistory={false} />
+        </Suspense>
+
+        {/* ================================================================ */}
         {/* BALANCE CARDS - 4 columns */}
         {/* ================================================================ */}
         <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
@@ -537,7 +545,7 @@ const InfluencerDashboard: React.FC = () => {
         )}
 
         {/* ================================================================ */}
-        {/* AFFILIATE LINKS - Prominent position for easy access */}
+        {/* UNIFIED AFFILIATE LINK + EARNINGS */}
         {/* ================================================================ */}
         <Suspense fallback={<CardSkeleton height="h-48" />}>
           <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '350ms' }}>
@@ -545,11 +553,9 @@ const InfluencerDashboard: React.FC = () => {
               <Sparkles className="w-5 h-5 text-yellow-500" />
               <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
             </h2>
-            <InfluencerAffiliateLinks
-              clientCode={influencer?.affiliateCodeClient || ''}
-              recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
-              providerCode={influencer?.affiliateCodeProvider || ''}
-              clientDiscount={config?.clientDiscountPercent ?? 0}
+            <UnifiedLinkWithEarnings
+              code={(influencer as any)?.affiliateCode || influencer?.affiliateCodeClient || ''}
+              role="influencer"
             />
           </div>
         </Suspense>

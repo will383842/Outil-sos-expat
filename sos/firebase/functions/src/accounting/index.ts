@@ -81,6 +81,7 @@ export {
   onBloggerCommissionCreated,
   onGroupAdminCommissionCreated,
   onAffiliateCommissionCreated,
+  onUnifiedCommissionCreated,
 
   // Triggers automatiques - Retraits & Transferts
   onWithdrawalCompleted,

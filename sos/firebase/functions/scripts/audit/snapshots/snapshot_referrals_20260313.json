@@ -1,0 +1,50 @@
+{
+  "snapshotDate": "2026-03-13T08:51:46.407Z",
+  "durationMs": 3844,
+  "summary": {
+    "totalUsers": 223,
+    "usersWithReferrals": 2,
+    "referredChatters": 0,
+    "referredInfluencers": 0,
+    "referredBloggers": 0,
+    "referredGroupAdmins": 0,
+    "genericReferralDocs": 1,
+    "criticalIssues": 0,
+    "warnings": 0
+  },
+  "issues": [],
+  "userReferrals": [
+    {
+      "userId": "HVsiAW7Ipvb07Fm0ACYMahBuyq32",
+      "role": "lawyer",
+      "email": "22222222williamsjullin@gmail.com",
+      "providerRecruitedByChatter": "PROV-WILLIAMS431",
+      "providerRecruitedByChatterId": "lBlOOjJW5aRfW4SxmqtiWCPJ5IJ3",
+      "pendingReferralCode": "PROV-WILLIAMS431"
+    },
+    {
+      "userId": "lY3A4rU3Y2dU49iVMfrdveY1cVI2",
+      "role": "lawyer",
+      "email": "beeeditions11@gmail.com",
+      "providerRecruitedByChatter": "PROV-BEE517",
+      "providerRecruitedByChatterId": "1McUxuJBRKR4n983JdDRNCCqqO52",
+      "pendingReferralCode": "REC-BEE517"
+    }
+  ],
+  "roleReferrals": {
+    "chatters": [],
+    "influencers": [],
+    "bloggers": [],
+    "groupAdmins": []
+  },
+  "genericReferrals": [
+    {
+      "id": "_initial",
+      "referrerId": null,
+      "refereeId": null,
+      "status": "unknown",
+      "firstActionAt": null,
+      "createdAt": null
+    }
+  ]
+}

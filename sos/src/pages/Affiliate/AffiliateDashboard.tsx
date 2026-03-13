@@ -114,6 +114,11 @@ const AffiliateDashboard: React.FC = () => {
     minimumWithdrawal,
   } = useAffiliate();
 
+  // Unified share URL (/r/CODE) — Phase 8
+  const unifiedShareUrl = affiliateData?.affiliateCode
+    ? `${window.location.origin}/r/${affiliateData.affiliateCode}`
+    : shareUrl;
+
   // Copy feedback state
   const [copied, setCopied] = useState(false);
 
@@ -127,8 +132,8 @@ const AffiliateDashboard: React.FC = () => {
 
   // Copy share link with feedback
   const copyShareLink = async () => {
-    if (!shareUrl) return;
-    const success = await copyToClipboard(shareUrl);
+    if (!unifiedShareUrl) return;
+    const success = await copyToClipboard(unifiedShareUrl);
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -137,12 +142,12 @@ const AffiliateDashboard: React.FC = () => {
 
   // Native share
   const shareNative = async () => {
-    if (!shareUrl || !navigator.share) return;
+    if (!unifiedShareUrl || !navigator.share) return;
     try {
       await navigator.share({
         title: intl.formatMessage({ id: "affiliate.share.title", defaultMessage: "Join SOS Expat" }),
         text: intl.formatMessage({ id: "affiliate.share.text", defaultMessage: "Get help from lawyers and expats worldwide" }),
-        url: shareUrl,
+        url: unifiedShareUrl,
       });
     } catch (err) {
       console.error("Share failed:", err);
@@ -281,7 +286,7 @@ const AffiliateDashboard: React.FC = () => {
               <div className="flex gap-2">
                 <div className="flex-1 flex items-center px-4 py-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
                   <span className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                    {shareUrl || intl.formatMessage({ id: "affiliate.share.loading", defaultMessage: "Chargement..." })}
+                    {unifiedShareUrl || intl.formatMessage({ id: "affiliate.share.loading", defaultMessage: "Chargement..." })}
                   </span>
                 </div>
                 <button

@@ -5,9 +5,10 @@
  * Includes photo upload to Firebase Storage + updateGroupAdminProfile callable.
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import toast from 'react-hot-toast';
+const UnifiedAffiliateLink = lazy(() => import('@/components/unified/UnifiedAffiliateLink'));
 import { httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useGroupAdmin } from '@/hooks/useGroupAdmin';
@@ -370,40 +371,21 @@ const GroupAdminProfile: React.FC = () => {
           )}
         </div>
 
-        {/* Codes d'affiliation */}
+        {/* Unified Affiliate Link */}
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <Settings className="w-5 h-5 text-purple-500" />
             <h2 className="text-lg dark:text-white font-semibold">
-              <FormattedMessage id="groupAdmin.profile.codes" defaultMessage="Codes d'affiliation" />
+              <FormattedMessage id="groupAdmin.profile.affiliateLink" defaultMessage="Mon lien affilié" />
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-0.5">
-                <FormattedMessage id="groupAdmin.profile.clientCode" defaultMessage="Code client ($5 remise)" />
-              </label>
-              <p className="text-xl text-indigo-600 dark:text-indigo-400 font-mono">
-                {profile?.affiliateCodeClient || '-'}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-0.5">
-                <FormattedMessage id="groupAdmin.profile.recruitCode" defaultMessage="Code recrutement" />
-              </label>
-              <p className="text-xl text-purple-600 dark:text-purple-400 font-mono">
-                {profile?.affiliateCodeRecruitment || '-'}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400 block mb-0.5">
-                <FormattedMessage id="groupAdmin.profile.providerCode" defaultMessage="Code prestataire ($5/appel)" />
-              </label>
-              <p className="text-xl text-teal-600 dark:text-teal-400 font-mono">
-                {profile?.affiliateCodeProvider || '-'}
-              </p>
-            </div>
-          </div>
+          {profile?.affiliateCodeClient ? (
+            <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
+              <UnifiedAffiliateLink code={profile.affiliateCodeClient} />
+            </Suspense>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400">-</p>
+          )}
         </div>
 
         {/* Paiement */}

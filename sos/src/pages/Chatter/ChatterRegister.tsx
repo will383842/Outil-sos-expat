@@ -17,7 +17,7 @@ import type { ChatterRegistrationData } from '@/components/Chatter/Forms/Chatter
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { Star, ArrowLeft, Gift, LogIn, Mail } from 'lucide-react';
-import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
@@ -80,9 +80,8 @@ const ChatterRegister: React.FC = () => {
       return fromUrl;
     }
 
-    // Fallback to localStorage (returns null if expired)
-    // Check role-specific storage first, then generic 'client' (set by useReferralCapture on any page)
-    return getStoredReferralCode('chatter') || getStoredReferralCode('client') || getBestAvailableReferralCode('chatter') || '';
+    // Unified fallback: unified key → legacy role-specific → sessionStorage
+    return getUnifiedReferralCode() || '';
   }, [searchParams]);
 
   // Routes
@@ -242,6 +241,7 @@ const ChatterRegister: React.FC = () => {
 
       // Clear stored referral code after successful registration
       clearStoredReferral('chatter');
+      clearUnifiedReferral();
 
       // Refresh user data BEFORE showing success to avoid loading flicker
       await refreshUser();

@@ -14,7 +14,7 @@ import useAntiBot from '@/hooks/useAntiBot';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration } from '../utils/metaPixel';
 import { trackAdRegistration } from '../services/adAttributionService';
 import { getStoredReferralTracking } from '../hooks/useAffiliate';
-import { getStoredReferralCode, getBestAvailableReferralCode } from '../utils/referralStorage';
+import { getUnifiedReferralCode } from '../utils/referralStorage';
 
 import LawyerRegisterForm from '../components/registration/lawyer/LawyerRegisterForm';
 import { getTheme } from '../components/registration/shared/theme';
@@ -29,7 +29,7 @@ const RegisterLawyer: React.FC = () => {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
-  const referralCode = searchParams.get('ref') || getStoredReferralCode('client') || getBestAvailableReferralCode('client') || '';
+  const referralCode = searchParams.get('ref') || getUnifiedReferralCode() || '';
   const { register, isLoading, user } = useAuth();
   const { language } = useApp();
   const lang = language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'pt' | 'ch' | 'ar';

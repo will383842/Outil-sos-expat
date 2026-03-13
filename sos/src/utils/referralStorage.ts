@@ -240,6 +240,143 @@ export function getBestAvailableReferralCode(preferredActorType?: ActorType): st
 }
 
 // ============================================================================
+// UNIFIED REFERRAL SYSTEM (Phase 7)
+// ============================================================================
+
+/** Single unified localStorage key — role-agnostic */
+const UNIFIED_STORAGE_KEY = 'sos_referral';
+
+/**
+ * Store a referral code in the unified format.
+ * Also stores in legacy role-specific keys for backward compatibility.
+ * Also stores in sessionStorage under 'pendingReferralCode' for RegisterClient.
+ *
+ * @param code - The referral code (any format: client, recruitment, provider)
+ * @param tracking - Optional UTM and landing page data
+ */
+export function storeUnifiedReferral(
+  code: string,
+  tracking?: {
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    landingPage?: string;
+  }
+): void {
+  if (typeof window === 'undefined') return;
+
+  const upperCode = code.toUpperCase();
+  const clientCode = deriveClientCode(upperCode);
+  const now = new Date();
+
+  const stored: StoredReferral = {
+    code: upperCode,
+    actorType: 'client', // unified = role-agnostic, stored as 'client'
+    codeType: 'client',
+    capturedAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + ATTRIBUTION_WINDOW_MS).toISOString(),
+    ...tracking,
+  };
+
+  try {
+    localStorage.setItem(UNIFIED_STORAGE_KEY, obfuscate(JSON.stringify(stored)));
+
+    // Backward compatibility: also store in legacy 'client' key
+    storeReferralCode(clientCode, 'client', 'client', tracking);
+
+    // sessionStorage for RegisterClient Google Auth flow
+    sessionStorage.setItem('pendingReferralCode', clientCode);
+  } catch (err) {
+    console.warn('[referralStorage] Failed to store unified referral:', err);
+  }
+}
+
+/**
+ * Get the referral code from the unified system with 3-level fallback:
+ * 1. Unified key (sos_referral) — new format
+ * 2. Legacy role-specific keys — old format via getBestAvailableReferralCode()
+ * 3. sessionStorage (pendingReferralCode) — last resort
+ *
+ * Returns the derived client code (prefixes stripped) or null if not found/expired.
+ */
+export function getUnifiedReferralCode(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  // 1. Unified key
+  try {
+    const raw = localStorage.getItem(UNIFIED_STORAGE_KEY);
+    if (raw) {
+      const stored: StoredReferral = JSON.parse(deobfuscate(raw));
+      if (!isExpired(stored.expiresAt)) {
+        return deriveClientCode(stored.code);
+      }
+      // Auto-clean expired
+      localStorage.removeItem(UNIFIED_STORAGE_KEY);
+    }
+  } catch {
+    // continue to fallback
+  }
+
+  // 2. Legacy role-specific keys (cross-tracking scan)
+  const legacyCode = getBestAvailableReferralCode();
+  if (legacyCode) return legacyCode;
+
+  // 3. sessionStorage (pendingReferralCode)
+  try {
+    const pending = sessionStorage.getItem('pendingReferralCode');
+    if (pending) return pending.toUpperCase();
+  } catch {
+    // sessionStorage not available
+  }
+
+  return null;
+}
+
+/**
+ * Get the full unified StoredReferral object (with tracking data).
+ * Same 3-level fallback as getUnifiedReferralCode() but returns the full object.
+ */
+export function getUnifiedReferral(): StoredReferral | null {
+  if (typeof window === 'undefined') return null;
+
+  // 1. Unified key
+  try {
+    const raw = localStorage.getItem(UNIFIED_STORAGE_KEY);
+    if (raw) {
+      const stored: StoredReferral = JSON.parse(deobfuscate(raw));
+      if (!isExpired(stored.expiresAt)) return stored;
+      localStorage.removeItem(UNIFIED_STORAGE_KEY);
+    }
+  } catch {
+    // continue to fallback
+  }
+
+  // 2. Legacy role-specific keys
+  const allActors: ActorType[] = ['client', 'chatter', 'blogger', 'influencer', 'groupAdmin', 'partner'];
+  for (const actor of allActors) {
+    const stored = getStoredReferral(actor);
+    if (stored) return stored;
+  }
+
+  return null;
+}
+
+/**
+ * Clear the unified referral + all legacy keys.
+ * Call after successful registration.
+ */
+export function clearUnifiedReferral(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(UNIFIED_STORAGE_KEY);
+    sessionStorage.removeItem('pendingReferralCode');
+  } catch {
+    // ignore
+  }
+  clearAllStoredReferrals();
+}
+
+// ============================================================================
 // LEGACY MIGRATION
 // ============================================================================
 

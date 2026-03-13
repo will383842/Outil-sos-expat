@@ -1,0 +1,2365 @@
+{
+  "snapshotDate": "2026-03-13T08:51:42.365Z",
+  "durationMs": 3917,
+  "summary": {
+    "totalEntries": 252,
+    "totalUniqueCodes": 279,
+    "criticalIssues": 2,
+    "warnings": 0,
+    "byCollection": {
+      "chatters": 28,
+      "influencers": 0,
+      "bloggers": 0,
+      "group_admins": 1,
+      "users_generic": 223,
+      "partners": 0,
+      "reserved_codes": 1
+    }
+  },
+  "issues": [
+    {
+      "severity": "CRITICAL",
+      "type": "collision",
+      "code": "ULIX-AAA_LA",
+      "owners": [
+        {
+          "userId": "aaa_lawyer_1769083207375_j4qe",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083209483_io5h",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083211117_edc4",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083211808_c7gg",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083212492_kkpa",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083213037_m5kv",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083215366_wv8h",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083216057_9h4d",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083216600_jtpj",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083217296_38c4",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083219507_29r6",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083220871_7y8l",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083221434_yxe3",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083222942_p9fg",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083224453_e8cx",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083225814_k1ct",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083226639_xhlu",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083227321_gvjr",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083228141_9lyf",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083230479_3wh2",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083231030_3r4e",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083232405_b85a",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083233083_ko8u",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083234581_nqzh",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083235407_nyjx",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083235939_oqiw",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083236614_pntt",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_lawyer_1769083237993_ivsd",
+          "field": "affiliateCode",
+          "collection": "users"
+        }
+      ]
+    },
+    {
+      "severity": "CRITICAL",
+      "type": "collision",
+      "code": "ULIX-AAA_MU",
+      "owners": [
+        {
+          "userId": "aaa_multi_afrique_1769080741948",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_multi_ameriques_1769080742491",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_multi_asie_oceanie_1769080742882",
+          "field": "affiliateCode",
+          "collection": "users"
+        },
+        {
+          "userId": "aaa_multi_europe_1769080742343",
+          "field": "affiliateCode",
+          "collection": "users"
+        }
+      ]
+    }
+  ],
+  "reservedCodes": [
+    {
+      "code": "_initial",
+      "isReserved": false,
+      "assignedToUserId": null,
+      "reservedBy": null
+    }
+  ],
+  "entries": [
+    {
+      "userId": "1McUxuJBRKR4n983JdDRNCCqqO52",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "beeeditions111111@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "BEE517",
+      "affiliateCodeRecruitment": "REC-BEE517",
+      "affiliateCodeProvider": "PROV-BEE517"
+    },
+    {
+      "userId": "1T0u86US0pgH5ZXwpxGaWRtuCjQ2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "babacardione1287@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "BABACAR936",
+      "affiliateCodeRecruitment": "REC-BABACAR936",
+      "affiliateCodeProvider": "PROV-BABACAR936"
+    },
+    {
+      "userId": "2UNFWheQy2QDsg4MeSdazQMYLWF2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "angelemendy62@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "HELENEAN507",
+      "affiliateCodeRecruitment": "REC-HELENEAN507",
+      "affiliateCodeProvider": "PROV-HELENEAN507"
+    },
+    {
+      "userId": "41sUW9Li2TdRTezCFItzORWcK7Y2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "diemexavier14@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "XAVIER139",
+      "affiliateCodeRecruitment": "REC-XAVIER139",
+      "affiliateCodeProvider": "PROV-XAVIER139"
+    },
+    {
+      "userId": "46m7jtLdouXsoh2fKppu9hWB1np2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "madiorfall@yahoo.fr",
+      "status": "active",
+      "affiliateCodeClient": "MADIOR405",
+      "affiliateCodeRecruitment": "REC-MADIOR405",
+      "affiliateCodeProvider": "PROV-MADIOR405"
+    },
+    {
+      "userId": "4Un1Q87LVDfpFWVOrywT3DEBNI73",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "prodafrik4@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "ELHADJIA456",
+      "affiliateCodeRecruitment": "REC-ELHADJIA456",
+      "affiliateCodeProvider": "PROV-ELHADJIA456"
+    },
+    {
+      "userId": "AKocmMldgUhn1BNi17SyHK2fgKW2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "amandine.guffond@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "AMANDINE465",
+      "affiliateCodeRecruitment": "REC-AMANDINE465",
+      "affiliateCodeProvider": "PROV-AMANDINE465"
+    },
+    {
+      "userId": "BwveRpchYcMSAtiQalNtjWeeq5g1",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "hadjibadji07@icloud.com",
+      "status": "active",
+      "affiliateCodeClient": "ELHADJIA189",
+      "affiliateCodeRecruitment": "REC-ELHADJIA189",
+      "affiliateCodeProvider": "PROV-ELHADJIA189"
+    },
+    {
+      "userId": "FIfeILLj5ig8KTTsufMACAhCzl83",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "ndoyendieme72@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "NDIEME994",
+      "affiliateCodeRecruitment": "REC-NDIEME994",
+      "affiliateCodeProvider": "PROV-NDIEME994"
+    },
+    {
+      "userId": "JGhPZUxSvyPAbqObI8RXjXjZbl73",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "madinaaidara26@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "MADINA147",
+      "affiliateCodeRecruitment": "REC-MADINA147",
+      "affiliateCodeProvider": "PROV-MADINA147"
+    },
+    {
+      "userId": "MeXEvgh60GThjpZUpOwt0kHdCih2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "karimgueye1999@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "KARIM457",
+      "affiliateCodeRecruitment": "REC-KARIM457",
+      "affiliateCodeProvider": "PROV-KARIM457"
+    },
+    {
+      "userId": "NwUX2HaypiaIRKpuQZeJs2UMEMw2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "usathoud@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "HERFREEU135",
+      "affiliateCodeRecruitment": "REC-HERFREEU135",
+      "affiliateCodeProvider": "PROV-HERFREEU135"
+    },
+    {
+      "userId": "Pq9NsmZ1iWP52wm9IEmDMuLoUr92",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "ndeyeevatoure@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "NDEYEAWA659",
+      "affiliateCodeRecruitment": "REC-NDEYEAWA659",
+      "affiliateCodeProvider": "PROV-NDEYEAWA659"
+    },
+    {
+      "userId": "QeD3MxfWS2QybW9oFOcbdhauK3D2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "abouhamadythioubou@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "ABOUHAMA866",
+      "affiliateCodeRecruitment": "REC-ABOUHAMA866",
+      "affiliateCodeProvider": "PROV-ABOUHAMA866"
+    },
+    {
+      "userId": "QqQ9oI0mzyUkGsSvbyEmt8JV9is1",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "fab.araujo@hotmail.fr",
+      "status": "active",
+      "affiliateCodeClient": "FABIENNE122",
+      "affiliateCodeRecruitment": "REC-FABIENNE122",
+      "affiliateCodeProvider": "PROV-FABIENNE122"
+    },
+    {
+      "userId": "RVG1Yi516VV71w1MlvaDtXCPX7B3",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "tefackngangwe@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "LAETICIA427",
+      "affiliateCodeRecruitment": "REC-LAETICIA427",
+      "affiliateCodeProvider": "PROV-LAETICIA427"
+    },
+    {
+      "userId": "Y0Sp70YMrxT8byW2qXvtrql9Cnz2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "brunorefdig@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "TETEBRUN669",
+      "affiliateCodeRecruitment": "REC-TETEBRUN669",
+      "affiliateCodeProvider": "PROV-TETEBRUN669"
+    },
+    {
+      "userId": "aQMhQ26NMTZ4rcTnSlq3HQYtQPw1",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "mbayebbc@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "MBAYE431",
+      "affiliateCodeRecruitment": "REC-MBAYE431",
+      "affiliateCodeProvider": "PROV-MBAYE431"
+    },
+    {
+      "userId": "acl6PPf8Ioc8HD1cfZc4Nv8kH002",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "fhghfyrt@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "LINZI532",
+      "affiliateCodeRecruitment": "REC-LINZI532",
+      "affiliateCodeProvider": "PROV-LINZI532"
+    },
+    {
+      "userId": "hoL4ZVTHtvhmrVYy4XLBWxZ8FF22",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "al.boisson@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "ANNELAUR627",
+      "affiliateCodeRecruitment": "REC-ANNELAUR627",
+      "affiliateCodeProvider": "PROV-ANNELAUR627"
+    },
+    {
+      "userId": "iqDglWIZvlQHXdOHTSK0t9aGa0G2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "sypapasamba6@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "PAPASAMB512",
+      "affiliateCodeRecruitment": "REC-PAPASAMB512",
+      "affiliateCodeProvider": "PROV-PAPASAMB512"
+    },
+    {
+      "userId": "kXNZ0p3nSVYxXYLaZrEiI0pYmVD2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "willklkiamsjullin@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "WILLIAMS436",
+      "affiliateCodeRecruitment": "REC-WILLIAMS436",
+      "affiliateCodeProvider": "PROV-WILLIAMS436"
+    },
+    {
+      "userId": "lBlOOjJW5aRfW4SxmqtiWCPJ5IJ3",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "williamsjullin@mlkgmail.com",
+      "status": "active",
+      "affiliateCodeClient": "WILLIAMS431",
+      "affiliateCodeRecruitment": "REC-WILLIAMS431",
+      "affiliateCodeProvider": "PROV-WILLIAMS431"
+    },
+    {
+      "userId": "lo7YP7nvrNXGnO2p355pHHcsZcG3",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "tinedesign893@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "DJIBRIL885",
+      "affiliateCodeRecruitment": "REC-DJIBRIL885",
+      "affiliateCodeProvider": "PROV-DJIBRIL885"
+    },
+    {
+      "userId": "np2ln5ogJTTUFyahC71TBFofoag2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "ndawbabacar21@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "BABACAR355",
+      "affiliateCodeRecruitment": "REC-BABACAR355",
+      "affiliateCodeProvider": "PROV-BABACAR355"
+    },
+    {
+      "userId": "ovmKbbmcoFXHkC8FrYguvJKKnf13",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "enzoomdd@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "MOUSSADI974",
+      "affiliateCodeRecruitment": "REC-MOUSSADI974",
+      "affiliateCodeProvider": "PROV-MOUSSADI974"
+    },
+    {
+      "userId": "q0BeyZGG5sPoyCQI6OBkdLrAnjk2",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "walidlassoueddd@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "WALID399",
+      "affiliateCodeRecruitment": "REC-WALID399",
+      "affiliateCodeProvider": "PROV-WALID399"
+    },
+    {
+      "userId": "rvOe0sqOZkQEvwBMuEm2VRCKVz92",
+      "collection": "chatters",
+      "role": "chatter",
+      "email": "oumarodjiguimde1@gmail.com",
+      "status": "active",
+      "affiliateCodeClient": "OUMAROTI176",
+      "affiliateCodeRecruitment": "REC-OUMAROTI176",
+      "affiliateCodeProvider": "PROV-OUMAROTI176"
+    },
+    {
+      "userId": "wLfJmxEPNrfIyux996Q4Naplcqt2",
+      "collection": "group_admins",
+      "role": "groupAdmin",
+      "email": "williajjjjjjjjjjjmjullin@hotmail.fr",
+      "status": "active",
+      "affiliateCodeClient": "GROUP-JJJJPLCQT2",
+      "affiliateCodeRecruitment": "REC-GROUP-JJJJPLCQT2",
+      "affiliateCodeProvider": "PROV-GROUP-JJJJPLCQT2"
+    },
+    {
+      "userId": "0W09KY7C7uVKSBXJ1gQaSObvZ4f2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "wiljul1@got.fr",
+      "status": "pending",
+      "affiliateCode": "ULIX-0W09KY"
+    },
+    {
+      "userId": "1McUxuJBRKR4n983JdDRNCCqqO52",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beeeditions111111@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BE2WXF2Y",
+      "affiliateCodeClient": "BEE517",
+      "affiliateCodeRecruitment": "REC-BEE517",
+      "affiliateCodeProvider": "PROV-BEE517"
+    },
+    {
+      "userId": "1OqE7PniMyTiHt9E2Rj4HTKW7KK2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "wghgfhgfghilliamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJCGJ7"
+    },
+    {
+      "userId": "1T0u86US0pgH5ZXwpxGaWRtuCjQ2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "babacardione1287@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BDX9UV6T",
+      "affiliateCodeClient": "BABACAR936",
+      "affiliateCodeRecruitment": "REC-BABACAR936",
+      "affiliateCodeProvider": "PROV-BABACAR936"
+    },
+    {
+      "userId": "2I4VlvWUkaUvlg7sJ3FFxAfR1hg2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "w2222222illiamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJHDSUYZ"
+    },
+    {
+      "userId": "2UNFWheQy2QDsg4MeSdazQMYLWF2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "angelemendy62@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "HMYTQLKC",
+      "affiliateCodeClient": "HELENEAN507",
+      "affiliateCodeRecruitment": "REC-HELENEAN507",
+      "affiliateCodeProvider": "PROV-HELENEAN507"
+    },
+    {
+      "userId": "2WEnQHriuncWfbn2uVqpBx4Seey1",
+      "collection": "users",
+      "role": "client",
+      "email": "williamjullin@hotmail1.fr",
+      "status": "active",
+      "affiliateCode": "ULIX-2WENQH"
+    },
+    {
+      "userId": "3sKwEFPeomOXbhZJKHL7oa3T9F92",
+      "collection": "users",
+      "role": "client",
+      "email": "test1@gmail.com",
+      "status": "active",
+      "affiliateCode": "ULIX-3SKWEF"
+    },
+    {
+      "userId": "41sUW9Li2TdRTezCFItzORWcK7Y2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "diemexavier14@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "XDE9LH69",
+      "affiliateCodeClient": "XAVIER139",
+      "affiliateCodeRecruitment": "REC-XAVIER139",
+      "affiliateCodeProvider": "PROV-XAVIER139"
+    },
+    {
+      "userId": "46m7jtLdouXsoh2fKppu9hWB1np2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "madiorfall@yahoo.fr",
+      "status": "unknown",
+      "affiliateCode": "MFHM28",
+      "affiliateCodeClient": "MADIOR405",
+      "affiliateCodeRecruitment": "REC-MADIOR405",
+      "affiliateCodeProvider": "PROV-MADIOR405"
+    },
+    {
+      "userId": "4Un1Q87LVDfpFWVOrywT3DEBNI73",
+      "collection": "users",
+      "role": "chatter",
+      "email": "prodafrik4@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "EN45H3",
+      "affiliateCodeClient": "ELHADJIA456",
+      "affiliateCodeRecruitment": "REC-ELHADJIA456",
+      "affiliateCodeProvider": "PROV-ELHADJIA456"
+    },
+    {
+      "userId": "4oya87wK5iSgsd7b5TjkaIbkQCQ2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "beeoipipipoieditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEKRK2"
+    },
+    {
+      "userId": "4ptIcOtfQ3bihBvb6vabQCoGW3s2",
+      "collection": "users",
+      "role": "client",
+      "email": "jkhlkqjhdd@dsdlk.hd",
+      "status": "unknown",
+      "affiliateCode": "JK6JWY"
+    },
+    {
+      "userId": "4uYoCZ8Nrcf1lPnZdPRYA6QeUHt2",
+      "collection": "users",
+      "role": "influencer",
+      "email": "williamsj589ullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJCRALH5"
+    },
+    {
+      "userId": "51KYMHaMEfRzL9Z4W1Tc4T208sn2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williagfdmsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ3CWESS"
+    },
+    {
+      "userId": "55FfRf94RRTljM1Kn44POW0EVb53",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williarrrrrrrrrrmsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ3WE6FF"
+    },
+    {
+      "userId": "7ctcHMiUExYNXmUAdBI0SIyepiv1",
+      "collection": "users",
+      "role": "expat",
+      "email": "beeezzzzzzzditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEEMKA"
+    },
+    {
+      "userId": "7uSzjoIdjWVtYfWaA3S8pBPGfie2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "williamsjullin66666666666666@gmail.com",
+      "status": "pending",
+      "affiliateCode": "WJY66M"
+    },
+    {
+      "userId": "9ELyrTEu53W2KJpl9Wt1g9oFfnj2",
+      "collection": "users",
+      "role": "client",
+      "email": "amai88care@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-9ELYRT"
+    },
+    {
+      "userId": "9Mu7qYkXIrXoVO490T1ai9nFTVS2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beee11111111ditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BE538T"
+    },
+    {
+      "userId": "AKocmMldgUhn1BNi17SyHK2fgKW2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "amandine.guffond@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "AGRKP5",
+      "affiliateCodeClient": "AMANDINE465",
+      "affiliateCodeRecruitment": "REC-AMANDINE465",
+      "affiliateCodeProvider": "PROV-AMANDINE465"
+    },
+    {
+      "userId": "ArHlVTcEsehV83w8MM1O12blBpG3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamftttttttttjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJWWFRMH"
+    },
+    {
+      "userId": "BwveRpchYcMSAtiQalNtjWeeq5g1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "hadjibadji07@icloud.com",
+      "status": "unknown",
+      "affiliateCode": "EBREMHTS",
+      "affiliateCodeClient": "ELHADJIA189",
+      "affiliateCodeRecruitment": "REC-ELHADJIA189",
+      "affiliateCodeProvider": "PROV-ELHADJIA189"
+    },
+    {
+      "userId": "C6nGY4K6W8bGlbeS5FXyDjmUWW83",
+      "collection": "users",
+      "role": "influencer",
+      "email": "beeed1111itions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BEPWSW"
+    },
+    {
+      "userId": "CG51SpKim2difCzyhNz2fC5qGN83",
+      "collection": "users",
+      "role": "chatter",
+      "email": "vnvnbvwilliamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJSVH7"
+    },
+    {
+      "userId": "CPW24GydpHZDJB13tTzcoG3qECo1",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "williammlkmlkmsjullin@gmail.com",
+      "status": "pending",
+      "affiliateCode": "WJQ4XB"
+    },
+    {
+      "userId": "DfDbWASBaeaVEZrqg6Wlcd3zpYX2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "julienvalentine1@gmail.com",
+      "status": "active",
+      "affiliateCode": "JV4MRY7Y"
+    },
+    {
+      "userId": "EChN45NAmMf7ixtQxZk0AvDNhj83",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "test000@gmail.com",
+      "status": "pending",
+      "affiliateCode": "FEUHK8"
+    },
+    {
+      "userId": "Edb9IEzLQ5YQLjnE5WoYCC95u812",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamwcwsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJZQCE"
+    },
+    {
+      "userId": "FIfeILLj5ig8KTTsufMACAhCzl83",
+      "collection": "users",
+      "role": "chatter",
+      "email": "ndoyendieme72@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "NNAAAT",
+      "affiliateCodeClient": "NDIEME994",
+      "affiliateCodeRecruitment": "REC-NDIEME994",
+      "affiliateCodeProvider": "PROV-NDIEME994"
+    },
+    {
+      "userId": "Fu1Dm7fdy3arnAXJujCgu0NQZn02",
+      "collection": "users",
+      "role": "influencer",
+      "email": "ckjlkjlkjlontact@ulixai.com",
+      "status": "unknown",
+      "affiliateCode": "WJNRV7"
+    },
+    {
+      "userId": "GnNjAs9lRPeMmKnmousNr0OzHgf1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamkml55kmmlsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJM5FBBN"
+    },
+    {
+      "userId": "HSwXAwL3RvNOHI48R2mLYOkGimz1",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "williamsjullin999@gmail.com",
+      "status": "pending",
+      "affiliateCode": "WJJGKU"
+    },
+    {
+      "userId": "HVsiAW7Ipvb07Fm0ACYMahBuyq32",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "22222222williamsjullin@gmail.com",
+      "status": "pending",
+      "affiliateCode": "WJNBKS"
+    },
+    {
+      "userId": "ISf8yy9R0YX41uaqH69NK0gUtJO2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "beeejkhjkhkjditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BES5H8"
+    },
+    {
+      "userId": "Ie9wegK5tlTc0Y0yR4hCz9SOcb92",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willia44444msjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJY7ZE"
+    },
+    {
+      "userId": "JGhPZUxSvyPAbqObI8RXjXjZbl73",
+      "collection": "users",
+      "role": "chatter",
+      "email": "madinaaidara26@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "MAC5QE",
+      "affiliateCodeClient": "MADINA147",
+      "affiliateCodeRecruitment": "REC-MADINA147",
+      "affiliateCodeProvider": "PROV-MADINA147"
+    },
+    {
+      "userId": "JNFmC1RyDmY7TQdii8gGcXsjaT32",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willia11111111mjullin@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJR7W3"
+    },
+    {
+      "userId": "K5SgzntIplZVOy2xLPmIWoO71Ah1",
+      "collection": "users",
+      "role": "client",
+      "email": "fjddhd@dhddh.ffj",
+      "status": "unknown",
+      "affiliateCode": "FJNDQKSK"
+    },
+    {
+      "userId": "Kdbu3h3mmDb9jf3MmeTnBt24rBl2",
+      "collection": "users",
+      "role": "client",
+      "email": "beeeditlmhgjhions@gmail.com",
+      "status": "active",
+      "affiliateCode": "BETD9U"
+    },
+    {
+      "userId": "KiivtZ15ZSNS8YifrEJxlpNvqq43",
+      "collection": "users",
+      "role": "client",
+      "email": "aichecklead@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "AX6U57"
+    },
+    {
+      "userId": "KsVAycESTnViKsTaibPqF9GnPfa2",
+      "collection": "users",
+      "role": "client",
+      "email": "beeeditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-KSVAYC"
+    },
+    {
+      "userId": "LplWMUP25oOtqf0Q6vzlFCjRa9j1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beeedit555ions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BESELG2A"
+    },
+    {
+      "userId": "M0T5yr0kcTRqbsy1zxDUzMnguzs2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamkmlkmmlsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJWHSB"
+    },
+    {
+      "userId": "MeXEvgh60GThjpZUpOwt0kHdCih2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "karimgueye1999@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "KGGMVA",
+      "affiliateCodeClient": "KARIM457",
+      "affiliateCodeRecruitment": "REC-KARIM457",
+      "affiliateCodeProvider": "PROV-KARIM457"
+    },
+    {
+      "userId": "MqnoW1EnFifJkFGL3v83VzGsbaf2",
+      "collection": "users",
+      "role": "admin",
+      "email": "williamsjullin@gmail.com",
+      "status": "active",
+      "affiliateCode": "ULIX-MQNOW1"
+    },
+    {
+      "userId": "NnUcODL9L5UvZDYwG6mTsYIqh172",
+      "collection": "users",
+      "role": "client",
+      "email": "dhddhdh@qusss.ff",
+      "status": "unknown",
+      "affiliateCode": "DHN7QQ"
+    },
+    {
+      "userId": "NwUX2HaypiaIRKpuQZeJs2UMEMw2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "usathoud@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "HSY884V2",
+      "affiliateCodeClient": "HERFREEU135",
+      "affiliateCodeRecruitment": "REC-HERFREEU135",
+      "affiliateCodeProvider": "PROV-HERFREEU135"
+    },
+    {
+      "userId": "NwxiDgCgdGbyQSNbkoB1gQgNBFC2",
+      "collection": "users",
+      "role": "client",
+      "email": "kjhkjh@dslmkd.gt",
+      "status": "unknown",
+      "affiliateCode": "KJJF7J"
+    },
+    {
+      "userId": "OH0x1ovq4vNpz4Ul9I3mbbZSdwY2",
+      "collection": "users",
+      "role": "client",
+      "email": "willsklfjslkdsj@ksdjsldkj.fr",
+      "status": "unknown",
+      "affiliateCode": "WX2Z3E"
+    },
+    {
+      "userId": "OQgWXVFu0PXxC0v3W08crEJ0bNu2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "beeeddddddddditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEXZXJTD"
+    },
+    {
+      "userId": "P0rIlDNzcTaZOVhquglrDfQetD03",
+      "collection": "users",
+      "role": "blogger",
+      "email": "williauuuuuumsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJKVP4"
+    },
+    {
+      "userId": "P5hJ5FUzIpaP3Q6Y9C1oaWVtXmB2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullin111@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJMDXV"
+    },
+    {
+      "userId": "Pq9NsmZ1iWP52wm9IEmDMuLoUr92",
+      "collection": "users",
+      "role": "chatter",
+      "email": "ndeyeevatoure@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "NTWBVD",
+      "affiliateCodeClient": "NDEYEAWA659",
+      "affiliateCodeRecruitment": "REC-NDEYEAWA659",
+      "affiliateCodeProvider": "PROV-NDEYEAWA659"
+    },
+    {
+      "userId": "QeD3MxfWS2QybW9oFOcbdhauK3D2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "abouhamadythioubou@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "ATX2AW5S",
+      "affiliateCodeClient": "ABOUHAMA866",
+      "affiliateCodeRecruitment": "REC-ABOUHAMA866",
+      "affiliateCodeProvider": "PROV-ABOUHAMA866"
+    },
+    {
+      "userId": "QikIhjqCumUpPIk3ABGProKg4752",
+      "collection": "users",
+      "role": "client",
+      "email": "williamsjullinbbbvv@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WXJ9A5"
+    },
+    {
+      "userId": "QqQ9oI0mzyUkGsSvbyEmt8JV9is1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "fab.araujo@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "FD8E8W",
+      "affiliateCodeClient": "FABIENNE122",
+      "affiliateCodeRecruitment": "REC-FABIENNE122",
+      "affiliateCodeProvider": "PROV-FABIENNE122"
+    },
+    {
+      "userId": "RVG1Yi516VV71w1MlvaDtXCPX7B3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "tefackngangwe@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "XT6U4G",
+      "affiliateCodeClient": "LAETICIA427",
+      "affiliateCodeRecruitment": "REC-LAETICIA427",
+      "affiliateCodeProvider": "PROV-LAETICIA427"
+    },
+    {
+      "userId": "SCSlJMyBpzL5RAczdxRxfx1Rick2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "contact@sos-expat.com",
+      "status": "pending",
+      "affiliateCode": "ULIX-SCSLJM"
+    },
+    {
+      "userId": "UAtW9ddyDpNUNlf61UoOiFTDaqg2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "beeeooooooditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BE7CH7"
+    },
+    {
+      "userId": "UdUNDFudAqc1c5OETl2slUFQnUz2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williammkmlk55sjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ8ECU"
+    },
+    {
+      "userId": "V4dCCIbb4Ta7VIr6436v19CG14g2",
+      "collection": "users",
+      "role": "admin",
+      "email": "",
+      "status": "unknown",
+      "affiliateCode": "ULIX-V4DCCI"
+    },
+    {
+      "userId": "VrcvEWl7hsO02TFq5h08z2BPhiv1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullin1111@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJGL89"
+    },
+    {
+      "userId": "Y0Sp70YMrxT8byW2qXvtrql9Cnz2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "brunorefdig@gmail.com",
+      "status": "unknown",
+      "affiliateCodeClient": "TETEBRUN669",
+      "affiliateCodeRecruitment": "REC-TETEBRUN669",
+      "affiliateCodeProvider": "PROV-TETEBRUN669"
+    },
+    {
+      "userId": "YA8LBy7daLd26njxdOwl5SoXAT33",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "kljljlk@hotmail.fr",
+      "status": "pending",
+      "affiliateCode": "ULIX-YA8LBY"
+    },
+    {
+      "userId": "Z7ymU3EwhxazrmD5xuBATRVxVQk2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamsjullin2@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJF3PX"
+    },
+    {
+      "userId": "Zr9ghDlHCOhP68QJuioXFh2d6Vh2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullinyuyfgfxd@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "W4KV5Y"
+    },
+    {
+      "userId": "aQMhQ26NMTZ4rcTnSlq3HQYtQPw1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "mbayebbc@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "MMGY4L6E",
+      "affiliateCodeClient": "MBAYE431",
+      "affiliateCodeRecruitment": "REC-MBAYE431",
+      "affiliateCodeProvider": "PROV-MBAYE431"
+    },
+    {
+      "userId": "aaa_expat_1764094502041_bwyjpp",
+      "collection": "users",
+      "role": "expat",
+      "email": "erik.persson.378@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAWX61O"
+    },
+    {
+      "userId": "aaa_expat_1764094507481_xoosf8",
+      "collection": "users",
+      "role": "expat",
+      "email": "oleg.fedorov.758@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAP9R8N"
+    },
+    {
+      "userId": "aaa_expat_1764095510449_ljwwju",
+      "collection": "users",
+      "role": "expat",
+      "email": "anna.smirnov.78@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAA8CIIZ"
+    },
+    {
+      "userId": "aaa_expat_1764095521622_n1qdye",
+      "collection": "users",
+      "role": "expat",
+      "email": "francisco.gomez.705@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAR9AG3"
+    },
+    {
+      "userId": "aaa_lawyer_1764092736260_53nh2d",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "patrick.dubois.620@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAYK1CN"
+    },
+    {
+      "userId": "aaa_lawyer_1764094047428_1la4cw",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "stefan.weber.31@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAALJV16"
+    },
+    {
+      "userId": "aaa_lawyer_1764094456047_uebzhh",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "antonio.esposito.886@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAARRX95"
+    },
+    {
+      "userId": "aaa_lawyer_1764094461957_wmvbhj",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "philippe.dubois.930@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAA0LBAA"
+    },
+    {
+      "userId": "aaa_lawyer_1764094469107_nywdd6",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "william.garcia.345@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAA78TPY"
+    },
+    {
+      "userId": "aaa_lawyer_1764094477157_0dif7v",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "james.smith.759@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAED9TS"
+    },
+    {
+      "userId": "aaa_lawyer_1764094479919_4cp0kp",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "alexandre.bernard.848@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAOANI7"
+    },
+    {
+      "userId": "aaa_lawyer_1764094489027_mdozto",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "somsak.wichai.613@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAH207L"
+    },
+    {
+      "userId": "aaa_lawyer_1764095430132_tp4ixe",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "peter.schulz.627@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAATZPJF"
+    },
+    {
+      "userId": "aaa_lawyer_1764095446104_uwxxtt",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "amadou.diop.221@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAX6BTF"
+    },
+    {
+      "userId": "aaa_lawyer_1764095451593_lff25k",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "samuel.nkrumah.243@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAA5I4YT"
+    },
+    {
+      "userId": "aaa_lawyer_1764095474246_7oysct",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "jasmijn.olsen.90@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAA8Z148"
+    },
+    {
+      "userId": "aaa_lawyer_1764095488277_zrviea",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "mohamed.benjelloun.585@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "AAAP0DVI"
+    },
+    {
+      "userId": "aaa_lawyer_1769083207375_j4qe",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "jean-pierre.lefebvre@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083209483_io5h",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "francois.dupont@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083210288_qoni",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "marie.leroy@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "MXXBX3"
+    },
+    {
+      "userId": "aaa_lawyer_1769083211117_edc4",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "antoine.girard@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083211808_c7gg",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "catherine.rousseau@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083212492_kkpa",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "laurent.fournier@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083213037_m5kv",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "nathalie.vincent@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083213856_uuim",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "pierre.bonnet@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "PB7FFA4L"
+    },
+    {
+      "userId": "aaa_lawyer_1769083214533_95mx",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "sylvie.mercier@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "SMLL3L"
+    },
+    {
+      "userId": "aaa_lawyer_1769083215366_wv8h",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "amadou.toure@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083216057_9h4d",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "fatou.diallo@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083216600_jtpj",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "oumar.kone@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083217296_38c4",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "aissatou.bah@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083218116_h7f9",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "moussa.traore@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "MTUF4Z"
+    },
+    {
+      "userId": "aaa_lawyer_1769083218654_4b6u",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "mariama.camara@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "MCRFA2EG"
+    },
+    {
+      "userId": "aaa_lawyer_1769083219507_29r6",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ibrahima.sow@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083220871_7y8l",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "bakary.cisse@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083221434_yxe3",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "khadija.benali@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083222942_p9fg",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "layla.al-rashid@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083224453_e8cx",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "sara.khalil@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083225814_k1ct",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "julie.gagnon@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083226639_xhlu",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "carlos.rodriguez@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083227321_gvjr",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ana.fernandez@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083228141_9lyf",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "luis.hernandez@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083228981_xwez",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "maria.gonzalez@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "MGKVMYBF"
+    },
+    {
+      "userId": "aaa_lawyer_1769083230479_3wh2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "carmen.lopez@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083231030_3r4e",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "diego.martinez@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083232405_b85a",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "wei.zhang@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083233083_ko8u",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "yuki.tanaka@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083233756_5t59",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "priya.sharma@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "PSQDVM"
+    },
+    {
+      "userId": "aaa_lawyer_1769083234581_nqzh",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ravi.kumar@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083235407_nyjx",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "mei.wong@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083235939_oqiw",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "amir.nazari@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083236614_pntt",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "james.wilson@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_1769083237993_ivsd",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "tearii.manutahi@aaa-avocats.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_LA"
+    },
+    {
+      "userId": "aaa_lawyer_au_1767139195451_9zd6",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "robert.miller.133@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWAU3PK"
+    },
+    {
+      "userId": "aaa_lawyer_bi_1767138655093_d4jc",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "cheikh.diallo.325@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWBI715"
+    },
+    {
+      "userId": "aaa_lawyer_bt_1767138778396_nfqi",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ashok.shah.544@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWBT58Q"
+    },
+    {
+      "userId": "aaa_lawyer_cf_1767138938139_8uvw",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ousmane.diallo.170@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWCFQFJ"
+    },
+    {
+      "userId": "aaa_lawyer_cv_1767138878737_q9aa",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "lucas.santos.624@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWCVNZB"
+    },
+    {
+      "userId": "aaa_lawyer_cz_1767139170426_78o2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "vladimir.sokolov.211@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWCZ6NB"
+    },
+    {
+      "userId": "aaa_lawyer_dj_1767138720712_2gfv",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ibrahim.diallo.664@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWDJEXD"
+    },
+    {
+      "userId": "aaa_lawyer_eg_1767139194930_1dg9",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "hassan.tazi.19@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWEGMIF"
+    },
+    {
+      "userId": "aaa_lawyer_fi_1767138992633_zq8q",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ole.olsen.48@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWFI9XN"
+    },
+    {
+      "userId": "aaa_lawyer_ie_1767138680088_8clt",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "john.smith.502@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWIEF3P"
+    },
+    {
+      "userId": "aaa_lawyer_ir_1767138885724_bco7",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ali.jafari.365@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWIRJYI"
+    },
+    {
+      "userId": "aaa_lawyer_kg_1767139154391_z0p4",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "burak.yldrm.219@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWKGG2T"
+    },
+    {
+      "userId": "aaa_lawyer_lc_1767138674854_shcv",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "michael.smith.781@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWLCB18"
+    },
+    {
+      "userId": "aaa_lawyer_lr_1767138879390_mb65",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "daniel.okafor.776@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWLRK63"
+    },
+    {
+      "userId": "aaa_lawyer_mk_1767138844223_qwpc",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "nikolai.sokolov.319@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWMKW6N"
+    },
+    {
+      "userId": "aaa_lawyer_mx_1767138853766_osu6",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "david.lopez.801@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWMXJVN"
+    },
+    {
+      "userId": "aaa_lawyer_ni_1767139088290_nkq1",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "manuel.martin.690@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWNIBGF"
+    },
+    {
+      "userId": "aaa_lawyer_np_1767138961260_u3es",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "suresh.nair.233@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWNPXKB"
+    },
+    {
+      "userId": "aaa_lawyer_pe_1767138949752_1s61",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "miguel.lopez.781@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWPEHW8"
+    },
+    {
+      "userId": "aaa_lawyer_pw_1767139041131_m1vx",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "etienne.miller.944@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWPWZXY"
+    },
+    {
+      "userId": "aaa_lawyer_ro_1767139005654_msoz",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "ivan.sidorov.161@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWROMC1"
+    },
+    {
+      "userId": "aaa_lawyer_sb_1767139205436_03l4",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "richard.williams.49@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWSBISY"
+    },
+    {
+      "userId": "aaa_lawyer_sc_1767139102349_z5iu",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "james.nkrumah.573@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWSCIZV"
+    },
+    {
+      "userId": "aaa_lawyer_sk_1767139194099_7qbr",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "alexei.sokolov.303@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWSKFLA"
+    },
+    {
+      "userId": "aaa_lawyer_td_1767139088952_y4ix",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "abdoulaye.sy.451@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWTDU61"
+    },
+    {
+      "userId": "aaa_lawyer_uy_1767138778910_dn04",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "roberto.garcia.334@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWUY2AO"
+    },
+    {
+      "userId": "aaa_lawyer_ve_1767138816530_lphv",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "alejandro.sanchez.6@test-sos.com",
+      "status": "unknown",
+      "affiliateCode": "LAWVE8GV"
+    },
+    {
+      "userId": "aaa_multi_afrique_1769080741948",
+      "collection": "users",
+      "role": "provider",
+      "email": "aaa-multicompte-afrique@sos-expat.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_MU"
+    },
+    {
+      "userId": "aaa_multi_ameriques_1769080742491",
+      "collection": "users",
+      "role": "provider",
+      "email": "aaa-multicompte-ameriques@sos-expat.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_MU"
+    },
+    {
+      "userId": "aaa_multi_asie_oceanie_1769080742882",
+      "collection": "users",
+      "role": "provider",
+      "email": "aaa-multicompte-asie-oceanie@sos-expat.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_MU"
+    },
+    {
+      "userId": "aaa_multi_europe_1769080742343",
+      "collection": "users",
+      "role": "provider",
+      "email": "aaa-multicompte-europe@sos-expat.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-AAA_MU"
+    },
+    {
+      "userId": "acl6PPf8Ioc8HD1cfZc4Nv8kH002",
+      "collection": "users",
+      "role": "chatter",
+      "email": "fhghfyrt@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "XBST8S",
+      "affiliateCodeClient": "LINZI532",
+      "affiliateCodeRecruitment": "REC-LINZI532",
+      "affiliateCodeProvider": "PROV-LINZI532"
+    },
+    {
+      "userId": "aginKxQfMcYMrberXu1Cz0cMAJg2",
+      "collection": "users",
+      "role": "client",
+      "email": "ulix.singer@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "UHD6VX72"
+    },
+    {
+      "userId": "bEUOhZb6kBfr9NgIyTwLGBGUmEM2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullinxfdgfgfdgfdg2222@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJHGYNZ5"
+    },
+    {
+      "userId": "bO9iR3Ab9FQd5WIIdlzgUkJBEl22",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullin2222@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJ66GS"
+    },
+    {
+      "userId": "bqEaD1YVv1ZpNV0g7Qje1KGZoOu2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamsdfsdssjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ9WY8HW"
+    },
+    {
+      "userId": "cx9DT859hOQjSik3uvBsvsI6DEE3",
+      "collection": "users",
+      "role": "influencer",
+      "email": "bmlkmlkmeeeditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BESNDSBQ"
+    },
+    {
+      "userId": "d6aazHXMqIbuE7Gz0NFKitIUaDj1",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "williamsjuiiillin@gmail.com",
+      "status": "pending",
+      "affiliateCode": "WJZ9UK"
+    },
+    {
+      "userId": "d7B1O6kAgQSyfMiyHqf3lO8zf0A3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "wi67867lliamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ3DWELC"
+    },
+    {
+      "userId": "dKXb9uo85ASA10sCGVz1mAdt4VM2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullin0000@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJZJGG7N"
+    },
+    {
+      "userId": "dM3pP9MUgAfXlxElS75peI0wi082",
+      "collection": "users",
+      "role": "client",
+      "email": "sisko142010@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "CCQY25"
+    },
+    {
+      "userId": "eTW3961xHRdeB1Gfz15tIlamTYj2",
+      "collection": "users",
+      "role": "client",
+      "email": "b132121eeeditions@gmail.com",
+      "status": "active",
+      "affiliateCode": "BE5K2XRQ"
+    },
+    {
+      "userId": "eXC5QhOD2dX1YagF1ewgWj9Xms03",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williakpoiopiomsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJYNSR"
+    },
+    {
+      "userId": "ecCel8x7ZzLkMf5SvCD6oHpGicW2",
+      "collection": "users",
+      "role": "client",
+      "email": "williamjullin@hotmail.ff",
+      "status": "unknown",
+      "affiliateCode": "WXDURD"
+    },
+    {
+      "userId": "esuDlm85DFQwgkI8kbYH3gx8a3C3",
+      "collection": "users",
+      "role": "client",
+      "email": "djddj@dhd.ff",
+      "status": "unknown",
+      "affiliateCode": "DJLUZF"
+    },
+    {
+      "userId": "fsxk6jowDGby5HmOOe7WmQbVfZc2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "ddhd@dh.dhd",
+      "status": "unknown",
+      "affiliateCode": "FDV8CGE7"
+    },
+    {
+      "userId": "gTc2Y99O1KYb70HRBP0rpDQ7UUS2",
+      "collection": "users",
+      "role": "expat",
+      "email": "dr.amokrane@gmail.com",
+      "status": "pending",
+      "affiliateCode": "MA6ZGE8H"
+    },
+    {
+      "userId": "gh4i823A3dZt6TJJjTTE8bJkwAQ2",
+      "collection": "users",
+      "role": "groupAdmin",
+      "email": "willihjgjhgamjullin@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "GJX57YBQ"
+    },
+    {
+      "userId": "h6M9IXcqF1anvx2eeosghmx1qjw1",
+      "collection": "users",
+      "role": "client",
+      "email": "11111beeeditions@gmail.com",
+      "status": "active",
+      "affiliateCode": "BEVNH7JD"
+    },
+    {
+      "userId": "hC0OGcB3c5WtIzhwCmZ30myKruN2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "william66666666sjullin@gmail.com",
+      "status": "pending",
+      "affiliateCode": "WEEN5244"
+    },
+    {
+      "userId": "hR5zWEuO3NP7gdWFKlM5i0GVXGu1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willilkmlkmkamjullin@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "SJWSG6"
+    },
+    {
+      "userId": "hSIecU0NUleuBH7ERJJQDWUy2Hr1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beee56652ditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BE7N9VXT"
+    },
+    {
+      "userId": "hoL4ZVTHtvhmrVYy4XLBWxZ8FF22",
+      "collection": "users",
+      "role": "chatter",
+      "email": "al.boisson@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "ABJAHNE7",
+      "affiliateCodeClient": "ANNELAUR627",
+      "affiliateCodeRecruitment": "REC-ANNELAUR627",
+      "affiliateCodeProvider": "PROV-ANNELAUR627"
+    },
+    {
+      "userId": "i8wWWK77iOcrLq6uMEyOnIiJmSZ2",
+      "collection": "users",
+      "role": "client",
+      "email": "simone.blanc.26@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "SB8BRF59"
+    },
+    {
+      "userId": "iTcK1NDxQMPb35Nukg3x7KB6dcp2",
+      "collection": "users",
+      "role": "client",
+      "email": "fbdhddhd@dudh.dhd",
+      "status": "unknown",
+      "affiliateCode": "FBF7HM3N"
+    },
+    {
+      "userId": "igSp9ke4wXRISP1P7QyIHxCQ1uH3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williams222222222jullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ6ERHMN"
+    },
+    {
+      "userId": "iqDglWIZvlQHXdOHTSK0t9aGa0G2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "sypapasamba6@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "PS9MARF8",
+      "affiliateCodeClient": "PAPASAMB512",
+      "affiliateCodeRecruitment": "REC-PAPASAMB512",
+      "affiliateCodeProvider": "PROV-PAPASAMB512"
+    },
+    {
+      "userId": "j1C0hZ7bhzOhjkP7BKDWD6uxRtw1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willia54646msjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJMKV8NW"
+    },
+    {
+      "userId": "k5KDQ8dlmbMDs2SQTgdHH5kDARj2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willi66666amjullin@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJRG2C6M"
+    },
+    {
+      "userId": "kNPzbNHwCDffZSEkvsjY0a6oXiJ2",
+      "collection": "users",
+      "role": "client",
+      "email": "williamjullin@hotmail.fr",
+      "status": "active",
+      "affiliateCode": "ULIX-KNPZBN"
+    },
+    {
+      "userId": "kXNZ0p3nSVYxXYLaZrEiI0pYmVD2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willklkiamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJY2B6",
+      "affiliateCodeClient": "WILLIAMS436",
+      "affiliateCodeRecruitment": "REC-WILLIAMS436",
+      "affiliateCodeProvider": "PROV-WILLIAMS436"
+    },
+    {
+      "userId": "lBlOOjJW5aRfW4SxmqtiWCPJ5IJ3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamsjullin@mlkgmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ5B49",
+      "affiliateCodeClient": "WILLIAMS431",
+      "affiliateCodeRecruitment": "REC-WILLIAMS431",
+      "affiliateCodeProvider": "PROV-WILLIAMS431"
+    },
+    {
+      "userId": "lY3A4rU3Y2dU49iVMfrdveY1cVI2",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "beeeditions11@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEJQXLHV"
+    },
+    {
+      "userId": "lo7YP7nvrNXGnO2p355pHHcsZcG3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "tinedesign893@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "DT9M7K",
+      "affiliateCodeClient": "DJIBRIL885",
+      "affiliateCodeRecruitment": "REC-DJIBRIL885",
+      "affiliateCodeProvider": "PROV-DJIBRIL885"
+    },
+    {
+      "userId": "m1Yvzmu8OnWKrUagA22vmrksvng1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beeeggggggditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "GGHRK2"
+    },
+    {
+      "userId": "mepJQUzITdbSCOGD1TtHzED2oor1",
+      "collection": "users",
+      "role": "groupAdmin",
+      "email": "beeedhgfhgfhgfitions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "GHKT8F"
+    },
+    {
+      "userId": "nDIjOllyfjWKi4gwURqGWNGO1QR2",
+      "collection": "users",
+      "role": "influencer",
+      "email": "will3333iamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJEB8F"
+    },
+    {
+      "userId": "nKXHEWEw1zTK4kAneKVZs7EdS5k1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williammlm%lsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "CX3665"
+    },
+    {
+      "userId": "nL4StDPeERNLDR68MIIWW2Id3gs1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beee43546546ditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BEPJY4"
+    },
+    {
+      "userId": "nfManYHa6pgkqO9ciGDtyUTHCLf2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willia555555msjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJJA75BD"
+    },
+    {
+      "userId": "np2ln5ogJTTUFyahC71TBFofoag2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "ndawbabacar21@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BNQ42D",
+      "affiliateCodeClient": "BABACAR355",
+      "affiliateCodeRecruitment": "REC-BABACAR355",
+      "affiliateCodeProvider": "PROV-BABACAR355"
+    },
+    {
+      "userId": "o2c6chlwaxb8ULmLlBJlS6Fdhqy1",
+      "collection": "users",
+      "role": "client",
+      "email": "williamsj999ullin@gmail.com",
+      "status": "active",
+      "affiliateCode": "WJFSXXFU"
+    },
+    {
+      "userId": "oB6Gt84jftOYQUfkmwmUidfkasD3",
+      "collection": "users",
+      "role": "client",
+      "email": "dhddhdh@dhdh.dh",
+      "status": "unknown",
+      "affiliateCode": "DHMGR6XR"
+    },
+    {
+      "userId": "ogyZT4S17KNs85qoGh2wmFI9gz92",
+      "collection": "users",
+      "role": "chatter",
+      "email": "dioumasene1995@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "DS9BGV7G"
+    },
+    {
+      "userId": "orEpsaBjmKcdj6bLM1nyQQidWWF2",
+      "collection": "users",
+      "role": "client",
+      "email": "dhdhddd@hotma.fr",
+      "status": "unknown",
+      "affiliateCode": "DHMVH7L6"
+    },
+    {
+      "userId": "ovkwqno8ELMfmHU39M8NrdrzdBD2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beee898ditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BEDFDVY3"
+    },
+    {
+      "userId": "ovmKbbmcoFXHkC8FrYguvJKKnf13",
+      "collection": "users",
+      "role": "chatter",
+      "email": "enzoomdd@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "MDMGBV",
+      "affiliateCodeClient": "MOUSSADI974",
+      "affiliateCodeRecruitment": "REC-MOUSSADI974",
+      "affiliateCodeProvider": "PROV-MOUSSADI974"
+    },
+    {
+      "userId": "q0BeyZGG5sPoyCQI6OBkdLrAnjk2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "walidlassoueddd@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WX58R6",
+      "affiliateCodeClient": "WALID399",
+      "affiliateCodeRecruitment": "REC-WALID399",
+      "affiliateCodeProvider": "PROV-WALID399"
+    },
+    {
+      "userId": "qJvCn605QaSdMeayqR4Jqzb2OyF2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "wiljul@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-QJVCN6"
+    },
+    {
+      "userId": "r1nLb7MhanT5YHdSK28d0afSBIo2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamjullin222@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "WJA2MQRL"
+    },
+    {
+      "userId": "rRreXdXY0BRgVo2BPM13hhmr04l1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willi3333333amsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJR3TBRJ"
+    },
+    {
+      "userId": "rvOe0sqOZkQEvwBMuEm2VRCKVz92",
+      "collection": "users",
+      "role": "chatter",
+      "email": "oumarodjiguimde1@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "XDFGCH",
+      "affiliateCodeClient": "OUMAROTI176",
+      "affiliateCodeRecruitment": "REC-OUMAROTI176",
+      "affiliateCodeProvider": "PROV-OUMAROTI176"
+    },
+    {
+      "userId": "thLuoOEcePREFaXL8wjQTJ4FpRI3",
+      "collection": "users",
+      "role": "client",
+      "email": "williamjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "ULIX-THLUOO"
+    },
+    {
+      "userId": "tti9SltaWfgAbxMZfhGKKnt4N9Q2",
+      "collection": "users",
+      "role": "client",
+      "email": "williamsjullin@gmail.comhhhhhhhhhhh",
+      "status": "unknown",
+      "affiliateCode": "WX593G2D"
+    },
+    {
+      "userId": "uduIXRF5WUQrCAieJVwSYGSKEgD3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamsjgggggggggggggullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJHS795M"
+    },
+    {
+      "userId": "ufXBgRja60hneF0c8rcXYGoxPc52",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willia31132132msjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ6QVW"
+    },
+    {
+      "userId": "ugZy8rAqQaQWamFon1tkc2Fv32z2",
+      "collection": "users",
+      "role": "client",
+      "email": "xbxxh@fjffj.fr",
+      "status": "unknown",
+      "affiliateCode": "XBGX7X"
+    },
+    {
+      "userId": "ukkfDQtA6Rd0MO6yW2PvtQtfiuy1",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "22222beeeditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEJ7PVAC"
+    },
+    {
+      "userId": "vFLw4Da3ejW0btCjMcZKaavOnum1",
+      "collection": "users",
+      "role": "client",
+      "email": "klsljlqkj@kdjdk.fr",
+      "status": "unknown",
+      "affiliateCode": "KXEL73"
+    },
+    {
+      "userId": "vs41fd8Y1AYrWsWwcp2Jy9aK6fE3",
+      "collection": "users",
+      "role": "blogger",
+      "email": "willi44444444amsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ8XHS"
+    },
+    {
+      "userId": "wLfJmxEPNrfIyux996Q4Naplcqt2",
+      "collection": "users",
+      "role": "groupAdmin",
+      "email": "williajjjjjjjjjjjmjullin@hotmail.fr",
+      "status": "unknown",
+      "affiliateCode": "JJNFU4KK",
+      "affiliateCodeClient": "GROUP-JJJJPLCQT2",
+      "affiliateCodeRecruitment": "REC-GROUP-JJJJPLCQT2",
+      "affiliateCodeProvider": "PROV-GROUP-JJJJPLCQT2"
+    },
+    {
+      "userId": "wYJBaMi1yxgpu7fuK1WBwOaWnIv2",
+      "collection": "users",
+      "role": "expat",
+      "email": "beeeggggggggggditions@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEDVEVM7"
+    },
+    {
+      "userId": "woaWvhBEeAbnk2PeLEtSZMNyTk12",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "beeedition66666s@gmail.com",
+      "status": "pending",
+      "affiliateCode": "BEFSGC9U"
+    },
+    {
+      "userId": "xINlC1JmiyYGah1RKuOtGH2fzyk1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willikjhhffamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ55YM"
+    },
+    {
+      "userId": "xO7o4nIXOaWnnJ64JXuSneUW25g2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "dhddh@dhdh.fr",
+      "status": "unknown",
+      "affiliateCode": "GD5FSZ"
+    },
+    {
+      "userId": "xe4UyRJqF8TwjdMV85JITPxXCYB3",
+      "collection": "users",
+      "role": "chatter",
+      "email": "beeefhgfhfhfq4ditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BE3Z5X"
+    },
+    {
+      "userId": "xeTwlm0rCdTIr29SUZoKn3ncyhH2",
+      "collection": "users",
+      "role": "chatter",
+      "email": "willikjhhamsjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJEXTC"
+    },
+    {
+      "userId": "xne1494SDdRIiBhQzQffNDOtOrQ2",
+      "collection": "users",
+      "role": "influencer",
+      "email": "beeeeeeeeeeeditions@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "BE2VSC"
+    },
+    {
+      "userId": "xplXWdjpsiZvxhusIMosAlOLCG32",
+      "collection": "users",
+      "role": "influencer",
+      "email": "williamstttttttttjullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJBANG"
+    },
+    {
+      "userId": "xrkj5sBYXsPGjBzsXZWWYiKX1qg1",
+      "collection": "users",
+      "role": "chatter",
+      "email": "williamsj11111111111ullin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJB48EZP"
+    },
+    {
+      "userId": "y9RJpvnojMMxdNbSIiVhyRbFCAo1",
+      "collection": "users",
+      "role": "lawyer",
+      "email": "williamkmlkmlkmlmjullin@hotmail.fr",
+      "status": "pending",
+      "affiliateCode": "WJ4LH4"
+    },
+    {
+      "userId": "ydw14Ul4CGRgVxMwZGEdQCGVZZw1",
+      "collection": "users",
+      "role": "influencer",
+      "email": "williamsjulxwlin@gmail.com",
+      "status": "unknown",
+      "affiliateCode": "WJ6JHS3L"
+    },
+    {
+      "userId": "yeiwVLBkDoNjVkO9yModITdKD2J3",
+      "collection": "users",
+      "role": "client",
+      "email": "fhfhf@dhdhd.fh",
+      "status": "unknown",
+      "affiliateCode": "FHXG6A"
+    }
+  ]
+}

@@ -36,6 +36,9 @@ import { WhatsAppBanner } from '@/whatsapp-groups';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
 
+// Unified affiliate dashboard (Phase 8)
+const UnifiedAffiliateDashboard = lazy(() => import('@/components/unified/UnifiedAffiliateDashboard'));
+
 // Below-fold: individual lazy wrappers that resolve named exports from the bundle
 
 // Skeleton for below-fold content
@@ -221,6 +224,11 @@ const ChatterDashboardContent: React.FC = () => {
 
         {/* 3 Balance Cards */}
         <BalanceCards onNavigateToWithdraw={() => navigate(paymentsRoute)} />
+
+        {/* Unified Affiliate Dashboard (Phase 8) */}
+        <Suspense fallback={null}>
+          <UnifiedAffiliateDashboard compact showBalance={false} showHistory={false} />
+        </Suspense>
 
         {/* Next Action / Micro Objective */}
         <MicroObjectiveCard

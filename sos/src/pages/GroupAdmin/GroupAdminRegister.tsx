@@ -19,7 +19,7 @@ import { WhatsAppGroupScreen } from '@/whatsapp-groups';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
-import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
@@ -59,7 +59,7 @@ const GroupAdminRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('groupAdmin') || getStoredReferralCode('client') || getBestAvailableReferralCode('groupAdmin') || '';
+    return getUnifiedReferralCode() || '';
   }, [searchParams]);
 
   // Routes
@@ -212,6 +212,7 @@ const GroupAdminRegister: React.FC = () => {
 
       if (responseData.success) {
         clearStoredReferral('groupAdmin');
+        clearUnifiedReferral();
         await refreshUser();
         setAffiliateCodes({ client: responseData.affiliateCodeClient, recruitment: responseData.affiliateCodeRecruitment });
         setSuccess(true);

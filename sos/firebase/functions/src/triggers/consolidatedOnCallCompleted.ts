@@ -53,110 +53,162 @@ export const consolidatedOnCallCompleted = onDocumentUpdated(
     const sessionId = event.params.sessionId;
     const results: Record<string, "ok" | "skipped" | string> = {};
 
-    // Run all 5 handlers independently with try/catch isolation.
-    // Dynamic imports keep cold-start overhead minimal: only the modules
-    // relevant to a given call session will load their full dependency trees.
-
-    // 1. Chatter handler
+    // Check if the unified system is enabled — if so, skip ALL legacy handlers
+    // to avoid double commissions (unified system handles everything).
+    let unifiedEnabled = false;
     try {
-      const { handleCallCompleted: chatterHandler } = await import(
-        "../chatter/triggers/onCallCompleted"
-      );
-      await chatterHandler(event);
-      results.chatter = "ok";
-    } catch (error) {
-      results.chatter = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] Chatter handler failed", {
-        sessionId,
-        error,
-      });
+      const { getSystemConfig } = await import("../unified/commissionCalculator");
+      const config = await getSystemConfig();
+      unifiedEnabled = config.enabled && !config.shadowMode;
+    } catch {
+      // If we can't read config, fall back to legacy handlers
     }
 
-    // 2. Influencer handler
-    try {
-      const { handleCallCompleted: influencerHandler } = await import(
-        "../influencer/triggers/onCallCompleted"
-      );
-      await influencerHandler(event);
-      results.influencer = "ok";
-    } catch (error) {
-      results.influencer = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] Influencer handler failed", {
-        sessionId,
-        error,
-      });
+    if (!unifiedEnabled) {
+      // ========== LEGACY HANDLERS (disabled when unified system is active) ==========
+      // Run all 6 handlers independently with try/catch isolation.
+
+      // 1. Chatter handler
+      try {
+        const { handleCallCompleted: chatterHandler } = await import(
+          "../chatter/triggers/onCallCompleted"
+        );
+        await chatterHandler(event);
+        results.chatter = "ok";
+      } catch (error) {
+        results.chatter = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] Chatter handler failed", {
+          sessionId,
+          error,
+        });
+      }
+
+      // 2. Influencer handler
+      try {
+        const { handleCallCompleted: influencerHandler } = await import(
+          "../influencer/triggers/onCallCompleted"
+        );
+        await influencerHandler(event);
+        results.influencer = "ok";
+      } catch (error) {
+        results.influencer = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] Influencer handler failed", {
+          sessionId,
+          error,
+        });
+      }
+
+      // 3. Blogger handler
+      try {
+        const { handleCallCompleted: bloggerHandler } = await import(
+          "../blogger/triggers/onCallCompleted"
+        );
+        await bloggerHandler(event);
+        results.blogger = "ok";
+      } catch (error) {
+        results.blogger = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] Blogger handler failed", {
+          sessionId,
+          error,
+        });
+      }
+
+      // 4. GroupAdmin handler (client referral commissions)
+      try {
+        const { handleCallCompleted: groupAdminHandler } = await import(
+          "../groupAdmin/triggers/onCallCompleted"
+        );
+        await groupAdminHandler(event);
+        results.groupAdmin = "ok";
+      } catch (error) {
+        results.groupAdmin = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] GroupAdmin handler failed", {
+          sessionId,
+          error,
+        });
+      }
+
+      // 4b. GroupAdmin provider recruitment commissions
+      try {
+        const { handleProviderRecruitmentCommission } = await import(
+          "../groupAdmin/triggers/onCallCompleted"
+        );
+        await handleProviderRecruitmentCommission(event);
+        results.groupAdminProviderRecruit = "ok";
+      } catch (error) {
+        results.groupAdminProviderRecruit = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] GroupAdmin provider recruitment handler failed", {
+          sessionId,
+          error,
+        });
+      }
+
+      // 5. Affiliate handler
+      try {
+        const { handleCallCompleted: affiliateHandler } = await import(
+          "../affiliate/triggers/onCallCompleted"
+        );
+        await affiliateHandler(event);
+        results.affiliate = "ok";
+      } catch (error) {
+        results.affiliate = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] Affiliate handler failed", {
+          sessionId,
+          error,
+        });
+      }
+
+      // 6. Partner handler
+      try {
+        const { handleCallCompleted: partnerHandler } = await import(
+          "../partner/triggers/onCallCompleted"
+        );
+        await partnerHandler(event);
+        results.partner = "ok";
+      } catch (error) {
+        results.partner = `error: ${error instanceof Error ? error.message : String(error)}`;
+        logger.error("[consolidatedOnCallCompleted] Partner handler failed", {
+          sessionId,
+          error,
+        });
+      }
+    } else {
+      results.legacy = "skipped (unified system active)";
     }
 
-    // 3. Blogger handler
+    // ========== UNIFIED COMMISSION SYSTEM ==========
+    // Config-driven: reads enabled/shadowMode from unified_commission_system/config.
     try {
-      const { handleCallCompleted: bloggerHandler } = await import(
-        "../blogger/triggers/onCallCompleted"
-      );
-      await bloggerHandler(event);
-      results.blogger = "ok";
-    } catch (error) {
-      results.blogger = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] Blogger handler failed", {
-        sessionId,
-        error,
-      });
-    }
+      const before = event.data?.before?.data();
+      const after = event.data?.after?.data();
 
-    // 4. GroupAdmin handler (client referral commissions)
-    try {
-      const { handleCallCompleted: groupAdminHandler } = await import(
-        "../groupAdmin/triggers/onCallCompleted"
-      );
-      await groupAdminHandler(event);
-      results.groupAdmin = "ok";
-    } catch (error) {
-      results.groupAdmin = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] GroupAdmin handler failed", {
-        sessionId,
-        error,
-      });
-    }
+      // Only trigger on status change to "completed" (same guard as legacy handlers)
+      if (after && after.status === "completed" && before?.status !== "completed") {
+        const { calculateAndCreateCommissions } = await import(
+          "../unified/commissionCalculator"
+        );
 
-    // 4b. GroupAdmin provider recruitment commissions
-    try {
-      const { handleProviderRecruitmentCommission } = await import(
-        "../groupAdmin/triggers/onCallCompleted"
-      );
-      await handleProviderRecruitmentCommission(event);
-      results.groupAdminProviderRecruit = "ok";
-    } catch (error) {
-      results.groupAdminProviderRecruit = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] GroupAdmin provider recruitment handler failed", {
-        sessionId,
-        error,
-      });
-    }
+        const unifiedResult = await calculateAndCreateCommissions({
+          type: "call_completed",
+          callSession: {
+            id: sessionId,
+            clientId: after.clientId || after.client_id || "",
+            providerId: after.providerId || after.provider_id || "",
+            providerType: after.providerType || after.provider_type || "expat",
+            amount: after.amount || after.totalAmount || 0,
+            connectionFee: after.connectionFee || after.connection_fee || 0,
+            duration: after.duration || after.call_duration || 0,
+            isPaid: after.isPaid ?? after.is_paid ?? (after.paymentStatus === "paid"),
+          },
+        });
 
-    // 5. Affiliate handler
-    try {
-      const { handleCallCompleted: affiliateHandler } = await import(
-        "../affiliate/triggers/onCallCompleted"
-      );
-      await affiliateHandler(event);
-      results.affiliate = "ok";
+        results.unified = unifiedResult ? "ok" : "disabled";
+      } else {
+        results.unified = "skipped";
+      }
     } catch (error) {
-      results.affiliate = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] Affiliate handler failed", {
-        sessionId,
-        error,
-      });
-    }
-
-    // 6. Partner handler
-    try {
-      const { handleCallCompleted: partnerHandler } = await import(
-        "../partner/triggers/onCallCompleted"
-      );
-      await partnerHandler(event);
-      results.partner = "ok";
-    } catch (error) {
-      results.partner = `error: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error("[consolidatedOnCallCompleted] Partner handler failed", {
+      results.unified = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnCallCompleted] Unified handler failed", {
         sessionId,
         error,
       });

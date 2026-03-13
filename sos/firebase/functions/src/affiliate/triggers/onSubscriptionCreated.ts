@@ -47,6 +47,16 @@ export const affiliateOnSubscriptionCreated = onDocumentCreated(
     const providerId = event.params.providerId;
     const subscriptionData = snapshot.data();
 
+    // Check if unified system is active — skip legacy handler if so
+    let unifiedEnabled = false;
+    try {
+      const { getSystemConfig } = await import("../../unified/commissionCalculator");
+      const config = await getSystemConfig();
+      unifiedEnabled = config.enabled && !config.shadowMode;
+    } catch {
+      // Fall back to legacy
+    }
+
     // Only process active or trialing subscriptions
     const validStatuses = ["active", "trialing"];
     if (!validStatuses.includes(subscriptionData.status)) {
@@ -67,6 +77,7 @@ export const affiliateOnSubscriptionCreated = onDocumentCreated(
 
     const db = getFirestore();
 
+    if (!unifiedEnabled) {
     try {
       // 1. Check if affiliate system is active
       const systemActive = await isAffiliateSystemActive();
@@ -223,6 +234,29 @@ export const affiliateOnSubscriptionCreated = onDocumentCreated(
         error,
       });
       throw error;
+    }
+    } // end if (!unifiedEnabled)
+
+    // ========== UNIFIED COMMISSION SYSTEM ==========
+    // Config-driven: reads enabled/shadowMode from unified_commission_system/config.
+    try {
+      const { calculateAndCreateCommissions } = await import(
+        "../../unified/commissionCalculator"
+      );
+
+      await calculateAndCreateCommissions({
+        type: "subscription_created",
+        subscriptionId: providerId,
+        providerId,
+        planId: subscriptionData.planId || "",
+        amount: subscriptionData.currentPeriodAmount || 0,
+        billingPeriod: (subscriptionData.billingPeriod || "monthly") as "monthly" | "yearly",
+      });
+    } catch (error) {
+      logger.error("[affiliateOnSubscriptionCreated] Unified handler failed", {
+        providerId,
+        error,
+      });
     }
   }
 );

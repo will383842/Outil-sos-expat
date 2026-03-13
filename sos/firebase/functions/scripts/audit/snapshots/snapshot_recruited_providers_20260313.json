@@ -1,0 +1,85 @@
+{
+  "snapshotDate": "2026-03-13T08:51:50.676Z",
+  "durationMs": 4066,
+  "summary": {
+    "totalRecruitedProviders": 2,
+    "activeRecruitedProviders": 2,
+    "totalRecruitedAffiliates": 0,
+    "byCollection": {
+      "chatter_recruited_providers": 2,
+      "influencer_referrals": 0,
+      "blogger_recruited_providers": 0,
+      "group_admin_recruited_providers": 0,
+      "chatter_recruited_chatters": 0,
+      "blogger_recruited_bloggers": 0,
+      "group_admin_recruited_admins": 0
+    }
+  },
+  "recruitedProviders": {
+    "chatter_recruited_providers": {
+      "total": 2,
+      "active": 2,
+      "expired": 0,
+      "totalCommissions": 0,
+      "entries": [
+        {
+          "id": "NlGPJC5B7onfoFjShjbR",
+          "recruiterId": "1McUxuJBRKR4n983JdDRNCCqqO52",
+          "providerId": "lY3A4rU3Y2dU49iVMfrdveY1cVI2",
+          "providerType": "lawyer",
+          "isActive": true,
+          "isExpired": false,
+          "callsWithCommission": 0,
+          "recruitedAt": "2026-03-10T21:15:13.695Z",
+          "windowEnd": "2026-09-10T21:15:13.695Z"
+        },
+        {
+          "id": "UD2rwlPyiFlB1Aw6u7jn",
+          "recruiterId": "lBlOOjJW5aRfW4SxmqtiWCPJ5IJ3",
+          "providerId": "HVsiAW7Ipvb07Fm0ACYMahBuyq32",
+          "providerType": "lawyer",
+          "isActive": true,
+          "isExpired": false,
+          "callsWithCommission": 0,
+          "recruitedAt": "2026-03-10T16:52:28.876Z",
+          "windowEnd": "2026-09-10T16:52:28.876Z"
+        }
+      ]
+    },
+    "influencer_referrals": {
+      "total": 0,
+      "active": 0,
+      "expired": 0,
+      "totalCommissions": 0,
+      "entries": []
+    },
+    "blogger_recruited_providers": {
+      "total": 0,
+      "active": 0,
+      "expired": 0,
+      "totalCommissions": 0,
+      "entries": []
+    },
+    "group_admin_recruited_providers": {
+      "total": 0,
+      "active": 0,
+      "expired": 0,
+      "totalCommissions": 0,
+      "entries": []
+    }
+  },
+  "recruitedAffiliates": {
+    "chatter_recruited_chatters": {
+      "total": 0,
+      "entries": []
+    },
+    "blogger_recruited_bloggers": {
+      "total": 0,
+      "entries": []
+    },
+    "group_admin_recruited_admins": {
+      "total": 0,
+      "entries": []
+    }
+  }
+}

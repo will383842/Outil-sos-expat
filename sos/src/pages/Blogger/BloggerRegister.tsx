@@ -55,7 +55,7 @@ import {
   PenTool,
 } from 'lucide-react';
 import { WhatsAppGroupScreen } from '@/whatsapp-groups';
-import { storeReferralCode, getStoredReferralCode, getStoredReferral, clearStoredReferral, getBestAvailableReferralCode } from '@/utils/referralStorage';
+import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
@@ -208,7 +208,7 @@ const BloggerRegister: React.FC = () => {
       return fromUrl;
     }
 
-    return getStoredReferralCode('blogger') || getStoredReferralCode('client') || getBestAvailableReferralCode('blogger') || '';
+    return getUnifiedReferralCode() || '';
   }, [searchParams]);
 
   const landingRoute = `/${getTranslatedRouteSlug('blogger-landing' as RouteKey, langCode)}`;
@@ -528,6 +528,7 @@ const BloggerRegister: React.FC = () => {
       if (result.data.success) {
         setSuccess(true);
         clearStoredReferral('blogger');
+        clearUnifiedReferral();
 
         // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
         trackMetaCompleteRegistration({

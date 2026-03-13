@@ -150,6 +150,30 @@ export const adminPromoteToCaptain = onCall(
       updatedAt: Timestamp.now(),
     });
 
+    // Assign captain commission plan (unified system)
+    try {
+      const planQuery = await db.collection("commission_plans")
+        .where("targetRoles", "array-contains", "captainChatter")
+        .where("isDefault", "==", true)
+        .limit(1)
+        .get();
+
+      if (!planQuery.empty) {
+        await db.collection("users").doc(chatterId).update({
+          commissionPlanId: planQuery.docs[0].id,
+        });
+        logger.info("[adminPromoteToCaptain] Assigned captain plan", {
+          chatterId,
+          planId: planQuery.docs[0].id,
+        });
+      }
+    } catch (planErr) {
+      logger.warn("[adminPromoteToCaptain] Failed to assign captain plan (non-blocking)", {
+        chatterId,
+        error: String(planErr),
+      });
+    }
+
     // Create notification
     await db.collection("chatter_notifications").add({
       chatterId,
@@ -274,6 +298,35 @@ export const adminRevokeCaptain = onCall(
       captainAssignedLanguages: FieldValue.delete(),
       updatedAt: now,
     });
+
+    // Revert to default chatter commission plan (unified system)
+    try {
+      const planQuery = await db.collection("commission_plans")
+        .where("targetRoles", "array-contains", "chatter")
+        .where("isDefault", "==", true)
+        .limit(1)
+        .get();
+
+      if (!planQuery.empty) {
+        await db.collection("users").doc(chatterId).update({
+          commissionPlanId: planQuery.docs[0].id,
+        });
+        logger.info("[adminRevokeCaptain] Reverted to chatter plan", {
+          chatterId,
+          planId: planQuery.docs[0].id,
+        });
+      } else {
+        // No default chatter plan found — remove plan assignment
+        await db.collection("users").doc(chatterId).update({
+          commissionPlanId: FieldValue.delete(),
+        });
+      }
+    } catch (planErr) {
+      logger.warn("[adminRevokeCaptain] Failed to revert plan (non-blocking)", {
+        chatterId,
+        error: String(planErr),
+      });
+    }
 
     // Clean up stale captainId references on chatters assigned to this captain
     const assignedChattersQuery = await db

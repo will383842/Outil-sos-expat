@@ -31,6 +31,8 @@ const NotificationBell = lazy(() =>
   import('@/components/shared/NotificationBell').then(m => ({ default: m.NotificationBell }))
 );
 const LockedPlanBanner = lazy(() => import('@/components/shared/LockedPlanBanner'));
+const UnifiedAffiliateDashboard = lazy(() => import('@/components/unified/UnifiedAffiliateDashboard'));
+const UnifiedLinkWithEarnings = lazy(() => import('@/components/unified/UnifiedLinkWithEarnings'));
 
 const BloggerDashboard: React.FC = () => {
   const intl = useIntl();
@@ -251,150 +253,18 @@ const BloggerDashboard: React.FC = () => {
           </Suspense>
         )}
 
-        {/* Affiliate Links - Mobile optimized with 48px touch targets */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
-          <h2 className="text-lg dark:text-white font-semibold mb-4">
-            <FormattedMessage id="blogger.dashboard.affiliateLinks" defaultMessage="Vos liens d'affiliation" />
-          </h2>
-
-          <div className="space-y-4 md:space-y-0 md:grid md:gap-4">
-            {/* Client Link */}
-            <div className="bg-gradient-to-br from-green-50 dark:from-green-900/20 to-green-100 dark:to-green-800/20 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm dark:text-white font-semibold">
-                  <FormattedMessage id="blogger.dashboard.clientLink" defaultMessage="Lien client ({amount}$/appel)" values={{ amount: ((dashboardData?.config?.commissionClientAmount ?? 1000) / 100).toFixed(0) }} />
-                </span>
-                <span className="text-sm dark:text-green-300 font-bold bg-green-200 dark:bg-green-800/50 px-3 py-1.5 rounded-full">
-                  {blogger.affiliateCodeClient}
-                </span>
-              </div>
-              {/* Mobile: Stack vertically, Desktop: Row */}
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={clientShareUrl}
-                  readOnly
-                  className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => copyToClipboard(clientShareUrl, 'client')}
-                    className={`flex-1 min-h-[48px] text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
-                      copiedCode === 'client' ? 'bg-green-600' : 'bg-purple-600 hover:bg-purple-700'
-                    }`}
-                  >
-                    {copiedCode === 'client' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    <span className="sm:inline">
-                      {copiedCode === 'client'
-                        ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
-                        : <FormattedMessage id="common.copy" defaultMessage="Copier" />
-                      }
-                    </span>
-                  </button>
-                  <a
-                    href={clientShareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Recruitment Link */}
-            <div className="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-blue-100 dark:to-blue-800/20 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm dark:text-white font-semibold">
-                  <FormattedMessage id="blogger.dashboard.recruitLink" defaultMessage="Lien recrutement ({amount}$/appel, {months} mois)" values={{ amount: ((dashboardData?.config?.commissionRecruitmentAmount ?? 500) / 100).toFixed(0), months: dashboardData?.config?.recruitmentWindowMonths ?? 6 }} />
-                </span>
-                <span className="text-sm dark:text-blue-300 font-bold bg-blue-200 dark:bg-blue-800/50 px-3 py-1.5 rounded-full">
-                  {blogger.affiliateCodeRecruitment}
-                </span>
-              </div>
-              {/* Mobile: Stack vertically, Desktop: Row */}
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={recruitmentShareUrl}
-                  readOnly
-                  className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => copyToClipboard(recruitmentShareUrl, 'recruit')}
-                    className={`flex-1 min-h-[48px] text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
-                      copiedCode === 'recruit' ? 'bg-green-600' : 'bg-purple-600 hover:bg-purple-700'
-                    }`}
-                  >
-                    {copiedCode === 'recruit' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    <span className="sm:inline">
-                      {copiedCode === 'recruit'
-                        ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
-                        : <FormattedMessage id="common.copy" defaultMessage="Copier" />
-                      }
-                    </span>
-                  </button>
-                  <a
-                    href={recruitmentShareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Provider Recruitment Link */}
-            {providerShareUrl && (
-              <div className="bg-gradient-to-br from-teal-50 dark:from-teal-900/20 to-teal-100 dark:to-teal-800/20 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm dark:text-white font-semibold">
-                    <FormattedMessage id="blogger.dashboard.providerLink" defaultMessage="Lien prestataire (${amount}/appel, 6 mois)" values={{ amount: ((dashboardData?.config?.commissionRecruitmentAmount ?? 500) / 100).toFixed(0) }} />
-                  </span>
-                  <span className="text-sm dark:text-teal-300 font-bold bg-teal-200 dark:bg-teal-800/50 px-3 py-1.5 rounded-full">
-                    {blogger.affiliateCodeProvider}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={providerShareUrl}
-                    readOnly
-                    className="w-full text-sm bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-3 min-h-[48px]"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => copyToClipboard(providerShareUrl, 'provider')}
-                      className={`flex-1 min-h-[48px] text-white rounded-xl items-center justify-center gap-2 font-medium transition-colors active:scale-[0.98] ${
-                        copiedCode === 'provider' ? 'bg-green-600' : 'bg-teal-600 hover:bg-teal-700'
-                      }`}
-                    >
-                      {copiedCode === 'provider' ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                      <span className="sm:inline">
-                        {copiedCode === 'provider'
-                          ? <FormattedMessage id="common.copied" defaultMessage="Copied!" />
-                          : <FormattedMessage id="common.copy" defaultMessage="Copier" />
-                        }
-                      </span>
-                    </button>
-                    <a
-                      href={providerShareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="min-h-[48px] bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-[0.98]"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
+        {/* Unified Affiliate Link + Earnings (Phase 12) */}
+        <Suspense fallback={null}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+            <h2 className="text-lg dark:text-white font-semibold mb-4">
+              <FormattedMessage id="blogger.dashboard.affiliateLinks" defaultMessage="Vos liens d'affiliation" />
+            </h2>
+            <UnifiedLinkWithEarnings
+              code={(blogger as any).affiliateCode || blogger.affiliateCodeClient || ''}
+              role="blogger"
+            />
           </div>
-        </div>
+        </Suspense>
 
         {/* Recent Commissions - Mobile optimized */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">

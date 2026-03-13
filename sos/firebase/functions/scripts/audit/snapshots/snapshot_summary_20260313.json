@@ -1,0 +1,125 @@
+{
+  "auditDate": "2026-03-13T08:51:54.884Z",
+  "scriptResults": [
+    {
+      "name": "Commissions",
+      "status": "success"
+    },
+    {
+      "name": "Affiliate Codes",
+      "status": "success"
+    },
+    {
+      "name": "Referrals",
+      "status": "success"
+    },
+    {
+      "name": "Clicks & Recruitments",
+      "status": "success"
+    },
+    {
+      "name": "Discount Config",
+      "status": "success"
+    }
+  ],
+  "snapshots": {
+    "snapshot_clicks_20260313.json": {
+      "totalClicks": 29,
+      "totalConverted": 29
+    },
+    "snapshot_codes_20260313.json": {
+      "totalEntries": 252,
+      "totalUniqueCodes": 279,
+      "criticalIssues": 2,
+      "warnings": 0,
+      "byCollection": {
+        "chatters": 28,
+        "influencers": 0,
+        "bloggers": 0,
+        "group_admins": 1,
+        "users_generic": 223,
+        "partners": 0,
+        "reserved_codes": 1
+      }
+    },
+    "snapshot_commissions_20260313.json": {
+      "totalCommissions": 0,
+      "totalAmountCents": 0,
+      "totalAmountDollars": 0,
+      "totalUniqueOwners": 0,
+      "totalAffiliateProfiles": 165,
+      "byCollection": [
+        {
+          "collection": "chatter_commissions",
+          "count": 0,
+          "totalDollars": 0
+        },
+        {
+          "collection": "chatter_referral_commissions",
+          "count": 0,
+          "totalDollars": 0
+        },
+        {
+          "collection": "influencer_commissions",
+          "count": 0,
+          "totalDollars": 0
+        },
+        {
+          "collection": "blogger_commissions",
+          "count": 0,
+          "totalDollars": 0
+        },
+        {
+          "collection": "group_admin_commissions",
+          "count": 0,
+          "totalDollars": 0
+        },
+        {
+          "collection": "affiliate_commissions",
+          "count": 0,
+          "totalDollars": 0
+        },
+        {
+          "collection": "partner_commissions",
+          "count": 0,
+          "totalDollars": 0
+        }
+      ]
+    },
+    "snapshot_discounts_20260313.json": {
+      "discountSources": {
+        "groupAdmin": "$0 fixed",
+        "influencer": "5%",
+        "partnersWithDiscount": 0,
+        "activeCoupons": 3
+      },
+      "commissionPlans": 0,
+      "telegramBonuses": 0
+    },
+    "snapshot_recruited_providers_20260313.json": {
+      "totalRecruitedProviders": 2,
+      "activeRecruitedProviders": 2,
+      "totalRecruitedAffiliates": 0,
+      "byCollection": {
+        "chatter_recruited_providers": 2,
+        "influencer_referrals": 0,
+        "blogger_recruited_providers": 0,
+        "group_admin_recruited_providers": 0,
+        "chatter_recruited_chatters": 0,
+        "blogger_recruited_bloggers": 0,
+        "group_admin_recruited_admins": 0
+      }
+    },
+    "snapshot_referrals_20260313.json": {
+      "totalUsers": 223,
+      "usersWithReferrals": 2,
+      "referredChatters": 0,
+      "referredInfluencers": 0,
+      "referredBloggers": 0,
+      "referredGroupAdmins": 0,
+      "genericReferralDocs": 1,
+      "criticalIssues": 0,
+      "warnings": 0
+    }
+  }
+}

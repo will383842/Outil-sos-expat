@@ -32,7 +32,7 @@ import { LocaleLink } from '../../../multilingual-system';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { generateEventIdForType } from '@/utils/sharedEventId';
-import { getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
+import { getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
 
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
@@ -423,6 +423,11 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         ...(referralCode && {
           pendingReferralCode: referralCode.toUpperCase().trim(),
         }),
+        // Unified system: single field for backend referral resolution
+        ...(() => {
+          const unifiedCode = getUnifiedReferralCode();
+          return unifiedCode ? { pendingRecruitmentCode: unifiedCode } : {};
+        })(),
         ...(() => {
           const ref = getStoredReferral('blogger');
           return ref?.codeType === 'provider' ? { providerRecruitedByBlogger: ref.code } : {};
@@ -510,6 +515,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
         await setGoogleAdsUserData({ email: form.email, firstName: fn, lastName: ln, country: form.currentCountry });
         trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
         clearStoredReferral('client');
+        clearUnifiedReferral();
 
         if (onSuccess) {
           onSuccess({ language, country: form.currentCountry });
@@ -559,6 +565,7 @@ const LawyerRegisterForm: React.FC<LawyerRegisterFormProps> = ({
       setGoogleAdsUserData({ email: form.email, firstName: fn, lastName: ln, country: form.currentCountry });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'lawyer_registration', country: form.currentCountry });
       clearStoredReferral('client');
+      clearUnifiedReferral();
 
       if (onSuccess) {
         onSuccess({ language, country: form.currentCountry });

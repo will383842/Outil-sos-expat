@@ -308,6 +308,9 @@ const AdminCommissionRules = lazy(
 const AdminCommissionPlans = lazy(
   () => import("../../pages/admin/AdminCommissionPlans")
 );
+const AdminUnifiedCommissions = lazy(
+  () => import("../../pages/admin/AdminUnifiedCommissions")
+);
 const AdminAffiliatePayouts = lazy(
   () => import("../../pages/admin/AdminAffiliatePayouts")
 );
@@ -1189,6 +1192,15 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminCommissionRules />
+          </Suspense>
+        }
+      />
+      {/* Commissions unifiées */}
+      <Route
+        path="affiliates/unified"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminUnifiedCommissions />
           </Suspense>
         }
       />

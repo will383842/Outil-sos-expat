@@ -90,6 +90,16 @@ export const affiliateOnSubscriptionRenewed = onDocumentUpdated(
       return;
     }
 
+    // Check if unified system is active — skip legacy handler if so
+    let unifiedEnabled = false;
+    try {
+      const { getSystemConfig } = await import("../../unified/commissionCalculator");
+      const config = await getSystemConfig();
+      unifiedEnabled = config.enabled && !config.shadowMode;
+    } catch {
+      // Fall back to legacy
+    }
+
     const providerId = event.params.providerId;
 
     // 1. Detect renewal: currentPeriodStart changed AND subscription is active
@@ -137,6 +147,7 @@ export const affiliateOnSubscriptionRenewed = onDocumentUpdated(
 
     const db = getFirestore();
 
+    if (!unifiedEnabled) {
     try {
       // 2. Check if affiliate system is active
       const systemActive = await isAffiliateSystemActive();
@@ -304,6 +315,31 @@ export const affiliateOnSubscriptionRenewed = onDocumentUpdated(
         error,
       });
       throw error;
+    }
+    } // end if (!unifiedEnabled)
+
+    // ========== UNIFIED COMMISSION SYSTEM ==========
+    // Config-driven: reads enabled/shadowMode from unified_commission_system/config.
+    try {
+      const { calculateAndCreateCommissions } = await import(
+        "../../unified/commissionCalculator"
+      );
+
+      const createdAt = toDate(after.createdAt);
+      const renewalMonthCalc = calculateRenewalMonth(createdAt, afterPeriodStart);
+
+      await calculateAndCreateCommissions({
+        type: "subscription_renewed",
+        subscriptionId: providerId,
+        providerId,
+        renewalMonth: renewalMonthCalc,
+        amount: after.currentPeriodAmount || 0,
+      });
+    } catch (error) {
+      logger.error("[affiliateOnSubscriptionRenewed] Unified handler failed", {
+        providerId,
+        error,
+      });
     }
   }
 );

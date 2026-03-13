@@ -723,6 +723,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: Cog,
             descriptionKey: "admin.menu.commissionPlans.description",
           },
+          {
+            id: "unified-commissions",
+            labelKey: "admin.menu.unifiedCommissions",
+            path: "/admin/affiliates/unified",
+            icon: Percent,
+            badge: "NEW",
+            descriptionKey: "admin.menu.unifiedCommissions.description",
+          },
         ],
       },
       // Sous-section : Chatters

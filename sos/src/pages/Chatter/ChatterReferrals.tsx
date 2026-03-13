@@ -18,6 +18,8 @@ import { UI, SPACING } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
 
+const UnifiedLinkWithEarnings = lazy(() => import('@/components/unified/UnifiedLinkWithEarnings'));
+
 // Lazy load heavier components
 const ShareButtons = lazy(() =>
   import('@/components/Chatter/ViralKit/ShareButtons').then(m => ({ default: m.ShareButtons }))
@@ -187,22 +189,15 @@ function ChatterReferralsContent() {
           <FormattedMessage id="chatter.sponsor.subtitle" defaultMessage="Partagez votre lien de recrutement" />
         </p>
 
-        {/* Recruitment link */}
-        <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-xl mb-4">
-          <p className="text-xs text-slate-400 mb-1">
-            <FormattedMessage id="chatter.sponsor.recruitLink" defaultMessage="Votre lien de recrutement" />
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-sm font-mono font-bold text-slate-700 dark:text-slate-300 truncate">
-              {chatter?.affiliateCodeRecruitment || '...'}
-            </code>
-            <button
-              onClick={handleCopyRecruitLink}
-              className={`${UI.button.primary} px-3 py-1.5 text-sm flex-shrink-0`}
-            >
-              <FormattedMessage id="common.copy" defaultMessage="Copier" />
-            </button>
-          </div>
+        {/* Unified affiliate link */}
+        <div className="mb-4">
+          <Suspense fallback={<div className="h-32 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
+            <UnifiedLinkWithEarnings
+              code={(chatter as any)?.affiliateCode || chatter?.affiliateCodeClient || ''}
+              role={(chatter as any)?.isCaptain ? 'captainChatter' : 'chatter'}
+              compact
+            />
+          </Suspense>
         </div>
 
         {/* Share buttons */}

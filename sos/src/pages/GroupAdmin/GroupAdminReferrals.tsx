@@ -2,8 +2,10 @@
  * GroupAdminReferrals - Recruited admins page
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+
+const UnifiedLinkWithEarnings = lazy(() => import('@/components/unified/UnifiedLinkWithEarnings'));
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
@@ -36,6 +38,7 @@ const GroupAdminReferrals: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [recruits, setRecruits] = useState<GroupAdminRecruit[]>([]);
   const [affiliateCode, setAffiliateCode] = useState('');
+  const [unifiedCode, setUnifiedCode] = useState('');
   const [activationBonusAmount, setActivationBonusAmount] = useState(500);
   const [copied, setCopied] = useState(false);
 
@@ -48,8 +51,9 @@ const GroupAdminReferrals: React.FC = () => {
       setLoading(true);
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
-      const data = result.data as { profile: { affiliateCodeRecruitment: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number } };
+      const data = result.data as { profile: { affiliateCodeRecruitment: string; affiliateCode?: string; affiliateCodeClient?: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number } };
       setAffiliateCode(data.profile.affiliateCodeRecruitment);
+      setUnifiedCode(data.profile.affiliateCode || data.profile.affiliateCodeClient || data.profile.affiliateCodeRecruitment);
       setRecruits(data.recentRecruits);
       if (data.config?.commissionActivationBonusAmount) {
         setActivationBonusAmount(data.config.commissionActivationBonusAmount);
@@ -93,62 +97,15 @@ const GroupAdminReferrals: React.FC = () => {
             <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 activation bonus + $1 per call from their members" />
           </p>
 
-          {/* Recruitment Link Card */}
-          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-6 text-white mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Users className="w-6 h-6" />
-              <span className="font-bold">
-                <FormattedMessage id="groupAdmin.referrals.yourLink" defaultMessage="Your Recruitment Link" />
-              </span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-3 mb-4">
-              <input
-                type="text"
-                readOnly
-                value={recruitmentLink}
-                className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
+          {/* Unified Affiliate Link */}
+          <div className="mb-8">
+            <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
+              <UnifiedLinkWithEarnings
+                code={unifiedCode}
+                role="groupAdmin"
+                compact
               />
-              <button
-                onClick={copyLink}
-                className="bg-white text-purple-600 p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
-                title={intl.formatMessage({ id: 'groupAdmin.referrals.copyLink', defaultMessage: 'Copy link' })}
-              >
-                {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              </button>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
-              <a
-                href={recruitmentLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <ExternalLink className="w-5 h-5" />
-                <FormattedMessage id="groupAdmin.referrals.viewInvitationPage" defaultMessage="View Invitation Page" />
-              </a>
-              <button
-                onClick={copyLink}
-                className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
-              >
-                {copied ? (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    <FormattedMessage id="groupAdmin.referrals.linkCopied" defaultMessage="Link Copied!" />
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-5 h-5" />
-                    <FormattedMessage id="groupAdmin.referrals.copyLinkButton" defaultMessage="Copy Link" />
-                  </>
-                )}
-              </button>
-            </div>
-
-            <p className="text-purple-100 text-sm">
-              <FormattedMessage id="groupAdmin.referrals.shareLinkDesc" defaultMessage="Share this link with other community/group admins. Earn $5 when they make their first 2 referrals, then $1 per call from their members." />
-            </p>
+            </Suspense>
           </div>
 
           {/* Commission Window Info */}

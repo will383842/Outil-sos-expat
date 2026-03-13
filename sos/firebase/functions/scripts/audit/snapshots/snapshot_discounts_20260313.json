@@ -1,0 +1,215 @@
+{
+  "snapshotDate": "2026-03-13T08:51:54.865Z",
+  "durationMs": 3990,
+  "summary": {
+    "discountSources": {
+      "groupAdmin": "$0 fixed",
+      "influencer": "5%",
+      "partnersWithDiscount": 0,
+      "activeCoupons": 3
+    },
+    "commissionPlans": 0,
+    "telegramBonuses": 0
+  },
+  "roleConfigs": {
+    "groupAdmin": {
+      "validationHoldPeriodDays": 7,
+      "minimumWithdrawalAmount": 2500
+    },
+    "influencer": {
+      "clientDiscountPercent": 5,
+      "commissionClientAmount": 1000,
+      "commissionRecruitmentAmount": 500,
+      "validationHoldPeriodDays": 7,
+      "minimumWithdrawalAmount": 5000
+    },
+    "chatter": {
+      "commissionClientCallAmountLawyer": 1000,
+      "commissionClientCallAmountExpat": 1000,
+      "minimumWithdrawalAmount": 3000
+    },
+    "blogger": null,
+    "affiliate": {
+      "isSystemActive": true,
+      "withdrawalsEnabled": true,
+      "newAffiliatesEnabled": true,
+      "defaultRates": {
+        "signupBonus": 200,
+        "callCommissionRate": 0.5,
+        "callFixedBonus": 0,
+        "subscriptionRate": 0.15,
+        "subscriptionFixedBonus": 0,
+        "providerValidationBonus": 2000
+      },
+      "commissionRules": {
+        "referral_signup": {
+          "enabled": true,
+          "type": "fixed",
+          "fixedAmount": 200,
+          "percentageRate": 0,
+          "baseAmount": null,
+          "conditions": {
+            "requireEmailVerification": true,
+            "minAccountAgeDays": 0,
+            "onlyFirstTime": true
+          },
+          "description": "2€ par inscription validée"
+        },
+        "referral_first_call": {
+          "enabled": true,
+          "type": "percentage",
+          "fixedAmount": 0,
+          "percentageRate": 0.5,
+          "baseAmount": null,
+          "applyTo": "connection_fee",
+          "conditions": {
+            "minCallDuration": 120,
+            "providerTypes": [
+              "lawyer",
+              "expat"
+            ]
+          },
+          "description": "50% des frais de connexion du 1er appel"
+        },
+        "referral_recurring_call": {
+          "enabled": true,
+          "type": "percentage",
+          "fixedAmount": 0,
+          "percentageRate": 0.2,
+          "baseAmount": null,
+          "applyTo": "connection_fee",
+          "conditions": {
+            "minCallDuration": 120,
+            "providerTypes": [
+              "lawyer",
+              "expat"
+            ],
+            "maxCallsPerMonth": 0,
+            "lifetimeLimit": 0
+          },
+          "description": "20% des frais de connexion des appels suivants"
+        },
+        "referral_subscription": {
+          "enabled": true,
+          "type": "percentage",
+          "fixedAmount": 0,
+          "percentageRate": 0.15,
+          "baseAmount": null,
+          "applyTo": "first_month",
+          "conditions": {
+            "planTypes": [
+              "solo",
+              "multi",
+              "enterprise"
+            ],
+            "onlyFirstSubscription": true
+          },
+          "description": "15% du premier mois d'abonnement"
+        },
+        "referral_subscription_renewal": {
+          "enabled": true,
+          "type": "percentage",
+          "fixedAmount": 0,
+          "percentageRate": 0.05,
+          "baseAmount": null,
+          "applyTo": "total_amount",
+          "conditions": {
+            "maxMonths": 12
+          },
+          "description": "5% des renouvellements (max 12 mois)"
+        },
+        "referral_provider_validated": {
+          "enabled": true,
+          "type": "fixed",
+          "fixedAmount": 2000,
+          "percentageRate": 0,
+          "baseAmount": null,
+          "conditions": {
+            "requireKYCComplete": true,
+            "requireFirstCall": false
+          },
+          "description": "20€ si prestataire parrainé complète son KYC"
+        }
+      },
+      "withdrawal": {
+        "minimumAmount": 3000,
+        "holdPeriodHours": 24,
+        "maxWithdrawalsPerMonth": 0,
+        "maxAmountPerMonth": 0
+      },
+      "antiFraud": {
+        "requireEmailVerification": true,
+        "minAccountAgeDays": 0,
+        "maxReferralsPerDay": 50,
+        "blockSameIPReferrals": true,
+        "blockedEmailDomains": [
+          "tempmail.com",
+          "throwaway.email",
+          "guerrillamail.com",
+          "10minutemail.com",
+          "mailinator.com",
+          "yopmail.com",
+          "fakeinbox.com",
+          "trashmail.com"
+        ],
+        "maxSignupsPerIPPerHour": 10,
+        "autoFlagThreshold": 5
+      }
+    },
+    "fees": {}
+  },
+  "partnerDiscounts": [],
+  "commissionPlans": [],
+  "activeCoupons": [
+    {
+      "id": "YvdXbeEmU4KNDaN34EjA",
+      "code": "GDGFDFGD",
+      "type": "fixed",
+      "amount": 10,
+      "maxDiscount": null,
+      "services": [
+        "lawyer_call",
+        "expat_call"
+      ],
+      "maxUsesTotal": 100,
+      "maxUsesPerUser": 1,
+      "validFrom": "2025-07-25T05:20:03.183Z",
+      "validUntil": "2026-07-25T05:20:03.691Z"
+    },
+    {
+      "id": "iCafpyD7Wt9qFchgUEAa",
+      "code": "START10",
+      "type": "fixed",
+      "amount": 10,
+      "maxDiscount": 10,
+      "services": [
+        "lawyer_call",
+        "expat_call"
+      ],
+      "maxUsesTotal": 100,
+      "maxUsesPerUser": 1,
+      "validFrom": "2025-10-06T11:03:10.914Z",
+      "validUntil": "2025-11-05T11:03:10.914Z"
+    },
+    {
+      "id": "y2CY8Rl2l5qJocYUL98L",
+      "code": "WELCOME10",
+      "type": "fixed",
+      "amount": 5,
+      "maxDiscount": null,
+      "services": [
+        "lawyer_call",
+        "expat_call"
+      ],
+      "maxUsesTotal": 100,
+      "maxUsesPerUser": 1,
+      "validFrom": "2025-09-30T07:52:55.795Z",
+      "validUntil": "2025-10-30T07:52:55.795Z"
+    }
+  ],
+  "telegramBonuses": {
+    "total": 0,
+    "locked": 0,
+    "unlocked": 0
+  }
+}

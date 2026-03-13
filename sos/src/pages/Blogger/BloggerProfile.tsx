@@ -2,12 +2,13 @@
  * BloggerProfile - Profile settings with photo upload
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useBlogger } from '@/hooks/useBlogger';
 import { useAuth } from '@/contexts/useAuth';
 import { BloggerDashboardLayout } from '@/components/Blogger';
 import { User, Globe, CreditCard, Settings, Badge, Camera, Loader2, CheckCircle } from 'lucide-react';
+const UnifiedAffiliateLink = lazy(() => import('@/components/unified/UnifiedAffiliateLink'));
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { storage, functionsAffiliate } from '@/config/firebase';
@@ -268,46 +269,19 @@ const BloggerProfile: React.FC = () => {
           )}
         </div>
 
-        {/* Affiliate Codes */}
+        {/* Unified Affiliate Link */}
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <Settings className="w-5 h-5 text-purple-500" />
             <h2 className="text-lg dark:text-white font-semibold">
-              <FormattedMessage id="blogger.profile.codes" defaultMessage="Codes d'affiliation" />
+              <FormattedMessage id="blogger.profile.affiliateLink" defaultMessage="Mon lien affilié" />
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm dark:text-gray-700">
-                <FormattedMessage id="blogger.profile.clientCode" defaultMessage="Code client ($10/appel)" />
-              </label>
-              <p className="text-xl dark:text-purple-400 font-mono">
-                {blogger.affiliateCodeClient}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm dark:text-gray-700">
-                <FormattedMessage id="blogger.profile.recruitCode" defaultMessage="Code recrutement ($5/appel)" />
-              </label>
-              <p className="text-xl dark:text-blue-400 font-mono">
-                {blogger.affiliateCodeRecruitment}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm dark:text-gray-700">
-                <FormattedMessage id="blogger.profile.providerCode" defaultMessage="Code prestataire ($5/appel)" />
-              </label>
-              <p className="text-xl dark:text-teal-400 font-mono">
-                {blogger.affiliateCodeProvider}
-              </p>
-            </div>
-          </div>
-          <p className="text-xs dark:text-gray-600 mt-3">
-            <FormattedMessage
-              id="blogger.profile.noDiscount"
-              defaultMessage="Note: Les blogueurs ne peuvent pas offrir de remise aux clients (commissions fixes uniquement)."
-            />
-          </p>
+          {blogger.affiliateCodeClient && (
+            <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
+              <UnifiedAffiliateLink code={blogger.affiliateCodeClient} />
+            </Suspense>
+          )}
         </div>
 
         {/* Badges */}

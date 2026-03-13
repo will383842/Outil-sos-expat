@@ -2,13 +2,14 @@
  * InfluencerProfile - Profile settings with photo upload
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import { useAuth } from '@/contexts/useAuth';
 import type { InfluencerPlatform } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import { User, Globe, CreditCard, Settings, Camera, Loader2, CheckCircle } from 'lucide-react';
+const UnifiedAffiliateLink = lazy(() => import('@/components/unified/UnifiedAffiliateLink'));
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { storage, functionsAffiliate } from '@/config/firebase';
@@ -221,32 +222,19 @@ const InfluencerProfile: React.FC = () => {
           )}
         </div>
 
-        {/* Affiliate Codes */}
+        {/* Unified Affiliate Link */}
         <div className={`${UI.card} p-6`}>
           <div className="flex items-center gap-3 mb-4">
             <Settings className="w-5 h-5 text-purple-500" />
             <h2 className="text-lg dark:text-white font-semibold">
-              <FormattedMessage id="influencer.profile.codes" defaultMessage="Codes d'affiliation" />
+              <FormattedMessage id="influencer.profile.affiliateLink" defaultMessage="Mon lien affilié" />
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm dark:text-gray-400">
-                <FormattedMessage id="influencer.profile.clientCode" defaultMessage="Code client (5% remise)" />
-              </label>
-              <p className="text-xl dark:text-red-400 font-mono">
-                {influencer?.affiliateCodeClient}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm dark:text-gray-400">
-                <FormattedMessage id="influencer.profile.recruitCode" defaultMessage="Code recrutement" />
-              </label>
-              <p className="text-xl dark:text-purple-400 font-mono">
-                {influencer?.affiliateCodeRecruitment}
-              </p>
-            </div>
-          </div>
+          {influencer?.affiliateCodeClient && (
+            <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
+              <UnifiedAffiliateLink code={influencer.affiliateCodeClient} />
+            </Suspense>
+          )}
         </div>
 
         {/* Payment Settings */}

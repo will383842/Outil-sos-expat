@@ -26,7 +26,7 @@ import {
 } from './lib/stripe';
 import { PAYMENT_FUNCTIONS_REGION } from './configs/callRegion';
 import { ALLOWED_ORIGINS } from './lib/functionConfigs';
-import { getPartnerDiscount } from './partner/services/partnerDiscountService';
+
 
 /* ────────────────────────────────────────────────────────────────────────────
    (A) LIMITS — placé tout en haut, avant toute utilisation
@@ -940,65 +940,28 @@ export const createPaymentIntent = onCall(
         }
       }
 
-      // ===== RÉDUCTIONS AFFILIÉES (GroupAdmin $5 fixe, Influencer 5%) =====
-      // Appliquées après les coupons, avant la validation stricte du montant.
-      // Le frontend doit calculer le même discount pour envoyer le bon montant.
+      // ===== RÉDUCTIONS AFFILIÉES (Unified System) =====
+      // Uses the unified discount resolver (plan-based, supports all affiliate types).
+      // Amounts: expected is in dollars, resolveAffiliateDiscount works in cents.
       let affiliateDiscountApplied = 0;
       let affiliateDiscountTypeApplied = '';
       try {
-        const clientUserDoc = await db.collection('users').doc(clientId).get();
-        const clientUserData = clientUserDoc.data();
-        if (clientUserData) {
-          if (clientUserData.groupAdminReferredBy) {
-            // GroupAdmin : réduction fixe (defaut $5 = 500 cents)
-            const gaConfigDoc = await db.collection('group_admin_config').doc('current').get();
-            const discountCents: number = (gaConfigDoc.exists && gaConfigDoc.data()?.clientDiscountAmount)
-              ? (gaConfigDoc.data()!.clientDiscountAmount as number)
-              : 500;
-            const discountAmt = Math.min(discountCents / 100, expected);
-            affiliateDiscountApplied = discountAmt;
-            affiliateDiscountTypeApplied = 'groupAdmin';
-            expected = Math.max(0, Math.round((expected - discountAmt) * 100) / 100);
-            logger.info('[createPaymentIntent] GroupAdmin affiliate discount applied', {
-              clientId: clientId?.substring(0, 10),
-              discountAmt,
-              newExpected: expected,
-            });
-          } else if (clientUserData.influencerReferredBy) {
-            // Influencer : réduction en pourcentage (défaut 5%)
-            const inflConfigDoc = await db.collection('influencer_config').doc('current').get();
-            const discountPct: number = (inflConfigDoc.exists && inflConfigDoc.data()?.clientDiscountPercent)
-              ? (inflConfigDoc.data()!.clientDiscountPercent as number)
-              : 5;
-            const discountAmt = Math.min(
-              Math.round((expected * discountPct / 100) * 100) / 100,
-              expected
-            );
-            affiliateDiscountApplied = discountAmt;
-            affiliateDiscountTypeApplied = 'influencer';
-            expected = Math.max(0, Math.round((expected - discountAmt) * 100) / 100);
-            logger.info('[createPaymentIntent] Influencer affiliate discount applied', {
-              clientId: clientId?.substring(0, 10),
-              discountPct,
-              discountAmt,
-              newExpected: expected,
-            });
-          } else if (clientUserData.partnerReferredById) {
-            // Partner : remise fixe ou pourcentage (configurée par partenaire)
-            const partnerDiscountResult = await getPartnerDiscount(clientId, expected);
-            if (partnerDiscountResult.hasDiscount) {
-              affiliateDiscountApplied = partnerDiscountResult.discountAmount;
-              affiliateDiscountTypeApplied = 'partner';
-              expected = partnerDiscountResult.finalPrice;
-              logger.info('[createPaymentIntent] Partner affiliate discount applied', {
-                clientId: clientId?.substring(0, 10),
-                partnerId: partnerDiscountResult.partnerId,
-                partnerCode: partnerDiscountResult.partnerCode,
-                discountAmount: partnerDiscountResult.discountAmount,
-                newExpected: expected,
-              });
-            }
-          }
+        const { resolveAffiliateDiscount } = await import('./unified/discountResolver');
+        const expectedCents = Math.round(expected * 100);
+        const discountResult = await resolveAffiliateDiscount(clientId, expectedCents);
+
+        if (discountResult.hasDiscount) {
+          affiliateDiscountApplied = discountResult.discountAmount / 100; // cents → dollars
+          affiliateDiscountTypeApplied = discountResult.discountType || 'unified';
+          expected = Math.max(0, Math.round((discountResult.finalPrice / 100) * 100) / 100);
+          logger.info('[createPaymentIntent] Unified affiliate discount applied', {
+            clientId: clientId?.substring(0, 10),
+            discountType: discountResult.discountType,
+            discountAmount: affiliateDiscountApplied,
+            referrerId: discountResult.referrerId,
+            planId: discountResult.planId,
+            newExpected: expected,
+          });
         }
       } catch (affiliateErr) {
         // Non-blocking : on ne rejette pas le paiement si la lecture échoue

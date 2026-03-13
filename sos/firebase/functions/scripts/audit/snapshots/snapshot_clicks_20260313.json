@@ -1,0 +1,43 @@
+{
+  "snapshotDate": "2026-03-13T08:51:50.675Z",
+  "summary": {
+    "totalClicks": 29,
+    "totalConverted": 29
+  },
+  "collections": {
+    "chatter_affiliate_clicks": {
+      "total": 28,
+      "converted": 28,
+      "conversionRate": 100,
+      "byType": {
+        "client": {
+          "count": 28,
+          "converted": 28
+        }
+      }
+    },
+    "influencer_affiliate_clicks": {
+      "total": 0,
+      "converted": 0,
+      "conversionRate": 0,
+      "byType": {}
+    },
+    "blogger_affiliate_clicks": {
+      "total": 0,
+      "converted": 0,
+      "conversionRate": 0,
+      "byType": {}
+    },
+    "group_admin_clicks": {
+      "total": 1,
+      "converted": 1,
+      "conversionRate": 100,
+      "byType": {
+        "client": {
+          "count": 1,
+          "converted": 1
+        }
+      }
+    }
+  }
+}

@@ -364,6 +364,7 @@ export {
   onBloggerCommissionCreated,
   onGroupAdminCommissionCreated,
   onAffiliateCommissionCreated,
+  onUnifiedCommissionCreated,
 
   // Triggers - Withdrawals & Provider transfers
   onWithdrawalCompleted,
@@ -3373,3 +3374,36 @@ export { adminIssueManualCommission } from './payment/callables/admin/issueManua
 export { adminMarkWithdrawalAsPaid } from './payment/callables/admin/markWithdrawalAsPaid';
 export { adminTerminateCall } from './callables/adminTerminateCall';
 export { cleanupAuditLogs } from './scheduled/cleanupAuditLogs';
+
+// ====== UNIFIED COMMISSION SYSTEM (Phase 2) ======
+export {
+  adminListCommissionPlans,
+  adminGetCommissionPlan,
+  adminCreateCommissionPlan,
+  adminUpdateCommissionPlan,
+  adminDeleteCommissionPlan,
+  adminAssignPlanToUser,
+  adminRemovePlanFromUser,
+  adminSetUserLockedRates,
+  adminSetUserDiscountConfig,
+} from './unified/callables/adminPlans';
+export { resolveAffiliateDiscountCallable } from './unified/callables/resolveDiscountCallable';
+export { getMyCommissionPlan } from './unified/callables/userPlan';
+export {
+  adminListUnifiedCommissions,
+  adminGetUserCommissionSummary,
+  adminCancelCommission,
+  adminReleaseHeldCommission,
+  adminGetUnifiedDashboardStats,
+  adminGetUnifiedShadowStats,
+  adminToggleUnifiedSystem,
+} from './unified/callables/adminDashboard';
+export {
+  adminSeedDefaultPlans,
+  adminMigrateAffiliateCodes,
+  adminMigrateReferrals,
+  adminGetMigrationStatus,
+} from './unified/callables/adminMigration';
+export {
+  unifiedReleaseHeldCommissions,
+} from './unified/scheduled/releaseHeldCommissions';

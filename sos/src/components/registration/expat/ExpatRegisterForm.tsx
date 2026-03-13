@@ -33,7 +33,7 @@ import { LocaleLink } from '../../../multilingual-system';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { generateEventIdForType } from '@/utils/sharedEventId';
-import { getStoredReferral, clearStoredReferral } from '@/utils/referralStorage';
+import { getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
 
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
@@ -426,6 +426,11 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         ...(referralCode && {
           pendingReferralCode: referralCode.toUpperCase().trim(),
         }),
+        // Unified system: single field for backend referral resolution
+        ...(() => {
+          const unifiedCode = getUnifiedReferralCode();
+          return unifiedCode ? { pendingRecruitmentCode: unifiedCode } : {};
+        })(),
         ...(() => {
           const ref = getStoredReferral('blogger');
           return ref?.codeType === 'provider' ? { providerRecruitedByBlogger: ref.code } : {};
@@ -514,6 +519,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         await setGoogleAdsUserData({ email: form.email, firstName: form.firstName, lastName: form.lastName, country: form.currentPresenceCountry });
         trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
         clearStoredReferral('client');
+        clearUnifiedReferral();
 
         if (onSuccess) {
           onSuccess({ language, country: form.currentPresenceCountry });
@@ -563,6 +569,7 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
       setGoogleAdsUserData({ email: form.email, firstName: form.firstName, lastName: form.lastName, country: form.currentPresenceCountry });
       trackGoogleAdsSignUp({ method: 'email', content_name: 'expat_registration', country: form.currentPresenceCountry });
       clearStoredReferral('client');
+      clearUnifiedReferral();
 
       if (onSuccess) {
         onSuccess({ language, country: form.currentPresenceCountry });

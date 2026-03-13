@@ -35,7 +35,7 @@ import { useApp } from '@/contexts/AppContext';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { phoneCodesData, type PhoneCodeEntry } from '@/data/phone-codes';
-import { clearStoredReferral, getStoredReferral } from '@/utils/referralStorage';
+import { clearStoredReferral, getStoredReferral, clearUnifiedReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
@@ -580,6 +580,7 @@ const InfluencerRegisterForm: React.FC<InfluencerRegisterFormProps> = ({
       if (data.success) {
         setSuccess(true);
         clearStoredReferral('influencer');
+        clearUnifiedReferral();
 
         // Meta Pixel: Track CompleteRegistration + Ad Attribution + Advanced Matching
         trackMetaCompleteRegistration({

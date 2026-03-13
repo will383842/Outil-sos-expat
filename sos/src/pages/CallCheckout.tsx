@@ -3491,59 +3491,71 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
     revalidatePromo();
   }, [serviceData?.serviceType]);
 
-  // Charger le discount affilié depuis le profil Firestore du client
+  // Charger le discount affilié via le callable unifié (Phase 7.4)
+  // Remplace 3 lectures Firestore directes par 1 appel backend
   useEffect(() => {
     if (!user?.uid) return;
     const fetchAffiliateDiscount = async () => {
       try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid!));
-        const userData = userDoc.data();
-        if (userData?.groupAdminReferredBy) {
-          // GroupAdmin : $5 fixe (clientDiscountAmount: 500 cents côté backend)
-          setAffiliateDiscount({
-            type: 'groupAdmin',
-            discountType: 'fixed',
-            discountValue: 5,
-            affiliateCode: String(userData.groupAdminReferredBy),
-          });
-        } else if (userData?.influencerReferredBy) {
-          // Influencer : 5% (clientDiscountPercent: 5 côté backend)
-          setAffiliateDiscount({
-            type: 'influencer',
-            discountType: 'percentage',
-            discountValue: 5,
-            affiliateCode: String(userData.influencerReferredBy),
-          });
-        } else if (userData?.partnerReferredById) {
-          // Partner : remise configurée par partenaire (fixe ou %)
-          try {
-            const partnerDoc = await getDoc(doc(db, 'partners', userData.partnerReferredById));
-            const partnerData = partnerDoc.data();
-            const dc = partnerData?.discountConfig;
-            if (dc?.isActive && partnerData?.status === 'active') {
-              // Vérifier l'expiration côté client (le backend re-vérifie)
-              const notExpired = !dc.expiresAt || dc.expiresAt.toMillis() > Date.now();
-              if (notExpired && dc.value > 0) {
-                setAffiliateDiscount({
-                  type: 'partner',
-                  discountType: dc.type,
-                  discountValue: dc.type === 'fixed' ? dc.value / 100 : dc.value,
-                  maxDiscountCents: dc.maxDiscountCents || undefined,
-                  affiliateCode: partnerData.affiliateCode || '',
-                  label: dc.label || undefined,
-                });
-              }
-            }
-          } catch (partnerErr) {
-            console.error('[CallCheckout] Partner discount lookup failed (non-blocking):', partnerErr);
+        const resolveFn = httpsCallable<
+          { clientId: string; originalPrice: number; serviceType?: string },
+          {
+            hasDiscount: boolean;
+            discountAmount: number;
+            originalPrice: number;
+            finalPrice: number;
+            label?: string;
+            referrerCode?: string;
+            discountType?: 'fixed' | 'percentage';
+            discountValue?: number;
           }
+        >(functionsPayment, 'resolveAffiliateDiscountCallable');
+
+        // Use a representative price for preview (the actual discount is recalculated server-side in createPaymentIntent)
+        const result = await resolveFn({
+          clientId: user.uid!,
+          originalPrice: 5500, // $55 default preview price in cents
+          serviceType: serviceData?.serviceType,
+        });
+
+        const data = result.data;
+        if (data.hasDiscount && data.discountType && data.discountValue !== undefined) {
+          setAffiliateDiscount({
+            type: 'partner', // unified system uses plan-based type
+            discountType: data.discountType,
+            discountValue: data.discountType === 'fixed' ? data.discountValue / 100 : data.discountValue,
+            affiliateCode: data.referrerCode || '',
+            label: data.label || undefined,
+          });
         }
       } catch (err) {
-        console.error('[CallCheckout] Affiliate discount lookup failed (non-blocking):', err);
+        console.error('[CallCheckout] Unified affiliate discount lookup failed (non-blocking):', err);
+        // Fallback: try legacy direct Firestore reads
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid!));
+          const userData = userDoc.data();
+          if (userData?.groupAdminReferredBy) {
+            setAffiliateDiscount({
+              type: 'groupAdmin',
+              discountType: 'fixed',
+              discountValue: 5,
+              affiliateCode: String(userData.groupAdminReferredBy),
+            });
+          } else if (userData?.influencerReferredBy) {
+            setAffiliateDiscount({
+              type: 'influencer',
+              discountType: 'percentage',
+              discountValue: 5,
+              affiliateCode: String(userData.influencerReferredBy),
+            });
+          }
+        } catch {
+          // Silently fail — discount is not critical for checkout
+        }
       }
     };
     fetchAffiliateDiscount();
-  }, [user?.uid]);
+  }, [user?.uid, serviceData?.serviceType]);
 
   useEffect(() => {
     const initializeCurrency = () => {

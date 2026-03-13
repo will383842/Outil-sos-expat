@@ -18,7 +18,7 @@ import { trackAdRegistration } from '../services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '../utils/googleAds';
 import { generateEventIdForType } from '../utils/sharedEventId';
 import { getStoredReferralTracking, clearStoredReferral } from '../hooks/useAffiliate';
-import { getStoredReferralCode as getStoredRefCode, getBestAvailableReferralCode } from '../utils/referralStorage';
+import { getUnifiedReferralCode, clearUnifiedReferral } from '../utils/referralStorage';
 
 import ClientRegisterForm from '../components/registration/client/ClientRegisterForm';
 import { WhatsAppGroupScreen } from '../whatsapp-groups';
@@ -69,7 +69,7 @@ const RegisterClient: React.FC = () => {
   const rawRedirect = redirectFromStorage || redirectFromParams || '/dashboard';
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
-  const referralCode = searchParams.get('ref') || getStoredRefCode('client') || getBestAvailableReferralCode('client') || '';
+  const referralCode = searchParams.get('ref') || getUnifiedReferralCode() || '';
 
   const { register, loginWithGoogle, isLoading, error, user, isFullyReady } = useAuth();
   const { language } = useApp();
@@ -336,6 +336,7 @@ const RegisterClient: React.FC = () => {
       }
       trackGoogleAdsSignUp({ method: 'google', content_name: 'client_registration_google' });
       clearStoredReferral();
+      clearUnifiedReferral();
     } catch (err) {
       if (googleTimeoutRef.current) {
         window.clearTimeout(googleTimeoutRef.current);
@@ -365,7 +366,7 @@ const RegisterClient: React.FC = () => {
     await setPersistence(auth, browserLocalPersistence);
     await register(userData as Parameters<typeof register>[0], password);
     clearStoredReferral();
-    try { sessionStorage.removeItem('pendingReferralCode'); } catch { /* noop */ }
+    clearUnifiedReferral();
   }, [register]);
 
   // ===========================================================================

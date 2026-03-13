@@ -102,8 +102,18 @@ export const consolidatedOnUserCreated = onDocumentCreated(
       }
     };
 
+    // Check if the unified system is enabled — if so, skip legacy commission handlers
+    let unifiedEnabled = false;
+    try {
+      const { getSystemConfig } = await import("../unified/commissionCalculator");
+      const config = await getSystemConfig();
+      unifiedEnabled = config.enabled && !config.shadowMode;
+    } catch {
+      // If we can't read config, fall back to legacy handlers
+    }
+
     // VAGUE 1: Handlers critiques (Claims + Telegram + Affiliate) — tous indépendants
-    await Promise.all([
+    const wave1: Promise<void>[] = [
       safeRun("telegram", async () => {
         const { handleTelegramUserRegistration } = await import("../telegram/triggers/onUserRegistration");
         await handleTelegramUserRegistration(event);
@@ -112,35 +122,49 @@ export const consolidatedOnUserCreated = onDocumentCreated(
         const { handleSyncClaimsCreated } = await import("./syncRoleClaims");
         await handleSyncClaimsCreated(event);
       }),
-      safeRun("affiliate", async () => {
-        const { handleAffiliateUserCreated } = await import("../affiliate/triggers/onUserCreated");
-        await handleAffiliateUserCreated(event);
-      }),
-    ]);
+    ];
 
-    // VAGUE 2: Referral tracking handlers — tous indépendants entre eux
-    await Promise.all([
-      safeRun("chatterProvider", async () => {
-        const { handleChatterProviderRegistered } = await import("../chatter/triggers/onProviderRegistered");
-        await handleChatterProviderRegistered(event);
-      }),
-      safeRun("chatterClient", async () => {
-        const { handleChatterClientRegistered } = await import("../chatter/triggers/onProviderRegistered");
-        await handleChatterClientRegistered(event);
-      }),
-      safeRun("influencer", async () => {
-        const { handleInfluencerProviderRegistered } = await import("../influencer/triggers/onProviderRegistered");
-        await handleInfluencerProviderRegistered(event);
-      }),
-      safeRun("bloggerProvider", async () => {
-        const { handleBloggerProviderRegistered } = await import("../blogger/triggers/onProviderRegistered");
-        await handleBloggerProviderRegistered(event);
-      }),
-      safeRun("groupAdminProvider", async () => {
-        const { handleGroupAdminProviderRegistered } = await import("../groupAdmin/triggers/onProviderRegistered");
-        await handleGroupAdminProviderRegistered(event);
-      }),
-    ]);
+    // Legacy affiliate handler only when unified system is NOT active
+    if (!unifiedEnabled) {
+      wave1.push(
+        safeRun("affiliate", async () => {
+          const { handleAffiliateUserCreated } = await import("../affiliate/triggers/onUserCreated");
+          await handleAffiliateUserCreated(event);
+        })
+      );
+    } else {
+      results.affiliate = "skipped (unified system active)";
+    }
+
+    await Promise.all(wave1);
+
+    // VAGUE 2: Referral tracking handlers — skip when unified system is active
+    if (!unifiedEnabled) {
+      await Promise.all([
+        safeRun("chatterProvider", async () => {
+          const { handleChatterProviderRegistered } = await import("../chatter/triggers/onProviderRegistered");
+          await handleChatterProviderRegistered(event);
+        }),
+        safeRun("chatterClient", async () => {
+          const { handleChatterClientRegistered } = await import("../chatter/triggers/onProviderRegistered");
+          await handleChatterClientRegistered(event);
+        }),
+        safeRun("influencer", async () => {
+          const { handleInfluencerProviderRegistered } = await import("../influencer/triggers/onProviderRegistered");
+          await handleInfluencerProviderRegistered(event);
+        }),
+        safeRun("bloggerProvider", async () => {
+          const { handleBloggerProviderRegistered } = await import("../blogger/triggers/onProviderRegistered");
+          await handleBloggerProviderRegistered(event);
+        }),
+        safeRun("groupAdminProvider", async () => {
+          const { handleGroupAdminProviderRegistered } = await import("../groupAdmin/triggers/onProviderRegistered");
+          await handleGroupAdminProviderRegistered(event);
+        }),
+      ]);
+    } else {
+      results.legacyRegistration = "skipped (unified system active)";
+    }
 
     // VAGUE 3: Tracking externe (Email, Google Ads, Meta CAPI) — tous indépendants
     await Promise.all([
@@ -157,6 +181,52 @@ export const consolidatedOnUserCreated = onDocumentCreated(
         await handleCAPIRegistration(event);
       }),
     ]);
+
+    // ========== UNIFIED COMMISSION SYSTEM ==========
+    // Config-driven: reads enabled/shadowMode from unified_commission_system/config.
+    try {
+      const { calculateAndCreateCommissions } = await import(
+        "../unified/commissionCalculator"
+      );
+
+      const userData = event.data?.data();
+      if (userData) {
+        const role = (userData.role || userData.affiliateRole || "client") as string;
+        const isProvider = role === "lawyer" || role === "expat" || role === "provider";
+
+        // 1. User registered event (always)
+        const userResult = await calculateAndCreateCommissions({
+          type: "user_registered",
+          userId,
+          role,
+          referralCode: (userData.referralCode || userData.pendingReferralCode || userData.referredByCode) as string | undefined,
+          referralCapturedAt: userData.referralCapturedAt as string | undefined,
+        });
+        results.unifiedUserRegistered = userResult ? "ok" : "disabled";
+
+        // 2. Provider registered event (only for providers)
+        if (isProvider) {
+          const providerResult = await calculateAndCreateCommissions({
+            type: "provider_registered",
+            userId,
+            providerType: (role === "lawyer" ? "lawyer" : "expat") as "lawyer" | "expat",
+            recruitmentCode: userData.recruitmentCode as string | undefined,
+            providerRecruitedByChatter: userData.providerRecruitedByChatter as string | undefined,
+            providerRecruitedByBlogger: userData.providerRecruitedByBlogger as string | undefined,
+            recruitedByInfluencer: userData.recruitedByInfluencer as boolean | undefined,
+            influencerCode: userData.influencerCode as string | undefined,
+            providerRecruitedByGroupAdmin: userData.providerRecruitedByGroupAdmin as string | undefined,
+          });
+          results.unifiedProviderRegistered = providerResult ? "ok" : "disabled";
+        }
+      }
+    } catch (error) {
+      results.unified = `error: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error("[consolidatedOnUserCreated] Unified handler failed", {
+        userId,
+        error,
+      });
+    }
 
     logger.info("[consolidatedOnUserCreated] All handlers completed", {
       userId,

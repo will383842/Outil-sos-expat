@@ -27,7 +27,7 @@ import ProviderOnlineManager from './components/providers/ProviderOnlineManager'
 import { useFCM } from './hooks/useFCM';
 // AFFILIATE: Capture referral codes from URL
 import { useReferralCapture } from './hooks/useAffiliate';
-import { migrateFromLegacyStorage, storeReferralCode } from './utils/referralStorage';
+import { migrateFromLegacyStorage, storeReferralCode, storeUnifiedReferral } from './utils/referralStorage';
 import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
 import { captureAffiliateRef, setAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
@@ -766,6 +766,29 @@ const AffiliatePathCapture: React.FC<{
   return <Navigate to={destination} replace />;
 };
 
+/**
+ * UnifiedAffiliateCapture — Phase 7 unified `/r/:code` route handler.
+ *
+ * Stores the code via the unified system (role-agnostic) and redirects to home.
+ * Keeps old /ref/ /rec/ /prov/ routes working (backward compatibility).
+ */
+const UnifiedAffiliateCapture: React.FC = () => {
+  const { code } = useParams<{ code: string }>();
+  const { language } = useApp();
+
+  if (code) {
+    const upperCode = code.toUpperCase();
+    storeUnifiedReferral(upperCode, {
+      landingPage: window.location.pathname,
+    });
+    setAffiliateRef(upperCode);
+  }
+
+  const locale = getLocaleString(language);
+  const search = window.location.search || '';
+  return <Navigate to={`/${locale}${search}`} replace />;
+};
+
 // --------------------------------------------
 // App
 // --------------------------------------------
@@ -1086,6 +1109,11 @@ const App: React.FC = () => {
                     /prov/ga/:code→ group-admin provider recruitment (stores as actorType=groupAdmin, codeType=provider)
                     Static segments rank higher than /:x/:y/:z in React Router v6,
                     so these routes win over the catch-all provider routes below automatically. */}
+                {/* UNIFIED affiliate link (Phase 7): /r/:code — role-agnostic, single short URL */}
+                <Route path="/r/:code" element={<UnifiedAffiliateCapture />} />
+                <Route path="/:locale/r/:code" element={<UnifiedAffiliateCapture />} />
+
+                {/* LEGACY affiliate links (kept for backward compatibility) */}
                 {/* Without locale prefix (direct links like /ref/c/CODE) */}
                 <Route path="/ref/b/:code" element={<AffiliatePathCapture actorType="client" codeType="client" />} />
                 <Route path="/rec/b/:code" element={<AffiliatePathCapture actorType="blogger" codeType="recruitment" redirectPath="/blogger/inscription" />} />

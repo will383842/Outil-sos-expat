@@ -2808,6 +2808,8 @@
   "admin.menu.clients.description": "Utilisateurs clients",
   "admin.menu.commissionPlans": "Plans de Commission",
   "admin.menu.commissionPlans.description": "Gestion des plans à vie (Lifetime Rate Lock)",
+  "admin.menu.unifiedCommissions": "Commissions Unifiées",
+  "admin.menu.unifiedCommissions.description": "Système unifié de commissions, plans, taux et overrides individuels",
   "admin.menu.commissionRules": "Règles de Commissions",
   "admin.menu.commissionRules.description": "Configuration des taux de commission",
   "admin.menu.connectionLogs": "Logs de connexion",

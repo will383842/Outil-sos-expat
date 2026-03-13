@@ -4,11 +4,12 @@
  * payment methods management, and Telegram connection.
  */
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, lazy } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useAuth } from '@/contexts/useAuth';
 import { ChatterDashboardLayout } from '@/components/Chatter/Layout';
+const UnifiedAffiliateLink = lazy(() => import('@/components/unified/UnifiedAffiliateLink'));
 import { User, Camera, Loader2, CheckCircle, Shield, Globe, Mail, MapPin, CreditCard, Plus, MessageCircle, ExternalLink, Trash2, ChevronDown, ChevronUp, Copy, Pencil, Check, X, LogOut, Phone, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
@@ -574,48 +575,17 @@ const ChatterProfileContent: React.FC = () => {
           )}
         </CollapsibleSection>
 
-        {/* Affiliate Codes */}
+        {/* Unified Affiliate Link */}
         <CollapsibleSection
-          title={<FormattedMessage id="chatter.profile.affiliateCodes" defaultMessage="Mes codes affiliés" />}
+          title={<FormattedMessage id="chatter.profile.affiliateLink" defaultMessage="Mon lien affilié" />}
           icon={<Copy className="w-5 h-5 text-indigo-500" />}
           defaultOpen={false}
         >
-          <div className="space-y-3">
-            {[
-              { key: 'affiliateCodeClient', labelId: 'chatter.profile.codeClient', labelDefault: 'Code Client' },
-              { key: 'affiliateCodeRecruitment', labelId: 'chatter.profile.codeRecruitment', labelDefault: 'Code Recrutement' },
-              { key: 'affiliateCodeProvider', labelId: 'chatter.profile.codeProvider', labelDefault: 'Code Prestataire' },
-            ].map(({ key, labelId, labelDefault }) => {
-              const code = (chatter as any)[key] as string | undefined;
-              if (!code) return null;
-              return (
-                <div
-                  key={key}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"
-                >
-                  <div className="min-w-0">
-                    <label className={`${TYPOGRAPHY.label} block`}>
-                      <FormattedMessage id={labelId} defaultMessage={labelDefault} />
-                    </label>
-                    <p className={`${TYPOGRAPHY.affiliateCode} text-slate-900 dark:text-white truncate`}>{code}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const ok = await copyToClipboard(code);
-                      if (ok) {
-                        toast.success(intl.formatMessage({ id: 'chatter.profile.codeCopied', defaultMessage: 'Code copied!' }));
-                      }
-                    }}
-                    className={`${UI.button.ghost} p-2 flex-shrink-0`}
-                    aria-label={intl.formatMessage({ id: 'chatter.profile.copyCode', defaultMessage: 'Copy code' })}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+          {chatter?.affiliateCodeClient && (
+            <React.Suspense fallback={<div className="h-20 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
+              <UnifiedAffiliateLink code={chatter.affiliateCodeClient} />
+            </React.Suspense>
+          )}
         </CollapsibleSection>
 
         {/* Platforms */}
