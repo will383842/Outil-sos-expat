@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Briefcase, Database, ExternalLink, Flame, Link2, Mail, Send, Server, Settings, Users, Wrench } from "lucide-react";
+import { Bot, Briefcase, Database, ExternalLink, Flame, Link2, Mail, MessageSquare, Send, Server, Settings, Star, Users, UserSearch, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -13,6 +13,9 @@ const SCRAPER_PRO_URL = "https://scraper.providers-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
 const JOB_ADS_TRACKER_URL = "/tools/suivi-annonces-emploi.html";
+const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
+const TRUSTPILOT_MEMBERS_URL = "https://trustpilot.life-expat.com";
+const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
 
 interface ToolCard {
   id: string;
@@ -115,6 +118,33 @@ const tools: ToolCard[] = [
     url: JOB_ADS_TRACKER_URL,
     icon: <Briefcase className="h-8 w-8" />,
     color: "bg-teal-600",
+    status: "live",
+  },
+  {
+    id: "influenceurs-tracker",
+    titleKey: "Influenceurs Tracker",
+    descriptionKey: "Suivi et gestion des influenceurs, contacts, rappels et statistiques",
+    url: INFLUENCEURS_TRACKER_URL,
+    icon: <UserSearch className="h-8 w-8" />,
+    color: "bg-pink-600",
+    status: "live",
+  },
+  {
+    id: "trustpilot-members",
+    titleKey: "Trustpilot Members",
+    descriptionKey: "Gestion des membres Trustpilot, groupes WhatsApp et messages GPT",
+    url: TRUSTPILOT_MEMBERS_URL,
+    icon: <Star className="h-8 w-8" />,
+    color: "bg-green-600",
+    status: "live",
+  },
+  {
+    id: "whatsapp-campaigns",
+    titleKey: "WhatsApp Campaigns",
+    descriptionKey: "Campagnes WhatsApp multilingues, séries programmées et suivi d'envois",
+    url: WHATSAPP_CAMPAIGNS_URL,
+    icon: <MessageSquare className="h-8 w-8" />,
+    color: "bg-green-700",
     status: "live",
   },
 ];
