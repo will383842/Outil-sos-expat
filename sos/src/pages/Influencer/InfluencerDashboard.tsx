@@ -450,14 +450,14 @@ const InfluencerDashboard: React.FC = () => {
               <FormattedMessage id="influencer.dashboard.subtitle" defaultMessage="Voici un aperçu de vos performances" />
               {isRefreshing && <RefreshCw className="w-4 h-4 animate-spin" />}
             </p>
-            {influencer?.monthlyTopMultiplier && influencer.monthlyTopMultiplier > 1.0 && (
+            {influencer?.currentMonthRank && influencer.currentMonthRank <= 3 && (
               <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-100 dark:from-yellow-900/30 to-amber-100 dark:to-amber-900/30 border dark:border-yellow-800">
                 <Sparkles className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                 <span className="text-xs dark:text-yellow-300 font-semibold">
                   <FormattedMessage
-                    id="influencer.dashboard.bonusActive"
-                    defaultMessage="Bonus Top 3 actif : x{multiplier}"
-                    values={{ multiplier: influencer.monthlyTopMultiplier.toFixed(2) }}
+                    id="influencer.dashboard.top3Active"
+                    defaultMessage="Top {rank} du mois dernier !"
+                    values={{ rank: influencer.currentMonthRank }}
                   />
                 </span>
               </div>

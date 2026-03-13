@@ -268,11 +268,6 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
                 {levelConfig.bonusLabel}
               </span>
             )}
-            {monthlyTopMultiplier && monthlyTopMultiplier > 1.0 && (
-              <span className="text-xs dark:text-yellow-400 font-semibold px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 animate-pulse">
-                x{monthlyTopMultiplier.toFixed(2)}
-              </span>
-            )}
           </h3>
           <p className="text-xs dark:text-gray-700 sm:text-sm">
             <FormattedMessage

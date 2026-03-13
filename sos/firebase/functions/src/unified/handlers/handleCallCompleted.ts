@@ -148,12 +148,7 @@ async function processDirectCommission(
     rateApplied = amount;
   }
 
-  // 6. Apply monthlyTopMultiplier (influencers)
-  let multiplierApplied: number | undefined;
-  if (referrer.monthlyTopMultiplier && referrer.monthlyTopMultiplier > 1) {
-    multiplierApplied = referrer.monthlyTopMultiplier;
-    amount = Math.round(amount * multiplierApplied);
-  }
+  // 6. Multipliers permanently disabled — commissions are fixed amounts only
 
   if (amount <= 0) return { referrerId: referrer.userId, referrerOfReferrer: null, plan };
 

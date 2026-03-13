@@ -4,7 +4,7 @@
  * Features:
  * - Calculates monthly rankings based on totalEarned during the month
  * - Awards CASH BONUSES to Top 3 performers
- * - Eligibility: minimum $200 in cumulated commissions (chatter + team, all types combined)
+ * - Eligibility: minimum $200 in MONTHLY earnings (current month, not cumulated total)
  * - Updates currentMonthRank on chatters for the new month
  * - Stores rankings history in chatter_monthly_rankings collection
  *
@@ -15,7 +15,7 @@
  * - Top 2: $100 (10000 cents)
  * - Top 3: $50 (5000 cents)
  *
- * Eligibility: Chatter must have >= $200 in totalEarned (all commissions combined: direct + team)
+ * Eligibility: Chatter must have >= $200 in monthly earnings (current month only)
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -37,7 +37,7 @@ const MONTHLY_TOP3_CASH_BONUS: Record<number, number> = {
   3: 5000,  // $50
 };
 
-/** Minimum cumulated commissions (chatter + team, all types) in cents to be eligible for Top 3 bonus */
+/** Minimum MONTHLY earnings in cents to be eligible for Top 3 bonus */
 const MONTHLY_TOP3_MIN_ELIGIBILITY = 20000; // $200
 
 // ============================================================================
@@ -221,7 +221,7 @@ async function calculateMonthlyRankings(monthId: string): Promise<MonthlyChatter
  * - Top 2: $100 cash bonus
  * - Top 3: $50 cash bonus
  *
- * Eligibility: chatter must have >= $200 cumulated commissions (all types combined)
+ * Eligibility: chatter must have >= $200 in monthly earnings (current month)
  * Creates a bonus_top3 commission credited to availableBalance
  */
 async function awardTop3Bonuses(
@@ -255,12 +255,12 @@ async function awardTop3Bonuses(
 
     const chatter = chatterDoc.data() as Chatter;
 
-    // Check eligibility: minimum $200 in cumulated commissions (chatter + team, all types)
-    if ((chatter.totalEarned || 0) < MONTHLY_TOP3_MIN_ELIGIBILITY) {
-      logger.info("[awardTop3Bonuses] Chatter not eligible (totalEarned below minimum)", {
+    // Check eligibility: minimum $200 in MONTHLY earnings (not cumulated total)
+    if (chatterStats.monthlyEarnings < MONTHLY_TOP3_MIN_ELIGIBILITY) {
+      logger.info("[awardTop3Bonuses] Chatter not eligible (monthlyEarnings below minimum)", {
         rank,
         chatterId: chatterStats.chatterId,
-        totalEarned: chatter.totalEarned || 0,
+        monthlyEarnings: chatterStats.monthlyEarnings,
         minRequired: MONTHLY_TOP3_MIN_ELIGIBILITY,
       });
       continue;

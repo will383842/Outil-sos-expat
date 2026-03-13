@@ -9,7 +9,7 @@
 
 import React, { lazy, Suspense } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Users, Phone, UserPlus, Award, Percent, DollarSign } from 'lucide-react';
+import { Users, Phone, UserPlus, Award, Percent, DollarSign, Trophy } from 'lucide-react';
 
 const UnifiedAffiliateLink = lazy(() => import('./UnifiedAffiliateLink'));
 
@@ -39,8 +39,7 @@ function getEarningsForRole(role: AffiliateRole): EarningRule[] {
     case 'captainChatter':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCall', labelDefault: 'Appel client (avocat ou aidant)', value: '$10', highlight: true },
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n1Call', labelDefault: 'Appel filleul N1 (votre recrue)', value: '$1', sub: '/appel' },
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n2Call', labelDefault: 'Appel filleul N2 (recrue de recrue)', value: '$0.50', sub: '/appel' },
         { icon: <Award className={iconClass} />, labelId: 'unified.earnings.activation', labelDefault: "Bonus activation (2e appel d'une recrue)", value: '$5', highlight: true },
@@ -48,30 +47,29 @@ function getEarningsForRole(role: AffiliateRole): EarningRule[] {
         ...(role === 'captainChatter' ? [
           { icon: <Award className={iconClass} />, labelId: 'unified.earnings.captainCall', labelDefault: "Appel d'un membre d'équipe", value: '$3', sub: '/appel' },
         ] : []),
+        { icon: <Trophy className={iconClass} />, labelId: 'unified.earnings.top3', labelDefault: 'Top 3 mensuel (si +$200/mois)', value: '$200/$100/$50', highlight: true },
       ];
 
     case 'influencer':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCall', labelDefault: 'Appel client (avocat ou aidant)', value: '$10', highlight: true },
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.providerRecruit', labelDefault: 'Recrutement prestataire', value: '$5/$3', sub: 'avocat/aidant, 6 mois' },
         { icon: <Percent className={iconClass} />, labelId: 'unified.earnings.clientDiscount', labelDefault: 'Remise pour vos clients', value: '-5%', highlight: true },
+        { icon: <Trophy className={iconClass} />, labelId: 'unified.earnings.top3', labelDefault: 'Top 3 mensuel (si +$200/mois)', value: '$200/$100/$50', highlight: true },
       ];
 
     case 'blogger':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCall', labelDefault: 'Appel client (avocat ou aidant)', value: '$10', highlight: true },
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.providerRecruit', labelDefault: 'Recrutement prestataire', value: '$5/$3', sub: 'avocat/aidant, 6 mois' },
       ];
 
     case 'groupAdmin':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCall', labelDefault: 'Appel client (avocat ou aidant)', value: '$10', highlight: true },
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n1Call', labelDefault: 'Appel filleul N1 (votre recrue)', value: '$1', sub: '/appel' },
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n2Call', labelDefault: 'Appel filleul N2 (recrue de recrue)', value: '$0.50', sub: '/appel' },
         { icon: <Award className={iconClass} />, labelId: 'unified.earnings.activation', labelDefault: "Bonus activation (2e appel d'une recrue)", value: '$5', highlight: true },

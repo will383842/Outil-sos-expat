@@ -1,17 +1,19 @@
 /**
- * Monthly Top 3 Rewards Scheduled Function
+ * Monthly Top 3 Rewards Scheduled Function (Influencer)
  *
  * Runs on the 1st of each month at 00:45 UTC.
  * Calculates rankings from the previous month and awards
- * commission multipliers to the top 3 influencers.
+ * CASH BONUSES to the top 3 influencers.
  *
- * Top 1: 2.00x multiplier for the next month
- * Top 2: 1.50x multiplier for the next month
- * Top 3: 1.15x multiplier for the next month
+ * Top 1: $200 cash bonus
+ * Top 2: $100 cash bonus
+ * Top 3: $50 cash bonus
+ *
+ * Eligibility: minimum $200 in MONTHLY earnings (current month only)
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -23,6 +25,16 @@ function ensureInitialized() {
     initializeApp();
   }
 }
+
+/** Cash bonus amounts for Top 3 (in cents) */
+const MONTHLY_TOP3_CASH_BONUS: Record<number, number> = {
+  1: 20000, // $200
+  2: 10000, // $100
+  3: 5000,  // $50
+};
+
+/** Minimum MONTHLY earnings in cents to be eligible for Top 3 bonus */
+const MONTHLY_TOP3_MIN_ELIGIBILITY = 20000; // $200
 
 /**
  * Calculate and apply monthly Top 3 rewards
@@ -51,11 +63,9 @@ export const influencerMonthlyTop3Rewards = onSchedule(
     const now = new Date();
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const previousMonthStr = prevMonth.toISOString().substring(0, 7); // YYYY-MM
-    const currentMonthStr = now.toISOString().substring(0, 7);
 
     logger.info("[influencerMonthlyTop3Rewards] Processing", {
       previousMonth: previousMonthStr,
-      currentMonth: currentMonthStr,
     });
 
     try {
@@ -65,7 +75,6 @@ export const influencerMonthlyTop3Rewards = onSchedule(
         .where("status", "==", "active")
         .get();
 
-      // Filter influencers who had earnings in the previous month
       const rankedInfluencers: {
         id: string;
         name: string;
@@ -76,7 +85,6 @@ export const influencerMonthlyTop3Rewards = onSchedule(
       for (const doc of influencersSnapshot.docs) {
         const influencer = doc.data() as Influencer;
 
-        // Check if their currentMonthStats match the previous month
         if (
           influencer.currentMonthStats &&
           influencer.currentMonthStats.month === previousMonthStr &&
@@ -115,78 +123,98 @@ export const influencerMonthlyTop3Rewards = onSchedule(
         calculatedAt: Timestamp.now(),
       });
 
-      // 4. Apply multipliers to top 3
-      const multipliers = [
-        config.top1BonusMultiplier,
-        config.top2BonusMultiplier,
-        config.top3BonusMultiplier,
-      ];
-
+      // 4. Award CASH BONUSES to top 3 (no multipliers)
       for (let i = 0; i < Math.min(3, rankedInfluencers.length); i++) {
         const ranked = rankedInfluencers[i];
-        const multiplier = multipliers[i];
+        const rank = i + 1;
+        const bonusAmount = MONTHLY_TOP3_CASH_BONUS[rank];
 
+        if (!bonusAmount) continue;
+
+        // Check eligibility: minimum $200 in MONTHLY earnings
+        if (ranked.earnings < MONTHLY_TOP3_MIN_ELIGIBILITY) {
+          logger.info("[influencerMonthlyTop3Rewards] Not eligible (monthly earnings below minimum)", {
+            rank,
+            influencerId: ranked.id,
+            monthlyEarnings: ranked.earnings,
+            minRequired: MONTHLY_TOP3_MIN_ELIGIBILITY,
+          });
+          continue;
+        }
+
+        const bonusDollars = (bonusAmount / 100).toFixed(0);
+
+        // Create cash bonus commission
+        const commissionRef = db.collection("influencer_commissions").doc();
+        await commissionRef.set({
+          id: commissionRef.id,
+          influencerId: ranked.id,
+          type: "bonus_top3",
+          sourceType: "bonus",
+          sourceDetails: {
+            bonusType: "monthly_top3",
+            bonusReason: `Top ${rank} du mois ${previousMonthStr} — prime de $${bonusDollars}`,
+            rank,
+            month: previousMonthStr,
+          },
+          baseAmount: bonusAmount,
+          amount: bonusAmount,
+          description: `Prime mensuelle Top ${rank} — $${bonusDollars}`,
+          calculationDetails: `Prime Top ${rank}: $${bonusDollars}`,
+          currency: "USD",
+          status: "available",
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          availableAt: Timestamp.now(),
+        });
+
+        // Credit balance immediately
         await db.collection("influencers").doc(ranked.id).update({
-          monthlyTopMultiplier: multiplier,
-          monthlyTopMultiplierMonth: currentMonthStr,
-          currentMonthRank: i + 1,
-          bestRank: i + 1, // Will be min'd with existing on read
+          availableBalance: FieldValue.increment(bonusAmount),
+          totalEarned: FieldValue.increment(bonusAmount),
+          currentMonthRank: rank,
           updatedAt: Timestamp.now(),
         });
 
         // Create notification
         const notificationRef = db.collection("influencer_notifications").doc();
-        const rankLabel = i === 0 ? "1er" : i === 1 ? "2ème" : "3ème";
+        const rankLabel = rank === 1 ? "1er" : `${rank}ème`;
 
         await notificationRef.set({
           id: notificationRef.id,
           influencerId: ranked.id,
           type: "top3_reward",
-          title: `Top ${i + 1} du mois !`,
-          titleTranslations: { en: `Monthly Top ${i + 1}!` },
-          message: `Félicitations ! Vous êtes ${rankLabel} du classement de ${previousMonthStr}. Vous bénéficiez d'un bonus x${multiplier.toFixed(2)} sur vos commissions ce mois-ci.`,
+          title: `Top ${rank} du mois — $${bonusDollars} !`,
+          titleTranslations: { en: `Monthly Top ${rank} — $${bonusDollars}!` },
+          message: `Félicitations ! Vous êtes ${rankLabel} du classement de ${previousMonthStr}. Une prime de $${bonusDollars} a été créditée sur votre solde !`,
           messageTranslations: {
-            en: `Congratulations! You ranked #${i + 1} in ${previousMonthStr}. You receive a x${multiplier.toFixed(2)} bonus on your commissions this month.`,
+            en: `Congratulations! You ranked #${rank} in ${previousMonthStr}. A $${bonusDollars} bonus has been credited to your balance!`,
           },
           actionUrl: "/influencer/classement",
           isRead: false,
           emailSent: false,
-          data: {
-            rank: i + 1,
-            month: previousMonthStr,
-            multiplier,
-            earnings: ranked.earnings,
-          },
+          data: { rank, month: previousMonthStr, bonusAmount },
           createdAt: Timestamp.now(),
         });
 
-        logger.info("[influencerMonthlyTop3Rewards] Reward applied", {
-          rank: i + 1,
+        logger.info("[influencerMonthlyTop3Rewards] Cash bonus awarded", {
+          rank,
           influencerId: ranked.id,
-          multiplier,
-          earnings: ranked.earnings,
+          bonusAmount,
         });
       }
 
-      // 5. Reset monthlyTopMultiplier for all OTHER influencers
-      // (those who were top 3 last month but not this month)
+      // 5. Reset currentMonthRank for non-top-3
       const batch = db.batch();
       let resetCount = 0;
 
       for (const doc of influencersSnapshot.docs) {
         const influencer = doc.data() as Influencer;
-        const isTop3ThisMonth = rankedInfluencers
-          .slice(0, 3)
-          .some((r) => r.id === doc.id);
+        const isTop3 = rankedInfluencers.slice(0, 3).some((r) => r.id === doc.id);
 
-        if (
-          !isTop3ThisMonth &&
-          influencer.monthlyTopMultiplier &&
-          influencer.monthlyTopMultiplier > 1.0
-        ) {
+        if (!isTop3 && influencer.currentMonthRank) {
           batch.update(doc.ref, {
-            monthlyTopMultiplier: 1.0,
-            monthlyTopMultiplierMonth: null,
+            currentMonthRank: null,
             updatedAt: Timestamp.now(),
           });
           resetCount++;
@@ -201,7 +229,7 @@ export const influencerMonthlyTop3Rewards = onSchedule(
         month: previousMonthStr,
         totalParticipants: rankedInfluencers.length,
         top3Applied: Math.min(3, rankedInfluencers.length),
-        multiplierResets: resetCount,
+        ranksReset: resetCount,
       });
     } catch (error) {
       logger.error("[influencerMonthlyTop3Rewards] Error", { error });
