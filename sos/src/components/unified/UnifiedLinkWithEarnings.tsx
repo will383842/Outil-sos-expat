@@ -39,8 +39,8 @@ function getEarningsForRole(role: AffiliateRole): EarningRule[] {
     case 'captainChatter':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$10' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$5' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n1Call', labelDefault: 'Appel filleul N1 (votre recrue)', value: '$1', sub: '/appel' },
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n2Call', labelDefault: 'Appel filleul N2 (recrue de recrue)', value: '$0.50', sub: '/appel' },
         { icon: <Award className={iconClass} />, labelId: 'unified.earnings.activation', labelDefault: "Bonus activation (2e appel d'une recrue)", value: '$5', highlight: true },
@@ -53,8 +53,8 @@ function getEarningsForRole(role: AffiliateRole): EarningRule[] {
     case 'influencer':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$10' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$5' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.providerRecruit', labelDefault: 'Recrutement prestataire', value: '$5/$3', sub: 'avocat/aidant, 6 mois' },
         { icon: <Percent className={iconClass} />, labelId: 'unified.earnings.clientDiscount', labelDefault: 'Remise pour vos clients', value: '-5%', highlight: true },
       ];
@@ -62,8 +62,8 @@ function getEarningsForRole(role: AffiliateRole): EarningRule[] {
     case 'blogger':
       return [
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$10' },
-        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$5' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallLawyer', labelDefault: 'Appel client (avocat)', value: '$5' },
+        { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCallExpat', labelDefault: 'Appel client (aidant)', value: '$3' },
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.providerRecruit', labelDefault: 'Recrutement prestataire', value: '$5/$3', sub: 'avocat/aidant, 6 mois' },
       ];
 

@@ -114,7 +114,7 @@ export const CHATTER_V1: PlanSeedData = {
   isDefault: true,
   rules: {
     signup_bonus: { enabled: true, amount: 200 },
-    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 1000, expat: 500 } },
+    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 500, expat: 300 } },
     recruitment_call: { enabled: true, depth: 2, depthAmounts: [100, 50] },
     activation_bonus: { enabled: true, amount: 500, afterNthCall: 2 },
     provider_recruitment: { enabled: true, amounts: { lawyer: 500, expat: 300 }, windowMonths: 6 },
@@ -168,7 +168,7 @@ export const CAPTAIN_V1: PlanSeedData = {
   rules: {
     // Same base as chatter
     signup_bonus: { enabled: true, amount: 200 },
-    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 1000, expat: 500 } },
+    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 500, expat: 300 } },
     recruitment_call: { enabled: true, depth: 2, depthAmounts: [100, 50] },
     activation_bonus: { enabled: true, amount: 500, afterNthCall: 2 },
     provider_recruitment: { enabled: true, amounts: { lawyer: 500, expat: 300 }, windowMonths: 6 },
@@ -192,15 +192,15 @@ export const CAPTAIN_V1: PlanSeedData = {
       enabled: true,
       callAmount: 300,
       tiers: [
-        { name: "Bronze", minTeamCalls: 50, bonusAmount: 2500 },
-        { name: "Argent", minTeamCalls: 100, bonusAmount: 5000 },
-        { name: "Or", minTeamCalls: 200, bonusAmount: 10000 },
-        { name: "Platine", minTeamCalls: 500, bonusAmount: 20000 },
-        { name: "Diamant", minTeamCalls: 1000, bonusAmount: 40000 },
+        { name: "Bronze", minTeamCalls: 20, bonusAmount: 2500 },
+        { name: "Argent", minTeamCalls: 50, bonusAmount: 5000 },
+        { name: "Or", minTeamCalls: 100, bonusAmount: 10000 },
+        { name: "Platine", minTeamCalls: 200, bonusAmount: 20000 },
+        { name: "Diamant", minTeamCalls: 400, bonusAmount: 40000 },
       ],
       qualityBonus: {
         enabled: true,
-        amount: 2000,
+        amount: 10000,
         minActiveRecruits: 10,
         minTeamCommissions: 10000,
       },
@@ -238,7 +238,7 @@ export const INFLUENCER_V1: PlanSeedData = {
   isDefault: true,
   rules: {
     signup_bonus: { enabled: true, amount: 200 },
-    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 1000, expat: 500 } },
+    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 500, expat: 300 } },
     recruitment_call: DISABLED_RECRUITMENT,
     activation_bonus: DISABLED_ACTIVATION,
     provider_recruitment: { enabled: true, amounts: { lawyer: 500, expat: 300 }, windowMonths: 6 },
@@ -285,7 +285,7 @@ export const BLOGGER_V1: PlanSeedData = {
   isDefault: true,
   rules: {
     signup_bonus: { enabled: true, amount: 200 },
-    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 1000, expat: 500 } },
+    client_call: { enabled: true, type: "fixed", amounts: { lawyer: 500, expat: 300 } },
     recruitment_call: DISABLED_RECRUITMENT,
     activation_bonus: DISABLED_ACTIVATION,
     provider_recruitment: { enabled: true, amounts: { lawyer: 500, expat: 300 }, windowMonths: 6 },
