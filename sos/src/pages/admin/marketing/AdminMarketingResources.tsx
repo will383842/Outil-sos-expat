@@ -65,8 +65,6 @@ const ALL_ROLES: { value: MarketingRole; label: string }[] = [
 const ALL_CATEGORIES: { value: MarketingCategory; label: string; group: string }[] = [
   // Shared
   { value: 'sos_expat', label: 'SOS-Expat', group: 'Partage' },
-  { value: 'ulixai', label: 'Ulixai', group: 'Partage' },
-  { value: 'founder', label: 'Fondateur', group: 'Partage' },
   // Affiliate
   { value: 'promotional', label: 'Promotionnel', group: 'Affilie' },
   { value: 'social_media', label: 'Reseaux sociaux', group: 'Affilie' },

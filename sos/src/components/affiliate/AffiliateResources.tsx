@@ -46,23 +46,15 @@ interface CategoryConfig {
 const ROLE_CATEGORIES: Record<MarketingRole, CategoryConfig[]> = {
   chatter: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
-    { value: 'ulixai', labelKey: 'resources.cat.ulixai', defaultLabel: 'Ulixai', descriptionKey: 'resources.cat.ulixai.desc', defaultDescription: 'Resources for the Ulixai AI assistant', color: 'blue' },
-    { value: 'founder', labelKey: 'resources.cat.founder', defaultLabel: 'Founder', descriptionKey: 'resources.cat.founder.desc', defaultDescription: 'Photos, bio and quotes from the founder', color: 'green' },
   ],
   captain: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
-    { value: 'ulixai', labelKey: 'resources.cat.ulixai', defaultLabel: 'Ulixai', descriptionKey: 'resources.cat.ulixai.desc', defaultDescription: 'Resources for the Ulixai AI assistant', color: 'blue' },
-    { value: 'founder', labelKey: 'resources.cat.founder', defaultLabel: 'Founder', descriptionKey: 'resources.cat.founder.desc', defaultDescription: 'Photos, bio and quotes from the founder', color: 'green' },
   ],
   influencer: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
-    { value: 'ulixai', labelKey: 'resources.cat.ulixai', defaultLabel: 'Ulixai', descriptionKey: 'resources.cat.ulixai.desc', defaultDescription: 'Resources for the Ulixai AI assistant', color: 'blue' },
-    { value: 'founder', labelKey: 'resources.cat.founder', defaultLabel: 'Founder', descriptionKey: 'resources.cat.founder.desc', defaultDescription: 'Photos, bio and quotes from the founder', color: 'green' },
   ],
   blogger: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
-    { value: 'ulixai', labelKey: 'resources.cat.ulixai', defaultLabel: 'Ulixai', descriptionKey: 'resources.cat.ulixai.desc', defaultDescription: 'Resources for the Ulixai AI assistant', color: 'blue' },
-    { value: 'founder', labelKey: 'resources.cat.founder', defaultLabel: 'Founder', descriptionKey: 'resources.cat.founder.desc', defaultDescription: 'Photos, bio and quotes from the founder', color: 'green' },
   ],
   group_admin: [
     { value: 'pinned_posts', labelKey: 'resources.cat.pinnedPosts', defaultLabel: 'Pinned Posts', descriptionKey: 'resources.cat.pinnedPosts.desc', defaultDescription: 'Posts to pin in your groups', color: 'red' },
@@ -74,7 +66,6 @@ const ROLE_CATEGORIES: Record<MarketingRole, CategoryConfig[]> = {
   ],
   partner: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
-    { value: 'ulixai', labelKey: 'resources.cat.ulixai', defaultLabel: 'Ulixai', descriptionKey: 'resources.cat.ulixai.desc', defaultDescription: 'Resources for the Ulixai AI assistant', color: 'blue' },
     { value: 'partner_kit', labelKey: 'resources.cat.partnerKit', defaultLabel: 'Partner Kit', descriptionKey: 'resources.cat.partnerKit.desc', defaultDescription: 'Partner integration kit and materials', color: 'amber' },
   ],
   press: [

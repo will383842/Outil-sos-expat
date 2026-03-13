@@ -1082,7 +1082,7 @@ export function formatChatterAmount(cents: number): string {
 // RESOURCES
 // ============================================================================
 
-export type ChatterResourceCategory = 'sos_expat' | 'ulixai' | 'founder';
+export type ChatterResourceCategory = 'sos_expat';
 
 export interface ChatterResourceFile {
   id: string;

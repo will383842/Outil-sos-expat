@@ -765,7 +765,7 @@ export interface SubmitInfluencerTrainingQuizResult {
 // RESOURCES
 // ============================================================================
 
-export type InfluencerResourceCategory = 'sos_expat' | 'ulixai' | 'founder';
+export type InfluencerResourceCategory = 'sos_expat';
 
 export interface InfluencerResourceFile {
   id: string;

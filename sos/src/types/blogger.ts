@@ -62,7 +62,7 @@ export type BloggerBadgeType =
   | 'top3'
   | 'top1';
 
-export type BloggerResourceCategory = 'sos_expat' | 'ulixai' | 'founder';
+export type BloggerResourceCategory = 'sos_expat';
 
 export type BloggerResourceType = 'logo' | 'image' | 'text' | 'data' | 'photo' | 'bio' | 'quote';
 

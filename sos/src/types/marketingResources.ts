@@ -19,8 +19,6 @@ export type MarketingRole =
 export type MarketingCategory =
   // Shared
   | 'sos_expat'
-  | 'ulixai'
-  | 'founder'
   // Affiliate
   | 'promotional'
   | 'social_media'
