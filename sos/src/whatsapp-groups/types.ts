@@ -115,6 +115,29 @@ export const COUNTRY_TO_LANGUAGE: Record<string, string> = {
   PK: 'en', BD: 'en', LK: 'en', MY: 'en', SL: 'en',
   LR: 'en', MW: 'en', GM: 'en', FJ: 'en', MT: 'en',
   TH: 'en', VN: 'en', KH: 'en', MM: 'en', LA: 'en',
+  // Anglophone — pays sans langue supportée (fallback EN)
+  ID: 'en', JP: 'en', KR: 'en', TR: 'en', IL: 'en',
+  ET: 'en', SS: 'en', ER: 'en', SZ: 'en', LS: 'en',
+  PG: 'en', SR: 'en', GY: 'en', BN: 'en', MV: 'en',
+  // Europe — fallback EN (langues non supportées)
+  IT: 'en', NL: 'en', PL: 'en', RO: 'en', CZ: 'en',
+  GR: 'en', SE: 'en', HU: 'en', DK: 'en', FI: 'en',
+  NO: 'en', SK: 'en', HR: 'en', RS: 'en', BG: 'en',
+  BA: 'en', AL: 'en', SI: 'en', MK: 'en', ME: 'en',
+  IS: 'en', CY: 'en', EE: 'en', LV: 'en', LT: 'en',
+  AD: 'en', SM: 'en', VA: 'en',
+  // Asie — fallback approprié
+  NP: 'hi', BT: 'en', MN: 'en', KP: 'en',
+  GE: 'en', AM: 'en', AZ: 'ru',
+  AF: 'ar',
+  // Moyen-Orient — fallback arabe
+  IR: 'ar',
+  // Caraïbes/Amériques — fallback EN
+  AG: 'en', BS: 'en', BB: 'en', BZ: 'en', DM: 'en',
+  GD: 'en', KN: 'en', LC: 'en', VC: 'en',
+  // Océanie — fallback EN
+  KI: 'en', MH: 'en', FM: 'en', NR: 'en', PW: 'en',
+  WS: 'en', SB: 'en', TO: 'en', TV: 'en', VU: 'en',
   // Hispanophone
   ES: 'es', MX: 'es', AR: 'es', CO: 'es', PE: 'es',
   CL: 'es', EC: 'es', VE: 'es', GT: 'es', CU: 'es',

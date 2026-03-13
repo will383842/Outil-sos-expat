@@ -18,6 +18,7 @@ import { doc, getDoc, setDoc, serverTimestamp, collection, query, orderBy, start
 import { db } from '@/config/firebase';
 import type { WhatsAppGroupsConfig, WhatsAppGroup, WhatsAppRole, WhatsAppGroupManager } from './types';
 import { COUNTRY_TO_LANGUAGE, COUNTRY_TO_CONTINENT, ALL_CONTINENTS, SUPPORTED_LANGUAGES, ROLE_LABELS } from './types';
+import { buildConfigFromSeedData } from './seedWhatsAppGroups';
 
 const CONFIG_DOC_PATH = 'admin_config/whatsapp_groups';
 
@@ -36,28 +37,37 @@ const ROLE_COLLECTION: Record<WhatsAppRole, string> = {
 // LECTURE CONFIG
 // ============================================================================
 
-/** Récupère la config des groupes WhatsApp depuis Firestore */
+/** Récupère la config des groupes WhatsApp depuis Firestore.
+ *  Fallback automatique sur les données seed hardcodées si le document
+ *  Firestore n'existe pas encore (évite le skip silencieux post-inscription).
+ */
 export async function getWhatsAppGroupsConfig(): Promise<WhatsAppGroupsConfig | null> {
   try {
     const snap = await getDoc(doc(db, CONFIG_DOC_PATH));
-    if (!snap.exists()) return null;
+    if (!snap.exists()) {
+      console.warn('[WhatsApp Groups] Firestore doc missing — using hardcoded seed data as fallback');
+      return buildConfigFromSeedData();
+    }
     return snap.data() as WhatsAppGroupsConfig;
   } catch (err) {
-    console.error('[WhatsApp Groups] Error fetching config:', err);
-    return null;
+    console.error('[WhatsApp Groups] Error fetching config, falling back to seed data:', err);
+    return buildConfigFromSeedData();
   }
 }
 
 /**
  * Trouve le bon groupe WhatsApp pour un utilisateur.
  *
- * Logique de résolution (priorité, 6 niveaux) :
- *   1. Continent + langue exacte (ex: "Chatter Afrique FR" pour un user FR en Afrique)
- *   2. Continent + langue déduite du pays (ex: pays=CM → langue=fr → "Chatter Afrique FR")
- *   3. Groupe langue du user (type "language", fallback)
- *   4. Groupe langue déduite du pays (type "language", fallback)
- *   5. Groupe par défaut du rôle (defaultGroupIds[role])
- *   6. Premier groupe enabled du rôle
+ * Logique de résolution (priorité, 9 niveaux) :
+ *   1.  Continent + langue exacte (ex: "Chatter Afrique FR" pour un user FR en Afrique)
+ *   2.  Continent + langue déduite du pays (ex: pays=CM → langue=fr)
+ *   2b. Continent + EN (lingua franca — ex: chatter ES en Europe → "Chatter Europe EN")
+ *   2c. Continent + FR (deuxième fallback continent)
+ *   3.  Groupe langue du user (type "language", fallback)
+ *   4.  Groupe langue déduite du pays (type "language", fallback)
+ *   4b. Groupe EN (lingua franca, type "language")
+ *   5.  Groupe par défaut du rôle (defaultGroupIds[role])
+ *   6.  Premier groupe enabled du rôle
  */
 export function findGroupForUser(
   config: WhatsAppGroupsConfig,
@@ -90,6 +100,22 @@ export function findGroupForUser(
     if (countryLangMatch) return countryLangMatch;
   }
 
+  // 2b. Continent + EN (lingua franca) — ex: chatter hispanophone en Europe → "Chatter Europe EN"
+  if (continent && lang !== 'en') {
+    const continentEnMatch = roleGroups.find(
+      (g) => g.type === 'continent' && g.continentCode === continent && g.language === 'en'
+    );
+    if (continentEnMatch) return continentEnMatch;
+  }
+
+  // 2c. Continent + FR (deuxième fallback) — ex: chatter arabophone en Afrique → "Chatter Afrique FR"
+  if (continent && lang !== 'fr' && lang !== 'en') {
+    const continentFrMatch = roleGroups.find(
+      (g) => g.type === 'continent' && g.continentCode === continent && g.language === 'fr'
+    );
+    if (continentFrMatch) return continentFrMatch;
+  }
+
   // 3. Groupe langue du user (fallback type "language")
   const langGroup = roleGroups.find(
     (g) => g.type === 'language' && g.language === lang
@@ -102,6 +128,14 @@ export function findGroupForUser(
       (g) => g.type === 'language' && g.language === countryLang
     );
     if (countryLangGroup) return countryLangGroup;
+  }
+
+  // 4b. Groupe EN (lingua franca, fallback type "language")
+  if (lang !== 'en') {
+    const enFallback = roleGroups.find(
+      (g) => g.type === 'language' && g.language === 'en'
+    );
+    if (enFallback) return enFallback;
   }
 
   // 5. Groupe par défaut du rôle

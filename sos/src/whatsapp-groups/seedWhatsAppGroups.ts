@@ -108,12 +108,12 @@ export async function seedWhatsAppGroupsFromJson(
 export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
   groups: {
     // ========== CHATTERS (14 groupes continent × FR/EN) ==========
-    chatter_af_fr: { id: "chatter_af_fr", role: "Chatter", type: "continent", name: "Chatter 🌍 Afrique 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/BYgasir1XX8F07kCDU4qC8", active: true, isDefault: true, continent: "AF" },
+    chatter_af_fr: { id: "chatter_af_fr", role: "Chatter", type: "continent", name: "Chatter 🌍 Afrique 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/BYgasir1XX8F07kCDU4qC8", active: true, isDefault: false, continent: "AF" },
     chatter_af_en: { id: "chatter_af_en", role: "Chatter", type: "continent", name: "Chatter 🌍 Afrique 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/DuSCD7rwPtvIINnA7dzg7x", active: true, isDefault: false, continent: "AF" },
     chatter_as_fr: { id: "chatter_as_fr", role: "Chatter", type: "continent", name: "Chatter 🌏 Asie 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/Ct8UZyO5bSR10uhvDkihNV", active: true, isDefault: false, continent: "AS" },
     chatter_as_en: { id: "chatter_as_en", role: "Chatter", type: "continent", name: "Chatter 🌏 Asie 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/DeRfOv1caxJKbw8kz0CkBP", active: true, isDefault: false, continent: "AS" },
     chatter_eu_fr: { id: "chatter_eu_fr", role: "Chatter", type: "continent", name: "Chatter 🇪🇺 Europe 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/DbN8nrqfEQH01qRHlsCLXF", active: true, isDefault: false, continent: "EU" },
-    chatter_eu_en: { id: "chatter_eu_en", role: "Chatter", type: "continent", name: "Chatter 🇪🇺 Europe 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/IDPOwu6UD5F4BQvjXOvixT", active: true, isDefault: false, continent: "EU" },
+    chatter_eu_en: { id: "chatter_eu_en", role: "Chatter", type: "continent", name: "Chatter 🇪🇺 Europe 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/IDPOwu6UD5F4BQvjXOvixT", active: true, isDefault: true, continent: "EU" },
     chatter_na_fr: { id: "chatter_na_fr", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Nord 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/Jxs5Eci7anEAxCaiHpAdU0", active: true, isDefault: false, continent: "NA" },
     chatter_na_en: { id: "chatter_na_en", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Nord 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/CTbLbaEEFiw4I4jldIJRl8", active: true, isDefault: false, continent: "NA" },
     chatter_sa_fr: { id: "chatter_sa_fr", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Sud 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/LokkAcMRDPd4FzdqbRG19C", active: true, isDefault: false, continent: "SA" },
@@ -190,6 +190,29 @@ export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
     expat_lang_hi: { id: "expat_lang_hi", role: "Expatrié Aidant", type: "langue", name: "Expatrié Aidant Hindi 🇮🇳", lang: "hi", inviteLink: "https://chat.whatsapp.com/L6QT0JKJM0sKr4RcqWngFi", active: true, isDefault: false },
   },
 };
+
+/**
+ * Construit la config WhatsApp à partir des données seed hardcodées.
+ * Utilisé comme fallback quand le document Firestore n'existe pas encore.
+ * Ne fait AUCUNE écriture Firestore — pure function.
+ */
+export function buildConfigFromSeedData(): WhatsAppGroupsConfig {
+  const groups: WhatsAppGroup[] = [];
+  const defaultGroupIds: Record<string, string> = {};
+
+  for (const [, raw] of Object.entries(WHATSAPP_GROUPS_SEED_DATA.groups)) {
+    const group = transformGroup(raw);
+    groups.push(group);
+    if (raw.isDefault) {
+      defaultGroupIds[group.role] = group.id;
+    }
+  }
+
+  return {
+    groups,
+    defaultGroupIds: defaultGroupIds as Record<WhatsAppRole, string>,
+  };
+}
 
 /**
  * Seed avec les données intégrées (appel simple depuis l'admin)

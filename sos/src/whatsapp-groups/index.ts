@@ -40,7 +40,7 @@ export type {
   WhatsAppGroupManager,
   WhatsAppRoleCategory,
 } from './types';
-export { seedWhatsAppGroups, seedWhatsAppGroupsFromJson } from './seedWhatsAppGroups';
+export { seedWhatsAppGroups, seedWhatsAppGroupsFromJson, buildConfigFromSeedData } from './seedWhatsAppGroups';
 export {
   COUNTRY_TO_LANGUAGE,
   COUNTRY_TO_CONTINENT,
