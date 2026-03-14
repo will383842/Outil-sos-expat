@@ -1,6 +1,7 @@
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { MailwizzAPI } from "../utils/mailwizz";
+import { mapUserToMailWizzFields } from "../utils/fieldMapper";
 import { logGA4Event, logTrustpilotEvent } from "../utils/analytics";
 import { getLanguageCode } from "../config";
 // P2-2 FIX: Unified payment status checks
@@ -81,13 +82,14 @@ export const handleCallCompleted = onDocumentUpdated(
         const duration = after.callDuration || after.duration || 0;
         const amount = after.price || after.amount || 0;
 
-        // Email to client
+        // Email to client — spread ALL real fields + per-event overrides
         try {
+          const clientFields = mapUserToMailWizzFields(client!, after.clientId);
           await mailwizz.sendTransactional({
             to: client?.email || after.clientId,
             template: `TR_CLI_call-completed_${clientLang}`,
             customFields: {
-              FNAME: client?.firstName || "",
+              ...clientFields,
               EXPERT_NAME: provider?.firstName || provider?.name || "Provider",
               DURATION: duration.toString(),
               AMOUNT: amount.toString(),
@@ -97,13 +99,14 @@ export const handleCallCompleted = onDocumentUpdated(
           console.error(`❌ Error sending client email:`, emailError);
         }
 
-        // Email to provider
+        // Email to provider — spread ALL real fields + per-event overrides
         try {
+          const providerFields = mapUserToMailWizzFields(provider!, after.providerId);
           await mailwizz.sendTransactional({
             to: provider?.email || after.providerId,
             template: `TR_PRO_call-completed_${providerLang}`,
             customFields: {
-              FNAME: provider?.firstName || "",
+              ...providerFields,
               CLIENT_NAME: client?.firstName || client?.name || "Client",
               DURATION: duration.toString(),
               AMOUNT: amount.toString(),
@@ -185,6 +188,8 @@ export const handleReviewSubmitted = onDocumentCreated(
         console.error(`❌ Error updating rating in MailWizz:`, updateError);
       }
 
+      const clientAllFields = mapUserToMailWizzFields(client!, clientId);
+
       // CRITICAL: Trustpilot invitation for satisfied clients (rating >= 4)
       if (rating >= 4) {
         // Satisfied client → Trustpilot invitation
@@ -193,7 +198,7 @@ export const handleReviewSubmitted = onDocumentCreated(
             to: client?.email || clientId,
             template: `TR_CLI_trustpilot-invite_${lang}`,
             customFields: {
-              FNAME: client?.firstName || "",
+              ...clientAllFields,
               TRUSTPILOT_URL: "https://www.trustpilot.com/review/sos-expat.com",
               RATING_STARS: rating.toString(),
             },
@@ -224,11 +229,12 @@ export const handleReviewSubmitted = onDocumentCreated(
           );
 
           try {
+            const providerAllFields = mapUserToMailWizzFields(provider!, providerId);
             await mailwizz.sendTransactional({
               to: provider?.email || providerId,
               template: `TR_PRO_good-review-received_${providerLang}`,
               customFields: {
-                FNAME: provider?.firstName || "",
+                ...providerAllFields,
                 CLIENT_NAME: client?.firstName || "Client",
                 RATING_STARS: rating.toString(),
                 REVIEW_TEXT: comment || "",
@@ -260,7 +266,7 @@ export const handleReviewSubmitted = onDocumentCreated(
             to: client?.email || clientId,
             template: `TR_CLI_thank-you-review_${lang}`,
             customFields: {
-              FNAME: client?.firstName || "",
+              ...clientAllFields,
               REVIEW_TEXT: comment || "",
               RATING_STARS: rating.toString(),
             },
@@ -333,11 +339,12 @@ export const handleReviewSubmitted = onDocumentCreated(
               : `TR_PRO_bad-review-received_${providerLang}`;
 
           try {
+            const providerAllFields2 = mapUserToMailWizzFields(provider!, providerId);
             await mailwizz.sendTransactional({
               to: provider?.email || providerId,
               template,
               customFields: {
-                FNAME: provider?.firstName || "",
+                ...providerAllFields2,
                 CLIENT_NAME: client?.firstName || "Client",
                 RATING_STARS: rating.toString(),
                 REVIEW_TEXT: comment || "",
@@ -422,14 +429,15 @@ export const handlePaymentReceived = onDocumentCreated(
           user?.language || user?.preferredLanguage || user?.lang || "en"
         );
 
+        const userFields = mapUserToMailWizzFields(user!, payment.userId || payment.clientId);
         await mailwizz.sendTransactional({
           to: user?.email || payment.userId || payment.clientId,
           template: `TR_CLI_payment-success_${lang}`,
           customFields: {
-            FNAME: user?.firstName || "",
+            ...userFields,
             AMOUNT: (payment.amount || 0).toString(),
             CURRENCY: payment.currency || "EUR",
-            INVOICE_URL: payment.invoiceUrl || `https://sos-expat.com/invoices/${paymentId}`,
+            INVOICE_URL: payment.invoiceUrl || "https://sos-expat.com/dashboard",
           },
         });
 
@@ -488,15 +496,16 @@ export const handlePaymentFailed = onDocumentCreated(
           user?.language || user?.preferredLanguage || user?.lang || "en"
         );
 
+        const userFields = mapUserToMailWizzFields(user!, payment.userId || payment.clientId);
         await mailwizz.sendTransactional({
           to: user?.email || payment.userId || payment.clientId,
           template: `TR_CLI_payment-failed_${lang}`,
           customFields: {
-            FNAME: user?.firstName || "",
+            ...userFields,
             AMOUNT: (payment.amount || 0).toString(),
             CURRENCY: payment.currency || "EUR",
             REASON: payment.failureReason || payment.reason || "Unknown error",
-            RETRY_URL: "https://sos-expat.com/billing/retry",
+            RETRY_URL: "https://sos-expat.com/dashboard",
           },
         });
 
@@ -554,11 +563,12 @@ export const handlePayoutRequested = onDocumentCreated(
         user?.language || user?.preferredLanguage || user?.lang || "en"
       );
 
+      const userFields = mapUserToMailWizzFields(user!, payout.providerId);
       await mailwizz.sendTransactional({
         to: user?.email || payout.providerId,
         template: `TR_PRO_payout-requested_${lang}`,
         customFields: {
-          FNAME: user?.firstName || "",
+          ...userFields,
           AMOUNT: (payout.amount || 0).toString(),
           CURRENCY: payout.currency || "EUR",
           THRESHOLD: (user?.payoutThreshold || 50).toString(),
@@ -620,11 +630,12 @@ export const handlePayoutSent = onDocumentUpdated(
           user?.language || user?.preferredLanguage || user?.lang || "en"
         );
 
+        const userFields = mapUserToMailWizzFields(user!, after.providerId);
         await mailwizz.sendTransactional({
           to: user?.email || after.providerId,
           template: `TR_PRO_payout-sent_${lang}`,
           customFields: {
-            FNAME: user?.firstName || "",
+            ...userFields,
             AMOUNT: (after.amount || 0).toString(),
             CURRENCY: after.currency || "EUR",
             THRESHOLD: (user?.payoutThreshold || 50).toString(),
@@ -695,11 +706,12 @@ export const handleCallMissed = onDocumentUpdated(
 
         const clientName = after.clientName || after.clientFirstName || "";
 
+        const providerFields = mapUserToMailWizzFields(provider!, after.providerId);
         await mailwizz.sendTransactional({
           to: provider?.email || after.providerId,
           template: `TR_PRO_call-missed-${variant}_${lang}`,
           customFields: {
-            FNAME: provider?.firstName || "",
+            ...providerFields,
             CLIENT_NAME: clientName,
           },
         });
@@ -752,15 +764,15 @@ export const handlePayoutFailed = onDocumentUpdated(
           user?.language || user?.preferredLanguage || "en"
         );
 
+        const userFields = mapUserToMailWizzFields(user!, after.providerId);
         await mailwizz.sendTransactional({
           to: user?.email || after.providerId,
           template: `TR_PRO_payout-failed_${lang}`,
           customFields: {
-            FNAME: user?.firstName || "",
+            ...userFields,
             AMOUNT: (after.amount || 0).toString(),
             CURRENCY: after.currency || "EUR",
             REASON: after.failureReason || after.reason || "Unknown error",
-            DASHBOARD_URL: "https://sos-expat.com/dashboard",
           },
         });
 
@@ -811,14 +823,14 @@ export const handlePayoutThresholdReached = onDocumentUpdated(
           after.language || after.preferredLanguage || "en"
         );
 
+        const userFields = mapUserToMailWizzFields(after, userId);
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_PRO_payout-threshold-reached_${lang}`,
           customFields: {
-            FNAME: after.firstName || "",
+            ...userFields,
             THRESHOLD: threshold.toString(),
             AMOUNT: newTotal.toString(),
-            DASHBOARD_URL: "https://sos-expat.com/dashboard",
           },
         });
 
@@ -867,14 +879,14 @@ export const handleFirstEarning = onDocumentUpdated(
           after.language || after.preferredLanguage || "en"
         );
 
+        const userFields = mapUserToMailWizzFields(after, userId);
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_PRO_first-earning_${lang}`,
           customFields: {
-            FNAME: after.firstName || "",
+            ...userFields,
             AMOUNT: newTotal.toString(),
             CURRENCY: "EUR",
-            DASHBOARD_URL: "https://sos-expat.com/dashboard",
           },
         });
 
@@ -956,11 +968,12 @@ export const handleEarningCredited = onDocumentUpdated(
           // Client name is optional — continue without it
         }
 
+        const userFields = mapUserToMailWizzFields(after, userId);
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_PRO_earning-credited_${lang}`,
           customFields: {
-            FNAME: after.firstName || "",
+            ...userFields,
             AMOUNT: earnedAmount.toString(),
             CURRENCY: "EUR",
             CLIENT_NAME: clientName,
@@ -1022,15 +1035,15 @@ export const handleReferralBonus = onDocumentCreated(
         referrer?.language || referrer?.preferredLanguage || "en"
       );
 
+      const referrerFields = mapUserToMailWizzFields(referrer!, referrerId);
       await mailwizz.sendTransactional({
         to: referrer?.email || referrerId,
         template: `TR_PRO_referral-bonus_${lang}`,
         customFields: {
-          FNAME: referrer?.firstName || "",
+          ...referrerFields,
           REFERRAL_NAME: referralName || "",
           BONUS_AMOUNT: (bonusAmount || 0).toString(),
           CURRENCY: currency || "EUR",
-          DASHBOARD_URL: "https://sos-expat.com/dashboard",
         },
       });
 

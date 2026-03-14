@@ -1,6 +1,7 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { MailwizzAPI } from "../utils/mailwizz";
+import { mapUserToMailWizzFields } from "../utils/fieldMapper";
 import { logGA4Event } from "../utils/analytics";
 import { getLanguageCode } from "../config";
 
@@ -35,12 +36,11 @@ export async function profileCompletedHandler(event: any) {
           after.language || after.preferredLanguage || after.lang || "en"
         );
         try {
+          const userFields = mapUserToMailWizzFields(after, userId);
           await mailwizz.sendTransactional({
             to: after.email || userId,
             template: `TR_${after.role === "provider" ? "PRO" : "CLI"}_profile-completed_${lang}`,
-            customFields: {
-              FNAME: after.firstName || "",
-            },
+            customFields: userFields,
           });
         } catch (emailError) {
           console.error(`❌ Error sending profile completion email:`, emailError);
@@ -193,13 +193,11 @@ export async function providerOnlineStatusHandler(event: any) {
         const isFirstOnline = afterOnline && !before.hasBeenOnline && !before.firstOnlineAt;
         if (isFirstOnline) {
           try {
+            const userFields = mapUserToMailWizzFields(after, userId);
             await mailwizz.sendTransactional({
               to: after.email || userId,
               template: `TR_PRO_first-online_${lang}`,
-              customFields: {
-                FNAME: after.firstName || "",
-                DASHBOARD_URL: "https://sos-expat.com/dashboard",
-              },
+              customFields: userFields,
             });
             // Mark as having been online to prevent re-sending on future reconnects
             // Write doesn't trigger this block again: beforeOnline===afterOnline===true on next event
@@ -214,13 +212,11 @@ export async function providerOnlineStatusHandler(event: any) {
         } else if (afterOnline && !beforeOnline) {
           // Coming back online (not first time)
           try {
+            const userFields2 = mapUserToMailWizzFields(after, userId);
             await mailwizz.sendTransactional({
               to: after.email || userId,
               template: `TR_PRO_back-online_${lang}`,
-              customFields: {
-                FNAME: after.firstName || "",
-                DASHBOARD_URL: "https://sos-expat.com/dashboard",
-              },
+              customFields: userFields2,
             });
             console.log(`✅ Back online email sent: ${userId}`);
           } catch (emailError) {
@@ -257,7 +253,7 @@ export async function kycVerificationHandler(event: any) {
       after.language || after.preferredLanguage || after.lang || "en"
     );
     const rolePrefix = after.role === "provider" || after.role === "lawyer" ? "PRO" : "CLI";
-    const kycUrl = `https://sos-expat.com/kyc/${userId}`;
+    const kycUrl = "https://sos-expat.com/dashboard/kyc";
 
     // KYC verified
     if (before.kycStatus !== "verified" && after.kycStatus === "verified") {
@@ -267,10 +263,11 @@ export async function kycVerificationHandler(event: any) {
         await mailwizz.updateSubscriber(userId, { KYC_STATUS: "verified" });
         await mailwizz.stopAutoresponders(userId, "kyc_verified");
 
+        const kycFields = mapUserToMailWizzFields(after, userId);
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_${rolePrefix}_kyc-verified_${lang}`,
-          customFields: { FNAME: after.firstName || "" },
+          customFields: kycFields,
         });
 
         await logGA4Event("kyc_verified", { user_id: userId, role: after.role || "client" });
@@ -287,11 +284,12 @@ export async function kycVerificationHandler(event: any) {
 
         await mailwizz.updateSubscriber(userId, { KYC_STATUS: "kyc_submitted" });
 
+        const kycSubFields = mapUserToMailWizzFields(after, userId);
         // Email to provider: documents received
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_${rolePrefix}_kyc-documents-received_${lang}`,
-          customFields: { FNAME: after.firstName || "" },
+          customFields: kycSubFields,
         }).catch((e) => console.error(`❌ kyc-documents-received email error:`, e));
 
         // Email to provider: KYC request / next steps
@@ -299,7 +297,7 @@ export async function kycVerificationHandler(event: any) {
           to: after.email || userId,
           template: `TR_${rolePrefix}_kyc-request_${lang}`,
           customFields: {
-            FNAME: after.firstName || "",
+            ...kycSubFields,
             KYC_URL: kycUrl,
           },
         }).catch((e) => console.error(`❌ kyc-request email error:`, e));
@@ -318,11 +316,12 @@ export async function kycVerificationHandler(event: any) {
 
         await mailwizz.updateSubscriber(userId, { KYC_STATUS: "kyc_info_missing" });
 
+        const kycMissingFields = mapUserToMailWizzFields(after, userId);
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_${rolePrefix}_kyc-info-missing_${lang}`,
           customFields: {
-            FNAME: after.firstName || "",
+            ...kycMissingFields,
             KYC_URL: kycUrl,
           },
         });
@@ -341,11 +340,12 @@ export async function kycVerificationHandler(event: any) {
 
         await mailwizz.updateSubscriber(userId, { KYC_STATUS: "kyc_rejected" });
 
+        const kycRejFields = mapUserToMailWizzFields(after, userId);
         await mailwizz.sendTransactional({
           to: after.email || userId,
           template: `TR_${rolePrefix}_kyc-rejected_${lang}`,
           customFields: {
-            FNAME: after.firstName || "",
+            ...kycRejFields,
             KYC_URL: kycUrl,
             REASON: after.kycRejectionReason || after.rejectionReason || "",
           },
@@ -396,12 +396,11 @@ export async function paypalConfigurationHandler(event: any) {
           after.language || after.preferredLanguage || after.lang || "en"
         );
         try {
+          const ppFields = mapUserToMailWizzFields(after, userId);
           await mailwizz.sendTransactional({
             to: after.email || userId,
             template: `TR_${after.role === "provider" ? "PRO" : "CLI"}_paypal-configured_${lang}`,
-            customFields: {
-              FNAME: after.firstName || "",
-            },
+            customFields: ppFields,
           });
         } catch (emailError) {
           console.error(`❌ Error sending PayPal configuration email:`, emailError);
@@ -454,12 +453,12 @@ export async function accountStatusHandler(event: any) {
 
       await mailwizz.updateSubscriber(userId, { ACCOUNT_STATUS: "blocked", IS_BLOCKED: "yes" });
 
+      const blockedFields = mapUserToMailWizzFields(after, userId);
       await mailwizz.sendTransactional({
         to: after.email || userId,
         template: `TR_PRO_account-blocked_${lang}`,
         customFields: {
-          FNAME: after.firstName || "",
-          SUPPORT_URL: "https://sos-expat.com/support",
+          ...blockedFields,
           REASON: after.blockReason || after.banReason || "",
         },
       });
@@ -478,13 +477,11 @@ export async function accountStatusHandler(event: any) {
 
       await mailwizz.updateSubscriber(userId, { ACCOUNT_STATUS: "reactivated", IS_BLOCKED: "no" });
 
+      const reactivatedFields = mapUserToMailWizzFields(after, userId);
       await mailwizz.sendTransactional({
         to: after.email || userId,
         template: `TR_PRO_account-reactivated_${lang}`,
-        customFields: {
-          FNAME: after.firstName || "",
-          DASHBOARD_URL: "https://sos-expat.com/dashboard",
-        },
+        customFields: reactivatedFields,
       });
 
       await logGA4Event("account_reactivated_email_sent", { user_id: userId });

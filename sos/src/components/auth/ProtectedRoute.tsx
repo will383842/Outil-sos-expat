@@ -47,7 +47,7 @@ interface ProtectedRouteProps {
   showError?: boolean;
 }
 
-type AuthState = 'loading' | 'checking' | 'authorized' | 'unauthorized' | 'error' | 'banned';
+type AuthState = 'loading' | 'checking' | 'authorized' | 'unauthorized' | 'wrong_role' | 'error' | 'banned';
 
 /**
  * P1 FIX: Délai minimum avant de rediriger vers login
@@ -71,7 +71,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const intl = useIntl();
   const location = useLocation();
   // P0 FIX: Utiliser isFullyReady au lieu de authInitialized pour éviter les redirections prématurées
-  const { user, isLoading, authInitialized, isFullyReady, error: authError } = useAuth();
+  const { user, isLoading, authInitialized, isFullyReady, error: authError, logout } = useAuth();
 
   // 🔍 [BOOKING_AUTH_DEBUG] Log initial state
   devLog('[BOOKING_AUTH_DEBUG] 🛡️ ProtectedRoute RENDER', {
@@ -168,7 +168,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
       if (allowedRoles) {
         const hasRole = checkUserRole(user, allowedRoles);
-        setAuthState(hasRole ? 'authorized' : 'unauthorized');
+        if (hasRole) {
+          setAuthState('authorized');
+        } else {
+          // User is logged in but has wrong role — redirect to their own dashboard
+          // instead of login page (which would cause infinite redirect loop)
+          setAuthState('wrong_role');
+        }
       } else {
         setAuthState('authorized');
       }
@@ -274,6 +280,66 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             </div>
           </div>
         );
+
+      case 'wrong_role': {
+        // User is logged in but has the wrong role
+        // Show a clear message instead of redirect loop
+        const roleLabels: Record<string, string> = {
+          client: 'Client', lawyer: 'Avocat', expat: 'Expert Expatriation',
+          chatter: 'Chatter', influencer: 'Influenceur', blogger: 'Blogueur',
+          groupAdmin: 'Admin Groupe', partner: 'Partenaire', admin: 'Admin',
+        };
+        const currentRoleLabel = roleLabels[user?.role || ''] || user?.role || '';
+        const requiredRoleLabel = Array.isArray(allowedRoles)
+          ? allowedRoles.map(r => roleLabels[r] || r).join(' / ')
+          : roleLabels[allowedRoles || ''] || allowedRoles || '';
+
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="text-center max-w-md">
+              <div className="text-5xl mb-4">🔒</div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {intl.formatMessage({ id: 'auth.wrongRole.title', defaultMessage: 'Mauvais compte' })}
+              </h2>
+              <p className="text-gray-600 mb-2">
+                {intl.formatMessage(
+                  { id: 'auth.wrongRole.description', defaultMessage: 'Vous êtes connecté en tant que {currentRole} ({email}), mais cette page nécessite un compte {requiredRole}.' },
+                  { currentRole: <strong>{currentRoleLabel}</strong>, email: <strong>{user?.email}</strong>, requiredRole: <strong>{requiredRoleLabel}</strong> }
+                )}
+              </p>
+              <p className="text-gray-500 text-sm mb-6">
+                {intl.formatMessage({ id: 'auth.wrongRole.hint', defaultMessage: 'Déconnectez-vous et reconnectez-vous avec le bon compte.' })}
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={async () => {
+                    sessionStorage.setItem('loginRedirect', location.pathname);
+                    await logout();
+                    window.location.href = `/login?redirect=${encodeURIComponent(location.pathname)}`;
+                  }}
+                  className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  {intl.formatMessage({ id: 'auth.wrongRole.logout', defaultMessage: 'Se déconnecter et changer de compte' })}
+                </button>
+                <button
+                  onClick={() => {
+                    let roleDashboard = '/dashboard';
+                    if (user?.role === 'chatter') roleDashboard = '/chatter/tableau-de-bord';
+                    else if (user?.role === 'influencer') roleDashboard = '/influencer/tableau-de-bord';
+                    else if (user?.role === 'blogger') roleDashboard = '/blogger/tableau-de-bord';
+                    else if (user?.role === 'groupAdmin') roleDashboard = '/group-admin/tableau-de-bord';
+                    else if (user?.role === 'partner') roleDashboard = '/partner/tableau-de-bord';
+                    window.location.href = roleDashboard;
+                  }}
+                  className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  {intl.formatMessage({ id: 'auth.wrongRole.myDashboard', defaultMessage: 'Mon tableau de bord' })}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
       case 'unauthorized':
         // 🔍 [BOOKING_AUTH_DEBUG] Log redirection vers login

@@ -58,14 +58,14 @@ export function mapUserToMailWizzFields(
 
   // URLs (9)
   fields.AFFILIATE_LINK = `https://sos-expat.com/ref/${userId}`;
-  fields.PROFILE_URL = `https://sos-expat.com/profile/${userId}`;
+  fields.PROFILE_URL = `https://sos-expat.com/profile/edit`;
   fields.DASHBOARD_URL = "https://sos-expat.com/dashboard";
   fields.TRUSTPILOT_URL = "https://www.trustpilot.com/review/sos-expat.com";
-  fields.HELP_URL = "https://sos-expat.com/help";
-  fields.ARTICLE_URL = "https://sos-expat.com/articles";
-  fields.KYC_URL = `https://sos-expat.com/kyc/${userId}`;
-  fields.INVOICE_URL = `https://sos-expat.com/invoices/${userId}`;
-  fields.RETRY_URL = "https://sos-expat.com/billing/retry";
+  fields.HELP_URL = "https://sos-expat.com/centre-aide";
+  fields.ARTICLE_URL = "https://sos-expat.com/centre-aide";
+  fields.KYC_URL = "https://sos-expat.com/dashboard/kyc";
+  fields.INVOICE_URL = "https://sos-expat.com/dashboard";
+  fields.RETRY_URL = "https://sos-expat.com/dashboard";
 
   // Statistics (10)
   fields.TOTAL_CALLS = (userData.totalCalls || 0).toString();
@@ -77,6 +77,7 @@ export function mapUserToMailWizzFields(
   fields.MONTHLY_CALLS = (userData.monthlyCalls || 0).toString();
   fields.MONTHLY_EARNINGS = (userData.monthlyEarnings || 0).toString();
   fields.RATING_STARS = (userData.averageRating || userData.rating || 0).toString();
+  fields.STARS = fields.RATING_STARS; // alias used in some provider templates
   fields.THRESHOLD = (userData.payoutThreshold || 50).toString();
 
   // Dynamic content fields (14) - These are usually populated per-email
@@ -106,7 +107,7 @@ export function mapUserToMailWizzFields(
   fields.MONTH = new Date().toLocaleString("en", { month: "long" });
 
   // URLs supplémentaires (1)
-  fields.SUPPORT_URL = "https://sos-expat.com/support";
+  fields.SUPPORT_URL = "https://sos-expat.com/contact";
 
   // Gamification (5)
   fields.MILESTONE_TYPE = "";
@@ -121,6 +122,16 @@ export function mapUserToMailWizzFields(
 
   // Potentiel
   fields.POTENTIAL_EARNINGS = (userData.potentialEarnings || 0).toString();
+
+  // Commission referral (used in client & provider templates) — stored in cents
+  fields.COMMISSION_REFERRAL = formatUsd(userData.commissionReferral || userData.referralCommission || 500);
+
+  // Average earning per call (provider campaigns)
+  const totalCalls = userData.totalCalls || 0;
+  const totalEarnings = userData.totalEarnings || 0;
+  fields.AVG_EARNING_PER_CALL = totalCalls > 0
+    ? `$${(totalEarnings / totalCalls / 100).toFixed(2)}`
+    : "$0";
 
   // Remove empty fields that shouldn't be sent
   const cleanedFields: Record<string, string> = {};
@@ -202,4 +213,87 @@ function mapAccountStatus(userData: any): string {
   return "normal";
 }
 
+/**
+ * Map chatter document to MailWizz custom fields for transactional emails.
+ * These fields correspond to [VARIABLE] placeholders in chatter email templates.
+ */
+export function mapChatterToMailWizzFields(
+  chatterData: admin.firestore.DocumentData,
+  chatterId: string
+): Record<string, string> {
+  const fields: Record<string, string> = {
+    EMAIL: chatterData.email || "",
+    FNAME: chatterData.firstName || chatterData.name?.split(" ")[0] || "",
+    LNAME: chatterData.lastName || chatterData.name?.split(" ").slice(1).join(" ") || "",
+  };
 
+  // Chatter affiliate link (single link, not AFFILIATE_LINK which is for client/provider)
+  fields.LINK = chatterData.affiliateLink || `https://sos-expat.com/ref/${chatterId}`;
+  fields.DASHBOARD_URL = "https://sos-expat.com/chatter/tableau-de-bord";
+  fields.QR_CODE_URL = chatterData.qrCodeUrl || chatterData.affiliateLink || `https://sos-expat.com/ref/${chatterId}`;
+
+  // Commission rates (from lockedRates or plan defaults) — always in USD
+  const rates = chatterData.lockedRates || chatterData.commissionRates || {};
+  fields.COMMISSION_CLIENT_LAWYER = formatUsd(rates.commissionClientLawyer || rates.client_lawyer || 1000);
+  fields.COMMISSION_CLIENT_EXPAT = formatUsd(rates.commissionClientExpat || rates.client_expat || 300);
+  fields.COMMISSION_N1 = formatUsd(rates.commissionN1 || rates.n1_call || 100);
+  fields.COMMISSION_N2 = formatUsd(rates.commissionN2 || rates.n2_call || 50);
+  fields.COMMISSION_PROVIDER = formatUsd(rates.commissionProvider || rates.provider_call || 500);
+
+  // Balances & earnings (stored in cents)
+  fields.AVAILABLE_BALANCE = formatUsd(chatterData.availableBalance || 0);
+  fields.TOTAL_EARNED = formatUsd(chatterData.totalEarned || 0);
+  fields.MONTHLY_EARNINGS = formatUsd(chatterData.monthlyEarnings || 0);
+
+  // Team & ranking
+  fields.TEAM_SIZE = (chatterData.teamSize || chatterData.totalRecruits || 0).toString();
+  fields.RANK = (chatterData.rank || chatterData.leaderboardPosition || "-").toString();
+  fields.LEVEL_NAME = chatterData.levelName || chatterData.tier || "Starter";
+  fields.CURRENT_STREAK = (chatterData.currentStreak || chatterData.streak || 0).toString();
+
+  // Last commission (populated per-event)
+  fields.LAST_COMMISSION_AMOUNT = "";
+  fields.LAST_COMMISSION_TYPE = "";
+
+  // Recruit info (populated per-event)
+  fields.NEW_RECRUIT_NAME = "";
+
+  // Withdrawal info (populated per-event)
+  fields.WITHDRAWAL_AMOUNT = "";
+  fields.WITHDRAWAL_FEE = "$3";
+  fields.WITHDRAWAL_THRESHOLD = "$30";
+
+  // Registration info
+  const createdAt = chatterData.createdAt?.toDate?.() ||
+    (chatterData.createdAt instanceof admin.firestore.Timestamp ? chatterData.createdAt.toDate() : null);
+  const daysSinceReg = createdAt
+    ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  fields.DAYS_SINCE_REGISTRATION = daysSinceReg.toString();
+
+  // Calculated fields for campaign templates
+  const totalEarnedCents = chatterData.totalEarned || 0;
+  fields.AVG_EARNINGS_PER_DAY = daysSinceReg > 0
+    ? formatUsd(Math.round(totalEarnedCents / daysSinceReg))
+    : "$0";
+
+  // Projected earnings based on recruit count
+  const avgCommPerRecruit = (chatterData.avgCommissionPerRecruit || 500); // cents/month
+  fields.PROJECTED_3_RECRUITS = formatUsd(avgCommPerRecruit * 3);
+  fields.PROJECTED_10_RECRUITS = formatUsd(avgCommPerRecruit * 10);
+
+  // Inactive recruit info (populated per-event in campaigns)
+  fields.INACTIVE_RECRUIT_NAME = "";
+  fields.INACTIVE_RECRUIT_DAYS = "";
+
+  return fields;
+}
+
+/**
+ * Format cents amount to USD string (e.g. 1000 → "$10")
+ */
+function formatUsd(cents: number): string {
+  if (!cents || cents === 0) return "$0";
+  const dollars = cents / 100;
+  return dollars % 1 === 0 ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+}
