@@ -2045,6 +2045,29 @@ export { sendWeeklyStats, sendMonthlyStats } from './emailMarketing/functions/st
 // sendAnniversaryEmails — CONSOLIDATED into consolidatedDailyEmails
 // Chatter MailWizz lifecycle (Campagne A recrutement + Campagne B onboarding)
 export { chatterMailwizzOnRegistered, detectInactiveChattersCron } from './emailMarketing/functions/chatterLifecycle';
+// Chatter transactional emails via MailWizz (8 triggers)
+// NOTE: chatterEmailWelcome excluded — welcome already sent via Zoho in chatterOnChatterCreated
+export {
+  chatterEmailCommission,
+  chatterEmailRecruitSignup,
+  chatterEmailWithdrawal,
+  chatterEmailMilestone,
+  chatterEmailThreshold,
+  chatterEmailTelegramLinked,
+  chatterEmailInactivityReminder,
+  chatterEmailAccountWarning,
+} from './emailMarketing/functions/chatterTransactionalEmails';
+// Backfill existing chatters to MailWizz campaign lists
+export { backfillExistingChattersToMailWizz } from './emailMarketing/functions/chatterBackfill';
+// Trustpilot proactive outreach (chatters + providers)
+export { sendTrustpilotOutreach, testTrustpilotOutreach } from './emailMarketing/functions/trustpilotOutreach';
+// IA Tool subscription campaign (prospect list management)
+export {
+  iaProspectOnSubscriptionChanged,
+  iaProspectOnTrialExhausted,
+  iaProspectSyncFieldsCron,
+  iaProspectResubscribeAfterCancel,
+} from './emailMarketing/functions/iaToolCampaign';
 
 // ============================================
 // SUBSCRIPTION FUNCTIONS
@@ -2389,6 +2412,9 @@ export { onBookingRequestCreated, retryOutilSync } from './triggers/syncBookings
 
 // ========== REVERSE SYNC: RECEIVE UPDATES FROM OUTIL-SOS-EXPAT ==========
 export { syncFromOutil } from './triggers/syncFromOutil';
+
+// ========== WHATSAPP INVITE LINKS SYNC (Laravel → Firestore) ==========
+export { syncWhatsAppInviteLinks } from './whatsapp/syncInviteLinks';
 
 
 // ========== SSO - AUTHENTICATION CROSS-PROJECT ==========
@@ -3405,5 +3431,11 @@ export {
   adminGetMigrationStatus,
 } from './unified/callables/adminMigration';
 export {
+  adminManualAdjustment,
+} from './unified/callables/adminManualAdjustment';
+export {
   unifiedReleaseHeldCommissions,
 } from './unified/scheduled/releaseHeldCommissions';
+export {
+  unifiedAutoMigrateAffiliateCodes,
+} from './unified/scheduled/autoMigrate';
