@@ -17,6 +17,8 @@ import {
   User,
   Scale,
   Globe,
+  Calendar,
+  UserCog,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
@@ -30,17 +32,21 @@ const PartnerTab = lazy(() => import('./tabs/PartnerTab'));
 const ClientTab = lazy(() => import('./tabs/ClientTab'));
 const LawyerRatesTab = lazy(() => import('./tabs/LawyerRatesTab'));
 const ExpatRatesTab = lazy(() => import('./tabs/ExpatRatesTab'));
+const PlansTab = lazy(() => import('./tabs/PlansTab'));
+const UserOverridesTab = lazy(() => import('./tabs/UserOverridesTab'));
 
 const TABS = [
-  { id: 'client', label: 'Client', icon: User, color: 'text-gray-500' },
-  { id: 'avocat', label: 'Avocat', icon: Scale, color: 'text-amber-600' },
-  { id: 'expatrie', label: 'Expatrié', icon: Globe, color: 'text-teal-500' },
   { id: 'chatter', label: 'Chatter', icon: MessageCircle, color: 'text-red-500' },
   { id: 'captain', label: 'Captain', icon: Crown, color: 'text-yellow-500' },
   { id: 'influenceur', label: 'Influenceur', icon: TrendingUp, color: 'text-orange-500' },
   { id: 'blogueur', label: 'Blogueur', icon: PenTool, color: 'text-purple-500' },
   { id: 'groupadmin', label: 'Admin Groupe', icon: Users, color: 'text-blue-500' },
   { id: 'partenaire', label: 'Partenaire', icon: Handshake, color: 'text-green-500' },
+  { id: 'client', label: 'Client', icon: User, color: 'text-gray-500' },
+  { id: 'avocat', label: 'Avocat', icon: Scale, color: 'text-amber-600' },
+  { id: 'expatrie', label: 'Expatrié', icon: Globe, color: 'text-teal-500' },
+  { id: 'plans', label: 'Plans promo', icon: Calendar, color: 'text-indigo-500' },
+  { id: 'overrides', label: 'Overrides', icon: UserCog, color: 'text-pink-500' },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
@@ -72,6 +78,8 @@ const AdminCommissionsHub: React.FC = () => {
       case 'blogueur': return <BloggerTab />;
       case 'groupadmin': return <GroupAdminTab />;
       case 'partenaire': return <PartnerTab />;
+      case 'plans': return <PlansTab />;
+      case 'overrides': return <UserOverridesTab />;
     }
   };
 

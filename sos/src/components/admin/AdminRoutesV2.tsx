@@ -1182,42 +1182,11 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
-      {/* Configuration globale */}
-      <Route
-        path="affiliates/config"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminAffiliateConfig />
-          </Suspense>
-        }
-      />
-      {/* Plans de commission à vie */}
-      <Route
-        path="affiliates/plans"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminCommissionPlans />
-          </Suspense>
-        }
-      />
-      {/* Règles de commission - accès direct au configurateur */}
-      <Route
-        path="affiliates/rules"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminCommissionRules />
-          </Suspense>
-        }
-      />
-      {/* Commissions unifiées */}
-      <Route
-        path="affiliates/unified"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminUnifiedCommissions />
-          </Suspense>
-        }
-      />
+      {/* Anciennes routes commission → redirect vers hub unifié */}
+      <Route path="affiliates/config" element={<Navigate to="/admin/commissions?tab=chatter" replace />} />
+      <Route path="affiliates/plans" element={<Navigate to="/admin/commissions?tab=plans" replace />} />
+      <Route path="affiliates/rules" element={<Navigate to="/admin/commissions?tab=avocat" replace />} />
+      <Route path="affiliates/unified" element={<Navigate to="/admin/commissions?tab=overrides" replace />} />
       {/* Gestion des commissions individuelles */}
       <Route
         path="affiliates/commissions"

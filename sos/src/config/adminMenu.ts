@@ -702,35 +702,7 @@ export const adminMenuTree: AdminMenuItem[] = [
             badge: "NEW",
             descriptionKey: "admin.menu.affiliateFraud.description",
           },
-          {
-            id: "affiliate-config",
-            labelKey: "admin.menu.affiliateConfig",
-            path: "/admin/affiliates/config",
-            icon: Settings,
-            descriptionKey: "admin.menu.affiliateConfig.description",
-          },
-          {
-            id: "commission-rules",
-            labelKey: "admin.menu.commissionRules",
-            path: "/admin/affiliates/rules",
-            icon: Cog,
-            descriptionKey: "admin.menu.commissionRules.description",
-          },
-          {
-            id: "commission-plans",
-            labelKey: "admin.menu.commissionPlans",
-            path: "/admin/affiliates/plans",
-            icon: Cog,
-            descriptionKey: "admin.menu.commissionPlans.description",
-          },
-          {
-            id: "unified-commissions",
-            labelKey: "admin.menu.unifiedCommissions",
-            path: "/admin/affiliates/unified",
-            icon: Percent,
-            badge: "NEW",
-            descriptionKey: "admin.menu.unifiedCommissions.description",
-          },
+          // Commission config, plans, rules, unified → déplacés vers /admin/commissions (hub unifié)
         ],
       },
       // Sous-section : Chatters
