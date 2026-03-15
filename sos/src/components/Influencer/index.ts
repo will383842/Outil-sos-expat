@@ -14,5 +14,3 @@ export { default as InfluencerStatsCard } from './Cards/InfluencerStatsCard';
 // Forms
 export { default as InfluencerRegisterForm } from './Forms/InfluencerRegisterForm';
 
-// Links
-export { default as InfluencerAffiliateLinks } from './Links/InfluencerAffiliateLinks';

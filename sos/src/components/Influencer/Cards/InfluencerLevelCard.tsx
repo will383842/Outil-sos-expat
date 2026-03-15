@@ -37,50 +37,29 @@ const UI = {
   `,
 } as const;
 
-// Level configurations based on total earnings (in cents)
-// Level 1: $0+, Level 2: $100+, Level 3: $500+, Level 4: $2000+, Level 5: $5000+
-const LEVEL_CONFIG = {
-  1: {
-    name: 'Starter',
-    color: 'from-gray-400 to-gray-500',
-    icon: Star,
-    minEarned: 0,
-    bonusLabel: null,
-    badge: null,
-  },
-  2: {
-    name: 'Rising Star',
-    color: 'from-blue-400 to-blue-500',
-    icon: TrendingUp,
-    minEarned: 10000, // $100 in cents
-    bonusLabel: '+10%',
-    badge: 'rising',
-  },
-  3: {
-    name: 'Pro',
-    color: 'from-purple-400 to-purple-500',
-    icon: Award,
-    minEarned: 50000, // $500 in cents
-    bonusLabel: '+20%',
-    badge: 'pro',
-  },
-  4: {
-    name: 'Expert',
-    color: 'from-amber-400 to-orange-500',
-    icon: Crown,
-    minEarned: 200000, // $2000 in cents
-    bonusLabel: '+35%',
-    badge: 'expert',
-  },
-  5: {
-    name: 'Elite',
-    color: 'from-yellow-400 to-amber-400',
-    icon: Zap,
-    minEarned: 500000, // $5000 in cents (aligned with Chatter)
-    bonusLabel: '+50%',
-    badge: 'elite',
-  },
-} as const;
+// Default level thresholds (cents) — overridden by backend config.levelThresholds
+const DEFAULT_THRESHOLDS = [0, 10000, 50000, 200000, 500000]; // $0, $100, $500, $2000, $5000
+
+// Visual config per level (name, color, icon, badge)
+const LEVEL_VISUAL = [
+  { name: 'Starter',     color: 'from-gray-400 to-gray-500',    icon: Star,       badge: null },
+  { name: 'Rising Star', color: 'from-blue-400 to-blue-500',    icon: TrendingUp, badge: 'rising' },
+  { name: 'Pro',         color: 'from-purple-400 to-purple-500', icon: Award,      badge: 'pro' },
+  { name: 'Expert',      color: 'from-amber-400 to-orange-500', icon: Crown,      badge: 'expert' },
+  { name: 'Elite',       color: 'from-yellow-400 to-amber-400', icon: Zap,        badge: 'elite' },
+] as const;
+
+/** Build LEVEL_CONFIG from thresholds (backend or defaults) */
+function buildLevelConfig(thresholds: number[]) {
+  const config: Record<number, { name: string; color: string; icon: typeof Star; minEarned: number; badge: string | null }> = {};
+  for (let i = 0; i < 5; i++) {
+    config[i + 1] = {
+      ...LEVEL_VISUAL[i],
+      minEarned: thresholds[i] ?? DEFAULT_THRESHOLDS[i],
+    };
+  }
+  return config;
+}
 
 // Badge configurations for achievements
 const BADGE_CONFIG: Record<string, { color: string; bgColor: string }> = {
@@ -103,15 +82,13 @@ const BADGE_CONFIG: Record<string, { color: string; bgColor: string }> = {
 };
 
 /**
- * Calculate influencer level based on total earnings
- * @param totalEarnedCents - Total earnings in cents
- * @returns Level from 1-5
+ * Calculate influencer level based on total earnings and thresholds
  */
-function calculateLevel(totalEarnedCents: number): 1 | 2 | 3 | 4 | 5 {
-  if (totalEarnedCents >= LEVEL_CONFIG[5].minEarned) return 5;
-  if (totalEarnedCents >= LEVEL_CONFIG[4].minEarned) return 4;
-  if (totalEarnedCents >= LEVEL_CONFIG[3].minEarned) return 3;
-  if (totalEarnedCents >= LEVEL_CONFIG[2].minEarned) return 2;
+function calculateLevel(totalEarnedCents: number, thresholds: number[]): 1 | 2 | 3 | 4 | 5 {
+  if (totalEarnedCents >= (thresholds[4] ?? DEFAULT_THRESHOLDS[4])) return 5;
+  if (totalEarnedCents >= (thresholds[3] ?? DEFAULT_THRESHOLDS[3])) return 4;
+  if (totalEarnedCents >= (thresholds[2] ?? DEFAULT_THRESHOLDS[2])) return 3;
+  if (totalEarnedCents >= (thresholds[1] ?? DEFAULT_THRESHOLDS[1])) return 2;
   return 1;
 }
 
@@ -134,8 +111,8 @@ interface InfluencerLevelCardProps {
   level?: 1 | 2 | 3 | 4 | 5;
   /** Backend-computed progress to next level (0-100) */
   levelProgress?: number;
-  /** Monthly top multiplier (>1.0 means active bonus) */
-  monthlyTopMultiplier?: number;
+  /** Level thresholds from backend config (5 values in cents) */
+  levelThresholds?: number[];
   /** Additional CSS classes */
   className?: string;
   /** Show loading skeleton */
@@ -148,7 +125,7 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
   totalEarned,
   level: backendLevel,
   levelProgress: backendProgress,
-  monthlyTopMultiplier,
+  levelThresholds,
   className = '',
   loading = false,
   animationDelay = 0,
@@ -157,8 +134,11 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
   const [progressAnimated, setProgressAnimated] = useState(false);
   const [badgesVisible, setBadgesVisible] = useState(false);
 
+  const thresholds = levelThresholds ?? DEFAULT_THRESHOLDS;
+  const LEVEL_CONFIG = buildLevelConfig(thresholds);
+
   // Use backend level if provided, otherwise fallback to client-side calc
-  const level = backendLevel || calculateLevel(totalEarned);
+  const level = backendLevel || calculateLevel(totalEarned, thresholds);
 
   // Trigger progress bar animation after mount
   useEffect(() => {
@@ -263,11 +243,6 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
             >
               {levelConfig.name}
             </span>
-            {levelConfig.bonusLabel && (
-              <span className="text-xs dark:text-green-400 font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30">
-                {levelConfig.bonusLabel}
-              </span>
-            )}
           </h3>
           <p className="text-xs dark:text-gray-700 sm:text-sm">
             <FormattedMessage
