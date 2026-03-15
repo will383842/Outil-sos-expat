@@ -75,6 +75,44 @@ async function apiCall<T>(
 }
 
 // ══════════════════════════════════════════════════════════════
+// PUBLIC endpoints (no auth required)
+// ══════════════════════════════════════════════════════════════
+
+export interface PublicPressResource {
+  id: string;
+  category: string;
+  type: string;
+  name: string;
+  description: string | null;
+  file_url: string | null;
+  file_format: string | null;
+  file_size: number | null;
+  sort_order: number;
+}
+
+export async function getPublicPressResources(
+  lang?: string,
+  category?: string,
+): Promise<{ success: boolean; resources: PublicPressResource[] }> {
+  const params = new URLSearchParams();
+  if (lang) params.set('lang', lang);
+  if (category) params.set('category', category);
+
+  const qs = params.toString();
+  const url = `${ENGINE_BASE_URL}/api/press/resources${qs ? `?${qs}` : ''}`;
+
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Press API error (${res.status})`);
+  }
+
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════════════════
 // AFFILIATE endpoints (firebase.affiliate middleware)
 // ══════════════════════════════════════════════════════════════
 

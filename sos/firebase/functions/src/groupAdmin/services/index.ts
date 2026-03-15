@@ -21,8 +21,5 @@ export {
   getWithdrawalStats,
 } from "./groupAdminWithdrawalService";
 
-export {
-  seedDefaultResources,
-  seedDefaultPosts,
-  getResourceStats,
-} from "./groupAdminResourceService";
+// Resources & Posts — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
+// seedDefaultResources, seedDefaultPosts, getResourceStats removed

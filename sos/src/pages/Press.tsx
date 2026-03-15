@@ -27,24 +27,24 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import {
+  getPublicPressResources,
+  type PublicPressResource,
+} from "../services/marketingResourcesApi";
 
 // ==================== TYPES ====================
 
+// PressResource mapped from Laravel API
 interface PressResource {
   id: string;
-  type: "logo" | "image" | "banner" | "screenshot" | "document" | "other";
-  title: string;
-  description: string;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  category: "brand" | "product" | "team";
-  format: string;
-  dimensions?: string;
-  isActive: boolean;
-  sortOrder: number;
-  downloadCount: number;
+  type: string;
+  name: string;
+  description: string | null;
+  file_url: string | null;
+  file_format: string | null;
+  file_size: number | null;
+  category: string;
+  sort_order: number;
 }
 
 interface PressRelease {
@@ -60,11 +60,12 @@ interface PressRelease {
   tags: string[];
 }
 
-type ResourceCategory = "all" | "brand" | "product" | "team";
+type ResourceCategory = "all" | "press_logos" | "press_kit" | "press_photos" | "press_data";
 
 // ==================== HELPERS ====================
 
-function formatFileSize(bytes: number): string {
+function formatFileSize(bytes: number | null): string {
+  if (!bytes) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -92,8 +93,9 @@ function getResourceIcon(type: string) {
   }
 }
 
-function isImageMime(mimeType: string): boolean {
-  return mimeType.startsWith("image/");
+function isImageFormat(format: string | null): boolean {
+  if (!format) return false;
+  return ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(format.toLowerCase());
 }
 
 // ==================== COMPONENT ====================
@@ -132,9 +134,6 @@ const Press: React.FC = () => {
       mediaKitSubtitle: intl.formatMessage({ id: "press.mediaKit.subtitle" }),
       mediaKitDownload: intl.formatMessage({ id: "press.mediaKit.download" }),
       mediaKitEmpty: intl.formatMessage({ id: "press.mediaKit.empty" }),
-      categoryBrand: intl.formatMessage({ id: "press.mediaKit.category.brand" }),
-      categoryProduct: intl.formatMessage({ id: "press.mediaKit.category.product" }),
-      categoryTeam: intl.formatMessage({ id: "press.mediaKit.category.team" }),
       typeLogo: intl.formatMessage({ id: "press.mediaKit.type.logo" }),
       typeImage: intl.formatMessage({ id: "press.mediaKit.type.image" }),
       typeBanner: intl.formatMessage({ id: "press.mediaKit.type.banner" }),
@@ -169,31 +168,26 @@ const Press: React.FC = () => {
     [t]
   );
 
-  const categoryLabels: Record<string, string> = useMemo(
-    () => ({
-      brand: t.categoryBrand,
-      product: t.categoryProduct,
-      team: t.categoryTeam,
-    }),
-    [t]
-  );
+  // Category labels moved to inline i18n in filter buttons
 
-  // Load press resources from Firestore
+  // Load press resources from Laravel API
   useEffect(() => {
     const loadResources = async () => {
       try {
         setLoadingResources(true);
-        const q = query(
-          collection(db, "press_resources"),
-          where("isActive", "==", true),
-          orderBy("sortOrder", "asc")
-        );
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as PressResource[];
-        setResources(data);
+        const result = await getPublicPressResources(lang);
+        const mapped: PressResource[] = (result.resources || []).map((r: PublicPressResource) => ({
+          id: r.id,
+          type: r.type,
+          name: r.name,
+          description: r.description,
+          file_url: r.file_url,
+          file_format: r.file_format,
+          file_size: r.file_size,
+          category: r.category,
+          sort_order: r.sort_order,
+        }));
+        setResources(mapped);
       } catch (error) {
         console.error("Error loading press resources:", error);
       } finally {
@@ -201,7 +195,7 @@ const Press: React.FC = () => {
       }
     };
     loadResources();
-  }, []);
+  }, [lang]);
 
   // Load press releases from Firestore
   useEffect(() => {
@@ -377,9 +371,10 @@ const Press: React.FC = () => {
               {(
                 [
                   { key: "all", label: intl.formatMessage({ id: "filter.all" }) },
-                  { key: "brand", label: categoryLabels.brand },
-                  { key: "product", label: categoryLabels.product },
-                  { key: "team", label: categoryLabels.team },
+                  { key: "press_logos", label: intl.formatMessage({ id: "press.mediaKit.category.logos", defaultMessage: "Logos" }) },
+                  { key: "press_kit", label: intl.formatMessage({ id: "press.mediaKit.category.kit", defaultMessage: "Dossier de Presse" }) },
+                  { key: "press_photos", label: intl.formatMessage({ id: "press.mediaKit.category.photos", defaultMessage: "Photos" }) },
+                  { key: "press_data", label: intl.formatMessage({ id: "press.mediaKit.category.data", defaultMessage: "Chiffres" }) },
                 ] as { key: ResourceCategory; label: string }[]
               ).map((cat) => (
                 <button
@@ -418,10 +413,10 @@ const Press: React.FC = () => {
                     >
                       {/* Thumbnail / icon */}
                       <div className="relative h-40 bg-gray-50 flex items-center justify-center overflow-hidden">
-                        {isImageMime(resource.mimeType) ? (
+                        {resource.file_url && isImageFormat(resource.file_format) ? (
                           <img
-                            src={resource.fileUrl}
-                            alt={resource.title}
+                            src={resource.file_url}
+                            alt={resource.name}
                             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
                             loading="lazy"
                           />
@@ -438,7 +433,7 @@ const Press: React.FC = () => {
                       {/* Info */}
                       <div className="p-5">
                         <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
-                          {resource.title}
+                          {resource.name}
                         </h3>
                         {resource.description && (
                           <p className="text-sm text-gray-500 mb-3 line-clamp-2">
@@ -447,22 +442,22 @@ const Press: React.FC = () => {
                         )}
                         <div className="flex items-center justify-between">
                           <div className="text-xs text-gray-400 space-x-2">
-                            <span>{resource.format}</span>
-                            {resource.dimensions && (
-                              <span>{resource.dimensions}</span>
+                            {resource.file_format && (
+                              <span>{resource.file_format.toUpperCase()}</span>
                             )}
-                            <span>{formatFileSize(resource.fileSize)}</span>
+                            <span>{formatFileSize(resource.file_size)}</span>
                           </div>
-                          <a
-                            href={resource.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={resource.fileName}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
-                          >
-                            <Download className="w-4 h-4" />
-                            {t.mediaKitDownload}
-                          </a>
+                          {resource.file_url && (
+                            <a
+                              href={resource.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                              <Download className="w-4 h-4" />
+                              {t.mediaKitDownload}
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>

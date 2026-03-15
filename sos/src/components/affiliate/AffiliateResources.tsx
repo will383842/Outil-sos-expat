@@ -46,15 +46,25 @@ interface CategoryConfig {
 const ROLE_CATEGORIES: Record<MarketingRole, CategoryConfig[]> = {
   chatter: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
+    { value: 'promotional', labelKey: 'resources.cat.promotional', defaultLabel: 'Promotionnel', descriptionKey: 'resources.cat.promotional.desc', defaultDescription: 'Textes et visuels promotionnels', color: 'blue' },
+    { value: 'templates', labelKey: 'resources.cat.templates', defaultLabel: 'Scripts & Templates', descriptionKey: 'resources.cat.templates.desc', defaultDescription: 'Scripts de conversation et messages types', color: 'green' },
   ],
   captain: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
+    { value: 'promotional', labelKey: 'resources.cat.promotional', defaultLabel: 'Promotionnel', descriptionKey: 'resources.cat.promotional.desc', defaultDescription: 'Textes et visuels promotionnels', color: 'blue' },
+    { value: 'templates', labelKey: 'resources.cat.templates', defaultLabel: 'Scripts & Templates', descriptionKey: 'resources.cat.templates.desc', defaultDescription: 'Scripts de conversation et messages types', color: 'green' },
+    { value: 'recruitment', labelKey: 'resources.cat.recruitment', defaultLabel: 'Recrutement', descriptionKey: 'resources.cat.recruitment.desc', defaultDescription: 'Ressources pour recruter de nouveaux chatters', color: 'red' },
   ],
   influencer: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
+    { value: 'social_media', labelKey: 'resources.cat.socialMedia', defaultLabel: 'Reseaux sociaux', descriptionKey: 'resources.cat.socialMedia.desc', defaultDescription: 'Posts, stories et reels prets a publier', color: 'purple' },
+    { value: 'promotional', labelKey: 'resources.cat.promotional', defaultLabel: 'Promotionnel', descriptionKey: 'resources.cat.promotional.desc', defaultDescription: 'Textes et visuels promotionnels', color: 'blue' },
   ],
   blogger: [
     { value: 'sos_expat', labelKey: 'resources.cat.sosExpat', defaultLabel: 'SOS-Expat', descriptionKey: 'resources.cat.sosExpat.desc', defaultDescription: 'Logos, banners and visuals', color: 'indigo' },
+    { value: 'seo', labelKey: 'resources.cat.seo', defaultLabel: 'SEO', descriptionKey: 'resources.cat.seo.desc', defaultDescription: 'Mots-cles, meta descriptions et guides SEO', color: 'green' },
+    { value: 'templates', labelKey: 'resources.cat.templates', defaultLabel: 'Templates', descriptionKey: 'resources.cat.templates.desc', defaultDescription: "Templates d'articles et structures recommandees", color: 'blue' },
+    { value: 'promotional', labelKey: 'resources.cat.promotional', defaultLabel: 'Promotionnel', descriptionKey: 'resources.cat.promotional.desc', defaultDescription: 'Widgets, bannieres et liens a integrer', color: 'purple' },
   ],
   group_admin: [
     { value: 'pinned_posts', labelKey: 'resources.cat.pinnedPosts', defaultLabel: 'Pinned Posts', descriptionKey: 'resources.cat.pinnedPosts.desc', defaultDescription: 'Posts to pin in your groups', color: 'red' },

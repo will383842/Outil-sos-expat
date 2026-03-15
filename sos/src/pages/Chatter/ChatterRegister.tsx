@@ -366,6 +366,19 @@ const ChatterRegister: React.FC = () => {
     );
   }
 
+  // WhatsApp screen after registration — rendered WITHOUT Layout for full-screen dark design
+  if (success && showWhatsApp && user?.uid) {
+    return (
+      <WhatsAppGroupScreen
+        userId={user.uid}
+        role="chatter"
+        language={registrationData?.language || 'en'}
+        country={registrationData?.country || ''}
+        onContinue={handleWhatsAppContinue}
+      />
+    );
+  }
+
   return (
     <Layout>
       <Helmet>
@@ -377,16 +390,7 @@ const ChatterRegister: React.FC = () => {
         <meta name="theme-color" content="#991B1B" />
       </Helmet>
 
-      {/* Écran WhatsApp après inscription réussie */}
-      {success && showWhatsApp && user?.uid ? (
-        <WhatsAppGroupScreen
-          userId={user.uid}
-          role="chatter"
-          language={registrationData?.language || 'en'}
-          country={registrationData?.country || ''}
-          onContinue={handleWhatsAppContinue}
-        />
-      ) : success ? (
+      {success ? (
         <SuccessFallbackRedirect dashboardRoute={dashboardRoute} navigate={navigate} />
       ) : (
         <div className="min-h-screen bg-gradient-to-b from-red-950 via-gray-950 to-black py-12 px-4">

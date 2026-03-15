@@ -74,9 +74,7 @@ export {
   completeWithdrawal,
   failWithdrawal,
   getWithdrawalStats,
-  seedDefaultResources,
-  seedDefaultPosts,
-  getResourceStats,
+  // seedDefaultResources, seedDefaultPosts, getResourceStats — MIGRATED TO LARAVEL
 } from "./services";
 
 // Triggers
