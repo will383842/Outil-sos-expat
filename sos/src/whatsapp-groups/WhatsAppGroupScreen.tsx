@@ -1,21 +1,46 @@
 /**
  * WhatsAppGroupScreen - Ecran post-inscription pour rejoindre le groupe WhatsApp
- * Design epure 2026 sur fond blanc, mobile-first
- * Scalable : fonctionne pour tous les roles (chatter, influencer, blogger, groupAdmin)
+ * Design sombre harmonise avec les pages d'inscription, mobile-first
+ * Scalable : fonctionne pour tous les roles (chatter, influencer, blogger, groupAdmin, client, lawyer, expat)
+ *
+ * Corrections 2026-03-14 :
+ * - P0: <a href> natif au lieu de window.open() (deep link mobile)
+ * - P1: Fond sombre harmonise avec les pages d'inscription
+ * - P1: Taille tactile 44px minimum sur tous les boutons
+ * - P1: Hover/active/focus sur le CTA
+ * - P1: Auto-redirect 8s apres clic
+ * - P2: Animation d'entree fade-in + slide-up
+ * - P2: Overflow-y-auto pour petits ecrans
+ * - P2: safe-area-inset pour iPhone notch
+ * - P2: Etats visuels differencies (invitation vs succes)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { ArrowRight, Loader2, MessageCircle, Shield, Zap, Users, Globe, Briefcase } from 'lucide-react';
 import { getWhatsAppGroupsConfig, findGroupForUser, trackWhatsAppGroupClick } from './whatsappGroupsService';
-import type { WhatsAppGroup, WhatsAppRole, WhatsAppRoleCategory } from './types';
-import { ROLE_CATEGORY } from './types';
+import type { WhatsAppGroup, WhatsAppRole } from './types';
 
-/** Icones par categorie de role */
-const ROLE_ICONS: Record<WhatsAppRoleCategory, [React.ReactNode, React.ReactNode, React.ReactNode]> = {
-  affiliate: [
+/** Icones par role — 3 icones par role, adaptees au contexte */
+const ROLE_ICONS: Record<WhatsAppRole, [React.ReactNode, React.ReactNode, React.ReactNode]> = {
+  chatter: [
     <Zap className="w-5 h-5 text-[#25D366]" />,
     <MessageCircle className="w-5 h-5 text-[#25D366]" />,
+    <Shield className="w-5 h-5 text-[#25D366]" />,
+  ],
+  influencer: [
+    <Globe className="w-5 h-5 text-[#25D366]" />,
+    <Users className="w-5 h-5 text-[#25D366]" />,
+    <Zap className="w-5 h-5 text-[#25D366]" />,
+  ],
+  blogger: [
+    <Globe className="w-5 h-5 text-[#25D366]" />,
+    <MessageCircle className="w-5 h-5 text-[#25D366]" />,
+    <Zap className="w-5 h-5 text-[#25D366]" />,
+  ],
+  groupAdmin: [
+    <Users className="w-5 h-5 text-[#25D366]" />,
+    <Zap className="w-5 h-5 text-[#25D366]" />,
     <Shield className="w-5 h-5 text-[#25D366]" />,
   ],
   client: [
@@ -23,12 +48,20 @@ const ROLE_ICONS: Record<WhatsAppRoleCategory, [React.ReactNode, React.ReactNode
     <Zap className="w-5 h-5 text-[#25D366]" />,
     <Users className="w-5 h-5 text-[#25D366]" />,
   ],
-  provider: [
+  lawyer: [
     <Briefcase className="w-5 h-5 text-[#25D366]" />,
     <Users className="w-5 h-5 text-[#25D366]" />,
     <Zap className="w-5 h-5 text-[#25D366]" />,
   ],
+  expat: [
+    <Users className="w-5 h-5 text-[#25D366]" />,
+    <Globe className="w-5 h-5 text-[#25D366]" />,
+    <Zap className="w-5 h-5 text-[#25D366]" />,
+  ],
 };
+
+/** Duree auto-redirect apres clic (ms) */
+const AUTO_REDIRECT_DELAY = 8000;
 
 interface WhatsAppGroupScreenProps {
   /** UID de l'utilisateur */
@@ -50,6 +83,29 @@ export const WhatsAppIcon: React.FC<{ className?: string }> = ({ className = 'w-
   </svg>
 );
 
+/** CSS keyframes pour les animations */
+const animationStyles = `
+@keyframes wa-fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes wa-checkmark-draw {
+  from { stroke-dashoffset: 30; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes wa-countdown-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.wa-animate-in { animation: wa-fade-in-up 0.5s ease-out both; }
+.wa-animate-in-delay { animation: wa-fade-in-up 0.5s ease-out 0.15s both; }
+.wa-checkmark-animated { stroke-dasharray: 30; animation: wa-checkmark-draw 0.6s ease-out 0.2s both; }
+.wa-countdown-bar { animation: wa-countdown-bar ${AUTO_REDIRECT_DELAY}ms linear both; }
+@media (prefers-reduced-motion: reduce) {
+  .wa-animate-in, .wa-animate-in-delay, .wa-checkmark-animated { animation: none !important; opacity: 1; }
+}
+`;
+
 const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
   userId,
   role,
@@ -61,7 +117,9 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
   const [group, setGroup] = useState<WhatsAppGroup | null>(null);
   const [loading, setLoading] = useState(true);
   const [clicked, setClicked] = useState(false);
+  const [countdown, setCountdown] = useState(Math.ceil(AUTO_REDIRECT_DELAY / 1000));
   const hasSkipped = useRef(false);
+  const linkRef = useRef<HTMLAnchorElement>(null);
 
   // Charger la config et trouver le bon groupe
   useEffect(() => {
@@ -86,55 +144,89 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
     }
   }, [loading, group, onContinue]);
 
-  const handleJoinClick = async () => {
+  // Auto-redirect apres clic avec countdown
+  useEffect(() => {
+    if (!clicked) return;
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          onContinue();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [clicked, onContinue]);
+
+  // Handler clic: tracker en fire-and-forget, le lien <a> gere l'ouverture
+  const handleJoinClick = () => {
     if (!group || !group.link) return;
-
-    // Ouvrir le lien WhatsApp dans un nouvel onglet
-    window.open(group.link, '_blank', 'noopener,noreferrer');
-
-    // Tracker le clic dans Firestore
     setClicked(true);
-    await trackWhatsAppGroupClick(role, userId, group.id, country);
+    // Fire-and-forget — ne pas await pour ne pas bloquer le contexte de clic
+    trackWhatsAppGroupClick(role, userId, group.id, country).catch(() => {});
   };
+
+  // Inject animation styles
+  useEffect(() => {
+    const id = 'wa-group-screen-styles';
+    if (document.getElementById(id)) return;
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = animationStyles;
+    document.head.appendChild(style);
+    return () => { document.getElementById(id)?.remove(); };
+  }, []);
 
   // Pas de groupe -> ne rien render (onContinue sera appele par l'effect)
   if (!loading && !group) return null;
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-white dark:bg-zinc-950 px-4 py-8">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-gray-950 via-gray-950 to-black px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] overflow-y-auto">
       <div className="max-w-md w-full">
         {loading ? (
           /* ===== ETAT LOADING ===== */
           <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 text-zinc-400 dark:text-zinc-500 mx-auto mb-4 animate-spin" />
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+            <Loader2 className="w-8 h-8 text-gray-500 mx-auto mb-4 animate-spin" />
+            <p className="text-gray-400 text-sm">
               <FormattedMessage id="whatsapp.loading" defaultMessage="Chargement..." />
             </p>
           </div>
         ) : clicked ? (
-          /* ===== ETAT APRES CLIC ===== */
-          <div className="text-center">
-            {/* Checkmark vert */}
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-50 dark:bg-green-950/30 flex items-center justify-center">
-              <svg className="w-8 h-8 text-[#25D366]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+          /* ===== ETAT APRES CLIC — Design differencie ===== */
+          <div className="text-center wa-animate-in">
+            {/* Grand logo WhatsApp anime */}
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#25D366]/20 flex items-center justify-center">
+              <WhatsAppIcon className="w-10 h-10 text-[#25D366]" />
             </div>
 
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-white mb-2">
               <FormattedMessage id="whatsapp.success.title" defaultMessage="Inscription terminée !" />
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-base mb-10 leading-relaxed max-w-xs mx-auto">
+            <p className="text-gray-400 text-base mb-8 leading-relaxed max-w-xs mx-auto">
               <FormattedMessage
                 id="whatsapp.success.subtitle"
                 defaultMessage="WhatsApp s'est ouvert. Rejoignez le groupe puis revenez ici."
               />
             </p>
 
+            {/* Barre de countdown */}
+            <div className="w-full h-1 bg-white/10 rounded-full mb-2 overflow-hidden">
+              <div className="h-full bg-[#25D366] rounded-full wa-countdown-bar" />
+            </div>
+            <p className="text-gray-500 text-xs mb-6">
+              <FormattedMessage
+                id="whatsapp.success.redirect"
+                defaultMessage="Redirection automatique dans {seconds}s..."
+                values={{ seconds: countdown }}
+              />
+            </p>
+
             {/* CTA vers dashboard */}
             <button
               onClick={onContinue}
-              className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold rounded-xl flex items-center justify-center gap-2 text-base"
+              className="w-full py-4 min-h-[48px] bg-white text-gray-900 font-semibold rounded-xl flex items-center justify-center gap-2 text-base hover:bg-gray-100 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
             >
               <FormattedMessage id="whatsapp.success.continue" defaultMessage="Mon tableau de bord" />
               <ArrowRight className="w-5 h-5" />
@@ -142,53 +234,50 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
           </div>
         ) : (
           /* ===== ETAT PRINCIPAL — INVITATION ===== */
-          <div className="text-center">
-            {/* Icone checkmark */}
-            <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-green-50 dark:bg-green-950/30 flex items-center justify-center">
-              <svg className="w-7 h-7 text-[#25D366]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+          <div className="text-center wa-animate-in">
+            {/* Grand logo WhatsApp */}
+            <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-[#25D366]/20 flex items-center justify-center wa-animate-in">
+              <WhatsAppIcon className="w-8 h-8 text-[#25D366]" />
             </div>
 
             {/* Badge discret */}
-            <span className="inline-block px-3 py-1 rounded-full bg-green-50 dark:bg-green-950/30 text-[#25D366] text-xs font-medium mb-6">
+            <span className="inline-block px-3 py-1 rounded-full bg-green-500/10 text-[#25D366] text-xs font-medium mb-6 wa-animate-in-delay">
               <FormattedMessage id="whatsapp.badge.registered" defaultMessage="Compte créé avec succès" />
             </span>
 
             {/* Titre */}
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-white mb-2">
               <FormattedMessage id="whatsapp.join.title" defaultMessage="Dernière étape !" />
             </h2>
 
             {/* Sous-titre */}
-            <p className="text-zinc-500 dark:text-zinc-400 text-base mb-6 leading-relaxed">
+            <p className="text-gray-400 text-base mb-6 leading-relaxed">
               <FormattedMessage
                 id="whatsapp.join.subtitle"
                 defaultMessage="Rejoignez le groupe {groupName}"
                 values={{
-                  groupName: <span className="text-zinc-900 dark:text-white font-semibold">{group?.name}</span>,
+                  groupName: <span className="text-white font-semibold">{group?.name}</span>,
                 }}
               />
             </p>
 
             {/* Separateur */}
-            <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800 mb-6" />
+            <div className="w-full h-px bg-white/10 mb-6" />
 
-            {/* 3 benefices — liste simple */}
+            {/* 3 benefices — adaptes par role */}
             {(() => {
-              const category = ROLE_CATEGORY[role] || 'affiliate';
-              const icons = ROLE_ICONS[category];
+              const icons = ROLE_ICONS[role];
               return (
                 <ul className="space-y-4 mb-8 text-left">
                   {[0, 1, 2].map((i) => (
                     <li key={i} className="flex items-start gap-3">
                       <span className="flex-shrink-0 mt-0.5">{icons[i]}</span>
                       <div>
-                        <p className="text-zinc-900 dark:text-white font-semibold text-sm">
-                          {intl.formatMessage({ id: `whatsapp.${category}.benefit${i + 1}.title` })}
+                        <p className="text-white font-semibold text-sm">
+                          {intl.formatMessage({ id: `whatsapp.${role}.benefit${i + 1}.title` })}
                         </p>
-                        <p className="text-zinc-400 dark:text-zinc-500 text-sm leading-relaxed">
-                          {intl.formatMessage({ id: `whatsapp.${category}.benefit${i + 1}.desc` })}
+                        <p className="text-gray-500 text-sm leading-relaxed">
+                          {intl.formatMessage({ id: `whatsapp.${role}.benefit${i + 1}.desc` })}
                         </p>
                       </div>
                     </li>
@@ -197,19 +286,22 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
               );
             })()}
 
-            {/* Bouton rejoindre */}
-            <button
+            {/* Bouton rejoindre — <a href> natif pour deep link mobile */}
+            <a
+              ref={linkRef}
+              href={group?.link || '#'}
+              rel="noopener noreferrer"
               onClick={handleJoinClick}
-              className="w-full py-4 bg-[#25D366] text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-base"
+              className="w-full py-4 min-h-[48px] bg-[#25D366] hover:bg-[#1fba59] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#25D366]/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-base transition-all"
             >
               <WhatsAppIcon className="w-5 h-5" />
               <FormattedMessage id="whatsapp.join.button" defaultMessage="Rejoindre le groupe WhatsApp" />
-            </button>
+            </a>
 
-            {/* Lien passer discret */}
+            {/* Lien passer discret — taille tactile 44px */}
             <button
               onClick={onContinue}
-              className="mt-5 py-2 text-zinc-400 dark:text-zinc-500 text-sm inline-flex items-center gap-1"
+              className="mt-5 py-2 min-h-[44px] px-4 text-gray-500 hover:text-gray-300 text-sm inline-flex items-center gap-1 transition-colors"
             >
               <FormattedMessage id="whatsapp.join.skip" defaultMessage="Passer cette étape" />
               <ArrowRight className="w-3.5 h-3.5" />

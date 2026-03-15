@@ -183,6 +183,60 @@ export function clearAllStoredReferrals(): void {
 }
 
 // ============================================================================
+// REFERRAL EXPIRATION STATUS — P1-2: Inform users when their referral link expired
+// ============================================================================
+
+/**
+ * Check if a referral code has expired or is about to expire.
+ * Returns status + days remaining for UI display.
+ */
+export function getReferralExpirationStatus(actorType: ActorType): {
+  hasReferral: boolean;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+  daysRemaining: number | null;
+} {
+  if (typeof window === 'undefined') {
+    return { hasReferral: false, isExpired: false, isExpiringSoon: false, daysRemaining: null };
+  }
+
+  // Check all keys for this actor type
+  const keys = [
+    getStorageKey(actorType),
+    getStorageKey(actorType, 'recruitment'),
+    getStorageKey(actorType, 'provider'),
+  ];
+
+  for (const key of keys) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+
+      const stored: StoredReferral = JSON.parse(deobfuscate(raw));
+      const expiresAt = new Date(stored.expiresAt).getTime();
+      const now = Date.now();
+      const daysRemaining = Math.max(0, Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000)));
+
+      if (isExpired(stored.expiresAt)) {
+        localStorage.removeItem(key);
+        return { hasReferral: true, isExpired: true, isExpiringSoon: false, daysRemaining: 0 };
+      }
+
+      return {
+        hasReferral: true,
+        isExpired: false,
+        isExpiringSoon: daysRemaining <= 3,
+        daysRemaining,
+      };
+    } catch {
+      continue;
+    }
+  }
+
+  return { hasReferral: false, isExpired: false, isExpiringSoon: false, daysRemaining: null };
+}
+
+// ============================================================================
 // CROSS-TRACKING: Find ANY stored referral code across all roles
 // ============================================================================
 

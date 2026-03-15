@@ -1,7 +1,11 @@
 /**
- * WhatsAppBanner - Bandeau pour le dashboard chatter
- * S'affiche pour les chatters qui n'ont pas encore rejoint le groupe WhatsApp
+ * WhatsAppBanner - Bandeau dashboard pour rejoindre le groupe WhatsApp
+ * S'affiche pour les users qui n'ont pas encore rejoint le groupe
  * Utile pour les anciens inscrits qui n'avaient pas le systeme WhatsApp
+ *
+ * Corrections 2026-03-14 :
+ * - P0: <a href> natif au lieu de window.open() (deep link mobile)
+ * - P3: localStorage au lieu de sessionStorage (persist entre sessions)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -16,7 +20,7 @@ interface WhatsAppBannerProps {
   role: WhatsAppRole;
   language: string;
   country: string;
-  /** Si true, le chatter a deja clique → ne pas afficher */
+  /** Si true, le user a deja clique → ne pas afficher */
   alreadyClicked?: boolean;
 }
 
@@ -34,7 +38,7 @@ const WhatsAppBanner: React.FC<WhatsAppBannerProps> = ({
   useEffect(() => {
     if (alreadyClicked) return;
     const dismissKey = `whatsapp_banner_dismissed_${userId}`;
-    if (sessionStorage.getItem(dismissKey)) {
+    if (localStorage.getItem(dismissKey)) {
       setDismissed(true);
       return;
     }
@@ -49,15 +53,15 @@ const WhatsAppBanner: React.FC<WhatsAppBannerProps> = ({
 
   if (alreadyClicked || clicked || dismissed || !group || !group.link) return null;
 
-  const handleJoin = async () => {
-    window.open(group.link, '_blank', 'noopener,noreferrer');
+  const handleJoinClick = () => {
     setClicked(true);
-    await trackWhatsAppGroupClick(role, userId, group.id, country);
+    // Fire-and-forget tracking
+    trackWhatsAppGroupClick(role, userId, group.id, country).catch(() => {});
   };
 
   const handleDismiss = () => {
     setDismissed(true);
-    sessionStorage.setItem(`whatsapp_banner_dismissed_${userId}`, '1');
+    localStorage.setItem(`whatsapp_banner_dismissed_${userId}`, '1');
   };
 
   return (
@@ -81,15 +85,18 @@ const WhatsAppBanner: React.FC<WhatsAppBannerProps> = ({
           />
         </p>
 
-        <button
-          onClick={handleJoin}
-          className="px-4 py-2 bg-[#25D366] text-white text-sm font-semibold rounded-lg whitespace-nowrap min-h-[44px]"
+        {/* <a href> natif pour deep link mobile */}
+        <a
+          href={group.link}
+          rel="noopener noreferrer"
+          onClick={handleJoinClick}
+          className="px-4 py-2 bg-[#25D366] hover:bg-[#1fba59] active:scale-[0.98] text-white text-sm font-semibold rounded-lg whitespace-nowrap min-h-[44px] inline-flex items-center transition-all"
         >
           <FormattedMessage
             id="whatsapp.dashboard.banner.button"
             defaultMessage="Rejoindre"
           />
-        </button>
+        </a>
       </div>
     </div>
   );
