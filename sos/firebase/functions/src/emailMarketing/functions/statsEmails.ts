@@ -1,6 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { MailwizzAPI } from "../utils/mailwizz";
+import { mapUserToMailWizzFields } from "../utils/fieldMapper";
 import { getLanguageCode } from "../config";
 import { logGA4Event } from "../utils/analytics";
 
@@ -53,22 +54,11 @@ export const sendWeeklyStats = onSchedule(
             user.language || user.preferredLanguage || user.lang || "en"
           );
 
-          const weeklyCalls = user.weeklyCalls || 0;
-          const weeklyEarnings = user.weeklyEarnings || 0;
-          const avgRating = user.averageRating || user.rating || 0;
-          const avgDuration = user.avgCallDuration || user.averageCallDuration || 0;
-
+          const userFields = mapUserToMailWizzFields(user, userId);
           await mailwizz.sendTransactional({
             to: user.email || userId,
             template: `TR_PRO_weekly-stats_${lang}`,
-            customFields: {
-              FNAME: user.firstName || "",
-              WEEKLY_CALLS: weeklyCalls.toString(),
-              WEEKLY_EARNINGS: weeklyEarnings.toString(),
-              AVG_RATING: avgRating.toString(),
-              AVG_DURATION: avgDuration.toString(),
-              DASHBOARD_URL: "https://sos-expat.com/dashboard",
-            },
+            customFields: userFields,
           });
 
           sent++;
@@ -140,26 +130,13 @@ export const sendMonthlyStats = onSchedule(
             user.language || user.preferredLanguage || user.lang || "en"
           );
 
-          const monthlyCalls = user.monthlyCalls || 0;
-          const monthlyEarnings = user.monthlyEarnings || 0;
-          const avgRating = user.averageRating || user.rating || 0;
-          const onlineHours = user.onlineHours || user.monthlyOnlineHours || 0;
-          const callsTrend = user.callsTrend || user.callsTrendPercent || "0%";
-          const earningsTrend = user.earningsTrend || user.earningsTrendPercent || "0%";
-
+          const userFields = mapUserToMailWizzFields(user, userId);
           await mailwizz.sendTransactional({
             to: user.email || userId,
             template: `TR_PRO_monthly-stats_${lang}`,
             customFields: {
-              FNAME: user.firstName || "",
+              ...userFields,
               MONTH: prevMonthName,
-              MONTHLY_CALLS: monthlyCalls.toString(),
-              MONTHLY_EARNINGS: monthlyEarnings.toString(),
-              AVG_RATING: avgRating.toString(),
-              ONLINE_HOURS: onlineHours.toString(),
-              CALLS_TREND: callsTrend,
-              EARNINGS_TREND: earningsTrend,
-              DASHBOARD_URL: "https://sos-expat.com/dashboard",
             },
           });
 
@@ -218,16 +195,13 @@ export async function sendAnniversaryEmailsHandler(): Promise<void> {
         const lang = getLanguageCode(user.language || user.preferredLanguage || user.lang || "en");
         const isProvider = user.role === "provider" || user.role === "lawyer";
         const rolePrefix = isProvider ? "PRO" : "CLI";
+        const userFields = mapUserToMailWizzFields(user, userId);
         await mailwizz.sendTransactional({
           to: user.email || userId,
           template: `TR_${rolePrefix}_anniversary_${lang}`,
           customFields: {
-            FNAME: user.firstName || "",
+            ...userFields,
             YEARS: "1",
-            TOTAL_CALLS: (user.totalCalls || 0).toString(),
-            TOTAL_CLIENTS: (user.totalClients || 0).toString(),
-            TOTAL_EARNINGS: isProvider ? (user.totalEarnings || 0).toString() : "0",
-            DASHBOARD_URL: "https://sos-expat.com/dashboard",
           },
         });
         sent++;

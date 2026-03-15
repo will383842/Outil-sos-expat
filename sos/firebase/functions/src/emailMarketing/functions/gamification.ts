@@ -1,6 +1,7 @@
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { MailwizzAPI } from "../utils/mailwizz";
+import { mapUserToMailWizzFields } from "../utils/fieldMapper";
 import { logGA4Event } from "../utils/analytics";
 import { getLanguageCode } from "../config";
 
@@ -49,16 +50,14 @@ export const handleMilestoneReached = onDocumentUpdated(
         after.language || after.preferredLanguage || after.lang || "en"
       );
 
+      const userFields = mapUserToMailWizzFields(after, userId);
       await mailwizz.sendTransactional({
         to: after.email || userId,
         template: `TR_PRO_milestone_${lang}`,
         customFields: {
-          FNAME: after.firstName || "",
+          ...userFields,
           MILESTONE_TYPE: after.lastMilestoneType || "",
           MILESTONE_VALUE: (after.lastMilestoneValue || "").toString(),
-          TOTAL_CALLS: (after.totalCalls || 0).toString(),
-          TOTAL_EARNINGS: (after.totalEarnings || 0).toString(),
-          DASHBOARD_URL: "https://sos-expat.com/dashboard",
         },
       });
 
@@ -126,15 +125,15 @@ export const handleBadgeUnlocked = onDocumentCreated(
         user?.language || user?.preferredLanguage || user?.lang || "en"
       );
 
+      const userFields = mapUserToMailWizzFields(user!, userId);
       await mailwizz.sendTransactional({
         to: user?.email || userId,
         template: `TR_PRO_badge-unlocked_${lang}`,
         customFields: {
-          FNAME: user?.firstName || "",
+          ...userFields,
           BADGE_NAME: badgeName || "",
           BADGE_ICON: badgeIcon || "",
           BADGE_DESCRIPTION: badgeDescription || "",
-          DASHBOARD_URL: "https://sos-expat.com/dashboard",
         },
       });
 

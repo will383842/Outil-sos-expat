@@ -18,7 +18,7 @@ export interface SubscriberData {
 
 export interface TransactionalEmailConfig {
   to: string;           // Email address of recipient
-  template: string;     // Template code: TR_PRO_xxx_LANG or TR_CLI_xxx_LANG
+  template: string;     // Template code: TR_PRO_xxx_LANG, TR_CLI_xxx_LANG, or TR_CHAT_xxx_LANG
   customFields?: Record<string, string>;
 }
 
@@ -33,14 +33,16 @@ const TEMPLATE_LANGUAGES_AVAILABLE = new Set(["AR", "DE", "EN", "ES", "FR", "HI"
 
 /**
  * Convert our internal template code to MailWizz template name
- * TR_PRO_call-completed_FR  → transactional-provider-call-completed [FR]
- * TR_CLI_welcome_EN         → transactional-client-welcome [EN]
- * TR_PRO_call-missed-01_DE  → transactional-provider-call-missed-01 [DE]
+ * TR_PRO_call-completed_FR   → transactional-provider-call-completed [FR]
+ * TR_CLI_welcome_EN          → transactional-client-welcome [EN]
+ * TR_PRO_call-missed-01_DE   → transactional-provider-call-missed-01 [DE]
+ * TR_CHAT_commission-earned_FR → transactional-chatter-commission-earned [FR]
  */
 function convertTemplateName(template: string): string {
   let name = template;
   name = name.replace(/^TR_PRO_/, "transactional-provider-");
   name = name.replace(/^TR_CLI_/, "transactional-client-");
+  name = name.replace(/^TR_CHAT_/, "transactional-chatter-");
   // Last segment: _FR → [FR], _EN → [EN], etc.
   name = name.replace(/_([A-Z]{2})$/, " [$1]");
   return name;
@@ -434,21 +436,20 @@ export class MailwizzAPI {
         throw new Error(`Empty template content for: ${templateName}`);
       }
 
-      // 5. Extract subject from <title> tag
-      const subject = extractSubjectFromHtml(rawHtml, templateName);
-
-      // 6. Replace [VARIABLE] placeholders
+      // 5. Replace [VARIABLE] placeholders
       const fields = config.customFields || {};
       const renderedHtml = renderTemplate(rawHtml, fields);
 
+      // 6. Extract subject from <title> tag (after rendering so variables are replaced)
+      const subject = extractSubjectFromHtml(renderedHtml, templateName);
+
       // 7. Encode body as base64 and send
       const bodyBase64 = Buffer.from(renderedHtml).toString("base64");
-
       const formData = new URLSearchParams();
       formData.append("email[to_email]", config.to);
       formData.append("email[to_name]", fields.FNAME || "");
-      formData.append("email[from_email]", "noreply@sos-expat.com");
-      formData.append("email[from_name]", "SOS Expat");
+      formData.append("email[from_email]", "manon@ulixai-expat.com");
+      formData.append("email[from_name]", "Manon de SOS Expat");
       formData.append("email[subject]", subject);
       formData.append("email[body]", bodyBase64);
 

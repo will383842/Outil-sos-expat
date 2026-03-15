@@ -48,15 +48,12 @@ export async function handleEmailMarketingRegistration(event: any) {
 
       try {
         await mailwizz.sendTransactional({
-          to: subscriberData.EMAIL, // Use email for transactional
+          to: subscriberData.EMAIL,
           template: welcomeTemplate,
-          customFields: {
-            FNAME: subscriberData.FNAME || "",
-          },
+          customFields: subscriberDataRaw,
         });
       } catch (emailError) {
         console.error(`❌ Error sending welcome email:`, emailError);
-        // Don't fail the whole function if email fails
       }
 
       // Log GA4 event

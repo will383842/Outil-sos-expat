@@ -1,5 +1,10 @@
 import * as admin from "firebase-admin";
+import { generateUnsubscribeToken } from "../../notificationPipeline/providers/email/zohoSmtp";
+import { EMAIL_PASS } from "../../lib/secrets";
 // import { getLanguageCode } from "../config";
+
+const UNSUBSCRIBE_FUNCTION_URL =
+  "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/emailUnsubscribe";
 
 /**
  * Map Firebase user document to MailWizz custom fields format
@@ -56,7 +61,7 @@ export function mapUserToMailWizzFields(
                          (userData.lastActivityAt instanceof admin.firestore.Timestamp ? userData.lastActivityAt.toDate().toISOString() : "") ||
                          fields.CREATED_AT;
 
-  // URLs (9)
+  // URLs (10)
   fields.AFFILIATE_LINK = `https://sos-expat.com/ref/${userId}`;
   fields.PROFILE_URL = `https://sos-expat.com/profile/edit`;
   fields.DASHBOARD_URL = "https://sos-expat.com/dashboard";
@@ -66,6 +71,20 @@ export function mapUserToMailWizzFields(
   fields.KYC_URL = "https://sos-expat.com/dashboard/kyc";
   fields.INVOICE_URL = "https://sos-expat.com/dashboard";
   fields.RETRY_URL = "https://sos-expat.com/dashboard";
+  // Unsubscribe URL (HMAC-signed token for RFC 8058 compliance)
+  try {
+    const email = userData.email || "";
+    if (email) {
+      const secret = EMAIL_PASS.value();
+      const token = generateUnsubscribeToken(email, secret);
+      fields.UNSUBSCRIBE_URL = `${UNSUBSCRIBE_FUNCTION_URL}?token=${encodeURIComponent(token)}&lang=${(userData.language || "en").toLowerCase()}`;
+    } else {
+      fields.UNSUBSCRIBE_URL = "https://sos-expat.com/contact";
+    }
+  } catch {
+    // Secret not available (emulator/dev) — fallback
+    fields.UNSUBSCRIBE_URL = "https://sos-expat.com/contact";
+  }
 
   // Statistics (10)
   fields.TOTAL_CALLS = (userData.totalCalls || 0).toString();
@@ -227,8 +246,9 @@ export function mapChatterToMailWizzFields(
     LNAME: chatterData.lastName || chatterData.name?.split(" ").slice(1).join(" ") || "",
   };
 
-  // Chatter affiliate link (single link, not AFFILIATE_LINK which is for client/provider)
+  // Chatter affiliate link — LINK is the primary, AFFILIATE_LINK is an alias for shared templates
   fields.LINK = chatterData.affiliateLink || `https://sos-expat.com/ref/${chatterId}`;
+  fields.AFFILIATE_LINK = fields.LINK; // alias so viral block works with both [LINK] and [AFFILIATE_LINK]
   fields.DASHBOARD_URL = "https://sos-expat.com/chatter/tableau-de-bord";
   fields.QR_CODE_URL = chatterData.qrCodeUrl || chatterData.affiliateLink || `https://sos-expat.com/ref/${chatterId}`;
 
@@ -285,6 +305,20 @@ export function mapChatterToMailWizzFields(
   // Inactive recruit info (populated per-event in campaigns)
   fields.INACTIVE_RECRUIT_NAME = "";
   fields.INACTIVE_RECRUIT_DAYS = "";
+
+  // Unsubscribe URL (HMAC-signed token for RFC 8058 compliance)
+  try {
+    const email = chatterData.email || "";
+    if (email) {
+      const secret = EMAIL_PASS.value();
+      const token = generateUnsubscribeToken(email, secret);
+      fields.UNSUBSCRIBE_URL = `${UNSUBSCRIBE_FUNCTION_URL}?token=${encodeURIComponent(token)}&lang=${(chatterData.language || "en").toLowerCase()}`;
+    } else {
+      fields.UNSUBSCRIBE_URL = "https://sos-expat.com/contact";
+    }
+  } catch {
+    fields.UNSUBSCRIBE_URL = "https://sos-expat.com/contact";
+  }
 
   return fields;
 }

@@ -1,6 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { MailwizzAPI } from "../utils/mailwizz";
+import { mapUserToMailWizzFields } from "../utils/fieldMapper";
 import { logGA4Event } from "../utils/analytics";
 import { getLanguageCode } from "../config";
 
@@ -52,7 +53,7 @@ export async function detectInactiveUsersHandler(): Promise<void> {
             await mailwizz.sendTransactional({
               to: user.email,
               template: `TR_${user.role === "provider" ? "PRO" : "CLI"}_re-engagement_${lang}`,
-              customFields: { FNAME: user.firstName || "", DAYS_INACTIVE: daysInactive.toString() },
+              customFields: { ...mapUserToMailWizzFields(user, userId), DAYS_INACTIVE: daysInactive.toString() },
             });
             await mailwizz.updateSubscriber(userId, {
               LAST_ACTIVITY: lastActivityDate.toISOString(),

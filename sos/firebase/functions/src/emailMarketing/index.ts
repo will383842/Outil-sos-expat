@@ -14,6 +14,9 @@ export * from './functions/inactiveUsers';
 export * from './functions/gamification';
 export * from './functions/statsEmails';
 export * from './functions/chatterLifecycle';
+export * from './functions/chatterTransactionalEmails';
+export * from './functions/chatterBackfill';
+export * from './functions/trustpilotOutreach';
 
 // Export utilities for internal use
 export * from './utils/mailwizz';

@@ -1,10 +1,12 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
-import { MailwizzAPI } from "../utils/mailwizz";
+import { MailwizzAPI, SubscriberData } from "../utils/mailwizz";
+import { mapChatterToMailWizzFields } from "../utils/fieldMapper";
 import {
   MAILWIZZ_LIST_CHATTER_RECRUTEMENT,
   MAILWIZZ_LIST_CHATTER_ONBOARDING,
+  getLanguageCode,
 } from "../config";
 
 /**
@@ -32,10 +34,8 @@ export const chatterMailwizzOnRegistered = onDocumentCreated(
     const data = event.data?.data();
     if (!data) return;
 
-    const { email, firstName, lastName, country, language } = data as {
+    const { email, country, language } = data as {
       email?: string;
-      firstName?: string;
-      lastName?: string;
       country?: string;
       language?: string;
     };
@@ -65,17 +65,18 @@ export const chatterMailwizzOnRegistered = onDocumentCreated(
     // --- Step 2: Subscribe to Campagne B (onboarding) if configured ---
     if (listOnboarding) {
       try {
+        const chatterId = event.params.chatterId;
         const mailwizzOnboarding = new MailwizzAPI(listOnboarding);
-        await mailwizzOnboarding.createSubscriber({
-          EMAIL: email,
-          FNAME: firstName || "",
-          LNAME: lastName || "",
-          COUNTRY: country || "",
-          LANGUAGE: language || "fr",
-          CHATTER_STATUS: "inscrit",
-          IS_SENEGAL: country === "SN" ? "yes" : "no",
-        });
-        console.log(`[chatterMailwizz] Subscribed to onboarding list: ${email.slice(0, 4)}***`);
+
+        // Send ALL chatter fields so campaign emails have real data
+        const allFields = mapChatterToMailWizzFields(data, chatterId);
+        allFields.LANGUAGE = getLanguageCode(language || data.preferredLanguage || "en").toLowerCase();
+        allFields.CHATTER_STATUS = "inscrit";
+        allFields.IS_SENEGAL = country === "SN" ? "yes" : "no";
+        allFields.COUNTRY = country || "";
+
+        await mailwizzOnboarding.createSubscriber(allFields as SubscriberData);
+        console.log(`[chatterMailwizz] Subscribed to onboarding list with ${Object.keys(allFields).length} fields: ${email.slice(0, 4)}***`);
       } catch (err) {
         console.error("[chatterMailwizz] Error subscribing to onboarding list:", err);
       }
