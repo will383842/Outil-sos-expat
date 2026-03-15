@@ -1,4 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
+/**
+ * Press Landing Page — Public press room for journalists & media
+ *
+ * Gate: Journalists must fill a form (email, country, language, media theme/type)
+ * before accessing resources. Data saved to Firestore press_contacts.
+ *
+ * Resources come from Laravel API (press_logos, press_kit, press_photos, press_data)
+ * Press releases come from Firestore (press_releases collection)
+ */
+
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Newspaper,
   Download,
@@ -11,11 +21,22 @@ import {
   ChevronUp,
   FileText,
   Image,
-  Filter,
   File,
   Lock,
   Unlock,
   CheckCircle,
+  Palette,
+  FolderOpen,
+  Camera,
+  BarChart3,
+  Award,
+  ExternalLink,
+  ArrowDown,
+  Users,
+  MapPin,
+  Calendar,
+  Building2,
+  Briefcase,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
@@ -39,7 +60,6 @@ import {
 
 // ==================== TYPES ====================
 
-// PressResource mapped from Laravel API
 interface PressResource {
   id: string;
   type: string;
@@ -64,46 +84,56 @@ interface PressRelease {
   tags: string[];
 }
 
-type ResourceCategory = "all" | "press_logos" | "press_kit" | "press_photos" | "press_data";
-
 interface PressContactForm {
   email: string;
   language: string;
   country: string;
   mediaTheme: string;
   mediaType: string;
+  mediaName: string;
 }
 
+// ==================== CONSTANTS ====================
+
 const MEDIA_THEMES = [
-  { value: "expatriation", label: { fr: "Expatriation", en: "Expatriation" } },
-  { value: "travel", label: { fr: "Voyage", en: "Travel" } },
-  { value: "legal", label: { fr: "Juridique", en: "Legal" } },
-  { value: "finance", label: { fr: "Finance & Economie", en: "Finance & Economy" } },
-  { value: "technology", label: { fr: "Technologie", en: "Technology" } },
-  { value: "lifestyle", label: { fr: "Lifestyle", en: "Lifestyle" } },
-  { value: "business", label: { fr: "Business & Entrepreneuriat", en: "Business & Entrepreneurship" } },
-  { value: "immigration", label: { fr: "Immigration", en: "Immigration" } },
-  { value: "education", label: { fr: "Education", en: "Education" } },
-  { value: "health", label: { fr: "Sante", en: "Health" } },
-  { value: "culture", label: { fr: "Culture", en: "Culture" } },
-  { value: "other", label: { fr: "Autre", en: "Other" } },
+  { value: "expatriation", fr: "Expatriation", en: "Expatriation" },
+  { value: "travel", fr: "Voyage", en: "Travel" },
+  { value: "legal", fr: "Juridique & Droit", en: "Legal" },
+  { value: "finance", fr: "Finance & Economie", en: "Finance & Economy" },
+  { value: "technology", fr: "Technologie & Startups", en: "Technology & Startups" },
+  { value: "lifestyle", fr: "Lifestyle & Bien-etre", en: "Lifestyle & Wellness" },
+  { value: "business", fr: "Business & Entrepreneuriat", en: "Business & Entrepreneurship" },
+  { value: "immigration", fr: "Immigration & Mobilite", en: "Immigration & Mobility" },
+  { value: "education", fr: "Education & Formation", en: "Education & Training" },
+  { value: "health", fr: "Sante", en: "Health" },
+  { value: "culture", fr: "Culture & Societe", en: "Culture & Society" },
+  { value: "general", fr: "Generaliste", en: "General" },
+  { value: "other", fr: "Autre", en: "Other" },
 ];
 
 const MEDIA_TYPES = [
-  { value: "online_press", label: { fr: "Presse en ligne", en: "Online Press" } },
-  { value: "print_press", label: { fr: "Presse ecrite", en: "Print Press" } },
-  { value: "tv", label: { fr: "Television", en: "Television" } },
-  { value: "radio", label: { fr: "Radio", en: "Radio" } },
-  { value: "podcast", label: { fr: "Podcast", en: "Podcast" } },
-  { value: "magazine", label: { fr: "Magazine", en: "Magazine" } },
-  { value: "daily", label: { fr: "Quotidien", en: "Daily Newspaper" } },
-  { value: "news_agency", label: { fr: "Agence de presse", en: "News Agency" } },
-  { value: "blog", label: { fr: "Blog / Media independant", en: "Blog / Independent Media" } },
-  { value: "influencer", label: { fr: "Influenceur media", en: "Media Influencer" } },
-  { value: "other", label: { fr: "Autre", en: "Other" } },
+  { value: "online_press", fr: "Presse en ligne", en: "Online Press" },
+  { value: "print_press", fr: "Presse ecrite", en: "Print Press" },
+  { value: "tv", fr: "Television", en: "Television" },
+  { value: "radio", fr: "Radio", en: "Radio" },
+  { value: "podcast", fr: "Podcast", en: "Podcast" },
+  { value: "magazine", fr: "Magazine", en: "Magazine" },
+  { value: "daily", fr: "Quotidien", en: "Daily Newspaper" },
+  { value: "news_agency", fr: "Agence de presse", en: "News Agency" },
+  { value: "blog", fr: "Blog / Media independant", en: "Blog / Independent Media" },
+  { value: "freelance", fr: "Journaliste freelance", en: "Freelance Journalist" },
+  { value: "other", fr: "Autre", en: "Other" },
 ];
 
 const PRESS_STORAGE_KEY = "sos_press_access";
+
+const SECTIONS = [
+  { id: "identity", icon: Palette, fr: "Identite visuelle", en: "Visual Identity" },
+  { id: "press-kit", icon: FolderOpen, fr: "Dossier de presse", en: "Press Kit" },
+  { id: "releases", icon: Newspaper, fr: "Communiques", en: "Press Releases" },
+  { id: "images", icon: Camera, fr: "Banque d'images", en: "Image Bank" },
+  { id: "data", icon: BarChart3, fr: "Chiffres cles", en: "Key Figures" },
+];
 
 // ==================== HELPERS ====================
 
@@ -114,26 +144,9 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getLocalizedText(
-  field: Record<string, string> | undefined,
-  lang: string
-): string {
+function getLocalizedText(field: Record<string, string> | undefined, lang: string): string {
   if (!field) return "";
   return field[lang] || field["en"] || field["fr"] || "";
-}
-
-function getResourceIcon(type: string) {
-  switch (type) {
-    case "logo":
-    case "image":
-    case "banner":
-    case "screenshot":
-      return Image;
-    case "document":
-      return FileText;
-    default:
-      return File;
-  }
 }
 
 function isImageFormat(format: string | null): boolean {
@@ -141,96 +154,131 @@ function isImageFormat(format: string | null): boolean {
   return ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(format.toLowerCase());
 }
 
-// ==================== COMPONENT ====================
+// ==================== SUB-COMPONENTS ====================
+
+function ResourceCard({ resource, downloadLabel }: { resource: PressResource; downloadLabel: string }) {
+  const isImg = resource.file_url && isImageFormat(resource.file_format);
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+      <div className="relative h-44 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+        {isImg ? (
+          <img src={resource.file_url!} alt={resource.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        ) : (
+          <div className="text-center">
+            <FileText className="w-12 h-12 text-gray-300 mx-auto" />
+            {resource.file_format && <span className="text-xs text-gray-400 mt-2 block uppercase">{resource.file_format}</span>}
+          </div>
+        )}
+      </div>
+      <div className="p-5">
+        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 text-sm">{resource.name}</h3>
+        {resource.description && <p className="text-xs text-gray-500 mb-3 line-clamp-2">{resource.description}</p>}
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-400 flex items-center gap-2">
+            {resource.file_format && <span className="bg-gray-100 px-2 py-0.5 rounded uppercase font-medium">{resource.file_format}</span>}
+            <span>{formatFileSize(resource.file_size)}</span>
+          </div>
+          {resource.file_url && (
+            <a href={resource.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors">
+              <Download className="w-3.5 h-3.5" />
+              {downloadLabel}
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, subtitle }: { icon: React.ElementType; title: string; subtitle: string }) {
+  return (
+    <div className="mb-10">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+          <Icon className="w-5 h-5 text-red-600" />
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{title}</h2>
+      </div>
+      <p className="text-gray-500 max-w-2xl">{subtitle}</p>
+    </div>
+  );
+}
+
+function EmptySection({ message }: { message: string }) {
+  return (
+    <div className="bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+      <FolderOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+      <p className="text-gray-400 text-sm">{message}</p>
+    </div>
+  );
+}
+
+// ==================== MAIN COMPONENT ====================
 
 const Press: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
   const lang = (language as string) || "fr";
+  const isFr = lang === "fr";
 
-  // Press access gate
+  // Gate state
   const [hasAccess, setHasAccess] = useState(() => {
     try { return !!localStorage.getItem(PRESS_STORAGE_KEY); } catch { return false; }
   });
   const [formData, setFormData] = useState<PressContactForm>({
-    email: "", language: lang, country: "", mediaTheme: "", mediaType: "",
+    email: "", language: lang, country: "", mediaTheme: "", mediaType: "", mediaName: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // State
+  // Resources state
   const [resources, setResources] = useState<PressResource[]>([]);
   const [releases, setReleases] = useState<PressRelease[]>([]);
-  const [loadingResources, setLoadingResources] = useState(true);
-  const [loadingReleases, setLoadingReleases] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState<ResourceCategory>("all");
+  const [loadingResources, setLoadingResources] = useState(false);
+  const [loadingReleases, setLoadingReleases] = useState(false);
   const [expandedRelease, setExpandedRelease] = useState<string | null>(null);
 
+  // Refs for section navigation
+  const contentRef = useRef<HTMLDivElement>(null);
+
   // i18n
-  const t = useMemo(
-    () => ({
-      seoTitle: intl.formatMessage({ id: "press.seo.title" }),
-      seoDescription: intl.formatMessage({ id: "press.seo.description" }),
-      heroTitle: intl.formatMessage({ id: "press.hero.title" }),
-      heroSubtitle: intl.formatMessage({ id: "press.hero.subtitle" }),
-      heroBadge: intl.formatMessage({ id: "press.hero.badge" }),
-      aboutTitle: intl.formatMessage({ id: "press.about.title" }),
-      aboutDescription: intl.formatMessage({ id: "press.about.description" }),
-      aboutMission: intl.formatMessage({ id: "press.about.mission" }),
-      statsCountries: intl.formatMessage({ id: "press.stats.countries" }),
-      statsCountriesLabel: intl.formatMessage({ id: "press.stats.countriesLabel" }),
-      statsLanguages: intl.formatMessage({ id: "press.stats.languages" }),
-      statsLanguagesLabel: intl.formatMessage({ id: "press.stats.languagesLabel" }),
-      statsAvailability: intl.formatMessage({ id: "press.stats.availability" }),
-      statsAvailabilityLabel: intl.formatMessage({ id: "press.stats.availabilityLabel" }),
-      mediaKitTitle: intl.formatMessage({ id: "press.mediaKit.title" }),
-      mediaKitSubtitle: intl.formatMessage({ id: "press.mediaKit.subtitle" }),
-      mediaKitDownload: intl.formatMessage({ id: "press.mediaKit.download" }),
-      mediaKitEmpty: intl.formatMessage({ id: "press.mediaKit.empty" }),
-      typeLogo: intl.formatMessage({ id: "press.mediaKit.type.logo" }),
-      typeImage: intl.formatMessage({ id: "press.mediaKit.type.image" }),
-      typeBanner: intl.formatMessage({ id: "press.mediaKit.type.banner" }),
-      typeScreenshot: intl.formatMessage({ id: "press.mediaKit.type.screenshot" }),
-      typeDocument: intl.formatMessage({ id: "press.mediaKit.type.document" }),
-      typeOther: intl.formatMessage({ id: "press.mediaKit.type.other" }),
-      releasesTitle: intl.formatMessage({ id: "press.releases.title" }),
-      releasesSubtitle: intl.formatMessage({ id: "press.releases.subtitle" }),
-      releasesReadMore: intl.formatMessage({ id: "press.releases.readMore" }),
-      releasesCollapse: intl.formatMessage({ id: "press.releases.collapse" }),
-      releasesDownloadPdf: intl.formatMessage({ id: "press.releases.downloadPdf" }),
-      releasesEmpty: intl.formatMessage({ id: "press.releases.empty" }),
-      releasesNoTranslation: intl.formatMessage({ id: "press.releases.noTranslation" }),
-      contactTitle: intl.formatMessage({ id: "press.contact.title" }),
-      contactDescription: intl.formatMessage({ id: "press.contact.description" }),
-      contactEmail: intl.formatMessage({ id: "press.contact.email" }),
-      contactEmailLabel: intl.formatMessage({ id: "press.contact.emailLabel" }),
-      contactResponse: intl.formatMessage({ id: "press.contact.response" }),
-    }),
-    [intl]
-  );
+  const t = useMemo(() => ({
+    seoTitle: intl.formatMessage({ id: "press.seo.title" }),
+    seoDescription: intl.formatMessage({ id: "press.seo.description" }),
+    heroTitle: intl.formatMessage({ id: "press.hero.title" }),
+    heroSubtitle: intl.formatMessage({ id: "press.hero.subtitle" }),
+    heroBadge: intl.formatMessage({ id: "press.hero.badge" }),
+    aboutTitle: intl.formatMessage({ id: "press.about.title" }),
+    aboutDescription: intl.formatMessage({ id: "press.about.description" }),
+    aboutMission: intl.formatMessage({ id: "press.about.mission" }),
+    mediaKitDownload: intl.formatMessage({ id: "press.mediaKit.download" }),
+    releasesTitle: intl.formatMessage({ id: "press.releases.title" }),
+    releasesSubtitle: intl.formatMessage({ id: "press.releases.subtitle" }),
+    releasesReadMore: intl.formatMessage({ id: "press.releases.readMore" }),
+    releasesCollapse: intl.formatMessage({ id: "press.releases.collapse" }),
+    releasesDownloadPdf: intl.formatMessage({ id: "press.releases.downloadPdf" }),
+    releasesEmpty: intl.formatMessage({ id: "press.releases.empty" }),
+    releasesNoTranslation: intl.formatMessage({ id: "press.releases.noTranslation" }),
+    contactTitle: intl.formatMessage({ id: "press.contact.title" }),
+    contactDescription: intl.formatMessage({ id: "press.contact.description" }),
+    contactEmail: intl.formatMessage({ id: "press.contact.email" }),
+    contactEmailLabel: intl.formatMessage({ id: "press.contact.emailLabel" }),
+    contactResponse: intl.formatMessage({ id: "press.contact.response" }),
+  }), [intl]);
 
-  const typeLabels: Record<string, string> = useMemo(
-    () => ({
-      logo: t.typeLogo,
-      image: t.typeImage,
-      banner: t.typeBanner,
-      screenshot: t.typeScreenshot,
-      document: t.typeDocument,
-      other: t.typeOther,
-    }),
-    [t]
-  );
+  const localeMap: Record<string, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", de: "de-DE", pt: "pt-PT", ru: "ru-RU", ch: "zh-CN", hi: "hi-IN", ar: "ar-SA" };
 
-  // Category labels moved to inline i18n in filter buttons
+  const formatDate = (date: Date): string =>
+    new Intl.DateTimeFormat(localeMap[lang] || "fr-FR", { year: "numeric", month: "long", day: "numeric" }).format(date);
 
-  // Submit press contact form
+  // ── Gate submit ──
   const handlePressAccess = async () => {
     if (!formData.email.trim() || !formData.country.trim() || !formData.mediaTheme || !formData.mediaType) {
-      setFormError(lang === "fr" ? "Veuillez remplir tous les champs" : "Please fill in all fields");
+      setFormError(isFr ? "Veuillez remplir tous les champs obligatoires" : "Please fill in all required fields");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setFormError(lang === "fr" ? "Adresse email invalide" : "Invalid email address");
+      setFormError(isFr ? "Adresse email invalide" : "Invalid email address");
       return;
     }
     setSubmitting(true);
@@ -242,632 +290,377 @@ const Press: React.FC = () => {
         country: formData.country.trim(),
         mediaTheme: formData.mediaTheme,
         mediaType: formData.mediaType,
+        mediaName: formData.mediaName.trim() || null,
         createdAt: serverTimestamp(),
         source: "press_landing_page",
       });
       localStorage.setItem(PRESS_STORAGE_KEY, JSON.stringify({ email: formData.email, ts: Date.now() }));
       setHasAccess(true);
-    } catch (error) {
-      console.error("Error saving press contact:", error);
-      setFormError(lang === "fr" ? "Erreur, veuillez reessayer" : "Error, please try again");
+    } catch {
+      setFormError(isFr ? "Erreur, veuillez reessayer" : "Error, please try again");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Load press resources from Laravel API — only after access granted
+  // ── Load resources ──
   useEffect(() => {
-    if (!hasAccess) { setLoadingResources(false); return; }
-    const loadResources = async () => {
+    if (!hasAccess) return;
+    (async () => {
+      setLoadingResources(true);
       try {
-        setLoadingResources(true);
         const result = await getPublicPressResources(lang);
-        const mapped: PressResource[] = (result.resources || []).map((r: PublicPressResource) => ({
-          id: r.id,
-          type: r.type,
-          name: r.name,
-          description: r.description,
-          file_url: r.file_url,
-          file_format: r.file_format,
-          file_size: r.file_size,
-          category: r.category,
-        }));
-        setResources(mapped);
-      } catch (error) {
-        console.error("Error loading press resources:", error);
-      } finally {
-        setLoadingResources(false);
-      }
-    };
-    loadResources();
+        setResources((result.resources || []).map((r: PublicPressResource) => ({
+          id: r.id, type: r.type, name: r.name, description: r.description,
+          file_url: r.file_url, file_format: r.file_format, file_size: r.file_size, category: r.category,
+        })));
+      } catch { /* silent */ }
+      setLoadingResources(false);
+    })();
   }, [lang, hasAccess]);
 
-  // Load press releases from Firestore — only after access granted
+  // ── Load releases ──
   useEffect(() => {
-    if (!hasAccess) { setLoadingReleases(false); return; }
-    const loadReleases = async () => {
+    if (!hasAccess) return;
+    (async () => {
+      setLoadingReleases(true);
       try {
-        setLoadingReleases(true);
-        const q = query(
-          collection(db, "press_releases"),
-          where("isActive", "==", true),
-          orderBy("publishedAt", "desc")
-        );
+        const q = query(collection(db, "press_releases"), where("isActive", "==", true), orderBy("publishedAt", "desc"));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map((doc) => {
+        setReleases(snapshot.docs.map((doc) => {
           const d = doc.data();
-          return {
-            id: doc.id,
-            ...d,
-            publishedAt: d.publishedAt?.toDate() || new Date(),
-          };
-        }) as PressRelease[];
-        setReleases(data);
-      } catch (error) {
-        console.error("Error loading press releases:", error);
-      } finally {
-        setLoadingReleases(false);
-      }
-    };
-    loadReleases();
+          return { id: doc.id, ...d, publishedAt: d.publishedAt?.toDate() || new Date() } as PressRelease;
+        }));
+      } catch { /* silent */ }
+      setLoadingReleases(false);
+    })();
   }, [hasAccess]);
 
-  // Filtered resources
-  const filteredResources = useMemo(() => {
-    if (categoryFilter === "all") return resources;
-    return resources.filter((r) => r.category === categoryFilter);
-  }, [resources, categoryFilter]);
+  // ── Categorized resources ──
+  const logos = resources.filter((r) => r.category === "press_logos");
+  const kits = resources.filter((r) => r.category === "press_kit");
+  const photos = resources.filter((r) => r.category === "press_photos");
+  const data = resources.filter((r) => r.category === "press_data");
+  const emptyMsg = isFr ? "Contenu bientot disponible" : "Content coming soon";
 
-  // Locale map for Intl.DateTimeFormat (BCP 47 compliant)
-  const localeMap: Record<string, string> = {
-    fr: "fr-FR", en: "en-US", es: "es-ES", de: "de-DE",
-    pt: "pt-PT", ru: "ru-RU", ch: "zh-CN", hi: "hi-IN", ar: "ar-SA",
-  };
-
-  const formatDate = (date: Date): string => {
-    return new Intl.DateTimeFormat(localeMap[lang] || "fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  };
-
-  const formatDateISO = (date: Date): string => {
-    return date.toISOString().split("T")[0];
-  };
-
+  // ==================== RENDER ====================
   return (
     <Layout>
-      <SEOHead
-        title={t.seoTitle}
-        description={t.seoDescription}
-        canonicalUrl={`/${lang}/presse`}
-        ogType="website"
-        locale={(localeMap[lang] || "fr-FR").replace("-", "_")}
-        contentType="WebPage"
-      />
-      <BreadcrumbSchema
-        items={[
-          { name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` },
-          { name: t.heroTitle },
-        ]}
-      />
+      <SEOHead title={t.seoTitle} description={t.seoDescription} canonicalUrl={`/${lang}/presse`} ogType="website" locale={(localeMap[lang] || "fr-FR").replace("-", "_")} contentType="WebPage" />
+      <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t.heroTitle }]} />
 
       <div className="min-h-screen bg-white">
-        {/* ==================== HERO ==================== */}
-        <section className="relative bg-gradient-to-br from-red-600 to-red-700 text-white overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        {/* ══════════════ HERO ══════════════ */}
+        <section className="relative bg-gray-950 text-white overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-[128px]" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[96px]" />
           </div>
-
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
-              <Newspaper className="w-4 h-4" />
-              <span className="text-sm font-medium">{t.heroBadge}</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
-              {t.heroTitle}
-            </h1>
-            <p className="text-lg sm:text-xl text-red-100 max-w-3xl mx-auto leading-relaxed">
-              {t.heroSubtitle}
-            </p>
-          </div>
-        </section>
-
-        {/* ==================== ABOUT ==================== */}
-        <section className="py-16 sm:py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                {t.aboutTitle}
-              </h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                {t.aboutDescription}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/10 rounded-full px-4 py-2 mb-8">
+                <Newspaper className="w-4 h-4 text-red-400" />
+                <span className="text-sm font-medium text-red-200">{t.heroBadge}</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 tracking-tight leading-[1.1]">
+                {t.heroTitle}
+              </h1>
+              <p className="text-lg sm:text-xl text-gray-400 leading-relaxed mb-8">
+                {t.heroSubtitle}
               </p>
-              <p className="text-lg text-red-600 font-medium italic">
-                {t.aboutMission}
-              </p>
+              {hasAccess && (
+                <button onClick={() => contentRef.current?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all">
+                  <ArrowDown className="w-5 h-5" />
+                  {isFr ? "Acceder aux ressources" : "Access resources"}
+                </button>
+              )}
             </div>
           </div>
         </section>
 
-        {/* ==================== KEY STATS ==================== */}
-        <section className="py-16 sm:py-20">
+        {/* ══════════════ ABOUT + KEY NUMBERS ══════════════ */}
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: Globe,
-                  value: t.statsCountries,
-                  label: t.statsCountriesLabel,
-                  color: "text-red-600",
-                  bg: "bg-red-50",
-                },
-                {
-                  icon: Languages,
-                  value: t.statsLanguages,
-                  label: t.statsLanguagesLabel,
-                  color: "text-red-600",
-                  bg: "bg-red-50",
-                },
-                {
-                  icon: Shield,
-                  value: t.statsAvailability,
-                  label: t.statsAvailabilityLabel,
-                  color: "text-red-600",
-                  bg: "bg-red-50",
-                },
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  className="text-center p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div
-                    className={`inline-flex items-center justify-center w-14 h-14 ${stat.bg} rounded-xl mb-4`}
-                  >
-                    <stat.icon className={`w-7 h-7 ${stat.color}`} />
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">{t.aboutTitle}</h2>
+                <p className="text-lg text-gray-600 leading-relaxed mb-6">{t.aboutDescription}</p>
+                <p className="text-lg text-red-600 font-medium italic border-l-4 border-red-600 pl-4">{t.aboutMission}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Globe, value: intl.formatMessage({ id: "press.stats.countries" }), label: intl.formatMessage({ id: "press.stats.countriesLabel" }) },
+                  { icon: Languages, value: intl.formatMessage({ id: "press.stats.languages" }), label: intl.formatMessage({ id: "press.stats.languagesLabel" }) },
+                  { icon: Shield, value: intl.formatMessage({ id: "press.stats.availability" }), label: intl.formatMessage({ id: "press.stats.availabilityLabel" }) },
+                  { icon: Users, value: "10K+", label: isFr ? "Clients aides" : "Clients helped" },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-gray-50 rounded-2xl p-6 text-center hover:bg-gray-100 transition-colors">
+                    <stat.icon className="w-6 h-6 text-red-600 mx-auto mb-3" />
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">{stat.label}</p>
                   </div>
-                  <div className="text-4xl font-bold text-gray-900 mb-2">
-                    {stat.value}
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════ GATE FORM ══════════════ */}
+        {!hasAccess && (
+          <section className="py-20 bg-gray-50">
+            <div className="max-w-xl mx-auto px-4">
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-10">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-red-500/20">
+                    <Lock className="w-8 h-8 text-white" />
                   </div>
-                  <div className="text-gray-500 font-medium">{stat.label}</div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    {isFr ? "Espace Presse" : "Press Room"}
+                  </h2>
+                  <p className="text-gray-500 text-sm">
+                    {isFr
+                      ? "Identifiez-vous pour acceder aux logos, dossiers de presse, communiques, banque d'images et chiffres cles."
+                      : "Identify yourself to access logos, press kits, releases, image bank and key figures."
+                    }
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        {/* ==================== PRESS ACCESS GATE / MEDIA KIT ==================== */}
-        <section className="py-16 sm:py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                {t.mediaKitTitle}
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                {t.mediaKitSubtitle}
-              </p>
-            </div>
+                {formError && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600 mb-6">{formError}</div>
+                )}
 
-            {/* ── ACCESS FORM (shown if no access yet) ── */}
-            {!hasAccess && (
-              <div className="max-w-xl mx-auto">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 space-y-5">
-                  <div className="text-center mb-2">
-                    <div className="inline-flex items-center justify-center w-14 h-14 bg-red-100 rounded-2xl mb-4">
-                      <Lock className="w-7 h-7 text-red-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {lang === "fr" ? "Acces Presse" : "Press Access"}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {lang === "fr"
-                        ? "Remplissez ce formulaire pour acceder aux ressources presse, logos, dossiers de presse et communiques."
-                        : "Fill in this form to access press resources, logos, press kits and releases."
-                      }
-                    </p>
-                  </div>
-
-                  {formError && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600">
-                      {formError}
-                    </div>
-                  )}
-
-                  {/* Email */}
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {lang === "fr" ? "Email professionnel" : "Professional email"} *
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="journalist@media.com"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{isFr ? "Email professionnel" : "Professional email"} *</label>
+                    <input type="email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" placeholder="journalist@media.com" />
                   </div>
 
-                  {/* Country + Language row */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{isFr ? "Nom du media" : "Media name"}</label>
+                    <input type="text" value={formData.mediaName} onChange={(e) => setFormData((p) => ({ ...p, mediaName: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" placeholder={isFr ? "Ex: Le Monde, TechCrunch..." : "Ex: The Guardian, TechCrunch..."} />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {lang === "fr" ? "Pays" : "Country"} *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.country}
-                        onChange={(e) => setFormData((p) => ({ ...p, country: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        placeholder={lang === "fr" ? "France" : "United States"}
-                      />
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{isFr ? "Pays" : "Country"} *</label>
+                      <input type="text" value={formData.country} onChange={(e) => setFormData((p) => ({ ...p, country: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" placeholder={isFr ? "France" : "United States"} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {lang === "fr" ? "Langue" : "Language"} *
-                      </label>
-                      <select
-                        value={formData.language}
-                        onChange={(e) => setFormData((p) => ({ ...p, language: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      >
-                        <option value="fr">Francais</option>
-                        <option value="en">English</option>
-                        <option value="es">Espanol</option>
-                        <option value="de">Deutsch</option>
-                        <option value="pt">Portugues</option>
-                        <option value="ar">العربية</option>
-                        <option value="ru">Русский</option>
-                        <option value="zh">中文</option>
-                        <option value="hi">हिन्दी</option>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{isFr ? "Langue" : "Language"} *</label>
+                      <select value={formData.language} onChange={(e) => setFormData((p) => ({ ...p, language: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="fr">Francais</option><option value="en">English</option><option value="es">Espanol</option>
+                        <option value="de">Deutsch</option><option value="pt">Portugues</option><option value="ar">العربية</option>
+                        <option value="ru">Русский</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Media Theme */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {lang === "fr" ? "Theme media" : "Media Theme"} *
-                    </label>
-                    <select
-                      value={formData.mediaTheme}
-                      onChange={(e) => setFormData((p) => ({ ...p, mediaTheme: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="">{lang === "fr" ? "Selectionnez un theme..." : "Select a theme..."}</option>
-                      {MEDIA_THEMES.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {lang === "fr" ? t.label.fr : t.label.en}
-                        </option>
-                      ))}
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{isFr ? "Theme editorial" : "Editorial theme"} *</label>
+                    <select value={formData.mediaTheme} onChange={(e) => setFormData((p) => ({ ...p, mediaTheme: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                      <option value="">{isFr ? "Selectionnez..." : "Select..."}</option>
+                      {MEDIA_THEMES.map((m) => <option key={m.value} value={m.value}>{isFr ? m.fr : m.en}</option>)}
                     </select>
                   </div>
 
-                  {/* Media Type */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {lang === "fr" ? "Type de media" : "Media Type"} *
-                    </label>
-                    <select
-                      value={formData.mediaType}
-                      onChange={(e) => setFormData((p) => ({ ...p, mediaType: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    >
-                      <option value="">{lang === "fr" ? "Selectionnez un type..." : "Select a type..."}</option>
-                      {MEDIA_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {lang === "fr" ? t.label.fr : t.label.en}
-                        </option>
-                      ))}
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{isFr ? "Type de media" : "Media type"} *</label>
+                    <select value={formData.mediaType} onChange={(e) => setFormData((p) => ({ ...p, mediaType: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                      <option value="">{isFr ? "Selectionnez..." : "Select..."}</option>
+                      {MEDIA_TYPES.map((m) => <option key={m.value} value={m.value}>{isFr ? m.fr : m.en}</option>)}
                     </select>
                   </div>
 
-                  {/* Submit */}
-                  <button
-                    onClick={handlePressAccess}
-                    disabled={submitting}
-                    className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 disabled:opacity-60"
-                  >
-                    {submitting ? (
-                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                    ) : (
-                      <>
-                        <Unlock className="w-5 h-5" />
-                        {lang === "fr" ? "Acceder aux ressources presse" : "Access press resources"}
-                      </>
+                  <button onClick={handlePressAccess} disabled={submitting}
+                    className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60">
+                    {submitting ? <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" /> : (
+                      <><Unlock className="w-5 h-5" />{isFr ? "Acceder a l'espace presse" : "Access press room"}</>
                     )}
                   </button>
 
-                  <p className="text-[11px] text-gray-400 text-center">
-                    {lang === "fr"
-                      ? "Vos donnees sont utilisees uniquement pour les relations presse. Pas de spam."
-                      : "Your data is used only for press relations. No spam."
-                    }
-                  </p>
+                  <p className="text-[11px] text-gray-400 text-center mt-3">{isFr ? "Vos donnees sont utilisees uniquement pour les relations presse." : "Your data is used only for press relations."}</p>
                 </div>
               </div>
-            )}
-
-            {/* ── RESOURCES (shown after access granted) ── */}
-            {hasAccess && (
-              <>
-                {/* Access confirmed badge */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                  <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2 text-sm text-green-700">
-                    <CheckCircle className="w-4 h-4" />
-                    {lang === "fr" ? "Acces presse accorde" : "Press access granted"}
-                  </div>
-                </div>
-
-                {/* Category filter */}
-                <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-              <Filter className="w-5 h-5 text-gray-400" />
-              {(
-                [
-                  { key: "all", label: intl.formatMessage({ id: "filter.all" }) },
-                  { key: "press_logos", label: intl.formatMessage({ id: "press.mediaKit.category.logos", defaultMessage: "Logos" }) },
-                  { key: "press_kit", label: intl.formatMessage({ id: "press.mediaKit.category.kit", defaultMessage: "Dossier de Presse" }) },
-                  { key: "press_photos", label: intl.formatMessage({ id: "press.mediaKit.category.photos", defaultMessage: "Photos" }) },
-                  { key: "press_data", label: intl.formatMessage({ id: "press.mediaKit.category.data", defaultMessage: "Chiffres" }) },
-                ] as { key: ResourceCategory; label: string }[]
-              ).map((cat) => (
-                <button
-                  key={cat.key}
-                  onClick={() => setCategoryFilter(cat.key)}
-                  aria-pressed={categoryFilter === cat.key}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    categoryFilter === cat.key
-                      ? "bg-red-600 text-white"
-                      : "bg-white text-gray-600 border border-gray-200 hover:border-red-300 hover:text-red-600"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
             </div>
-
-            {/* Resources grid */}
-            {loadingResources ? (
-              <div className="flex justify-center py-12">
-                <div role="status" className="animate-spin w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full" aria-label="Loading" />
-              </div>
-            ) : filteredResources.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Image className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>{t.mediaKitEmpty}</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredResources.map((resource) => {
-                  const IconComp = getResourceIcon(resource.type);
-                  return (
-                    <div
-                      key={resource.id}
-                      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
-                    >
-                      {/* Thumbnail / icon */}
-                      <div className="relative h-40 bg-gray-50 flex items-center justify-center overflow-hidden">
-                        {resource.file_url && isImageFormat(resource.file_format) ? (
-                          <img
-                            src={resource.file_url}
-                            alt={resource.name}
-                            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <IconComp className="w-16 h-16 text-gray-300" />
-                        )}
-                        <div className="absolute top-3 left-3">
-                          <span className="px-2 py-1 bg-red-600 text-white text-xs font-medium rounded-md">
-                            {typeLabels[resource.type] || resource.type}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Info */}
-                      <div className="p-5">
-                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
-                          {resource.name}
-                        </h3>
-                        {resource.description && (
-                          <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-                            {resource.description}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs text-gray-400 space-x-2">
-                            {resource.file_format && (
-                              <span>{resource.file_format.toUpperCase()}</span>
-                            )}
-                            <span>{formatFileSize(resource.file_size)}</span>
-                          </div>
-                          {resource.file_url && (
-                            <a
-                              href={resource.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
-                            >
-                              <Download className="w-4 h-4" />
-                              {t.mediaKitDownload}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* ==================== PRESS RELEASES ==================== */}
-        {hasAccess && (
-        <section className="py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                {t.releasesTitle}
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                {t.releasesSubtitle}
-              </p>
-            </div>
-
-            {loadingReleases ? (
-              <div className="flex justify-center py-12">
-                <div role="status" className="animate-spin w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full" aria-label="Loading" />
-              </div>
-            ) : releases.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Newspaper className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>{t.releasesEmpty}</p>
-              </div>
-            ) : (
-              <div className="max-w-4xl mx-auto space-y-6">
-                {releases.map((release) => {
-                  const title = getLocalizedText(release.title, lang);
-                  const summary = getLocalizedText(release.summary, lang);
-                  const content = getLocalizedText(release.content, lang);
-                  const pdfUrl = release.pdfUrl?.[lang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
-                  const isExpanded = expandedRelease === release.id;
-                  const hasTranslation = !!(release.title?.[lang] || release.title?.["en"] || release.title?.["fr"]);
-
-                  return (
-                    <article
-                      key={release.id}
-                      className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
-                    >
-                      <div className="p-6 sm:p-8">
-                        {/* Header */}
-                        <div className="flex items-start gap-4">
-                          {release.imageUrl && (
-                            <img
-                              src={release.imageUrl}
-                              alt={title}
-                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0 hidden sm:block"
-                              loading="lazy"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                              <time dateTime={formatDateISO(release.publishedAt)} className="text-sm text-gray-400">
-                                {intl.formatMessage(
-                                  { id: "press.releases.publishedOn" },
-                                  { date: formatDate(release.publishedAt) }
-                                )}
-                              </time>
-                              {release.tags?.length > 0 && (
-                                <div className="flex gap-1.5 flex-wrap">
-                                  {release.tags.slice(0, 3).map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
-                              {title || t.releasesNoTranslation}
-                            </h3>
-                            {summary && (
-                              <p className="text-gray-600 leading-relaxed">
-                                {summary}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Expanded content */}
-                        {isExpanded && content && (
-                          <div className="mt-6 pt-6 border-t border-gray-100">
-                            <div className="prose prose-gray max-w-none text-gray-600 whitespace-pre-line">
-                              {content}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-4 mt-6 pt-4 border-t border-gray-50">
-                          {content && hasTranslation && (
-                            <button
-                              onClick={() =>
-                                setExpandedRelease(
-                                  isExpanded ? null : release.id
-                                )
-                              }
-                              className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
-                            >
-                              {isExpanded ? (
-                                <>
-                                  <ChevronUp className="w-4 h-4" />
-                                  {t.releasesCollapse}
-                                </>
-                              ) : (
-                                <>
-                                  <ChevronDown className="w-4 h-4" />
-                                  {t.releasesReadMore}
-                                </>
-                              )}
-                            </button>
-                          )}
-                          {pdfUrl && (
-                            <a
-                              href={pdfUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"
-                            >
-                              <Download className="w-4 h-4" />
-                              {t.releasesDownloadPdf}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
+          </section>
         )}
 
-        {/* ==================== PRESS CONTACT ==================== */}
-        <section className="py-16 sm:py-20 bg-gray-50">
+        {/* ══════════════ PRESS CONTENT (gated) ══════════════ */}
+        {hasAccess && (
+          <>
+            {/* Section nav */}
+            <div ref={contentRef} className="sticky top-0 z-30 bg-white/95 backdrop-blur-lg border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center gap-1 overflow-x-auto py-3 no-scrollbar">
+                  <div className="flex items-center gap-1.5 mr-4">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-xs text-green-600 font-medium whitespace-nowrap">{isFr ? "Acces presse" : "Press access"}</span>
+                  </div>
+                  {SECTIONS.map((s) => (
+                    <a key={s.id} href={`#${s.id}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg whitespace-nowrap transition-colors">
+                      <s.icon className="w-3.5 h-3.5" />
+                      {isFr ? s.fr : s.en}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Loading */}
+            {loadingResources && (
+              <div className="flex justify-center py-20">
+                <div className="animate-spin w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full" />
+              </div>
+            )}
+
+            {!loadingResources && (
+              <>
+                {/* ── IDENTITY / LOGOS ── */}
+                <section id="identity" className="py-20 bg-white">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <SectionHeader icon={Palette}
+                      title={isFr ? "Identite visuelle" : "Visual Identity"}
+                      subtitle={isFr ? "Logos, charte graphique et elements de marque. Tous les fichiers sont libres de droits pour un usage presse." : "Logos, brand guidelines and brand assets. All files are royalty-free for press use."} />
+                    {logos.length > 0 ? (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        {logos.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                      </div>
+                    ) : <EmptySection message={emptyMsg} />}
+                  </div>
+                </section>
+
+                {/* ── PRESS KIT ── */}
+                <section id="press-kit" className="py-20 bg-gray-50">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <SectionHeader icon={FolderOpen}
+                      title={isFr ? "Dossier de presse" : "Press Kit"}
+                      subtitle={isFr ? "Dossier de presse complet, fiches entreprise, presentations et decks." : "Complete press kit, company fact sheets, presentations and decks."} />
+                    {kits.length > 0 ? (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {kits.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                      </div>
+                    ) : <EmptySection message={emptyMsg} />}
+                  </div>
+                </section>
+
+                {/* ── PRESS RELEASES ── */}
+                <section id="releases" className="py-20 bg-white">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <SectionHeader icon={Newspaper} title={t.releasesTitle} subtitle={t.releasesSubtitle} />
+                    {loadingReleases ? (
+                      <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full" /></div>
+                    ) : releases.length === 0 ? (
+                      <EmptySection message={t.releasesEmpty} />
+                    ) : (
+                      <div className="max-w-4xl space-y-5">
+                        {releases.map((release) => {
+                          const title = getLocalizedText(release.title, lang);
+                          const summary = getLocalizedText(release.summary, lang);
+                          const content = getLocalizedText(release.content, lang);
+                          const pdfUrl = release.pdfUrl?.[lang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
+                          const isExpanded = expandedRelease === release.id;
+                          return (
+                            <article key={release.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
+                              <div className="p-6 sm:p-8">
+                                <div className="flex items-start gap-4">
+                                  {release.imageUrl && <img src={release.imageUrl} alt={title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0 hidden sm:block" loading="lazy" />}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {formatDate(release.publishedAt)}
+                                      </div>
+                                      {release.tags?.slice(0, 3).map((tag) => (
+                                        <span key={tag} className="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] rounded-full font-medium">{tag}</span>
+                                      ))}
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">{title || t.releasesNoTranslation}</h3>
+                                    {summary && <p className="text-gray-600 text-sm leading-relaxed">{summary}</p>}
+                                  </div>
+                                </div>
+                                {isExpanded && content && (
+                                  <div className="mt-6 pt-6 border-t border-gray-100 prose prose-sm prose-gray max-w-none text-gray-600 whitespace-pre-line">{content}</div>
+                                )}
+                                <div className="flex items-center gap-4 mt-5 pt-4 border-t border-gray-50">
+                                  {content && (
+                                    <button onClick={() => setExpandedRelease(isExpanded ? null : release.id)}
+                                      className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 hover:text-red-700">
+                                      {isExpanded ? <><ChevronUp className="w-4 h-4" />{t.releasesCollapse}</> : <><ChevronDown className="w-4 h-4" />{t.releasesReadMore}</>}
+                                    </button>
+                                  )}
+                                  {pdfUrl && (
+                                    <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-red-600">
+                                      <Download className="w-4 h-4" />{t.releasesDownloadPdf}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {/* ── IMAGE BANK ── */}
+                <section id="images" className="py-20 bg-gray-50">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <SectionHeader icon={Camera}
+                      title={isFr ? "Banque d'images" : "Image Bank"}
+                      subtitle={isFr ? "Photos haute resolution de l'equipe, des bureaux et du produit. Libre de droits pour usage presse." : "High-resolution photos of the team, offices and product. Royalty-free for press use."} />
+                    {photos.length > 0 ? (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        {photos.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                      </div>
+                    ) : <EmptySection message={emptyMsg} />}
+                  </div>
+                </section>
+
+                {/* ── DATA & KEY FIGURES ── */}
+                <section id="data" className="py-20 bg-white">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <SectionHeader icon={BarChart3}
+                      title={isFr ? "Chiffres cles & Donnees" : "Key Figures & Data"}
+                      subtitle={isFr ? "Fact sheets, infographies et statistiques actualisees pour vos articles." : "Fact sheets, infographics and up-to-date statistics for your articles."} />
+                    {data.length > 0 ? (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {data.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                      </div>
+                    ) : <EmptySection message={emptyMsg} />}
+                  </div>
+                </section>
+              </>
+            )}
+          </>
+        )}
+
+        {/* ══════════════ PRESS CONTACT (always visible) ══════════════ */}
+        <section className="py-20 bg-gray-950 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mx-auto text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-6">
-                <Mail className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Mail className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                {t.contactTitle}
-              </h2>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                {t.contactDescription}
-              </p>
-
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-4">
-                <div className="flex items-center justify-center gap-3">
-                  <Mail className="w-5 h-5 text-red-600" />
-                  <span className="text-sm text-gray-500">{t.contactEmailLabel}</span>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t.contactTitle}</h2>
+              <p className="text-lg text-gray-400 mb-8 leading-relaxed">{t.contactDescription}</p>
+              <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 space-y-4">
+                <div className="flex items-center justify-center gap-3 text-gray-400">
+                  <Mail className="w-5 h-5" />
+                  <span className="text-sm">{t.contactEmailLabel}</span>
                 </div>
-                <a
-                  href={`mailto:${t.contactEmail}`}
-                  className="inline-flex items-center gap-2 text-xl font-semibold text-red-600 hover:text-red-700 transition-colors"
-                >
+                <a href={`mailto:${t.contactEmail}`} className="inline-flex items-center gap-2 text-xl font-semibold text-red-400 hover:text-red-300 transition-colors">
                   {t.contactEmail}
-                  <Mail className="w-4 h-4" />
+                  <ExternalLink className="w-4 h-4" />
                 </a>
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                   <Clock className="w-4 h-4" />
                   <span>{t.contactResponse}</span>
                 </div>
