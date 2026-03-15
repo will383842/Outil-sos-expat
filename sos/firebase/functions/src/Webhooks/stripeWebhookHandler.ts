@@ -1505,6 +1505,7 @@ export const stripeWebhook = onRequest(
                       const { cancelBloggerCommissionsForCallSession: cancelBlogger } = await import("../blogger/services/bloggerCommissionService");
                       const { cancelCommissionsForCallSession: cancelGroupAdmin } = await import("../groupAdmin/services/groupAdminCommissionService");
                       const { cancelCommissionsForCallSession: cancelAffiliate } = await import("../affiliate/services/commissionService");
+                      const { cancelUnifiedCommissionsForCallSession } = await import("../unified/handlers/handleCallRefunded");
 
                       const cancelReason = `Stripe Dashboard refund: ${charge.id}`;
                       const results = await Promise.allSettled([
@@ -1513,9 +1514,10 @@ export const stripeWebhook = onRequest(
                         cancelBlogger(sessionId, cancelReason, "system_refund"),
                         cancelGroupAdmin(sessionId, cancelReason),
                         cancelAffiliate(sessionId, cancelReason, "system_refund"),
+                        cancelUnifiedCommissionsForCallSession(sessionId, cancelReason),
                       ]);
 
-                      const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate"] as const;
+                      const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate", "unified"] as const;
                       let totalCancelled = 0;
                       for (let i = 0; i < results.length; i++) {
                         const r = results[i];

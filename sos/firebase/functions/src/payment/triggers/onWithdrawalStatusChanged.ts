@@ -9,7 +9,7 @@
  */
 
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -1024,6 +1024,69 @@ async function rollbackAffiliateCommissions(
 }
 
 /**
+ * Rollback Unified commissions when a withdrawal permanently fails.
+ * Reverts commissions from "paid" back to "available" and restores availableBalance.
+ */
+async function rollbackUnifiedCommissions(
+  withdrawal: WithdrawalRequest
+): Promise<void> {
+  const db = getFirestore();
+
+  try {
+    // Find unified commissions tied to this withdrawal that were marked "paid"
+    let commissionsSnapshot = await db
+      .collection("commissions")
+      .where("payoutId", "==", withdrawal.id)
+      .where("status", "==", "paid")
+      .get();
+
+    if (commissionsSnapshot.empty) {
+      return;
+    }
+
+    // Batch update all commissions back to "available" + restore balance
+    const batch = db.batch();
+    const now = Timestamp.now();
+    let totalRolledBack = 0;
+
+    for (const doc of commissionsSnapshot.docs) {
+      const data = doc.data();
+      batch.update(doc.ref, {
+        status: "available",
+        payoutId: null,
+        paidAt: null,
+        rolledBackAt: now,
+        rolledBackReason: `Withdrawal ${withdrawal.id} permanently failed`,
+      });
+      totalRolledBack += data.amount || 0;
+    }
+
+    // Restore user's available balance
+    if (totalRolledBack > 0) {
+      const userRef = db.collection("users").doc(withdrawal.userId);
+      batch.update(userRef, {
+        availableBalance: FieldValue.increment(totalRolledBack),
+      });
+    }
+
+    await batch.commit();
+
+    logger.info("[onWithdrawalStatusChanged] Unified commissions rolled back", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      commissionsRolledBack: commissionsSnapshot.size,
+      totalRolledBack,
+    });
+  } catch (error) {
+    logger.error("[onWithdrawalStatusChanged] Failed to rollback unified commissions", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      error: error instanceof Error ? error.message : "Unknown",
+    });
+  }
+}
+
+/**
  * Handle specific status transitions
  */
 async function handleStatusTransition(
@@ -1063,14 +1126,16 @@ async function handleStatusTransition(
     });
   }
 
-  // Handle permanent failure — rollback commissions (GroupAdmin + Affiliate)
+  // Handle permanent failure — rollback commissions (GroupAdmin + Affiliate + Unified)
   if (newStatus === "failed" && withdrawal.retryCount >= withdrawal.maxRetries) {
     await rollbackGroupAdminCommissions(withdrawal);
-    await rollbackAffiliateCommissions(withdrawal); // P1-2 FIX
+    await rollbackAffiliateCommissions(withdrawal);
+    await rollbackUnifiedCommissions(withdrawal);
   }
   if (newStatus === "rejected" || newStatus === "cancelled") {
     await rollbackGroupAdminCommissions(withdrawal);
-    await rollbackAffiliateCommissions(withdrawal); // P1-2 FIX
+    await rollbackAffiliateCommissions(withdrawal);
+    await rollbackUnifiedCommissions(withdrawal);
   }
 
   // Clear pendingWithdrawalId on terminal states
