@@ -2800,6 +2800,8 @@
   "admin.menu.chattersReferrals.description": "Referral of new chatters",
   "admin.menu.chattersResources": "Chatter Resources",
   "admin.menu.chattersResources.description": "Resources and guides for chatters",
+  "admin.menu.marketingResources": "Marketing Resources",
+  "admin.menu.marketingResources.description": "Unified resource management for all affiliates",
   "admin.menu.chattersUsers": "Chatters",
   "admin.menu.chattersUsers.description": "Manage chatters",
   "admin.menu.chattersWhatsappGroups": "WhatsApp Groups",
