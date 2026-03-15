@@ -2956,6 +2956,8 @@
   "admin.menu.profileValidation.description": "Validation des profils prestataires en attente",
   "admin.menu.profitLoss": "Compte de résultat",
   "admin.menu.profitLoss.description": "Produits et charges",
+  "admin.menu.commissionsHub": "Commissions d'affiliation",
+  "admin.menu.commissionsHub.description": "Configuration centralisée des commissions par rôle",
   "admin.menu.promoCodes": "Codes promo",
   "admin.menu.promoCodes.description": "Créer, activer, suivre les coupons",
   "admin.menu.providerPerformance": "Performances Prestataires",

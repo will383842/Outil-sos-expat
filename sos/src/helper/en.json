@@ -2956,6 +2956,8 @@
   "admin.menu.profileValidation.description": "Pending provider profile validation",
   "admin.menu.profitLoss": "Profit & Loss",
   "admin.menu.profitLoss.description": "Income and expenses",
+  "admin.menu.commissionsHub": "Affiliate Commissions",
+  "admin.menu.commissionsHub.description": "Centralized commission settings per role",
   "admin.menu.promoCodes": "Promo Codes",
   "admin.menu.promoCodes.description": "Create, activate, track coupons",
   "admin.menu.providerPerformance": "Provider Performance",

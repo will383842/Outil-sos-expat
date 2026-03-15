@@ -1212,6 +1212,13 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.promoCodes.description",
       },
       {
+        id: "commissions-hub",
+        labelKey: "admin.menu.commissionsHub",
+        path: "/admin/commissions",
+        icon: DollarSign,
+        descriptionKey: "admin.menu.commissionsHub.description",
+      },
+      {
         id: "pricing-management",
         labelKey: "admin.menu.pricingManagement",
         path: "/admin/pricing",

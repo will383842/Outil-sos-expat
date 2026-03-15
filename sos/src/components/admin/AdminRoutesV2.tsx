@@ -292,6 +292,11 @@ const DevPage: React.FC<{ pageKey: string }> = ({ pageKey }) => {
   );
 };
 
+// ===== LAZY IMPORTS - COMMISSIONS HUB =====
+const AdminCommissionsHub = lazy(
+  () => import("../../pages/admin/Commissions/AdminCommissionsHub")
+);
+
 // ===== LAZY IMPORTS - AFFILIATION =====
 const AdminAffiliatesList = lazy(
   () => import("../../pages/admin/AdminAffiliatesList")
@@ -1156,6 +1161,15 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminAffiliateDashboard />
+          </Suspense>
+        }
+      />
+      {/* Hub commissions unifié */}
+      <Route
+        path="commissions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminCommissionsHub />
           </Suspense>
         }
       />
@@ -2220,6 +2234,7 @@ export const useAdminRouteValidation = () => {
       "/admin/comms/messages",
       "/admin/comms/notifications",
       "/admin/contact-messages",
+      "/admin/commissions",
       "/admin/affiliates",
       "/admin/affiliates/dashboard",
       "/admin/affiliates/:affiliateId",
