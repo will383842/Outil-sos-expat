@@ -282,13 +282,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.paymentsWithdrawals.description",
           },
           {
-            id: "finance-affiliate-payouts",
-            labelKey: "admin.menu.affiliatePayouts",
-            path: "/admin/payments?userType=affiliate",
-            icon: DollarSign,
-            descriptionKey: "admin.menu.affiliatePayouts.description",
-          },
-          {
             id: "payments-config",
             labelKey: "admin.menu.paymentsConfig",
             path: "/admin/payments/config",
@@ -613,13 +606,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.affiliateCommissions.description",
           },
           {
-            id: "affiliate-payouts",
-            labelKey: "admin.menu.affiliatePayouts",
-            path: "/admin/payments?userType=affiliate",
-            icon: Wallet,
-            descriptionKey: "admin.menu.affiliatePayouts.description",
-          },
-          {
             id: "affiliate-reports",
             labelKey: "admin.menu.affiliateReports",
             path: "/admin/affiliates/reports",
@@ -681,13 +667,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.chattersCommissions.description",
           },
           {
-            id: "chatters-payments",
-            labelKey: "admin.menu.chattersPayments",
-            path: "/admin/payments?userType=chatter",
-            icon: Wallet,
-            descriptionKey: "admin.menu.chattersPayments.description",
-          },
-          {
             id: "chatters-fraud",
             labelKey: "admin.menu.chattersFraud",
             path: "/admin/chatters/fraud",
@@ -741,13 +720,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.influencersList.description",
           },
           {
-            id: "influencers-payments",
-            labelKey: "admin.menu.influencersPayments",
-            path: "/admin/payments?userType=influencer",
-            icon: Wallet,
-            descriptionKey: "admin.menu.influencersPayments.description",
-          },
-          {
             id: "influencers-leaderboard",
             labelKey: "admin.menu.influencersLeaderboard",
             path: "/admin/influencers/leaderboard",
@@ -799,13 +771,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             path: "/admin/bloggers",
             icon: Users,
             descriptionKey: "admin.menu.bloggersList.description",
-          },
-          {
-            id: "bloggers-payments",
-            labelKey: "admin.menu.bloggersPayments",
-            path: "/admin/payments?userType=blogger",
-            icon: Wallet,
-            descriptionKey: "admin.menu.bloggersPayments.description",
           },
           {
             id: "bloggers-articles",
@@ -871,13 +836,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.groupAdminsRecruitments.description",
           },
           {
-            id: "groupadmins-payments",
-            labelKey: "admin.menu.groupAdminsPayments",
-            path: "/admin/payments?userType=group_admin",
-            icon: Wallet,
-            descriptionKey: "admin.menu.groupAdminsPayments.description",
-          },
-          {
             id: "groupadmins-posts",
             labelKey: "admin.menu.groupAdminsPosts",
             path: "/admin/group-admins/posts",
@@ -940,12 +898,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             labelKey: "admin.menu.partnersCreate",
             path: "/admin/partners/create",
             icon: UserPlus,
-          },
-          {
-            id: "partners-payments",
-            labelKey: "admin.menu.partnersPayments",
-            path: "/admin/payments?userType=partner",
-            icon: Wallet,
           },
           {
             id: "partners-fraud",
