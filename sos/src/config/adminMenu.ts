@@ -567,6 +567,29 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
+      // --- Sous-section : Presse ---
+      {
+        id: "press",
+        labelKey: "admin.menu.press",
+        icon: Newspaper,
+        descriptionKey: "admin.menu.press.description",
+        children: [
+          {
+            id: "press-releases",
+            labelKey: "admin.menu.pressReleases",
+            path: "/admin/press/releases",
+            icon: FileText,
+            descriptionKey: "admin.menu.pressReleases.description",
+          },
+          {
+            id: "press-resources",
+            labelKey: "admin.menu.pressResources",
+            path: "/admin/marketing/resources?role=press",
+            icon: FolderOpen,
+            descriptionKey: "admin.menu.pressResources.description",
+          },
+        ],
+      },
     ],
   },
 
@@ -1050,35 +1073,13 @@ export const adminMenuTree: AdminMenuItem[] = [
     ],
   },
 
-  // ===== 7. CONTENU & SEO (press + legal docs + FAQs) =====
+  // ===== 7. CONTENU & SEO (legal docs + FAQs) =====
   {
     id: "content",
     labelKey: "admin.menu.content",
     icon: Newspaper,
     descriptionKey: "admin.menu.content.description",
     children: [
-      {
-        id: "press",
-        labelKey: "admin.menu.press",
-        icon: Newspaper,
-        descriptionKey: "admin.menu.press.description",
-        children: [
-          {
-            id: "press-resources",
-            labelKey: "admin.menu.pressResources",
-            path: "/admin/press/resources",
-            icon: FolderOpen,
-            descriptionKey: "admin.menu.pressResources.description",
-          },
-          {
-            id: "press-releases",
-            labelKey: "admin.menu.pressReleases",
-            path: "/admin/press/releases",
-            icon: FileText,
-            descriptionKey: "admin.menu.pressReleases.description",
-          },
-        ],
-      },
       {
         id: "legal-documents",
         labelKey: "admin.menu.legalDocuments",

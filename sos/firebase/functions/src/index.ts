@@ -3493,3 +3493,6 @@ export {
 export {
   unifiedAutoMigrateAffiliateCodes,
 } from './unified/scheduled/autoMigrate';
+
+// ========== MARKETING CONTENT TRANSLATION ==========
+export { translateMarketingContent } from './translation/translateMarketingContent';

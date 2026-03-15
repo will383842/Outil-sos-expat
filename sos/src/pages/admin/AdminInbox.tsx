@@ -5,6 +5,7 @@
  * - Demandes de retrait (payment_withdrawals)
  * - Candidatures Captain (captain_applications)
  * - Messages contact (contact_messages)
+ * - Messages presse (contact_messages, category=press)
  * - Feedbacks utilisateurs (user_feedback)
  * - Candidatures Partenaire (partner_applications)
  *
@@ -36,6 +37,7 @@ import {
   Mail,
   MessageSquare,
   Handshake,
+  Newspaper,
   ExternalLink,
   Eye,
   Clock,
@@ -59,12 +61,12 @@ import { sendInboxReply } from '../../api/sendInboxReply';
 // TYPES
 // ============================================================================
 
-type InboxCategory = 'all' | 'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner';
+type InboxCategory = 'all' | 'withdrawal' | 'captain' | 'contact' | 'press' | 'feedback' | 'partner';
 type ViewMode = 'active' | 'archived';
 
 interface InboxItem {
   id: string;
-  category: 'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner';
+  category: 'withdrawal' | 'captain' | 'contact' | 'press' | 'feedback' | 'partner';
   title: string;
   subtitle: string;
   detail: string;
@@ -82,6 +84,7 @@ const COLLECTION_MAP: Record<string, string> = {
   withdrawal: 'payment_withdrawals',
   captain: 'captain_applications',
   contact: 'contact_messages',
+  press: 'contact_messages',
   feedback: 'user_feedback',
   partner: 'partner_applications',
 };
@@ -109,7 +112,7 @@ const formatCentsToUSD = (cents: number): string => `$${(cents / 100).toFixed(2)
 // ============================================================================
 
 const CATEGORY_CONFIG: Record<
-  'withdrawal' | 'captain' | 'contact' | 'feedback' | 'partner',
+  'withdrawal' | 'captain' | 'contact' | 'press' | 'feedback' | 'partner',
   { icon: React.ReactNode; color: string; bg: string; border: string; label: string; defaultLabel: string }
 > = {
   withdrawal: {
@@ -135,6 +138,14 @@ const CATEGORY_CONFIG: Record<
     border: 'border-blue-200',
     label: 'admin.inbox.category.contact',
     defaultLabel: 'Contact',
+  },
+  press: {
+    icon: <Newspaper className="w-4 h-4" />,
+    color: 'text-fuchsia-600',
+    bg: 'bg-fuchsia-50',
+    border: 'border-fuchsia-200',
+    label: 'admin.inbox.category.press',
+    defaultLabel: 'Presse',
   },
   feedback: {
     icon: <MessageSquare className="w-4 h-4" />,
@@ -181,6 +192,7 @@ const AdminInbox: React.FC = () => {
   const getEmail = (category: string, raw: Record<string, unknown>): string => {
     switch (category) {
       case 'contact': return (raw.email as string) || '';
+      case 'press': return (raw.email as string) || '';
       case 'feedback': return (raw.email as string) || '';
       case 'partner': return (raw.email as string) || '';
       case 'captain': return (raw.email as string) || (raw.whatsapp as string) || '';
@@ -192,6 +204,7 @@ const AdminInbox: React.FC = () => {
   const getRecipientName = (category: string, raw: Record<string, unknown>): string => {
     switch (category) {
       case 'contact': return (raw.name as string)?.split(' ')[0] || '';
+      case 'press': return (raw.name as string)?.split(' ')[0] || (raw.organization as string) || '';
       case 'feedback': return (raw.userName as string) || (raw.email as string)?.split('@')[0] || '';
       case 'partner': return (raw.firstName as string) || '';
       case 'captain': return (raw.name as string)?.split(' ')[0] || '';
@@ -249,6 +262,19 @@ const AdminInbox: React.FC = () => {
           link: '/admin/contact-messages',
           raw: { ...data, _docId: d.id },
         };
+      case 'press': {
+        const org = (data.organization as string) || '';
+        return {
+          id: `press_${d.id}`, category, email, hasReply, existingReply,
+          title: org ? `${(data.name as string) || 'N/A'} — ${org}` : (data.name as string) || (data.email as string) || 'N/A',
+          subtitle: (data.email as string) || '',
+          detail: (data.message as string) || '',
+          status: 'unread',
+          createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() || null,
+          link: '/admin/contact-messages',
+          raw: { ...data, _docId: d.id },
+        };
+      }
       case 'feedback': {
         const typeLabel = data.type === 'bug' ? 'Bug' : data.type === 'ux_friction' ? 'UX' : data.type === 'suggestion' ? 'Suggestion' : 'Autre';
         return {
@@ -317,10 +343,39 @@ const AdminInbox: React.FC = () => {
       limit(50)
     ));
 
-    // Contact (unread)
-    addListener('contact', query(
+    // Contact (unread, excluding press category — filtered client-side)
+    {
+      const q = query(
+        collection(db, 'contact_messages'),
+        where('isRead', '==', false),
+        orderBy('createdAt', 'desc'),
+        limit(80)
+      );
+      unsubs.push(
+        onSnapshot(q, (snap) => {
+          const newItems = snap.docs
+            .filter((d) => {
+              const data = d.data();
+              return !data.isArchived && data.category !== 'press';
+            })
+            .map((d) => buildItem(d as unknown as { id: string; data: () => Record<string, unknown> }, 'contact'));
+          setItems((prev) => {
+            const others = prev.filter((i) => i.category !== 'contact');
+            return [...others, ...newItems].sort(sortByDate);
+          });
+          setLoading(false);
+        }, (err) => {
+          console.error('Inbox contact listener error:', err);
+          setLoading(false);
+        })
+      );
+    }
+
+    // Press (unread, category=press from contact_messages)
+    addListener('press', query(
       collection(db, 'contact_messages'),
       where('isRead', '==', false),
+      where('category', '==', 'press'),
       orderBy('createdAt', 'desc'),
       limit(50)
     ));
@@ -370,9 +425,34 @@ const AdminInbox: React.FC = () => {
     };
 
     // Archived = isArchived == true for each collection
-    addArchivedListener('contact', query(
+    {
+      const q = query(
+        collection(db, 'contact_messages'),
+        where('isArchived', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(150)
+      );
+      unsubs.push(
+        onSnapshot(q, (snap) => {
+          const newItems = snap.docs
+            .filter((d) => (d.data() as Record<string, unknown>).category !== 'press')
+            .map((d) => buildItem(d as unknown as { id: string; data: () => Record<string, unknown> }, 'contact'));
+          setArchivedItems((prev) => {
+            const others = prev.filter((i) => i.category !== 'contact');
+            return [...others, ...newItems].sort(sortByDate);
+          });
+          setLoadingArchived(false);
+        }, (err) => {
+          console.error('Archived contact listener error:', err);
+          setLoadingArchived(false);
+        })
+      );
+    }
+
+    addArchivedListener('press', query(
       collection(db, 'contact_messages'),
       where('isArchived', '==', true),
+      where('category', '==', 'press'),
       orderBy('createdAt', 'desc'),
       limit(100)
     ));
@@ -470,7 +550,7 @@ const AdminInbox: React.FC = () => {
       const collName = COLLECTION_MAP[item.category];
       await updateDoc(doc(db, collName, docId), {
         isArchived: archive,
-        ...(archive && item.category === 'contact' ? { isRead: true } : {}),
+        ...(archive && (item.category === 'contact' || item.category === 'press') ? { isRead: true } : {}),
       });
       toast.success(archive ? 'Archive !' : 'Desarchive !');
       if (expandedId === item.id) setExpandedId(null);
@@ -582,6 +662,7 @@ const AdminInbox: React.FC = () => {
     withdrawal: displayItems.filter((i) => i.category === 'withdrawal').length,
     captain: displayItems.filter((i) => i.category === 'captain').length,
     contact: displayItems.filter((i) => i.category === 'contact').length,
+    press: displayItems.filter((i) => i.category === 'press').length,
     feedback: displayItems.filter((i) => i.category === 'feedback').length,
     partner: displayItems.filter((i) => i.category === 'partner').length,
   };
@@ -675,7 +756,7 @@ const AdminInbox: React.FC = () => {
 
         {/* Category filters */}
         <div className="flex flex-wrap gap-2">
-          {(['all', 'withdrawal', 'captain', 'contact', 'feedback', 'partner'] as InboxCategory[]).map((cat) => {
+          {(['all', 'withdrawal', 'captain', 'contact', 'press', 'feedback', 'partner'] as InboxCategory[]).map((cat) => {
             const isActive = activeFilter === cat;
             const count = counts[cat];
             if (cat === 'all') {
@@ -955,8 +1036,8 @@ const AdminInbox: React.FC = () => {
                           Supprimer
                         </button>
 
-                        {/* Mark as read (contact only, active view) */}
-                        {item.category === 'contact' && viewMode === 'active' && (
+                        {/* Mark as read (contact/press only, active view) */}
+                        {(item.category === 'contact' || item.category === 'press') && viewMode === 'active' && (
                           <button
                             onClick={() => markContactRead(item.raw._docId as string)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors min-h-[36px]"

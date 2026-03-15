@@ -40,6 +40,7 @@ interface ContactMessageDocument {
   email?: string;
   subject?: string;
   message?: string;
+  category?: string;
 }
 
 // ============================================================================
@@ -125,12 +126,14 @@ export const telegramOnNewContactMessage = onDocumentCreated(
       const email = messageData.email || "N/A";
       const subject = messageData.subject || "N/A";
       const message = messageData.message || "";
+      const category = messageData.category || "";
 
       logger.info(`${LOG_PREFIX} Message data extracted`, {
         messageId,
         name,
         email,
         subject,
+        category,
       });
 
       // 3. Truncate message to first 100 characters for preview
@@ -161,6 +164,7 @@ export const telegramOnNewContactMessage = onDocumentCreated(
         email,
         subject,
         message,
+        category,
       });
     } catch (error) {
       // Graceful error handling - log but don't throw

@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminLayout from '@/components/admin/AdminLayout';
 import {
   adminGetResources,
@@ -62,7 +63,42 @@ import {
   Star,
   Video,
   FileCode,
+  Languages,
 } from 'lucide-react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/config/firebase';
+import toast from 'react-hot-toast';
+
+// ── Auto-translate helper ──
+
+const LANG_NATIVE_NAMES: Record<string, string> = {
+  fr: 'francais (France)',
+  en: 'English (United Kingdom/international)',
+  es: 'espanol (Espana/Latinoamerica)',
+  pt: 'portugues (Brasil/Portugal)',
+  ar: 'العربية (standard moderne)',
+  de: 'Deutsch (Deutschland)',
+  zh: '中文 (简体, 中国大陆)',
+  ru: 'русский (Россия)',
+  hi: 'हिन्दी (भारत)',
+};
+
+async function autoTranslateFields(
+  sourceText: string,
+  sourceLang: string,
+  targetLangs: string[],
+  context: string
+): Promise<Record<string, string>> {
+  const translateFn = httpsCallable(functions, 'translateMarketingContent');
+  const result = await translateFn({
+    text: sourceText,
+    sourceLang,
+    targetLangs,
+    context,
+    langNames: LANG_NATIVE_NAMES,
+  });
+  return (result.data as { translations: Record<string, string> }).translations;
+}
 
 // ── Role definitions with rich metadata ──
 
@@ -261,6 +297,9 @@ interface AdminMarketingResourcesProps {
 }
 
 const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initialRole }) => {
+  const [searchParams] = useSearchParams();
+  const roleFromUrl = searchParams.get('role') as MarketingRole | null;
+
   // ── State ──
   const [resources, setResources] = useState<MarketingResourceAdmin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -269,7 +308,7 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
   const [success, setSuccess] = useState<string | null>(null);
 
   // Navigation
-  const [activeRole, setActiveRole] = useState<MarketingRole>(initialRole || 'chatter');
+  const [activeRole, setActiveRole] = useState<MarketingRole>(initialRole || roleFromUrl || 'chatter');
   const [activeCategory, setActiveCategory] = useState<MarketingCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -531,6 +570,63 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
       ...editing,
       data: { ...editing.data, [field]: { ...current, [lang]: value } },
     });
+  };
+
+  // ── Auto-translate all fields from source language ──
+  const [translating, setTranslating] = useState(false);
+
+  const handleAutoTranslate = async () => {
+    if (!editing) return;
+
+    // Find source language (first non-empty: prefer activeLangTab, then fr, then en)
+    const nameMap = (editing.data.name as Record<string, string>) || {};
+    const descMap = (editing.data.description as Record<string, string>) || {};
+    const contentMap = (editing.data.content as Record<string, string>) || {};
+
+    const sourceLang = [activeLangTab, 'fr', 'en'].find((l) => nameMap[l]?.trim()) || 'fr';
+    const sourceName = nameMap[sourceLang]?.trim();
+
+    if (!sourceName) {
+      toast.error('Remplissez au moins le nom dans une langue avant de traduire.');
+      return;
+    }
+
+    const targetLangs = LANGUAGES.map((l) => l.code).filter((l) => l !== sourceLang);
+    const isPressContext = (editing.data.target_roles || []).includes('press');
+    const context = isPressContext
+      ? 'Ressource de salle de presse / relations media pour SOS-Expat (service d\'assistance juridique pour expatries)'
+      : 'Ressource marketing pour affilies SOS-Expat (service d\'assistance juridique pour expatries)';
+
+    setTranslating(true);
+    try {
+      // Translate each field that has source content
+      const updatedData = { ...editing.data };
+
+      if (sourceName) {
+        const nameTranslations = await autoTranslateFields(sourceName, sourceLang, targetLangs, context + ' — nom court de la ressource');
+        updatedData.name = { ...nameMap, ...nameTranslations };
+      }
+
+      const sourceDesc = descMap[sourceLang]?.trim();
+      if (sourceDesc) {
+        const descTranslations = await autoTranslateFields(sourceDesc, sourceLang, targetLangs, context + ' — description courte');
+        updatedData.description = { ...descMap, ...descTranslations };
+      }
+
+      const sourceContent = contentMap[sourceLang]?.trim();
+      if (sourceContent) {
+        const contentTranslations = await autoTranslateFields(sourceContent, sourceLang, targetLangs, context + ' — contenu principal / texte copiable. Conserve les variables entre {{}} telles quelles.');
+        updatedData.content = { ...contentMap, ...contentTranslations };
+      }
+
+      setEditing({ ...editing, data: updatedData });
+      toast.success(`Traduit depuis ${LANGUAGES.find((l) => l.code === sourceLang)?.full} vers ${targetLangs.length} langues`);
+    } catch (err: unknown) {
+      console.error('Translation error:', err);
+      toast.error('Erreur de traduction. Verifiez la console.');
+    } finally {
+      setTranslating(false);
+    }
   };
 
   const toggleRole = (role: MarketingRole) => {
@@ -1094,27 +1190,50 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                 {/* ── STEP 2: Content & Translations ── */}
                 {editorStep === 2 && (
                   <>
-                    {/* Language tabs */}
-                    <div className="flex gap-1 bg-gray-100 dark:bg-white/5 rounded-xl p-1 overflow-x-auto">
-                      {LANGUAGES.map((l) => {
-                        const hasContent = ((editing.data.name as Record<string, string>) || {})[l.code]?.trim();
-                        return (
-                          <button
-                            key={l.code}
-                            onClick={() => setActiveLangTab(l.code)}
-                            className={`relative px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                              activeLangTab === l.code
-                                ? 'bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                          >
-                            {l.label}
-                            {(l.code === 'fr' || l.code === 'en') && <span className="text-red-400 ml-0.5">*</span>}
-                            {hasContent && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full" />}
-                          </button>
-                        );
-                      })}
+                    {/* Language tabs + auto-translate */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1 bg-gray-100 dark:bg-white/5 rounded-xl p-1 overflow-x-auto flex-1">
+                        {LANGUAGES.map((l) => {
+                          const hasContent = ((editing.data.name as Record<string, string>) || {})[l.code]?.trim();
+                          return (
+                            <button
+                              key={l.code}
+                              onClick={() => setActiveLangTab(l.code)}
+                              className={`relative px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                                activeLangTab === l.code
+                                  ? 'bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm'
+                                  : 'text-gray-500 hover:text-gray-700'
+                              }`}
+                            >
+                              {l.label}
+                              {(l.code === 'fr' || l.code === 'en') && <span className="text-red-400 ml-0.5">*</span>}
+                              {hasContent && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={handleAutoTranslate}
+                        disabled={translating}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 shadow-md shadow-violet-200 transition-all disabled:opacity-50 whitespace-nowrap"
+                        title="Traduire automatiquement dans les 9 langues depuis la langue active"
+                      >
+                        {translating ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Languages className="h-3.5 w-3.5" />
+                        )}
+                        {translating ? 'Traduction...' : 'Auto-traduire'}
+                      </button>
                     </div>
+
+                    {/* Translation info */}
+                    {translating && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-violet-50 dark:bg-violet-900/20 rounded-xl text-xs text-violet-700 dark:text-violet-300">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Traduction IA en cours depuis {LANGUAGES.find((l) => l.code === activeLangTab)?.full} vers les 8 autres langues...
+                      </div>
+                    )}
 
                     {/* Name */}
                     <div>
