@@ -15,9 +15,9 @@ import { Helmet } from "react-helmet-async";
 import {
   Newspaper, Download, Mail, Clock, Globe, Languages, Shield,
   ChevronDown, ChevronUp, FileText, Image, FolderOpen, Camera,
-  BarChart3, ExternalLink, Users, Calendar, X, Send, MessageSquare,
-  Loader2, CheckCircle, Palette, ArrowRight, Phone, MapPin, Zap,
-  Award, Quote,
+  BarChart3, Users, Calendar, X, Send, MessageSquare,
+  Loader2, CheckCircle, Palette, MapPin, Zap,
+  Quote,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
@@ -33,7 +33,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import {
-  getPublicPressResources, type PublicPressResource,
+  getPublicPressResources, trackPressDownload, type PublicPressResource,
 } from "../services/marketingResourcesApi";
 
 // ══════════════════════════════════════════════════════════════
@@ -157,7 +157,7 @@ const Press: React.FC = () => {
   const seoTitle = t("press.seo.title");
   const seoDescription = t("press.seo.description");
 
-  const localeMap: Record<string, string> = { fr: "fr_FR", en: "en_US", es: "es_ES", de: "de_DE", pt: "pt_PT", ru: "ru_RU", ch: "zh_CN", hi: "hi_IN", ar: "ar_SA" };
+  const localeMap: Record<string, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", de: "de-DE", pt: "pt-PT", ru: "ru-RU", zh: "zh-CN", hi: "hi-IN", ar: "ar-SA" };
   const formatDate = (date: Date) => new Intl.DateTimeFormat(localeMap[lang] || "fr-FR", { year: "numeric", month: "long", day: "numeric" }).format(date);
 
   // FAQ for schema
@@ -179,7 +179,7 @@ const Press: React.FC = () => {
     contact: t("press.contact.title"),
   }), [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Track download
+  // Track download (Firestore + Laravel API)
   const trackDownload = async (resource: PressResource) => {
     try {
       await addDoc(collection(db, "press_downloads"), {
@@ -188,6 +188,8 @@ const Press: React.FC = () => {
         createdAt: serverTimestamp(),
       });
     } catch { /* silent */ }
+    // Also track in Laravel PostgreSQL for admin stats
+    trackPressDownload(resource.id);
   };
 
   // Contact submit
@@ -265,7 +267,7 @@ const Press: React.FC = () => {
         description={seoDescription}
         canonicalUrl={`/${lang}/presse`}
         ogType="website"
-        locale={localeMap[lang] || "fr_FR"}
+        locale={localeMap[lang] || "fr-FR"}
         contentType="WebPage"
         aiSummary={t("press.boilerplate.short")}
         contentQuality="high"

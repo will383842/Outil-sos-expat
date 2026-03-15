@@ -80,10 +80,14 @@ const ROLE_CATEGORIES: Record<MarketingRole, CategoryConfig[]> = {
   ],
   press: [
     { value: 'press_logos', labelKey: 'resources.cat.pressLogos', defaultLabel: 'Logos', descriptionKey: 'resources.cat.pressLogos.desc', defaultDescription: 'HD logos, vector files, brand guidelines', color: 'indigo' },
+    { value: 'press_brand_guidelines', labelKey: 'resources.cat.pressBrandGuidelines', defaultLabel: 'Brand Guidelines', descriptionKey: 'resources.cat.pressBrandGuidelines.desc', defaultDescription: 'Brand usage rules, color palettes, typography', color: 'red' },
     { value: 'press_releases', labelKey: 'resources.cat.pressReleases', defaultLabel: 'Press Releases', descriptionKey: 'resources.cat.pressReleases.desc', defaultDescription: 'Official press releases and announcements', color: 'blue' },
     { value: 'press_kit', labelKey: 'resources.cat.pressKit', defaultLabel: 'Press Kit', descriptionKey: 'resources.cat.pressKit.desc', defaultDescription: 'Media kit, fact sheets and company overview', color: 'green' },
+    { value: 'press_spokesperson', labelKey: 'resources.cat.pressSpokesperson', defaultLabel: 'Spokesperson', descriptionKey: 'resources.cat.pressSpokesperson.desc', defaultDescription: 'Spokesperson bios, headshots and quotes', color: 'teal' },
     { value: 'press_photos', labelKey: 'resources.cat.pressPhotos', defaultLabel: 'Official Photos', descriptionKey: 'resources.cat.pressPhotos.desc', defaultDescription: 'Official photos, team portraits, event shots', color: 'purple' },
-    { value: 'press_data', labelKey: 'resources.cat.pressData', defaultLabel: 'Data & Stats', descriptionKey: 'resources.cat.pressData.desc', defaultDescription: 'Key figures, statistics and infographics', color: 'amber' },
+    { value: 'press_b_roll', labelKey: 'resources.cat.pressBRoll', defaultLabel: 'B-Roll & Videos', descriptionKey: 'resources.cat.pressBRoll.desc', defaultDescription: 'Video footage, B-roll clips for media use', color: 'amber' },
+    { value: 'press_data', labelKey: 'resources.cat.pressData', defaultLabel: 'Data & Stats', descriptionKey: 'resources.cat.pressData.desc', defaultDescription: 'Key figures, statistics and infographics', color: 'blue' },
+    { value: 'press_fact_sheets', labelKey: 'resources.cat.pressFactSheets', defaultLabel: 'Fact Sheets', descriptionKey: 'resources.cat.pressFactSheets.desc', defaultDescription: 'Company fact sheets and one-pagers', color: 'green' },
   ],
 };
 

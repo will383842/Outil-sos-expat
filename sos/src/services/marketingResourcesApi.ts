@@ -111,6 +111,20 @@ export async function getPublicPressResources(
   return res.json();
 }
 
+export async function trackPressDownload(
+  resourceId: string,
+): Promise<void> {
+  try {
+    const url = `${ENGINE_BASE_URL}/api/press/resources/${resourceId}/download`;
+    await fetch(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+  } catch {
+    // Silent — don't block UX if tracking fails
+  }
+}
+
 // ══════════════════════════════════════════════════════════════
 // AFFILIATE endpoints (firebase.affiliate middleware)
 // ══════════════════════════════════════════════════════════════
