@@ -87,7 +87,7 @@ export {
   onBloggerCreated,
   handleBloggerProviderRegistered,
   checkBloggerClientReferral,
-  bloggerOnCallSessionCompleted,
+  // bloggerOnCallSessionCompleted → consolidatedOnCallCompleted
   checkBloggerProviderRecruitment,
   awardBloggerRecruitmentCommission,
   deactivateExpiredRecruitments,
@@ -98,8 +98,8 @@ export {
 // ============================================================================
 
 export {
-  bloggerValidatePendingCommissions,
-  bloggerReleaseValidatedCommissions,
+  // bloggerValidatePendingCommissions → consolidatedValidateCommissions
+  // bloggerReleaseValidatedCommissions → consolidatedReleaseCommissions
   bloggerUpdateMonthlyRankings,
   bloggerDeactivateExpiredRecruitments,
   bloggerFinalizeMonthlyRankings,

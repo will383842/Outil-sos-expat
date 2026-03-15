@@ -4,10 +4,10 @@
 
 export { onBloggerCreated } from "./onBloggerCreated";
 
-// Export utility functions and triggers for use in other parts of the app
+// bloggerOnCallSessionCompleted → consolidated into consolidatedOnCallCompleted
+// checkBloggerClientReferral is a helper, not a Cloud Function
 export {
   checkBloggerClientReferral,
-  bloggerOnCallSessionCompleted,
 } from "./onCallCompleted";
 
 export {

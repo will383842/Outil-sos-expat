@@ -248,6 +248,8 @@ export interface GroupAdmin {
 
   // ---- Affiliate Codes ----
 
+  /** Unified affiliate code (new system: 1 code, 1 link /r/CODE) */
+  affiliateCode?: string;
   /** Code for client referrals (e.g., "GROUP-JEAN123") */
   affiliateCodeClient: string;
 

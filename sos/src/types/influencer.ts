@@ -147,6 +147,9 @@ export interface Influencer {
   socialLinks?: Record<string, string>;
 
   // Affiliate codes
+  /** Unified affiliate code (new system: 1 code, 1 link /r/CODE) */
+  affiliateCode?: string;
+  /** @deprecated Use affiliateCode. Kept for backward compatibility. */
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   affiliateCodeProvider: string;
@@ -493,6 +496,13 @@ export interface InfluencerConfig {
   // V2: Rate history
   rateHistory?: InfluencerRateHistoryEntry[];
 
+  // Level thresholds (5 values in cents) from backend config
+  levelThresholds?: number[];
+  levelBonuses?: number[];
+
+  // Unified commission config fields
+  commissionClientAmount?: number;
+
   // Version
   version?: number;
 
@@ -799,19 +809,6 @@ export interface InfluencerResourcesData {
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Get affiliate link for client referrals (influencer referring clients)
- */
-export function getInfluencerAffiliateLink(affiliateCode: string): string {
-  return `https://sos-expat.com?ref=${affiliateCode}`;
-}
-
-/**
- * Get recruitment link for influencer-to-influencer referrals
- */
-export function getInfluencerRecruitmentLink(affiliateCode: string): string {
-  return `https://sos-expat.com/influencer/inscription?ref=${affiliateCode}`;
-}
 
 /**
  * Format amount in cents to display currency

@@ -23,8 +23,6 @@ import {
 } from "firebase/firestore";
 import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
-import { useApp } from "../contexts/AppContext";
-import { getTranslatedRouteSlug } from "@/multilingual-system/core/routing/localeRoutes";
 import {
   InfluencerDashboardData,
   InfluencerCommission,
@@ -83,8 +81,6 @@ interface UseInfluencerReturn {
 
 export function useInfluencer(): UseInfluencerReturn {
   const { user } = useAuth();
-  const { language } = useApp();
-  const langCode = (language || "en") as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar";
   const [dashboardData, setDashboardData] = useState<InfluencerDashboardData | null>(null);
   const [commissions, setCommissions] = useState<InfluencerCommission[]>([]);
   const [withdrawals, setWithdrawals] = useState<InfluencerWithdrawal[]>([]);
@@ -400,22 +396,17 @@ export function useInfluencer(): UseInfluencerReturn {
     }
   }, [isInfluencer, refreshLeaderboard]);
 
-  // Computed values
-  const clientShareUrl = useMemo(() => {
-    if (!dashboardData?.influencer?.affiliateCodeClient) return "";
-    return `${window.location.origin}/ref/i/${dashboardData.influencer.affiliateCodeClient}`;
+  // Unified share URL — single /r/CODE link for all purposes
+  const shareUrl = useMemo(() => {
+    const code = (dashboardData?.influencer as any)?.affiliateCode || dashboardData?.influencer?.affiliateCodeClient;
+    if (!code) return "";
+    return `${window.location.origin}/r/${code}`;
   }, [dashboardData]);
 
-  const recruitmentShareUrl = useMemo(() => {
-    if (!dashboardData?.influencer?.affiliateCodeRecruitment) return "";
-    const providerRoute = getTranslatedRouteSlug("become-provider" as any, langCode);
-    return `${window.location.origin}/rec/i/${dashboardData.influencer.affiliateCodeRecruitment}`;
-  }, [dashboardData, langCode]);
-
-  const providerShareUrl = useMemo(() => {
-    if (!dashboardData?.influencer?.affiliateCodeProvider) return "";
-    return `${window.location.origin}/prov/i/${dashboardData.influencer.affiliateCodeProvider}`;
-  }, [dashboardData]);
+  // Legacy aliases — all point to unified link for backward compatibility
+  const clientShareUrl = shareUrl;
+  const recruitmentShareUrl = shareUrl;
+  const providerShareUrl = shareUrl;
 
   const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default
 

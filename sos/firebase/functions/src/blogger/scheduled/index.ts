@@ -1,81 +1,21 @@
 /**
  * Blogger Scheduled Functions
  *
- * Cron jobs for the blogger system:
- * - Validate pending commissions
- * - Release validated commissions
+ * NOTE: bloggerValidatePendingCommissions & bloggerReleaseValidatedCommissions
+ * have been consolidated into consolidatedValidateCommissions / consolidatedReleaseCommissions.
+ *
+ * Remaining cron jobs:
  * - Update monthly rankings
  * - Deactivate expired recruitment windows
+ * - Finalize monthly rankings
  */
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import {
-  validatePendingBloggerCommissions,
-  releaseValidatedBloggerCommissions,
   updateBloggerMonthlyRankings,
 } from "../services/bloggerCommissionService";
 import { deactivateExpiredRecruitments } from "../triggers/onProviderRegistered";
-
-/**
- * Validate pending commissions - runs every hour
- *
- * Moves commissions from "pending" to "validated" after hold period
- */
-export const bloggerValidatePendingCommissions = onSchedule(
-  {
-    schedule: "0 * * * *", // Every hour at minute 0
-    region: "europe-west3",
-    timeZone: "Europe/Paris",
-    memory: "256MiB",
-    cpu: 0.083,
-    timeoutSeconds: 300,
-  },
-  async () => {
-    logger.info("[bloggerValidatePendingCommissions] Starting scheduled job");
-
-    try {
-      const result = await validatePendingBloggerCommissions();
-
-      logger.info("[bloggerValidatePendingCommissions] Job completed", {
-        validated: result.validated,
-        errors: result.errors,
-      });
-    } catch (error) {
-      logger.error("[bloggerValidatePendingCommissions] Job failed", { error });
-    }
-  }
-);
-
-/**
- * Release validated commissions - runs every hour
- *
- * Moves commissions from "validated" to "available" after release delay
- */
-export const bloggerReleaseValidatedCommissions = onSchedule(
-  {
-    schedule: "30 * * * *", // Every hour at minute 30
-    region: "europe-west3",
-    timeZone: "Europe/Paris",
-    memory: "256MiB",
-    cpu: 0.083,
-    timeoutSeconds: 300,
-  },
-  async () => {
-    logger.info("[bloggerReleaseValidatedCommissions] Starting scheduled job");
-
-    try {
-      const result = await releaseValidatedBloggerCommissions();
-
-      logger.info("[bloggerReleaseValidatedCommissions] Job completed", {
-        released: result.released,
-        errors: result.errors,
-      });
-    } catch (error) {
-      logger.error("[bloggerReleaseValidatedCommissions] Job failed", { error });
-    }
-  }
-);
 
 /**
  * Update monthly rankings - runs daily at midnight

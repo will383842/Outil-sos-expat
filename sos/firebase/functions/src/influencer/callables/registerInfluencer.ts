@@ -35,6 +35,7 @@ import { detectCircularReferral } from "../../affiliate/utils/circularReferralDe
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
+import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
@@ -374,6 +375,9 @@ export const registerInfluencer = onCall(
       const affiliateCodeRecruitment = generateRecruitmentCode(affiliateCodeClient);
       const affiliateCodeProvider = generateProviderCode(affiliateCodeClient);
 
+      // Unified code (new system: 1 code, 1 link /r/CODE)
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId);
+
       // 8. V2: Capture current rates (frozen at registration)
       const capturedRates = captureCurrentRates(config);
 
@@ -405,6 +409,7 @@ export const registerInfluencer = onCall(
 
         status: "active", // Directly active - no quiz required
         isVisible: false,
+        affiliateCode,
         affiliateCodeClient,
         affiliateCodeRecruitment,
         affiliateCodeProvider,
@@ -500,6 +505,7 @@ export const registerInfluencer = onCall(
             role: "influencer",
             isInfluencer: true,
             influencerStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,
@@ -515,6 +521,7 @@ export const registerInfluencer = onCall(
             role: "influencer",
             isInfluencer: true,
             influencerStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,

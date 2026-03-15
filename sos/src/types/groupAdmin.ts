@@ -147,6 +147,9 @@ export interface GroupAdmin {
   adminNotes?: string;
   suspensionReason?: string;
 
+  /** Unified affiliate code (new system: 1 code, 1 link /r/CODE) */
+  affiliateCode?: string;
+  /** @deprecated Use affiliateCode. Kept for backward compatibility. */
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   affiliateCodeProvider: string;
@@ -477,6 +480,7 @@ export interface RequestWithdrawalRequest {
 export interface RegisterGroupAdminResponse {
   success: boolean;
   groupAdminId: string;
+  affiliateCode?: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   affiliateCodeProvider: string;
@@ -724,16 +728,3 @@ export function formatGroupAdminAmount(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-/**
- * Get affiliate link for a GroupAdmin
- */
-export function getGroupAdminAffiliateLink(affiliateCode: string): string {
-  return `https://sos-expat.com/r/${affiliateCode}`;
-}
-
-/**
- * Get recruitment link for a GroupAdmin
- */
-export function getGroupAdminRecruitmentLink(affiliateCode: string): string {
-  return `https://sos-expat.com/group-admin/inscription?ref=${affiliateCode}`;
-}

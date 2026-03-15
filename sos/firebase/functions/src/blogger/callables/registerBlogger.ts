@@ -30,6 +30,7 @@ import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklin
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 import { snapshotLockedRates } from "../../lib/planResolver";
+import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
 
 // ============================================================================
 // VALIDATION
@@ -362,6 +363,9 @@ export const registerBlogger = onCall(
       const { affiliateCodeClient, affiliateCodeRecruitment, affiliateCodeProvider } =
         generateBloggerAffiliateCodes(input.firstName, uid);
 
+      // Unified code (new system: 1 code, 1 link /r/CODE)
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, uid);
+
       // 7b. Resolve commission plan (Lifetime Rate Lock)
       const planSnapshot = await snapshotLockedRates("blogger");
       if (planSnapshot) {
@@ -404,6 +408,7 @@ export const registerBlogger = onCall(
         definitiveRoleAcknowledgedAt: now,
 
         // Affiliate codes
+        affiliateCode,
         affiliateCodeClient,
         affiliateCodeRecruitment,
         affiliateCodeProvider,
@@ -496,6 +501,7 @@ export const registerBlogger = onCall(
             role: "blogger",
             isBlogger: true,
             bloggerStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,
@@ -510,6 +516,7 @@ export const registerBlogger = onCall(
             role: "blogger",
             isBlogger: true,
             bloggerStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,

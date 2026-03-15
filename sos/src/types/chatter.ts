@@ -206,6 +206,9 @@ export interface ChatterData {
   level: ChatterLevel;
   levelProgress: number;
 
+  /** Unified affiliate code (new system: 1 code, 1 link /r/CODE) */
+  affiliateCode?: string;
+  /** @deprecated Use affiliateCode. Kept for backward compatibility. */
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   affiliateCodeProvider: string;
@@ -1057,19 +1060,6 @@ export interface ActivityFeedItem {
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Get affiliate link for client referrals (chatter referring clients)
- */
-export function getChatterAffiliateLink(affiliateCode: string): string {
-  return `https://sos-expat.com?ref=${affiliateCode}`;
-}
-
-/**
- * Get recruitment link for chatter-to-chatter referrals
- */
-export function getChatterRecruitmentLink(affiliateCode: string): string {
-  return `https://sos-expat.com/chatter/inscription?ref=${affiliateCode}`;
-}
 
 /**
  * Format amount in cents to display currency

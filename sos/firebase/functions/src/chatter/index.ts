@@ -10,7 +10,7 @@
 
 export {
   chatterOnChatterCreated,
-  chatterOnCallCompleted,
+  // chatterOnCallCompleted → consolidatedOnCallCompleted
   chatterOnProviderRegistered,
   chatterOnClientRegistered,
   chatterOnChatterEarningsUpdated,
@@ -203,8 +203,8 @@ export {
 // ============================================================================
 
 export {
-  chatterValidatePendingCommissions,
-  chatterReleaseValidatedCommissions,
+  // chatterValidatePendingCommissions → consolidatedValidateCommissions
+  // chatterReleaseValidatedCommissions → consolidatedReleaseCommissions
   chatterMonthlyRecurringCommissions,
   chatterValidatePendingReferralCommissions,
   // Weekly Challenges

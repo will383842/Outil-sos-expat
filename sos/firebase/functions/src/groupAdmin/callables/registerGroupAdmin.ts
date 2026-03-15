@@ -26,6 +26,7 @@ import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklin
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 import { snapshotLockedRates } from "../../lib/planResolver";
+import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
 
 // Supported languages validation (must match app navigation languages)
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
@@ -402,6 +403,9 @@ export const registerGroupAdmin = onCall(
       const affiliateCodeRecruitment = generateAffiliateCode(input.firstName, userId, "recruitment");
       const affiliateCodeProvider = generateAffiliateCode(input.firstName, userId, "provider");
 
+      // Unified code (new system: 1 code, 1 link /r/CODE)
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId);
+
       // 10b. Resolve commission plan (Lifetime Rate Lock)
       const planSnapshot = await snapshotLockedRates("groupAdmin");
       if (planSnapshot) {
@@ -434,6 +438,7 @@ export const registerGroupAdmin = onCall(
 
         status: "active",
 
+        affiliateCode,
         affiliateCodeClient,
         affiliateCodeRecruitment,
         affiliateCodeProvider,
@@ -520,6 +525,7 @@ export const registerGroupAdmin = onCall(
             role: "groupAdmin",
             isGroupAdmin: true,
             groupAdminStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,
@@ -534,6 +540,7 @@ export const registerGroupAdmin = onCall(
             role: "groupAdmin",
             isGroupAdmin: true,
             groupAdminStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,

@@ -192,20 +192,17 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     return notifications.filter((n) => !n.isRead).length;
   }, [notifications]);
 
-  const clientShareUrl = useMemo(() => {
-    if (!profile?.affiliateCodeClient) return '';
-    return `${window.location.origin}/ref/ga/${profile.affiliateCodeClient}`;
-  }, [profile?.affiliateCodeClient]);
+  // Unified share URL — single /r/CODE link for all purposes
+  const shareUrl = useMemo(() => {
+    const code = (profile as any)?.affiliateCode || profile?.affiliateCodeClient;
+    if (!code) return '';
+    return `${window.location.origin}/r/${code}`;
+  }, [profile]);
 
-  const recruitmentShareUrl = useMemo(() => {
-    if (!profile?.affiliateCodeRecruitment) return '';
-    return `${window.location.origin}/rec/ga/${profile.affiliateCodeRecruitment}`;
-  }, [profile?.affiliateCodeRecruitment]);
-
-  const providerShareUrl = useMemo(() => {
-    if (!profile?.affiliateCodeProvider) return '';
-    return `${window.location.origin}/prov/ga/${profile.affiliateCodeProvider}`;
-  }, [profile?.affiliateCodeProvider]);
+  // Legacy aliases — all point to unified link for backward compatibility
+  const clientShareUrl = shareUrl;
+  const recruitmentShareUrl = shareUrl;
+  const providerShareUrl = shareUrl;
 
   return {
     profile,

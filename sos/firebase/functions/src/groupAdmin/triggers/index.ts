@@ -2,7 +2,9 @@
  * GroupAdmin Triggers - Main Export
  */
 
-export { onCallCompletedGroupAdmin, handleProviderRecruitmentCommission } from "./onCallCompleted";
+// onCallCompletedGroupAdmin → consolidated into consolidatedOnCallCompleted
+// handleProviderRecruitmentCommission is still used by consolidatedOnCallCompleted
+export { handleProviderRecruitmentCommission } from "./onCallCompleted";
 export { onGroupAdminCreated } from "./onGroupAdminCreated";
 export {
   handleGroupAdminProviderRegistered,

@@ -409,20 +409,17 @@ export function useBlogger(): UseBloggerReturn {
   // COMPUTED VALUES
   // ============================================================================
 
-  const clientShareUrl = useMemo(() => {
-    if (!blogger?.affiliateCodeClient) return '';
-    return `${window.location.origin}/ref/b/${blogger.affiliateCodeClient}`;
-  }, [blogger?.affiliateCodeClient]);
+  // Unified share URL — single /r/CODE link for all purposes
+  const shareUrl = useMemo(() => {
+    const code = (blogger as any)?.affiliateCode || blogger?.affiliateCodeClient;
+    if (!code) return '';
+    return `${window.location.origin}/r/${code}`;
+  }, [blogger]);
 
-  const recruitmentShareUrl = useMemo(() => {
-    if (!blogger?.affiliateCodeRecruitment) return '';
-    return `${window.location.origin}/rec/b/${blogger.affiliateCodeRecruitment}`;
-  }, [blogger?.affiliateCodeRecruitment]);
-
-  const providerShareUrl = useMemo(() => {
-    if (!blogger?.affiliateCodeProvider) return '';
-    return `${window.location.origin}/prov/b/${blogger.affiliateCodeProvider}`;
-  }, [blogger?.affiliateCodeProvider]);
+  // Legacy aliases — all point to unified link for backward compatibility
+  const clientShareUrl = shareUrl;
+  const recruitmentShareUrl = shareUrl;
+  const providerShareUrl = shareUrl;
 
   const minimumWithdrawal = useMemo(() => {
     return dashboardData?.config?.minimumWithdrawalAmount || 3000; // $30 default

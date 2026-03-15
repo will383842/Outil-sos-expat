@@ -81,7 +81,7 @@ export {
 
 // Triggers
 export {
-  onCallCompletedGroupAdmin,
+  // onCallCompletedGroupAdmin → consolidatedOnCallCompleted
   onGroupAdminCreated,
   handleGroupAdminProviderRegistered,
   checkGroupAdminProviderRecruitment,
@@ -90,7 +90,5 @@ export {
 } from "./triggers";
 
 // Scheduled Functions
-export {
-  validatePendingGroupAdminCommissions,
-  releaseValidatedGroupAdminCommissions,
-} from "./scheduled";
+// validatePendingGroupAdminCommissions → consolidatedValidateCommissions
+// releaseValidatedGroupAdminCommissions → consolidatedReleaseCommissions

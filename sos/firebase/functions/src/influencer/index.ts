@@ -10,7 +10,7 @@
 
 export {
   influencerOnInfluencerCreated,
-  influencerOnCallCompleted,
+  // influencerOnCallCompleted → consolidatedOnCallCompleted
   influencerOnProviderRegistered,
   influencerOnProviderCallCompleted,
 } from "./triggers";
@@ -98,8 +98,8 @@ export { getInfluencerDirectory } from "./callables/public";
 // ============================================================================
 
 export {
-  influencerValidatePendingCommissions,
-  influencerReleaseValidatedCommissions,
+  // influencerValidatePendingCommissions → consolidatedValidateCommissions
+  // influencerReleaseValidatedCommissions → consolidatedReleaseCommissions
   influencerMonthlyTop3Rewards,
 } from "./scheduled";
 

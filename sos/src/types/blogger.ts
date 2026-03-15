@@ -104,6 +104,9 @@ export interface Blogger {
   definitiveRoleAcknowledgedAt: string | null;
 
   // Affiliate codes
+  /** Unified affiliate code (new system: 1 code, 1 link /r/CODE) */
+  affiliateCode?: string;
+  /** @deprecated Use affiliateCode. Kept for backward compatibility. */
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   affiliateCodeProvider: string;
@@ -507,6 +510,7 @@ export interface RegisterBloggerInput {
 export interface RegisterBloggerResponse {
   success: boolean;
   bloggerId: string;
+  affiliateCode?: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   affiliateCodeProvider: string;
@@ -948,19 +952,6 @@ export const PROMO_WIDGET_BUTTON_PRESETS: {
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Get affiliate link for client referrals (blogger referring clients)
- */
-export function getBloggerAffiliateLink(affiliateCode: string): string {
-  return `https://sos-expat.com?ref=${affiliateCode}`;
-}
-
-/**
- * Get recruitment link for blogger-to-blogger referrals
- */
-export function getBloggerRecruitmentLink(affiliateCode: string): string {
-  return `https://sos-expat.com/blogger/inscription?ref=${affiliateCode}`;
-}
 
 /**
  * Format amount in cents to display currency

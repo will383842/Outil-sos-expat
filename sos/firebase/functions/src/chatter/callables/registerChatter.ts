@@ -32,6 +32,7 @@ import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { snapshotLockedRates } from "../../lib/planResolver";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
+import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedChatterLanguage[] = [
@@ -487,8 +488,11 @@ export const registerChatter = onCall(
       const affiliateCodeRecruitment = generateChatterRecruitmentCode(affiliateCodeClient);
       const affiliateCodeProvider = generateChatterProviderCode(affiliateCodeClient);
 
+      // Unified code (new system: 1 code, 1 link /r/CODE)
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId);
+
       console.log("[registerChatter] STEP 10: Codes generated", JSON.stringify({
-        userId, affiliateCodeClient, affiliateCodeRecruitment, affiliateCodeProvider, elapsed: Date.now() - startTime,
+        userId, affiliateCode, affiliateCodeClient, affiliateCodeRecruitment, affiliateCodeProvider, elapsed: Date.now() - startTime,
       }));
 
       // 10b. Resolve commission plan (Lifetime Rate Lock)
@@ -519,6 +523,7 @@ export const registerChatter = onCall(
         levelProgress: 0,
 
         // Codes generated immediately at registration
+        affiliateCode,
         affiliateCodeClient,
         affiliateCodeRecruitment,
         affiliateCodeProvider,
@@ -628,6 +633,7 @@ export const registerChatter = onCall(
             role: "chatter",
             isChatter: true,
             chatterStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,
@@ -645,6 +651,7 @@ export const registerChatter = onCall(
             role: "chatter",
             isChatter: true,
             chatterStatus: "active",
+            affiliateCode,
             affiliateCodeClient,
             affiliateCodeRecruitment,
             affiliateCodeProvider,

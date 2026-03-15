@@ -3,7 +3,7 @@
  */
 
 export { chatterOnChatterCreated } from "./onChatterCreated";
-export { chatterOnCallCompleted } from "./onCallCompleted";
+// chatterOnCallCompleted → consolidated into consolidatedOnCallCompleted
 export {
   chatterOnProviderRegistered,
   chatterOnClientRegistered,

@@ -387,21 +387,17 @@ export function useChatter(): UseChatterReturn {
     refreshDashboard();
   }, [refreshDashboard]);
 
-  // Computed values
-  const clientShareUrl = useMemo(() => {
-    if (!dashboardData?.chatter?.affiliateCodeClient) return "";
-    return `${window.location.origin}/ref/c/${dashboardData.chatter.affiliateCodeClient}`;
+  // Unified share URL — single /r/CODE link for all purposes
+  const shareUrl = useMemo(() => {
+    const code = (dashboardData?.chatter as any)?.affiliateCode || dashboardData?.chatter?.affiliateCodeClient;
+    if (!code) return "";
+    return `${window.location.origin}/r/${code}`;
   }, [dashboardData]);
 
-  const recruitmentShareUrl = useMemo(() => {
-    if (!dashboardData?.chatter?.affiliateCodeRecruitment) return "";
-    return `${window.location.origin}/rec/c/${dashboardData.chatter.affiliateCodeRecruitment}`;
-  }, [dashboardData]);
-
-  const providerShareUrl = useMemo(() => {
-    if (!dashboardData?.chatter?.affiliateCodeProvider) return "";
-    return `${window.location.origin}/prov/c/${dashboardData.chatter.affiliateCodeProvider}`;
-  }, [dashboardData]);
+  // Legacy aliases — all point to unified link for backward compatibility
+  const clientShareUrl = shareUrl;
+  const recruitmentShareUrl = shareUrl;
+  const providerShareUrl = shareUrl;
 
   const minimumWithdrawal = dashboardData?.config?.minimumWithdrawalAmount || 3000;
 
