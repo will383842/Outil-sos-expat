@@ -1005,11 +1005,17 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.press.description",
         children: [
           {
+            id: "press-resources",
+            labelKey: "admin.menu.pressResources",
+            path: "/admin/press/resources",
+            icon: FolderOpen,
+            descriptionKey: "admin.menu.pressResources.description",
+          },
+          {
             id: "press-releases",
             labelKey: "admin.menu.pressReleases",
             path: "/admin/press/releases",
             icon: FileText,
-            badge: "NEW",
             descriptionKey: "admin.menu.pressReleases.description",
           },
         ],
