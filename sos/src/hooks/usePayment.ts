@@ -61,8 +61,10 @@ export type MobileMoneyProvider =
 
 /**
  * User type for payment context
+ * Imported from centralized types for single source of truth
  */
-export type PaymentUserType = "chatter" | "influencer" | "blogger" | "group_admin" | "partner";
+import type { PaymentUserType as _PaymentUserType } from "../types/payment";
+export type PaymentUserType = _PaymentUserType;
 
 // ============================================================================
 // PAYMENT DETAILS TYPES

@@ -142,6 +142,7 @@ const USER_TYPE_CONFIG: Record<PaymentUserType, { color: string; label: string }
   client: { color: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700', label: 'Client' },
   lawyer: { color: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700', label: 'Avocat' },
   expat: { color: 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700', label: 'Expatrié' },
+  captain: { color: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700', label: 'Capitaine' },
 };
 
 const UserTypeBadge: React.FC<{ userType: PaymentUserType }> = ({ userType }) => {

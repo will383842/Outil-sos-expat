@@ -1061,13 +1061,8 @@ async function rollbackUnifiedCommissions(
       totalRolledBack += data.amount || 0;
     }
 
-    // Restore user's available balance
-    if (totalRolledBack > 0) {
-      const userRef = db.collection("users").doc(withdrawal.userId);
-      batch.update(userRef, {
-        availableBalance: FieldValue.increment(totalRolledBack),
-      });
-    }
+    // Note: balance restoration is now handled by restoreUserBalance() which
+    // restores the full totalDebited amount (including fees) for all user types.
 
     await batch.commit();
 
@@ -1081,6 +1076,51 @@ async function rollbackUnifiedCommissions(
     logger.error("[onWithdrawalStatusChanged] Failed to rollback unified commissions", {
       withdrawalId: withdrawal.id,
       userId: withdrawal.userId,
+      error: error instanceof Error ? error.message : "Unknown",
+    });
+  }
+}
+
+/**
+ * Restore the user's available balance when a withdrawal permanently fails, is rejected, or cancelled.
+ * This ensures the debited amount (withdrawal + fees) is returned to the user.
+ * Note: rollbackUnifiedCommissions already restores commission amounts for users in the "users"
+ * collection, but this function handles ALL user types (chatters, group_admins, etc.)
+ * and restores the full totalDebited amount (including platform fees).
+ */
+async function restoreUserBalance(
+  withdrawal: WithdrawalRequest,
+  newStatus: WithdrawalStatus
+): Promise<void> {
+  const db = getFirestore();
+  const userCollection = getUserCollection(withdrawal.userType);
+  const restoreAmount = withdrawal.totalDebited || withdrawal.amount;
+
+  if (!restoreAmount || restoreAmount <= 0) {
+    return;
+  }
+
+  try {
+    const userRef = db.collection(userCollection).doc(withdrawal.userId);
+    await userRef.update({
+      availableBalance: FieldValue.increment(restoreAmount),
+      updatedAt: Timestamp.now(),
+    });
+
+    logger.info("[onWithdrawalStatusChanged] User balance restored", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      userType: withdrawal.userType,
+      collection: userCollection,
+      restoredAmount: restoreAmount,
+      newStatus,
+    });
+  } catch (error) {
+    logger.error("[onWithdrawalStatusChanged] CRITICAL: Failed to restore user balance", {
+      withdrawalId: withdrawal.id,
+      userId: withdrawal.userId,
+      userType: withdrawal.userType,
+      amount: restoreAmount,
       error: error instanceof Error ? error.message : "Unknown",
     });
   }
@@ -1126,16 +1166,13 @@ async function handleStatusTransition(
     });
   }
 
-  // Handle permanent failure — rollback commissions (GroupAdmin + Affiliate + Unified)
-  if (newStatus === "failed" && withdrawal.retryCount >= withdrawal.maxRetries) {
+  // Handle permanent failure — rollback commissions + restore user balance
+  const isPermanentFailure = newStatus === "failed" && withdrawal.retryCount >= withdrawal.maxRetries;
+  if (isPermanentFailure || newStatus === "rejected" || newStatus === "cancelled") {
     await rollbackGroupAdminCommissions(withdrawal);
     await rollbackAffiliateCommissions(withdrawal);
     await rollbackUnifiedCommissions(withdrawal);
-  }
-  if (newStatus === "rejected" || newStatus === "cancelled") {
-    await rollbackGroupAdminCommissions(withdrawal);
-    await rollbackAffiliateCommissions(withdrawal);
-    await rollbackUnifiedCommissions(withdrawal);
+    await restoreUserBalance(withdrawal, newStatus);
   }
 
   // Clear pendingWithdrawalId on terminal states
