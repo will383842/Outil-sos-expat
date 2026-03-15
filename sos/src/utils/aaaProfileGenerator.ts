@@ -476,6 +476,7 @@ export async function generateCompleteAaaProfile(params: AaaProfileGenerationPar
     bio,
     isApproved: true,
     approvalStatus: 'approved',
+    isActive: true,
     isOnline: false,
     isVisible: true,
     isVisibleOnMap: true,

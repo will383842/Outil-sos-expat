@@ -2919,8 +2919,9 @@ const SOSCall: React.FC = () => {
       selectedCountryCode
     });
 
-    // Séparer les profils online et offline
-    const onlineProviders = next.filter(p => p.isOnline === true);
+    // Séparer les profils en 3 groupes: busy > available > offline
+    const busyProviders = next.filter(p => p.availability === 'busy' && p.isOnline);
+    const availableProviders = next.filter(p => p.isOnline === true && p.availability !== 'busy');
     const offlineProviders = next.filter(p => p.isOnline !== true);
 
     // Trier par rating uniquement (meilleure note d'abord)
@@ -2930,11 +2931,12 @@ const SOSCall: React.FC = () => {
       return ratingB - ratingA; // Meilleure note en premier
     };
 
-    const sortedOnline = [...onlineProviders].sort(sortByRating);
+    const sortedBusy = [...busyProviders].sort(sortByRating);
+    const sortedAvailable = [...availableProviders].sort(sortByRating);
     const sortedOffline = [...offlineProviders].sort(sortByRating);
 
-    // Combiner: TOUJOURS online d'abord, puis offline
-    const sorted = [...sortedOnline, ...sortedOffline];
+    // Combiner: busy d'abord (activité visible), puis available, puis offline
+    const sorted = [...sortedBusy, ...sortedAvailable, ...sortedOffline];
 
     setFilteredProviders(sorted);
     setPage(1);

@@ -1880,6 +1880,7 @@ export const testWebhook = onRequest(
 
 // ========== SYSTEME EN LIGNE/HORS LIGNE ==========
 export { checkProviderInactivity } from './scheduled/checkProviderInactivity';
+export { aaaBusySimulation } from './scheduled/aaaBusySimulation';
 export { updateProviderActivity } from './callables/updateProviderActivity';
 export { setProviderOffline } from './callables/setProviderOffline';
 

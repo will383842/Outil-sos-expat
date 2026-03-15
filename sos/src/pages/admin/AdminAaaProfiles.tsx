@@ -1564,7 +1564,7 @@ const AdminAaaProfiles: React.FC = () => {
     return typeof value === 'string' ? value : id;
   };
 
-  const [activeTab, setActiveTab] = useState<'generate' | 'manage' | 'planner'>('generate');
+  const [activeTab, setActiveTab] = useState<'generate' | 'manage' | 'planner' | 'simulation'>('generate');
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCount, setGeneratedCount] = useState(0);
@@ -1599,6 +1599,73 @@ const AdminAaaProfiles: React.FC = () => {
     enabled: false, dailyCount: 20, regionCountries: ['Thaïlande', 'Vietnam', 'Cambodge'],
     role: 'expat' as Role, genderBias: { male: 50, female: 50 }, languages: ['fr', 'en'],
   });
+
+  // ========== AAA BUSY SIMULATION CONFIG ==========
+  const [simConfig, setSimConfig] = useState<{
+    enabled: boolean;
+    simultaneousBusy: number;
+    busyDurationMinutes: number;
+  }>({ enabled: false, simultaneousBusy: 5, busyDurationMinutes: 20 });
+  const [simConfigLoaded, setSimConfigLoaded] = useState(false);
+  const [savingSimConfig, setSavingSimConfig] = useState(false);
+  const [simulatedProfiles, setSimulatedProfiles] = useState<Array<{ id: string; name: string; simulatedAt: Date }>>([]);
+
+  const loadSimConfig = async () => {
+    try {
+      const snap = await getDoc(doc(db, 'admin_config', 'aaa_busy_simulation'));
+      if (snap.exists()) {
+        const data = snap.data();
+        setSimConfig({
+          enabled: data.enabled ?? false,
+          simultaneousBusy: data.simultaneousBusy ?? 5,
+          busyDurationMinutes: data.busyDurationMinutes ?? 20,
+        });
+      }
+      setSimConfigLoaded(true);
+    } catch (err) {
+      console.error('[AAA Simulation] Error loading config:', err);
+    }
+  };
+
+  const saveSimConfig = async (newConfig: typeof simConfig) => {
+    setSavingSimConfig(true);
+    try {
+      await setDoc(doc(db, 'admin_config', 'aaa_busy_simulation'), {
+        ...newConfig,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser?.uid || 'unknown',
+      });
+      setSimConfig(newConfig);
+      setSuccess(newConfig.enabled ? 'Simulation busy activée' : 'Simulation busy désactivée');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(`Erreur sauvegarde config simulation: ${(err as Error).message}`);
+    } finally {
+      setSavingSimConfig(false);
+    }
+  };
+
+  const loadSimulatedProfiles = async () => {
+    try {
+      const snap = await getDocs(
+        query(collection(db, 'sos_profiles'), where('isAAA', '==', true))
+      );
+      const profiles: typeof simulatedProfiles = [];
+      for (const d of snap.docs) {
+        const data = d.data();
+        if (data.aaaBusySimulatedAt) {
+          profiles.push({
+            id: d.id,
+            name: data.fullName || data.displayName || d.id,
+            simulatedAt: data.aaaBusySimulatedAt.toDate(),
+          });
+        }
+      }
+      setSimulatedProfiles(profiles);
+    } catch (err) {
+      console.error('[AAA Simulation] Error loading simulated profiles:', err);
+    }
+  };
 
   // ========== AAA PAYOUT CONFIG ==========
   const [aaaPayoutConfig, setAaaPayoutConfig] = useState<AaaPayoutConfig>({
@@ -1760,7 +1827,11 @@ const AdminAaaProfiles: React.FC = () => {
     // ✅ CHARGER LA CONFIG PAYOUT AAA
     loadAaaPayoutConfig();
 
+    // ✅ CHARGER LA CONFIG SIMULATION BUSY
+    loadSimConfig();
+
     if (activeTab === 'manage') loadExistingProfiles().catch(() => {});
+    if (activeTab === 'simulation') loadSimulatedProfiles().catch(() => {});
   }, [currentUser, navigate, activeTab]);
 
   const filteredProfiles = useMemo(() => {
@@ -2923,6 +2994,9 @@ const AdminAaaProfiles: React.FC = () => {
             <button onClick={() => setActiveTab('planner')} className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center ${activeTab === 'planner' ? 'bg-red-600 text-white hover:bg-red-700' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
               <Calendar className="mr-2" size={18} /> Planner
             </button>
+            <button onClick={() => { setActiveTab('simulation'); loadSimulatedProfiles(); }} className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center ${activeTab === 'simulation' ? 'bg-orange-600 text-white hover:bg-orange-700' : 'border border-orange-300 text-orange-700 hover:bg-orange-50'}`}>
+              <Settings className="mr-2 animate-spin" style={{ animationDuration: '3s' }} size={18} /> Simulation Busy
+            </button>
           </div>
         </div>
 
@@ -3525,6 +3599,163 @@ const AdminAaaProfiles: React.FC = () => {
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-6">Fonctionnalité à venir</p>
+          </div>
+        )}
+
+        {activeTab === 'simulation' && (
+          <div className="space-y-6">
+            {/* Toggle principal */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Simulation d'activité Busy</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Simule de l'activité en mettant des profils AAA en statut "Occupé" de manière rotative
+                  </p>
+                </div>
+                <button
+                  onClick={() => saveSimConfig({ ...simConfig, enabled: !simConfig.enabled })}
+                  disabled={savingSimConfig}
+                  className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
+                    simConfig.enabled ? 'bg-green-500' : 'bg-gray-300'
+                  } ${savingSimConfig ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                    simConfig.enabled ? 'translate-x-9' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+
+              {simConfig.enabled && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center mb-4">
+                  <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-sm text-green-700">
+                    Simulation active — le cron tourne toutes les 4 minutes
+                  </span>
+                </div>
+              )}
+
+              {!simConfig.enabled && simConfigLoaded && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center mb-4">
+                  <AlertCircle className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" />
+                  <span className="text-sm text-gray-600">
+                    Simulation désactivée — tous les profils AAA busy simulés seront automatiquement libérés
+                  </span>
+                </div>
+              )}
+
+              {/* Paramètres */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre de profils simultanément busy
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={simConfig.simultaneousBusy}
+                      onChange={(e) => setSimConfig(prev => ({ ...prev, simultaneousBusy: Number(e.target.value) }))}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-semibold text-gray-900 w-8 text-center">{simConfig.simultaneousBusy}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Recommandé : 4-6 profils</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Durée busy par profil (minutes)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={5}
+                      max={60}
+                      step={5}
+                      value={simConfig.busyDurationMinutes}
+                      onChange={(e) => setSimConfig(prev => ({ ...prev, busyDurationMinutes: Number(e.target.value) }))}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-semibold text-gray-900 w-12 text-center">{simConfig.busyDurationMinutes}m</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Recommandé : 15-25 minutes</p>
+                </div>
+              </div>
+
+              {/* Bouton sauvegarder les paramètres */}
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => saveSimConfig(simConfig)}
+                  disabled={savingSimConfig}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center disabled:opacity-50"
+                >
+                  {savingSimConfig ? <Loader className="animate-spin mr-2" size={16} /> : <Save className="mr-2" size={16} />}
+                  Enregistrer les paramètres
+                </button>
+              </div>
+            </div>
+
+            {/* Monitoring live */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-md font-semibold text-gray-900">
+                  Profils actuellement en busy simulé ({simulatedProfiles.length})
+                </h3>
+                <button
+                  onClick={loadSimulatedProfiles}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
+                >
+                  <RefreshCw size={14} className="mr-1" /> Rafraîchir
+                </button>
+              </div>
+
+              {simulatedProfiles.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center">
+                  Aucun profil AAA en busy simulé actuellement
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {simulatedProfiles.map((p) => {
+                    const elapsed = Math.round((Date.now() - p.simulatedAt.getTime()) / 60000);
+                    const remaining = Math.max(0, simConfig.busyDurationMinutes - elapsed);
+                    const progress = Math.min(100, (elapsed / simConfig.busyDurationMinutes) * 100);
+                    return (
+                      <div key={p.id} className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                        <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-900 truncate">{p.name}</span>
+                            <span className="text-xs text-gray-500 flex-shrink-0">
+                              {remaining > 0 ? `${remaining}min restantes` : 'Expiration imminente'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-orange-200 rounded-full h-1.5 mt-1">
+                            <div
+                              className="bg-orange-500 h-1.5 rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Explication */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">Comment ça marche</h4>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>Un cron tourne toutes les 4 minutes et maintient le nombre de profils AAA busy configuré</li>
+                <li>Les profils sont choisis aléatoirement et changent à chaque rotation</li>
+                <li>Les profils ne sont jamais tous busy en même temps — ils sont décalés dans le temps</li>
+                <li>Si un vrai appel arrive sur un AAA, le système de simulation ne l'affecte pas</li>
+                <li>Désactiver le toggle libère immédiatement tous les profils busy simulés</li>
+              </ul>
+            </div>
           </div>
         )}
 

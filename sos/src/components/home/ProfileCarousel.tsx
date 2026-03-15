@@ -87,11 +87,13 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       return Math.random() - 0.5; // Aléatoire pour le reste
     };
 
-    const online = all.filter(p => p.isOnline);
+    const busy = all.filter(p => p.availability === 'busy' && p.isOnline);
+    const available = all.filter(p => p.isOnline && p.availability !== 'busy');
     const offline = all.filter(p => !p.isOnline);
-    const sortedOnline = online.sort(sortByPhotoThenRandom);
+    const sortedBusy = busy.sort(sortByPhotoThenRandom);
+    const sortedAvailable = available.sort(sortByPhotoThenRandom);
     const sortedOffline = offline.sort(sortByPhotoThenRandom);
-    const prioritized = [...sortedOnline, ...sortedOffline];
+    const prioritized = [...sortedBusy, ...sortedAvailable, ...sortedOffline];
     const notRecent = prioritized.filter(p => !recentlyShown.current.has(p.id));
 
     let selected = notRecent.slice(0, MAX_VISIBLE);
