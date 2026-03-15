@@ -20,7 +20,8 @@ import {
   getDocs,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../../../config/firebase';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import Button from '../../../components/common/Button';
 import {
@@ -461,88 +462,92 @@ const AdminPaymentDetail: React.FC = () => {
   // ACTIONS
   // ============================================================================
 
-  const updateWithdrawal = async (updates: Record<string, unknown>) => {
-    if (!withdrawal || !userType || !withdrawalId) return;
+  // Callable references (europe-west1 — adminConfig region)
+  const approveFn = useCallback(() => httpsCallable(functions, 'paymentAdminApprove'), []);
+  const rejectFn = useCallback(() => httpsCallable(functions, 'paymentAdminReject'), []);
+  const processFn = useCallback(() => httpsCallable(functions, 'paymentAdminProcess'), []);
+  const markPaidFn = useCallback(() => httpsCallable(functions, 'adminMarkWithdrawalAsPaid'), []);
 
+  const runAction = async (action: () => Promise<void>, successMsg: string) => {
+    if (!withdrawal || !withdrawalId) return;
     setIsProcessing(true);
     setError(null);
-
     try {
-      const colName = getCollectionName(userType as PaymentUserType);
-      const docRef = doc(db, colName, withdrawalId);
-      await updateDoc(docRef, updates);
-
-      setSuccess(intl.formatMessage({ id: 'admin.withdrawals.detail.updateSuccess', defaultMessage: 'Mise a jour reussie' }));
+      await action();
+      setSuccess(successMsg);
       setTimeout(() => setSuccess(null), 3000);
-
-      // Refresh data
       await fetchWithdrawal();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating withdrawal:', err);
-      setError(intl.formatMessage({ id: 'admin.withdrawals.detail.updateError', defaultMessage: 'Erreur lors de la mise a jour' }));
+      setError(err.message || intl.formatMessage({ id: 'admin.withdrawals.detail.updateError', defaultMessage: 'Erreur lors de la mise à jour' }));
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleApprove = () => {
-    updateWithdrawal({
-      status: 'approved',
-      approvedAt: Timestamp.now(),
-      approvedBy: 'admin',
-    });
+    runAction(
+      async () => { await approveFn()({ withdrawalId, note: adminNotes.trim() || undefined }); },
+      intl.formatMessage({ id: 'admin.withdrawals.detail.approved', defaultMessage: 'Retrait approuvé' })
+    );
   };
 
   const handleReject = () => {
     if (!rejectionReason.trim()) return;
-
-    updateWithdrawal({
-      status: 'rejected',
-      rejectedAt: Timestamp.now(),
-      rejectedBy: 'admin',
-      rejectionReason: rejectionReason.trim(),
-    });
-
+    const reason = rejectionReason.trim();
     setShowRejectModal(false);
     setRejectionReason('');
+    runAction(
+      async () => { await rejectFn()({ withdrawalId, reason }); },
+      intl.formatMessage({ id: 'admin.withdrawals.detail.rejected', defaultMessage: 'Retrait rejeté — solde restauré' })
+    );
   };
 
   const handleProcess = () => {
-    updateWithdrawal({
-      status: 'processing',
-      processedAt: Timestamp.now(),
-      processedBy: 'admin',
-    });
+    runAction(
+      async () => { await processFn()({ withdrawalId }); },
+      intl.formatMessage({ id: 'admin.withdrawals.detail.processed', defaultMessage: 'Retrait envoyé au fournisseur' })
+    );
   };
 
   const handleComplete = () => {
-    updateWithdrawal({
-      status: 'completed',
-      completedAt: Timestamp.now(),
-      paymentReference: paymentReference.trim() || undefined,
-    });
-
+    const ref = paymentReference.trim();
     setShowCompleteModal(false);
     setPaymentReference('');
+    runAction(
+      async () => { await markPaidFn()({ withdrawalId, externalReference: ref || 'manual', note: adminNotes.trim() || undefined }); },
+      intl.formatMessage({ id: 'admin.withdrawals.detail.completed', defaultMessage: 'Retrait marqué comme payé' })
+    );
   };
 
   const handleFail = () => {
     if (!failureReason.trim()) return;
-
-    updateWithdrawal({
-      status: 'failed',
-      failedAt: Timestamp.now(),
-      failureReason: failureReason.trim(),
-    });
-
+    const reason = failureReason.trim();
     setShowFailModal(false);
     setFailureReason('');
+    // Reject with failure reason (backend handles balance restoration)
+    runAction(
+      async () => { await rejectFn()({ withdrawalId, reason }); },
+      intl.formatMessage({ id: 'admin.withdrawals.detail.failed', defaultMessage: 'Retrait marqué comme échoué' })
+    );
   };
 
-  const handleSaveNotes = () => {
-    updateWithdrawal({
-      adminNotes: adminNotes.trim(),
-    });
+  const handleSaveNotes = async () => {
+    if (!withdrawal || !withdrawalId) return;
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const colName = getCollectionName(userType as PaymentUserType);
+      const docRef = doc(db, colName, withdrawalId);
+      await updateDoc(docRef, { adminNotes: adminNotes.trim() });
+      setSuccess('Notes sauvegardées');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      console.error('Error saving notes:', err);
+      setError(err.message || 'Erreur');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // ============================================================================

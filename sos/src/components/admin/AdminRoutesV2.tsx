@@ -124,6 +124,42 @@ const AdminUsers = lazy(() => import("../../pages/admin/AdminUsers"));
 const AdminClients = lazy(() => import("../../pages/admin/AdminClients"));
 const AdminLawyers = lazy(() => import("../../pages/admin/AdminLawyers"));
 const AdminExpats = lazy(() => import("../../pages/admin/AdminExpats"));
+const AdminClientsFraud = lazy(
+  () => import("../../pages/admin/Clients/AdminClientsFraud")
+);
+const AdminClientsPromotions = lazy(
+  () => import("../../pages/admin/Clients/AdminClientsPromotions")
+);
+const AdminLawyersFraud = lazy(
+  () => import("../../pages/admin/Lawyers/AdminLawyersFraud")
+);
+const AdminLawyersPromotions = lazy(
+  () => import("../../pages/admin/Lawyers/AdminLawyersPromotions")
+);
+const AdminExpatsFraud = lazy(
+  () => import("../../pages/admin/Expats/AdminExpatsFraud")
+);
+const AdminExpatsPromotions = lazy(
+  () => import("../../pages/admin/Expats/AdminExpatsPromotions")
+);
+const AdminClientsAnalytics = lazy(
+  () => import("../../pages/admin/Clients/AdminClientsAnalytics")
+);
+const AdminClientsConfig = lazy(
+  () => import("../../pages/admin/Clients/AdminClientsConfig")
+);
+const AdminLawyersAnalytics = lazy(
+  () => import("../../pages/admin/Lawyers/AdminLawyersAnalytics")
+);
+const AdminLawyersConfig = lazy(
+  () => import("../../pages/admin/Lawyers/AdminLawyersConfig")
+);
+const AdminExpatsAnalytics = lazy(
+  () => import("../../pages/admin/Expats/AdminExpatsAnalytics")
+);
+const AdminExpatsConfig = lazy(
+  () => import("../../pages/admin/Expats/AdminExpatsConfig")
+);
 const AdminAaaProfiles = lazy(
   () => import("../../pages/admin/AdminAaaProfiles")
 );
@@ -316,9 +352,7 @@ const AdminCommissionPlans = lazy(
 const AdminUnifiedCommissions = lazy(
   () => import("../../pages/admin/AdminUnifiedCommissions")
 );
-const AdminAffiliatePayouts = lazy(
-  () => import("../../pages/admin/AdminAffiliatePayouts")
-);
+// AdminAffiliatePayouts removed — redirected to centralized AdminPaymentsDashboard
 const AdminAffiliateDashboard = lazy(
   () => import("../../pages/admin/AdminAffiliateDashboard")
 );
@@ -339,9 +373,7 @@ const AdminChattersList = lazy(
 const AdminChatterDetail = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterDetail")
 );
-const AdminChatterPayments = lazy(
-  () => import("../../pages/admin/Chatter/AdminChatterPayments")
-);
+// AdminChatterPayments removed — redirected to centralized AdminPaymentsDashboard
 const AdminChatterConfig = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterConfig")
 );
@@ -396,9 +428,7 @@ const AdminInfluencersList = lazy(
 const AdminInfluencerDetail = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencerDetail")
 );
-const AdminInfluencersPayments = lazy(
-  () => import("../../pages/admin/Influencers/AdminInfluencersPayments")
-);
+// AdminInfluencersPayments removed — redirected to centralized AdminPaymentsDashboard
 const AdminInfluencersConfig = lazy(
   () => import("../../pages/admin/Influencers/AdminInfluencersConfig")
 );
@@ -425,9 +455,7 @@ const AdminBloggersList = lazy(
 const AdminBloggerDetail = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggerDetail")
 );
-const AdminBloggersPayments = lazy(
-  () => import("../../pages/admin/Bloggers/AdminBloggersPayments")
-);
+// AdminBloggersPayments removed — redirected to centralized AdminPaymentsDashboard
 const AdminBloggersConfig = lazy(
   () => import("../../pages/admin/Bloggers/AdminBloggersConfig")
 );
@@ -449,6 +477,9 @@ const AdminBloggerAnalytics = lazy(
 const AdminBloggerFraud = lazy(
   () => import("../../pages/admin/Blogger/AdminBloggerFraud")
 );
+const AdminBloggersPromotions = lazy(
+  () => import("../../pages/admin/Bloggers/AdminBloggersPromotions")
+);
 
 // ===== LAZY IMPORTS - GROUPADMIN =====
 const AdminGroupAdminsList = lazy(
@@ -457,9 +488,7 @@ const AdminGroupAdminsList = lazy(
 const AdminGroupAdminDetail = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminDetail")
 );
-const AdminGroupAdminsPayments = lazy(
-  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPayments")
-);
+// AdminGroupAdminsPayments removed — redirected to centralized AdminPaymentsDashboard
 const AdminGroupAdminsConfig = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsConfig")
 );
@@ -492,9 +521,7 @@ const AdminPartnerCreate = lazy(
 const AdminPartnerDetail = lazy(
   () => import("../../pages/admin/Partners/AdminPartnerDetail")
 );
-const AdminPartnersPayments = lazy(
-  () => import("../../pages/admin/Partners/AdminPartnersPayments")
-);
+// AdminPartnersPayments removed — redirected to centralized AdminPaymentsDashboard
 const AdminPartnersConfig = lazy(
   () => import("../../pages/admin/Partners/AdminPartnersConfig")
 );
@@ -506,6 +533,12 @@ const AdminPartnersStats = lazy(
 );
 const AdminPartnerApplications = lazy(
   () => import("../../pages/admin/Partners/AdminPartnerApplications")
+);
+const AdminPartnersFraud = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersFraud")
+);
+const AdminPartnersPromotions = lazy(
+  () => import("../../pages/admin/Partners/AdminPartnersPromotions")
 );
 
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
@@ -1196,14 +1229,10 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
-      {/* Payouts - versements */}
+      {/* Payouts - redirigé vers le dashboard centralisé */}
       <Route
         path="affiliates/payouts"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminAffiliatePayouts />
-          </Suspense>
-        }
+        element={<Navigate to="/admin/payments?userType=affiliate" replace />}
       />
       {/* Rapports & Analytics affiliés */}
       <Route
@@ -1302,11 +1331,7 @@ const AdminRoutesV2: React.FC = () => {
       />
       <Route
         path="chatters/payments"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminChatterPayments />
-          </Suspense>
-        }
+        element={<Navigate to="/admin/payments?userType=chatter" replace />}
       />
       <Route
         path="chatters/captains"
@@ -1475,11 +1500,7 @@ const AdminRoutesV2: React.FC = () => {
       />
       <Route
         path="influencers/payments"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminInfluencersPayments />
-          </Suspense>
-        }
+        element={<Navigate to="/admin/payments?userType=influencer" replace />}
       />
       <Route
         path="influencers/leaderboard"
@@ -1549,11 +1570,7 @@ const AdminRoutesV2: React.FC = () => {
       />
       <Route
         path="bloggers/payments"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminBloggersPayments />
-          </Suspense>
-        }
+        element={<Navigate to="/admin/payments?userType=blogger" replace />}
       />
       <Route
         path="bloggers/resources"
@@ -1611,6 +1628,14 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      <Route
+        path="bloggers/promotions"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggersPromotions />
+          </Suspense>
+        }
+      />
 
       {/* 👥 GROUP-ADMINS (Facebook Group Administrators) */}
       <Route
@@ -1631,11 +1656,7 @@ const AdminRoutesV2: React.FC = () => {
       />
       <Route
         path="group-admins/payments"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminGroupAdminsPayments />
-          </Suspense>
-        }
+        element={<Navigate to="/admin/payments?userType=group_admin" replace />}
       />
       <Route
         path="group-admins/recruitments"
@@ -1698,11 +1719,31 @@ const AdminRoutesV2: React.FC = () => {
       <Route path="partners" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersList /></Suspense>} />
       <Route path="partners/create" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerCreate /></Suspense>} />
       <Route path="partners/:partnerId" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerDetail /></Suspense>} />
-      <Route path="partners/payments" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersPayments /></Suspense>} />
+      <Route path="partners/payments" element={<Navigate to="/admin/payments?userType=partner" replace />} />
       <Route path="partners/config" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersConfig /></Suspense>} />
       <Route path="partners/widgets" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersWidgets /></Suspense>} />
       <Route path="partners/stats" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersStats /></Suspense>} />
       <Route path="partners/applications" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerApplications /></Suspense>} />
+      <Route path="partners/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersFraud /></Suspense>} />
+      <Route path="partners/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersPromotions /></Suspense>} />
+
+      {/* 👤 CLIENTS (Affiliate) */}
+      <Route path="clients/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsFraud /></Suspense>} />
+      <Route path="clients/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsPromotions /></Suspense>} />
+      <Route path="clients/analytics" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsAnalytics /></Suspense>} />
+      <Route path="clients/config" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsConfig /></Suspense>} />
+
+      {/* ⚖️ LAWYERS (Affiliate) */}
+      <Route path="lawyers/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersFraud /></Suspense>} />
+      <Route path="lawyers/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersPromotions /></Suspense>} />
+      <Route path="lawyers/analytics" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersAnalytics /></Suspense>} />
+      <Route path="lawyers/config" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersConfig /></Suspense>} />
+
+      {/* 🌍 EXPATS (Affiliate) */}
+      <Route path="expats/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsFraud /></Suspense>} />
+      <Route path="expats/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsPromotions /></Suspense>} />
+      <Route path="expats/analytics" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsAnalytics /></Suspense>} />
+      <Route path="expats/config" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsConfig /></Suspense>} />
 
       {/* 📚 TRAINING MODULES */}
       <Route
@@ -1999,10 +2040,7 @@ const AdminRoutesV2: React.FC = () => {
         path="providers"
         element={<Navigate to="users/providers/lawyers" replace />}
       />
-      <Route
-        path="payments"
-        element={<Navigate to="finance/payments" replace />}
-      />
+      {/* Legacy /admin/payments redirect removed — now served by AdminPaymentsDashboard */}
       <Route
         path="invoices"
         element={<Navigate to="finance/invoices" replace />}

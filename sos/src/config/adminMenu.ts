@@ -292,7 +292,7 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "finance-affiliate-payouts",
             labelKey: "admin.menu.affiliatePayouts",
-            path: "/admin/affiliates/payouts",
+            path: "/admin/payments?userType=affiliate",
             icon: DollarSign,
             descriptionKey: "admin.menu.affiliatePayouts.description",
           },
@@ -639,7 +639,7 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "affiliate-payouts",
             labelKey: "admin.menu.affiliatePayouts",
-            path: "/admin/affiliates/payouts",
+            path: "/admin/payments?userType=affiliate",
             icon: Wallet,
             descriptionKey: "admin.menu.affiliatePayouts.description",
           },
@@ -707,7 +707,7 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "chatters-payments",
             labelKey: "admin.menu.chattersPayments",
-            path: "/admin/chatters/payments",
+            path: "/admin/payments?userType=chatter",
             icon: Wallet,
             descriptionKey: "admin.menu.chattersPayments.description",
           },
@@ -767,9 +767,8 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "influencers-payments",
             labelKey: "admin.menu.influencersPayments",
-            path: "/admin/influencers/payments",
+            path: "/admin/payments?userType=influencer",
             icon: Wallet,
-            badge: "NEW",
             descriptionKey: "admin.menu.influencersPayments.description",
           },
           {
@@ -828,9 +827,8 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "bloggers-payments",
             labelKey: "admin.menu.bloggersPayments",
-            path: "/admin/bloggers/payments",
+            path: "/admin/payments?userType=blogger",
             icon: Wallet,
-            badge: "NEW",
             descriptionKey: "admin.menu.bloggersPayments.description",
           },
           {
@@ -856,6 +854,14 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: ShieldAlert,
             badge: "NEW",
             descriptionKey: "admin.menu.bloggersFraud.description",
+          },
+          {
+            id: "bloggers-promotions",
+            labelKey: "admin.menu.bloggersPromotions",
+            path: "/admin/bloggers/promotions",
+            icon: Award,
+            badge: "NEW",
+            descriptionKey: "admin.menu.bloggersPromotions.description",
           },
           {
             id: "bloggers-config",
@@ -891,7 +897,7 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "groupadmins-payments",
             labelKey: "admin.menu.groupAdminsPayments",
-            path: "/admin/group-admins/payments",
+            path: "/admin/payments?userType=group_admin",
             icon: Wallet,
             descriptionKey: "admin.menu.groupAdminsPayments.description",
           },
@@ -962,8 +968,22 @@ export const adminMenuTree: AdminMenuItem[] = [
           {
             id: "partners-payments",
             labelKey: "admin.menu.partnersPayments",
-            path: "/admin/partners/payments",
+            path: "/admin/payments?userType=partner",
             icon: Wallet,
+          },
+          {
+            id: "partners-fraud",
+            labelKey: "admin.menu.partnersFraud",
+            path: "/admin/partners/fraud",
+            icon: ShieldAlert,
+            badge: "NEW",
+          },
+          {
+            id: "partners-promotions",
+            labelKey: "admin.menu.partnersPromotions",
+            path: "/admin/partners/promotions",
+            icon: Award,
+            badge: "NEW",
           },
           {
             id: "partners-config",
@@ -976,6 +996,117 @@ export const adminMenuTree: AdminMenuItem[] = [
             labelKey: "admin.menu.partnersStats",
             path: "/admin/partners/stats",
             icon: TrendingUp,
+          },
+        ],
+      },
+      // Sous-section : Clients (Affiliation)
+      {
+        id: "clients-affiliate",
+        labelKey: "admin.menu.clientsAffiliate",
+        icon: Users,
+        descriptionKey: "admin.menu.clientsAffiliate.description",
+        children: [
+          {
+            id: "clients-analytics",
+            labelKey: "admin.menu.clientsAnalytics",
+            path: "/admin/clients/analytics",
+            icon: BarChart3,
+            badge: "NEW",
+          },
+          {
+            id: "clients-fraud",
+            labelKey: "admin.menu.clientsFraud",
+            path: "/admin/clients/fraud",
+            icon: ShieldAlert,
+            badge: "NEW",
+          },
+          {
+            id: "clients-promotions",
+            labelKey: "admin.menu.clientsPromotions",
+            path: "/admin/clients/promotions",
+            icon: Award,
+            badge: "NEW",
+          },
+          {
+            id: "clients-config",
+            labelKey: "admin.menu.clientsConfig",
+            path: "/admin/clients/config",
+            icon: Settings,
+            badge: "NEW",
+          },
+        ],
+      },
+      // Sous-section : Avocats (Affiliation)
+      {
+        id: "lawyers-affiliate",
+        labelKey: "admin.menu.lawyersAffiliate",
+        icon: Scale,
+        descriptionKey: "admin.menu.lawyersAffiliate.description",
+        children: [
+          {
+            id: "lawyers-analytics",
+            labelKey: "admin.menu.lawyersAnalytics",
+            path: "/admin/lawyers/analytics",
+            icon: BarChart3,
+            badge: "NEW",
+          },
+          {
+            id: "lawyers-fraud",
+            labelKey: "admin.menu.lawyersFraud",
+            path: "/admin/lawyers/fraud",
+            icon: ShieldAlert,
+            badge: "NEW",
+          },
+          {
+            id: "lawyers-promotions",
+            labelKey: "admin.menu.lawyersPromotions",
+            path: "/admin/lawyers/promotions",
+            icon: Award,
+            badge: "NEW",
+          },
+          {
+            id: "lawyers-config",
+            labelKey: "admin.menu.lawyersConfig",
+            path: "/admin/lawyers/config",
+            icon: Settings,
+            badge: "NEW",
+          },
+        ],
+      },
+      // Sous-section : Expatriés Aidants (Affiliation)
+      {
+        id: "expats-affiliate",
+        labelKey: "admin.menu.expatsAffiliate",
+        icon: Globe,
+        descriptionKey: "admin.menu.expatsAffiliate.description",
+        children: [
+          {
+            id: "expats-analytics",
+            labelKey: "admin.menu.expatsAnalytics",
+            path: "/admin/expats/analytics",
+            icon: BarChart3,
+            badge: "NEW",
+          },
+          {
+            id: "expats-fraud",
+            labelKey: "admin.menu.expatsFraud",
+            path: "/admin/expats/fraud",
+            icon: ShieldAlert,
+            badge: "NEW",
+          },
+          {
+            id: "expats-promotions",
+            labelKey: "admin.menu.expatsPromotions",
+            path: "/admin/expats/promotions",
+            icon: Award,
+            badge: "NEW",
+          },
+          {
+            id: "expats-config",
+            labelKey: "admin.menu.expatsConfig",
+            path: "/admin/expats/config",
+            icon: Settings,
+            badge: "NEW",
           },
         ],
       },
