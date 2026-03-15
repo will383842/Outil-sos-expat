@@ -56,7 +56,7 @@ import {
   Users,
   Globe,
   Megaphone,
-  Hash,
+  Newspaper,
   MessageSquare,
   Palette,
   Star,
@@ -162,16 +162,20 @@ const ROLES: RoleInfo[] = [
   {
     value: 'press',
     label: 'Presse',
-    description: 'Journalistes et medias',
-    icon: <Hash className="w-4 h-4" />,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-500',
+    description: 'Journalistes, medias et relations presse',
+    icon: <Newspaper className="w-4 h-4" />,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-600',
     categories: [
-      { value: 'press_logos', label: 'Logos', description: 'Logos HD et vectoriels' },
-      { value: 'press_releases', label: 'Communiques', description: 'Communiques de presse' },
-      { value: 'press_kit', label: 'Dossier de presse', description: 'Kit media et fiches' },
-      { value: 'press_photos', label: 'Photos officielles', description: 'Photos equipe et evenements' },
-      { value: 'press_data', label: 'Chiffres & Stats', description: 'Infographies et statistiques' },
+      { value: 'press_logos', label: 'Identite visuelle', description: 'Logos HD, vectoriels (SVG, EPS, PNG), variantes couleur/monochrome' },
+      { value: 'press_brand_guidelines', label: 'Charte graphique', description: 'Guidelines de marque, couleurs, typographies, regles d\'usage' },
+      { value: 'press_kit', label: 'Dossier de presse', description: 'Kit media complet, one-pager, fiches entreprise' },
+      { value: 'press_releases', label: 'Communiques', description: 'Communiques de presse prets a publier' },
+      { value: 'press_spokesperson', label: 'Porte-parole & Bios', description: 'Biographies dirigeants, photos portraits HD, citations autorisees' },
+      { value: 'press_photos', label: 'Banque d\'images', description: 'Photos equipe, evenements, produit en haute resolution' },
+      { value: 'press_b_roll', label: 'B-Roll & Videos', description: 'Footage video, animations, spots TV/web prets a diffuser' },
+      { value: 'press_data', label: 'Chiffres cles', description: 'Infographies, rapports d\'impact, donnees marche' },
+      { value: 'press_fact_sheets', label: 'Fiches techniques', description: 'FAQ presse, fiches produit, comparatifs, timeline entreprise' },
     ],
   },
 ];
@@ -200,7 +204,8 @@ const LANGUAGES = [
   { code: 'hi', label: 'HI', full: 'हिन्दी' },
 ];
 
-const AVAILABLE_PLACEHOLDERS = [
+// ── Placeholders for affiliate roles ──
+const AFFILIATE_PLACEHOLDERS = [
   { value: '{{AFFILIATE_LINK}}', label: 'Lien client', example: 'https://sos-expat.com/?ref=ABC123', description: 'Le lien unique de l\'affilie pour les clients' },
   { value: '{{RECRUITMENT_LINK}}', label: 'Lien recrutement', example: 'https://sos-expat.com/chatter/register?ref=XYZ', description: 'Le lien pour recruter de nouveaux affilies' },
   { value: '{{PROVIDER_LINK}}', label: 'Lien prestataire', example: 'https://sos-expat.com/register-provider?ref=ABC123', description: 'Le lien pour inscrire un prestataire' },
@@ -211,6 +216,41 @@ const AVAILABLE_PLACEHOLDERS = [
   { value: '{{DISCOUNT_AMOUNT}}', label: 'Reduction $', example: '5$', description: 'Le montant de la reduction client' },
   { value: '{{DISCOUNT_PERCENT}}', label: 'Reduction %', example: '5%', description: 'Le pourcentage de reduction' },
 ];
+
+// ── Placeholders for press resources — company/press-specific variables ──
+const PRESS_PLACEHOLDERS = [
+  { value: '{{COMPANY_NAME}}', label: 'Nom entreprise', example: 'SOS-Expat', description: 'Nom officiel de l\'entreprise' },
+  { value: '{{COMPANY_TAGLINE}}', label: 'Slogan', example: 'L\'assistance juridique des expatries, partout dans le monde', description: 'Tagline officielle de la marque' },
+  { value: '{{WEBSITE_URL}}', label: 'Site web', example: 'https://sos-expat.com', description: 'URL officielle du site' },
+  { value: '{{FOUNDED_YEAR}}', label: 'Annee de creation', example: '2024', description: 'Annee de fondation de l\'entreprise' },
+  { value: '{{CEO_NAME}}', label: 'Nom du CEO', example: 'William Music', description: 'Nom complet du dirigeant principal' },
+  { value: '{{CEO_TITLE}}', label: 'Titre du CEO', example: 'Fondateur & CEO', description: 'Titre officiel du dirigeant' },
+  { value: '{{PRESS_CONTACT_EMAIL}}', label: 'Email presse', example: 'press@sos-expat.com', description: 'Adresse email du contact presse' },
+  { value: '{{PRESS_CONTACT_PHONE}}', label: 'Tel presse', example: '+33 1 23 45 67 89', description: 'Telephone du contact presse' },
+  { value: '{{PRESS_CONTACT_NAME}}', label: 'Responsable presse', example: 'Service Communication', description: 'Nom du responsable relations presse' },
+  { value: '{{COUNTRIES_COUNT}}', label: 'Nombre de pays', example: '45+', description: 'Nombre de pays couverts par le service' },
+  { value: '{{LANGUAGES_COUNT}}', label: 'Nombre de langues', example: '9', description: 'Nombre de langues supportees' },
+  { value: '{{PROVIDERS_COUNT}}', label: 'Nombre de prestataires', example: '500+', description: 'Nombre de prestataires actifs sur la plateforme' },
+  { value: '{{USERS_COUNT}}', label: 'Nombre d\'utilisateurs', example: '10 000+', description: 'Nombre total d\'utilisateurs inscrits' },
+  { value: '{{HEADQUARTERS}}', label: 'Siege social', example: 'Paris, France', description: 'Localisation du siege social' },
+  { value: '{{CURRENT_DATE}}', label: 'Date du jour', example: '15 mars 2026', description: 'Date actuelle (pour communiques)' },
+  { value: '{{EMBARGO_DATE}}', label: 'Date d\'embargo', example: '20 mars 2026, 08h00 CET', description: 'Date de levee d\'embargo (si applicable)' },
+  { value: '{{BOILERPLATE}}', label: 'Boilerplate', example: 'SOS-Expat est la premiere plateforme...', description: 'Paragraphe "A propos" standard pour fin de communique' },
+];
+
+// Get the right placeholders based on target roles
+const getPlaceholdersForRoles = (targetRoles: MarketingRole[]): typeof AFFILIATE_PLACEHOLDERS => {
+  const isPressOnly = targetRoles.length === 1 && targetRoles[0] === 'press';
+  const includesPress = targetRoles.includes('press');
+  const includesAffiliate = targetRoles.some((r) => r !== 'press');
+
+  if (isPressOnly) return PRESS_PLACEHOLDERS;
+  if (includesPress && includesAffiliate) return [...PRESS_PLACEHOLDERS, ...AFFILIATE_PLACEHOLDERS];
+  return AFFILIATE_PLACEHOLDERS;
+};
+
+// Unified placeholder list for preview (needs all)
+const ALL_PLACEHOLDERS = [...PRESS_PLACEHOLDERS, ...AFFILIATE_PLACEHOLDERS];
 
 const ENGINE_URL = 'https://engine-telegram-sos-expat.life-expat.com/storage';
 
@@ -524,7 +564,10 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
               Ressources Marketing
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Gerez le contenu que vos affilies telechargeront et partageront
+              {activeRole === 'press'
+                ? 'Gerez les ressources de votre salle de presse — logos, communiques, dossiers media'
+                : 'Gerez le contenu que vos affilies telechargeront et partageront'
+              }
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -732,10 +775,16 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
               <Sparkles className="w-8 h-8 text-red-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Aucune ressource pour les {currentRole.label}
+              {activeRole === 'press'
+                ? 'Votre salle de presse est vide'
+                : `Aucune ressource pour les ${currentRole.label}`
+              }
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-              Commencez par ajouter du contenu que vos {currentRole.label.toLowerCase()} pourront telecharger et utiliser pour promouvoir SOS-Expat.
+              {activeRole === 'press'
+                ? 'Ajoutez logos, communiques, dossiers de presse et medias que les journalistes pourront telecharger librement.'
+                : `Commencez par ajouter du contenu que vos ${currentRole.label.toLowerCase()} pourront telecharger et utiliser pour promouvoir SOS-Expat.`
+              }
             </p>
             <div className="flex flex-wrap justify-center gap-2 mb-6">
               {currentRole.categories.map((cat) => (
@@ -961,6 +1010,11 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                       </label>
                       <p className="text-xs text-gray-500 mb-3">
                         Selectionnez un ou plusieurs roles. La ressource apparaitra dans le dashboard de chaque role selectionne.
+                        {activeRole === 'press' && (
+                          <span className="block mt-1 text-indigo-500 font-medium">
+                            Les ressources Presse sont publiques et telechargeable par les journalistes sans authentification.
+                          </span>
+                        )}
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {ROLES.map((role) => {
@@ -1087,37 +1141,67 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                         value={((editing.data.description as Record<string, string>) || {})[activeLangTab] || ''}
                         onChange={(e) => updateTranslation('description', activeLangTab, e.target.value)}
                         className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white text-sm"
-                        placeholder="Courte description pour aider l'affilie a comprendre cette ressource"
+                        placeholder={
+                          (editing.data.target_roles || []).includes('press') && !(editing.data.target_roles || []).some((r: MarketingRole) => r !== 'press')
+                            ? 'Ex: Logo officiel SVG transparent, communique lancement Q1 2026...'
+                            : 'Courte description pour aider l\'affilie a comprendre cette ressource'
+                        }
                       />
                     </div>
 
                     {/* Content */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                        Contenu copiable
-                      </label>
-                      <p className="text-xs text-gray-500 mb-2">
-                        Texte que l'affilie pourra copier en un clic. Utilisez les variables ci-dessous pour personnaliser.
-                      </p>
+                      {(() => {
+                        const targetRoles = editing.data.target_roles || [];
+                        const isPressContext = targetRoles.includes('press') && !targetRoles.some((r: MarketingRole) => r !== 'press');
+                        return (
+                          <>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                              {isPressContext ? 'Contenu presse' : 'Contenu copiable'}
+                            </label>
+                            <p className="text-xs text-gray-500 mb-2">
+                              {isPressContext
+                                ? 'Texte du communique ou de la fiche. Les variables presse seront remplacees automatiquement.'
+                                : 'Texte que l\'affilie pourra copier en un clic. Utilisez les variables ci-dessous pour personnaliser.'
+                              }
+                            </p>
+                          </>
+                        );
+                      })()}
                       <textarea
                         value={((editing.data.content as Record<string, string>) || {})[activeLangTab] || ''}
                         onChange={(e) => updateTranslation('content', activeLangTab, e.target.value)}
                         className="w-full px-4 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white text-sm min-h-[120px] font-mono"
                         rows={5}
-                        placeholder={"Bonjour ! Decouvrez SOS-Expat, le service d'assistance juridique pour les expatries.\n\nInscrivez-vous ici : {{AFFILIATE_LINK}}"}
+                        placeholder={
+                          (editing.data.target_roles || []).includes('press') && !(editing.data.target_roles || []).some((r: MarketingRole) => r !== 'press')
+                            ? "COMMUNIQUE DE PRESSE\n\n{{COMPANY_NAME}} annonce...\n\nA propos de {{COMPANY_NAME}}\n{{BOILERPLATE}}\n\nContact presse :\n{{PRESS_CONTACT_NAME}}\n{{PRESS_CONTACT_EMAIL}} | {{PRESS_CONTACT_PHONE}}"
+                            : "Bonjour ! Decouvrez SOS-Expat, le service d'assistance juridique pour les expatries.\n\nInscrivez-vous ici : {{AFFILIATE_LINK}}"
+                        }
                       />
                     </div>
 
                     {/* Placeholders */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                        Variables dynamiques
-                      </label>
-                      <p className="text-xs text-gray-500 mb-2">
-                        Activez les variables utilisees dans le contenu. Elles seront remplacees par les vraies valeurs de chaque affilie.
-                      </p>
+                      {(() => {
+                        const targetRoles = editing.data.target_roles || [];
+                        const isPressContext = targetRoles.includes('press');
+                        return (
+                          <>
+                            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                              {isPressContext ? 'Variables presse' : 'Variables dynamiques'}
+                            </label>
+                            <p className="text-xs text-gray-500 mb-2">
+                              {isPressContext
+                                ? 'Variables d\'entreprise pour communiques et documents presse. Remplacees automatiquement lors du telechargement.'
+                                : 'Activez les variables utilisees dans le contenu. Elles seront remplacees par les vraies valeurs de chaque affilie.'
+                              }
+                            </p>
+                          </>
+                        );
+                      })()}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {AVAILABLE_PLACEHOLDERS.map((ph) => {
+                        {getPlaceholdersForRoles(editing.data.target_roles || []).map((ph) => {
                           const isActive = (editing.data.placeholders || []).includes(ph.value);
                           return (
                             <button
@@ -1160,7 +1244,10 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                         Fichier
                       </label>
                       <p className="text-xs text-gray-500 mb-2">
-                        Image, PDF, video ou document que l'affilie pourra telecharger
+                        {(editing.data.target_roles || []).includes('press') && !(editing.data.target_roles || []).some((r: MarketingRole) => r !== 'press')
+                          ? 'Logo vectoriel, photo HD, dossier PDF, video B-Roll... Les journalistes attendent des fichiers haute qualite.'
+                          : 'Image, PDF, video ou document que l\'affilie pourra telecharger'
+                        }
                       </p>
                       <input ref={fileInputRef} type="file" onChange={handleFileUpload} className="hidden" />
                       <div
@@ -1227,7 +1314,12 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                           />
                           <div>
                             <span className="text-sm font-medium text-gray-900 dark:text-white">Active</span>
-                            <p className="text-[10px] text-gray-400">Visible par les affilies</p>
+                            <p className="text-[10px] text-gray-400">
+                              {(editing.data.target_roles || []).includes('press') && !(editing.data.target_roles || []).some((r: MarketingRole) => r !== 'press')
+                                ? 'Visible dans la salle de presse publique'
+                                : 'Visible par les affilies'
+                              }
+                            </p>
                           </div>
                         </label>
                       </div>
@@ -1349,7 +1441,7 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                   <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap border border-gray-200 dark:border-white/10 font-mono">
                     {(() => {
                       let text = previewResource.content![previewLang] || '';
-                      AVAILABLE_PLACEHOLDERS.forEach((ph) => {
+                      ALL_PLACEHOLDERS.forEach((ph) => {
                         text = text.split(ph.value).join(ph.example);
                       });
                       return text;
@@ -1358,7 +1450,7 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
                   {(previewResource.placeholders || []).length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {previewResource.placeholders!.map((ph) => {
-                        const info = AVAILABLE_PLACEHOLDERS.find((p) => p.value === ph);
+                        const info = ALL_PLACEHOLDERS.find((p) => p.value === ph);
                         return (
                           <span key={ph} className="text-[10px] px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-full">
                             {ph} = {info?.example || '...'}

@@ -39,7 +39,11 @@ export type MarketingCategory =
   | 'press_releases'
   | 'press_kit'
   | 'press_photos'
-  | 'press_data';
+  | 'press_data'
+  | 'press_brand_guidelines'
+  | 'press_spokesperson'
+  | 'press_b_roll'
+  | 'press_fact_sheets';
 
 export type MarketingResourceType =
   | 'logo'

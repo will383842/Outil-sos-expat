@@ -249,9 +249,13 @@ const Press: React.FC = () => {
 
   // Categorized
   const logos = resources.filter((r) => r.category === "press_logos");
+  const brandGuidelines = resources.filter((r) => r.category === "press_brand_guidelines");
   const kits = resources.filter((r) => r.category === "press_kit");
+  const spokespersons = resources.filter((r) => r.category === "press_spokesperson");
   const photos = resources.filter((r) => r.category === "press_photos");
+  const bRoll = resources.filter((r) => r.category === "press_b_roll");
   const dataRes = resources.filter((r) => r.category === "press_data");
+  const factSheets = resources.filter((r) => r.category === "press_fact_sheets");
 
   // ══════════════════ RENDER ══════════════════
   return (
@@ -446,6 +450,18 @@ const Press: React.FC = () => {
               </div>
             </section>
 
+            {/* BRAND GUIDELINES */}
+            {brandGuidelines.length > 0 && (
+              <section className="py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="brand-guidelines" icon={Shield}
+                    title={t("press.section.brandGuidelines")}
+                    subtitle={t("press.section.brandGuidelinesDesc")} />
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{brandGuidelines.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+                </div>
+              </section>
+            )}
+
             {/* PRESS KIT */}
             <section className="py-20">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -519,6 +535,18 @@ const Press: React.FC = () => {
               </div>
             </section>
 
+            {/* SPOKESPERSON & BIOS */}
+            {spokespersons.length > 0 && (
+              <section className="py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="spokesperson" icon={Users}
+                    title={t("press.section.spokesperson")}
+                    subtitle={t("press.section.spokespersonDesc")} />
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{spokespersons.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+                </div>
+              </section>
+            )}
+
             {/* IMAGE BANK */}
             <section className="py-20">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -539,6 +567,18 @@ const Press: React.FC = () => {
               </div>
             </section>
 
+            {/* B-ROLL & VIDEOS */}
+            {bRoll.length > 0 && (
+              <section className="py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="b-roll" icon={Camera}
+                    title={t("press.section.bRoll")}
+                    subtitle={t("press.section.bRollDesc")} />
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{bRoll.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+                </div>
+              </section>
+            )}
+
             {/* DATA & KEY FIGURES */}
             <section className="py-20 bg-gray-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -555,6 +595,18 @@ const Press: React.FC = () => {
                 )}
               </div>
             </section>
+
+            {/* FACT SHEETS */}
+            {factSheets.length > 0 && (
+              <section className="py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="fact-sheets" icon={FileText}
+                    title={t("press.section.factSheets")}
+                    subtitle={t("press.section.factSheetsDesc")} />
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{factSheets.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+                </div>
+              </section>
+            )}
           </>
         )}
 
