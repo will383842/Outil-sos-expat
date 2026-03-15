@@ -13,6 +13,9 @@ import {
   Image,
   Filter,
   File,
+  Lock,
+  Unlock,
+  CheckCircle,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
@@ -25,6 +28,8 @@ import {
   where,
   orderBy,
   getDocs,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import {
@@ -60,6 +65,45 @@ interface PressRelease {
 }
 
 type ResourceCategory = "all" | "press_logos" | "press_kit" | "press_photos" | "press_data";
+
+interface PressContactForm {
+  email: string;
+  language: string;
+  country: string;
+  mediaTheme: string;
+  mediaType: string;
+}
+
+const MEDIA_THEMES = [
+  { value: "expatriation", label: { fr: "Expatriation", en: "Expatriation" } },
+  { value: "travel", label: { fr: "Voyage", en: "Travel" } },
+  { value: "legal", label: { fr: "Juridique", en: "Legal" } },
+  { value: "finance", label: { fr: "Finance & Economie", en: "Finance & Economy" } },
+  { value: "technology", label: { fr: "Technologie", en: "Technology" } },
+  { value: "lifestyle", label: { fr: "Lifestyle", en: "Lifestyle" } },
+  { value: "business", label: { fr: "Business & Entrepreneuriat", en: "Business & Entrepreneurship" } },
+  { value: "immigration", label: { fr: "Immigration", en: "Immigration" } },
+  { value: "education", label: { fr: "Education", en: "Education" } },
+  { value: "health", label: { fr: "Sante", en: "Health" } },
+  { value: "culture", label: { fr: "Culture", en: "Culture" } },
+  { value: "other", label: { fr: "Autre", en: "Other" } },
+];
+
+const MEDIA_TYPES = [
+  { value: "online_press", label: { fr: "Presse en ligne", en: "Online Press" } },
+  { value: "print_press", label: { fr: "Presse ecrite", en: "Print Press" } },
+  { value: "tv", label: { fr: "Television", en: "Television" } },
+  { value: "radio", label: { fr: "Radio", en: "Radio" } },
+  { value: "podcast", label: { fr: "Podcast", en: "Podcast" } },
+  { value: "magazine", label: { fr: "Magazine", en: "Magazine" } },
+  { value: "daily", label: { fr: "Quotidien", en: "Daily Newspaper" } },
+  { value: "news_agency", label: { fr: "Agence de presse", en: "News Agency" } },
+  { value: "blog", label: { fr: "Blog / Media independant", en: "Blog / Independent Media" } },
+  { value: "influencer", label: { fr: "Influenceur media", en: "Media Influencer" } },
+  { value: "other", label: { fr: "Autre", en: "Other" } },
+];
+
+const PRESS_STORAGE_KEY = "sos_press_access";
 
 // ==================== HELPERS ====================
 
@@ -103,6 +147,16 @@ const Press: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
   const lang = (language as string) || "fr";
+
+  // Press access gate
+  const [hasAccess, setHasAccess] = useState(() => {
+    try { return !!localStorage.getItem(PRESS_STORAGE_KEY); } catch { return false; }
+  });
+  const [formData, setFormData] = useState<PressContactForm>({
+    email: "", language: lang, country: "", mediaTheme: "", mediaType: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // State
   const [resources, setResources] = useState<PressResource[]>([]);
@@ -169,8 +223,41 @@ const Press: React.FC = () => {
 
   // Category labels moved to inline i18n in filter buttons
 
-  // Load press resources from Laravel API
+  // Submit press contact form
+  const handlePressAccess = async () => {
+    if (!formData.email.trim() || !formData.country.trim() || !formData.mediaTheme || !formData.mediaType) {
+      setFormError(lang === "fr" ? "Veuillez remplir tous les champs" : "Please fill in all fields");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setFormError(lang === "fr" ? "Adresse email invalide" : "Invalid email address");
+      return;
+    }
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      await addDoc(collection(db, "press_contacts"), {
+        email: formData.email.trim().toLowerCase(),
+        language: formData.language,
+        country: formData.country.trim(),
+        mediaTheme: formData.mediaTheme,
+        mediaType: formData.mediaType,
+        createdAt: serverTimestamp(),
+        source: "press_landing_page",
+      });
+      localStorage.setItem(PRESS_STORAGE_KEY, JSON.stringify({ email: formData.email, ts: Date.now() }));
+      setHasAccess(true);
+    } catch (error) {
+      console.error("Error saving press contact:", error);
+      setFormError(lang === "fr" ? "Erreur, veuillez reessayer" : "Error, please try again");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Load press resources from Laravel API — only after access granted
   useEffect(() => {
+    if (!hasAccess) { setLoadingResources(false); return; }
     const loadResources = async () => {
       try {
         setLoadingResources(true);
@@ -193,10 +280,11 @@ const Press: React.FC = () => {
       }
     };
     loadResources();
-  }, [lang]);
+  }, [lang, hasAccess]);
 
-  // Load press releases from Firestore
+  // Load press releases from Firestore — only after access granted
   useEffect(() => {
+    if (!hasAccess) { setLoadingReleases(false); return; }
     const loadReleases = async () => {
       try {
         setLoadingReleases(true);
@@ -222,7 +310,7 @@ const Press: React.FC = () => {
       }
     };
     loadReleases();
-  }, []);
+  }, [hasAccess]);
 
   // Filtered resources
   const filteredResources = useMemo(() => {
@@ -351,7 +439,7 @@ const Press: React.FC = () => {
           </div>
         </section>
 
-        {/* ==================== MEDIA KIT ==================== */}
+        {/* ==================== PRESS ACCESS GATE / MEDIA KIT ==================== */}
         <section className="py-16 sm:py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -363,8 +451,158 @@ const Press: React.FC = () => {
               </p>
             </div>
 
-            {/* Category filter */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+            {/* ── ACCESS FORM (shown if no access yet) ── */}
+            {!hasAccess && (
+              <div className="max-w-xl mx-auto">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 space-y-5">
+                  <div className="text-center mb-2">
+                    <div className="inline-flex items-center justify-center w-14 h-14 bg-red-100 rounded-2xl mb-4">
+                      <Lock className="w-7 h-7 text-red-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {lang === "fr" ? "Acces Presse" : "Press Access"}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {lang === "fr"
+                        ? "Remplissez ce formulaire pour acceder aux ressources presse, logos, dossiers de presse et communiques."
+                        : "Fill in this form to access press resources, logos, press kits and releases."
+                      }
+                    </p>
+                  </div>
+
+                  {formError && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600">
+                      {formError}
+                    </div>
+                  )}
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {lang === "fr" ? "Email professionnel" : "Professional email"} *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="journalist@media.com"
+                    />
+                  </div>
+
+                  {/* Country + Language row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {lang === "fr" ? "Pays" : "Country"} *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.country}
+                        onChange={(e) => setFormData((p) => ({ ...p, country: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder={lang === "fr" ? "France" : "United States"}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {lang === "fr" ? "Langue" : "Language"} *
+                      </label>
+                      <select
+                        value={formData.language}
+                        onChange={(e) => setFormData((p) => ({ ...p, language: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      >
+                        <option value="fr">Francais</option>
+                        <option value="en">English</option>
+                        <option value="es">Espanol</option>
+                        <option value="de">Deutsch</option>
+                        <option value="pt">Portugues</option>
+                        <option value="ar">العربية</option>
+                        <option value="ru">Русский</option>
+                        <option value="zh">中文</option>
+                        <option value="hi">हिन्दी</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Media Theme */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {lang === "fr" ? "Theme media" : "Media Theme"} *
+                    </label>
+                    <select
+                      value={formData.mediaTheme}
+                      onChange={(e) => setFormData((p) => ({ ...p, mediaTheme: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="">{lang === "fr" ? "Selectionnez un theme..." : "Select a theme..."}</option>
+                      {MEDIA_THEMES.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {lang === "fr" ? t.label.fr : t.label.en}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Media Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {lang === "fr" ? "Type de media" : "Media Type"} *
+                    </label>
+                    <select
+                      value={formData.mediaType}
+                      onChange={(e) => setFormData((p) => ({ ...p, mediaType: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="">{lang === "fr" ? "Selectionnez un type..." : "Select a type..."}</option>
+                      {MEDIA_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {lang === "fr" ? t.label.fr : t.label.en}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    onClick={handlePressAccess}
+                    disabled={submitting}
+                    className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 disabled:opacity-60"
+                  >
+                    {submitting ? (
+                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                      <>
+                        <Unlock className="w-5 h-5" />
+                        {lang === "fr" ? "Acceder aux ressources presse" : "Access press resources"}
+                      </>
+                    )}
+                  </button>
+
+                  <p className="text-[11px] text-gray-400 text-center">
+                    {lang === "fr"
+                      ? "Vos donnees sont utilisees uniquement pour les relations presse. Pas de spam."
+                      : "Your data is used only for press relations. No spam."
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ── RESOURCES (shown after access granted) ── */}
+            {hasAccess && (
+              <>
+                {/* Access confirmed badge */}
+                <div className="flex items-center justify-center gap-2 mb-8">
+                  <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2 text-sm text-green-700">
+                    <CheckCircle className="w-4 h-4" />
+                    {lang === "fr" ? "Acces presse accorde" : "Press access granted"}
+                  </div>
+                </div>
+
+                {/* Category filter */}
+                <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
               <Filter className="w-5 h-5 text-gray-400" />
               {(
                 [
@@ -463,10 +701,13 @@ const Press: React.FC = () => {
                 })}
               </div>
             )}
+              </>
+            )}
           </div>
         </section>
 
         {/* ==================== PRESS RELEASES ==================== */}
+        {hasAccess && (
         <section className="py-16 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -598,6 +839,7 @@ const Press: React.FC = () => {
             )}
           </div>
         </section>
+        )}
 
         {/* ==================== PRESS CONTACT ==================== */}
         <section className="py-16 sm:py-20 bg-gray-50">
