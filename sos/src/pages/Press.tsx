@@ -94,7 +94,7 @@ function isImageFormat(format: string | null): boolean {
 function ResourceCard({ resource, onDownload }: { resource: PressResource; onDownload?: (r: PressResource) => void }) {
   const isImg = resource.file_url && isImageFormat(resource.file_format);
   return (
-    <div className="group relative bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-red-500/30 hover:bg-white/[0.06] transition-all duration-300">
+    <div className="group relative bg-white/[0.05] backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-red-500/30 hover:bg-white/[0.06] transition-all duration-300">
       <div className="relative h-44 bg-gradient-to-br from-white/5 to-white/[0.02] flex items-center justify-center overflow-hidden">
         {isImg ? (
           <img src={resource.file_url!} alt={resource.name} className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -111,7 +111,7 @@ function ResourceCard({ resource, onDownload }: { resource: PressResource; onDow
       </div>
       <div className="p-5">
         <h3 className="font-semibold text-white text-sm mb-1.5 line-clamp-1">{resource.name}</h3>
-        {resource.description && <p className="text-xs text-white/50 mb-4 line-clamp-2 leading-relaxed">{resource.description}</p>}
+        {resource.description && <p className="text-xs text-white/60 mb-4 line-clamp-2 leading-relaxed">{resource.description}</p>}
         {resource.file_url && (
           <a href={resource.file_url} target="_blank" rel="noopener noreferrer" onClick={() => onDownload?.(resource)}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-red-600 text-white text-xs font-semibold rounded-xl transition-all duration-300 border border-white/10 hover:border-red-600">
@@ -133,16 +133,16 @@ function SectionTitle({ icon: Icon, title, subtitle, id, dark = true }: { icon: 
         </div>
         <h2 className={`text-2xl sm:text-3xl font-bold ${dark ? "text-white" : "text-gray-900"}`}>{title}</h2>
       </div>
-      <p className={`ml-16 text-base ${dark ? "text-white/50" : "text-gray-500"}`}>{subtitle}</p>
+      <p className={`ml-16 text-base ${dark ? "text-white/60" : "text-gray-500"}`}>{subtitle}</p>
     </div>
   );
 }
 
 function EmptySection({ icon: Icon, label, btnLabel, onRequest, dark = true }: { icon: React.ElementType; label: string; btnLabel: string; onRequest: () => void; dark?: boolean }) {
   return (
-    <div className={`rounded-2xl border-2 border-dashed p-16 text-center ${dark ? "border-white/10 bg-white/[0.02]" : "border-gray-200 bg-gray-50"}`}>
+    <div className={`rounded-2xl border-2 border-dashed p-16 text-center ${dark ? "border-white/10 bg-white/[0.04]" : "border-gray-200 bg-gray-50"}`}>
       <Icon className={`w-14 h-14 mx-auto mb-4 ${dark ? "text-white/10" : "text-gray-300"}`} />
-      <p className={`font-medium mb-4 ${dark ? "text-white/30" : "text-gray-500"}`}>{label}</p>
+      <p className={`font-medium mb-4 ${dark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
       <button onClick={onRequest}
         className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all inline-flex items-center gap-2 active:scale-[0.98]">
         <Mail className="w-4 h-4" />{btnLabel}
@@ -321,7 +321,7 @@ const Press: React.FC = () => {
         @media (prefers-reduced-motion: reduce) { .press-float, .press-glow { animation: none; } }
       `}</style>
 
-      <div className="press-page bg-black min-h-screen">
+      <div className="press-page bg-gray-950 min-h-screen">
 
         {/* ══════════════ HERO ══════════════ */}
         <section className="relative overflow-hidden">
@@ -352,11 +352,11 @@ const Press: React.FC = () => {
 
               {/* Mission cards */}
               <div className="grid sm:grid-cols-2 gap-4 mb-12 max-w-2xl">
-                <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 backdrop-blur-sm hover:border-red-500/30 transition-colors">
+                <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5 backdrop-blur-sm hover:border-red-500/30 transition-colors">
                   <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2">{t("press.mission1.title")}</p>
                   <p className="text-sm font-medium text-white/80">{t("press.mission1.desc")}</p>
                 </div>
-                <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 backdrop-blur-sm hover:border-orange-500/30 transition-colors">
+                <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5 backdrop-blur-sm hover:border-orange-500/30 transition-colors">
                   <p className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2">{t("press.mission2.title")}</p>
                   <p className="text-sm font-medium text-white/80">{t("press.mission2.desc")}</p>
                 </div>
@@ -388,7 +388,7 @@ const Press: React.FC = () => {
         </section>
 
         {/* ══════════════ STICKY NAV ══════════════ */}
-        <nav className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-white/10" aria-label="Press sections">
+        <nav className="sticky top-0 z-30 bg-gray-950/90 backdrop-blur-xl border-b border-white/10" aria-label="Press sections">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1 overflow-x-auto py-3 no-scrollbar">
               {SECTION_IDS.map((id) => (
@@ -413,7 +413,7 @@ const Press: React.FC = () => {
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
                     <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 py-1.5 min-w-[180px] overflow-hidden">
-                      <p className="px-4 py-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">{t("press.label.resourceLanguage")}</p>
+                      <p className="px-4 py-2 text-[10px] font-bold text-white/40 uppercase tracking-widest">{t("press.label.resourceLanguage")}</p>
                       {LANG_OPTIONS.map((opt) => (
                         <button key={opt.code} onClick={() => { setResourceLang(opt.code); setShowLangDropdown(false); }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${resourceLang === opt.code ? "bg-red-600/20 text-red-400" : "text-white/70 hover:bg-white/5 hover:text-white"}`}>
@@ -469,7 +469,7 @@ const Press: React.FC = () => {
                 </div>
               </div>
               <div id="press-facts" className="lg:col-span-2">
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+                <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-red-400 mb-6">{t("press.facts.title")}</h3>
                   <div className="space-y-4">
                     {[
@@ -500,7 +500,7 @@ const Press: React.FC = () => {
           <div className="flex justify-center py-24">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
-              <p className="text-white/30 text-sm font-medium">{t("press.label.resourceLanguage")}...</p>
+              <p className="text-white/40 text-sm font-medium">{t("press.label.resourceLanguage")}...</p>
             </div>
           </div>
         ) : (
@@ -546,9 +546,9 @@ const Press: React.FC = () => {
                 {loadingReleases ? (
                   <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-red-500 animate-spin" /></div>
                 ) : releases.length === 0 ? (
-                  <div className="rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.02] p-16 text-center">
+                  <div className="rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.04] p-16 text-center">
                     <Newspaper className="w-14 h-14 text-white/10 mx-auto mb-4" />
-                    <p className="text-white/30 font-medium">{t("press.releases.empty")}</p>
+                    <p className="text-white/40 font-medium">{t("press.releases.empty")}</p>
                   </div>
                 ) : (
                   <div className="max-w-4xl space-y-5">
@@ -559,17 +559,17 @@ const Press: React.FC = () => {
                       const pdfUrl = release.pdfUrl?.[lang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
                       const isExpanded = expandedRelease === release.id;
                       return (
-                        <article key={release.id} className="bg-white/[0.03] border border-white/10 rounded-2xl hover:border-white/20 transition-all">
+                        <article key={release.id} className="bg-white/[0.05] border border-white/10 rounded-2xl hover:border-white/20 transition-all">
                           <div className="p-6 sm:p-8">
                             <div className="flex items-start gap-4">
                               {release.imageUrl && <img src={release.imageUrl} alt={title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 hidden sm:block border border-white/10" loading="lazy" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-3 flex-wrap">
-                                  <span className="flex items-center gap-1.5 text-xs text-white/30"><Calendar className="w-3.5 h-3.5" />{formatDate(release.publishedAt)}</span>
+                                  <span className="flex items-center gap-1.5 text-xs text-white/40"><Calendar className="w-3.5 h-3.5" />{formatDate(release.publishedAt)}</span>
                                   {release.tags?.slice(0, 3).map((tag) => <span key={tag} className="px-2.5 py-0.5 bg-red-600/15 text-red-400 text-[10px] rounded-full font-semibold">{tag}</span>)}
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-                                {summary && <p className="text-white/50 text-sm leading-relaxed">{summary}</p>}
+                                {summary && <p className="text-white/60 text-sm leading-relaxed">{summary}</p>}
                               </div>
                             </div>
                             {isExpanded && content && (
@@ -584,7 +584,7 @@ const Press: React.FC = () => {
                               )}
                               {pdfUrl && (
                                 <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
-                                  className="text-sm font-medium text-white/30 hover:text-red-400 flex items-center gap-1.5 transition-colors">
+                                  className="text-sm font-medium text-white/40 hover:text-red-400 flex items-center gap-1.5 transition-colors">
                                   <Download className="w-4 h-4" />PDF
                                 </a>
                               )}
@@ -660,14 +660,14 @@ const Press: React.FC = () => {
             <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-12">{t("press.faq.title")}</h2>
             <div className="space-y-3">
               {faqs.map((faq, i) => (
-                <details key={i} className="group bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
+                <details key={i} className="group bg-white/[0.05] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
                   <summary className="flex items-center justify-between p-5 sm:p-6 cursor-pointer transition-colors">
                     <span className="text-sm font-semibold text-white/90 pr-4">{faq.question}</span>
                     <div className="w-8 h-8 rounded-xl bg-white/5 group-open:bg-red-600/20 flex items-center justify-center flex-shrink-0 transition-colors">
                       <ChevronDown className="w-4 h-4 text-white/40 group-open:text-red-400 group-open:rotate-180 transition-all" />
                     </div>
                   </summary>
-                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-white/50 leading-relaxed -mt-1">{faq.answer}</div>
+                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-white/60 leading-relaxed -mt-1">{faq.answer}</div>
                 </details>
               ))}
             </div>
@@ -676,7 +676,7 @@ const Press: React.FC = () => {
 
         {/* ══════════════ CONTACT CTA ══════════════ */}
         <section id="contact" className="scroll-mt-16 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-red-950/20 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-red-950/30 to-gray-950" />
           <div className="absolute inset-0">
             <div className="absolute top-[20%] left-[30%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[150px]" />
           </div>
@@ -685,14 +685,14 @@ const Press: React.FC = () => {
               <Mail className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-6 tracking-tight">{t("press.contact.title")}</h2>
-            <p className="text-white/50 text-lg sm:text-xl mb-10 max-w-xl mx-auto leading-relaxed">{t("press.contact.description")}</p>
+            <p className="text-white/60 text-lg sm:text-xl mb-10 max-w-xl mx-auto leading-relaxed">{t("press.contact.description")}</p>
             <button onClick={openContact}
               className="group px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-2xl transition-all flex items-center gap-3 shadow-xl shadow-red-600/25 text-lg mx-auto active:scale-[0.98]">
               <MessageSquare className="w-6 h-6" />
               {t("press.contact.cta")}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <p className="text-white/30 text-sm mt-8 flex items-center justify-center gap-2">
+            <p className="text-white/40 text-sm mt-8 flex items-center justify-center gap-2">
               <Clock className="w-4 h-4" />{t("press.contact.response")}
             </p>
           </div>
@@ -717,7 +717,7 @@ const Press: React.FC = () => {
                   <CheckCircle className="w-10 h-10 text-emerald-400" />
                 </div>
                 <h4 className="text-xl font-bold text-white mb-3">{t("press.contact.sent")}</h4>
-                <p className="text-white/50 text-sm mb-8">{t("press.contact.sentDesc")}</p>
+                <p className="text-white/60 text-sm mb-8">{t("press.contact.sentDesc")}</p>
                 <button onClick={() => setShowContact(false)}
                   className="px-8 py-3 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl text-sm border border-white/10 transition-colors">
                   {t("press.label.close")}
