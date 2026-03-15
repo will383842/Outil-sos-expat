@@ -29,14 +29,14 @@ import {
   FolderOpen,
   Camera,
   BarChart3,
-  Award,
   ExternalLink,
   ArrowDown,
   Users,
-  MapPin,
   Calendar,
-  Building2,
-  Briefcase,
+  X,
+  Send,
+  MessageSquare,
+  Loader2,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
@@ -156,7 +156,7 @@ function isImageFormat(format: string | null): boolean {
 
 // ==================== SUB-COMPONENTS ====================
 
-function ResourceCard({ resource, downloadLabel }: { resource: PressResource; downloadLabel: string }) {
+function ResourceCard({ resource, downloadLabel, onDownload }: { resource: PressResource; downloadLabel: string; onDownload?: (r: PressResource) => void }) {
   const isImg = resource.file_url && isImageFormat(resource.file_format);
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all overflow-hidden group">
@@ -179,7 +179,9 @@ function ResourceCard({ resource, downloadLabel }: { resource: PressResource; do
             <span>{formatFileSize(resource.file_size)}</span>
           </div>
           {resource.file_url && (
-            <a href={resource.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors">
+            <a href={resource.file_url} target="_blank" rel="noopener noreferrer"
+              onClick={() => onDownload?.(resource)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors">
               <Download className="w-3.5 h-3.5" />
               {downloadLabel}
             </a>
@@ -237,6 +239,13 @@ const Press: React.FC = () => {
   const [loadingResources, setLoadingResources] = useState(false);
   const [loadingReleases, setLoadingReleases] = useState(false);
   const [expandedRelease, setExpandedRelease] = useState<string | null>(null);
+
+  // Contact modal
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: "", email: "", media: "", subject: "", message: "" });
+  const [contactSending, setContactSending] = useState(false);
+  const [contactSent, setContactSent] = useState(false);
+  const [contactError, setContactError] = useState<string | null>(null);
 
   // Refs for section navigation
   const contentRef = useRef<HTMLDivElement>(null);
@@ -300,6 +309,67 @@ const Press: React.FC = () => {
       setFormError(isFr ? "Erreur, veuillez reessayer" : "Error, please try again");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ── Track download ──
+  const trackDownload = async (resource: PressResource) => {
+    try {
+      const stored = localStorage.getItem(PRESS_STORAGE_KEY);
+      const pressEmail = stored ? JSON.parse(stored).email : "unknown";
+      await addDoc(collection(db, "press_downloads"), {
+        resourceId: resource.id,
+        resourceName: resource.name,
+        resourceCategory: resource.category,
+        fileFormat: resource.file_format,
+        pressEmail,
+        createdAt: serverTimestamp(),
+      });
+    } catch { /* silent */ }
+  };
+
+  // ── Contact press submit ──
+  const handleContactSubmit = async () => {
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) {
+      setContactError(isFr ? "Veuillez remplir le nom, l'email et le message" : "Please fill in name, email and message");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) {
+      setContactError(isFr ? "Adresse email invalide" : "Invalid email address");
+      return;
+    }
+    setContactSending(true);
+    setContactError(null);
+    try {
+      await addDoc(collection(db, "contact_messages"), {
+        firstName: contactForm.name.split(" ")[0] || contactForm.name,
+        lastName: contactForm.name.split(" ").slice(1).join(" ") || "",
+        email: contactForm.email.trim().toLowerCase(),
+        message: contactForm.message.trim(),
+        subject: contactForm.subject.trim() || "Demande presse",
+        category: "press",
+        type: "contact_message",
+        source: "press_contact_form",
+        status: "new",
+        isRead: false,
+        responded: false,
+        priority: "high",
+        adminNotified: false,
+        adminTags: ["press"],
+        adminNotes: "",
+        createdAt: serverTimestamp(),
+        metadata: {
+          mediaName: contactForm.media.trim() || null,
+          language: lang,
+          formVersion: "1.0",
+          source: "press_landing_page",
+        },
+      });
+      setContactSent(true);
+    } catch {
+      setContactError(isFr ? "Erreur, veuillez reessayer" : "Error, please try again");
+    } finally {
+      setContactSending(false);
     }
   };
 
@@ -530,7 +600,7 @@ const Press: React.FC = () => {
                       subtitle={isFr ? "Logos, charte graphique et elements de marque. Tous les fichiers sont libres de droits pour un usage presse." : "Logos, brand guidelines and brand assets. All files are royalty-free for press use."} />
                     {logos.length > 0 ? (
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {logos.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                        {logos.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} onDownload={trackDownload} />)}
                       </div>
                     ) : <EmptySection message={emptyMsg} />}
                   </div>
@@ -544,7 +614,7 @@ const Press: React.FC = () => {
                       subtitle={isFr ? "Dossier de presse complet, fiches entreprise, presentations et decks." : "Complete press kit, company fact sheets, presentations and decks."} />
                     {kits.length > 0 ? (
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {kits.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                        {kits.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} onDownload={trackDownload} />)}
                       </div>
                     ) : <EmptySection message={emptyMsg} />}
                   </div>
@@ -618,7 +688,7 @@ const Press: React.FC = () => {
                       subtitle={isFr ? "Photos haute resolution de l'equipe, des bureaux et du produit. Libre de droits pour usage presse." : "High-resolution photos of the team, offices and product. Royalty-free for press use."} />
                     {photos.length > 0 ? (
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {photos.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                        {photos.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} onDownload={trackDownload} />)}
                       </div>
                     ) : <EmptySection message={emptyMsg} />}
                   </div>
@@ -632,7 +702,7 @@ const Press: React.FC = () => {
                       subtitle={isFr ? "Fact sheets, infographies et statistiques actualisees pour vos articles." : "Fact sheets, infographics and up-to-date statistics for your articles."} />
                     {data.length > 0 ? (
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {data.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} />)}
+                        {data.map((r) => <ResourceCard key={r.id} resource={r} downloadLabel={t.mediaKitDownload} onDownload={trackDownload} />)}
                       </div>
                     ) : <EmptySection message={emptyMsg} />}
                   </div>
@@ -651,23 +721,96 @@ const Press: React.FC = () => {
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t.contactTitle}</h2>
               <p className="text-lg text-gray-400 mb-8 leading-relaxed">{t.contactDescription}</p>
-              <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 space-y-4">
-                <div className="flex items-center justify-center gap-3 text-gray-400">
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                <button
+                  onClick={() => { setShowContactModal(true); setContactSent(false); setContactError(null); }}
+                  className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-red-500/20 text-lg"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  {isFr ? "Contacter l'equipe presse" : "Contact press team"}
+                </button>
+                <a href={`mailto:${t.contactEmail}`} className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all flex items-center gap-2 border border-white/10">
                   <Mail className="w-5 h-5" />
-                  <span className="text-sm">{t.contactEmailLabel}</span>
-                </div>
-                <a href={`mailto:${t.contactEmail}`} className="inline-flex items-center gap-2 text-xl font-semibold text-red-400 hover:text-red-300 transition-colors">
                   {t.contactEmail}
-                  <ExternalLink className="w-4 h-4" />
                 </a>
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <Clock className="w-4 h-4" />
-                  <span>{t.contactResponse}</span>
-                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                <Clock className="w-4 h-4" />
+                <span>{t.contactResponse}</span>
               </div>
             </div>
           </div>
         </section>
+
+        {/* ══════════════ CONTACT MODAL ══════════════ */}
+        {showContactModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setShowContactModal(false)}>
+            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+              <div className="bg-gray-950 px-6 py-5 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-red-400" />
+                  {isFr ? "Contacter l'equipe presse" : "Contact press team"}
+                </h3>
+                <button onClick={() => setShowContactModal(false)} className="p-1 hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
+              </div>
+
+              {contactSent ? (
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">{isFr ? "Message envoye !" : "Message sent!"}</h4>
+                  <p className="text-gray-500 text-sm mb-6">{isFr ? "Notre equipe presse vous repondra dans les 24 heures." : "Our press team will respond within 24 hours."}</p>
+                  <button onClick={() => setShowContactModal(false)} className="px-6 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm">{isFr ? "Fermer" : "Close"}</button>
+                </div>
+              ) : (
+                <div className="p-6 space-y-4">
+                  {contactError && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600">{contactError}</div>}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{isFr ? "Nom complet" : "Full name"} *</label>
+                    <input type="text" value={contactForm.name} onChange={(e) => setContactForm((p) => ({ ...p, name: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Jean Dupont" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                      <input type="email" value={contactForm.email} onChange={(e) => setContactForm((p) => ({ ...p, email: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="journalist@media.com" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{isFr ? "Media" : "Media"}</label>
+                      <input type="text" value={contactForm.media} onChange={(e) => setContactForm((p) => ({ ...p, media: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Le Monde, TechCrunch..." />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{isFr ? "Sujet" : "Subject"}</label>
+                    <input type="text" value={contactForm.subject} onChange={(e) => setContactForm((p) => ({ ...p, subject: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder={isFr ? "Demande d'interview, article, partenariat..." : "Interview request, article, partnership..."} />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                    <textarea value={contactForm.message} onChange={(e) => setContactForm((p) => ({ ...p, message: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent min-h-[120px]" rows={4}
+                      placeholder={isFr ? "Decrivez votre demande..." : "Describe your request..."} />
+                  </div>
+
+                  <button onClick={handleContactSubmit} disabled={contactSending}
+                    className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                    {contactSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-5 h-5" />{isFr ? "Envoyer le message" : "Send message"}</>}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
