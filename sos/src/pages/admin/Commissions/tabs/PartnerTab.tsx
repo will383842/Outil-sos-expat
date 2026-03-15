@@ -4,7 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functionsAffiliate } from '@/config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { db, functionsAffiliate } from '@/config/firebase';
 import {
   DollarSign, Clock, Save, Loader2, AlertTriangle, CheckCircle, RefreshCw, Info,
 } from 'lucide-react';
@@ -34,9 +35,11 @@ const PartnerTab: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const fn = httpsCallable<void, { config: PartnerConfig }>(functionsAffiliate, 'adminGetPartnerConfig');
-      const result = await fn();
-      setConfig(result.data.config || result.data);
+      const docRef = doc(db, 'partner_config', 'current');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        setConfig(snap.data() as PartnerConfig);
+      }
     } catch (err: any) {
       setError(err.message || 'Erreur de chargement');
     } finally {
@@ -51,7 +54,7 @@ const PartnerTab: React.FC = () => {
     setError(null);
     setSuccess(false);
     try {
-      const fn = httpsCallable(functionsAffiliate, 'updatePartnerConfig');
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdatePartnerConfig');
       await fn(config);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

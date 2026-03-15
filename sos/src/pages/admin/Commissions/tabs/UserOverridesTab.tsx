@@ -69,16 +69,17 @@ const UserOverridesTab: React.FC = () => {
     try {
       const fn = httpsCallable<{ userId: string }, {
         success: boolean;
-        user: UserInfo;
+        userId: string;
+        userInfo: UserInfo;
         summary: UserCommissionSummary;
-      }>(functionsAffiliate, 'adminGetUserCommissionInfo');
+      }>(functionsAffiliate, 'adminGetUserCommissionSummary');
 
       const result = await fn({ userId: searchQuery.trim() });
       setUserId(searchQuery.trim());
-      setUserInfo(result.data.user);
+      setUserInfo(result.data.userInfo);
       setSummary(result.data.summary);
-      if (result.data.user.lockedRates) {
-        setEditRates({ ...result.data.user.lockedRates });
+      if (result.data.userInfo?.lockedRates) {
+        setEditRates({ ...result.data.userInfo.lockedRates });
       }
     } catch (err: any) {
       setError(err.message || 'Utilisateur non trouvé');
