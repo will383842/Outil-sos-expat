@@ -1784,14 +1784,7 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
-      <Route
-        path="payments/withdrawals"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminPaymentsDashboard />
-          </Suspense>
-        }
-      />
+      <Route path="payments/withdrawals" element={<Navigate to="/admin/payments" replace />} />
       <Route
         path="payments/:userType/:withdrawalId"
         element={
