@@ -64,40 +64,40 @@ const PRESS_SECTIONS = [
 
 const BOILERPLATE = {
   short: {
-    fr: "SOS-Expat est la premiere plateforme d'assistance juridique instantanee pour les expatries et voyageurs, accessible en 9 langues dans plus de 170 pays, 24h/24 et 7j/7.",
-    en: "SOS-Expat is the first instant legal assistance platform for expatriates and travelers, available in 9 languages across 170+ countries, 24/7.",
+    fr: "SOS-Expat met en relation en moins de 5 minutes les expatries, voyageurs, vacanciers et digital nomads avec un avocat ou un expatrie aidant de confiance, partout dans le monde, dans leur langue, 24h/24.",
+    en: "SOS-Expat connects expatriates, travelers, vacationers and digital nomads with a trusted lawyer or expat helper in under 5 minutes, anywhere in the world, in their language, 24/7.",
   },
   long: {
-    fr: "Fondee en 2024, SOS-Expat revolutionne l'acces a l'assistance juridique pour les expatries et voyageurs du monde entier. Grace a une mise en relation instantanee avec des avocats et experts juridiques locaux, la plateforme permet a tout expatrie de recevoir une consultation en quelques minutes, dans sa langue, ou qu'il soit. Disponible en 9 langues (francais, anglais, espagnol, portugais, arabe, allemand, chinois, russe, hindi), SOS-Expat couvre plus de 170 pays et fonctionne 24 heures sur 24, 7 jours sur 7. La plateforme integre un systeme de visioconference securise, un suivi de dossier complet, et un reseau de prestataires certifies. SOS-Expat est soutenu par un programme d'affiliation innovant reunissant chatters, influenceurs, blogueurs et administrateurs de communautes qui contribuent a rendre l'assistance juridique accessible a tous les expatries.",
-    en: "Founded in 2024, SOS-Expat is revolutionizing access to legal assistance for expatriates and travelers worldwide. Through instant connection with local lawyers and legal experts, the platform enables any expatriate to receive a consultation within minutes, in their language, wherever they are. Available in 9 languages (French, English, Spanish, Portuguese, Arabic, German, Chinese, Russian, Hindi), SOS-Expat covers 170+ countries and operates 24/7. The platform integrates secure video conferencing, complete case tracking, and a network of certified providers. SOS-Expat is supported by an innovative affiliate program bringing together chatters, influencers, bloggers and community administrators who help make legal assistance accessible to all expatriates.",
+    fr: "Lancee en aout 2025, SOS-Expat est la premiere plateforme d'aide immediate pour les expatries, voyageurs, vacanciers et digital nomads confrontes a tout type de difficulte a l'etranger : problemes juridiques, administratifs, urgences medicales, arnaques, litiges locaux, perte de documents, ou tout simplement besoin de conseil. En moins de 5 minutes, l'utilisateur est mis en relation par appel avec un avocat local ou un expatrie aidant de confiance parlant sa langue. La plateforme a un double impact mondial : elle offre une assistance instantanee a ceux qui en ont besoin, ET elle cree des opportunites de revenus pour les avocats et expatries aidants dans le monde entier. Disponible en 9 langues (francais, anglais, espagnol, portugais, arabe, allemand, chinois, russe, hindi), SOS-Expat couvre plus de 170 pays, 24h/24 et 7j/7. Le programme d'affiliation reunit chatters, influenceurs, blogueurs et administrateurs de communautes pour rendre l'aide accessible partout.",
+    en: "Launched in August 2025, SOS-Expat is the first instant help platform for expatriates, travelers, vacationers and digital nomads facing any type of difficulty abroad: legal issues, administrative problems, medical emergencies, scams, local disputes, lost documents, or simply needing advice. In under 5 minutes, users are connected by call with a local lawyer or trusted expat helper who speaks their language. The platform has a dual global impact: it provides instant assistance to those in need, AND creates revenue opportunities for lawyers and expat helpers worldwide. Available in 9 languages (French, English, Spanish, Portuguese, Arabic, German, Chinese, Russian, Hindi), SOS-Expat covers 170+ countries, 24/7. The affiliate program unites chatters, influencers, bloggers and community administrators to make help accessible everywhere.",
   },
 };
 
 const COMPANY_FACTS = {
-  founded: "2024",
+  founded: { fr: "Aout 2025", en: "August 2025" },
   hq: "Europe",
   countries: "170+",
   languages: "9",
   availability: "24/7",
-  providers: "500+",
+  providers: "100+",
 };
 
 const PRESS_FAQS = [
   {
     question: { fr: "Qu'est-ce que SOS-Expat ?", en: "What is SOS-Expat?" },
-    answer: { fr: "SOS-Expat est une plateforme d'assistance juridique instantanee pour expatries et voyageurs, accessible dans plus de 170 pays, en 9 langues, 24h/24.", en: "SOS-Expat is an instant legal assistance platform for expatriates and travelers, accessible in 170+ countries, in 9 languages, 24/7." },
+    answer: { fr: "SOS-Expat est une plateforme d'aide immediate pour les expatries, voyageurs, vacanciers et digital nomads. En moins de 5 minutes, nous mettons en relation par appel avec un avocat local ou un expatrie aidant de confiance, partout dans le monde, dans leur langue. Ce n'est pas limite au juridique : problemes administratifs, urgences, arnaques, litiges, perte de documents...", en: "SOS-Expat is an instant help platform for expatriates, travelers, vacationers and digital nomads. In under 5 minutes, we connect users by call with a local lawyer or trusted expat helper, anywhere in the world, in their language. Not limited to legal: administrative issues, emergencies, scams, disputes, lost documents..." },
   },
   {
-    question: { fr: "Comment fonctionne le service ?", en: "How does the service work?" },
-    answer: { fr: "L'utilisateur appelle depuis l'application ou le site web et est mis en relation en quelques minutes avec un avocat ou expert juridique local parlant sa langue.", en: "Users call from the app or website and are connected within minutes with a local lawyer or legal expert who speaks their language." },
+    question: { fr: "Quel est le double impact de SOS-Expat ?", en: "What is SOS-Expat's dual impact?" },
+    answer: { fr: "Mission 1 : Aide immediate — nous aidons les expatries et voyageurs confrontes a des difficultes partout dans le monde. Mission 2 : Revenus garantis — nous permettons aux avocats et expatries aidants de gagner des revenus avec des appels prepayes, ou qu'ils soient.", en: "Mission 1: Instant help — we help expatriates and travelers facing difficulties anywhere in the world. Mission 2: Guaranteed income — we enable lawyers and expat helpers to earn revenue with prepaid calls, wherever they are." },
   },
   {
-    question: { fr: "Dans combien de pays SOS-Expat est-il disponible ?", en: "In how many countries is SOS-Expat available?" },
-    answer: { fr: "SOS-Expat est disponible dans plus de 170 pays a travers le monde, avec un reseau de prestataires juridiques locaux certifies.", en: "SOS-Expat is available in over 170 countries worldwide, with a network of certified local legal providers." },
+    question: { fr: "Comment fonctionne la mise en relation ?", en: "How does the matching work?" },
+    answer: { fr: "L'utilisateur appelle depuis le site ou l'application. En moins de 5 minutes, il est mis en relation avec un professionnel ou aidant verifie, parlant sa langue, dans son fuseau horaire. Appel garanti, paiement securise, pas de surprises.", en: "Users call from the website or app. In under 5 minutes, they're connected with a verified professional or helper, speaking their language, in their timezone. Guaranteed call, secure payment, no surprises." },
   },
   {
     question: { fr: "Comment contacter l'equipe presse ?", en: "How to contact the press team?" },
-    answer: { fr: "Vous pouvez nous contacter via le formulaire sur cette page ou par email a press@sos-expat.com. Nous repondons sous 24 heures.", en: "You can contact us via the form on this page or by email at press@sos-expat.com. We respond within 24 hours." },
+    answer: { fr: "Utilisez le formulaire de contact sur cette page. Notre equipe presse repond sous 24 heures a toute demande d'interview, d'information ou de partenariat media.", en: "Use the contact form on this page. Our press team responds within 24 hours to any interview, information or media partnership request." },
   },
 ];
 
@@ -180,6 +180,9 @@ const Press: React.FC = () => {
   const lang = (language as string) || "fr";
   const isFr = lang === "fr";
 
+  // Resource language (visitor can switch independently of page lang)
+  const [resourceLang, setResourceLang] = useState(lang);
+
   // Data
   const [resources, setResources] = useState<PressResource[]>([]);
   const [releases, setReleases] = useState<PressRelease[]>([]);
@@ -250,11 +253,12 @@ const Press: React.FC = () => {
     } finally { setContactSending(false); }
   };
 
-  // Load resources (free access)
+  // Load resources (free access, uses resourceLang)
   useEffect(() => {
+    setLoadingResources(true);
     (async () => {
       try {
-        const result = await getPublicPressResources(lang);
+        const result = await getPublicPressResources(resourceLang);
         setResources((result.resources || []).map((r: PublicPressResource) => ({
           id: r.id, type: r.type, name: r.name, description: r.description,
           file_url: r.file_url, file_format: r.file_format, file_size: r.file_size, category: r.category,
@@ -262,7 +266,7 @@ const Press: React.FC = () => {
       } catch { /* silent */ }
       setLoadingResources(false);
     })();
-  }, [lang]);
+  }, [resourceLang]);
 
   // Load releases
   useEffect(() => {
@@ -311,42 +315,52 @@ const Press: React.FC = () => {
           "description": seoDescription,
           "url": `https://sos-expat.com/${lang}/presse`,
           "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["#press-boilerplate", "#press-facts"] },
-          "mainEntity": { "@type": "Organization", "name": "SOS-Expat", "url": "https://sos-expat.com", "foundingDate": "2024", "areaServed": "Worldwide", "numberOfEmployees": { "@type": "QuantitativeValue", "value": "50+" } },
+          "mainEntity": { "@type": "Organization", "name": "SOS-Expat", "url": "https://sos-expat.com", "foundingDate": "2025-08", "areaServed": "Worldwide" },
         })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-white">
 
         {/* ══════════════ HERO ══════════════ */}
-        <section className="relative bg-gray-950 text-white overflow-hidden">
+        <section className="relative bg-white overflow-hidden border-b border-gray-100">
           <div className="absolute inset-0">
-            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-red-600/15 rounded-full blur-[160px]" />
-            <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-red-500/10 rounded-full blur-[96px]" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-50 rounded-full blur-[120px]" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-50 rounded-full blur-[100px]" />
           </div>
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 bg-red-500/20 border border-red-400/20 rounded-full px-4 py-2 mb-8">
-                <Newspaper className="w-4 h-4 text-red-400" />
-                <span className="text-sm font-semibold text-red-300 uppercase tracking-wider">{isFr ? "Espace Presse" : "Press Room"}</span>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
+            <div className="max-w-4xl">
+              <div className="inline-flex items-center gap-2 bg-red-100 border border-red-200 rounded-full px-4 py-2 mb-8">
+                <Newspaper className="w-4 h-4 text-red-600" />
+                <span className="text-sm font-semibold text-red-700 uppercase tracking-wider">{isFr ? "Espace Presse" : "Press Room"}</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight leading-[1.05]">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight leading-[1.08]">
                 {isFr ? (
-                  <>L'assistance juridique<br /><span className="text-red-500">pour les expatries</span><br />du monde entier</>
+                  <>{isFr ? "Aide immediate" : "Instant help"} <span className="text-red-600">{isFr ? "en moins de 5 minutes" : "in under 5 minutes"}</span><br />{isFr ? "partout dans le monde" : "anywhere in the world"}</>
                 ) : (
-                  <>Legal assistance<br /><span className="text-red-500">for expatriates</span><br />worldwide</>
+                  <>Instant help <span className="text-red-600">in under 5 minutes</span><br />anywhere in the world</>
                 )}
               </h1>
-              <p id="press-boilerplate" className="text-lg text-gray-400 leading-relaxed mb-10 max-w-2xl">
+              <p id="press-boilerplate" className="text-lg sm:text-xl text-gray-600 leading-relaxed mb-6 max-w-3xl">
                 {BOILERPLATE.short[isFr ? "fr" : "en"]}
               </p>
+              {/* Double impact callout */}
+              <div className="grid sm:grid-cols-2 gap-4 mb-10 max-w-2xl">
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">{isFr ? "Mission 1" : "Mission 1"}</p>
+                  <p className="text-sm font-semibold text-gray-900">{isFr ? "Aide immediate pour expatries, voyageurs, vacanciers et digital nomads en difficulte" : "Instant help for expatriates, travelers, vacationers & digital nomads in difficulty"}</p>
+                </div>
+                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">{isFr ? "Mission 2" : "Mission 2"}</p>
+                  <p className="text-sm font-semibold text-gray-900">{isFr ? "Revenus garantis pour les avocats et expatries aidants, partout dans le monde" : "Guaranteed revenue for lawyers & expat helpers, worldwide"}</p>
+                </div>
+              </div>
               <div className="flex flex-wrap gap-4">
                 <a href="#identity" className="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-red-600/20">
                   <Download className="w-5 h-5" />
                   {isFr ? "Telecharger le media kit" : "Download media kit"}
                 </a>
                 <button onClick={() => { setShowContact(true); setContactSent(false); setContactError(null); }}
-                  className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all flex items-center gap-2 border border-white/10 backdrop-blur-sm">
+                  className="px-6 py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-xl transition-all flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" />
                   {isFr ? "Contacter l'equipe presse" : "Contact press team"}
                 </button>
@@ -358,12 +372,31 @@ const Press: React.FC = () => {
         {/* ══════════════ SECTION NAV ══════════════ */}
         <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur-lg border-b border-gray-200" aria-label="Press sections">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex gap-1 overflow-x-auto py-3 no-scrollbar">
+            <div className="flex items-center gap-1 overflow-x-auto py-3 no-scrollbar">
               {PRESS_SECTIONS.map((s) => (
                 <a key={s.id} href={`#${s.id}`} className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg whitespace-nowrap transition-colors">
                   {isFr ? s.fr : s.en}
                 </a>
               ))}
+              <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+                <Globe className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={resourceLang}
+                  onChange={(e) => setResourceLang(e.target.value)}
+                  className="text-xs bg-gray-100 border-0 rounded-lg px-2 py-1.5 text-gray-700 focus:ring-2 focus:ring-red-500 cursor-pointer"
+                  title={isFr ? "Langue des ressources" : "Resources language"}
+                >
+                  <option value="fr">FR</option>
+                  <option value="en">EN</option>
+                  <option value="es">ES</option>
+                  <option value="de">DE</option>
+                  <option value="pt">PT</option>
+                  <option value="ar">AR</option>
+                  <option value="ru">RU</option>
+                  <option value="zh">ZH</option>
+                  <option value="hi">HI</option>
+                </select>
+              </div>
             </div>
           </div>
         </nav>
@@ -392,7 +425,7 @@ const Press: React.FC = () => {
                 <div className="bg-gray-950 text-white rounded-2xl p-6 space-y-5">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">{isFr ? "Fiche entreprise" : "Company Facts"}</h3>
                   {[
-                    { icon: Calendar, label: isFr ? "Fondation" : "Founded", value: COMPANY_FACTS.founded },
+                    { icon: Calendar, label: isFr ? "Fondation" : "Founded", value: isFr ? COMPANY_FACTS.founded.fr : COMPANY_FACTS.founded.en },
                     { icon: MapPin, label: isFr ? "Siege" : "Headquarters", value: COMPANY_FACTS.hq },
                     { icon: Globe, label: isFr ? "Pays couverts" : "Countries", value: COMPANY_FACTS.countries },
                     { icon: Languages, label: isFr ? "Langues" : "Languages", value: COMPANY_FACTS.languages },
@@ -592,15 +625,10 @@ const Press: React.FC = () => {
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">{isFr ? "Contact Presse" : "Press Contact"}</h2>
             <p className="text-gray-400 text-lg mb-8">{isFr ? "Notre equipe presse est a votre disposition pour toute demande d'interview, d'information ou de partenariat media." : "Our press team is available for any interview, information or media partnership request."}</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button onClick={() => { setShowContact(true); setContactSent(false); }}
-                className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-red-600/20 text-lg">
-                <MessageSquare className="w-5 h-5" />{isFr ? "Envoyer un message" : "Send a message"}
-              </button>
-              <a href="mailto:press@sos-expat.com" className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all flex items-center gap-2 border border-white/10">
-                <Mail className="w-5 h-5" />press@sos-expat.com
-              </a>
-            </div>
+            <button onClick={() => { setShowContact(true); setContactSent(false); }}
+              className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-red-600/20 text-lg mx-auto">
+              <MessageSquare className="w-5 h-5" />{isFr ? "Contacter l'equipe presse" : "Contact press team"}
+            </button>
             <p className="text-gray-500 text-sm mt-6 flex items-center justify-center gap-2"><Clock className="w-4 h-4" />{isFr ? "Reponse sous 24h" : "Response within 24h"}</p>
           </div>
         </section>
