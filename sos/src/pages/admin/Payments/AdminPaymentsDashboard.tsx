@@ -413,15 +413,13 @@ const AdminPaymentsDashboard: React.FC = () => {
   useEffect(() => {
     fetchWithdrawals(true);
     fetchStats();
-  }, [mainTab, statusFilter, userTypeFilter]);
 
-  // Update URL params when filters change
-  useEffect(() => {
+    // Update URL params in the same effect to avoid re-render loops with setSearchParams
     const params = new URLSearchParams();
     if (mainTab !== 'active') params.set('tab', mainTab);
     if (userTypeFilter !== 'all') params.set('userType', userTypeFilter);
     setSearchParams(params, { replace: true });
-  }, [mainTab, userTypeFilter, setSearchParams]);
+  }, [mainTab, statusFilter, userTypeFilter, fetchWithdrawals, fetchStats, setSearchParams]);
 
   // ============================================================================
   // ACTIONS (via callables — audit trail + balance management)
@@ -746,74 +744,72 @@ const AdminPaymentsDashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="admin.withdrawals.stats.pending" defaultMessage="En attente" />
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending.count}</p>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatAmount(stats.pending.amount * 100)}</p>
-                </div>
-                <div className="p-2 sm:p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
-                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
-                </div>
+        {/* Stats Cards — always rendered to avoid layout shift */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  <FormattedMessage id="admin.withdrawals.stats.pending" defaultMessage="En attente" />
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats?.pending.count ?? '—'}</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{stats ? formatAmount(stats.pending.amount * 100) : '—'}</p>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="admin.withdrawals.stats.processing" defaultMessage="En traitement" />
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.processing.count}</p>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatAmount(stats.processing.amount * 100)}</p>
-                </div>
-                <div className="p-2 sm:p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                  <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="admin.withdrawals.stats.completed30d" defaultMessage="Payés (30j)" />
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.completed30d.count}</p>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{formatAmount(stats.completed30d.amount * 100)}</p>
-                </div>
-                <div className="p-2 sm:p-3 rounded-full bg-green-100 dark:bg-green-900/30">
-                  <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="admin.withdrawals.stats.successRate" defaultMessage="Taux de succès" />
-                  </p>
-                  <p className={`text-xl sm:text-2xl font-bold ${stats.successRate >= 90 ? 'text-green-600' : stats.successRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {stats.successRate.toFixed(1)}%
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    <FormattedMessage id="admin.withdrawals.stats.last30d" defaultMessage="30 derniers jours" />
-                  </p>
-                </div>
-                <div className="p-2 sm:p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
-                </div>
+              <div className="p-2 sm:p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </div>
-        )}
+
+          <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  <FormattedMessage id="admin.withdrawals.stats.processing" defaultMessage="En traitement" />
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats?.processing.count ?? '—'}</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{stats ? formatAmount(stats.processing.amount * 100) : '—'}</p>
+              </div>
+              <div className="p-2 sm:p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  <FormattedMessage id="admin.withdrawals.stats.completed30d" defaultMessage="Payés (30j)" />
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats?.completed30d.count ?? '—'}</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{stats ? formatAmount(stats.completed30d.amount * 100) : '—'}</p>
+              </div>
+              <div className="p-2 sm:p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  <FormattedMessage id="admin.withdrawals.stats.successRate" defaultMessage="Taux de succès" />
+                </p>
+                <p className={`text-xl sm:text-2xl font-bold ${!stats ? 'text-gray-400' : stats.successRate >= 90 ? 'text-green-600' : stats.successRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {stats ? `${stats.successRate.toFixed(1)}%` : '—'}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  <FormattedMessage id="admin.withdrawals.stats.last30d" defaultMessage="30 derniers jours" />
+                </p>
+              </div>
+              <div className="p-2 sm:p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Filters */}
         <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 p-4 shadow-sm">
@@ -899,13 +895,13 @@ const AdminPaymentsDashboard: React.FC = () => {
         )}
 
         {/* Withdrawals Table */}
-        <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
+        <div className="bg-white dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/60 dark:bg-black/40 z-10 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-red-500" />
             </div>
-          ) : (
-            <div className="overflow-x-auto">
+          )}
+          <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-white/10">
                 <thead className="bg-gray-50 dark:bg-white/5">
                   <tr>
@@ -1141,7 +1137,6 @@ const AdminPaymentsDashboard: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          )}
 
           {/* Pagination */}
           {!isLoading && filteredWithdrawals.length > 0 && (
