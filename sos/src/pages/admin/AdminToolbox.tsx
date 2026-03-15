@@ -1,8 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { Bot, Briefcase, Database, ExternalLink, Flame, Link2, Mail, MessageSquare, Send, Server, Settings, Users, UserSearch, Wrench } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Bot, Briefcase, Database, ExternalLink, Flame, GripVertical, Link2, Mail, MessageSquare, Send, Server, Settings, Users, UserSearch, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -16,6 +31,8 @@ const JOB_ADS_TRACKER_URL = "/tools/suivi-annonces-emploi.html";
 const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
 
+const STORAGE_KEY = "admin-toolbox-order";
+
 interface ToolCard {
   id: string;
   titleKey: string;
@@ -27,7 +44,7 @@ interface ToolCard {
   internalRoute?: string;
 }
 
-const tools: ToolCard[] = [
+const defaultTools: ToolCard[] = [
   {
     id: "telegram-marketing",
     titleKey: "Telegram Marketing",
@@ -139,9 +156,134 @@ const tools: ToolCard[] = [
   },
 ];
 
+function getOrderedTools(): ToolCard[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const order: string[] = JSON.parse(saved);
+      const toolMap = new Map(defaultTools.map((t) => [t.id, t]));
+      const ordered: ToolCard[] = [];
+      for (const id of order) {
+        const tool = toolMap.get(id);
+        if (tool) {
+          ordered.push(tool);
+          toolMap.delete(id);
+        }
+      }
+      // Append any new tools not in saved order
+      for (const tool of toolMap.values()) {
+        ordered.push(tool);
+      }
+      return ordered;
+    }
+  } catch {
+    // ignore
+  }
+  return defaultTools;
+}
+
+interface SortableToolCardProps {
+  tool: ToolCard;
+  onClick: (tool: ToolCard, e: React.MouseEvent) => void;
+  t: (key: string) => string;
+}
+
+const SortableToolCard: React.FC<SortableToolCardProps> = ({ tool, onClick, t }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: tool.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.85 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-2 z-10 p-1.5 rounded-md bg-white/30 hover:bg-white/50 text-white cursor-grab active:cursor-grabbing transition-colors"
+        title="Glisser pour réorganiser"
+        onClick={(e) => e.preventDefault()}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+
+      <a
+        href={tool.internalRoute || tool.url}
+        target={tool.internalRoute ? undefined : "_blank"}
+        rel={tool.internalRoute ? undefined : "noopener noreferrer"}
+        onClick={(e) => onClick(tool, e)}
+        className={`group block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden ${
+          isDragging ? "shadow-xl ring-2 ring-blue-400" : ""
+        }`}
+      >
+        <div className={`${tool.color} p-4 flex items-center justify-between`}>
+          <div className="text-white">{tool.icon}</div>
+          {tool.status === "live" ? (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-white bg-white/20 rounded-full px-2 py-0.5 mr-8">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-300 animate-pulse" />
+              Live
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-white/70 bg-white/10 rounded-full px-2 py-0.5 mr-8">
+              Coming soon
+            </span>
+          )}
+        </div>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+              {t(tool.titleKey)}
+            </h3>
+            <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+          </div>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            {t(tool.descriptionKey)}
+          </p>
+          <div className="mt-3 text-xs text-gray-400 truncate">
+            {tool.internalRoute || tool.url}
+          </div>
+        </div>
+      </a>
+    </div>
+  );
+};
+
 const AdminToolbox: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [tools, setTools] = useState<ToolCard[]>(getOrderedTools);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tools.map((t) => t.id)));
+  }, [tools]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setTools((prev) => {
+        const oldIndex = prev.findIndex((t) => t.id === active.id);
+        const newIndex = prev.findIndex((t) => t.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  };
 
   const handleClick = (tool: ToolCard, e: React.MouseEvent) => {
     if (tool.internalRoute) {
@@ -165,46 +307,24 @@ const AdminToolbox: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tools.map((tool) => (
-            <a
-              key={tool.id}
-              href={tool.internalRoute || tool.url}
-              target={tool.internalRoute ? undefined : "_blank"}
-              rel={tool.internalRoute ? undefined : "noopener noreferrer"}
-              onClick={(e) => handleClick(tool, e)}
-              className="group block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden"
-            >
-              <div className={`${tool.color} p-4 flex items-center justify-between`}>
-                <div className="text-white">{tool.icon}</div>
-                {tool.status === "live" ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-white bg-white/20 rounded-full px-2 py-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-300 animate-pulse" />
-                    Live
-                  </span>
-                ) : (
-                  <span className="text-xs font-medium text-white/70 bg-white/10 rounded-full px-2 py-0.5">
-                    Coming soon
-                  </span>
-                )}
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {t(tool.titleKey)}
-                  </h3>
-                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  {t(tool.descriptionKey)}
-                </p>
-                <div className="mt-3 text-xs text-gray-400 truncate">
-                  {tool.internalRoute || tool.url}
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={tools.map((t) => t.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tools.map((tool) => (
+                <SortableToolCard
+                  key={tool.id}
+                  tool={tool}
+                  onClick={handleClick}
+                  t={t}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
     </AdminLayout>
   );
