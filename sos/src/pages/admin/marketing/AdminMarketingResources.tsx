@@ -17,6 +17,7 @@ import {
   adminUploadFile,
   adminBulkAction,
   adminGetStats,
+  // adminReorder — available but not yet used in UI
 } from '@/services/marketingResourcesApi';
 import type {
   MarketingResourceAdmin,
@@ -908,7 +909,7 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
 
         {/* ══════════════════ EDITOR MODAL ══════════════════ */}
         {editing && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setEditing(null)}>
             <div className="bg-white dark:bg-gray-900 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
               {/* Editor header */}
               <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-white/10 px-6 py-4 flex items-center justify-between">
@@ -1273,7 +1274,7 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
 
         {/* ══════════════════ PREVIEW MODAL ══════════════════ */}
         {previewResource && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setPreviewResource(null)}>
             <div className="bg-white dark:bg-gray-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6 space-y-5">
               {/* Header */}
               <div className="flex items-center justify-between">
