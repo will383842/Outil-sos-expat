@@ -1647,8 +1647,10 @@ const AdminAaaProfiles: React.FC = () => {
 
   const loadSimulatedProfiles = async () => {
     try {
+      // Utilise la collection 'users' car sos_profiles a des security rules
+      // qui bloquent les queries collection-wide (resource.data.isVisible check)
       const snap = await getDocs(
-        query(collection(db, 'sos_profiles'), where('isAAA', '==', true))
+        query(collection(db, 'users'), where('isAAA', '==', true))
       );
       const profiles: typeof simulatedProfiles = [];
       for (const d of snap.docs) {
@@ -1664,6 +1666,7 @@ const AdminAaaProfiles: React.FC = () => {
       setSimulatedProfiles(profiles);
     } catch (err) {
       console.error('[AAA Simulation] Error loading simulated profiles:', err);
+      toast.error('Erreur chargement profils simulés');
     }
   };
 
