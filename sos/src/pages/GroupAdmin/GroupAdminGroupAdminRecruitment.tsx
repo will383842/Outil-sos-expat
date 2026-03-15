@@ -109,12 +109,12 @@ const GroupAdminGroupAdminRecruitment: React.FC = () => {
       setThreshold(data.threshold);
       setBonusAmount(data.bonusAmount);
 
-      // Fetch recruitment link
+      // Fetch unified link
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const dashboardResult = await getDashboard({});
-      const dashboardData = dashboardResult.data as { profile: { affiliateCodeRecruitment: string } };
-      const code = dashboardData.profile.affiliateCodeRecruitment;
-      setRecruitmentLink(`${window.location.origin}/group-admin/inscription?ref=${code}`);
+      const dashboardData = dashboardResult.data as { profile: { affiliateCode?: string; affiliateCodeClient?: string; affiliateCodeRecruitment: string } };
+      const code = dashboardData.profile.affiliateCode || dashboardData.profile.affiliateCodeClient || dashboardData.profile.affiliateCodeRecruitment;
+      setRecruitmentLink(`${window.location.origin}/r/${code}`);
     } catch (err) {
       console.error('Error fetching recruits:', err);
       setError(intl.formatMessage({ id: 'groupAdmin.groupAdminRecruitment.error' }));

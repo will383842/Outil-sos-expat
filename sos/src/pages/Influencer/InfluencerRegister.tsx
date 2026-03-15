@@ -133,13 +133,15 @@ const InfluencerRegister: React.FC = () => {
   // WhatsApp screen after successful registration
   if (showWhatsApp && user) {
     return (
-      <WhatsAppGroupScreen
-        userId={user.uid || ''}
-        role="influencer"
-        language={registrationData?.language ?? 'en'}
-        country={registrationData?.country ?? ''}
-        onContinue={handleWhatsAppContinue}
-      />
+      <Layout>
+        <WhatsAppGroupScreen
+          userId={user.uid || ''}
+          role="influencer"
+          language={registrationData?.language ?? 'en'}
+          country={registrationData?.country ?? ''}
+          onContinue={handleWhatsAppContinue}
+        />
+      </Layout>
     );
   }
 

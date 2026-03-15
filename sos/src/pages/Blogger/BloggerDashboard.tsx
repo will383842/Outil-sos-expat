@@ -262,6 +262,7 @@ const BloggerDashboard: React.FC = () => {
             <UnifiedLinkWithEarnings
               code={(blogger as any).affiliateCode || blogger.affiliateCodeClient || ''}
               role="blogger"
+              config={dashboardData?.config}
             />
           </div>
         </Suspense>

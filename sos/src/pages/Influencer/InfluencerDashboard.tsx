@@ -556,6 +556,7 @@ const InfluencerDashboard: React.FC = () => {
             <UnifiedLinkWithEarnings
               code={(influencer as any)?.affiliateCode || influencer?.affiliateCodeClient || ''}
               role="influencer"
+              config={config}
             />
           </div>
         </Suspense>
@@ -571,7 +572,7 @@ const InfluencerDashboard: React.FC = () => {
                 totalEarned={influencer?.totalEarned || 0}
                 level={influencer?.level}
                 levelProgress={influencer?.levelProgress}
-                monthlyTopMultiplier={influencer?.monthlyTopMultiplier}
+                levelThresholds={config?.levelThresholds}
               />
             </div>
           </Suspense>

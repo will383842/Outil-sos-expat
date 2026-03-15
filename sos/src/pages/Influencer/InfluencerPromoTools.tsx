@@ -7,8 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useInfluencer } from '@/hooks/useInfluencer';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
-import InfluencerAffiliateLinks from '@/components/Influencer/Links/InfluencerAffiliateLinks';
-import { Image, Code, QrCode, FileText, Copy, Check, Download } from 'lucide-react';
+import { Image, Code, QrCode, FileText, Copy, Check, Download, Link2 } from 'lucide-react';
 
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
@@ -43,8 +42,9 @@ const InfluencerPromoTools: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const clientLink = `https://sos-expat.com/ref/i/${influencer?.affiliateCodeClient || ''}`;
-  const recruitLink = `https://sos-expat.com/rec/i/${influencer?.affiliateCodeRecruitment || ''}`;
+  const affiliateCode = (influencer as any)?.affiliateCode || influencer?.affiliateCodeClient || '';
+  const unifiedLink = `https://sos-expat.com/r/${affiliateCode}`;
+  const clientLink = unifiedLink; // Legacy alias for banner/widget/text generation
 
   // Generate HTML code for banner
   const generateBannerCode = (size: string) => {
@@ -99,14 +99,36 @@ const InfluencerPromoTools: React.FC = () => {
           {activeTab === 'links' && (
             <div className="space-y-6">
               <h2 className="text-lg dark:text-white font-semibold">
-                <FormattedMessage id="influencer.tools.links.title" defaultMessage="Vos liens de parrainage" />
+                <FormattedMessage id="influencer.tools.links.title" defaultMessage="Votre lien unique" />
               </h2>
-              <InfluencerAffiliateLinks
-                clientCode={influencer?.affiliateCodeClient || ''}
-                recruitmentCode={influencer?.affiliateCodeRecruitment || ''}
-                providerCode={influencer?.affiliateCodeProvider || ''}
-                clientDiscount={config?.clientDiscountPercent ?? 0}
-              />
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <FormattedMessage
+                    id="influencer.tools.links.unified.desc"
+                    defaultMessage="Un seul lien pour tout : clients, recrutement, et prestataires. Le système détecte automatiquement le type d'inscription."
+                  />
+                </p>
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
+                  <Link2 className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <code className="flex-1 text-sm font-mono text-gray-800 dark:text-gray-200 truncate">
+                    {unifiedLink}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(unifiedLink)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                  >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    <FormattedMessage id="influencer.tools.copyLink" defaultMessage="Copier" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-500">
+                  <FormattedMessage
+                    id="influencer.tools.links.unified.code"
+                    defaultMessage="Code affilié : {code}"
+                    values={{ code: affiliateCode }}
+                  />
+                </p>
+              </div>
             </div>
           )}
 

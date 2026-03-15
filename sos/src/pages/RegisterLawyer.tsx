@@ -191,13 +191,15 @@ const RegisterLawyer: React.FC = () => {
   // WhatsApp screen after registration
   if (showWhatsApp && user && registrationData) {
     return (
-      <WhatsAppGroupScreen
-        userId={user.id || (user as any).uid}
-        role="lawyer"
-        language={registrationData.language}
-        country={registrationData.country}
-        onContinue={handleWhatsAppContinue}
-      />
+      <Layout>
+        <WhatsAppGroupScreen
+          userId={user.id || (user as any).uid}
+          role="lawyer"
+          language={registrationData.language}
+          country={registrationData.country}
+          onContinue={handleWhatsAppContinue}
+        />
+      </Layout>
     );
   }
 

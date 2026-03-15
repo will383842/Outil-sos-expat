@@ -195,6 +195,7 @@ function ChatterReferralsContent() {
             <UnifiedLinkWithEarnings
               code={(chatter as any)?.affiliateCode || chatter?.affiliateCodeClient || ''}
               role={(chatter as any)?.isCaptain ? 'captainChatter' : 'chatter'}
+              config={config}
               compact
             />
           </Suspense>

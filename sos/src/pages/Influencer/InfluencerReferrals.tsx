@@ -474,6 +474,7 @@ const InfluencerReferrals: React.FC = () => {
               <UnifiedLinkWithEarnings
                 code={(dashboardData?.influencer as any)?.affiliateCode || dashboardData?.influencer?.affiliateCodeClient || ''}
                 role="influencer"
+                config={dashboardData?.config}
                 compact
               />
             </Suspense>

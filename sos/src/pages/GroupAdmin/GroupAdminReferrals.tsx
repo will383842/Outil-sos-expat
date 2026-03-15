@@ -10,9 +10,8 @@ import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdmin
 import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
-import { Users, Copy, CheckCircle, Loader2, ExternalLink, DollarSign, Clock, AlertTriangle, Info } from 'lucide-react';
-import { copyToClipboard } from '@/utils/clipboard';
-import { GroupAdminRecruit, getGroupAdminRecruitmentLink, formatGroupAdminAmount, FirebaseDate } from '@/types/groupAdmin';
+import { Users, CheckCircle, Loader2, DollarSign, Clock, AlertTriangle, Info } from 'lucide-react';
+import { GroupAdminRecruit, formatGroupAdminAmount, FirebaseDate } from '@/types/groupAdmin';
 
 /**
  * Calculate remaining time until commission window ends
@@ -40,7 +39,7 @@ const GroupAdminReferrals: React.FC = () => {
   const [affiliateCode, setAffiliateCode] = useState('');
   const [unifiedCode, setUnifiedCode] = useState('');
   const [activationBonusAmount, setActivationBonusAmount] = useState(500);
-  const [copied, setCopied] = useState(false);
+  const [gaConfig, setGaConfig] = useState<{ commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } | undefined>(undefined);
 
   useEffect(() => {
     fetchData();
@@ -51,25 +50,21 @@ const GroupAdminReferrals: React.FC = () => {
       setLoading(true);
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
-      const data = result.data as { profile: { affiliateCodeRecruitment: string; affiliateCode?: string; affiliateCodeClient?: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number } };
+      const data = result.data as { profile: { affiliateCodeRecruitment: string; affiliateCode?: string; affiliateCodeClient?: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } };
       setAffiliateCode(data.profile.affiliateCodeRecruitment);
       setUnifiedCode(data.profile.affiliateCode || data.profile.affiliateCodeClient || data.profile.affiliateCodeRecruitment);
       setRecruits(data.recentRecruits);
-      if (data.config?.commissionActivationBonusAmount) {
-        setActivationBonusAmount(data.config.commissionActivationBonusAmount);
+      if (data.config) {
+        setGaConfig(data.config as Record<string, unknown>);
+        if (data.config.commissionActivationBonusAmount) {
+          setActivationBonusAmount(data.config.commissionActivationBonusAmount);
+        }
       }
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const copyLink = async () => {
-    const link = getGroupAdminRecruitmentLink(affiliateCode);
-    await copyToClipboard(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   if (loading) {
@@ -81,8 +76,6 @@ const GroupAdminReferrals: React.FC = () => {
       </GroupAdminDashboardLayout>
     );
   }
-
-  const recruitmentLink = getGroupAdminRecruitmentLink(affiliateCode);
 
   return (
     <GroupAdminDashboardLayout>
@@ -103,6 +96,7 @@ const GroupAdminReferrals: React.FC = () => {
               <UnifiedLinkWithEarnings
                 code={unifiedCode}
                 role="groupAdmin"
+                config={gaConfig}
                 compact
               />
             </Suspense>

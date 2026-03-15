@@ -32,8 +32,6 @@ import {
 } from 'lucide-react';
 import {
   formatGroupAdminAmount,
-  getGroupAdminAffiliateLink,
-  getGroupAdminRecruitmentLink,
   GROUP_ADMIN_BADGES,
 } from '@/types/groupAdmin';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
@@ -135,9 +133,6 @@ const GroupAdminDashboard: React.FC = () => {
       </GroupAdminDashboardLayout>
     );
   }
-
-  const affiliateLink = getGroupAdminAffiliateLink(profile.affiliateCodeClient);
-  const recruitmentLink = getGroupAdminRecruitmentLink(profile.affiliateCodeRecruitment);
 
   return (
     <GroupAdminDashboardLayout>
@@ -259,6 +254,7 @@ const GroupAdminDashboard: React.FC = () => {
               <UnifiedLinkWithEarnings
                 code={(profile as any).affiliateCode || profile.affiliateCodeClient || ''}
                 role="groupAdmin"
+                config={config}
               />
             </div>
           </Suspense>

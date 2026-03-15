@@ -254,9 +254,8 @@ function YourNextGoal({
   let progressPercent: number | null = null;
 
   const config = dashboardData?.config;
-  const goalClientCallAmount = config?.commissionClientCallAmount || 300;
-  const goalLawyerAmount = config?.commissionClientCallAmountLawyer || goalClientCallAmount;
-  const goalExpatAmount = config?.commissionClientCallAmountExpat || goalClientCallAmount;
+  const goalLawyerAmount = config?.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmount ?? 500;
+  const goalExpatAmount = config?.commissionClientCallAmountExpat ?? config?.commissionClientCallAmount ?? 300;
 
   if (chatter?.totalClients === 0) {
     const minAmount = formatCents(Math.min(goalLawyerAmount, goalExpatAmount));
@@ -596,14 +595,13 @@ function ChatterHowToEarn() {
 
   // Config-based amounts (use lockedRates/config from backend, fallback to defaults)
   const config = dashboardData?.config;
-  const clientCallAmount = config?.commissionClientCallAmount || 300;
-  const clientCallAmountLawyer = config?.commissionClientCallAmountLawyer || clientCallAmount;
-  const clientCallAmountExpat = config?.commissionClientCallAmountExpat || clientCallAmount;
-  const n1CallAmount = config?.commissionN1CallAmount || 100;
-  const n2CallAmount = config?.commissionN2CallAmount || 50;
-  const providerCallAmount = config?.commissionProviderCallAmount || config?.commissionRecruitmentAmount || 500;
-  const activationBonusAmount = config?.commissionActivationBonusAmount || 500;
-  const recruitBonusAmount = config?.commissionN1RecruitBonusAmount || 100;
+  const clientCallAmountLawyer = config?.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmount ?? 500;
+  const clientCallAmountExpat = config?.commissionClientCallAmountExpat ?? config?.commissionClientCallAmount ?? 300;
+  const n1CallAmount = config?.commissionN1CallAmount ?? 100;
+  const n2CallAmount = config?.commissionN2CallAmount ?? 50;
+  const providerCallAmount = config?.commissionProviderCallAmount ?? config?.commissionRecruitmentAmount ?? 500;
+  const activationBonusAmount = config?.commissionActivationBonusAmount ?? 500;
+  const recruitBonusAmount = config?.commissionN1RecruitBonusAmount ?? 100;
 
   const handleCopy = useCallback(async () => {
     if (!clientShareUrl) return;
@@ -695,7 +693,7 @@ function ChatterHowToEarn() {
             highlight={intl.formatMessage({
               id: 'chatter.howToEarn.step3.highlight',
               defaultMessage: '{amount} par appel',
-            }, { amount: formatCents(clientCallAmount) })}
+            }, { amount: `${formatCents(clientCallAmountLawyer)}/${formatCents(clientCallAmountExpat)}` })}
             color="text-purple-500"
           />
 
