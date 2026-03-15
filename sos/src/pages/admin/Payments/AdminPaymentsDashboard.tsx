@@ -411,16 +411,21 @@ const AdminPaymentsDashboard: React.FC = () => {
     }
   }, [getStatsFn]);
 
+  // Fetch data when filters change
   useEffect(() => {
     fetchWithdrawals(true);
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainTab, statusFilter, userTypeFilter]);
 
-    // Update URL params in the same effect to avoid re-render loops with setSearchParams
+  // Sync URL params separately to avoid re-render loop (setSearchParams is unstable)
+  useEffect(() => {
     const params = new URLSearchParams();
     if (mainTab !== 'active') params.set('tab', mainTab);
     if (userTypeFilter !== 'all') params.set('userType', userTypeFilter);
     setSearchParams(params, { replace: true });
-  }, [mainTab, statusFilter, userTypeFilter, fetchWithdrawals, fetchStats, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainTab, userTypeFilter]);
 
   // ============================================================================
   // ACTIONS (via callables — audit trail + balance management)
