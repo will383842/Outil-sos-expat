@@ -1,9 +1,9 @@
 /**
  * Chatter Scheduled Functions - Main Export
+ *
+ * NOTE: chatterValidatePendingCommissions & chatterReleaseValidatedCommissions
+ * have been consolidated into consolidatedValidateCommissions / consolidatedReleaseCommissions.
  */
-
-export { chatterValidatePendingCommissions } from "./validatePendingCommissions";
-export { chatterReleaseValidatedCommissions } from "./releaseValidatedCommissions";
 
 // Referral system scheduled functions
 export {

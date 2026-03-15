@@ -19,7 +19,7 @@ import {
 // ANTI-DUPLICATE WINDOW
 // ============================================================================
 
-const DUPLICATE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const DUPLICATE_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
 
 // ============================================================================
 // CREATE COMMISSION
@@ -64,7 +64,7 @@ export interface CreateCommissionInput {
 /**
  * Create a unified commission document.
  *
- * - Anti-duplicate: checks (referrerId + sourceId + type + subType) within 5 minutes
+ * - Anti-duplicate: checks (referrerId + sourceId + type + subType) within 30 minutes
  * - Atomic balance updates on the referrer's user doc
  * - Returns the created commission ID
  */
@@ -88,7 +88,7 @@ export async function createUnifiedCommission(
     if (isDuplicate) {
       throw new Error(
         `Duplicate commission: ${input.type}/${input.subType || ""} for referrer ${input.referrerId} ` +
-        `and source ${input.sourceId} already exists within the last 5 minutes`
+        `and source ${input.sourceId} already exists within the last 30 minutes`
       );
     }
   }

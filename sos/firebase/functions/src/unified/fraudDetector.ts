@@ -209,12 +209,12 @@ async function checkCircularReferral(
 function computeRiskLevel(reasons: string[]): FraudRiskLevel {
   if (reasons.length === 0) return "none";
 
-  // High risk: self-referral or circular
-  const highRiskReasons = ["self_referral_same_user", "self_referral_same_email", "circular_referral"];
+  // High risk: self-referral, circular, or rate limit exceeded
+  const highRiskReasons = ["self_referral_same_user", "self_referral_same_email", "circular_referral", "rate_limit_exceeded"];
   if (reasons.some((r) => highRiskReasons.includes(r))) return "high";
 
-  // Medium risk: rate limit or same IP
-  const mediumRiskReasons = ["rate_limit_exceeded", "same_ip_address"];
+  // Medium risk: same IP
+  const mediumRiskReasons = ["same_ip_address"];
   if (reasons.some((r) => mediumRiskReasons.includes(r))) return "medium";
 
   // Low risk: disposable email, check errors

@@ -148,7 +148,8 @@ async function processDirectCommission(
     rateApplied = amount;
   }
 
-  // 6. Multipliers permanently disabled — commissions are fixed amounts only
+  // 6. Multipliers permanently disabled — snapshot promo flag for audit trail
+  const promoMultiplierApplied = plan.rules.promo_multiplier?.enabled ? 1.0 : undefined;
 
   if (amount <= 0) return { referrerId: referrer.userId, referrerOfReferrer: null, plan };
 
@@ -182,7 +183,7 @@ async function processDirectCommission(
     baseAmount,
     rateApplied,
     ...(lockedRateUsed ? { lockedRateUsed: true } : {}),
-    multiplierApplied,
+    ...(promoMultiplierApplied !== undefined ? { promoMultiplierApplied } : {}),
     amount,
     holdHours,
   };

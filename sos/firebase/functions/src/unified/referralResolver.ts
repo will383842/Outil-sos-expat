@@ -219,6 +219,20 @@ export async function buildCascadeChain(
 
     const userData = userSnap.data()!;
 
+    // P1-4: Skip node if commissions are explicitly suspended (but don't break chain)
+    if (userData.commissionsSuspended === true) {
+      logger.info(`Cascade node ${currentUserId} has commissionsSuspended=true, skipping but continuing chain`);
+      // Don't add to chain but continue traversal
+      const nextReferrerId = (userData.referredByUserId ||
+        userData.referredByChatterId ||
+        userData.referredByInfluencerId ||
+        userData.referredByBlogger ||
+        userData.referredByGroupAdmin) as string | undefined;
+      if (!nextReferrerId) break;
+      currentUserId = nextReferrerId;
+      continue;
+    }
+
     chain.push({
       userId: currentUserId,
       role: (userData.affiliateRole || userData.role || "unknown") as string,
@@ -259,6 +273,13 @@ async function loadReferrerProfile(
   }
 
   const data = userSnap.data()!;
+
+  // P1-4: Skip referrer if their commissions are explicitly suspended
+  // (login suspension doesn't block commissions unless commissionsSuspended is true)
+  if (data.commissionsSuspended === true) {
+    logger.info(`Referrer ${userId} has commissionsSuspended=true, skipping`);
+    return null;
+  }
 
   return {
     userId,

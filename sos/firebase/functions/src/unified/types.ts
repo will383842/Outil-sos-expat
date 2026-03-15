@@ -193,8 +193,10 @@ export interface CommissionPlanBonuses {
     cashAmounts?: number[];
     /** [rank1, rank2, rank3] multipliers. Used if type="multiplier" */
     multipliers?: number[];
-    /** Min total earned (cents) to be eligible */
+    /** Min total earned (cents) to be eligible (legacy) */
     minTotalEarned?: number;
+    /** Min monthly earnings (cents) to be eligible for top 3 */
+    minMonthlyEarnings?: number;
   };
   /** Enable captain promotion system */
   captain: boolean;

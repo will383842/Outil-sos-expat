@@ -1,6 +1,6 @@
 /**
  * GroupAdmin Scheduled Functions - Main Export
+ *
+ * NOTE: validatePendingGroupAdminCommissions & releaseValidatedGroupAdminCommissions
+ * have been consolidated into consolidatedValidateCommissions / consolidatedReleaseCommissions.
  */
-
-export { validatePendingGroupAdminCommissions } from "./validatePendingCommissions";
-export { releaseValidatedGroupAdminCommissions } from "./releaseValidatedCommissions";
