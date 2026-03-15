@@ -733,12 +733,12 @@ const Press: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/60 mb-1.5">Email *</label>
+                    <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.email")} *</label>
                     <input type="email" value={contactForm.email} onChange={(e) => setContactForm((p) => ({ ...p, email: e.target.value }))}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/60 mb-1.5">Media</label>
+                    <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.media")}</label>
                     <input type="text" value={contactForm.media} onChange={(e) => setContactForm((p) => ({ ...p, media: e.target.value }))}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" placeholder="Le Monde..." />
                   </div>
@@ -750,7 +750,7 @@ const Press: React.FC = () => {
                     placeholder={t("press.contact.form.subjectPlaceholder")} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">Message *</label>
+                  <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.message")} *</label>
                   <textarea value={contactForm.message} onChange={(e) => setContactForm((p) => ({ ...p, message: e.target.value }))}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent min-h-[120px] transition-colors" rows={4} />
                 </div>
