@@ -14,7 +14,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   Newspaper, Download, Mail, Clock, Globe, Languages, Shield,
-  ChevronDown, ChevronUp, FileText, Image, FolderOpen, Camera,
+  ChevronDown, ChevronUp, FileText, FolderOpen, Camera,
   BarChart3, Users, Calendar, X, Send, MessageSquare,
   Loader2, CheckCircle, Palette, MapPin, Zap,
   Quote, ArrowRight, Sparkles,
@@ -438,7 +438,7 @@ const Press: React.FC = () => {
                 { value: t("press.facts.countries"), label: t("press.label.countries"), gradient: "from-red-600 to-red-500" },
                 { value: t("press.facts.languages"), label: t("press.label.languages"), gradient: "from-blue-600 to-blue-500" },
                 { value: t("press.facts.availability"), label: t("press.label.availability"), gradient: "from-emerald-600 to-emerald-500" },
-                { value: "10K+", label: t("press.label.helped"), gradient: "from-purple-600 to-purple-500" },
+                { value: t("press.facts.clientsHelped"), label: t("press.label.helped"), gradient: "from-purple-600 to-purple-500" },
               ].map((s) => (
                 <div key={s.label} className="relative overflow-hidden rounded-2xl p-5 text-center">
                   <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient} opacity-10`} />
