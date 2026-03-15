@@ -16,7 +16,6 @@ import { chatterAdminConfig as adminConfig } from "../../../lib/functionConfigs"
 import {
   Chatter,
   ChatterReferralCommission,
-  ChatterReferralFraudAlert,
 } from "../../types";
 import {
   reviewFraudAlert,
@@ -338,13 +337,46 @@ export const adminGetReferralTree = onCall(
 
 interface GetFraudAlertsInput {
   status?: "pending" | "confirmed" | "dismissed" | "resolved";
+  statusFilter?: string;
   severity?: "low" | "medium" | "high" | "critical";
+  typeFilter?: string;
+  role?: string;
   limit?: number;
 }
 
+interface FraudAlertResponse {
+  id: string;
+  chatterId: string;
+  chatterName: string;
+  chatterEmail: string;
+  type: string;
+  severity: string;
+  status: string;
+  details: Record<string, any>;
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+}
+
 interface GetFraudAlertsResponse {
-  alerts: ChatterReferralFraudAlert[];
+  alerts: FraudAlertResponse[];
+  stats: {
+    totalAlerts: number;
+    pendingAlerts: number;
+    highSeverityCount: number;
+    blockedChattersCount: number;
+  };
   totalCount: number;
+}
+
+/**
+ * Get the Firestore fraud alerts collection for a given role.
+ * Falls back to a unified collection if role-specific doesn't exist.
+ */
+function getFraudCollection(role?: string): string {
+  if (!role || role === "chatter") return "chatter_referral_fraud_alerts";
+  return `${role}_referral_fraud_alerts`;
 }
 
 export const adminGetReferralFraudAlerts = onCall(
@@ -357,35 +389,69 @@ export const adminGetReferralFraudAlerts = onCall(
 
     const input = request.data as GetFraudAlertsInput;
     const db = getFirestore();
+    const collectionName = getFraudCollection(input.role);
+
+    // Support both legacy (status) and new (statusFilter) parameters
+    const statusValue = input.statusFilter || input.status;
 
     try {
       let query: FirebaseFirestore.Query = db
-        .collection("chatter_referral_fraud_alerts")
+        .collection(collectionName)
         .orderBy("createdAt", "desc");
 
-      if (input.status) {
-        query = query.where("status", "==", input.status);
+      if (statusValue && statusValue !== "all") {
+        query = query.where("status", "==", statusValue);
       }
       if (input.severity) {
         query = query.where("severity", "==", input.severity);
       }
+      if (input.typeFilter && input.typeFilter !== "all") {
+        query = query.where("type", "==", input.typeFilter);
+      }
 
       const snapshot = await query.limit(input.limit || 50).get();
-      const alerts = snapshot.docs.map((doc) => doc.data() as ChatterReferralFraudAlert);
+      const alerts: FraudAlertResponse[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          chatterId: data.chatterId || data.userId || doc.id,
+          chatterName: data.chatterName || data.userName || data.name || "",
+          chatterEmail: data.chatterEmail || data.userEmail || data.email || "",
+          type: data.type || "suspicious_pattern",
+          severity: data.severity || "medium",
+          status: data.status || "pending",
+          details: data.details || {},
+          createdAt: data.createdAt?.toDate?.()?.toISOString?.() || data.createdAt || "",
+          reviewedAt: data.reviewedAt?.toDate?.()?.toISOString?.() || data.reviewedAt,
+          reviewedBy: data.reviewedBy,
+          reviewNotes: data.reviewNotes,
+        };
+      });
 
-      // Get total count
-      const countQuery = await db
-        .collection("chatter_referral_fraud_alerts")
-        .where("status", "==", input.status || "pending")
-        .count()
-        .get();
+      // Compute stats
+      const allDocsSnap = await db.collection(collectionName).get();
+      let pendingAlerts = 0;
+      let highSeverityCount = 0;
+      let blockedCount = 0;
+      for (const doc of allDocsSnap.docs) {
+        const d = doc.data();
+        if (d.status === "pending") pendingAlerts++;
+        if (d.severity === "high" || d.severity === "critical") highSeverityCount++;
+        if (d.actionTaken === "banned" || d.actionTaken === "suspended") blockedCount++;
+      }
 
       return {
         alerts,
-        totalCount: countQuery.data().count,
+        stats: {
+          totalAlerts: allDocsSnap.size,
+          pendingAlerts,
+          highSeverityCount,
+          blockedChattersCount: blockedCount,
+        },
+        totalCount: allDocsSnap.size,
       };
     } catch (error) {
-      logger.error("[adminGetReferralFraudAlerts] Error", { error });
+      logger.error("[adminGetReferralFraudAlerts] Error", { error, role: input.role });
       throw new HttpsError("internal", "Failed to get fraud alerts");
     }
   }
@@ -397,9 +463,25 @@ export const adminGetReferralFraudAlerts = onCall(
 
 interface ReviewFraudAlertInput {
   alertId: string;
-  status: "confirmed" | "dismissed" | "resolved";
+  // Legacy backend format
+  status?: "confirmed" | "dismissed" | "resolved";
   actionTaken?: "none" | "warning_sent" | "suspended" | "banned";
+  // Frontend format
+  action?: "dismiss" | "take_action" | "block";
+  notes?: string;
   reviewNotes?: string;
+}
+
+/**
+ * Map frontend action names to backend status/actionTaken values
+ */
+function mapFrontendAction(action: string): { status: string; actionTaken: string } {
+  switch (action) {
+    case "dismiss": return { status: "dismissed", actionTaken: "none" };
+    case "take_action": return { status: "resolved", actionTaken: "warning_sent" };
+    case "block": return { status: "confirmed", actionTaken: "banned" };
+    default: return { status: action, actionTaken: "none" };
+  }
 }
 
 export const adminReviewFraudAlert = onCall(
@@ -412,12 +494,23 @@ export const adminReviewFraudAlert = onCall(
 
     const input = request.data as ReviewFraudAlertInput;
 
+    // Support both frontend (action/notes) and legacy (status/actionTaken/reviewNotes) formats
+    let resolvedStatus = input.status;
+    let resolvedActionTaken = input.actionTaken;
+    const resolvedNotes = input.notes || input.reviewNotes;
+
+    if (input.action && !resolvedStatus) {
+      const mapped = mapFrontendAction(input.action);
+      resolvedStatus = mapped.status as any;
+      resolvedActionTaken = mapped.actionTaken as any;
+    }
+
     try {
       const result = await reviewFraudAlert(input.alertId, {
-        status: input.status,
-        actionTaken: input.actionTaken,
+        status: resolvedStatus || "dismissed",
+        actionTaken: resolvedActionTaken,
         reviewedBy: request.auth!.uid,
-        reviewNotes: input.reviewNotes,
+        reviewNotes: resolvedNotes,
       });
 
       if (!result.success) {

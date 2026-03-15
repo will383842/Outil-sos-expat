@@ -3085,6 +3085,13 @@ export {
   adminDeleteBlogger,
   // Admin locked rates
   adminUpdateBloggerLockedRates,
+  // Admin Promotions callables
+  adminGetBloggerPromotions,
+  adminCreateBloggerPromotion,
+  adminUpdateBloggerPromotion,
+  adminDeleteBloggerPromotion,
+  adminGetBloggerPromotionStats,
+  adminDuplicateBloggerPromotion,
 } from './blogger';
 
 // ========== CENTRALIZED PAYMENT SYSTEM ==========
@@ -3207,12 +3214,58 @@ export {
   adminConvertApplicationToPartner,
   // Admin delete
   adminDeletePartner,
+  // Admin Promotions callables
+  adminGetPartnerPromotions,
+  adminCreatePartnerPromotion,
+  adminUpdatePartnerPromotion,
+  adminDeletePartnerPromotion,
+  adminGetPartnerPromotionStats,
+  adminDuplicatePartnerPromotion,
   // Triggers
   onPartnerCreated,
   // Scheduled
   releasePartnerPendingCommissions,
   updatePartnerMonthlyStats,
 } from './partner';
+
+// ========== CLIENT AFFILIATE SYSTEM ==========
+// Client affiliate promotions and config
+export {
+  adminGetClientPromotions,
+  adminCreateClientPromotion,
+  adminUpdateClientPromotion,
+  adminDeleteClientPromotion,
+  adminGetClientPromotionStats,
+  adminDuplicateClientPromotion,
+} from './client/callables/admin/promotions';
+export { adminUpdateClientConfig } from './client/callables/admin/config';
+
+// ========== LAWYER AFFILIATE SYSTEM ==========
+// Lawyer affiliate promotions and config
+export {
+  adminGetLawyerPromotions,
+  adminCreateLawyerPromotion,
+  adminUpdateLawyerPromotion,
+  adminDeleteLawyerPromotion,
+  adminGetLawyerPromotionStats,
+  adminDuplicateLawyerPromotion,
+} from './lawyer/callables/admin/promotions';
+export { adminUpdateLawyerConfig } from './lawyer/callables/admin/config';
+
+// ========== EXPAT AFFILIATE SYSTEM ==========
+// Expat affiliate promotions and config
+export {
+  adminGetExpatPromotions,
+  adminCreateExpatPromotion,
+  adminUpdateExpatPromotion,
+  adminDeleteExpatPromotion,
+  adminGetExpatPromotionStats,
+  adminDuplicateExpatPromotion,
+} from './expat/callables/admin/promotions';
+export { adminUpdateExpatConfig } from './expat/callables/admin/config';
+
+// ========== UNIFIED AFFILIATE ANALYTICS ==========
+export { adminGetAffiliateUsersList } from './unified/callables/adminGetAffiliateUsersList';
 
 // ========== TELEGRAM NOTIFICATIONS ==========
 // telegramOnUserRegistration → consolidatedOnUserCreated

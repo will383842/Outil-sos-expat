@@ -40,6 +40,16 @@ export {
   adminDeletePartner,
 } from "./callables/admin";
 
+// Admin Promotions callables
+export {
+  adminGetPartnerPromotions,
+  adminCreatePartnerPromotion,
+  adminUpdatePartnerPromotion,
+  adminDeletePartnerPromotion,
+  adminGetPartnerPromotionStats,
+  adminDuplicatePartnerPromotion,
+} from "./callables/admin/promotions";
+
 // Triggers
 export { onPartnerCreated } from "./triggers";
 
