@@ -13,11 +13,11 @@
  * - Configuration des capabilities (card_payments, transfers)
  * - Sauvegarde du stripeAccountId dans Firestore
  * - Status initial: stripeAccountStatus = 'pending_verification'
- * - Provider NON visible jusqu'à approbation admin (isVisible = false)
+ * - Provider NON visible jusqu'à approbation admin (isVisible set at registration, NOT here)
  *
  * PAYPAL (151+ pays non supportés par Stripe):
  * - Pas de création automatique de compte
- * - Provider NON visible jusqu'à connexion PayPal
+ * - Provider NON visible jusqu'à approbation admin (isVisible set at registration, NOT here)
  * - Status initial: paypalAccountStatus = 'not_connected'
  * - Rappels envoyés pour inciter à connecter PayPal
  *
@@ -970,8 +970,8 @@ async function handleStripeProvider(
     console.log(`[onProviderCreated] Compte Stripe créé avec succès: ${account.id}`);
 
     // Données Stripe à sauvegarder
-    // ⚠️ CORRECTION: isVisible = false jusqu'à approbation admin
-    // Les providers ne doivent pas être visibles avant validation manuelle
+    // isVisible is already set to false at registration (index.ts) and set to true by approveProfile.
+    // This trigger must NOT touch isVisible to avoid overwriting approval on retry.
     const stripeData = {
       stripeAccountId: account.id,
       stripeAccountType: "express",
@@ -981,7 +981,6 @@ async function handleStripeProvider(
       chargesEnabled: false,
       payoutsEnabled: false,
       paymentGateway: "stripe" as const,
-      isVisible: false, // ⚠️ Provider NON visible jusqu'à approbation admin
       stripeCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
@@ -1078,13 +1077,13 @@ async function handlePayPalProvider(
   console.log(`[onProviderCreated] Email PayPal enregistré: ${paypalEmail}`);
 
   // Données PayPal à sauvegarder
-  // ✅ SIMPLIFIÉ: Juste l'email PayPal, pas de Partner Referrals complexes
+  // isVisible is already set to false at registration (index.ts) and set to true by approveProfile.
+  // This trigger must NOT touch isVisible to avoid overwriting approval on retry.
   const paypalData = {
     paymentGateway: "paypal" as const,
-    paypalEmail: paypalEmail, // 🆕 Email PayPal pour Payouts API
-    paypalAccountStatus: "active", // 🆕 Actif automatiquement (pas besoin de vérification Partner)
-    paypalEmailVerified: false, // À vérifier lors du premier payout
-    isVisible: false, // ⚠️ Provider NON visible jusqu'à approbation admin (comme Stripe)
+    paypalEmail: paypalEmail,
+    paypalAccountStatus: "active",
+    paypalEmailVerified: false,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 

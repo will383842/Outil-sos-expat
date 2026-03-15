@@ -40,6 +40,8 @@ import {
   FileCheck2,
   Link as LinkIcon,
   GripVertical,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useIntl } from "react-intl";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -67,6 +69,7 @@ type Lawyer = {
   createdAt: Date;
   lastLoginAt?: Date;
   emailVerified: boolean;
+  isVisible: boolean;
   isOnline: boolean;
   isVisibleOnMap: boolean;
   isFeatured: boolean;
@@ -158,6 +161,7 @@ type ColId =
   | "reviews"
   | "signup"
   | "lastLogin"
+  | "visibility"
   | "accountStatus"
   | "validation"
   | "kyc"
@@ -179,6 +183,7 @@ const DEFAULT_ORDER: ColId[] = [
   "reviews",
   "signup",
   "lastLogin",
+  "visibility",
   "accountStatus",
   "validation",
   "kyc",
@@ -202,6 +207,7 @@ const DEFAULT_WIDTHS: Record<ColId | "select" | "actions", number> = {
   reviews: 100,
   signup: 130,
   lastLogin: 130,
+  visibility: 100,
   accountStatus: 140,
   validation: 150,
   kyc: 200,
@@ -226,6 +232,7 @@ const DEFAULT_VISIBLE: Record<ColId, boolean> = {
   reviews: false,
   signup: true,
   lastLogin: true,
+  visibility: true,
   accountStatus: true,
   validation: true,
   kyc: true,
@@ -474,6 +481,7 @@ const AdminLawyers: React.FC = () => {
           createdAt: v.createdAt ? v.createdAt.toDate() : new Date(),
           lastLoginAt: v.lastLoginAt ? v.lastLoginAt.toDate() : undefined,
           emailVerified: !!v.emailVerified,
+          isVisible: v.isVisible ?? false,
           isOnline: v.isOnline ?? false,
           isVisibleOnMap: v.isVisibleOnMap ?? v.isVisible ?? false,
           isFeatured: v.isFeatured ?? false,
@@ -798,6 +806,7 @@ const AdminLawyers: React.FC = () => {
             createdAt: v.createdAt ? v.createdAt.toDate() : new Date(),
             lastLoginAt: v.lastLoginAt ? v.lastLoginAt.toDate() : undefined,
             emailVerified: !!v.emailVerified,
+            isVisible: v.isVisible ?? false,
             isOnline: v.isOnline ?? false,
             isVisibleOnMap: v.isVisibleOnMap ?? v.isVisible ?? false,
             isFeatured: v.isFeatured ?? false,
@@ -1029,6 +1038,32 @@ const AdminLawyers: React.FC = () => {
             {l.lastLoginAt ? l.lastLoginAt.toLocaleDateString(intl.locale) : "—"}
           </div>
         );
+      case "visibility":
+        return (
+          <button
+            onClick={async () => {
+              try {
+                const ref = doc(db, "sos_profiles", l.id);
+                await updateDoc(ref, { isVisible: !l.isVisible, updatedAt: Timestamp.now() });
+                l.isVisible = !l.isVisible;
+                setRows((prev) => [...prev]);
+                toast.success(l.isVisible ? "Prestataire visible" : "Prestataire masqué");
+              } catch (err) {
+                console.error("Error toggling visibility:", err);
+                toast.error("Erreur lors du changement de visibilité");
+              }
+            }}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+              l.isVisible
+                ? "bg-green-100 text-green-800 hover:bg-green-200"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            title={l.isVisible ? "Masquer" : "Rendre visible"}
+          >
+            {l.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+            {l.isVisible ? "Oui" : "Non"}
+          </button>
+        );
       case "accountStatus":
         return (
           <div style={cellStyleFor(col)} className="space-y-1">
@@ -1123,6 +1158,8 @@ const AdminLawyers: React.FC = () => {
         return t("tableSignup");
       case "lastLogin":
         return t("tableLastLogin");
+      case "visibility":
+        return "Visible";
       case "accountStatus":
         return t("tableAccount");
       case "validation":

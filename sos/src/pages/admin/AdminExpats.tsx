@@ -44,6 +44,7 @@ import {
   Clock,
   Star,
   Eye,
+  EyeOff,
   Edit,
 } from "lucide-react";
 import { useIntl } from "react-intl";
@@ -82,6 +83,7 @@ interface Expat {
   languages: string[];
   expatSince?: Date;
   yearsInCountry: number;
+  isVisible: boolean;
   isVisibleOnMap: boolean;
   isOnline: boolean;
   isFeatured: boolean;
@@ -175,6 +177,7 @@ type ColId =
   | "expatSince"
   | "hourlyRate"
   | "profile"
+  | "visibility"
   | "map"
   | "accountStatus"
   | "validation"
@@ -200,6 +203,7 @@ const DEFAULT_ORDER: ColId[] = [
   "expatSince",
   "hourlyRate",
   "profile",
+  "visibility",
   "map",
   "accountStatus",
   "validation",
@@ -227,6 +231,7 @@ const DEFAULT_WIDTHS: Record<ColId, number> = {
   expatSince: 150,
   hourlyRate: 120,
   profile: 140,
+  visibility: 100,
   map: 120,
   accountStatus: 160,
   validation: 150,
@@ -255,6 +260,7 @@ const DEFAULT_VISIBLE: Record<ColId, boolean> = {
   expatSince: false,
   hourlyRate: false,
   profile: false,
+  visibility: true,
   map: true,
   accountStatus: true,
   validation: true,
@@ -574,6 +580,7 @@ const AdminExpats: React.FC = () => {
       languages: data.languages || data.spokenLanguages || [],
       expatSince,
       yearsInCountry,
+      isVisible: data.isVisible ?? false,
       isVisibleOnMap: data.isVisibleOnMap ?? true,
       isOnline: data.isOnline ?? false,
       isFeatured: data.isFeatured ?? false,
@@ -747,6 +754,7 @@ const AdminExpats: React.FC = () => {
       "Tarif €/h": e.hourlyRate ?? "",
       Statut: e.status,
       Validation: e.validationStatus,
+      "Visible site": e.isVisible ? "Oui" : "Non",
       "Visible carte": e.isVisibleOnMap ? "Oui" : "Non",
       "Total gagné": fmtMoney(e.totalEarned),
       "Appels": e.callsCount,
@@ -867,6 +875,32 @@ const AdminExpats: React.FC = () => {
               {e.callsCount} calls • {fmtMoney(e.totalEarned)}
             </div>
           </div>
+        );
+      case "visibility":
+        return (
+          <button
+            onClick={async () => {
+              try {
+                const ref = doc(db, "sos_profiles", e.id);
+                await updateDoc(ref, { isVisible: !e.isVisible, updatedAt: Timestamp.now() });
+                e.isVisible = !e.isVisible;
+                setExpats((prev) => [...prev]);
+                toast.success(e.isVisible ? "Prestataire visible" : "Prestataire masqué");
+              } catch (err) {
+                console.error("Error toggling visibility:", err);
+                toast.error("Erreur lors du changement de visibilité");
+              }
+            }}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+              e.isVisible
+                ? "bg-green-100 text-green-800 hover:bg-green-200"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            title={e.isVisible ? "Masquer" : "Rendre visible"}
+          >
+            {e.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+            {e.isVisible ? "Oui" : "Non"}
+          </button>
         );
       case "map":
         return <AdminMapVisibilityToggle userId={e.id} className="text-xs" />;
@@ -1039,6 +1073,7 @@ const AdminExpats: React.FC = () => {
       expatSince: t("expatSince"),
       hourlyRate: t("hourlyRate"),
       profile: t("profile"),
+      visibility: "Visible",
       map: t("map"),
       accountStatus: t("accountStatus"),
       validation: t("validation"),
