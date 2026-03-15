@@ -883,7 +883,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="finance/plans"
+        path="subscription-plans"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminPlans />
@@ -1019,7 +1019,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="finance/costs"
+        path="analytics/costs"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <CostMonitoring />
@@ -1027,7 +1027,7 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="finance/gcp-costs"
+        path="analytics/gcp-costs"
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminGcpCosts />
@@ -1215,6 +1215,10 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
+      {/* Anciens paths déplacés → nouveaux paths */}
+      <Route path="finance/plans" element={<Navigate to="/admin/subscription-plans" replace />} />
+      <Route path="finance/costs" element={<Navigate to="/admin/analytics/costs" replace />} />
+      <Route path="finance/gcp-costs" element={<Navigate to="/admin/analytics/gcp-costs" replace />} />
       {/* Anciennes routes commission → redirect vers hub unifié */}
       <Route path="affiliates/config" element={<Navigate to="/admin/commissions?tab=chatter" replace />} />
       <Route path="affiliates/plans" element={<Navigate to="/admin/commissions?tab=plans" replace />} />
@@ -2225,8 +2229,11 @@ export const useAdminRouteValidation = () => {
       "/admin/finance/balance-sheet",
       "/admin/finance/profit-loss",
       "/admin/finance/cash-flow",
-      "/admin/finance/costs",
       "/admin/finance/supporting-documents",
+      "/admin/subscription-plans",
+      "/admin/analytics/costs",
+      "/admin/analytics/gcp-costs",
+      "/admin/payments/monitoring",
       "/admin/calls",
       "/admin/calls/sessions",
       "/admin/calls/received",

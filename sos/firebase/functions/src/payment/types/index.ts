@@ -61,7 +61,12 @@ export type MobileMoneyProvider =
   | 'mpesa'         // Kenya, Tanzania
   | 'free_money'    // Senegal
   | 't_money'       // Togo
-  | 'flooz';        // Togo, Benin
+  | 'flooz'         // Togo, Benin
+  | 'vodacom'       // DRC, Tanzania, Mozambique
+  | 'mobilis'       // Algeria
+  | 'ecocash'       // Zimbabwe
+  | 'afrimoney'     // Sierra Leone, Guinea
+  | 'hormuud';      // Somalia
 
 // ============================================================================
 // PAYMENT METHOD DETAILS

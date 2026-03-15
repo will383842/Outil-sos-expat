@@ -151,6 +151,7 @@ export const adminGetInfluencersList = onCall(
           totalClients: number; totalRecruits: number; currentMonthRank: number | null;
           createdAt: string; lastLoginAt: string | null; isVisible: boolean; photoUrl?: string; isFeatured: boolean;
           recruitedBy: string | null; recruitedByName: string | null;
+          whatsappGroupClicked: boolean; hasTelegram: boolean; telegramId: string | null;
         } = {
           id: data.id,
           email: data.email,

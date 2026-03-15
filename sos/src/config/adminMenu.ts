@@ -258,14 +258,6 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: Repeat,
             descriptionKey: "admin.menu.subscriptions.description",
           },
-          {
-            id: "subscription-plans",
-            labelKey: "admin.menu.subscriptionPlans",
-            path: "/admin/finance/plans",
-            icon: CreditCard,
-            badge: "NEW",
-            descriptionKey: "admin.menu.subscriptionPlans.description",
-          },
         ],
       },
       // Retraits & Paiements centralisés (ex-section payments)
@@ -435,22 +427,6 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/finance/exports",
         icon: FileSpreadsheet,
         descriptionKey: "admin.menu.financeReports.description",
-      },
-      // Suivi des Coûts Cloud
-      {
-        id: "cost-monitoring",
-        labelKey: "admin.menu.costMonitoring",
-        path: "/admin/finance/costs",
-        icon: TrendingDown,
-        descriptionKey: "admin.menu.costMonitoring.description",
-      },
-      {
-        id: "gcp-costs",
-        labelKey: "admin.menu.gcpCosts",
-        path: "/admin/finance/gcp-costs",
-        icon: Cloud,
-        badge: "NEW",
-        descriptionKey: "admin.menu.gcpCosts.description",
       },
     ],
   },
@@ -1259,6 +1235,21 @@ export const adminMenuTree: AdminMenuItem[] = [
           },
         ],
       },
+      // Suivi des Coûts Cloud
+      {
+        id: "cost-monitoring",
+        labelKey: "admin.menu.costMonitoring",
+        path: "/admin/analytics/costs",
+        icon: TrendingDown,
+        descriptionKey: "admin.menu.costMonitoring.description",
+      },
+      {
+        id: "gcp-costs",
+        labelKey: "admin.menu.gcpCosts",
+        path: "/admin/analytics/gcp-costs",
+        icon: Cloud,
+        descriptionKey: "admin.menu.gcpCosts.description",
+      },
     ],
   },
 
@@ -1289,6 +1280,13 @@ export const adminMenuTree: AdminMenuItem[] = [
         path: "/admin/pricing",
         icon: DollarSign,
         descriptionKey: "admin.menu.pricingManagement.description",
+      },
+      {
+        id: "subscription-plans",
+        labelKey: "admin.menu.subscriptionPlans",
+        path: "/admin/subscription-plans",
+        icon: Crown,
+        descriptionKey: "admin.menu.subscriptionPlans.description",
       },
       {
         id: "countries-management",

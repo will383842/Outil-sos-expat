@@ -341,6 +341,106 @@ const FLOOZ_CONFIG: MobileMoneyProviderConfig = {
   notes: 'Flooz is offered by Moov Togo',
 };
 
+/**
+ * Vodacom M-Pesa Configuration
+ * DRC, Tanzania, Mozambique
+ */
+const VODACOM_CONFIG: MobileMoneyProviderConfig = {
+  id: 'vodacom',
+  name: 'vodacom',
+  displayName: 'Vodacom M-Pesa',
+  logo: '/assets/logos/vodacom.png',
+  countries: ['CD', 'TZ', 'MZ'],
+  currencies: ['CDF', 'TZS', 'MZN'],
+  phonePrefix: { CD: '+243', TZ: '+255', MZ: '+258' },
+  phoneRegex: '^[0-9]{9,10}$',
+  minAmount: 100,
+  maxAmount: 50000,
+  processingTime: 'Instant to 2 hours',
+  fees: { fixed: 50, percentage: 2.5 },
+  notes: 'Vodacom M-Pesa in DRC, Tanzania, and Mozambique',
+};
+
+/**
+ * Mobilis Configuration
+ * Algeria
+ */
+const MOBILIS_CONFIG: MobileMoneyProviderConfig = {
+  id: 'mobilis',
+  name: 'mobilis',
+  displayName: 'Mobilis',
+  logo: '/assets/logos/mobilis.png',
+  countries: ['DZ'],
+  currencies: ['DZD'],
+  phonePrefix: { DZ: '+213' },
+  phoneRegex: '^[0-9]{9}$',
+  minAmount: 100,
+  maxAmount: 50000,
+  processingTime: '1 to 24 hours',
+  fees: { fixed: 50, percentage: 3.0 },
+  notes: 'Mobilis mobile payment in Algeria',
+};
+
+/**
+ * EcoCash Configuration
+ * Zimbabwe
+ */
+const ECOCASH_CONFIG: MobileMoneyProviderConfig = {
+  id: 'ecocash',
+  name: 'ecocash',
+  displayName: 'EcoCash',
+  logo: '/assets/logos/ecocash.png',
+  countries: ['ZW'],
+  currencies: ['ZWL', 'USD'],
+  phonePrefix: { ZW: '+263' },
+  phoneRegex: '^[0-9]{9}$',
+  minAmount: 100,
+  maxAmount: 50000,
+  processingTime: 'Instant to 4 hours',
+  fees: { fixed: 50, percentage: 2.5 },
+  notes: 'EcoCash by Econet Wireless in Zimbabwe',
+};
+
+/**
+ * AfriMoney Configuration
+ * Sierra Leone, Guinea
+ */
+const AFRIMONEY_CONFIG: MobileMoneyProviderConfig = {
+  id: 'afrimoney',
+  name: 'afrimoney',
+  displayName: 'AfriMoney',
+  logo: '/assets/logos/afrimoney.png',
+  countries: ['SL', 'GN'],
+  currencies: ['SLL', 'GNF'],
+  phonePrefix: { SL: '+232', GN: '+224' },
+  phoneRegex: '^[0-9]{8,9}$',
+  minAmount: 100,
+  maxAmount: 50000,
+  processingTime: '1 to 24 hours',
+  fees: { fixed: 50, percentage: 3.0 },
+  notes: 'AfriMoney by Africell in Sierra Leone and Guinea',
+};
+
+/**
+ * Hormuud Configuration
+ * Somalia (EVC Plus)
+ */
+const HORMUUD_CONFIG: MobileMoneyProviderConfig = {
+  id: 'hormuud',
+  name: 'hormuud',
+  displayName: 'Hormuud EVC Plus',
+  logo: '/assets/logos/hormuud.png',
+  countries: ['SO'],
+  currencies: ['SOS', 'USD'],
+  phonePrefix: { SO: '+252' },
+  phoneRegex: '^[0-9]{8,9}$',
+  minAmount: 100,
+  maxAmount: 50000,
+  processingTime: '1 to 24 hours',
+  fees: { fixed: 50, percentage: 3.0 },
+  notes: 'Hormuud EVC Plus mobile money in Somalia',
+};
+
 // ============================================================================
 // PROVIDER MAP
 // ============================================================================
@@ -358,6 +458,11 @@ export const MOBILE_MONEY_PROVIDERS: Record<MobileMoneyProvider, MobileMoneyProv
   free_money: FREE_MONEY_CONFIG,
   t_money: T_MONEY_CONFIG,
   flooz: FLOOZ_CONFIG,
+  vodacom: VODACOM_CONFIG,
+  mobilis: MOBILIS_CONFIG,
+  ecocash: ECOCASH_CONFIG,
+  afrimoney: AFRIMONEY_CONFIG,
+  hormuud: HORMUUD_CONFIG,
 };
 
 // ============================================================================

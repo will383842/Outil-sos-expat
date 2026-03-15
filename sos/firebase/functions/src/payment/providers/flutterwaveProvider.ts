@@ -327,6 +327,34 @@ export const FLUTTERWAVE_PROVIDER_MAPPING: Record<
     BJ: 'FMM',
     default: 'FMM',
   },
+  // Vodacom M-Pesa (DRC, Tanzania, Mozambique)
+  vodacom: {
+    CD: 'MPS',
+    TZ: 'MPS',
+    MZ: 'MPS',
+    default: 'MPS',
+  },
+  // Mobilis (Algeria)
+  mobilis: {
+    DZ: 'FMM',
+    default: 'FMM',
+  },
+  // EcoCash (Zimbabwe)
+  ecocash: {
+    ZW: 'MPS',
+    default: 'MPS',
+  },
+  // AfriMoney (Sierra Leone, Guinea)
+  afrimoney: {
+    SL: 'FMM',
+    GN: 'FMM',
+    default: 'FMM',
+  },
+  // Hormuud EVC Plus (Somalia)
+  hormuud: {
+    SO: 'FMM',
+    default: 'FMM',
+  },
 };
 
 /**
@@ -402,6 +430,29 @@ export const FLUTTERWAVE_NETWORK_CODES: Record<
     TG: 'flooz',
     BJ: 'flooz',
     default: 'flooz',
+  },
+  vodacom: {
+    CD: 'vodacom',
+    TZ: 'vodacom',
+    MZ: 'vodacom',
+    default: 'vodacom',
+  },
+  mobilis: {
+    DZ: 'mobilis',
+    default: 'mobilis',
+  },
+  ecocash: {
+    ZW: 'ecocash',
+    default: 'ecocash',
+  },
+  afrimoney: {
+    SL: 'afrimoney',
+    GN: 'afrimoney',
+    default: 'afrimoney',
+  },
+  hormuud: {
+    SO: 'hormuud',
+    default: 'hormuud',
   },
 };
 
@@ -1135,6 +1186,11 @@ export function getSupportedCountriesForProvider(
     free_money: ['SN'],
     t_money: ['TG'],
     flooz: ['TG', 'BJ'],
+    vodacom: ['CD', 'TZ', 'MZ'],
+    mobilis: ['DZ'],
+    ecocash: ['ZW'],
+    afrimoney: ['SL', 'GN'],
+    hormuud: ['SO'],
   };
 
   return countryMap[provider] || [];
