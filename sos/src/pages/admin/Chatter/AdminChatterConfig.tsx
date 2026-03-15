@@ -1,6 +1,6 @@
 /**
- * AdminChatterConfig - Admin page for configuring chatter system settings
- * Allows configuration of commission rates, withdrawal limits, bonuses, etc.
+ * AdminChatterConfig - System settings for Chatter program
+ * Commission settings are managed in the centralized hub: /admin/commissions
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -8,35 +8,16 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate } from "@/config/firebase";
 import {
-  Settings,
-  DollarSign,
-  Star,
-  Trophy,
-  Clock,
-  AlertTriangle,
-  Save,
-  RefreshCw,
-  Loader2,
-  CheckCircle,
-  Info,
-  Percent,
-  Calendar,
-  Shield,
-  Video,
-  Users,
-  GraduationCap,
-  Globe,
-  Check,
+  Settings, AlertTriangle, Save, RefreshCw, Loader2, CheckCircle,
+  Calendar, Shield, GraduationCap, Globe, Check, DollarSign, ExternalLink,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
-// Design tokens
 const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
   button: {
     primary: "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-xl transition-all",
     secondary: "bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all",
-    danger: "bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all",
   },
   input: "w-full px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500",
 } as const;
@@ -46,133 +27,71 @@ interface ChatterConfig {
   newRegistrationsEnabled: boolean;
   withdrawalsEnabled: boolean;
   trainingEnabled: boolean;
-  commissionClientAmount: number;
-  commissionRecruitmentAmount: number;
-  commissionClientCallAmountLawyer?: number;
-  commissionClientCallAmountExpat?: number;
-  commissionProviderCallAmountLawyer?: number;
-  commissionProviderCallAmountExpat?: number;
-  levelThresholds: {
-    level2: number;
-    level3: number;
-    level4: number;
-    level5: number;
-  };
-  recruitmentLinkDurationMonths: number;
-  minimumWithdrawalAmount: number;
-  validationHoldPeriodHours: number;
-  releaseDelayHours: number;
   quizPassingScore: number;
   quizRetryDelayHours: number;
   quizQuestionsCount: number;
-  attributionWindowDays: number;
   version: number;
   updatedAt?: string;
   updatedBy?: string;
   isChatterListingPageVisible?: boolean;
-  // Captain Chatter
-  commissionCaptainCallAmountLawyer?: number;
-  commissionCaptainCallAmountExpat?: number;
-  captainTiers?: Array<{ name: string; minCalls: number; bonus: number }>;
-  captainQualityBonusAmount?: number;
-  // Recruitment Milestones
-  recruitmentMilestones?: Array<{ count: number; bonus: number }>;
-  // Monthly Competition Prizes
-  monthlyCompetitionPrizes?: { first: number; second: number; third: number };
-  // Competition eligibility
-  competitionEligibilityMinimum?: number;
-  // Telegram Bonus
-  telegramBonusAmount?: number;
-  piggyBankUnlockThreshold?: number;
 }
 
 const AdminChatterConfig: React.FC = () => {
   const intl = useIntl();
-
-  // State
   const [config, setConfig] = useState<ChatterConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
-
   const [togglingVisibility, setTogglingVisibility] = useState(false);
   const [visibilitySuccess, setVisibilitySuccess] = useState(false);
-
-  // Form state
   const [formData, setFormData] = useState<Partial<ChatterConfig>>({});
 
-  // Fetch config
   const fetchConfig = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const adminGetChatterConfig = httpsCallable<void, { config: ChatterConfig }>(
-        functionsAffiliate,
-        'adminGetChatterConfig'
-      );
-
-      const result = await adminGetChatterConfig();
+      const fn = httpsCallable<void, { config: ChatterConfig }>(functionsAffiliate, 'adminGetChatterConfig');
+      const result = await fn();
       setConfig(result.data.config);
       setFormData(result.data.config);
       setHasChanges(false);
     } catch (err: any) {
-      console.error('Error fetching config:', err);
       setError(err.message || 'Failed to load configuration');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchConfig();
-  }, [fetchConfig]);
+  useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
-  // Handle input change
   const handleChange = (field: keyof ChatterConfig, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
     setSuccess(null);
   };
 
-  // Handle nested change (levelBonuses, levelThresholds)
-  const handleNestedChange = (
-    parent: 'levelThresholds',
-    field: string,
-    value: number
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: {
-        ...(prev[parent] || config?.[parent]),
-        [field]: value,
-      } as typeof prev[typeof parent],
-    }));
-    setHasChanges(true);
-    setSuccess(null);
-  };
-
-  // Save config
   const handleSave = async () => {
     setSaving(true);
     setError(null);
     setSuccess(null);
-
     try {
-      const adminUpdateChatterConfig = httpsCallable<Partial<ChatterConfig>, { success: boolean }>(
-        functionsAffiliate,
-        'adminUpdateChatterConfig'
-      );
-
-      await adminUpdateChatterConfig(formData);
-      setSuccess(intl.formatMessage({ id: 'admin.chatterConfig.saved', defaultMessage: 'Configuration sauvegardée avec succès' }));
+      const fn = httpsCallable(functionsAffiliate, 'adminUpdateChatterConfig');
+      await fn({
+        isSystemActive: formData.isSystemActive,
+        newRegistrationsEnabled: formData.newRegistrationsEnabled,
+        withdrawalsEnabled: formData.withdrawalsEnabled,
+        trainingEnabled: formData.trainingEnabled,
+        quizPassingScore: formData.quizPassingScore,
+        quizRetryDelayHours: formData.quizRetryDelayHours,
+        quizQuestionsCount: formData.quizQuestionsCount,
+      });
+      setSuccess('Configuration sauvegardée');
       setHasChanges(false);
       fetchConfig();
     } catch (err: any) {
-      console.error('Error saving config:', err);
-      setError(err.message || 'Failed to save configuration');
+      setError(err.message || 'Failed to save');
     } finally {
       setSaving(false);
     }
@@ -195,21 +114,13 @@ const AdminChatterConfig: React.FC = () => {
     }
   }, [config?.isChatterListingPageVisible]);
 
-  // Format amount for display (cents to dollars)
-  const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;
-
-  // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
-      </div>
-    );
+    return <div className="flex items-center justify-center py-20"><Loader2 className="w-10 h-10 text-red-500 animate-spin" /></div>;
   }
 
   return (
     <AdminLayout>
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -218,51 +129,46 @@ const AdminChatterConfig: React.FC = () => {
             <FormattedMessage id="admin.chatterConfig.title" defaultMessage="Configuration Chatter" />
           </h1>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
-            <FormattedMessage id="admin.chatterConfig.subtitle" defaultMessage="Gérer les paramètres du système de parrainage" />
+            Paramètres système du programme chatter
           </p>
         </div>
-
         <div className="flex gap-2">
-          <button
-            onClick={fetchConfig}
-            className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <FormattedMessage id="common.refresh" defaultMessage="Actualiser" />
+          <button onClick={fetchConfig} className={`${UI.button.secondary} px-4 py-2 flex items-center gap-2`}>
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
           </button>
-          <button
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-            className={`${UI.button.primary} px-4 py-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <FormattedMessage id="common.save" defaultMessage="Sauvegarder" />
+          <button onClick={handleSave} disabled={!hasChanges || saving}
+            className={`${UI.button.primary} px-4 py-2 flex items-center gap-2 disabled:opacity-50`}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Sauvegarder
           </button>
         </div>
       </div>
 
       {/* Messages */}
       {error && (
-        <div className={`${UI.card} p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800`}>
-          <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-            <AlertTriangle className="w-5 h-5" />
-            <span>{error}</span>
-          </div>
+        <div className={`${UI.card} p-4 bg-red-50 dark:bg-red-900/20`}>
+          <div className="flex items-center gap-3 text-red-600 dark:text-red-400"><AlertTriangle className="w-5 h-5" /><span>{error}</span></div>
+        </div>
+      )}
+      {success && (
+        <div className={`${UI.card} p-4 bg-green-50 dark:bg-green-900/20`}>
+          <div className="flex items-center gap-3 text-green-600 dark:text-green-400"><CheckCircle className="w-5 h-5" /><span>{success}</span></div>
         </div>
       )}
 
-      {success && (
-        <div className={`${UI.card} p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800`}>
-          <div className="flex items-center gap-3 text-green-600 dark:text-green-400">
-            <CheckCircle className="w-5 h-5" />
-            <span>{success}</span>
+      {/* Link to Commission Hub */}
+      <a href="/admin/commissions?tab=chatter"
+        className={`${UI.card} p-4 flex items-center justify-between hover:border-red-300 dark:hover:border-red-500/30 transition-colors group`}>
+        <div className="flex items-center gap-3">
+          <DollarSign className="w-5 h-5 text-green-500" />
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">Commissions d'affiliation</p>
+            <p className="text-xs text-gray-500">Taux, bonus, paliers, retraits — gérés dans le hub centralisé</p>
           </div>
         </div>
-      )}
+        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+      </a>
 
       {/* Directory Page Visibility */}
       <div className={`${UI.card} p-6`}>
@@ -275,7 +181,6 @@ const AdminChatterConfig: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Activer pour rendre visible la page{' '}
               <a href="/nos-chatters" target="_blank" className="text-red-600 hover:underline">/nos-chatters</a>
-              {' '}avec les chatters dont la visibilité est activée.
             </p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -283,15 +188,9 @@ const AdminChatterConfig: React.FC = () => {
             {togglingVisibility ? (
               <Loader2 className="w-6 h-6 animate-spin text-red-500" />
             ) : (
-              <button
-                onClick={handleToggleListingPage}
-                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
-                  config?.isChatterListingPageVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-              >
-                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                  config?.isChatterListingPageVisible ? 'translate-x-8' : 'translate-x-1'
-                }`} />
+              <button onClick={handleToggleListingPage}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${config?.isChatterListingPageVisible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${config?.isChatterListingPageVisible ? 'translate-x-8' : 'translate-x-1'}`} />
               </button>
             )}
             <span className={`text-sm font-medium ${config?.isChatterListingPageVisible ? 'text-green-600' : 'text-gray-400'}`}>
@@ -305,555 +204,51 @@ const AdminChatterConfig: React.FC = () => {
       <div className={`${UI.card} p-6`}>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Shield className="w-5 h-5 text-red-500" />
-          <FormattedMessage id="admin.chatterConfig.systemStatus" defaultMessage="Statut du système" />
+          Statut du système
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={formData.isSystemActive ?? config?.isSystemActive ?? true}
-              onChange={(e) => handleChange('isSystemActive', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
-            />
-            <span className="text-gray-700 dark:text-gray-300">
-              <FormattedMessage id="admin.chatterConfig.systemActive" defaultMessage="Système actif" />
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={formData.newRegistrationsEnabled ?? config?.newRegistrationsEnabled ?? true}
-              onChange={(e) => handleChange('newRegistrationsEnabled', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
-            />
-            <span className="text-gray-700 dark:text-gray-300">
-              <FormattedMessage id="admin.chatterConfig.registrationsEnabled" defaultMessage="Inscriptions ouvertes" />
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={formData.withdrawalsEnabled ?? config?.withdrawalsEnabled ?? true}
-              onChange={(e) => handleChange('withdrawalsEnabled', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500"
-            />
-            <span className="text-gray-700 dark:text-gray-300">
-              <FormattedMessage id="admin.chatterConfig.withdrawalsEnabled" defaultMessage="Retraits activés" />
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={formData.trainingEnabled ?? config?.trainingEnabled ?? true}
-              onChange={(e) => handleChange('trainingEnabled', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-            />
-            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <GraduationCap className="w-4 h-4 text-blue-500" />
-              <FormattedMessage id="admin.chatterConfig.trainingEnabled" defaultMessage="Formation visible" />
-            </div>
-          </label>
+          {[
+            { field: 'isSystemActive' as const, label: 'Système actif', color: 'red' },
+            { field: 'newRegistrationsEnabled' as const, label: 'Inscriptions ouvertes', color: 'red' },
+            { field: 'withdrawalsEnabled' as const, label: 'Retraits activés', color: 'red' },
+            { field: 'trainingEnabled' as const, label: 'Formation visible', color: 'blue', icon: <GraduationCap className="w-4 h-4 text-blue-500" /> },
+          ].map(({ field, label, color, icon }) => (
+            <label key={field} className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={(formData[field] as boolean) ?? true}
+                onChange={(e) => handleChange(field, e.target.checked)}
+                className={`w-5 h-5 rounded border-gray-300 text-${color}-500 focus:ring-${color}-500`} />
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                {icon}{label}
+              </div>
+            </label>
+          ))}
         </div>
       </div>
 
-      {/* Commission Amounts */}
+      {/* Quiz Settings */}
       <div className={`${UI.card} p-6`}>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <DollarSign className="w-5 h-5 text-green-500" />
-          <FormattedMessage id="admin.chatterConfig.commissions" defaultMessage="Montants des commissions" />
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Commission appel client — split avocat/expatrié */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.commission.clientByType" defaultMessage="Commission appel client (par type de prestataire)" />
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /> (cents)</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 500}
-                    onChange={(e) => handleChange('commissionClientCallAmountLawyer', parseInt(e.target.value))}
-                    className={UI.input}
-                    min={0}
-                    step={100}
-                  />
-                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    = {formatCents(formData.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmountLawyer ?? 500)}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.expatLabel" defaultMessage="Expatrié" /> (cents)</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 300}
-                    onChange={(e) => handleChange('commissionClientCallAmountExpat', parseInt(e.target.value))}
-                    className={UI.input}
-                    min={0}
-                    step={100}
-                  />
-                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    = {formatCents(formData.commissionClientCallAmountExpat ?? config?.commissionClientCallAmountExpat ?? 300)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="admin.commission.clientByType.desc" defaultMessage="Commission fixe pour chaque client qui effectue un appel payant" />
-            </p>
-          </div>
-
-          {/* Commission prestataire recruté — avocats uniquement (expat supprimé) */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.commission.providerByType" defaultMessage="Commission prestataire recruté (avocats uniquement)" />
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1"><FormattedMessage id="admin.commission.lawyerLabel" defaultMessage="Avocat" /> (cents)</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={formData.commissionProviderCallAmountLawyer ?? config?.commissionProviderCallAmountLawyer ?? 500}
-                    onChange={(e) => handleChange('commissionProviderCallAmountLawyer', parseInt(e.target.value))}
-                    className={UI.input}
-                    min={0}
-                    step={100}
-                  />
-                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    = {formatCents(formData.commissionProviderCallAmountLawyer ?? config?.commissionProviderCallAmountLawyer ?? 500)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-                  Pas de commission pour les expats aidants
-                </p>
-              </div>
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <FormattedMessage id="admin.commission.providerByType.desc" defaultMessage="Commission pour chaque appel reçu par un avocat recruté (6 mois)" />
-            </p>
-          </div>
-        </div>
-
-        {/* Captain Chatter Commissions */}
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
-          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-yellow-500">&#128081;</span>
-            <FormattedMessage id="admin.chatterConfig.captainCommissions" defaultMessage="Commissions Capitaine Chatter" />
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.captainCallLawyer" defaultMessage="Captain call — avocat (cents)" />
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 300}
-                  onChange={(e) => handleChange('commissionCaptainCallAmountLawyer', parseInt(e.target.value))}
-                  className={UI.input}
-                  min={0}
-                  step={50}
-                />
-                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  = {formatCents(formData.commissionCaptainCallAmountLawyer ?? config?.commissionCaptainCallAmountLawyer ?? 300)}
-                </span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.captainCallExpat" defaultMessage="Captain call — expatrié (cents)" />
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 200}
-                  onChange={(e) => handleChange('commissionCaptainCallAmountExpat', parseInt(e.target.value))}
-                  className={UI.input}
-                  min={0}
-                  step={50}
-                />
-                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  = {formatCents(formData.commissionCaptainCallAmountExpat ?? config?.commissionCaptainCallAmountExpat ?? 200)}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.captainQualityBonus" defaultMessage="Bonus qualité capitaine (cents)" />
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 10000}
-                onChange={(e) => handleChange('captainQualityBonusAmount', parseInt(e.target.value))}
-                className={UI.input}
-                min={0}
-                step={500}
-                style={{ maxWidth: 200 }}
-              />
-              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                = {formatCents(formData.captainQualityBonusAmount ?? config?.captainQualityBonusAmount ?? 10000)}
-              </span>
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            <FormattedMessage id="admin.chatterConfig.captainCommissions.desc" defaultMessage="Le capitaine reçoit ces commissions À LA PLACE des commissions N1/N2 standard. Paliers mensuels configurables dans la liste capitaines." />
-          </p>
-        </div>
-
-        {/* Recruiter Milestone Bonus */}
-        <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-red-500 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-red-800 dark:text-red-300">
-                <FormattedMessage id="admin.chatterConfig.recruiterBonus" defaultMessage="Bonus partenaire automatique" />
-              </p>
-              <p className="text-xs text-red-700 dark:text-red-400 mt-1">
-                <FormattedMessage
-                  id="admin.chatterConfig.recruiterBonus.desc"
-                  defaultMessage="$50 automatiquement versés au partenaire quand son filleul atteint $500 de commissions."
-                />
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Recruitment Milestones */}
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
-          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-500" />
-            <FormattedMessage id="admin.chatterConfig.recruitmentMilestones" defaultMessage="Bonus de recrutement (paliers)" />
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-            <FormattedMessage id="admin.chatterConfig.recruitmentMilestones.desc" defaultMessage="Bonus versé au chatter quand il atteint X filleuls actifs (montants en cents)" />
-          </p>
-          <div className="space-y-2">
-            {(formData.recruitmentMilestones ?? config?.recruitmentMilestones ?? [
-              { count: 5, bonus: 1500 }, { count: 10, bonus: 3500 }, { count: 20, bonus: 7500 },
-              { count: 50, bonus: 25000 }, { count: 100, bonus: 60000 }, { count: 500, bonus: 400000 },
-            ]).map((milestone, idx) => {
-              const milestones = formData.recruitmentMilestones ?? config?.recruitmentMilestones ?? [];
-              return (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 w-16 shrink-0">Recrues</label>
-                    <input
-                      type="number"
-                      value={milestone.count}
-                      onChange={(e) => {
-                        const updated = milestones.map((m, i) => i === idx ? { ...m, count: parseInt(e.target.value) || 0 } : m);
-                        handleChange('recruitmentMilestones', updated);
-                      }}
-                      className={UI.input}
-                      min={1}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 flex-1">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 w-16 shrink-0">Bonus (¢)</label>
-                    <input
-                      type="number"
-                      value={milestone.bonus}
-                      onChange={(e) => {
-                        const updated = milestones.map((m, i) => i === idx ? { ...m, bonus: parseInt(e.target.value) || 0 } : m);
-                        handleChange('recruitmentMilestones', updated);
-                      }}
-                      className={UI.input}
-                      min={0}
-                      step={100}
-                    />
-                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">= {formatCents(milestone.bonus)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Monthly Competition Prizes */}
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
-          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-500" />
-            <FormattedMessage id="admin.chatterConfig.competitionPrizes" defaultMessage="Prix compétition mensuelle Top 3" />
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-            <FormattedMessage id="admin.chatterConfig.competitionPrizes.desc" defaultMessage="Montants fixes versés aux 3 premiers du classement mensuel (en cents)" />
-          </p>
-          <div className="grid grid-cols-3 gap-4">
-            {(['first', 'second', 'third'] as const).map((place, idx) => {
-              const labels = ['🥇 1ère place', '🥈 2ème place', '🥉 3ème place'];
-              const prizes = formData.monthlyCompetitionPrizes ?? config?.monthlyCompetitionPrizes ?? { first: 20000, second: 10000, third: 5000 };
-              return (
-                <div key={place}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{labels[idx]}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={prizes[place]}
-                      onChange={(e) => handleChange('monthlyCompetitionPrizes', { ...prizes, [place]: parseInt(e.target.value) || 0 })}
-                      className={UI.input}
-                      min={0}
-                      step={500}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500">= {formatCents(prizes[place])}</p>
-                </div>
-              );
-            })}
-          </div>
-          {/* Eligibility minimum */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Seuil minimum d'éligibilité (cents)
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={formData.competitionEligibilityMinimum ?? config?.competitionEligibilityMinimum ?? 20000}
-                onChange={(e) => handleChange('competitionEligibilityMinimum', parseInt(e.target.value) || 0)}
-                className={UI.input}
-                min={0}
-                step={1000}
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">= {formatCents(formData.competitionEligibilityMinimum ?? config?.competitionEligibilityMinimum ?? 20000)} min. de commissions pour participer</p>
-          </div>
-        </div>
-
-        {/* Telegram Bonus */}
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
-          <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-            <Star className="w-5 h-5 text-blue-500" />
-            Bonus Telegram (Tirelire)
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-            Bonus crédité à la tirelire quand le chatter connecte son Telegram. Débloqué après un seuil de commissions.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Montant du bonus (cents)
-              </label>
-              <input
-                type="number"
-                value={formData.telegramBonusAmount ?? config?.telegramBonusAmount ?? 5000}
-                onChange={(e) => handleChange('telegramBonusAmount', parseInt(e.target.value) || 0)}
-                className={UI.input}
-                min={0}
-                step={500}
-              />
-              <p className="mt-1 text-xs text-gray-500">= {formatCents(formData.telegramBonusAmount ?? config?.telegramBonusAmount ?? 5000)} crédité à la tirelire</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Seuil de déblocage (cents)
-              </label>
-              <input
-                type="number"
-                value={formData.piggyBankUnlockThreshold ?? config?.piggyBankUnlockThreshold ?? 15000}
-                onChange={(e) => handleChange('piggyBankUnlockThreshold', parseInt(e.target.value) || 0)}
-                className={UI.input}
-                min={0}
-                step={1000}
-              />
-              <p className="mt-1 text-xs text-gray-500">= {formatCents(formData.piggyBankUnlockThreshold ?? config?.piggyBankUnlockThreshold ?? 15000)} de commissions pour débloquer</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Withdrawal Settings */}
-      <div className={`${UI.card} p-6`}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-blue-500" />
-          <FormattedMessage id="admin.chatterConfig.withdrawalSettings" defaultMessage="Paramètres de retrait" />
+          <Calendar className="w-5 h-5 text-green-500" />
+          Paramètres du quiz
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.minWithdrawal" defaultMessage="Retrait minimum (cents)" />
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={formData.minimumWithdrawalAmount ?? config?.minimumWithdrawalAmount ?? 3000}
-                onChange={(e) => handleChange('minimumWithdrawalAmount', parseInt(e.target.value))}
-                className={UI.input}
-                min={0}
-                step={100}
-              />
-              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                = {formatCents(formData.minimumWithdrawalAmount ?? config?.minimumWithdrawalAmount ?? 3000)}
-              </span>
-            </div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Score de réussite (%)</label>
+            <input type="number" value={formData.quizPassingScore ?? config?.quizPassingScore ?? 85}
+              onChange={(e) => handleChange('quizPassingScore', parseInt(e.target.value))}
+              className={UI.input} min={0} max={100} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.validationHold" defaultMessage="Délai de validation (heures)" />
-            </label>
-            <input
-              type="number"
-              value={formData.validationHoldPeriodHours ?? config?.validationHoldPeriodHours ?? 48}
-              onChange={(e) => handleChange('validationHoldPeriodHours', parseInt(e.target.value))}
-              className={UI.input}
-              min={0}
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Délai nouvel essai (heures)</label>
+            <input type="number" value={formData.quizRetryDelayHours ?? config?.quizRetryDelayHours ?? 24}
+              onChange={(e) => handleChange('quizRetryDelayHours', parseInt(e.target.value))}
+              className={UI.input} min={0} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.releaseDelay" defaultMessage="Délai de libération (heures)" />
-            </label>
-            <input
-              type="number"
-              value={formData.releaseDelayHours ?? config?.releaseDelayHours ?? 24}
-              onChange={(e) => handleChange('releaseDelayHours', parseInt(e.target.value))}
-              className={UI.input}
-              min={0}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* P1-1 FIX: Level Bonuses REMOVED — multipliers are disabled (zero-percentage policy) */}
-
-      {/* Level Thresholds */}
-      <div className={`${UI.card} p-6`}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-purple-500" />
-          <FormattedMessage id="admin.chatterConfig.levelThresholds" defaultMessage="Seuils de niveau (gains totaux)" />
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {([2, 3, 4, 5] as const).map((level) => {
-            const levelKey = `level${level}` as 'level2' | 'level3' | 'level4' | 'level5';
-            const thresholdValue = (formData.levelThresholds?.[levelKey] ?? config?.levelThresholds?.[levelKey]) ?? 0;
-            return (
-              <div key={level}>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Niveau {level}
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={thresholdValue}
-                    onChange={(e) => handleNestedChange('levelThresholds', levelKey, parseInt(e.target.value))}
-                    className={UI.input}
-                    step={1000}
-                    min={0}
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  = {formatCents(thresholdValue)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* P1-1 FIX: Top 3 Bonuses REMOVED — multipliers are disabled (zero-percentage policy) */}
-
-      {/* Quiz Settings */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Quiz Settings */}
-        <div className={`${UI.card} p-6`}>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-green-500" />
-            <FormattedMessage id="admin.chatterConfig.quizSettings" defaultMessage="Paramètres du quiz" />
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.quizPassingScore" defaultMessage="Score de réussite (%)" />
-              </label>
-              <input
-                type="number"
-                value={formData.quizPassingScore ?? config?.quizPassingScore ?? 85}
-                onChange={(e) => handleChange('quizPassingScore', parseInt(e.target.value))}
-                className={UI.input}
-                min={0}
-                max={100}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.quizRetryDelay" defaultMessage="Délai avant nouvel essai (heures)" />
-              </label>
-              <input
-                type="number"
-                value={formData.quizRetryDelayHours ?? config?.quizRetryDelayHours ?? 24}
-                onChange={(e) => handleChange('quizRetryDelayHours', parseInt(e.target.value))}
-                className={UI.input}
-                min={0}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <FormattedMessage id="admin.chatterConfig.quizQuestions" defaultMessage="Nombre de questions" />
-              </label>
-              <input
-                type="number"
-                value={formData.quizQuestionsCount ?? config?.quizQuestionsCount ?? 5}
-                onChange={(e) => handleChange('quizQuestionsCount', parseInt(e.target.value))}
-                className={UI.input}
-                min={1}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Other Settings */}
-      <div className={`${UI.card} p-6`}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Settings className="w-5 h-5 text-gray-500" />
-          <FormattedMessage id="admin.chatterConfig.otherSettings" defaultMessage="Autres paramètres" />
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.recruitmentDuration" defaultMessage="Durée du lien partenaires (mois)" />
-            </label>
-            <input
-              type="number"
-              value={formData.recruitmentLinkDurationMonths ?? config?.recruitmentLinkDurationMonths ?? 6}
-              onChange={(e) => handleChange('recruitmentLinkDurationMonths', parseInt(e.target.value))}
-              className={UI.input}
-              min={1}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              <FormattedMessage id="admin.chatterConfig.recruitmentDuration.desc" defaultMessage="Période pendant laquelle les commissions partenaires sont versées" />
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <FormattedMessage id="admin.chatterConfig.attributionWindow" defaultMessage="Fenêtre d'attribution (jours)" />
-            </label>
-            <input
-              type="number"
-              value={formData.attributionWindowDays ?? config?.attributionWindowDays ?? 30}
-              onChange={(e) => handleChange('attributionWindowDays', parseInt(e.target.value))}
-              className={UI.input}
-              min={1}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              <FormattedMessage id="admin.chatterConfig.attributionWindow.desc" defaultMessage="Durée de validité du cookie d'attribution" />
-            </p>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre de questions</label>
+            <input type="number" value={formData.quizQuestionsCount ?? config?.quizQuestionsCount ?? 5}
+              onChange={(e) => handleChange('quizQuestionsCount', parseInt(e.target.value))}
+              className={UI.input} min={1} />
           </div>
         </div>
       </div>
@@ -861,19 +256,7 @@ const AdminChatterConfig: React.FC = () => {
       {/* Version Info */}
       {config && (
         <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-          <FormattedMessage
-            id="admin.chatterConfig.versionInfo"
-            defaultMessage="Version {version} - Dernière modification: {date}"
-            values={{
-              version: config.version,
-              date: config.updatedAt
-                ? new Date(config.updatedAt).toLocaleDateString(intl.locale, {
-                    dateStyle: 'long',
-                    timeStyle: 'short',
-                  })
-                : '-',
-            }}
-          />
+          Version {config.version} — Dernière modification: {config.updatedAt ? new Date(config.updatedAt).toLocaleDateString(intl.locale, { dateStyle: 'long', timeStyle: 'short' }) : '-'}
         </div>
       )}
     </div>
