@@ -87,7 +87,6 @@ export interface PublicPressResource {
   file_url: string | null;
   file_format: string | null;
   file_size: number | null;
-  sort_order: number;
 }
 
 export async function getPublicPressResources(

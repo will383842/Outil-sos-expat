@@ -44,7 +44,6 @@ interface PressResource {
   file_format: string | null;
   file_size: number | null;
   category: string;
-  sort_order: number;
 }
 
 interface PressRelease {
@@ -185,7 +184,6 @@ const Press: React.FC = () => {
           file_format: r.file_format,
           file_size: r.file_size,
           category: r.category,
-          sort_order: r.sort_order,
         }));
         setResources(mapped);
       } catch (error) {
