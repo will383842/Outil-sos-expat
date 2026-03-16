@@ -37,9 +37,13 @@ import {
   Pencil,
   Save,
   MessageCircle,
+  Copy,
+  Check,
+  Link2,
 } from 'lucide-react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import AdminErrorState from '@/components/admin/AdminErrorState';
+import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { StatusType } from '@/components/admin/StatusBadge';
 
@@ -89,6 +93,7 @@ interface ChatterDetail {
   totalRecruitmentConversions: number;
   currentStreak: number;
   bestStreak: number;
+  affiliateCode?: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   recruitedByCode?: string;
@@ -765,24 +770,34 @@ const AdminChatterDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Affiliate Codes */}
+      {/* Affiliate Link (Unified) */}
       <div className={`${UI.card} p-6`}>
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-          <FormattedMessage id="admin.chatters.codes" defaultMessage="Codes affiliés" />
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <Link2 className="w-5 h-5 text-red-500" />
+          <FormattedMessage id="admin.chatters.codes" defaultMessage="Lien d'affiliation" />
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code Client</p>
-            <p className="text-lg font-bold text-red-600 dark:text-red-400">
-              {chatter.affiliateCodeClient || '-'}
+        <div className="space-y-3">
+          <div className="p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code unifié</p>
+            <p className="text-xl font-bold text-red-600 dark:text-red-400 font-mono tracking-wider">
+              {chatter.affiliateCode || chatter.affiliateCodeClient || '-'}
             </p>
           </div>
-          <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code Recrutement</p>
-            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
-              {chatter.affiliateCodeRecruitment || '-'}
-            </p>
-          </div>
+          {(chatter.affiliateCode || chatter.affiliateCodeClient) && (
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-gray-100 dark:bg-white/5 px-3 py-2 rounded-lg text-xs overflow-x-auto">
+                https://sos-expat.com/r/{chatter.affiliateCode || chatter.affiliateCodeClient}
+              </code>
+              <button
+                onClick={() => {
+                  clipboardCopy(`https://sos-expat.com/r/${chatter.affiliateCode || chatter.affiliateCodeClient}`);
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+              >
+                <Copy className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+          )}
         </div>
         {chatter.recruitedByCode && (
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">

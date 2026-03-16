@@ -447,11 +447,13 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
     if (!editing) return;
     const nameObj = (editing.data.name as Record<string, string>) || {};
     if (!nameObj.fr?.trim() || !nameObj.en?.trim()) {
-      setError('Le nom en francais et en anglais est obligatoire');
+      toast.error('Le nom en francais et en anglais est obligatoire');
+      setEditorStep(2);
       return;
     }
     if (!editing.data.target_roles?.length) {
-      setError('Selectionnez au moins un role cible');
+      toast.error('Selectionnez au moins un role cible');
+      setEditorStep(1);
       return;
     }
 
@@ -460,17 +462,19 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
     try {
       if (editing.isNew) {
         await adminCreateResource(editing.data as CreateResourcePayload);
-        showSuccessMsg('Ressource creee avec succes !');
+        toast.success('Ressource creee avec succes !');
       } else {
         const { id, ...payload } = editing.data;
         await adminUpdateResource(id!, payload);
-        showSuccessMsg('Ressource mise a jour !');
+        toast.success('Ressource mise a jour !');
       }
       setEditing(null);
       fetchResources();
     } catch (err: unknown) {
       const e = err as { message?: string };
-      setError(e.message || 'Erreur de sauvegarde');
+      const msg = e.message || 'Erreur de sauvegarde';
+      toast.error(msg);
+      console.error('[saveResource]', msg, err);
     } finally {
       setSaving(false);
     }
@@ -519,10 +523,11 @@ const AdminMarketingResources: React.FC<AdminMarketingResourcesProps> = ({ initi
           file_size: result.file_size,
         },
       });
-      showSuccessMsg('Fichier uploade !');
+      toast.success('Fichier uploade !');
     } catch (err: unknown) {
       const e = err as { message?: string };
-      setError(e.message || 'Erreur upload');
+      toast.error(e.message || 'Erreur upload');
+      console.error('[handleFileUpload]', err);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

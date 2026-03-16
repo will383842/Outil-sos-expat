@@ -62,6 +62,7 @@ interface Influencer {
   communitySize?: number;
   communityNiche?: string;
   socialLinks?: Record<string, string>;
+  affiliateCode?: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
   availableBalance: number;
@@ -118,8 +119,7 @@ const AdminInfluencerDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [copiedClient, setCopiedClient] = useState(false);
-  const [copiedRecruit, setCopiedRecruit] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [ratesEditing, setRatesEditing] = useState(false);
   const [ratesForm, setRatesForm] = useState<Record<string, number>>({});
   const [ratesSaving, setRatesSaving] = useState(false);
@@ -176,15 +176,10 @@ const AdminInfluencerDetail: React.FC = () => {
   };
 
   // Copy to clipboard
-  const copyToClipboard = (text: string, type: 'client' | 'recruit') => {
+  const copyToClipboard = (text: string) => {
     clipboardCopy(text);
-    if (type === 'client') {
-      setCopiedClient(true);
-      setTimeout(() => setCopiedClient(false), 2000);
-    } else {
-      setCopiedRecruit(true);
-      setTimeout(() => setCopiedRecruit(false), 2000);
-    }
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   // Locked rates editing
@@ -285,8 +280,8 @@ const AdminInfluencerDetail: React.FC = () => {
     );
   }
 
-  const clientLink = `https://sos-expat.com/ref/i/${influencer.affiliateCodeClient}`;
-  const recruitLink = `https://sos-expat.com/rec/i/${influencer.affiliateCodeRecruitment}`;
+  const unifiedCode = influencer.affiliateCode || influencer.affiliateCodeClient;
+  const unifiedLink = `https://sos-expat.com/r/${unifiedCode}`;
 
   return (
     <AdminLayout>
@@ -377,44 +372,30 @@ const AdminInfluencerDetail: React.FC = () => {
               )}
             </div>
 
-            {/* Affiliate Links */}
+            {/* Affiliate Link (Unified) */}
             <div className={`${UI.card} p-6`}>
               <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Link2 className="w-5 h-5 text-red-500" />
-                <FormattedMessage id="admin.influencer.links" defaultMessage="Liens d'affiliation" />
+                <FormattedMessage id="admin.influencer.links" defaultMessage="Lien d'affiliation" />
               </h2>
 
-              <div className="space-y-4">
-                {/* Client Link */}
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lien client (5% remise)</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-gray-100 dark:bg-white/5 px-3 py-2 rounded-lg text-xs overflow-x-auto">
-                      {influencer.affiliateCodeClient}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(clientLink, 'client')}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
-                    >
-                      {copiedClient ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
-                    </button>
-                  </div>
+              <div className="space-y-3">
+                <div className="p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code unifié</p>
+                  <p className="text-xl font-bold text-red-600 dark:text-red-400 font-mono tracking-wider">
+                    {unifiedCode}
+                  </p>
                 </div>
-
-                {/* Recruit Link */}
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lien partenaires</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-gray-100 dark:bg-white/5 px-3 py-2 rounded-lg text-xs overflow-x-auto">
-                      {influencer.affiliateCodeRecruitment}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(recruitLink, 'recruit')}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
-                    >
-                      {copiedRecruit ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-gray-100 dark:bg-white/5 px-3 py-2 rounded-lg text-xs overflow-x-auto">
+                    {unifiedLink}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(unifiedLink)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg"
+                  >
+                    {copiedLink ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                  </button>
                 </div>
               </div>
             </div>

@@ -169,6 +169,7 @@ interface CaptainDetailData {
   // Archives
   archives?: CaptainArchive[];
   // Affiliate codes
+  affiliateCode?: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
 }
@@ -861,24 +862,25 @@ const AdminCaptainDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Affiliate Codes */}
+          {/* Affiliate Link (Unified) */}
           <div className={`${UI.card} p-4 sm:p-6`}>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-              <FormattedMessage id="admin.captainDetail.codes" defaultMessage="Codes affilies" />
+              <FormattedMessage id="admin.captainDetail.codes" defaultMessage="Lien d'affiliation" />
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code Client</p>
-                <p className="text-lg font-bold text-red-600 dark:text-red-400 break-all">
-                  {captain.affiliateCodeClient || '-'}
+            <div className="space-y-3">
+              <div className="p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code unifié</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400 font-mono tracking-wider break-all">
+                  {captain.affiliateCode || captain.affiliateCodeClient || '-'}
                 </p>
               </div>
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code Recrutement</p>
-                <p className="text-lg font-bold text-purple-600 dark:text-purple-400 break-all">
-                  {captain.affiliateCodeRecruitment || '-'}
-                </p>
-              </div>
+              {(captain.affiliateCode || captain.affiliateCodeClient) && (
+                <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                  <code className="text-xs text-gray-600 dark:text-gray-300 break-all">
+                    https://sos-expat.com/r/{captain.affiliateCode || captain.affiliateCodeClient}
+                  </code>
+                </div>
+              )}
             </div>
           </div>
         </div>

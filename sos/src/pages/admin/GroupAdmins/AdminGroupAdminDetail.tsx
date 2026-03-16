@@ -72,6 +72,7 @@ interface GroupAdminDetail {
   groupVerifiedAt?: string;
 
   // Affiliate codes
+  affiliateCode?: string;
   affiliateCodeClient: string;
   affiliateCodeRecruitment: string;
 
@@ -555,34 +556,27 @@ const AdminGroupAdminDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* Affiliate Codes */}
+            {/* Affiliate Link (Unified) */}
             <div className={UI.card + " p-6"}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 {intl.formatMessage({ id: 'groupAdmin.admin.detail.affiliateCodes' })}
               </h2>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
-                  <div>
-                    <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.clientCode' })}</p>
-                    <p className="font-mono font-medium text-gray-900 dark:text-white">{admin.affiliateCodeClient}</p>
-                  </div>
-                  <button
-                    onClick={() => copyToClipboard(admin.affiliateCodeClient, 'client')}
-                    className={`${UI.button.secondary} p-2`}
-                  >
-                    {copied === 'client' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                  </button>
+                <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Code unifié</p>
+                  <p className="text-xl font-bold text-blue-600 dark:text-blue-400 font-mono tracking-wider">
+                    {admin.affiliateCode || admin.affiliateCodeClient}
+                  </p>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
-                  <div>
-                    <p className="text-sm text-gray-500">{intl.formatMessage({ id: 'groupAdmin.admin.detail.recruitmentCode' })}</p>
-                    <p className="font-mono font-medium text-gray-900 dark:text-white">{admin.affiliateCodeRecruitment}</p>
-                  </div>
+                  <code className="flex-1 text-sm font-mono text-gray-600 dark:text-gray-300 truncate">
+                    https://sos-expat.com/r/{admin.affiliateCode || admin.affiliateCodeClient}
+                  </code>
                   <button
-                    onClick={() => copyToClipboard(admin.affiliateCodeRecruitment, 'recruit')}
-                    className={`${UI.button.secondary} p-2`}
+                    onClick={() => copyToClipboard(`https://sos-expat.com/r/${admin.affiliateCode || admin.affiliateCodeClient}`, 'link')}
+                    className={`${UI.button.secondary} p-2 ml-2`}
                   >
-                    {copied === 'recruit' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    {copied === 'link' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
