@@ -30,7 +30,6 @@ interface LeaderboardEntry {
   monthlyEarnings: number;
   monthlyClients: number;
   monthlyRecruits: number;
-  level: 1 | 2 | 3 | 4 | 5;
 }
 
 interface GetLeaderboardInput {
@@ -105,7 +104,6 @@ export const getChatterLeaderboard = onCall(
           monthlyEarnings: r.monthlyEarnings,
           monthlyClients: r.monthlyClients,
           monthlyRecruits: r.monthlyRecruits,
-          level: r.level,
         }));
         totalParticipants = rankingData.rankings.length;
       } else {
@@ -180,7 +178,6 @@ export const getChatterLeaderboard = onCall(
               monthlyEarnings: result.monthlyEarnings,
               monthlyClients: result.monthlyClients,
               monthlyRecruits: result.monthlyRecruits,
-              level: chatter.level,
             });
           }
         }

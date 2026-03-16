@@ -27,7 +27,6 @@ import {
   getValidationDelayMs,
   getReleaseDelayMs,
   getCommissionRule,
-  calculateLevelFromEarnings,
 } from "../utils/influencerConfigService";
 
 // ============================================================================
@@ -57,6 +56,13 @@ export interface CreateCommissionInput {
       monthsRemaining?: number;
       // For percentage-based calculations (V2)
       totalAmount?: number;
+      // For N1/N2 network commissions
+      originInfluencerId?: string;
+      n1Id?: string;
+      // For activation bonus
+      activatedInfluencerId?: string;
+      totalClientCalls?: number;
+      recruiterId?: string;
     };
   };
   amount?: number; // Override amount (otherwise use config/captured rates)
@@ -283,13 +289,8 @@ export async function createCommission(
       // Promotion service unavailable — proceed without promo
     }
 
-    // 5c. P1-1 FIX: Multipliers DISABLED — aligned with Chatter/Blogger/GroupAdmin (2026-03-06)
-    // All commissions are now fixed amounts only. Level/top3/streak bonuses removed.
+    // 5c. All commissions are fixed amounts only (no multipliers).
     let commissionAmount = baseCommissionAmount;
-    const levelBonusMultiplier = 1.0;
-    const top3BonusMultiplier = 1.0;
-    const streakBonusMultiplier = 1.0;
-    const monthlyTopMult = 1.0;
     let calculationDetails = `Base: ${baseCommissionAmount} (fixed, no multipliers)`;
 
     // 5d. Apply promotion multiplier
@@ -324,10 +325,6 @@ export async function createCommission(
       sourceDetails: source.details,
       amount: commissionAmount,
       baseAmount: baseCommissionAmount,
-      levelBonus: levelBonusMultiplier,
-      top3Bonus: top3BonusMultiplier,
-      streakBonus: streakBonusMultiplier,
-      monthlyTopMultiplier: monthlyTopMult,
       calculationDetails,
       currency: "USD",
       description: description || getDefaultDescription(type, source.details),
@@ -403,20 +400,21 @@ export async function createCommission(
         currentMonthStats.earnings += commissionAmount;
       }
 
-      // Update last activity date and streak
+      // Update streak (lastActivityDate may exist on legacy docs)
       const today = new Date().toISOString().split("T")[0];
       let newStreak = currentData.currentStreak || 0;
       let newBestStreak = currentData.bestStreak || 0;
+      const lastActivity = (currentData as unknown as Record<string, unknown>).lastActivityDate as string | null;
 
-      if (currentData.lastActivityDate) {
+      if (lastActivity) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-        if (currentData.lastActivityDate === yesterdayStr) {
+        if (lastActivity === yesterdayStr) {
           // Consecutive day
           newStreak += 1;
-        } else if (currentData.lastActivityDate !== today) {
+        } else if (lastActivity !== today) {
           // Streak broken (gap > 1 day)
           newStreak = 1;
         }
@@ -429,10 +427,6 @@ export async function createCommission(
         newBestStreak = newStreak;
       }
 
-      // Check level progression
-      const newTotalEarned = (currentData.totalEarned || 0) + commissionAmount;
-      const levelResult = calculateLevelFromEarnings(newTotalEarned, config);
-
       // Create commission
       transaction.set(commissionRef, commission);
 
@@ -443,11 +437,8 @@ export async function createCommission(
         totalClients: newTotalClients,
         totalRecruits: newTotalRecruits,
         currentMonthStats,
-        lastActivityDate: today,
         currentStreak: newStreak,
         bestStreak: newBestStreak,
-        level: levelResult.level,
-        levelProgress: levelResult.progress,
         updatedAt: Timestamp.now(),
       });
     });

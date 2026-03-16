@@ -89,11 +89,6 @@ export interface CommissionDetailed {
   sourceType: "call_session" | "user" | "provider" | "bonus" | null;
   sourceDetails?: Record<string, unknown>;
   baseAmount: number;
-  levelBonus: number;
-  top3Bonus: number;
-  zoomBonus: number;
-  streakBonus?: number;
-  monthlyTopMultiplier?: number;
   amount: number;
   currency: "USD";
   calculationDetails: string;
@@ -323,11 +318,6 @@ export const adminGetCommissionsDetailed = onCall(
           sourceType: data.sourceType,
           sourceDetails: data.sourceDetails,
           baseAmount: data.baseAmount,
-          levelBonus: data.levelBonus,
-          top3Bonus: data.top3Bonus,
-          zoomBonus: data.zoomBonus,
-          streakBonus: data.streakBonus,
-          monthlyTopMultiplier: data.monthlyTopMultiplier,
           amount: data.amount,
           currency: data.currency,
           calculationDetails: data.calculationDetails,
@@ -697,9 +687,6 @@ export const adminExportCommissionsCSV = onCall(
         "Type",
         "Source Type",
         "Base Amount ($)",
-        "Level Bonus",
-        "Top3 Bonus",
-        "Zoom Bonus",
         "Final Amount ($)",
         "Status",
         "Description",
@@ -724,9 +711,6 @@ export const adminExportCommissionsCSV = onCall(
           data.type,
           data.sourceType || "",
           (data.baseAmount / 100).toFixed(2),
-          data.levelBonus.toFixed(2),
-          data.top3Bonus.toFixed(2),
-          data.zoomBonus.toFixed(2),
           (data.amount / 100).toFixed(2),
           data.status,
           data.description.replace(/"/g, '""'),

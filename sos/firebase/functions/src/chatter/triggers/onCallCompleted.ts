@@ -346,6 +346,21 @@ export async function handleCallCompleted(
         const activationBonusAmount = getActivationBonusAmount(config, recruiterLockedRates, recruiterIndividualRates);
         const chatterData = activationResult.chatterData!;
 
+        // Check recruiter's direct commissions before paying activation bonus ($100 minimum)
+        const recruiterTotalEarned = recruiterDataForBonus?.totalEarned || 0;
+        const minDirectCommissions = config.activationMinDirectCommissions || 10000;
+
+        if (recruiterTotalEarned < minDirectCommissions) {
+          logger.info("[chatterOnCallCompleted] Recruiter hasn't reached minimum for activation bonus", {
+            recruiterId: activationResult.recruitedBy,
+            totalEarned: recruiterTotalEarned,
+            required: minDirectCommissions,
+            recruitedChatterId: chatterId,
+          });
+          // Chatter is STILL marked as activated (done in the transaction above)
+          // TODO: Pay deferred activation bonus when recruiter reaches $100 threshold
+          //       (requires a separate trigger on recruiter's totalEarned update)
+        } else {
         const bonusResult = await createCommission({
           chatterId: activationResult.recruitedBy,
           type: "activation_bonus",
@@ -462,6 +477,40 @@ export async function handleCallCompleted(
               }
             }
           }
+        }
+        } // end else (recruiter meets $100 threshold)
+      }
+
+      // ========================================================================
+      // 3b. RECRUITMENT MILESTONES CHECK
+      // ========================================================================
+
+      if (chatter.recruitedBy) {
+        try {
+          const { checkAndPayRecruitmentMilestones } = await import("../../lib/milestoneService");
+          const recruiterMilestoneDoc = await db.collection("chatters").doc(chatter.recruitedBy).get();
+          if (recruiterMilestoneDoc.exists) {
+            const recruiterForMilestone = recruiterMilestoneDoc.data() as Chatter;
+            const recruitsSnap = await db.collection("chatters")
+              .where("recruitedBy", "==", chatter.recruitedBy)
+              .get();
+
+            await checkAndPayRecruitmentMilestones({
+              affiliateId: chatter.recruitedBy,
+              role: "chatter",
+              collection: "chatters",
+              commissionCollection: "chatter_commissions",
+              totalRecruits: recruitsSnap.size,
+              tierBonusesPaid: recruiterForMilestone.tierBonusesPaid || [],
+              milestones: (config.recruitmentMilestones || []).map((m: { count: number; bonus: number }) => ({
+                recruits: m.count,
+                bonus: m.bonus,
+              })),
+              commissionType: "tier_bonus",
+            });
+          }
+        } catch (milestoneErr) {
+          logger.warn("[chatterOnCallCompleted] Milestone check failed (non-critical)", { chatterId, error: milestoneErr });
         }
       }
 

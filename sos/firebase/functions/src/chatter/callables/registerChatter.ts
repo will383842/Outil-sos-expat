@@ -521,8 +521,6 @@ export const registerChatter = onCall(
 
         status: "active", // Direct activation - no quiz required
         isVisible: false,
-        level: 1,
-        levelProgress: 0,
 
         // Codes generated immediately at registration
         affiliateCode,
@@ -546,17 +544,9 @@ export const registerChatter = onCall(
 
         currentStreak: 0,
         bestStreak: 0,
-        lastActivityDate: null,
         badges: [],
         currentMonthRank: null,
         bestRank: null,
-
-        // Monthly top multiplier (reward for top 3)
-        monthlyTopMultiplier: 1.0, // No bonus by default
-        monthlyTopMultiplierMonth: null,
-
-        zoomMeetingsAttended: 0,
-        lastZoomAttendance: null,
 
         preferredPaymentMethod: null,
         paymentDetails: null,

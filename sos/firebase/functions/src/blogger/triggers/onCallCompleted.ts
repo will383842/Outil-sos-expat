@@ -11,7 +11,7 @@
  * NOTE: This trigger listens to call_sessions collection.
  */
 
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
 import { Blogger } from "../types";
@@ -247,6 +247,138 @@ async function awardBloggerCommission(
 
     // Check and pay recruitment commission (recruiter gets $50 when this blogger reaches $200)
     await checkAndPayRecruitmentCommission(bloggerId);
+
+    // ============================================================
+    // N1/N2 NETWORK COMMISSIONS + ACTIVATION BONUS
+    // ============================================================
+    const bloggerConfig = await getBloggerConfigCached();
+
+    // Increment totalClientCalls
+    await db.collection("bloggers").doc(bloggerId).update({
+      totalClientCalls: FieldValue.increment(1),
+    });
+
+    const freshBlogger = (await db.collection("bloggers").doc(bloggerId).get()).data() as Blogger;
+    const totalCalls = freshBlogger.totalClientCalls || 1;
+
+    // --- ACTIVATION BONUS ---
+    if (
+      !freshBlogger.isActivated &&
+      totalCalls >= (bloggerConfig.activationCallsRequired || 2) &&
+      freshBlogger.recruitedBy
+    ) {
+      await db.collection("bloggers").doc(bloggerId).update({ isActivated: true });
+
+      const recruiterId = freshBlogger.recruitedBy;
+      const recruiterDoc = await db.collection("bloggers").doc(recruiterId).get();
+      if (recruiterDoc.exists) {
+        const recruiter = recruiterDoc.data() as Blogger;
+        const minDirect = bloggerConfig.activationMinDirectCommissions || 10000;
+
+        if ((recruiter.totalEarned || 0) >= minDirect && !freshBlogger.activationBonusPaid) {
+          const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount
+            ?? recruiter.lockedRates?.commissionActivationBonusAmount
+            ?? bloggerConfig.commissionActivationBonusAmount ?? 500;
+
+          const actResult = await createBloggerCommission({
+            bloggerId: recruiterId,
+            type: "activation_bonus",
+            source: { id: bloggerId, type: "user", details: { activatedBloggerId: bloggerId, totalClientCalls: totalCalls } },
+            baseAmount: activationAmount,
+            description: `Bonus activation: filleul ${bloggerId} activé`,
+          });
+
+          if (actResult.success) {
+            await db.collection("bloggers").doc(bloggerId).update({ activationBonusPaid: true });
+            logger.info("[bloggerOnCallCompleted] Activation bonus paid", { recruiterId, activatedId: bloggerId });
+          }
+
+          // N1 Recruit Bonus to grand-parrain
+          if (recruiter.recruitedBy) {
+            const gpDoc = await db.collection("bloggers").doc(recruiter.recruitedBy).get();
+            if (gpDoc.exists) {
+              const gp = gpDoc.data() as Blogger;
+              const n1RecruitAmt = gp.individualRates?.commissionN1RecruitBonusAmount
+                ?? gp.lockedRates?.commissionN1RecruitBonusAmount
+                ?? bloggerConfig.commissionN1RecruitBonusAmount ?? 100;
+
+              await createBloggerCommission({
+                bloggerId: recruiter.recruitedBy,
+                type: "n1_recruit_bonus",
+                source: { id: bloggerId, type: "user", details: { activatedBloggerId: bloggerId, recruiterId } },
+                baseAmount: n1RecruitAmt,
+                description: `Bonus N1 recrutement: ${bloggerId} activé via ${recruiterId}`,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // --- N1 COMMISSION ---
+    if (freshBlogger.recruitedBy) {
+      const n1Doc = await db.collection("bloggers").doc(freshBlogger.recruitedBy).get();
+      if (n1Doc.exists) {
+        const n1 = n1Doc.data() as Blogger;
+        if (n1.status === "active") {
+          const n1Amt = n1.individualRates?.commissionN1CallAmount
+            ?? n1.lockedRates?.commissionN1CallAmount
+            ?? bloggerConfig.commissionN1CallAmount ?? 100;
+
+          await createBloggerCommission({
+            bloggerId: freshBlogger.recruitedBy,
+            type: "n1_call",
+            source: { id: callSessionId, type: "call_session", details: { originBloggerId: bloggerId, clientId, providerType } },
+            baseAmount: n1Amt,
+            description: `Commission N1: appel client de ${bloggerId}`,
+          });
+        }
+      }
+    }
+
+    // --- N2 COMMISSION ---
+    if (freshBlogger.parrainNiveau2Id) {
+      const n2Doc = await db.collection("bloggers").doc(freshBlogger.parrainNiveau2Id).get();
+      if (n2Doc.exists) {
+        const n2 = n2Doc.data() as Blogger;
+        if (n2.status === "active") {
+          const n2Amt = n2.individualRates?.commissionN2CallAmount
+            ?? n2.lockedRates?.commissionN2CallAmount
+            ?? bloggerConfig.commissionN2CallAmount ?? 50;
+
+          await createBloggerCommission({
+            bloggerId: freshBlogger.parrainNiveau2Id,
+            type: "n2_call",
+            source: { id: callSessionId, type: "call_session", details: { originBloggerId: bloggerId, n1Id: freshBlogger.recruitedBy || undefined, clientId, providerType } },
+            baseAmount: n2Amt,
+            description: `Commission N2: appel client de ${bloggerId}`,
+          });
+        }
+      }
+    }
+
+    // --- MILESTONE CHECK ---
+    if (freshBlogger.recruitedBy) {
+      const { checkAndPayRecruitmentMilestones } = await import("../../lib/milestoneService");
+      const milestoneRecruiterDoc = await db.collection("bloggers").doc(freshBlogger.recruitedBy).get();
+      if (milestoneRecruiterDoc.exists) {
+        const milestoneRecruiter = milestoneRecruiterDoc.data() as Blogger;
+        const recruitsSnap = await db.collection("bloggers")
+          .where("recruitedBy", "==", freshBlogger.recruitedBy)
+          .get();
+
+        await checkAndPayRecruitmentMilestones({
+          affiliateId: freshBlogger.recruitedBy,
+          role: "blogger",
+          collection: "bloggers",
+          commissionCollection: "blogger_commissions",
+          totalRecruits: recruitsSnap.size,
+          tierBonusesPaid: milestoneRecruiter.tierBonusesPaid || [],
+          milestones: bloggerConfig.recruitmentMilestones || [],
+          commissionType: "tier_bonus",
+        });
+      }
+    }
   }
 
   return {

@@ -71,6 +71,12 @@ export interface CreateBloggerCommissionInput {
       recruitmentDate?: string;
       monthsRemaining?: number;
       adjustmentReason?: string;
+      // N1/N2 network & activation fields
+      activatedBloggerId?: string;
+      totalClientCalls?: number;
+      originBloggerId?: string;
+      recruiterId?: string;
+      n1Id?: string;
     };
   };
   baseAmount?: number; // Override base amount (otherwise use config)

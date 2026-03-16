@@ -378,10 +378,33 @@ async function checkAndPayActivationBonus(groupAdminId: string, _callId: string)
     const recruiterRef = getDb().collection("group_admins").doc(groupAdmin.recruitedBy);
     // Pre-read recruiter doc to get lockedRates for Lifetime Rate Lock
     const recruiterPreSnap = await recruiterRef.get();
-    const recruiterLockedRates = recruiterPreSnap.exists ? (recruiterPreSnap.data() as GroupAdmin).lockedRates : undefined;
-    const recruiterIndividualRates = recruiterPreSnap.exists ? (recruiterPreSnap.data() as GroupAdmin).individualRates : undefined;
+    const recruiterData = recruiterPreSnap.exists ? (recruiterPreSnap.data() as GroupAdmin) : undefined;
+    const recruiterLockedRates = recruiterData?.lockedRates;
+    const recruiterIndividualRates = recruiterData?.individualRates;
     const amount = await getActivationBonusAmount(recruiterLockedRates, recruiterIndividualRates);
 
+    // Check recruiter's direct commissions before paying activation bonus ($100 minimum)
+    const config = await getGroupAdminConfig();
+    const recruiterTotalEarned = recruiterData?.totalEarned || 0;
+    const minDirectCommissions = config.activationMinDirectCommissions || 10000;
+
+    if (recruiterTotalEarned < minDirectCommissions) {
+      logger.info("[GroupAdminCommission] Recruiter hasn't reached minimum for activation bonus", {
+        recruiterId: groupAdmin.recruitedBy,
+        totalEarned: recruiterTotalEarned,
+        required: minDirectCommissions,
+        recruitedId: groupAdminId,
+      });
+
+      // Still update the call count and mark activated (but NOT activationBonusPaid)
+      await recruitRef.update({
+        activationCallCount: newCount,
+        updatedAt: Timestamp.now(),
+      });
+
+      // TODO: Pay deferred activation bonus when recruiter reaches $100 threshold
+      //       (requires a separate trigger on recruiter's totalEarned update)
+    } else {
     await getDb().runTransaction(async (tx) => {
       const freshRecruit = await tx.get(recruitRef);
       if (!freshRecruit.exists || freshRecruit.data()?.activationBonusPaid === true) {
@@ -443,6 +466,40 @@ async function checkAndPayActivationBonus(groupAdminId: string, _callId: string)
         activationCallCount: newCount,
       });
     });
+    } // end else (recruiter meets $100 threshold)
+
+    // ========================================================================
+    // RECRUITMENT MILESTONES CHECK
+    // ========================================================================
+
+    if (groupAdmin.recruitedBy) {
+      try {
+        const { checkAndPayRecruitmentMilestones } = await import("../../lib/milestoneService");
+        const recruiterMilestoneDoc = await getDb().collection("group_admins").doc(groupAdmin.recruitedBy).get();
+        if (recruiterMilestoneDoc.exists) {
+          const recruiterForMilestone = recruiterMilestoneDoc.data() as GroupAdmin;
+          const recruitsSnap = await getDb().collection("group_admins")
+            .where("recruitedBy", "==", groupAdmin.recruitedBy)
+            .get();
+
+          await checkAndPayRecruitmentMilestones({
+            affiliateId: groupAdmin.recruitedBy,
+            role: "groupAdmin",
+            collection: "group_admins",
+            commissionCollection: "group_admin_commissions",
+            totalRecruits: recruitsSnap.size,
+            tierBonusesPaid: recruiterForMilestone.tierBonusesPaid || [],
+            milestones: (config.recruitmentMilestones || []).map((m: { recruits: number; bonus: number }) => ({
+              recruits: m.recruits,
+              bonus: m.bonus,
+            })),
+            commissionType: "tier_bonus",
+          });
+        }
+      } catch (milestoneErr) {
+        logger.warn("[GroupAdminCommission] Milestone check failed (non-critical)", { groupAdminId, error: milestoneErr });
+      }
+    }
   } catch (error) {
     logger.error("[GroupAdminCommission] Error checking activation bonus", {
       groupAdminId,

@@ -12,7 +12,7 @@
  */
 
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
@@ -247,6 +247,203 @@ export async function handleCallCompleted(
 
         // Check and pay recruitment commission (recruiter gets $5 when this influencer reaches $50)
         await checkAndPayRecruitmentCommission(influencerId);
+
+        // ============================================================
+        // N1/N2 NETWORK COMMISSIONS + ACTIVATION BONUS
+        // ============================================================
+
+        // Increment totalClientCalls for activation tracking
+        await db.collection("influencers").doc(influencerId).update({
+          totalClientCalls: FieldValue.increment(1),
+        });
+
+        const freshInfluencer = (await db.collection("influencers").doc(influencerId).get()).data() as Influencer;
+        const totalCalls = freshInfluencer.totalClientCalls || 1;
+
+        // --- ACTIVATION BONUS ---
+        // Check if this influencer just reached activation threshold (2nd call)
+        if (
+          !freshInfluencer.isActivated &&
+          totalCalls >= (config.activationCallsRequired || 2) &&
+          freshInfluencer.recruitedBy
+        ) {
+          // Mark as activated
+          await db.collection("influencers").doc(influencerId).update({
+            isActivated: true,
+          });
+
+          // Pay activation bonus to recruiter (if recruiter has $100+ in direct commissions)
+          const recruiterId = freshInfluencer.recruitedBy;
+          const recruiterDoc = await db.collection("influencers").doc(recruiterId).get();
+          if (recruiterDoc.exists) {
+            const recruiter = recruiterDoc.data() as Influencer;
+            const minDirectCommissions = config.activationMinDirectCommissions || 10000;
+
+            if ((recruiter.totalEarned || 0) >= minDirectCommissions && !freshInfluencer.activationBonusPaid) {
+              const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount
+                ?? recruiter.lockedRates?.commissionActivationBonusAmount
+                ?? config.commissionActivationBonusAmount ?? 500;
+
+              const activationResult = await createCommission({
+                influencerId: recruiterId,
+                type: "activation_bonus",
+                source: {
+                  id: influencerId,
+                  type: "user",
+                  details: {
+                    activatedInfluencerId: influencerId,
+                    totalClientCalls: totalCalls,
+                    providerType: afterData.providerType,
+                  },
+                },
+                baseAmount: activationAmount,
+              });
+
+              if (activationResult.success) {
+                await db.collection("influencers").doc(influencerId).update({
+                  activationBonusPaid: true,
+                });
+                logger.info("[influencerOnCallCompleted] Activation bonus paid", {
+                  recruiterId,
+                  activatedId: influencerId,
+                  amount: activationAmount,
+                });
+              }
+
+              // N1 Recruit Bonus: if recruiter also has a recruiter (grand-parrain)
+              if (recruiter.recruitedBy || recruiter.parrainId) {
+                const grandParrainId = recruiter.recruitedBy || recruiter.parrainId;
+                const gpDoc = await db.collection("influencers").doc(grandParrainId!).get();
+                if (gpDoc.exists) {
+                  const gp = gpDoc.data() as Influencer;
+                  const n1RecruitAmount = gp.individualRates?.commissionN1RecruitBonusAmount
+                    ?? gp.lockedRates?.commissionN1RecruitBonusAmount
+                    ?? config.commissionN1RecruitBonusAmount ?? 100;
+
+                  await createCommission({
+                    influencerId: grandParrainId!,
+                    type: "n1_recruit_bonus",
+                    source: {
+                      id: influencerId,
+                      type: "user",
+                      details: {
+                        activatedInfluencerId: influencerId,
+                        recruiterId,
+                      },
+                    },
+                    baseAmount: n1RecruitAmount,
+                  });
+                  logger.info("[influencerOnCallCompleted] N1 recruit bonus paid", {
+                    grandParrainId,
+                    recruiterId,
+                    activatedId: influencerId,
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        // --- N1 COMMISSION ---
+        // If this influencer was recruited, pay N1 commission to recruiter
+        if (freshInfluencer.recruitedBy) {
+          const n1Id = freshInfluencer.recruitedBy;
+          const n1Doc = await db.collection("influencers").doc(n1Id).get();
+          if (n1Doc.exists) {
+            const n1 = n1Doc.data() as Influencer;
+            if (n1.status === "active") {
+              const n1Amount = n1.individualRates?.commissionN1CallAmount
+                ?? n1.lockedRates?.commissionN1CallAmount
+                ?? config.commissionN1CallAmount ?? 100;
+
+              await createCommission({
+                influencerId: n1Id,
+                type: "n1_call",
+                source: {
+                  id: sessionId,
+                  type: "call_session",
+                  details: {
+                    originInfluencerId: influencerId,
+                    clientId: afterData.clientId,
+                    callDuration: afterData.duration,
+                    providerType: afterData.providerType,
+                  },
+                },
+                baseAmount: n1Amount,
+              });
+              logger.info("[influencerOnCallCompleted] N1 commission paid", {
+                n1Id,
+                originId: influencerId,
+                amount: n1Amount,
+              });
+            }
+          }
+        }
+
+        // --- N2 COMMISSION ---
+        // If this influencer's recruiter also has a recruiter, pay N2
+        if (freshInfluencer.parrainNiveau2Id || (freshInfluencer.recruitedBy && freshInfluencer.parrainId)) {
+          const n2Id = freshInfluencer.parrainNiveau2Id;
+          if (n2Id) {
+            const n2Doc = await db.collection("influencers").doc(n2Id).get();
+            if (n2Doc.exists) {
+              const n2 = n2Doc.data() as Influencer;
+              if (n2.status === "active") {
+                const n2Amount = n2.individualRates?.commissionN2CallAmount
+                  ?? n2.lockedRates?.commissionN2CallAmount
+                  ?? config.commissionN2CallAmount ?? 50;
+
+                await createCommission({
+                  influencerId: n2Id,
+                  type: "n2_call",
+                  source: {
+                    id: sessionId,
+                    type: "call_session",
+                    details: {
+                      originInfluencerId: influencerId,
+                      n1Id: freshInfluencer.recruitedBy || undefined,
+                      clientId: afterData.clientId,
+                      callDuration: afterData.duration,
+                      providerType: afterData.providerType,
+                    },
+                  },
+                  baseAmount: n2Amount,
+                });
+                logger.info("[influencerOnCallCompleted] N2 commission paid", {
+                  n2Id,
+                  n1Id: freshInfluencer.recruitedBy,
+                  originId: influencerId,
+                  amount: n2Amount,
+                });
+              }
+            }
+          }
+        }
+
+        // --- MILESTONE CHECK ---
+        // Check recruitment milestones for the recruiter
+        if (freshInfluencer.recruitedBy) {
+          const { checkAndPayRecruitmentMilestones } = await import("../../lib/milestoneService");
+          const recruiterDoc = await db.collection("influencers").doc(freshInfluencer.recruitedBy).get();
+          if (recruiterDoc.exists) {
+            const recruiter = recruiterDoc.data() as Influencer;
+            // Count total recruits
+            const recruitsSnap = await db.collection("influencers")
+              .where("recruitedBy", "==", freshInfluencer.recruitedBy)
+              .get();
+
+            await checkAndPayRecruitmentMilestones({
+              affiliateId: freshInfluencer.recruitedBy,
+              role: "influencer",
+              collection: "influencers",
+              commissionCollection: "influencer_commissions",
+              totalRecruits: recruitsSnap.size,
+              tierBonusesPaid: recruiter.tierBonusesPaid || [],
+              milestones: config.recruitmentMilestones || [],
+              commissionType: "tier_bonus",
+            });
+          }
+        }
       } else {
         logger.error("[influencerOnCallCompleted] Failed to create commission", {
           sessionId,

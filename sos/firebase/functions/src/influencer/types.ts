@@ -3,12 +3,10 @@
  *
  * Complete type definitions for the SOS-Expat Influencer program.
  * Supports:
- * - Client referral commissions ($10 base + level/streak/top3 bonuses)
+ * - Client referral commissions ($10 base, fixed amounts)
  * - Provider recruitment commissions (fixed $5 for 6 months)
  * - Influencer recruitment commissions ($5 one-time when recruit reaches $50)
- * - Levels 1-5 based on totalEarned (same thresholds as Chatter)
  * - Monthly Top 3 leaderboard with bonus multipliers
- * - Streak bonuses for consecutive daily activity
  * - Promotional tools (banners, widgets, QR codes)
  * - 5% client discount via referral links
  */
@@ -18,11 +16,6 @@ import { Timestamp } from "firebase-admin/firestore";
 // ============================================================================
 // ENUMS
 // ============================================================================
-
-/**
- * Influencer level (1-5 based on total earnings, aligned with Chatter)
- */
-export type InfluencerLevel = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Influencer account status
@@ -59,6 +52,11 @@ export type InfluencerCommissionType =
   | "subscription"          // Souscription abonnement
   | "renewal"               // Renouvellement abonnement
   | "provider_bonus"        // Bonus prestataire validé
+  | "n1_call"               // Commission on direct recruit's client call
+  | "n2_call"               // Commission on indirect recruit's client call
+  | "activation_bonus"      // Bonus paid to recruiter when recruit activates
+  | "n1_recruit_bonus"      // Bonus when N1 recruits someone who activates
+  | "tier_bonus"            // Milestone tier bonus (5, 10, 20, 50, 100, 500 recruits)
   | "manual_adjustment";    // Admin manual adjustment
 
 /**
@@ -241,13 +239,7 @@ export interface Influencer {
   /** Best ever rank */
   bestRank: number | null;
 
-  // ---- Level & Gamification (aligned with Chatter) ----
-
-  /** Current level (1-5) based on totalEarned */
-  level: InfluencerLevel;
-
-  /** Progress towards next level (0-100%) */
-  levelProgress: number;
+  // ---- Gamification ----
 
   /** Current streak (consecutive days with activity) */
   currentStreak: number;
@@ -304,6 +296,21 @@ export interface Influencer {
   /** Admin-set individual rate overrides (highest priority, separate from plan snapshot) */
   individualRates?: Record<string, number>;
 
+  // ---- MLM Network (N1/N2) ----
+
+  /** ID of the influencer who recruited this one (same as recruitedBy but typed for MLM) */
+  parrainId?: string;
+  /** ID of the recruiter's recruiter (N2 grandparent) */
+  parrainNiveau2Id?: string;
+  /** Whether this influencer has been activated (made enough client calls) */
+  isActivated?: boolean;
+  /** Whether activation bonus has been paid to recruiter */
+  activationBonusPaid?: boolean;
+  /** Total number of client calls made (for activation tracking) */
+  totalClientCalls?: number;
+  /** Milestone tier bonuses already paid (indices) */
+  tierBonusesPaid?: number[];
+
   /** Total amount withdrawn all time */
   totalWithdrawn: number;
 
@@ -349,9 +356,6 @@ export interface Influencer {
 
   /** Last login */
   lastLoginAt: Timestamp | null;
-
-  /** Last activity date (for ranking calculation) */
-  lastActivityDate: string | null; // YYYY-MM-DD
 
   // ---- TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD) ----
 
@@ -490,18 +494,6 @@ export interface InfluencerCommission {
 
   /** Base amount before bonuses (cents) */
   baseAmount: number;
-
-  /** Level bonus multiplier applied (1.0 = no bonus) */
-  levelBonus: number;
-
-  /** Top 3 bonus multiplier applied (1.0 = no bonus) */
-  top3Bonus: number;
-
-  /** Streak bonus multiplier applied (1.0 = no bonus) */
-  streakBonus: number;
-
-  /** Monthly top multiplier (reward for being top 3 previous month, 1.0 = no bonus) */
-  monthlyTopMultiplier: number;
 
   /** Final commission amount (cents) */
   amount: number;
@@ -927,40 +919,11 @@ export interface InfluencerConfig {
   /** Number of influencers shown in leaderboard */
   leaderboardSize: number;
 
-  // ---- Level Bonuses (aligned with Chatter) ----
-
-  levelBonuses: {
-    level1: number;  // 1.00 = no bonus
-    level2: number;  // 1.10 = +10%
-    level3: number;  // 1.20 = +20%
-    level4: number;  // 1.35 = +35%
-    level5: number;  // 1.50 = +50%
-  };
-
-  // ---- Level Thresholds (cents) ----
-
-  levelThresholds: {
-    level2: number;  // $100 = 10000
-    level3: number;  // $500 = 50000
-    level4: number;  // $2000 = 200000
-    level5: number;  // $5000 = 500000
-  };
-
   // ---- Top 3 Monthly Bonuses ----
 
   top1BonusMultiplier: number;  // 2.00 = +100%
   top2BonusMultiplier: number;  // 1.50 = +50%
   top3BonusMultiplier: number;  // 1.15 = +15%
-
-  // ---- Streak Bonus ----
-
-  /** Streak bonus multipliers based on consecutive activity days */
-  streakBonuses: {
-    days7: number;   // 1.05 = +5% bonus at 7+ days
-    days14: number;  // 1.10 = +10% bonus at 14+ days
-    days30: number;  // 1.20 = +20% bonus at 30+ days
-    days100: number; // 1.50 = +50% bonus at 100+ days
-  };
 
   // ---- Recruitment Commission ----
 
@@ -969,6 +932,23 @@ export interface InfluencerConfig {
 
   /** One-time bonus (cents) paid to recruiter when recruited influencer reaches threshold */
   recruitmentCommissionAmount: number;
+
+  // ---- MLM Network Commissions (N1/N2) ----
+
+  /** N1 call commission (cents) - per call from direct recruit's client */
+  commissionN1CallAmount: number;
+  /** N2 call commission (cents) - per call from indirect recruit's client */
+  commissionN2CallAmount: number;
+  /** Activation bonus (cents) - paid to recruiter after recruit's Nth call */
+  commissionActivationBonusAmount: number;
+  /** N1 recruit bonus (cents) - paid when N1 recruits someone who activates */
+  commissionN1RecruitBonusAmount: number;
+  /** Number of client calls required for activation */
+  activationCallsRequired: number;
+  /** Minimum direct commissions earned (cents) to unlock activation bonus */
+  activationMinDirectCommissions: number;
+  /** Recruitment milestones: array of { recruits: number, bonus: number (cents) } */
+  recruitmentMilestones: Array<{ recruits: number; bonus: number }>;
 
   // ---- V2: Commission Rules ----
 
@@ -1138,7 +1118,7 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
   withdrawalsEnabled: true,
   trainingEnabled: true,
 
-  commissionClientAmount: 1000,      // $10
+  commissionClientAmount: 500,       // $5 fallback (when providerType unknown, overridden by Lawyer/Expat split)
   commissionRecruitmentAmount: 500,  // $5
   commissionClientAmountLawyer: 500,       // $5 - lawyer
   commissionClientAmountExpat: 300,        // $3 - expat
@@ -1158,35 +1138,28 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
 
   leaderboardSize: 10,
 
-  // Level bonuses (aligned with Chatter)
-  levelBonuses: {
-    level1: 1.00,
-    level2: 1.10,
-    level3: 1.20,
-    level4: 1.35,
-    level5: 1.50,
-  },
-
-  levelThresholds: {
-    level2: 10000,   // $100
-    level3: 50000,   // $500
-    level4: 200000,  // $2000
-    level5: 500000,  // $5000
-  },
-
   top1BonusMultiplier: 2.00,
   top2BonusMultiplier: 1.50,
   top3BonusMultiplier: 1.15,
 
-  streakBonuses: {
-    days7: 1.05,    // +5% bonus at 7+ consecutive days
-    days14: 1.10,   // +10% bonus at 14+ consecutive days
-    days30: 1.20,   // +20% bonus at 30+ consecutive days
-    days100: 1.50,  // +50% bonus at 100+ consecutive days
-  },
-
   recruitmentCommissionThreshold: 5000, // $50 — recruited influencer must earn this before recruiter gets bonus
   recruitmentCommissionAmount: 500, // $5 — one-time bonus paid to recruiter
+
+  // MLM Network commissions (N1/N2)
+  commissionN1CallAmount: 100,            // $1
+  commissionN2CallAmount: 50,             // $0.50
+  commissionActivationBonusAmount: 500,   // $5
+  commissionN1RecruitBonusAmount: 100,    // $1
+  activationCallsRequired: 2,
+  activationMinDirectCommissions: 10000,  // $100
+  recruitmentMilestones: [
+    { recruits: 5, bonus: 1500 },     // $15
+    { recruits: 10, bonus: 3500 },    // $35
+    { recruits: 20, bonus: 7500 },    // $75
+    { recruits: 50, bonus: 25000 },   // $250
+    { recruits: 100, bonus: 60000 },  // $600
+    { recruits: 500, bonus: 400000 }, // $4,000
+  ],
 
   // V2: Commission rules
   commissionRules: DEFAULT_COMMISSION_RULES,
@@ -1650,8 +1623,6 @@ export interface GetInfluencerDashboardResponse {
     | "clientDiscountPercent"
     | "clientDiscountAmount"
     | "minimumWithdrawalAmount"
-    | "levelThresholds"
-    | "levelBonuses"
   > & {
     commissionClientAmountLawyer?: number;
     commissionClientAmountExpat?: number;

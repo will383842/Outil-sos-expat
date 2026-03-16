@@ -50,7 +50,7 @@ interface MonthlyChatterStats {
   chatterCode: string;
   photoUrl?: string;
   country: string;
-  level: 1 | 2 | 3 | 4 | 5;
+  language: string;
   monthlyEarnings: number;
   monthlyClients: number;
   monthlyRecruits: number;
@@ -194,7 +194,7 @@ async function calculateMonthlyRankings(monthId: string): Promise<MonthlyChatter
         chatterCode: chatter.affiliateCodeClient,
         photoUrl: chatter.photoUrl,
         country: chatter.country,
-        level: chatter.level,
+        language: chatter.language,
         monthlyEarnings,
         monthlyClients,
         monthlyRecruits,
@@ -285,11 +285,6 @@ async function awardTop3Bonuses(
       },
       baseAmount: bonusAmount,
       amount: bonusAmount,
-      levelBonus: 0,
-      top3Bonus: 0,
-      zoomBonus: 0,
-      streakBonus: 1.0,
-      monthlyTopMultiplier: 1.0,
       calculationDetails: `Prime Top ${rank}: $${bonusDollars}`,
       currency: "USD",
       status: "available", // Immediately available (bonus, no validation delay)
@@ -366,12 +361,6 @@ const setTop3Multipliers = awardTop3Bonuses;
 async function updateChatterRanks(rankings: MonthlyChatterStats[]): Promise<void> {
   const db = getFirestore();
 
-  // Get top 3 chatter IDs
-  const top3Ids = new Set(rankings.slice(0, 3).map((r) => r.chatterId));
-
-  // Current month for multiplier comparison
-  const currentMonth = getCurrentMonth();
-
   // Update all active chatters
   const chattersSnapshot = await db
     .collection("chatters")
@@ -411,17 +400,6 @@ async function updateChatterRanks(rankings: MonthlyChatterStats[]): Promise<void
       }
     }
 
-    // Reset multiplier if the bonus month has passed (not the new month being set)
-    // Multiplier is set for THIS month, so we reset it if it was set for a previous month
-    if (
-      chatter.monthlyTopMultiplierMonth &&
-      chatter.monthlyTopMultiplierMonth !== currentMonth &&
-      !top3Ids.has(chatterId) // Don't reset if they're getting a new multiplier
-    ) {
-      updates.monthlyTopMultiplier = 1.0;
-      updates.monthlyTopMultiplierMonth = null;
-    }
-
     currentBatch.update(db.collection("chatters").doc(chatterId), updates);
     operationCount++;
 
@@ -445,7 +423,7 @@ async function updateChatterRanks(rankings: MonthlyChatterStats[]): Promise<void
 
   logger.info("[updateChatterRanks] Ranks updated", {
     totalUpdated: chattersSnapshot.size,
-    top3Ids: Array.from(top3Ids),
+    top3: rankings.slice(0, 3).map((r) => r.chatterId),
   });
 }
 
@@ -470,7 +448,7 @@ async function storeMonthlyRankings(
     monthlyEarnings: stats.monthlyEarnings,
     monthlyClients: stats.monthlyClients,
     monthlyRecruits: stats.monthlyRecruits,
-    level: stats.level,
+    language: stats.language,
   }));
 
   const monthlyRanking: ChatterMonthlyRanking = {

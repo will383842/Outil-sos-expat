@@ -373,6 +373,197 @@ export async function handleCallCompleted(
             updatedAt: Timestamp.now(),
           });
         }
+
+        // ============================================================
+        // N1/N2 NETWORK COMMISSIONS + ACTIVATION BONUS
+        // ============================================================
+
+        // Increment totalClientCalls on referrer's user doc
+        await db.collection("users").doc(referredByUserId).update({
+          totalClientCalls: FieldValue.increment(1),
+        });
+
+        const freshUser = (await db.collection("users").doc(referredByUserId).get()).data();
+        const totalCalls = freshUser?.totalClientCalls || 1;
+
+        // --- ACTIVATION BONUS ---
+        if (
+          !freshUser?.isActivated &&
+          totalCalls >= 2 &&
+          freshUser?.recruitedBy
+        ) {
+          await db.collection("users").doc(referredByUserId).update({ isActivated: true });
+
+          const recruiterId = freshUser.recruitedBy;
+          const recruiterDoc = await db.collection("users").doc(recruiterId).get();
+          if (recruiterDoc.exists) {
+            const recruiter = recruiterDoc.data()!;
+            const minDirect = 10000; // $100
+
+            if ((recruiter.totalEarned || 0) >= minDirect && !freshUser.activationBonusPaid) {
+              const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount
+                ?? recruiter.lockedRates?.commissionActivationBonusAmount
+                ?? 500; // $5
+
+              // Create activation bonus commission
+              const actRef = db.collection("affiliate_commissions").doc();
+              await actRef.set({
+                id: actRef.id,
+                referrerId: recruiterId,
+                type: "activation_bonus",
+                amount: activationAmount,
+                status: "validated",
+                source: {
+                  type: "activation",
+                  details: {
+                    activatedUserId: referredByUserId,
+                    totalClientCalls: totalCalls,
+                  },
+                },
+                description: `Bonus activation: filleul activé`,
+                createdAt: Timestamp.now(),
+                validatedAt: Timestamp.now(),
+              });
+
+              // Credit recruiter
+              await db.collection("users").doc(recruiterId).update({
+                availableBalance: FieldValue.increment(activationAmount),
+                totalEarned: FieldValue.increment(activationAmount),
+              });
+
+              await db.collection("users").doc(referredByUserId).update({ activationBonusPaid: true });
+
+              logger.info("[affiliateOnCallCompleted] Activation bonus paid", {
+                recruiterId,
+                activatedId: referredByUserId,
+                amount: activationAmount,
+              });
+
+              // N1 Recruit Bonus to grand-parrain
+              if (recruiter.recruitedBy) {
+                const gpDoc = await db.collection("users").doc(recruiter.recruitedBy).get();
+                if (gpDoc.exists) {
+                  const gp = gpDoc.data()!;
+                  const n1RecruitAmt = gp.individualRates?.commissionN1RecruitBonusAmount
+                    ?? gp.lockedRates?.commissionN1RecruitBonusAmount
+                    ?? 100;
+
+                  const n1rRef = db.collection("affiliate_commissions").doc();
+                  await n1rRef.set({
+                    id: n1rRef.id,
+                    referrerId: recruiter.recruitedBy,
+                    type: "n1_recruit_bonus",
+                    amount: n1RecruitAmt,
+                    status: "validated",
+                    source: { type: "recruitment", details: { activatedUserId: referredByUserId, recruiterId } },
+                    description: `Bonus N1 recrutement`,
+                    createdAt: Timestamp.now(),
+                    validatedAt: Timestamp.now(),
+                  });
+
+                  await db.collection("users").doc(recruiter.recruitedBy).update({
+                    availableBalance: FieldValue.increment(n1RecruitAmt),
+                    totalEarned: FieldValue.increment(n1RecruitAmt),
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        // --- N1 COMMISSION ---
+        if (freshUser?.recruitedBy) {
+          const n1Doc = await db.collection("users").doc(freshUser.recruitedBy).get();
+          if (n1Doc.exists) {
+            const n1 = n1Doc.data()!;
+            const n1Amt = n1.individualRates?.commissionN1CallAmount
+              ?? n1.lockedRates?.commissionN1CallAmount
+              ?? 100;
+
+            const n1Ref = db.collection("affiliate_commissions").doc();
+            await n1Ref.set({
+              id: n1Ref.id,
+              referrerId: freshUser.recruitedBy,
+              type: "n1_call",
+              amount: n1Amt,
+              status: "validated",
+              source: {
+                type: "n1_call",
+                details: { originUserId: referredByUserId, clientId: after?.clientId, providerType: after?.providerType },
+              },
+              description: `Commission N1: appel client référé`,
+              createdAt: Timestamp.now(),
+              validatedAt: Timestamp.now(),
+            });
+
+            await db.collection("users").doc(freshUser.recruitedBy).update({
+              availableBalance: FieldValue.increment(n1Amt),
+              totalEarned: FieldValue.increment(n1Amt),
+            });
+          }
+        }
+
+        // --- N2 COMMISSION ---
+        if (freshUser?.parrainNiveau2Id) {
+          const n2Doc = await db.collection("users").doc(freshUser.parrainNiveau2Id).get();
+          if (n2Doc.exists) {
+            const n2 = n2Doc.data()!;
+            const n2Amt = n2.individualRates?.commissionN2CallAmount
+              ?? n2.lockedRates?.commissionN2CallAmount
+              ?? 50;
+
+            const n2Ref = db.collection("affiliate_commissions").doc();
+            await n2Ref.set({
+              id: n2Ref.id,
+              referrerId: freshUser.parrainNiveau2Id,
+              type: "n2_call",
+              amount: n2Amt,
+              status: "validated",
+              source: {
+                type: "n2_call",
+                details: { originUserId: referredByUserId, n1Id: freshUser.recruitedBy, providerType: after?.providerType },
+              },
+              description: `Commission N2: appel client référé`,
+              createdAt: Timestamp.now(),
+              validatedAt: Timestamp.now(),
+            });
+
+            await db.collection("users").doc(freshUser.parrainNiveau2Id).update({
+              availableBalance: FieldValue.increment(n2Amt),
+              totalEarned: FieldValue.increment(n2Amt),
+            });
+          }
+        }
+
+        // --- MILESTONE CHECK ---
+        if (freshUser?.recruitedBy) {
+          const { checkAndPayRecruitmentMilestones } = await import("../../lib/milestoneService");
+          const milestoneRecruiterDoc = await db.collection("users").doc(freshUser.recruitedBy).get();
+          if (milestoneRecruiterDoc.exists) {
+            const milestoneRecruiter = milestoneRecruiterDoc.data()!;
+            const recruitsSnap = await db.collection("users")
+              .where("recruitedBy", "==", freshUser.recruitedBy)
+              .get();
+
+            await checkAndPayRecruitmentMilestones({
+              affiliateId: freshUser.recruitedBy,
+              role: "affiliate",
+              collection: "users",
+              commissionCollection: "affiliate_commissions",
+              totalRecruits: recruitsSnap.size,
+              tierBonusesPaid: milestoneRecruiter.tierBonusesPaid || [],
+              milestones: [
+                { recruits: 5, bonus: 1500 },
+                { recruits: 10, bonus: 3500 },
+                { recruits: 20, bonus: 7500 },
+                { recruits: 50, bonus: 25000 },
+                { recruits: 100, bonus: 60000 },
+                { recruits: 500, bonus: 400000 },
+              ],
+              commissionType: "tier_bonus",
+            });
+          }
+        }
       } else {
         logger.info("[affiliateOnCallCompleted] Commission not created", {
           reason: commissionResult.reason || commissionResult.error,

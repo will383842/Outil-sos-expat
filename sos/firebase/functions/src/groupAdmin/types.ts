@@ -315,6 +315,9 @@ export interface GroupAdmin {
   /** Earned badges */
   badges: GroupAdminBadgeType[];
 
+  /** Milestone tier bonuses already paid (indices) */
+  tierBonusesPaid?: number[];
+
   // ---- Commission Plan (Lifetime Rate Lock) ----
 
   /** ID of the commission plan active at registration */
@@ -1151,6 +1154,12 @@ export interface GroupAdminConfig {
   /** Number of client referrals required from recruit to trigger activation bonus */
   activationCallsRequired: number;
 
+  /** Minimum direct commissions earned (cents) to unlock activation bonus */
+  activationMinDirectCommissions: number;
+
+  /** Recruitment milestones: array of { recruits: number, bonus: number (cents) } */
+  recruitmentMilestones: Array<{ recruits: number; bonus: number }>;
+
   /** Client discount type: 'fixed' ($) or 'percent' (%) */
   clientDiscountType: 'percent' | 'fixed';
   /** Client discount amount in cents ($5 = 500) */
@@ -1223,12 +1232,21 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   // All amounts in USD cents — fixed values, independent of call currency (EUR/USD/etc.)
   commissionClientAmountLawyer: 500,     // $5 per client call (lawyer)
   commissionClientAmountExpat: 300,      // $3 per client call (expat)
-  commissionClientCallAmount: 300,       // $3 fallback (expat rate)
+  commissionClientCallAmount: 500,       // $5 fallback (when providerType unknown)
   commissionN1CallAmount: 100,           // $1 per N1 recruit's client call
   commissionN2CallAmount: 50,            // $0.50 per N2 recruit's client call
   commissionActivationBonusAmount: 500,  // $5 activation bonus (recruit makes 2 referrals)
   commissionN1RecruitBonusAmount: 100,   // $1 when N1 recruits a N2
   activationCallsRequired: 2,            // 2 referrals needed to trigger activation bonus
+  activationMinDirectCommissions: 10000, // $100 minimum direct commissions to unlock activation bonus
+  recruitmentMilestones: [
+    { recruits: 5, bonus: 1500 },       // $15
+    { recruits: 10, bonus: 3500 },      // $35
+    { recruits: 20, bonus: 7500 },      // $75
+    { recruits: 50, bonus: 25000 },     // $250
+    { recruits: 100, bonus: 60000 },    // $600
+    { recruits: 500, bonus: 400000 },   // $4,000
+  ],
   clientDiscountType: "fixed" as const,  // 'fixed' ($) or 'percent' (%)
   clientDiscountAmount: 500,             // $5 discount for client
   clientDiscountPercent: 0,              // 0% (not used when type=fixed)

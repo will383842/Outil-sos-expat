@@ -48,6 +48,22 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
     providerValidationBonus: 0, // Pas de bonus prestataire
   },
 
+  // N1/N2 Network Commission Settings
+  commissionN1CallAmount: 100,            // $1
+  commissionN2CallAmount: 50,             // $0.50
+  commissionActivationBonusAmount: 500,   // $5
+  commissionN1RecruitBonusAmount: 100,    // $1
+  activationCallsRequired: 2,
+  activationMinDirectCommissions: 10000,  // $100
+  recruitmentMilestones: [
+    { recruits: 5, bonus: 1500 },
+    { recruits: 10, bonus: 3500 },
+    { recruits: 20, bonus: 7500 },
+    { recruits: 50, bonus: 25000 },
+    { recruits: 100, bonus: 60000 },
+    { recruits: 500, bonus: 400000 },
+  ],
+
   // Règles de commission par type d'action
   commissionRules: {
     // Inscription d'un filleul - DÉSACTIVÉ

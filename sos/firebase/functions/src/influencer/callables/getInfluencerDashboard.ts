@@ -19,7 +19,7 @@ import {
   InfluencerCommission,
   GetInfluencerDashboardResponse,
 } from "../types";
-import { getInfluencerConfigCached, calculateLevelFromEarnings } from "../utils";
+import { getInfluencerConfigCached } from "../utils";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
@@ -80,26 +80,8 @@ export const getInfluencerDashboard = onCall(
         throw new HttpsError("permission-denied", "Account is banned");
       }
 
-      // 3b. Self-healing: calculate level if missing
+      // 3b. Get config for response
       const config = await getInfluencerConfigCached();
-
-      if (influencer.level === undefined || influencer.level === null) {
-        const levelResult = calculateLevelFromEarnings(influencer.totalEarned || 0, config);
-        influencer.level = levelResult.level;
-        influencer.levelProgress = levelResult.progress;
-
-        // Write back (fire and forget)
-        db.collection("influencers").doc(userId).update({
-          level: levelResult.level,
-          levelProgress: levelResult.progress,
-          currentStreak: influencer.currentStreak ?? 0,
-          bestStreak: influencer.bestStreak ?? 0,
-          monthlyTopMultiplier: influencer.monthlyTopMultiplier ?? 1.0,
-          monthlyTopMultiplierMonth: influencer.monthlyTopMultiplierMonth ?? null,
-        }).catch((err) => {
-          logger.warn("[getInfluencerDashboard] Self-heal write failed", { userId, err });
-        });
-      }
 
       // 4. Get recent commissions (last 10)
       const commissionsQuery = await db
@@ -203,8 +185,6 @@ export const getInfluencerDashboard = onCall(
           clientDiscountPercent: config.clientDiscountPercent,
           clientDiscountAmount: config.clientDiscountAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
-          levelThresholds: config.levelThresholds,
-          levelBonuses: config.levelBonuses,
         },
         // Commission Plan info (for display on dashboard)
         commissionPlan: influencer.commissionPlanId ? {

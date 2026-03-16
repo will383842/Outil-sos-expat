@@ -168,7 +168,6 @@ export const adminGetChattersList = onCall(
           country: data.country,
           language: data.language || null,
           status: data.status,
-          level: data.level,
           totalEarned: data.totalEarned,
           totalClients: data.totalClients,
           totalRecruits: data.totalRecruits,
@@ -392,8 +391,6 @@ export const adminGetChatterDetail = onCall(
         bio: chatter.bio || "",
         status: chatter.status,
         isVisible: chatter.isVisible ?? false,
-        level: chatter.level,
-        levelProgress: chatter.levelProgress || 0,
         adminNotes: chatter.adminNotes || "",
         affiliateCodeClient: chatter.affiliateCodeClient,
         affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
@@ -409,7 +406,6 @@ export const adminGetChatterDetail = onCall(
         isActivated: chatter.isActivated ?? false,
         currentStreak: chatter.currentStreak || 0,
         bestStreak: chatter.bestStreak || 0,
-        lastActivityDate: chatter.lastActivityDate || null,
         badges: chatter.badges || [],
         currentMonthRank: chatter.currentMonthRank || null,
         bestRank: chatter.bestRank || null,
@@ -442,7 +438,6 @@ export const adminGetChatterDetail = onCall(
         activatedAt: tsToISO(chatter.activatedAt),
         captainAssignedAt: tsToISO(chatter.captainAssignedAt),
         captainPromotedAt: tsToISO(chatter.captainPromotedAt),
-        lastZoomAttendance: tsToISO(chatter.lastZoomAttendance),
         telegramLinkedAt: tsToISO(chatter.telegramLinkedAt),
         suspendedAt: tsToISO((chatter as any).suspendedAt),
         suspendReason: (chatter as any).suspendReason || null,
@@ -1204,7 +1199,6 @@ export const adminGetChatterLeaderboard = onCall(
         monthlyEarnings: number;
         monthlyClients: number;
         monthlyRecruits: number;
-        level: number;
       }> = [];
 
       // Process chatters in batches of 10
@@ -1255,7 +1249,6 @@ export const adminGetChatterLeaderboard = onCall(
               monthlyEarnings: result.monthlyEarnings,
               monthlyClients: result.monthlyClients,
               monthlyRecruits: result.monthlyRecruits,
-              level: chatter.level,
             });
           }
         }

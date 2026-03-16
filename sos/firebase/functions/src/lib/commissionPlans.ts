@@ -42,6 +42,10 @@ export interface InfluencerPlanRates {
   commissionRecruitmentAmount: number;
   commissionRecruitmentAmountLawyer?: number;
   commissionRecruitmentAmountExpat?: number;
+  commissionN1CallAmount?: number;
+  commissionN2CallAmount?: number;
+  commissionActivationBonusAmount?: number;
+  commissionN1RecruitBonusAmount?: number;
 }
 
 /**
@@ -54,6 +58,10 @@ export interface BloggerPlanRates {
   commissionRecruitmentAmount: number;
   commissionRecruitmentAmountLawyer?: number;
   commissionRecruitmentAmountExpat?: number;
+  commissionN1CallAmount?: number;
+  commissionN2CallAmount?: number;
+  commissionActivationBonusAmount?: number;
+  commissionN1RecruitBonusAmount?: number;
 }
 
 /**
@@ -86,6 +94,14 @@ export interface AffiliatePlanRates {
   subscriptionFixedBonus: number;
   /** Fixed bonus when referred provider completes KYC (cents) */
   providerValidationBonus: number;
+  /** N1 call commission amount (cents) */
+  commissionN1CallAmount?: number;
+  /** N2 call commission amount (cents) */
+  commissionN2CallAmount?: number;
+  /** Activation bonus amount (cents) */
+  commissionActivationBonusAmount?: number;
+  /** N1 recruit bonus amount (cents) */
+  commissionN1RecruitBonusAmount?: number;
 }
 
 /**

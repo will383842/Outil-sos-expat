@@ -5,7 +5,7 @@
  * Supports:
  * - Client referral commissions
  * - Provider recruitment commissions
- * - Gamification (levels, badges, streaks)
+ * - Gamification (badges)
  * - Quiz qualification system
  * - Monthly leaderboards with bonuses
  */
@@ -24,11 +24,6 @@ export type ChatterStatus =
   | "active"            // Registered & active, can earn commissions
   | "suspended"         // Temporarily suspended by admin
   | "banned";           // Permanently banned
-
-/**
- * Chatter level (1-5 based on total earnings)
- */
-export type ChatterLevel = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Supported languages for chatters
@@ -68,10 +63,7 @@ export type ChatterCommissionType =
   | "n1_recruit_bonus"      // NEW: $1 - N1 recruits someone who activates
   | "provider_call"         // NEW: $5 - Recruited provider received a call (6 months window)
   | "recruitment"           // LEGACY: Recruited provider received first call
-  | "bonus_level"           // Level-up bonus
-  | "bonus_streak"          // Streak bonus
   | "bonus_top3"            // Monthly Top 3 bonus
-  | "bonus_zoom"            // Zoom meeting attendance bonus
   | "manual_adjustment"     // Admin manual adjustment
   // LEGACY: Referral system commissions (2-level) - kept for backward compatibility
   | "threshold_10"          // LEGACY: Filleul N1 reached $10 threshold
@@ -223,19 +215,13 @@ export interface Chatter {
   /** Bio/description */
   bio?: string;
 
-  // ---- Status & Level ----
+  // ---- Status ----
 
   /** Account status */
   status: ChatterStatus;
 
   /** Whether this chatter is visible in the public directory */
   isVisible: boolean;
-
-  /** Current level (1-5) */
-  level: ChatterLevel;
-
-  /** Progress towards next level (0-100%) */
-  levelProgress: number;
 
   /** Admin notes (internal) */
   adminNotes?: string;
@@ -293,9 +279,6 @@ export interface Chatter {
   /** Best streak ever */
   bestStreak: number;
 
-  /** Last activity date (for streak calculation) */
-  lastActivityDate: string | null; // YYYY-MM-DD
-
   /** Earned badges */
   badges: ChatterBadgeType[];
 
@@ -304,25 +287,6 @@ export interface Chatter {
 
   /** Best ever rank */
   bestRank: number | null;
-
-  // ---- Monthly Top Multiplier (reward for top 3) ----
-
-  /**
-   * Commission multiplier for this month (reward for being top 3 previous month)
-   * 1.0 = no bonus, 2.0 = double, 1.5 = +50%, 1.15 = +15%
-   */
-  monthlyTopMultiplier: number;
-
-  /** Month during which the multiplier is active (YYYY-MM format, null if no active bonus) */
-  monthlyTopMultiplierMonth: string | null;
-
-  // ---- Zoom ----
-
-  /** Total Zoom meetings attended */
-  zoomMeetingsAttended: number;
-
-  /** Last Zoom attendance date */
-  lastZoomAttendance: Timestamp | null;
 
   // ---- Payment Details ----
 
@@ -641,7 +605,7 @@ export interface ChatterCommission {
     rank?: number;
     month?: string; // YYYY-MM
     streakDays?: number;
-    levelReached?: ChatterLevel;
+    levelReached?: 1 | 2 | 3 | 4 | 5;
 
     // For captain quality bonus (hybrid system)
     criteriaMet?: boolean;
@@ -655,21 +619,6 @@ export interface ChatterCommission {
 
   /** Base amount before bonuses (cents) */
   baseAmount: number;
-
-  /** Level bonus multiplier applied (1.0 = no bonus) */
-  levelBonus: number;
-
-  /** Top 3 bonus multiplier applied (1.0 = no bonus) */
-  top3Bonus: number;
-
-  /** Zoom bonus multiplier applied (1.0 = no bonus) */
-  zoomBonus: number;
-
-  /** Streak bonus multiplier applied (1.0 = no bonus) */
-  streakBonus?: number;
-
-  /** Monthly top multiplier (reward for being top 3 previous month, 1.0 = no bonus) */
-  monthlyTopMultiplier?: number;
 
   /** Final commission amount (cents) */
   amount: number;
@@ -999,6 +948,9 @@ export interface ChatterConfig {
   /** Number of client calls required before activation (anti-fraud) */
   activationCallsRequired: number;
 
+  /** Minimum direct commissions earned (cents) to unlock activation bonus */
+  activationMinDirectCommissions: number;
+
   /** Commission when recruited provider receives a call ($5 = 500 cents) */
   commissionProviderCallAmount: number;
 
@@ -1031,15 +983,6 @@ export interface ChatterConfig {
   /** @deprecated Use recruitmentWindowMonths instead */
   providerRecruitmentDurationMonths: number;
 
-  /** Flash bonus multiplier (for promotions, e.g., 2.0 = double commissions) */
-  flashBonusMultiplier: number;
-
-  /** Whether flash bonus is currently active */
-  flashBonusActive: boolean;
-
-  /** Flash bonus end date (if active) */
-  flashBonusEndsAt: Timestamp | null;
-
   // ---- LEGACY Commission Amounts (kept for backward compatibility) ----
 
   /** @deprecated Use commissionClientCallAmount instead */
@@ -1048,48 +991,11 @@ export interface ChatterConfig {
   /** @deprecated Use commissionN1RecruitBonusAmount instead */
   commissionRecruitmentAmount: number;
 
-  // ---- Level Bonuses ----
-
-  levelBonuses: {
-    level1: number;  // 1.00 = no bonus
-    level2: number;  // 1.10 = +10%
-    level3: number;  // 1.20 = +20%
-    level4: number;  // 1.35 = +35%
-    level5: number;  // 1.50 = +50%
-  };
-
-  // ---- Level Thresholds (cents) ----
-
-  levelThresholds: {
-    level2: number;  // $100 = 10000
-    level3: number;  // $500 = 50000
-    level4: number;  // $2000 = 200000
-    level5: number;  // $5000 = 500000
-  };
-
   // ---- Top 3 Monthly Bonuses ----
 
   top1BonusMultiplier: number;  // 2.00 = +100%
   top2BonusMultiplier: number;  // 1.50 = +50%
   top3BonusMultiplier: number;  // 1.15 = +15%
-
-  // ---- Zoom Bonus ----
-
-  /** Zoom attendance bonus multiplier */
-  zoomBonusMultiplier: number;  // 1.10 = +10%
-
-  /** Days after Zoom meeting that bonus applies */
-  zoomBonusDurationDays: number;
-
-  // ---- Streak Bonus ----
-
-  /** Streak bonus multipliers based on consecutive activity days */
-  streakBonuses: {
-    days7: number;   // 1.05 = +5% bonus at 7+ days
-    days14: number;  // 1.10 = +10% bonus at 14+ days
-    days30: number;  // 1.20 = +20% bonus at 30+ days
-    days100: number; // 1.50 = +50% bonus at 100+ days
-  };
 
   // ---- Recruitment Commission ----
 
@@ -1187,12 +1093,13 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   trainingEnabled: true,
 
   // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
-  commissionClientCallAmount: 300,         // $3 - Direct client call (fallback, overridden by Firestore admin config)
+  commissionClientCallAmount: 500,         // $5 - Direct client call (fallback when providerType unknown)
   commissionN1CallAmount: 100,            // $1 - N1 referral makes a call
   commissionN2CallAmount: 50,             // $0.50 - N2 referral makes a call
   commissionActivationBonusAmount: 500,   // $5 - After referral's 2nd client call
   commissionN1RecruitBonusAmount: 100,    // $1 - N1 recruits someone who activates
   activationCallsRequired: 2,             // 2 calls to activate (anti-fraud)
+  activationMinDirectCommissions: 10000,  // $100 minimum direct commissions to unlock activation bonus
   commissionProviderCallAmount: 500,      // $5 - Provider recruitment call
   commissionClientCallAmountLawyer: 500,   // $5 - Client call with lawyer
   commissionClientCallAmountExpat: 300,    // $3 - Client call with expat
@@ -1212,42 +1119,14 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   captainQualityBonusMinCommissions: 10000, // Min $100 monthly team commissions
   recruitmentWindowMonths: 6,             // 6 months window for recruitment commissions
   providerRecruitmentDurationMonths: 6,   // @deprecated Use recruitmentWindowMonths instead
-  flashBonusMultiplier: 1.0,              // No flash bonus by default
-  flashBonusActive: false,
-  flashBonusEndsAt: null,
 
   // LEGACY (kept for backward compatibility)
   commissionClientAmount: 300,       // $3 - deprecated (fallback)
   commissionRecruitmentAmount: 500,  // $5 - deprecated
 
-  levelBonuses: {
-    level1: 1.00,
-    level2: 1.10,
-    level3: 1.20,
-    level4: 1.35,
-    level5: 1.50,
-  },
-
-  levelThresholds: {
-    level2: 10000,   // $100
-    level3: 50000,   // $500
-    level4: 200000,  // $2000
-    level5: 500000,  // $5000
-  },
-
   top1BonusMultiplier: 2.00,
   top2BonusMultiplier: 1.50,
   top3BonusMultiplier: 1.15,
-
-  zoomBonusMultiplier: 1.10,
-  zoomBonusDurationDays: 7,
-
-  streakBonuses: {
-    days7: 1.05,    // +5% bonus at 7+ consecutive days
-    days14: 1.10,   // +10% bonus at 14+ consecutive days
-    days30: 1.20,   // +20% bonus at 30+ consecutive days
-    days100: 1.50,  // +50% bonus at 100+ consecutive days
-  },
 
   recruitmentCommissionThreshold: 5000, // $50 — recruited chatter must earn this before recruiter gets $5
 
@@ -1460,7 +1339,7 @@ export interface ChatterBadgeAward {
     rank?: number;
     month?: string;
     streakDays?: number;
-    level?: ChatterLevel;
+    level?: 1 | 2 | 3 | 4 | 5;
     clientCount?: number;
     recruitCount?: number;
     totalEarned?: number;
@@ -1489,7 +1368,7 @@ export interface ChatterMonthlyRanking {
     monthlyEarnings: number;
     monthlyClients: number;
     monthlyRecruits: number;
-    level: ChatterLevel;
+    language: string;
   }>;
 
   /** Bonus commissions awarded to top 3 */
@@ -1641,7 +1520,7 @@ export interface ChatterNotification {
     commissionId?: string;
     withdrawalId?: string;
     badgeType?: ChatterBadgeType;
-    newLevel?: ChatterLevel;
+    newLevel?: 1 | 2 | 3 | 4 | 5;
     streakDays?: number;
     rank?: number;
     month?: string;
@@ -1738,7 +1617,7 @@ export interface ChatterZoomMeeting {
   selectedChatterIds?: string[];
 
   /** Minimum level required */
-  minimumLevel?: ChatterLevel;
+  minimumLevel?: 1 | 2 | 3 | 4 | 5;
 
   /** Created timestamp */
   createdAt: Timestamp;
@@ -2504,11 +2383,10 @@ export interface RegisterChatterResponse {
 }
 
 export interface GetChatterDashboardResponse {
-  chatter: Omit<Chatter, "paymentDetails" | "adminNotes" | "createdAt" | "updatedAt" | "lastLoginAt" | "lastZoomAttendance" | "recruitedAt" | "activatedAt"> & {
+  chatter: Omit<Chatter, "paymentDetails" | "adminNotes" | "createdAt" | "updatedAt" | "lastLoginAt" | "recruitedAt" | "activatedAt"> & {
     createdAt: string;
     updatedAt: string;
     lastLoginAt: string | null;
-    lastZoomAttendance: string | null;
     recruitedAt: string | null;
     recruiterName: string | null;
     recruiterPhoto: string | null;
@@ -2547,8 +2425,6 @@ export interface GetChatterDashboardResponse {
     | "commissionN1RecruitBonusAmount"
     | "commissionProviderCallAmount"
     | "minimumWithdrawalAmount"
-    | "levelThresholds"
-    | "levelBonuses"
     | "recruitmentMilestones"
     | "monthlyCompetitionPrizes"
     | "telegramBonusAmount"
@@ -2690,7 +2566,7 @@ export interface UpdateChatterProfileInput {
 
 export interface AdminGetChattersListInput {
   status?: ChatterStatus;
-  level?: ChatterLevel;
+  level?: 1 | 2 | 3 | 4 | 5;
   country?: string;
   search?: string;
   sortBy?: "createdAt" | "totalEarned" | "totalClients" | "currentStreak";
@@ -2707,7 +2583,6 @@ export interface AdminGetChattersListResponse {
     lastName: string;
     country: string;
     status: ChatterStatus;
-    level: ChatterLevel;
     totalEarned: number;
     totalClients: number;
     totalRecruits: number;

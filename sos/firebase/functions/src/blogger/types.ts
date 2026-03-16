@@ -56,6 +56,11 @@ export type SupportedBloggerLanguage =
 export type BloggerCommissionType =
   | "client_referral"       // Client completed a paid call ($10 FIXED)
   | "recruitment"           // Recruited provider received a call ($5 FIXED)
+  | "n1_call"               // Call from direct recruit's client (N1 network)
+  | "n2_call"               // Call from indirect recruit's client (N2 network)
+  | "activation_bonus"      // Paid to recruiter after recruit's Nth call
+  | "n1_recruit_bonus"      // Paid when N1 recruits someone who activates
+  | "tier_bonus"            // Recruitment milestone tier bonus
   | "manual_adjustment";    // Admin manual adjustment
 
 /**
@@ -318,11 +323,28 @@ export interface Blogger {
   /** Blogger who recruited this one (blogger ID) */
   recruitedBy: string | null;
 
+  /** ID of the recruiter's recruiter (N2 grandparent) */
+  parrainNiveau2Id?: string;
+
   /** Recruitment code used */
   recruitedByCode: string | null;
 
   /** When recruited */
   recruitedAt: Timestamp | null;
+
+  // ---- MLM Network Activation ----
+
+  /** Whether this blogger has been activated (made enough client calls) */
+  isActivated?: boolean;
+
+  /** Whether activation bonus has been paid to recruiter */
+  activationBonusPaid?: boolean;
+
+  /** Total number of client calls made (for activation tracking) */
+  totalClientCalls?: number;
+
+  /** Milestone tier bonuses already paid (indices) */
+  tierBonusesPaid?: number[];
 
   // ---- Payment Details ----
 
@@ -1351,6 +1373,23 @@ export interface BloggerConfig {
   /** Minimum totalEarned (cents) a recruited blogger must reach before recruiter gets $50 */
   recruitmentCommissionThreshold: number;
 
+  // ---- MLM Network Commissions (cents) ----
+
+  /** N1 call commission (cents) - per call from direct recruit's client */
+  commissionN1CallAmount: number;
+  /** N2 call commission (cents) - per call from indirect recruit's client */
+  commissionN2CallAmount: number;
+  /** Activation bonus (cents) - paid to recruiter after recruit's Nth call */
+  commissionActivationBonusAmount: number;
+  /** N1 recruit bonus (cents) - paid when N1 recruits someone who activates */
+  commissionN1RecruitBonusAmount: number;
+  /** Number of client calls required for activation */
+  activationCallsRequired: number;
+  /** Minimum direct commissions earned (cents) to unlock activation bonus */
+  activationMinDirectCommissions: number;
+  /** Recruitment milestones: array of { recruits: number, bonus: number (cents) } */
+  recruitmentMilestones: Array<{ recruits: number; bonus: number }>;
+
   // ---- Version & History ----
 
   /** Config version */
@@ -1389,7 +1428,7 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
   newRegistrationsEnabled: true,
   withdrawalsEnabled: true,
 
-  commissionClientAmount: 1000,      // $10 FIXED
+  commissionClientAmount: 500,       // $5 fallback (when providerType unknown, overridden by Lawyer/Expat split)
   commissionRecruitmentAmount: 500,  // $5 FIXED
   commissionClientAmountLawyer: 500,       // $5 - lawyer
   commissionClientAmountExpat: 300,        // $3 - expat
@@ -1413,6 +1452,21 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
   recruitmentCommissionThreshold: 20000,    // $200 — recruited blogger must earn this before recruiter gets $50
 
   isBloggerListingPageVisible: true,
+
+  commissionN1CallAmount: 100,            // $1
+  commissionN2CallAmount: 50,             // $0.50
+  commissionActivationBonusAmount: 500,   // $5
+  commissionN1RecruitBonusAmount: 100,    // $1
+  activationCallsRequired: 2,
+  activationMinDirectCommissions: 10000,  // $100
+  recruitmentMilestones: [
+    { recruits: 5, bonus: 1500 },     // $15
+    { recruits: 10, bonus: 3500 },    // $35
+    { recruits: 20, bonus: 7500 },    // $75
+    { recruits: 50, bonus: 25000 },   // $250
+    { recruits: 100, bonus: 60000 },  // $600
+    { recruits: 500, bonus: 400000 }, // $4,000
+  ],
 
   version: 1,
 };

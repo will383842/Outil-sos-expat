@@ -17,13 +17,11 @@ import {
 } from "../types";
 import {
   getChatterConfigCached,
-  calculateLevelFromEarnings,
   getValidationDelayMs,
   getReleaseDelayMs,
 } from "../utils/chatterConfigService";
 // Note: getValidationDelayMs and getReleaseDelayMs are used in validateCommission and batch operations
 import { checkCommissionFraud, checkAutoSuspension } from "../utils/chatterFraudDetection";
-import { notifyMotivationEngine } from "../../Webhooks/notifyMotivationEngine";
 
 // ============================================================================
 // TYPES
@@ -257,11 +255,6 @@ export async function createCommission(
       sourceType: source.type,
       sourceDetails: source.details,
       baseAmount,
-      levelBonus: 0,
-      top3Bonus: 0,
-      zoomBonus: 0,
-      streakBonus: 1.0,
-      monthlyTopMultiplier: 1.0, // P1-1: all multipliers permanently disabled
       amount: finalAmount,
       currency: "USD",
       calculationDetails: finalCalculationDetails,
@@ -330,28 +323,6 @@ export async function createCommission(
         newTotalRecruits += 1;
       }
 
-      // Update streak (activity today)
-      const today = new Date().toISOString().split("T")[0];
-      let newStreak = currentData.currentStreak;
-      let newBestStreak = currentData.bestStreak;
-
-      if (currentData.lastActivityDate !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-        if (currentData.lastActivityDate === yesterdayStr) {
-          // Continue streak
-          newStreak += 1;
-          if (newStreak > newBestStreak) {
-            newBestStreak = newStreak;
-          }
-        } else {
-          // Reset streak
-          newStreak = 1;
-        }
-      }
-
       // Create commission
       transaction.set(commissionRef, commission);
 
@@ -362,9 +333,6 @@ export async function createCommission(
         commissionsByType,
         totalClients: newTotalClients,
         totalRecruits: newTotalRecruits,
-        currentStreak: newStreak,
-        bestStreak: newBestStreak,
-        lastActivityDate: today,
         updatedAt: Timestamp.now(),
       });
     });
@@ -417,14 +385,8 @@ function getDefaultDescription(
       return `Commission client referral${details?.clientEmail ? ` (${maskEmail(details.clientEmail)})` : ""}`;
     case "recruitment":
       return `Commission recrutement prestataire${details?.providerEmail ? ` (${maskEmail(details.providerEmail)})` : ""}`;
-    case "bonus_level":
-      return `Bonus passage niveau ${details?.levelReached || ""}`;
-    case "bonus_streak":
-      return `Bonus streak ${details?.streakDays || ""} jours`;
     case "bonus_top3":
       return `Bonus Top ${details?.rank || ""} mensuel (${details?.month || ""})`;
-    case "bonus_zoom":
-      return "Bonus participation Zoom";
     case "bonus_telegram":
       return "Bonus connexion Telegram";
     case "manual_adjustment":
@@ -569,9 +531,6 @@ export async function releaseCommission(
       chatterId: commission.chatterId,
       amount: commission.amount,
     });
-
-    // Check for level up
-    await checkAndUpdateLevel(commission.chatterId);
 
     // Check and award milestone badges
     await checkAndAwardBadges(commission.chatterId);
@@ -768,111 +727,6 @@ export async function cancelCommission(
 }
 
 // ============================================================================
-// LEVEL MANAGEMENT
-// ============================================================================
-
-/**
- * Check and update chatter level based on total earnings
- */
-export async function checkAndUpdateLevel(chatterId: string): Promise<{
-  levelChanged: boolean;
-  newLevel?: 1 | 2 | 3 | 4 | 5;
-  previousLevel?: 1 | 2 | 3 | 4 | 5;
-}> {
-  const db = getFirestore();
-
-  try {
-    const chatterDoc = await db.collection("chatters").doc(chatterId).get();
-
-    if (!chatterDoc.exists) {
-      return { levelChanged: false };
-    }
-
-    const chatter = chatterDoc.data() as Chatter;
-    const config = await getChatterConfigCached();
-
-    const { level: newLevel, progress } = calculateLevelFromEarnings(
-      chatter.totalEarned,
-      config
-    );
-
-    if (newLevel === chatter.level) {
-      // Just update progress
-      await db.collection("chatters").doc(chatterId).update({
-        levelProgress: progress,
-        updatedAt: Timestamp.now(),
-      });
-      return { levelChanged: false };
-    }
-
-    // Level changed
-    await db.collection("chatters").doc(chatterId).update({
-      level: newLevel,
-      levelProgress: progress,
-      badges: FieldValue.arrayUnion(`level_${newLevel}` as const),
-      updatedAt: Timestamp.now(),
-    });
-
-    // Create level-up bonus commission
-    const badgeDoc = await db.collection("chatter_badges").doc(`level_${newLevel}`).get();
-    if (badgeDoc.exists) {
-      const badge = badgeDoc.data();
-      if (badge?.bonusReward && badge.bonusReward > 0) {
-        await createCommission({
-          chatterId,
-          type: "bonus_level",
-          source: {
-            id: null,
-            type: "bonus",
-            details: {
-              bonusType: "level_up",
-              levelReached: newLevel,
-            },
-          },
-          baseAmount: badge.bonusReward,
-          description: `Bonus niveau ${newLevel} atteint`,
-          skipFraudCheck: true,
-        });
-      }
-    }
-
-    // Create badge award record
-    await db.collection("chatter_badge_awards").add({
-      chatterId,
-      chatterEmail: chatter.email,
-      badgeType: `level_${newLevel}`,
-      awardedAt: Timestamp.now(),
-      bonusCommissionId: null,
-      context: { level: newLevel },
-    });
-
-    logger.info("[checkAndUpdateLevel] Level updated", {
-      chatterId,
-      previousLevel: chatter.level,
-      newLevel,
-    });
-
-    // Notify Motivation Engine (non-blocking)
-    notifyMotivationEngine("chatter.level_up", chatterId, {
-      oldLevel: chatter.level,
-      newLevel,
-      totalEarningsCents: chatter.totalEarned,
-    }).catch((err) => {
-      logger.warn("[checkAndUpdateLevel] Failed to notify Motivation Engine", { error: err });
-    });
-
-    return {
-      levelChanged: true,
-      newLevel,
-      previousLevel: chatter.level,
-    };
-  } catch (error) {
-    logger.error("[checkAndUpdateLevel] Error", { chatterId, error });
-    return { levelChanged: false };
-  }
-}
-
-// ============================================================================
 // AUTOMATIC BADGE ATTRIBUTION
 // ============================================================================
 
@@ -1064,7 +918,6 @@ export async function checkAndAwardBadges(chatterId: string): Promise<{
             totalClients: chatter.totalClients,
             totalRecruits: chatter.totalRecruits,
             totalEarned: chatter.totalEarned,
-            zoomMeetings: chatter.zoomMeetingsAttended,
           },
         });
       }

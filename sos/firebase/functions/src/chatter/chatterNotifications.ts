@@ -343,17 +343,8 @@ export const chatterNotifyCommissionEarned = onDocumentCreated(
       case "tier_bonus":
         reason = "Bonus palier atteint";
         break;
-      case "bonus_level":
-        reason = "Bonus niveau";
-        break;
-      case "bonus_streak":
-        reason = "Bonus streak";
-        break;
       case "bonus_top3":
         reason = "Bonus Top 3";
-        break;
-      case "bonus_zoom":
-        reason = "Bonus Zoom";
         break;
       case "bonus_telegram":
         reason = "Bonus connexion Telegram";

@@ -24,12 +24,7 @@ export {
   getChatterConfigCached,
   refreshChatterConfigCache,
   invalidateChatterConfigCache,
-  calculateLevelFromEarnings,
-  getLevelBonus,
   getTop3Bonus,
-  hasActiveZoomBonus,
-  getZoomBonus,
-  calculateCommissionWithBonuses,
   isCountrySupported,
   getMinimumWithdrawalAmount,
   areWithdrawalsEnabled,
@@ -37,7 +32,6 @@ export {
   getValidationDelayMs,
   getReleaseDelayMs,
   // NEW SIMPLIFIED COMMISSION SYSTEM (2026)
-  getFlashBonusMultiplier,
   getClientCallCommission,
   getN1CallCommission,
   getN2CallCommission,
@@ -46,7 +40,6 @@ export {
   getActivationCallsRequired,
   getProviderCallCommission,
   getProviderRecruitmentDurationMonths,
-  getStreakBonusMultiplier,
   getCaptainCallCommission,
 } from "./chatterConfigService";
 

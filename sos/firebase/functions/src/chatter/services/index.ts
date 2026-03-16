@@ -8,7 +8,6 @@ export {
   validateCommission,
   releaseCommission,
   cancelCommission,
-  checkAndUpdateLevel,
   checkAndAwardBadges,
   validatePendingCommissions,
   releaseValidatedCommissions,

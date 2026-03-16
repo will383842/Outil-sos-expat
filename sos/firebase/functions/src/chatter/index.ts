@@ -359,7 +359,6 @@ export type {
 export type {
   Chatter,
   ChatterStatus,
-  ChatterLevel,
   ChatterCommission,
   ChatterCommissionType,
   ChatterCommissionStatus,

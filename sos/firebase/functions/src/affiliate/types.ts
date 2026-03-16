@@ -30,6 +30,11 @@ export type CommissionActionType =
   | "referral_subscription" // Subscription created
   | "referral_subscription_renewal" // Subscription renewed
   | "referral_provider_validated" // Provider completed KYC
+  | "n1_call"                    // N1 referral made a call
+  | "n2_call"                    // N2 referral made a call
+  | "activation_bonus"           // Activation bonus (recruit reaches threshold)
+  | "n1_recruit_bonus"           // N1 recruits someone who activates
+  | "tier_bonus"                 // Recruitment milestone tier bonus
   | "manual_adjustment"; // Admin manual adjustment
 
 /**
@@ -246,6 +251,24 @@ export interface UserAffiliateFields {
 
   /** Current payout in progress (if any) */
   pendingPayoutId: string | null;
+
+  /** ID of the user who referred this one */
+  recruitedBy?: string;
+
+  /** ID of the recruiter's recruiter (N2) */
+  parrainNiveau2Id?: string;
+
+  /** Whether activated (enough client calls) */
+  isActivated?: boolean;
+
+  /** Whether activation bonus paid to recruiter */
+  activationBonusPaid?: boolean;
+
+  /** Total client calls made */
+  totalClientCalls?: number;
+
+  /** Milestone tier bonuses already paid */
+  tierBonusesPaid?: number[];
 
   /** Affiliate status */
   affiliateStatus: AffiliateStatus;
@@ -597,6 +620,23 @@ export interface AffiliateConfig {
     providerValidationBonus: number; // cents
   };
 
+  // ---- N1/N2 Network Commission Settings ----
+
+  /** N1 call commission amount (cents) */
+  commissionN1CallAmount: number;
+  /** N2 call commission amount (cents) */
+  commissionN2CallAmount: number;
+  /** Activation bonus amount (cents) */
+  commissionActivationBonusAmount: number;
+  /** N1 recruit bonus amount (cents) */
+  commissionN1RecruitBonusAmount: number;
+  /** Number of client calls required before activation */
+  activationCallsRequired: number;
+  /** Minimum direct commissions earned (cents) to unlock activation bonus */
+  activationMinDirectCommissions: number;
+  /** Recruitment milestones: array of { recruits: number, bonus: number (cents) } */
+  recruitmentMilestones: Array<{ recruits: number; bonus: number }>;
+
   // ---- Commission Rules ----
 
   commissionRules: {
@@ -911,6 +951,22 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
     subscriptionFixedBonus: 0,
     providerValidationBonus: 2000, // 20€
   },
+
+  // N1/N2 Network Commission Settings
+  commissionN1CallAmount: 100,              // $1 per N1 recruit's client call
+  commissionN2CallAmount: 50,               // $0.50 per N2 recruit's client call
+  commissionActivationBonusAmount: 500,     // $5 activation bonus
+  commissionN1RecruitBonusAmount: 100,      // $1 when N1 recruits a N2
+  activationCallsRequired: 2,              // 2 calls to activate
+  activationMinDirectCommissions: 10000,   // $100 minimum direct commissions to unlock activation bonus
+  recruitmentMilestones: [
+    { recruits: 5, bonus: 1500 },       // $15
+    { recruits: 10, bonus: 3500 },      // $35
+    { recruits: 20, bonus: 7500 },      // $75
+    { recruits: 50, bonus: 25000 },     // $250
+    { recruits: 100, bonus: 60000 },    // $600
+    { recruits: 500, bonus: 400000 },   // $4,000
+  ],
 
   commissionRules: {
     referral_signup: {

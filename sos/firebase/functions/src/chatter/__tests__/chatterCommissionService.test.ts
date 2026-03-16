@@ -93,7 +93,6 @@ jest.mock("../utils/chatterConfigService", () => ({
   getChatterConfigCached: (...a: any[]) => mockGetChatterConfigCached(...a),
   getValidationDelayMs: jest.fn().mockReturnValue(7 * 24 * 3600 * 1000),
   getReleaseDelayMs: jest.fn().mockReturnValue(3 * 24 * 3600 * 1000),
-  calculateLevelFromEarnings: jest.fn().mockReturnValue(1),
 }));
 
 const mockCheckCommissionFraud = jest.fn().mockResolvedValue({ shouldBlock: false, flags: [], severity: "low" });

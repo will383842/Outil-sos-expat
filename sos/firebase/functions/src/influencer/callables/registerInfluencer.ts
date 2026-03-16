@@ -416,13 +416,8 @@ export const registerInfluencer = onCall(
         affiliateCodeRecruitment,
         affiliateCodeProvider,
 
-        // Level system (aligned with Chatter)
-        level: 1,
-        levelProgress: 0,
         currentStreak: 0,
         bestStreak: 0,
-        monthlyTopMultiplier: 1.0,
-        monthlyTopMultiplierMonth: null,
 
         totalEarned: 0,
         availableBalance: 0,
@@ -440,6 +435,8 @@ export const registerInfluencer = onCall(
         },
         currentMonthRank: null,
         bestRank: null,
+        monthlyTopMultiplier: 1,
+        monthlyTopMultiplierMonth: null,
 
         preferredPaymentMethod: null,
         paymentDetails: null,
@@ -465,8 +462,6 @@ export const registerInfluencer = onCall(
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
-        lastActivityDate: null,
-
         // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
         termsAccepted: input.acceptTerms ?? true,
         termsAcceptedAt: input.termsAcceptedAt || now.toDate().toISOString(),

@@ -412,6 +412,7 @@ export {
 
 // AI Tax Watch - Semiannual tax compliance monitoring
 export { aiTaxWatch } from "./scheduled/aiTaxWatch";
+export { crossRoleMonthlyTop3 } from "./scheduled/crossRoleMonthlyTop3";
 
 // Alias pour usage local dans GLOBAL_SECRETS
 const PAYPAL_CLIENT_ID = _PAYPAL_CLIENT_ID;

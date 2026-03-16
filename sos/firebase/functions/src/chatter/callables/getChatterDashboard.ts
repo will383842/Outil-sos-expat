@@ -19,7 +19,6 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import {
   Chatter,
   ChatterCommission,
-  ChatterLevel,
   ChatterZoomMeeting,
   GetChatterDashboardResponse,
   REFERRAL_CONFIG,
@@ -50,41 +49,6 @@ function getMonthStart(date: Date): Date {
 function calculatePercentChange(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
   return Math.round(((current - previous) / previous) * 100);
-}
-
-// Helper to estimate time to next level
-function estimateTimeToNextLevel(
-  currentLevel: ChatterLevel,
-  totalEarned: number,
-  monthlyPace: number,
-  levelThresholds: { level2: number; level3: number; level4: number; level5: number }
-): string | null {
-  if (currentLevel >= 5) return null;
-  if (monthlyPace <= 0) return null;
-
-  const thresholdMap: Record<number, number> = {
-    1: levelThresholds.level2,
-    2: levelThresholds.level3,
-    3: levelThresholds.level4,
-    4: levelThresholds.level5,
-  };
-
-  const nextThreshold = thresholdMap[currentLevel];
-  if (!nextThreshold) return null;
-
-  const amountNeeded = nextThreshold - totalEarned;
-  if (amountNeeded <= 0) return null;
-
-  const weeksNeeded = Math.ceil(amountNeeded / (monthlyPace / 4));
-
-  if (weeksNeeded <= 1) return "1 week";
-  if (weeksNeeded <= 4) return `${weeksNeeded} weeks`;
-
-  const monthsNeeded = Math.ceil(weeksNeeded / 4);
-  if (monthsNeeded <= 1) return "1 month";
-  if (monthsNeeded <= 12) return `${monthsNeeded} months`;
-
-  return `${Math.ceil(monthsNeeded / 12)} year${Math.ceil(monthsNeeded / 12) > 1 ? "s" : ""}`;
 }
 
 // Lazy initialization
@@ -359,19 +323,12 @@ export const getChatterDashboard = onCall(
         const estimatedMonthlyEarnings =
           dayOfMonth > 0 ? Math.round((monthlyEarnings / dayOfMonth) * daysInMonth) : 0;
 
-        const estimatedNextLevel = estimateTimeToNextLevel(
-          chatter.level,
-          chatter.totalEarned,
-          estimatedMonthlyEarnings,
-          config.levelThresholds
-        );
-
         const nextTierBonusInfo = getNextTierBonus(chatter);
         const potentialBonus = nextTierBonusInfo?.bonusAmount || 0;
 
         forecast = {
           estimatedMonthlyEarnings,
-          estimatedNextLevel,
+          estimatedNextLevel: null,
           potentialBonus,
           currentDayOfMonth: dayOfMonth,
         };
@@ -387,8 +344,7 @@ export const getChatterDashboard = onCall(
           (meeting.targetAudience === "new_chatters" && chatter.totalCommissions === 0) ||
           (meeting.targetAudience === "top_performers" && (chatter.currentMonthRank || 999) <= 10) ||
           (meeting.targetAudience === "selected" &&
-            meeting.selectedChatterIds?.includes(userId)) ||
-          (meeting.minimumLevel && chatter.level >= meeting.minimumLevel);
+            meeting.selectedChatterIds?.includes(userId));
 
         if (isEligible) {
           upcomingZoomMeeting = {
@@ -435,8 +391,6 @@ export const getChatterDashboard = onCall(
           platforms: chatter.platforms,
           bio: chatter.bio,
           status: chatter.status,
-          level: chatter.level,
-          levelProgress: chatter.levelProgress,
           affiliateCodeClient: chatter.affiliateCodeClient,
           affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
           affiliateCodeProvider: affiliateCodeProvider,
@@ -450,12 +404,9 @@ export const getChatterDashboard = onCall(
           commissionsByType: chatter.commissionsByType,
           currentStreak: chatter.currentStreak,
           bestStreak: chatter.bestStreak,
-          lastActivityDate: chatter.lastActivityDate,
           badges: chatter.badges,
           currentMonthRank: chatter.currentMonthRank,
           bestRank: chatter.bestRank,
-          zoomMeetingsAttended: chatter.zoomMeetingsAttended,
-          lastZoomAttendance: chatter.lastZoomAttendance?.toDate().toISOString() || null,
           preferredPaymentMethod: chatter.preferredPaymentMethod,
           pendingWithdrawalId: chatter.pendingWithdrawalId,
           recruitedBy: chatter.recruitedBy,
@@ -481,9 +432,6 @@ export const getChatterDashboard = onCall(
           createdAt: chatter.createdAt?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: chatter.updatedAt?.toDate().toISOString() || new Date().toISOString(),
           lastLoginAt: chatter.lastLoginAt?.toDate().toISOString() || null,
-          // Monthly Top Multiplier (reward for top 3)
-          monthlyTopMultiplier: chatter.monthlyTopMultiplier || 1,
-          monthlyTopMultiplierMonth: chatter.monthlyTopMultiplierMonth || null,
           // Terms acceptance tracking
           termsAccepted: chatter.termsAccepted || false,
           termsAcceptedAt: chatter.termsAcceptedAt || "",
@@ -520,8 +468,6 @@ export const getChatterDashboard = onCall(
           commissionN1RecruitBonusAmount: chatter.lockedRates?.commissionN1RecruitBonusAmount ?? config.commissionN1RecruitBonusAmount,
           commissionProviderCallAmount: chatter.lockedRates?.commissionProviderCallAmount ?? config.commissionProviderCallAmount ?? config.commissionRecruitmentAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
-          levelThresholds: config.levelThresholds,
-          levelBonuses: config.levelBonuses,
           withdrawalFeeCents: withdrawalFee,
           recruitmentMilestones: config.recruitmentMilestones ?? DEFAULT_CHATTER_CONFIG.recruitmentMilestones,
           monthlyCompetitionPrizes: config.monthlyCompetitionPrizes ?? DEFAULT_CHATTER_CONFIG.monthlyCompetitionPrizes,
@@ -606,7 +552,6 @@ export const getChatterDashboard = onCall(
       logger.info("[getChatterDashboard] Dashboard data returned", {
         chatterId: userId,
         status: chatter.status,
-        level: chatter.level,
         availableBalance: chatter.availableBalance,
       });
 
