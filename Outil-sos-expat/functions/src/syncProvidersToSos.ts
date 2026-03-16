@@ -64,8 +64,8 @@ const SYNC_FIELDS = [
   "hasActiveSubscription",
   "subscriptionStatus",
   "aiCallsLimit",
+  "aiCallsUsed",
   "freeTrialUntil",
-  // Note: aiCallsUsed n'est pas inclus car il change trop fréquemment
 ];
 
 /**
@@ -148,6 +148,9 @@ function transformToSyncPayload(
   }
   if (data.aiCallsLimit !== undefined) {
     payload.aiCallsLimit = data.aiCallsLimit;
+  }
+  if (data.aiCallsUsed !== undefined) {
+    payload.aiCallsUsed = data.aiCallsUsed;
   }
   if (data.freeTrialUntil) {
     // Convertir Timestamp en ISO string

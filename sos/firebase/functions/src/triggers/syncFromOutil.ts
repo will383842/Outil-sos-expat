@@ -183,11 +183,24 @@ export const syncFromOutil = onRequest(
         updateData.lastSyncUpdatedBy = data.updatedBy;
       }
 
-      // Mettre à jour le profil SOS
-      await sosProfileRef.update(updateData);
+      // Mettre à jour le profil SOS ET le document users
+      const userRef = db.collection("users").doc(providerId);
+      const userDoc = await userRef.get();
 
-      logger.info("[syncFromOutil] Profil synchronisé", {
+      const promises: Promise<FirebaseFirestore.WriteResult>[] = [
+        sosProfileRef.update(updateData),
+      ];
+
+      // Aussi mettre à jour users/{uid} pour que l'admin dashboard affiche les bonnes données
+      if (userDoc.exists) {
+        promises.push(userRef.update(updateData));
+      }
+
+      await Promise.all(promises);
+
+      logger.info("[syncFromOutil] Profil synchronisé (sos_profiles + users)", {
         providerId,
+        userDocExists: userDoc.exists,
         fieldsUpdated: Object.keys(updateData).filter(k => k !== "updatedAt" && k !== "lastSyncFromOutil")
       });
 
