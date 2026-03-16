@@ -275,11 +275,11 @@ export const adminMenuTree: AdminMenuItem[] = [
             descriptionKey: "admin.menu.paymentsDashboard.description",
           },
           {
-            id: "payments-withdrawals",
-            labelKey: "admin.menu.paymentsWithdrawals",
-            path: "/admin/payments/withdrawals",
+            id: "payments-monitoring",
+            labelKey: "admin.menu.paymentsMonitoring",
+            path: "/admin/payments/monitoring",
             icon: Banknote,
-            descriptionKey: "admin.menu.paymentsWithdrawals.description",
+            descriptionKey: "admin.menu.paymentsMonitoring.description",
           },
           {
             id: "payments-config",

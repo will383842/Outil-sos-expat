@@ -8,7 +8,7 @@
  * Supports: chatter, influencer, blogger, group_admin, affiliate, partner, client, lawyer, expat
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../config/firebase';
@@ -288,7 +288,7 @@ const MarkAsPaidModal: React.FC<{
 const AdminPaymentsDashboard: React.FC = () => {
   const intl = useIntl();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // Main tabs
   const initialTab = (searchParams.get('tab') as MainTab) || 'active';
@@ -411,20 +411,27 @@ const AdminPaymentsDashboard: React.FC = () => {
     }
   }, [getStatsFn]);
 
+  // Track whether initial fetch has happened to avoid double-fetching
+  const hasFetched = useRef(false);
+
   // Fetch data when filters change
   useEffect(() => {
     fetchWithdrawals(true);
     fetchStats();
+    hasFetched.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mainTab, statusFilter, userTypeFilter]);
 
-  // Sync URL params separately to avoid re-render loop (setSearchParams is unstable)
+  // Sync URL params using window.history to avoid React Router re-render loop
   useEffect(() => {
     const params = new URLSearchParams();
     if (mainTab !== 'active') params.set('tab', mainTab);
     if (userTypeFilter !== 'all') params.set('userType', userTypeFilter);
-    setSearchParams(params, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const search = params.toString();
+    const newUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+    if (newUrl !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(null, '', newUrl);
+    }
   }, [mainTab, userTypeFilter]);
 
   // ============================================================================
