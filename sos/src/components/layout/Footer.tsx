@@ -707,6 +707,10 @@ const Footer: React.FC = () => {
             label: intl.formatMessage({ id: "footer.partners", defaultMessage: "Nos partenaires" }),
             href: `/${getTranslatedRouteSlug("partners-page", resolvedLang)}`,
           },
+          {
+            label: intl.formatMessage({ id: "footer.becomePartner", defaultMessage: "Devenir Partenaire" }),
+            href: `/${getTranslatedRouteSlug("partner-landing", resolvedLang)}`,
+          },
         ],
       },
     }),
