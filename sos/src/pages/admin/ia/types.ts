@@ -162,6 +162,7 @@ export interface ProviderIAAccess {
   displayName: string;
   firstName?: string;
   lastName?: string;
+  profilePhoto?: string;
   role: 'lawyer' | 'expat_aidant';
 
   // Accès IA

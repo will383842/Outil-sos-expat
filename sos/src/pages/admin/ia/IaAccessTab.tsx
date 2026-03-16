@@ -102,7 +102,20 @@ const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provider, onC
         <div className="p-6 space-y-6">
           {/* Info de base */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">{provider.displayName}</h3>
+            <div className="flex items-center gap-4 mb-3">
+              {provider.profilePhoto ? (
+                <img
+                  src={provider.profilePhoto}
+                  alt={provider.displayName}
+                  className="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-lg font-medium text-gray-600">
+                  {(provider.firstName?.[0] || provider.displayName[0] || '?').toUpperCase()}
+                </div>
+              )}
+              <h3 className="text-lg font-medium text-gray-900">{provider.displayName}</h3>
+            </div>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-gray-600">
                 <Mail className="w-4 h-4" />
@@ -275,6 +288,7 @@ export const IaAccessTab: React.FC = () => {
           displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
           firstName: data.firstName,
           lastName: data.lastName,
+          profilePhoto: data.profilePhoto || data.photoURL || '',
           role: data.role === 'provider' ? (data.providerType || 'lawyer') : data.role,
           accessStatus,
           forcedAIAccess: data.forcedAIAccess === true,
@@ -772,9 +786,25 @@ export const IaAccessTab: React.FC = () => {
 
                       {/* Prestataire */}
                       <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium text-gray-900">{provider.displayName}</div>
-                          <div className="text-sm text-gray-500">{provider.email}</div>
+                        <div className="flex items-center gap-3">
+                          {provider.profilePhoto ? (
+                            <img
+                              src={provider.profilePhoto}
+                              alt={provider.displayName}
+                              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).classList.remove('hidden'); }}
+                            />
+                          ) : null}
+                          <div className={cn(
+                            "w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-sm font-medium text-gray-600",
+                            provider.profilePhoto ? "hidden" : ""
+                          )}>
+                            {(provider.firstName?.[0] || provider.displayName[0] || '?').toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-900 truncate">{provider.displayName}</div>
+                            <div className="text-sm text-gray-500 truncate">{provider.email}</div>
+                          </div>
                         </div>
                       </td>
 

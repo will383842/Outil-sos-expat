@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNavigate } from "react-router-dom";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
+import { useAuth } from "../../contexts/useAuth";
 import AdminLayout from "../../components/admin/AdminLayout";
 import {
   DndContext,
@@ -259,10 +262,30 @@ const SortableToolCard: React.FC<SortableToolCardProps> = ({ tool, onClick, t })
   );
 };
 
+function applyOrder(order: string[]): ToolCard[] {
+  const toolMap = new Map(defaultTools.map((t) => [t.id, t]));
+  const ordered: ToolCard[] = [];
+  for (const id of order) {
+    const tool = toolMap.get(id);
+    if (tool) {
+      ordered.push(tool);
+      toolMap.delete(id);
+    }
+  }
+  for (const tool of toolMap.values()) {
+    ordered.push(tool);
+  }
+  return ordered;
+}
+
+const FIRESTORE_DOC = "toolbox_order";
+
 const AdminToolbox: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [tools, setTools] = useState<ToolCard[]>(getOrderedTools);
+  const isInitialLoad = useRef(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -270,9 +293,39 @@ const AdminToolbox: React.FC = () => {
     })
   );
 
+  // Load order from Firestore on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tools.map((t) => t.id)));
-  }, [tools]);
+    const loadFromFirestore = async () => {
+      try {
+        const snap = await getDoc(doc(db, "admin_config", FIRESTORE_DOC));
+        if (snap.exists()) {
+          const data = snap.data();
+          const order: string[] = data.order || [];
+          if (order.length > 0) {
+            const ordered = applyOrder(order);
+            setTools(ordered);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+          }
+        }
+      } catch {
+        // Firestore failed, keep localStorage order
+      } finally {
+        isInitialLoad.current = false;
+      }
+    };
+    loadFromFirestore();
+  }, []);
+
+  const saveOrder = useCallback((order: string[]) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+    setDoc(doc(db, "admin_config", FIRESTORE_DOC), {
+      order,
+      updatedAt: new Date().toISOString(),
+      updatedBy: user?.uid || "unknown",
+    }).catch(() => {
+      // Silent fail for Firestore save
+    });
+  }, [user?.uid]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -280,7 +333,9 @@ const AdminToolbox: React.FC = () => {
       setTools((prev) => {
         const oldIndex = prev.findIndex((t) => t.id === active.id);
         const newIndex = prev.findIndex((t) => t.id === over.id);
-        return arrayMove(prev, oldIndex, newIndex);
+        const newTools = arrayMove(prev, oldIndex, newIndex);
+        saveOrder(newTools.map((t) => t.id));
+        return newTools;
       });
     }
   };
