@@ -27,7 +27,7 @@ import { logger } from "firebase-functions";
 const SOS_SYNC_API_KEY = defineSecret("SOS_SYNC_API_KEY");
 
 // URL de l'endpoint syncFromOutil dans SOS
-const SOS_SYNC_ENDPOINT = "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/syncFromOutil";
+const SOS_SYNC_ENDPOINT = "https://europe-west3-sos-urgently-ac307.cloudfunctions.net/syncFromOutil";
 
 // =============================================================================
 // TYPES
@@ -181,9 +181,11 @@ export const onProviderUpdated = onDocumentUpdated(
       return;
     }
 
-    // Vérifier si le provider a un sosProfileId (lié à SOS)
-    // Si non, pas besoin de synchroniser
-    if (!afterData.sosProfileId && afterData.source !== "sos-expat") {
+    // Vérifier si le provider est lié à SOS
+    // Accepter: sosProfileId défini, OU source qui commence par "sos-expat"
+    const isSosLinked = !!afterData.sosProfileId ||
+      (typeof afterData.source === "string" && afterData.source.startsWith("sos-expat"));
+    if (!isSosLinked) {
       logger.debug("[onProviderUpdated] Provider non lié à SOS, skip sync:", uid);
       return;
     }
