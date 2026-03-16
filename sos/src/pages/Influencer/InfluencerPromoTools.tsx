@@ -56,7 +56,7 @@ const InfluencerPromoTools: React.FC = () => {
   // Generate iframe widget code
   const generateWidgetCode = () => {
     return `<iframe
-  src="https://sos-expat.com/widget/search?ref=${influencer?.affiliateCodeClient || ''}"
+  src="https://sos-expat.com/widget/search?ref=${affiliateCode}"
   width="300"
   height="400"
   frameborder="0"
@@ -228,7 +228,7 @@ const InfluencerPromoTools: React.FC = () => {
                   },
                   {
                     title: intl.formatMessage({ id: 'influencer.tools.texts.bio', defaultMessage: 'Bio/Description' }),
-                    text: `Partenaire SOS-Expat - 5% de remise sur votre premier appel avec mon code ${influencer?.affiliateCodeClient}`,
+                    text: `Partenaire SOS-Expat - 5% de remise sur votre premier appel avec mon code ${affiliateCode}`,
                   },
                   {
                     title: intl.formatMessage({ id: 'influencer.tools.texts.long', defaultMessage: 'Description longue' }),

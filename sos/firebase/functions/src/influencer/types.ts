@@ -1644,7 +1644,9 @@ export interface GetInfluencerDashboardResponse {
   config: Pick<InfluencerConfig,
     | "commissionClientAmount"
     | "commissionRecruitmentAmount"
+    | "clientDiscountType"
     | "clientDiscountPercent"
+    | "clientDiscountAmount"
     | "minimumWithdrawalAmount"
     | "levelThresholds"
     | "levelBonuses"

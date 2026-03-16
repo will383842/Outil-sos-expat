@@ -36,7 +36,6 @@ const GroupAdminReferrals: React.FC = () => {
   const intl = useIntl();
   const [loading, setLoading] = useState(true);
   const [recruits, setRecruits] = useState<GroupAdminRecruit[]>([]);
-  const [affiliateCode, setAffiliateCode] = useState('');
   const [unifiedCode, setUnifiedCode] = useState('');
   const [activationBonusAmount, setActivationBonusAmount] = useState(500);
   const [gaConfig, setGaConfig] = useState<{ commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } | undefined>(undefined);
@@ -51,7 +50,6 @@ const GroupAdminReferrals: React.FC = () => {
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
       const data = result.data as { profile: { affiliateCodeRecruitment: string; affiliateCode?: string; affiliateCodeClient?: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } };
-      setAffiliateCode(data.profile.affiliateCodeRecruitment);
       setUnifiedCode(data.profile.affiliateCode || data.profile.affiliateCodeClient || data.profile.affiliateCodeRecruitment);
       setRecruits(data.recentRecruits);
       if (data.config) {

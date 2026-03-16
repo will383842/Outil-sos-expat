@@ -471,7 +471,9 @@ export interface InfluencerConfig {
   commissionRecruitmentAmountExpat?: number;
 
   // Client discount
+  clientDiscountType?: 'percent' | 'fixed';
   clientDiscountPercent: number;
+  clientDiscountAmount?: number;
 
   // Withdrawal settings
   minimumWithdrawalAmount: number;

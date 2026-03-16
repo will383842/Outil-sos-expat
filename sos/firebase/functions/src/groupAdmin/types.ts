@@ -1350,6 +1350,9 @@ export interface GroupAdminDashboardResponse {
     commissionN2CallAmount: number;
     commissionActivationBonusAmount: number;
     commissionN1RecruitBonusAmount: number;
+    clientDiscountType?: 'percent' | 'fixed';
+    clientDiscountAmount?: number;
+    clientDiscountPercent?: number;
   };
   /** Commission Plan info (Lifetime Rate Lock) */
   commissionPlan?: {

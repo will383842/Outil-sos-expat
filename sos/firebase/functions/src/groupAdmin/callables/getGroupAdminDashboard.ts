@@ -204,6 +204,9 @@ export const getGroupAdminDashboard = onCall(
           commissionN2CallAmount: profile.lockedRates?.commissionN2CallAmount ?? gaConfig.commissionN2CallAmount,
           commissionActivationBonusAmount: profile.lockedRates?.commissionActivationBonusAmount ?? gaConfig.commissionActivationBonusAmount,
           commissionN1RecruitBonusAmount: profile.lockedRates?.commissionN1RecruitBonusAmount ?? gaConfig.commissionN1RecruitBonusAmount,
+          clientDiscountType: gaConfig.clientDiscountType,
+          clientDiscountAmount: gaConfig.clientDiscountAmount,
+          clientDiscountPercent: gaConfig.clientDiscountPercent,
         },
         // Commission Plan info (for display on dashboard)
         commissionPlan: profile.commissionPlanId ? {

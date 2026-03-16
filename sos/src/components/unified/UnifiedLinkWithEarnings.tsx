@@ -42,7 +42,9 @@ interface CommissionConfig {
   commissionN1RecruitBonusAmount?: number;
   // Influencer/Blogger
   commissionRecruitmentAmount?: number;
+  clientDiscountType?: 'percent' | 'fixed';
   clientDiscountPercent?: number;
+  clientDiscountAmount?: number;
 }
 
 interface Props {
@@ -68,7 +70,8 @@ const DEFAULTS = {
   activationBonus: 500,    // $5
   providerRecruit: 500,    // $5
   recruitmentAmount: 500,  // $5
-  clientDiscount: 5,       // 5%
+  clientDiscountAmount: 500,  // $5
+  clientDiscountPercent: 5,   // 5%
 } as const;
 
 /** Get client call amount - tries lawyer/expat specific fields, falls back to plan defaults */
@@ -94,6 +97,15 @@ function getClientCallDisplay(config: CommissionConfig | undefined, role: Affili
 
   // Different amounts → show "lawyer/expat"
   return `${centsToUsd(lawyer)}/${centsToUsd(expat)}`;
+}
+
+/** Format client discount based on type (fixed $ or percent %) */
+function getDiscountDisplay(config?: CommissionConfig): string {
+  const type = config?.clientDiscountType ?? 'fixed';
+  if (type === 'fixed') {
+    return `-${centsToUsd(config?.clientDiscountAmount ?? DEFAULTS.clientDiscountAmount)}`;
+  }
+  return `-${config?.clientDiscountPercent ?? DEFAULTS.clientDiscountPercent}%`;
 }
 
 function getEarningsForRole(role: AffiliateRole, config?: CommissionConfig): EarningRule[] {
@@ -125,7 +137,7 @@ function getEarningsForRole(role: AffiliateRole, config?: CommissionConfig): Ear
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.signup', labelDefault: "Inscription d'un filleul", value: '$2', highlight: true },
         { icon: <Phone className={iconClass} />, labelId: 'unified.earnings.clientCall', labelDefault: 'Appel client (avocat ou aidant)', value: clientCallValue, highlight: true },
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.providerRecruit', labelDefault: 'Recrutement prestataire', value: c(config?.commissionRecruitmentAmount, DEFAULTS.recruitmentAmount), sub: '6 mois' },
-        { icon: <Percent className={iconClass} />, labelId: 'unified.earnings.clientDiscount', labelDefault: 'Remise pour vos clients', value: `-${config?.clientDiscountPercent ?? DEFAULTS.clientDiscount}%`, highlight: true },
+        { icon: <Percent className={iconClass} />, labelId: 'unified.earnings.clientDiscount', labelDefault: 'Remise pour vos clients', value: getDiscountDisplay(config), highlight: true },
         { icon: <Trophy className={iconClass} />, labelId: 'unified.earnings.top3', labelDefault: 'Top 3 mensuel (si +$200/mois)', value: '$200/$100/$50', highlight: true },
       ];
 
@@ -144,7 +156,7 @@ function getEarningsForRole(role: AffiliateRole, config?: CommissionConfig): Ear
         { icon: <Users className={iconClass} />, labelId: 'unified.earnings.n2Call', labelDefault: 'Appel filleul N2 (recrue de recrue)', value: c(config?.commissionN2CallAmount, DEFAULTS.n2Call), sub: '/appel' },
         { icon: <Award className={iconClass} />, labelId: 'unified.earnings.activation', labelDefault: "Bonus activation (2e appel d'une recrue)", value: c(config?.commissionActivationBonusAmount, DEFAULTS.activationBonus), highlight: true },
         { icon: <UserPlus className={iconClass} />, labelId: 'unified.earnings.providerRecruit', labelDefault: 'Recrutement prestataire', value: c(config?.commissionN1RecruitBonusAmount, DEFAULTS.providerRecruit), sub: '6 mois' },
-        { icon: <DollarSign className={iconClass} />, labelId: 'unified.earnings.clientDiscount', labelDefault: 'Remise pour vos clients', value: '-$5', highlight: true },
+        { icon: <DollarSign className={iconClass} />, labelId: 'unified.earnings.clientDiscount', labelDefault: 'Remise pour vos clients', value: getDiscountDisplay(config), highlight: true },
       ];
 
     case 'partner':

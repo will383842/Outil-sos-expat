@@ -208,7 +208,7 @@ const GroupAdminRegister: React.FC = () => {
         throw cfError;
       }
 
-      const responseData = result.data as { success: boolean; affiliateCodeClient: string; affiliateCodeRecruitment: string };
+      const responseData = result.data as { success: boolean; affiliateCode?: string; affiliateCodeClient: string; affiliateCodeRecruitment: string };
 
       if (responseData.success) {
         clearStoredReferral('groupAdmin');
