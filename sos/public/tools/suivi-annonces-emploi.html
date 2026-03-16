@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suivi Annonces Emploi — SOS Expat v3</title>
+<title>Suivi Annonces Emploi — SOS Expat v4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <style>
 :root{--bg:#0a0c10;--surface:#111418;--surface2:#181c22;--border:#252a33;--accent:#00c896;--accent2:#0ea5e9;--warn:#f59e0b;--danger:#ef4444;--text:#e8eaf0;--muted:#6b7280;--pending:#8b5cf6;--approved:#00c896;--expired:#ef4444;--active:#0ea5e9}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -720,30 +718,36 @@ function hashPassword(pwd){
   return CryptoJS.SHA256(pwd).toString();
 }
 
-function attemptLogin(){
+async function attemptLogin(){
   var name=document.getElementById("auth-name").value.trim();
   var pwd=document.getElementById("auth-password").value;
   var errEl=document.getElementById("auth-error");
   if(!name){errEl.textContent="Entrez votre nom";errEl.style.display="block";return;}
-  if(!pwd){errEl.textContent="Entrez un mot de passe";errEl.style.display="block";return;}
-  var storedHash=localStorage.getItem(AUTH_HASH_KEY);
-  var hash=hashPassword(pwd);
-  if(!storedHash){
-    // First time: set password
-    localStorage.setItem(AUTH_HASH_KEY, hash);
-    localStorage.setItem(AUTH_NAME_KEY, name);
-    loginSuccess(name, pwd);
-  }else if(hash===storedHash){
-    localStorage.setItem(AUTH_NAME_KEY, name);
-    loginSuccess(name, pwd);
-  }else{
-    errEl.textContent="Mot de passe incorrect";
-    errEl.style.display="block";
+  if(!pwd){errEl.textContent="Entrez le secret API (ENGINE_API_SECRET)";errEl.style.display="block";return;}
+  // Validate API secret by testing a real API call
+  API_SECRET=pwd;
+  errEl.textContent="Connexion...";errEl.style.display="block";errEl.style.color="var(--accent)";
+  try{
+    var r=await fetch(API_BASE+"/stats",{headers:{"Content-Type":"application/json","X-Engine-Secret":pwd}});
+    if(r.ok){
+      localStorage.setItem(AUTH_NAME_KEY, name);
+      localStorage.setItem("sos_adtracker_api_secret", pwd);
+      loginSuccess(name, pwd);
+    }else{
+      errEl.style.color="var(--danger)";
+      errEl.textContent="Secret API invalide (HTTP "+r.status+")";
+      API_SECRET="";
+    }
+  }catch(e){
+    errEl.style.color="var(--danger)";
+    errEl.textContent="Impossible de joindre l\u2019API: "+e.message;
+    API_SECRET="";
   }
 }
 
 function loginSuccess(name, pwd){
   MASTER_KEY=pwd;
+  API_SECRET=pwd;
   currentOperator=name;
   document.getElementById("auth-gate").classList.add("hidden");
   document.getElementById("app-container").style.display="block";
@@ -779,133 +783,165 @@ document.getElementById("auth-name").addEventListener("keydown",function(e){
 });
 
 // ================================================================
-// STORAGE
+// API CONFIGURATION — PostgreSQL backend on Hetzner VPS
 // ================================================================
-var STORAGE_KEY="sos_adtracker_ads_v3";
-var SITES_KEY="sos_adtracker_sites_v3";
-var TRASH_KEY="sos_adtracker_trash_v3";
-var PREFS_KEY="sos_adtracker_prefs";
-var BACKUP_KEY="sos_adtracker_backups";
+var API_BASE="https://engine-telegram-sos-expat.life-expat.com/api/job-tracker";
+var API_SECRET=""; // Set after login from ENGINE_API_SECRET
 
-function loadData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");}catch(e){return[];}}
-function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d));autoBackup();syncToCloud();}
-function loadSites(){try{return JSON.parse(localStorage.getItem(SITES_KEY)||"[]");}catch(e){return[];}}
-function saveSitesData(d){localStorage.setItem(SITES_KEY,JSON.stringify(d));syncToCloud();}
-function loadTrash(){try{return JSON.parse(localStorage.getItem(TRASH_KEY)||"[]");}catch(e){return[];}}
-function saveTrash(d){localStorage.setItem(TRASH_KEY,JSON.stringify(d));syncToCloud();}
+var PREFS_KEY="sos_adtracker_prefs";
+var CACHE_ADS_KEY="sos_adtracker_cache_ads";
+var CACHE_SITES_KEY="sos_adtracker_cache_sites";
+var CACHE_TRASH_KEY="sos_adtracker_cache_trash";
+
+// ================================================================
+// API LAYER — all data persisted in PostgreSQL
+// ================================================================
+function apiHeaders(){
+  return {"Content-Type":"application/json","X-Engine-Secret":API_SECRET};
+}
+
+async function apiGet(path){
+  try{
+    updateSyncUI("syncing");
+    var r=await fetch(API_BASE+path,{headers:apiHeaders()});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    updateSyncUI("connected");
+    return await r.json();
+  }catch(e){
+    console.warn("API GET failed:",path,e);
+    updateSyncUI("error");
+    return null;
+  }
+}
+
+async function apiPost(path,body){
+  try{
+    updateSyncUI("syncing");
+    var r=await fetch(API_BASE+path,{method:"POST",headers:apiHeaders(),body:JSON.stringify(body)});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    updateSyncUI("connected");
+    return await r.json();
+  }catch(e){
+    console.warn("API POST failed:",path,e);
+    updateSyncUI("error");
+    return null;
+  }
+}
+
+async function apiPut(path,body){
+  try{
+    updateSyncUI("syncing");
+    var r=await fetch(API_BASE+path,{method:"PUT",headers:apiHeaders(),body:JSON.stringify(body)});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    updateSyncUI("connected");
+    return await r.json();
+  }catch(e){
+    console.warn("API PUT failed:",path,e);
+    updateSyncUI("error");
+    return null;
+  }
+}
+
+async function apiDelete(path,body){
+  try{
+    updateSyncUI("syncing");
+    var opts={method:"DELETE",headers:apiHeaders()};
+    if(body) opts.body=JSON.stringify(body);
+    var r=await fetch(API_BASE+path,opts);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    updateSyncUI("connected");
+    return await r.json();
+  }catch(e){
+    console.warn("API DELETE failed:",path,e);
+    updateSyncUI("error");
+    return null;
+  }
+}
+
+// ================================================================
+// STORAGE — PostgreSQL primary, localStorage cache
+// ================================================================
+// Map camelCase (frontend) <-> snake_case (backend)
+function toSnake(obj){
+  if(!obj||typeof obj!=="object") return obj;
+  if(Array.isArray(obj)) return obj.map(toSnake);
+  var out={};
+  for(var k in obj){
+    var sk=k.replace(/([A-Z])/g,function(m){return"_"+m.toLowerCase();});
+    out[sk]=obj[k];
+  }
+  return out;
+}
+function toCamel(obj){
+  if(!obj||typeof obj!=="object") return obj;
+  if(Array.isArray(obj)) return obj.map(toCamel);
+  var out={};
+  for(var k in obj){
+    var ck=k.replace(/_([a-z])/g,function(_,c){return c.toUpperCase();});
+    out[ck]=obj[k];
+  }
+  return out;
+}
+
+async function loadDataFromAPI(){
+  var res=await apiGet("/ads");
+  if(res&&res.data){
+    ads=res.data.map(toCamel);
+    localStorage.setItem(CACHE_ADS_KEY,JSON.stringify(ads));
+    return ads;
+  }
+  // Fallback to cache
+  try{return JSON.parse(localStorage.getItem(CACHE_ADS_KEY)||"[]");}catch(e){return[];}
+}
+
+async function loadTrashFromAPI(){
+  var res=await apiGet("/ads?trashed=1");
+  if(res&&res.data){
+    trash=res.data.map(toCamel);
+    localStorage.setItem(CACHE_TRASH_KEY,JSON.stringify(trash));
+    return trash;
+  }
+  try{return JSON.parse(localStorage.getItem(CACHE_TRASH_KEY)||"[]");}catch(e){return[];}
+}
+
+async function loadSitesFromAPI(){
+  var res=await apiGet("/sites");
+  if(res&&res.data){
+    sites=res.data.map(toCamel);
+    localStorage.setItem(CACHE_SITES_KEY,JSON.stringify(sites));
+    return sites;
+  }
+  try{return JSON.parse(localStorage.getItem(CACHE_SITES_KEY)||"[]");}catch(e){return[];}
+}
+
+// Legacy sync functions — now save to API
+function saveData(d){
+  // Update local cache immediately for UI responsiveness
+  localStorage.setItem(CACHE_ADS_KEY,JSON.stringify(d));
+}
+function saveSitesData(d){
+  localStorage.setItem(CACHE_SITES_KEY,JSON.stringify(d));
+}
+function saveTrash(d){
+  localStorage.setItem(CACHE_TRASH_KEY,JSON.stringify(d));
+}
+
 function loadPrefs(){try{return JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");}catch(e){return{};}}
 function savePrefs(p){localStorage.setItem(PREFS_KEY,JSON.stringify(p));}
 
-// ================================================================
-// AUTO-BACKUP (improvement #2 - local versioned backups)
-// ================================================================
-function autoBackup(){
-  try{
-    var backups=JSON.parse(localStorage.getItem(BACKUP_KEY)||"[]");
-    var now=new Date().toISOString();
-    // Only backup every 5 minutes max
-    if(backups.length>0){
-      var last=new Date(backups[backups.length-1].date);
-      if(new Date()-last<300000) return;
-    }
-    backups.push({date:now,ads:ads.length,sites:sites.length,data:JSON.stringify({ads:ads,sites:sites})});
-    // Keep last 10 backups
-    if(backups.length>10) backups=backups.slice(-10);
-    localStorage.setItem(BACKUP_KEY,JSON.stringify(backups));
-  }catch(e){console.warn("Backup failed:",e);}
-}
-
-// ================================================================
-// FIREBASE CLOUD SYNC (improvement #2)
-// ================================================================
-var db=null;
-var SYNC_DOC="admin_tools/job_ads_tracker";
-var syncEnabled=false;
-
-function initFirebase(){
-  try{
-    if(typeof firebase==="undefined") return;
-    var config={
-      apiKey:"AIzaSyCLp02v_ywBw67d4VD7rQ2tCQUdKp83CT8",
-      authDomain:"sos-urgently-ac307.firebaseapp.com",
-      projectId:"sos-urgently-ac307"
-    };
-    if(!firebase.apps.length) firebase.initializeApp(config);
-    db=firebase.firestore();
-    syncEnabled=true;
-    updateSyncUI("connected");
-    // Initial sync: pull from cloud
-    pullFromCloud();
-  }catch(e){
-    console.warn("Firebase init failed:",e);
-    updateSyncUI("error");
-  }
-}
+// Placeholder for initial load (replaced by async initApp)
+function loadData(){try{return JSON.parse(localStorage.getItem(CACHE_ADS_KEY)||"[]");}catch(e){return[];}}
+function loadSites(){try{return JSON.parse(localStorage.getItem(CACHE_SITES_KEY)||"[]");}catch(e){return[];}}
+function loadTrash(){try{return JSON.parse(localStorage.getItem(CACHE_TRASH_KEY)||"[]");}catch(e){return[];}}
 
 function updateSyncUI(state){
   var dot=document.getElementById("sync-dot");
   var text=document.getElementById("sync-text");
   if(!dot) return;
   dot.className="sync-dot";
-  if(state==="connected"){dot.className="sync-dot";text.textContent="Cloud OK";}
+  if(state==="connected"){dot.className="sync-dot";text.textContent="PostgreSQL OK";}
   else if(state==="syncing"){dot.className="sync-dot syncing";text.textContent="Syncing...";}
-  else if(state==="error"){dot.className="sync-dot error";text.textContent="Cloud offline";}
-}
-
-function syncToCloud(){
-  if(!syncEnabled||!db) return;
-  updateSyncUI("syncing");
-  var payload={
-    ads:JSON.stringify(ads),
-    sites:JSON.stringify(sites),
-    trash:JSON.stringify(trash),
-    lastModified:new Date().toISOString(),
-    lastModifiedBy:currentOperator
-  };
-  db.doc(SYNC_DOC).set(payload,{merge:true}).then(function(){
-    updateSyncUI("connected");
-  }).catch(function(e){
-    console.warn("Sync failed:",e);
-    updateSyncUI("error");
-  });
-}
-
-function pullFromCloud(){
-  if(!syncEnabled||!db) return;
-  db.doc(SYNC_DOC).get().then(function(doc){
-    if(doc.exists){
-      var d=doc.data();
-      var cloudAds=JSON.parse(d.ads||"[]");
-      var cloudSites=JSON.parse(d.sites||"[]");
-      var cloudTrash=JSON.parse(d.trash||"[]");
-      // Merge by ID: cloud item wins if newer (updatedAt), keep local-only items
-      ads=mergeById(ads,cloudAds);
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(ads));
-      sites=mergeById(sites,cloudSites);
-      localStorage.setItem(SITES_KEY,JSON.stringify(sites));
-      trash=mergeById(trash,cloudTrash);
-      localStorage.setItem(TRASH_KEY,JSON.stringify(trash));
-      refresh();
-      updateSyncUI("connected");
-    }
-  }).catch(function(e){
-    console.warn("Pull failed:",e);
-    updateSyncUI("error");
-  });
-}
-function mergeById(local,cloud){
-  var map={};
-  local.forEach(function(item){map[item.id]=item;});
-  cloud.forEach(function(item){
-    var existing=map[item.id];
-    if(!existing){map[item.id]=item;}
-    else{
-      var ct=item.updatedAt||item.createdAt||"";
-      var lt=existing.updatedAt||existing.createdAt||"";
-      if(ct>lt) map[item.id]=item;
-    }
-  });
-  return Object.keys(map).map(function(k){return map[k];});
+  else if(state==="error"){dot.className="sync-dot error";text.textContent="API offline";}
 }
 
 // ================================================================
@@ -962,18 +998,20 @@ function expiryInfo(d,status){
   return {cls:"ok",txt:formatDate(d)};
 }
 
-function autoExpire(){
+async function autoExpire(){
   var changed=false;
   var now=new Date().toISOString();
-  ads.forEach(function(a){
+  for(var i=0;i<ads.length;i++){
+    var a=ads[i];
     if(a.expiry&&a.status==="active"&&daysUntil(a.expiry)<0){
       a.status="expired";
       a.updatedAt=now;
       if(!a.audit) a.audit=[];
-      a.audit.push({who:"system",when:now,action:"Auto-expired (date dépassée)"});
+      a.audit.push({who:"system",when:now,action:"Auto-expired (date d\u00e9pass\u00e9e)"});
+      await apiPut("/ads/"+a.id,toSnake({status:"expired",audit:a.audit}));
       changed=true;
     }
-  });
+  }
   if(changed) saveData(ads);
 }
 
@@ -1231,21 +1269,29 @@ function updateBulkBar(){
   if(selectedIds.size>0){bar.classList.remove("bulk-bar-hidden");count.textContent=selectedIds.size+" s\u00e9lectionn\u00e9e(s)";}
   else{bar.classList.add("bulk-bar-hidden");}
 }
-function bulkSetStatus(status){
+async function bulkSetStatus(status){
   if(!selectedIds.size)return;
   var n=selectedIds.size;
-  ads.forEach(function(a){if(selectedIds.has(a.id)){a.status=status;addAudit(a,"Statut -> "+statusLabel(status)+" (bulk)");}});
-  saveData(ads);clearSelection();refresh();notify(n+" annonce(s) -> "+statusLabel(status));
+  var ids=Array.from(selectedIds);
+  var res=await apiPost("/ads/bulk-status",{ids:ids,status:status});
+  if(res&&res.success){
+    ads.forEach(function(a){if(selectedIds.has(a.id)){a.status=status;addAudit(a,"Statut -> "+statusLabel(status)+" (bulk)");}});
+    saveData(ads);clearSelection();refresh();notify(n+" annonce(s) -> "+statusLabel(status));
+  }else{notify("Erreur bulk status",true);}
 }
-function bulkDelete(){
+async function bulkDelete(){
   if(!selectedIds.size)return;
   if(!confirm("Mettre "+selectedIds.size+" annonce(s) en corbeille ?"))return;
-  var count=0;
-  ads=ads.filter(function(a){
-    if(selectedIds.has(a.id)){a.deletedAt=new Date().toISOString();a.deletedBy=currentOperator;addAudit(a,"Mis en corbeille (bulk)");trash.push(a);count++;return false;}
-    return true;
-  });
-  saveData(ads);saveTrash(trash);clearSelection();refresh();notify(count+" annonce(s) en corbeille");
+  var ids=Array.from(selectedIds);
+  var res=await apiPost("/ads/bulk-trash",{ids:ids,operator:currentOperator});
+  if(res&&res.success){
+    var count=0;
+    ads=ads.filter(function(a){
+      if(selectedIds.has(a.id)){a.deletedAt=new Date().toISOString();a.deletedBy=currentOperator;addAudit(a,"Mis en corbeille (bulk)");trash.push(a);count++;return false;}
+      return true;
+    });
+    saveData(ads);saveTrash(trash);clearSelection();refresh();notify(count+" annonce(s) en corbeille");
+  }else{notify("Erreur bulk delete",true);}
 }
 function bulkExportSelection(){
   var selected=ads.filter(function(a){return selectedIds.has(a.id);});
@@ -1503,25 +1549,33 @@ function renderTrash(){
       "</div></td></tr>";
   }).join("");
 }
-function restoreAd(id){
+async function restoreAd(id){
   var idx=trash.findIndex(function(a){return a.id===id;});
   if(idx===-1) return;
-  var ad=trash[idx];
-  delete ad.deletedAt;delete ad.deletedBy;
-  addAudit(ad,"Restaur\u00e9 depuis la corbeille");
-  ads.unshift(ad);
-  trash.splice(idx,1);
-  saveData(ads);saveTrash(trash);refresh();notify("Annonce restaur\u00e9e");
+  var res=await apiPost("/ads/"+id+"/restore");
+  if(res&&res.success){
+    var ad=trash[idx];
+    delete ad.deletedAt;delete ad.deletedBy;
+    addAudit(ad,"Restaur\u00e9 depuis la corbeille");
+    ads.unshift(ad);trash.splice(idx,1);
+    saveData(ads);saveTrash(trash);refresh();notify("Annonce restaur\u00e9e");
+  }else{notify("Erreur restauration",true);}
 }
-function permanentDelete(id){
+async function permanentDelete(id){
   if(!confirm("Supprimer d\u00e9finitivement ?")) return;
-  trash=trash.filter(function(a){return a.id!==id;});
-  saveTrash(trash);renderTrash();updateStats();notify("Supprim\u00e9 d\u00e9finitivement");
+  var res=await apiDelete("/ads/"+id);
+  if(res&&res.success){
+    trash=trash.filter(function(a){return a.id!==id;});
+    saveTrash(trash);renderTrash();updateStats();notify("Supprim\u00e9 d\u00e9finitivement");
+  }else{notify("Erreur suppression",true);}
 }
-function emptyTrash(){
+async function emptyTrash(){
   if(!trash.length) return;
   if(!confirm("Vider toute la corbeille ("+trash.length+" \u00e9l\u00e9ments) ?")) return;
-  trash=[];saveTrash(trash);renderTrash();updateStats();notify("Corbeille vid\u00e9e");
+  var res=await apiDelete("/trash/empty");
+  if(res&&res.success){
+    trash=[];saveTrash(trash);renderTrash();updateStats();notify("Corbeille vid\u00e9e");
+  }else{notify("Erreur vidage corbeille",true);}
 }
 </script><script>
 // ================================================================
@@ -1576,7 +1630,7 @@ function openModal(id){
 }
 function closeModal(){document.getElementById("modal-overlay").classList.remove("open");editingId=null;}
 
-function saveAd(){
+async function saveAd(){
   var title=document.getElementById("f-title").value.trim();
   if(!title){notify("Le titre est requis",true);return;}
   var rawPwd=document.getElementById("f-password").value;
@@ -1605,10 +1659,11 @@ function saveAd(){
     if(siteIdx!==-1){
       sites[siteIdx].isPaid=isPaid;
       if(isPaid&&!sites[siteIdx].paidDetectedAt) sites[siteIdx].paidDetectedAt=new Date().toISOString();
-      saveSitesData(sites);
+      await apiPut("/sites/"+sites[siteIdx].id,toSnake(sites[siteIdx]));
     }else if(isPaid){
-      sites.unshift({id:uid(),name:data.site,url:data.siteUrl||"",isPaid:true,paidDetectedAt:new Date().toISOString(),createdAt:new Date().toISOString(),audit:[]});
-      saveSitesData(sites);
+      var newSite={name:data.site,url:data.siteUrl||"",isPaid:true,paidDetectedAt:new Date().toISOString(),audit:[]};
+      var sRes=await apiPost("/sites",toSnake(newSite));
+      if(sRes&&sRes.data) sites.unshift(toCamel(sRes.data));
     }
   }
   if(editingId){
@@ -1618,8 +1673,8 @@ function saveAd(){
       if(data.responses>oldR){
         if(!ads[idx].responseHistory) ads[idx].responseHistory=[];
         ads[idx].responseHistory.push({date:new Date().toISOString(),count:data.responses-oldR});
+        data.responseHistory=ads[idx].responseHistory;
       }
-      // Audit: track changes
       var changes=[];
       if(ads[idx].title!==data.title) changes.push("titre");
       if(ads[idx].status!==data.status) changes.push("statut -> "+statusLabel(data.status));
@@ -1627,13 +1682,19 @@ function saveAd(){
       if((ads[idx].responses||0)!==data.responses) changes.push("r\u00e9ponses: "+(ads[idx].responses||0)+" -> "+data.responses);
       if(changes.length) addAudit(ads[idx],"Modifi\u00e9: "+changes.join(", "));
       else addAudit(ads[idx],"Mis \u00e0 jour");
-      ads[idx]=Object.assign({},ads[idx],data);
+      data.audit=ads[idx].audit;
+      // Save to PostgreSQL
+      var res=await apiPut("/ads/"+editingId,toSnake(data));
+      if(res&&res.data) ads[idx]=toCamel(res.data);
+      else ads[idx]=Object.assign({},ads[idx],data);
     }
   }else{
-    data.id=uid();data.createdAt=new Date().toISOString();
     data.responseHistory=data.responses>0?[{date:new Date().toISOString(),count:data.responses}]:[];
     data.audit=[];
     addAudit(data,"Cr\u00e9\u00e9e");
+    // Save to PostgreSQL
+    var res=await apiPost("/ads",toSnake(data));
+    if(res&&res.data){data=toCamel(res.data);data.audit=data.audit||[];}
     ads.unshift(data);
   }
   saveData(ads);closeModal();refresh();
@@ -1643,31 +1704,35 @@ function saveAd(){
 function editAd(id){openModal(id);}
 
 // Trash instead of delete (improvement #6)
-function trashAd(id){
+async function trashAd(id){
   var idx=ads.findIndex(function(a){return a.id===id;});
   if(idx===-1) return;
   var ad=ads[idx];
-  ad.deletedAt=new Date().toISOString();
-  ad.deletedBy=currentOperator;
   addAudit(ad,"Mis en corbeille");
-  trash.push(ad);
-  ads.splice(idx,1);
-  saveData(ads);saveTrash(trash);refresh();notify("En corbeille (restaurable 30j)");
+  await apiPut("/ads/"+id,toSnake({audit:ad.audit}));
+  var res=await apiDelete("/ads/"+id+"/trash",{operator:currentOperator});
+  if(res&&res.success){
+    ad.deletedAt=new Date().toISOString();ad.deletedBy=currentOperator;
+    trash.push(ad);ads.splice(idx,1);
+    saveData(ads);saveTrash(trash);refresh();notify("En corbeille (restaurable 30j)");
+  }else{notify("Erreur suppression",true);}
 }
 
-function addResponse(id){
+async function addResponse(id){
   var ad=ads.find(function(a){return a.id===id;});if(!ad)return;
   ad.responses=(ad.responses||0)+1;
   if(!ad.responseHistory) ad.responseHistory=[];
   ad.responseHistory.push({date:new Date().toISOString(),count:1});
   addAudit(ad,"+1 r\u00e9ponse (total: "+ad.responses+")");
+  await apiPut("/ads/"+id,toSnake({responses:ad.responses,responseHistory:ad.responseHistory,audit:ad.audit}));
   saveData(ads);refresh();notify("+1 r\u00e9ponse -> "+ad.responses);
 }
-function cycleStatus(id){
+async function cycleStatus(id){
   var cycle=["draft","pending","approved","active","expired","rejected"];
   var ad=ads.find(function(a){return a.id===id;});if(!ad)return;
   ad.status=cycle[(cycle.indexOf(ad.status)+1)%cycle.length];
   addAudit(ad,"Statut -> "+statusLabel(ad.status));
+  await apiPut("/ads/"+id,toSnake({status:ad.status,audit:ad.audit}));
   saveData(ads);refresh();notify("Statut -> "+statusLabel(ad.status));
 }
 
@@ -1702,7 +1767,7 @@ function openSiteModal(id){
   document.getElementById("site-modal-overlay").classList.add("open");
 }
 function closeSiteModal(){document.getElementById("site-modal-overlay").classList.remove("open");editingSiteId=null;}
-function saveSite(){
+async function saveSite(){
   var name=document.getElementById("sf-name").value.trim();
   if(!name){notify("Nom requis",true);return;}
   var rawPwd=document.getElementById("sf-password").value;
@@ -1720,24 +1785,36 @@ function saveSite(){
   };
   if(editingSiteId){
     var idx=sites.findIndex(function(s){return s.id===editingSiteId;});
-    if(idx!==-1){addAudit(sites[idx],"Modifi\u00e9 par "+currentOperator);sites[idx]=Object.assign({},sites[idx],data);}
+    if(idx!==-1){
+      addAudit(sites[idx],"Modifi\u00e9 par "+currentOperator);
+      data.audit=sites[idx].audit;
+      var res=await apiPut("/sites/"+editingSiteId,toSnake(data));
+      if(res&&res.data) sites[idx]=toCamel(res.data);
+      else sites[idx]=Object.assign({},sites[idx],data);
+    }
   }else{
-    data.id=uid();data.createdAt=new Date().toISOString();data.audit=[];
+    data.audit=[];
     addAudit(data,"Cr\u00e9\u00e9 par "+currentOperator);
-    sites.unshift(data);
+    var res=await apiPost("/sites",toSnake(data));
+    if(res&&res.data) sites.unshift(toCamel(res.data));
+    else{data.id=uid();data.createdAt=new Date().toISOString();sites.unshift(data);}
   }
   saveSitesData(sites);closeSiteModal();renderSites();notify(editingSiteId?"Site mis \u00e0 jour":"Site ajout\u00e9");
 }
 function editSite(id){openSiteModal(id);}
-function deleteSite(id){
+async function deleteSite(id){
   if(!confirm("Supprimer ce site ?"))return;
-  sites=sites.filter(function(s){return s.id!==id;});saveSitesData(sites);renderSites();notify("Site supprim\u00e9");
+  var res=await apiDelete("/sites/"+id);
+  if(res&&res.success){
+    sites=sites.filter(function(s){return s.id!==id;});saveSitesData(sites);renderSites();notify("Site supprim\u00e9");
+  }else{notify("Erreur suppression",true);}
 }
-function toggleSitePaid(id){
+async function toggleSitePaid(id){
   var s=sites.find(function(x){return x.id===id;});if(!s)return;
   s.isPaid=!s.isPaid;
   if(s.isPaid&&!s.paidDetectedAt) s.paidDetectedAt=new Date().toISOString();
   addAudit(s,s.isPaid?"Marqu\u00e9 payant":"Marqu\u00e9 gratuit");
+  await apiPut("/sites/"+id,toSnake({isPaid:s.isPaid,paidDetectedAt:s.paidDetectedAt,audit:s.audit}));
   saveSitesData(sites);renderSites();updateSidebarFilters();
   notify(s.isPaid?s.name+" = payant":s.name+" = gratuit");
 }
@@ -1816,21 +1893,30 @@ function downloadFile(content,filename,mimeType){
 }
 
 function importData(){document.getElementById("import-input").click();}
-function handleImport(e){
+async function handleImport(e){
   var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(ev){
+  reader.onload=async function(ev){
     try{
       var d=JSON.parse(ev.target.result);
-      if(d.ads){
+      if(d.ads&&d.ads.length){
         d.ads.forEach(function(a){if(!a.tags)a.tags=[];if(!a.responseHistory)a.responseHistory=[];if(!a.audit)a.audit=[];});
-        ads=d.ads.concat(ads.filter(function(a){return !d.ads.find(function(b){return b.id===a.id;});}));
-        saveData(ads);
+        // Import via API (bulk upsert)
+        var res=await apiPost("/ads/import",{ads:d.ads.map(toSnake)});
+        if(res&&res.success){
+          notify("Import API: "+((res.created||0)+" cr\u00e9\u00e9s, "+(res.updated||0)+" mis \u00e0 jour"));
+          // Reload from API
+          ads=await loadDataFromAPI();
+        }else{notify("Erreur import API",true);}
       }
-      if(d.sites){sites=d.sites.concat(sites.filter(function(s){return !d.sites.find(function(b){return b.id===s.id;});}));saveSitesData(sites);}
-      if(d.trash){trash=d.trash.concat(trash.filter(function(t){return !d.trash.find(function(b){return b.id===t.id;});}));saveTrash(trash);}
-      refresh();notify("Import JSON: "+(d.ads?d.ads.length:0)+" annonces");
-    }catch(err){notify("Erreur import JSON",true);}
+      if(d.sites&&d.sites.length){
+        for(var i=0;i<d.sites.length;i++){
+          await apiPost("/sites",toSnake(d.sites[i]));
+        }
+        sites=await loadSitesFromAPI();
+      }
+      refresh();
+    }catch(err){notify("Erreur import JSON: "+err.message,true);}
   };
   reader.readAsText(file);
   e.target.value="";
@@ -1884,11 +1970,10 @@ function handleCSVFile(e){
   reader.readAsText(file);
 }
 
-function confirmCSVImport(){
+async function confirmCSVImport(){
   if(!csvParsedData||csvParsedData.length<2) return;
   var headers=csvParsedData[0].map(function(h){return h.toLowerCase().trim();});
   var fieldMap={};
-  // Auto-map common header names
   var mappings={"titre":"title","title":"title","site":"site","url":"adUrl","url annonce":"adUrl","pays":"country","country":"country","langue":"lang","language":"lang","lang":"lang","statut":"status","status":"status","categorie":"category","category":"category","expiration":"expiry","expiry":"expiry","reponses":"responses","responses":"responses","login":"login","email":"login","poste par":"poster","poster":"poster","tags":"tags","notes":"notes","date pub":"pubDate","date publication":"pubDate","url site":"siteUrl"};
   headers.forEach(function(h,i){
     var normalized=h.replace(/[^a-z\s]/g,"").trim();
@@ -1896,10 +1981,10 @@ function confirmCSVImport(){
     else if(mappings[h]) fieldMap[i]=mappings[h];
   });
 
-  var count=0;
+  var newAds=[];
   for(var r=1;r<csvParsedData.length;r++){
     var row=csvParsedData[r];
-    var ad={id:uid(),createdAt:new Date().toISOString(),status:"draft",tags:[],responseHistory:[],audit:[]};
+    var ad={status:"draft",tags:[],responseHistory:[],audit:[]};
     Object.keys(fieldMap).forEach(function(i){
       var field=fieldMap[i];
       var val=(row[i]||"").trim();
@@ -1909,12 +1994,17 @@ function confirmCSVImport(){
     });
     if(ad.title||ad.site){
       addAudit(ad,"Import\u00e9 depuis CSV par "+currentOperator);
-      ads.unshift(ad);
-      count++;
+      newAds.push(ad);
     }
   }
-  saveData(ads);closeCSVModal();refresh();
-  notify("Import CSV: "+count+" annonces ajout\u00e9es");
+  if(newAds.length){
+    var res=await apiPost("/ads/import",{ads:newAds.map(toSnake)});
+    if(res&&res.success){
+      ads=await loadDataFromAPI();
+      notify("Import CSV: "+newAds.length+" annonces ("+((res.created||0)+" cr\u00e9\u00e9s)"));
+    }else{notify("Erreur import CSV",true);}
+  }
+  closeCSVModal();refresh();
 }
 
 // ================================================================
@@ -1947,19 +2037,36 @@ function refresh(){
 // ================================================================
 // INIT
 // ================================================================
-function initApp(){
-  initFirebase();
+async function initApp(){
+  // Load data from PostgreSQL API
+  updateSyncUI("syncing");
+  try{
+    var results=await Promise.all([loadDataFromAPI(),loadSitesFromAPI(),loadTrashFromAPI()]);
+    ads=results[0]||[];
+    sites=results[1]||[];
+    trash=results[2]||[];
+    // Ensure arrays
+    ads.forEach(function(a){if(!a.tags)a.tags=[];if(!a.responseHistory)a.responseHistory=[];if(!a.audit)a.audit=[];});
+    sites.forEach(function(s){if(!s.audit)s.audit=[];});
+    updateSyncUI("connected");
+  }catch(e){
+    console.warn("Failed to load from API, using cache:",e);
+    updateSyncUI("error");
+  }
   requestNotifPermission();
   refresh();
   // Check notifications every 60s
   setInterval(function(){refresh();checkExpiryNotifications();},60000);
-  // Check notifications on first load too (after 5s)
   setTimeout(checkExpiryNotifications,5000);
 }
 
-// Pre-fill operator name if remembered
+// Pre-fill operator name and auto-login if secret saved
 var savedName=localStorage.getItem(AUTH_NAME_KEY);
+var savedSecret=localStorage.getItem("sos_adtracker_api_secret");
 if(savedName) document.getElementById("auth-name").value=savedName;
+if(savedSecret) document.getElementById("auth-password").value=savedSecret;
+// Auto-login if both are saved
+if(savedName&&savedSecret){attemptLogin();}
 </script>
 </body>
 </html>
