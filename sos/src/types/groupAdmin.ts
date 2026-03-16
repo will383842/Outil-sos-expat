@@ -55,6 +55,7 @@ export type GroupAdminCommissionType =
   | "activation_bonus"   // $5 when recruit makes 2 referrals
   | "n1_recruit_bonus"   // $1 when N1 recruits a N2
   | "provider_call"      // $5/$3 per recruited provider call (6 months)
+  | "tier_bonus"         // Recruitment milestone bonus
   | "recruitment"        // Legacy: kept for backward compat
   | "manual_adjustment";
 

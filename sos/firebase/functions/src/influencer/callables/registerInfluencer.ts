@@ -447,6 +447,12 @@ export const registerInfluencer = onCall(
         recruitedByCode,
         recruitedAt: recruitedBy ? now : null,
 
+        // MLM activation tracking
+        totalClientCalls: 0,
+        isActivated: false,
+        activationBonusPaid: false,
+        tierBonusesPaid: [],
+
         // V2: Captured rates (frozen at registration) — LEGACY
         capturedRates,
         totalWithdrawn: 0,

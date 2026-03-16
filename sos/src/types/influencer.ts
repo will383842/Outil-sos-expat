@@ -15,6 +15,11 @@ export type InfluencerStatus = 'active' | 'suspended' | 'banned';
 export type InfluencerCommissionType =
   | 'client_referral'
   | 'recruitment'
+  | 'n1_call'
+  | 'n2_call'
+  | 'activation_bonus'
+  | 'n1_recruit_bonus'
+  | 'tier_bonus'
   | 'signup_bonus'
   | 'first_call'
   | 'recurring_call'
