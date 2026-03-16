@@ -242,15 +242,13 @@ const LANGUAGES = [
 
 // ── Placeholders for affiliate roles ──
 const AFFILIATE_PLACEHOLDERS = [
-  { value: '{{AFFILIATE_LINK}}', label: 'Lien client', example: 'https://sos-expat.com/?ref=ABC123', description: 'Le lien unique de l\'affilie pour les clients' },
-  { value: '{{RECRUITMENT_LINK}}', label: 'Lien recrutement', example: 'https://sos-expat.com/chatter/register?ref=XYZ', description: 'Le lien pour recruter de nouveaux affilies' },
-  { value: '{{PROVIDER_LINK}}', label: 'Lien prestataire', example: 'https://sos-expat.com/register-provider?ref=ABC123', description: 'Le lien pour inscrire un prestataire' },
+  { value: '{{AFFILIATE_LINK}}', label: 'Lien unifie', example: 'https://sos-expat.com/r/ABC123', description: 'Le lien unique de l\'affilie (clients + recrutement + prestataires)' },
   { value: '{{AFFILIATE_CODE}}', label: 'Code affilie', example: 'ABC123', description: 'Le code unique de l\'affilie' },
   { value: '{{GROUP_NAME}}', label: 'Nom du groupe', example: 'Expats France', description: 'Le nom du groupe de l\'admin (GroupAdmin)' },
   { value: '{{ADMIN_NAME}}', label: 'Nom complet', example: 'Jean Dupont', description: 'Le nom complet de l\'affilie' },
   { value: '{{ADMIN_FIRST_NAME}}', label: 'Prenom', example: 'Jean', description: 'Le prenom de l\'affilie' },
-  { value: '{{DISCOUNT_AMOUNT}}', label: 'Reduction $', example: '5$', description: 'Le montant de la reduction client' },
-  { value: '{{DISCOUNT_PERCENT}}', label: 'Reduction %', example: '5%', description: 'Le pourcentage de reduction' },
+  { value: '{{DISCOUNT_AMOUNT}}', label: 'Reduction $', example: '5$', description: 'Le montant fixe de la reduction client (ex: 5$)' },
+  { value: '{{DISCOUNT_PERCENT}}', label: 'Reduction %', example: '5%', description: 'Le pourcentage de reduction client (ex: 5%)' },
 ];
 
 // ── Placeholders for press resources — company/press-specific variables ──
