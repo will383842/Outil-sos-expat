@@ -27,7 +27,7 @@ const IA_TOOL_URL = "https://ia.sos-expat.com";
 const SCRAPER_PRO_URL = "https://scraper.providers-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
-const JOB_ADS_TRACKER_URL = "/tools/suivi-annonces-emploi.html";
+const JOB_ADS_TRACKER_URL = "https://sos-expat.com/tools/job-tracker.html";
 const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
 
