@@ -64,6 +64,7 @@ interface Provider {
   id: string;
   name: string;
   email: string;
+  profilePhoto?: string;
   type: 'lawyer' | 'expat';
   // Status fields
   availability: 'available' | 'busy' | 'offline';
@@ -327,6 +328,7 @@ export const IaMultiProvidersTab: React.FC = () => {
               id: pid,
               name: cachedProfile.displayName || 'N/A',
               email: cachedProfile.email || '',
+              profilePhoto: cachedProfile.profilePhoto,
               type: cachedProfile.type,
               // Status fields from profile
               availability: cachedProfile.availability || 'offline',
@@ -363,6 +365,7 @@ export const IaMultiProvidersTab: React.FC = () => {
                 id: pid,
                 name: cachedUser.displayName || 'N/A',
                 email: cachedUser.email || '',
+                profilePhoto: cachedUser.profilePhoto,
                 type: cachedUser.type === 'expat_aidant' ? 'expat' : 'lawyer',
                 // Status fields from user
                 availability: cachedUser.availability || 'offline',
@@ -2074,13 +2077,22 @@ export const IaMultiProvidersTab: React.FC = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {/* Provider Type Icon with Status Indicator */}
+                        {/* Provider Photo with Status Indicator */}
                         <div className="relative">
+                          {provider.profilePhoto ? (
+                            <img
+                              src={provider.profilePhoto}
+                              alt={provider.name}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).classList.remove('hidden'); }}
+                            />
+                          ) : null}
                           <div className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center",
                             provider.type === 'lawyer'
                               ? "bg-purple-100 dark:bg-purple-900/30"
-                              : "bg-blue-100 dark:bg-blue-900/30"
+                              : "bg-blue-100 dark:bg-blue-900/30",
+                            provider.profilePhoto ? "hidden" : ""
                           )}>
                             {provider.type === 'lawyer' ? (
                               <Scale className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -2446,18 +2458,22 @@ export const IaMultiProvidersTab: React.FC = () => {
                         )}
                       >
                         <div className="flex items-center gap-2">
-                          <div className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center",
-                            provider.type === 'lawyer'
-                              ? "bg-purple-100 dark:bg-purple-900/30"
-                              : "bg-blue-100 dark:bg-blue-900/30"
-                          )}>
-                            {provider.type === 'lawyer' ? (
-                              <Scale className="w-3 h-3 text-purple-600" />
-                            ) : (
-                              <Globe className="w-3 h-3 text-blue-600" />
-                            )}
-                          </div>
+                          {provider.profilePhoto ? (
+                            <img src={provider.profilePhoto} alt={provider.name} className="w-6 h-6 rounded-full object-cover" />
+                          ) : (
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center",
+                              provider.type === 'lawyer'
+                                ? "bg-purple-100 dark:bg-purple-900/30"
+                                : "bg-blue-100 dark:bg-blue-900/30"
+                            )}>
+                              {provider.type === 'lawyer' ? (
+                                <Scale className="w-3 h-3 text-purple-600" />
+                              ) : (
+                                <Globe className="w-3 h-3 text-blue-600" />
+                              )}
+                            </div>
+                          )}
                           <span className="font-medium text-gray-900 dark:text-white">
                             {provider.name}
                           </span>

@@ -306,16 +306,6 @@ export const IaAccessTab: React.FC = () => {
         const userPhoto = data.profilePhoto || data.photoURL || data.avatar || '';
         const photo = (userPhoto && userPhoto !== '/default-avatar.png') ? userPhoto : (profilePhotos.get(docSnap.id) || '');
 
-        // Debug: log first 3 providers' photo fields
-        if (providersList.length < 3) {
-          console.log(`[IaAccess] ${docSnap.id} photo fields:`, {
-            profilePhoto: data.profilePhoto,
-            photoURL: data.photoURL,
-            avatar: data.avatar,
-            sosProfile: profilePhotos.get(docSnap.id),
-            resolved: photo
-          });
-        }
 
         providersList.push({
           id: docSnap.id,

@@ -32,6 +32,7 @@ export interface UserReference {
   id: string;
   displayName: string;
   email: string;
+  profilePhoto?: string;
   type: string;
   country: string;
   preferredLanguage: string;
@@ -60,6 +61,7 @@ export interface ProfileReference {
   id: string;
   displayName: string;
   email: string;
+  profilePhoto?: string;
   type: 'lawyer' | 'expat';
   country: string;
   languages: string[];
@@ -203,10 +205,12 @@ export function useAdminReferenceData(): AdminReferenceDataReturn {
         const newUsersMap = new Map<string, UserReference>();
         usersSnap.docs.forEach(doc => {
           const data = doc.data();
+          const userPhoto = data.profilePhoto || data.photoURL || data.avatar || '';
           newUsersMap.set(doc.id, {
             id: doc.id,
             displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
             email: data.email || '',
+            profilePhoto: (userPhoto && userPhoto !== '/default-avatar.png') ? userPhoto : undefined,
             type: data.type || data.role || data.providerType || 'user',
             country: data.country || data.currentCountry || 'Unknown',
             preferredLanguage: data.preferredLanguage || 'fr',
@@ -234,10 +238,12 @@ export function useAdminReferenceData(): AdminReferenceDataReturn {
         const newProfilesMap = new Map<string, ProfileReference>();
         profilesSnap.docs.forEach(doc => {
           const data = doc.data();
+          const profPhoto = data.profilePhoto || data.photoURL || data.avatar || '';
           newProfilesMap.set(doc.id, {
             id: doc.id,
             displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
             email: data.email || '',
+            profilePhoto: (profPhoto && profPhoto !== '/default-avatar.png') ? profPhoto : undefined,
             type: data.type || 'expat',
             country: data.country || 'Unknown',
             languages: data.languages || [],
