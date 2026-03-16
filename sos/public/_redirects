@@ -229,6 +229,11 @@
 /register-expat /fr-fr/inscription/expatrie 301
 
 # =============================================
+# Static tools — served as-is, NOT through the SPA
+# =============================================
+/tools/* /tools/:splat 200
+
+# =============================================
 # SPA fallback - MUST be last
 # All routes that don't match above are served by index.html
 # =============================================
