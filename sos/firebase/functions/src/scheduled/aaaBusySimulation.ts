@@ -22,7 +22,10 @@ import * as admin from 'firebase-admin';
 
 interface SimulationConfig {
   enabled: boolean;
-  simultaneousBusy: number;
+  simultaneousBusyMin: number;
+  simultaneousBusyMax: number;
+  /** @deprecated Utilisé comme fallback si min/max pas définis */
+  simultaneousBusy?: number;
   busyDurationMinutes: number;
   updatedAt?: admin.firestore.Timestamp;
   updatedBy?: string;
@@ -30,7 +33,8 @@ interface SimulationConfig {
 
 const DEFAULT_CONFIG: SimulationConfig = {
   enabled: false,
-  simultaneousBusy: 5,
+  simultaneousBusyMin: 3,
+  simultaneousBusyMax: 6,
   busyDurationMinutes: 20,
 };
 
@@ -64,7 +68,13 @@ export const aaaBusySimulation = scheduler.onSchedule(
         return;
       }
 
-      console.log(`🤖 [AAA Simulation] Démarrage — target: ${config.simultaneousBusy} busy, durée: ${config.busyDurationMinutes}min`);
+      // Résoudre min/max avec fallback sur l'ancien champ simultaneousBusy
+      const busyMin = config.simultaneousBusyMin ?? config.simultaneousBusy ?? DEFAULT_CONFIG.simultaneousBusyMin;
+      const busyMax = config.simultaneousBusyMax ?? config.simultaneousBusy ?? DEFAULT_CONFIG.simultaneousBusyMax;
+      // Nombre cible aléatoire à chaque exécution → variation naturelle (3, 4, 5, ou 6)
+      const targetBusy = Math.floor(Math.random() * (busyMax - busyMin + 1)) + busyMin;
+
+      console.log(`🤖 [AAA Simulation] Démarrage — target: ${targetBusy} busy (range ${busyMin}-${busyMax}), durée: ${config.busyDurationMinutes}min`);
 
       // 2. Récupérer TOUS les profils AAA (single field query, auto-indexé)
       const aaaSnapshot = await db
@@ -137,12 +147,38 @@ export const aaaBusySimulation = scheduler.onSchedule(
         console.log(`🤖 [AAA Simulation] ✅ ${expiredBusy.length} profils libérés (busy expiré)`);
       }
 
-      // 4. Calculer combien de nouveaux busy sont nécessaires
+      // 4. Calculer combien de nouveaux busy sont nécessaires (ou à libérer)
       const currentActiveBusy = simulatedBusy.length;
-      const needed = Math.max(0, config.simultaneousBusy - currentActiveBusy);
+      const needed = targetBusy - currentActiveBusy;
+
+      // Si on a TROP de busy actifs par rapport au target → en libérer quelques-uns
+      if (needed < 0) {
+        const toRelease = Math.abs(needed);
+        const shuffledBusy = simulatedBusy.sort(() => Math.random() - 0.5);
+        const profilesToRelease = shuffledBusy.slice(0, toRelease);
+
+        let relBatch = db.batch();
+        let relOpCount = 0;
+        for (const doc of profilesToRelease) {
+          const releaseData = buildReleaseData(now);
+          relBatch.update(doc.ref, releaseData);
+          relBatch.update(db.collection('users').doc(doc.id), releaseData);
+          relOpCount += 2;
+          if (relOpCount >= BATCH_SAFE_LIMIT) {
+            await relBatch.commit();
+            relBatch = db.batch();
+            relOpCount = 0;
+          }
+        }
+        if (relOpCount > 0) {
+          await relBatch.commit();
+        }
+        console.log(`🤖 [AAA Simulation] ✅ Libéré ${toRelease} profils (target ${targetBusy}, avait ${currentActiveBusy})`);
+        return;
+      }
 
       if (needed === 0) {
-        console.log(`🤖 [AAA Simulation] ✅ Déjà ${currentActiveBusy} busy actifs, rien à faire`);
+        console.log(`🤖 [AAA Simulation] ✅ Déjà ${currentActiveBusy} busy actifs = target ${targetBusy}, rien à faire`);
         return;
       }
 
@@ -158,7 +194,7 @@ export const aaaBusySimulation = scheduler.onSchedule(
       // 6. Mettre en busy avec décalage naturel
       // On étale les aaaBusySimulatedAt dans le passé pour que les expirations
       // soient décalées dans le temps (rotation continue, pas tous en même temps)
-      const staggerMs = Math.floor(busyDurationMs / (config.simultaneousBusy + 1));
+      const staggerMs = Math.floor(busyDurationMs / (targetBusy + 1));
       let busyBatch = db.batch();
       let busyOpCount = 0;
 

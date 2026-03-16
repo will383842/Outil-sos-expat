@@ -1603,9 +1603,10 @@ const AdminAaaProfiles: React.FC = () => {
   // ========== AAA BUSY SIMULATION CONFIG ==========
   const [simConfig, setSimConfig] = useState<{
     enabled: boolean;
-    simultaneousBusy: number;
+    simultaneousBusyMin: number;
+    simultaneousBusyMax: number;
     busyDurationMinutes: number;
-  }>({ enabled: false, simultaneousBusy: 5, busyDurationMinutes: 20 });
+  }>({ enabled: false, simultaneousBusyMin: 3, simultaneousBusyMax: 6, busyDurationMinutes: 20 });
   const [simConfigLoaded, setSimConfigLoaded] = useState(false);
   const [savingSimConfig, setSavingSimConfig] = useState(false);
   const [simulatedProfiles, setSimulatedProfiles] = useState<Array<{ id: string; name: string; simulatedAt: Date }>>([]);
@@ -1617,7 +1618,8 @@ const AdminAaaProfiles: React.FC = () => {
         const data = snap.data();
         setSimConfig({
           enabled: data.enabled ?? false,
-          simultaneousBusy: data.simultaneousBusy ?? 5,
+          simultaneousBusyMin: data.simultaneousBusyMin ?? data.simultaneousBusy ?? 3,
+          simultaneousBusyMax: data.simultaneousBusyMax ?? data.simultaneousBusy ?? 6,
           busyDurationMinutes: data.busyDurationMinutes ?? 20,
         });
       }
@@ -3651,20 +3653,33 @@ const AdminAaaProfiles: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre de profils simultanément busy
+                    Nombre busy simultanés (min - max)
                   </label>
                   <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500">Min</span>
                     <input
                       type="range"
                       min={1}
-                      max={10}
-                      value={simConfig.simultaneousBusy}
-                      onChange={(e) => setSimConfig(prev => ({ ...prev, simultaneousBusy: Number(e.target.value) }))}
+                      max={simConfig.simultaneousBusyMax}
+                      value={simConfig.simultaneousBusyMin}
+                      onChange={(e) => setSimConfig(prev => ({ ...prev, simultaneousBusyMin: Math.min(Number(e.target.value), prev.simultaneousBusyMax) }))}
                       className="flex-1"
                     />
-                    <span className="text-lg font-semibold text-gray-900 w-8 text-center">{simConfig.simultaneousBusy}</span>
+                    <span className="text-lg font-semibold text-gray-900 w-8 text-center">{simConfig.simultaneousBusyMin}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Recommandé : 4-6 profils</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-xs text-gray-500">Max</span>
+                    <input
+                      type="range"
+                      min={simConfig.simultaneousBusyMin}
+                      max={12}
+                      value={simConfig.simultaneousBusyMax}
+                      onChange={(e) => setSimConfig(prev => ({ ...prev, simultaneousBusyMax: Math.max(Number(e.target.value), prev.simultaneousBusyMin) }))}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-semibold text-gray-900 w-8 text-center">{simConfig.simultaneousBusyMax}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Varie aléatoirement entre {simConfig.simultaneousBusyMin} et {simConfig.simultaneousBusyMax} toutes les 4 min</p>
                 </div>
 
                 <div>
