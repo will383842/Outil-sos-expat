@@ -183,7 +183,6 @@ const InfluencerReferrals = lazy(() => import('./pages/Influencer/InfluencerRefe
 const InfluencerLeaderboard = lazy(() => import('./pages/Influencer/InfluencerLeaderboard'));
 const InfluencerPayments = lazy(() => import('./pages/Influencer/InfluencerPayments'));
 const InfluencerProfile = lazy(() => import('./pages/Influencer/InfluencerProfile'));
-const InfluencerPromoTools = lazy(() => import('./pages/Influencer/InfluencerPromoTools'));
 const InfluencerResources = lazy(() => import('./pages/Influencer/InfluencerResources'));
 const InfluencerTraining = lazy(() => import('./pages/Influencer/InfluencerTraining'));
 const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSuspended'));
@@ -447,7 +446,6 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/influencer/paiements", component: InfluencerPayments, protected: true, role: 'influencer', translated: "influencer-payments" },
   { path: "/influencer/ressources", component: InfluencerResources, protected: true, role: 'influencer', translated: "influencer-resources" },
   { path: "/influencer/formation", component: InfluencerTraining, protected: true, role: 'influencer', translated: "influencer-training" },
-  { path: "/influencer/outils", component: InfluencerPromoTools, protected: true, role: 'influencer', translated: "influencer-promo-tools" },
   { path: "/influencer/profil", component: InfluencerProfile, protected: true, role: 'influencer', translated: "influencer-profile" },
   { path: "/influencer/suspendu", component: InfluencerSuspended, protected: true, role: 'influencer', translated: "influencer-suspended" },
 

@@ -7,4 +7,3 @@ export { default as AdminInfluencerDetail } from './AdminInfluencerDetail';
 export { default as AdminInfluencersConfig } from './AdminInfluencersConfig';
 export { default as AdminInfluencersLeaderboard } from './AdminInfluencersLeaderboard';
 export { default as AdminInfluencersResources } from './AdminInfluencersResources';
-export { default as AdminInfluencersPromotions } from './AdminInfluencersPromotions';

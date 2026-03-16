@@ -2,7 +2,6 @@ export { default as AdminChattersList } from './AdminChattersList';
 export { default as AdminChatterDetail } from './AdminChatterDetail';
 export { default as AdminChatterConfig } from './AdminChatterConfig';
 export { default as AdminChatterReferrals } from './AdminChatterReferrals';
-export { default as AdminChatterPromotions } from './AdminChatterPromotions';
 export { default as AdminChatterFraud } from './AdminChatterFraud';
 export { default as AdminChatterAnalytics } from './AdminChatterAnalytics';
 export { default as AdminChatterFunnel } from './AdminChatterFunnel';

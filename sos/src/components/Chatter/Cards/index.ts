@@ -18,7 +18,6 @@ export { default as RevenueCalculatorCard, RevenueCalculatorCard as RevenueCalcu
 export { ReferralStatsCard } from './ReferralStatsCard';
 export { EarningsRatioCard } from './EarningsRatioCard';
 export { MilestoneProgressCard } from './MilestoneProgressCard';
-export { PromoAlertCard } from './PromoAlertCard';
 export { default as WeeklyChallengeCard } from './WeeklyChallengeCard';
 export { default as LiveActivityFeed } from './LiveActivityFeed';
 export { default as PiggyBankCard } from './PiggyBankCard';
