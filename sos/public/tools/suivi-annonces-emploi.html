@@ -517,7 +517,7 @@ select option{background:var(--surface2)}
       <div id="duplicate-warning" class="duplicate-warning"><span id="duplicate-text"></span></div>
       <div class="form-row">
         <div class="form-group"><label>Site *</label><input type="text" id="f-site" placeholder="ex: Expat.com" list="sites-datalist" oninput="onSiteInputChange();checkDuplicate()"><datalist id="sites-datalist"></datalist></div>
-        <div class="form-group"><label>URL du site</label><input type="url" id="f-site-url" placeholder="https://..."></div>
+        <div class="form-group"><label>URL du site</label><input type="url" id="f-site-url" placeholder="https://..." oninput="onSiteUrlChange()"></div>
       </div>
       <div class="form-row">
         <div class="form-group full"><label>Titre *</label><input type="text" id="f-title" placeholder="ex: Développeur Laravel Senior" oninput="checkDuplicate()"></div>
@@ -993,6 +993,34 @@ function tagClass(tag){
   if(tag.indexOf("relancer")!==-1) return "tag-relance";
   if(tag.indexOf("traduction")!==-1) return "tag-traduction";
   return "tag-custom";
+}
+
+// ================================================================
+// SITE DEDUP — extract domain & find existing site
+// ================================================================
+function extractDomain(url){
+  if(!url) return "";
+  try{
+    var u=url.indexOf("://")!==-1?url:"https://"+url;
+    var a=document.createElement("a");a.href=u;
+    var h=a.hostname.replace(/^www\./,"").toLowerCase();
+    return h;
+  }catch(e){return url.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/,"").split("/")[0];}
+}
+
+function findExistingSite(name,url){
+  var domain=extractDomain(url);
+  // 1. Match by exact name
+  var byName=sites.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
+  if(byName) return byName;
+  // 2. Match by domain (even if different name/url)
+  if(domain){
+    var byDomain=sites.find(function(s){
+      return extractDomain(s.url)===domain || extractDomain(s.name)===domain;
+    });
+    if(byDomain) return byDomain;
+  }
+  return null;
 }
 
 function expiryInfo(d,status){
@@ -1742,21 +1770,25 @@ async function saveAd(){
     poster:document.getElementById("f-poster").value.trim(),
     tags:[].concat(currentTags)
   };
-  // Handle site: auto-create if unknown, update if known
+  // Handle site: auto-create if unknown, update if known (with domain-based dedup)
   var isPaid=document.getElementById("f-is-paid").checked;
   if(data.site){
-    var siteIdx=sites.findIndex(function(s){return s.name===data.site;});
-    if(siteIdx!==-1){
+    var existingSite=findExistingSite(data.site,data.siteUrl);
+    if(existingSite){
       // Update existing site
-      sites[siteIdx].isPaid=isPaid;
-      if(isPaid&&!sites[siteIdx].paidDetectedAt) sites[siteIdx].paidDetectedAt=new Date().toISOString();
-      // Update country/lang if site doesn't have one yet
-      if(!sites[siteIdx].country&&data.country) sites[siteIdx].country=data.country;
-      if(!sites[siteIdx].lang&&data.lang) sites[siteIdx].lang=data.lang;
-      if(!sites[siteIdx].url&&data.siteUrl) sites[siteIdx].url=data.siteUrl;
-      await apiPut("/sites/"+sites[siteIdx].id,toSnake(sites[siteIdx]));
+      var siteIdx=sites.findIndex(function(s){return s.id===existingSite.id;});
+      if(siteIdx!==-1){
+        sites[siteIdx].isPaid=isPaid;
+        if(isPaid&&!sites[siteIdx].paidDetectedAt) sites[siteIdx].paidDetectedAt=new Date().toISOString();
+        if(!sites[siteIdx].country&&data.country) sites[siteIdx].country=data.country;
+        if(!sites[siteIdx].lang&&data.lang) sites[siteIdx].lang=data.lang;
+        if(!sites[siteIdx].url&&data.siteUrl) sites[siteIdx].url=data.siteUrl;
+        await apiPut("/sites/"+sites[siteIdx].id,toSnake(sites[siteIdx]));
+      }
+      // Use existing site name in the ad for consistency
+      data.site=existingSite.name;
     }else{
-      // Auto-create new site (always, not just when paid)
+      // Auto-create new site (no duplicate found by name or domain)
       var newSite={name:data.site,url:data.siteUrl||"",country:data.country||"",lang:data.lang||"",isPaid:isPaid,audit:[]};
       if(isPaid) newSite.paidDetectedAt=new Date().toISOString();
       addAudit(newSite,"Auto-cr\u00e9\u00e9 depuis annonce par "+currentOperator);
@@ -1893,6 +1925,11 @@ async function saveSite(){
       else sites[idx]=Object.assign({},sites[idx],data);
     }
   }else{
+    // Check for duplicates before creating
+    var dup=findExistingSite(name,data.url);
+    if(dup){
+      if(!confirm("Un site similaire existe d\u00e9j\u00e0 : \""+dup.name+"\""+(dup.url?" ("+extractDomain(dup.url)+")":"")+"\n\nVoulez-vous quand m\u00eame cr\u00e9er un nouveau site ?")) return;
+    }
     data.audit=[];
     addAudit(data,"Cr\u00e9\u00e9 par "+currentOperator);
     var res=await apiPost("/sites",toSnake(data));
@@ -1939,12 +1976,29 @@ function setCountryFilter(c){countryFilter=countryFilter===c?null:c;currentPage=
 function setPosterFilter(p){posterFilter=posterFilter===p?null:p;currentPage=1;renderTable();updateSidebarFilters();}
 function onSiteInputChange(){
   var siteName=document.getElementById("f-site").value.trim();
-  var siteObj=sites.find(function(s){return s.name===siteName;});
+  var siteUrl=document.getElementById("f-site-url").value.trim();
   var warn=document.getElementById("paid-site-warning");
+  var dupWarn=document.getElementById("duplicate-warning");
   var toggle=document.getElementById("f-is-paid");
+  // Check exact name match
+  var siteObj=sites.find(function(s){return s.name===siteName;});
   if(siteObj&&siteObj.isPaid){warn.innerHTML="Ce site est marqu\u00e9 <b>payant</b>.";warn.style.display="flex";toggle.checked=true;}
   else{warn.style.display="none";}
+  // Check domain-based duplicate (different name but same domain)
+  if(siteName&&!siteObj){
+    var domainMatch=findExistingSite(siteName,siteUrl);
+    if(domainMatch){
+      dupWarn.innerHTML="\u26a0 Ce site semble d\u00e9j\u00e0 r\u00e9f\u00e9renc\u00e9 sous le nom <b>"+domainMatch.name+"</b>"+(domainMatch.url?" ("+extractDomain(domainMatch.url)+")":"")+". L\u2019annonce sera rattach\u00e9e \u00e0 ce site.";
+      dupWarn.style.display="flex";
+    }else{
+      dupWarn.style.display="none";
+    }
+  }else{
+    if(dupWarn) dupWarn.style.display="none";
+  }
 }
+// Also check when URL changes
+function onSiteUrlChange(){onSiteInputChange();}
 function checkPaidWarning(){
   var isPaid=document.getElementById("f-is-paid").checked;
   var site=document.getElementById("f-site").value.trim();
@@ -2128,11 +2182,7 @@ function refresh(){
   if(currentView==="trash") renderTrash();
 }
 
-// Close modals on overlay click
-["modal-overlay","site-modal-overlay","csv-modal-overlay"].forEach(function(id){
-  var el=document.getElementById(id);
-  if(el) el.addEventListener("click",function(e){if(e.target.id===id)e.target.classList.remove("open");});
-});
+// Modals: only close via X button or Annuler — NOT by clicking outside
 
 // ================================================================
 // INIT
