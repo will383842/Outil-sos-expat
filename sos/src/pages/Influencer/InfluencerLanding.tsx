@@ -274,7 +274,7 @@ const InfluencerLanding: React.FC = () => {
     { question: intl.formatMessage({ id: 'influencer.faq.q3', defaultMessage: "What is an 'expat helper'?" }), answer: intl.formatMessage({ id: 'influencer.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q4', defaultMessage: "What promo tools do I get?" }), answer: intl.formatMessage({ id: 'influencer.faq.a4', defaultMessage: "You get ready-made banners, interactive widgets for your website, personalized QR codes, promo texts in 9 languages, and high-quality logos. Everything you need to promote professionally." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q5', defaultMessage: "How and when do I get paid?" }), answer: intl.formatMessage({ id: 'influencer.faq.a5', defaultMessage: "Withdraw anytime. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }) },
-    { question: intl.formatMessage({ id: 'influencer.faq.q6', defaultMessage: "What discount do my followers get?" }), answer: intl.formatMessage({ id: 'influencer.faq.a6', defaultMessage: `Your followers automatically get ${rates.discountLabel} off their first call when they use your link. It's an exclusive benefit for your community!` }) },
+    { question: intl.formatMessage({ id: 'influencer.faq.q6', defaultMessage: "What discount do my followers get?" }), answer: intl.formatMessage({ id: 'influencer.faq.a6', defaultMessage: "Your followers automatically get {discount} off every call when they use your link. It's an exclusive benefit for your community!" }, { discount: rates.discountLabel }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q7', defaultMessage: "What audience size do I need?" }), answer: intl.formatMessage({ id: 'influencer.faq.a7', defaultMessage: "There's no minimum! Micro-influencers with 1,000 engaged followers often convert better than mega-influencers. It's about engagement, not size. Quality over quantity!" }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q8', defaultMessage: "Can I recruit lawyers or helpers?" }), answer: intl.formatMessage({ id: 'influencer.faq.a8', defaultMessage: `Yes! Find lawyers or expat helpers to join the platform. You earn $${rates.providerCall}/call for a recruited lawyer or $${rates.providerCallExp}/call for an expat helper during their first ${rates.linkDuration} months. It's passive income from their success!` }) },
   ];
@@ -546,11 +546,11 @@ const InfluencerLanding: React.FC = () => {
                   <FormattedMessage id="influencer.step2.title" defaultMessage="Share Your Link" />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl mb-4">
-                  <FormattedMessage id="influencer.step2.desc" defaultMessage="Add your unique affiliate link in video descriptions, bio, stories. Your followers get {discount} off their first call - exclusive benefit!" values={{ discount: rates.discountLabel }} />
+                  <FormattedMessage id="influencer.step2.desc" defaultMessage="Add your unique affiliate link in video descriptions, bio, stories. Your followers get {discount} off every call - exclusive benefit!" values={{ discount: rates.discountLabel }} />
                 </p>
                 <div className="bg-white/10 rounded-xl p-3 border">
                   <p className="text-sm italic">
-                    "<FormattedMessage id="influencer.step2.example" defaultMessage="Link in bio for {discount} off your first call with a lawyer or expat helper!" values={{ discount: rates.discountLabel }} />"
+                    "<FormattedMessage id="influencer.step2.example" defaultMessage="Link in bio for {discount} off every call with a lawyer or expat helper!" values={{ discount: rates.discountLabel }} />"
                   </p>
                 </div>
               </article>

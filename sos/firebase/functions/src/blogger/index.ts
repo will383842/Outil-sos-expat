@@ -79,15 +79,6 @@ export {
 
 export { adminUpdateBloggerProfile } from "./callables/admin/updateProfile";
 
-// Admin Promotions callables
-export {
-  adminGetBloggerPromotions,
-  adminCreateBloggerPromotion,
-  adminUpdateBloggerPromotion,
-  adminDeleteBloggerPromotion,
-  adminGetBloggerPromotionStats,
-  adminDuplicateBloggerPromotion,
-} from "./callables/admin/promotions";
 
 // ============================================================================
 // TRIGGERS

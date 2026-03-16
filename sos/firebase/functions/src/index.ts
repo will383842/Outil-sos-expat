@@ -2922,13 +2922,6 @@ export {
   adminGetCommissionsDetailed,
   adminGetCommissionStats,
   adminExportCommissionsCSV,
-  // Admin Promotions
-  adminGetPromotions,
-  adminCreatePromotion,
-  adminUpdatePromotion,
-  adminDeletePromotion,
-  adminGetPromotionStats,
-  adminDuplicatePromotion,
   // Public directory
   getChatterDirectory,
   // Admin visibility toggle
@@ -2936,8 +2929,6 @@ export {
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // chatterValidatePendingCommissions,  // → consolidatedValidateCommissions
   // chatterReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
-  chatterMonthlyRecurringCommissions,
-  chatterValidatePendingReferralCommissions,
   // Initialization
   // DISABLED 2026-01-30: One-time init functions - removed to free quota
   // initializeChatterConfig,
@@ -3013,13 +3004,6 @@ export {
   // DISABLED 2026-01-30: One-time seed - removed to free quota
   // adminSeedInfluencerTrainingModules,
   // Resources callables — MIGRATED TO LARAVEL (Phase 4, 2026-03-12)
-  // Admin Promotions callables
-  adminGetInfluencerPromotions,
-  adminCreateInfluencerPromotion,
-  adminUpdateInfluencerPromotion,
-  adminDeleteInfluencerPromotion,
-  adminGetInfluencerPromotionStats,
-  adminDuplicateInfluencerPromotion,
   // Admin - Visibility Toggle
   adminToggleInfluencerVisibility,
   adminUpdateInfluencerProfile,
@@ -3087,13 +3071,6 @@ export {
   adminDeleteBlogger,
   // Admin locked rates
   adminUpdateBloggerLockedRates,
-  // Admin Promotions callables
-  adminGetBloggerPromotions,
-  adminCreateBloggerPromotion,
-  adminUpdateBloggerPromotion,
-  adminDeleteBloggerPromotion,
-  adminGetBloggerPromotionStats,
-  adminDuplicateBloggerPromotion,
 } from './blogger';
 
 // ========== CENTRALIZED PAYMENT SYSTEM ==========
@@ -3160,13 +3137,6 @@ export {
   adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
-  // Admin Promotions callables
-  adminGetGroupAdminPromotions,
-  adminCreateGroupAdminPromotion,
-  adminUpdateGroupAdminPromotion,
-  adminDeleteGroupAdminPromotion,
-  adminGetGroupAdminPromotionStats,
-  adminDuplicateGroupAdminPromotion,
   // Visibility
   adminToggleGroupAdminVisibility,
   adminUpdateGroupAdminProfile,
@@ -3216,13 +3186,6 @@ export {
   adminConvertApplicationToPartner,
   // Admin delete
   adminDeletePartner,
-  // Admin Promotions callables
-  adminGetPartnerPromotions,
-  adminCreatePartnerPromotion,
-  adminUpdatePartnerPromotion,
-  adminDeletePartnerPromotion,
-  adminGetPartnerPromotionStats,
-  adminDuplicatePartnerPromotion,
   // Triggers
   onPartnerCreated,
   // Scheduled
@@ -3231,39 +3194,12 @@ export {
 } from './partner';
 
 // ========== CLIENT AFFILIATE SYSTEM ==========
-// Client affiliate promotions and config
-export {
-  adminGetClientPromotions,
-  adminCreateClientPromotion,
-  adminUpdateClientPromotion,
-  adminDeleteClientPromotion,
-  adminGetClientPromotionStats,
-  adminDuplicateClientPromotion,
-} from './client/callables/admin/promotions';
 export { adminUpdateClientConfig } from './client/callables/admin/config';
 
 // ========== LAWYER AFFILIATE SYSTEM ==========
-// Lawyer affiliate promotions and config
-export {
-  adminGetLawyerPromotions,
-  adminCreateLawyerPromotion,
-  adminUpdateLawyerPromotion,
-  adminDeleteLawyerPromotion,
-  adminGetLawyerPromotionStats,
-  adminDuplicateLawyerPromotion,
-} from './lawyer/callables/admin/promotions';
 export { adminUpdateLawyerConfig } from './lawyer/callables/admin/config';
 
 // ========== EXPAT AFFILIATE SYSTEM ==========
-// Expat affiliate promotions and config
-export {
-  adminGetExpatPromotions,
-  adminCreateExpatPromotion,
-  adminUpdateExpatPromotion,
-  adminDeleteExpatPromotion,
-  adminGetExpatPromotionStats,
-  adminDuplicateExpatPromotion,
-} from './expat/callables/admin/promotions';
 export { adminUpdateExpatConfig } from './expat/callables/admin/config';
 
 // ========== UNIFIED AFFILIATE ANALYTICS ==========

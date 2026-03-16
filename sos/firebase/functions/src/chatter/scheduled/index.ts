@@ -5,12 +5,6 @@
  * have been consolidated into consolidatedValidateCommissions / consolidatedReleaseCommissions.
  */
 
-// Referral system scheduled functions
-export {
-  chatterMonthlyRecurringCommissions,
-  chatterValidatePendingReferralCommissions,
-} from "./monthlyRecurringCommissions";
-
 // Weekly Challenges
 export {
   chatterCreateWeeklyChallenge,

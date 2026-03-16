@@ -26,7 +26,6 @@ import {
 } from "../types";
 import { getChatterConfigCached } from "../utils";
 import { getNextTierBonus, getClientEarnings } from "../services/chatterReferralService";
-import { getActivePromotions } from "../services/chatterPromotionService";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { getWithdrawalFee } from "../../services/feeCalculationService";
 
@@ -133,7 +132,6 @@ export const getChatterDashboard = onCall(
         zoomQuery,
         notificationsQuery,
         withdrawalFee,
-        activePromotions,
         recruiterDoc,
       ] = await Promise.all([
         // Config (cached)
@@ -172,8 +170,6 @@ export const getChatterDashboard = onCall(
           .get(),
         // Withdrawal fee
         getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
-        // Active promotions
-        getActivePromotions(userId, chatter.country),
         // Recruiter info (if recruited)
         chatter.recruitedBy
           ? db.collection("chatters").doc(chatter.recruitedBy).get()
@@ -502,17 +498,8 @@ export const getChatterDashboard = onCall(
             referralPercent: total > 0 ? Math.round((referralEarnings / total) * 100) : 0,
           };
         })() : undefined,
-        // Active promotion (already fetched in parallel)
-        activePromotion: (() => {
-          if (activePromotions.length === 0) return null;
-          const best = activePromotions.reduce((a, b) => (a.multiplier > b.multiplier ? a : b));
-          return {
-            id: best.id,
-            name: best.name,
-            multiplier: best.multiplier,
-            endsAt: best.endDate.toDate().toISOString(),
-          };
-        })(),
+        // Active promotion — removed (promotion multiplier system deleted)
+        activePromotion: null,
         // Piggy Bank - Bonus pending unlock (sync calculation, no await needed)
         piggyBank: (() => {
           const clientEarnings = getClientEarnings(chatter);

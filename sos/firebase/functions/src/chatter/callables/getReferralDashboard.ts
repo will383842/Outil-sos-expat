@@ -19,9 +19,6 @@ import {
   getClientEarnings,
   getNextTierBonus,
 } from "../services/chatterReferralService";
-import {
-  getActivePromotions,
-} from "../services/chatterPromotionService";
 import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 
 // Lazy initialization
@@ -172,24 +169,6 @@ export const getReferralDashboard = onCall(
       logger.info("[getReferralDashboard] Step 6: Tier progress");
       const nextTier = getNextTierBonus(chatter);
 
-      // Step 7: Active promotions (has its own error handling)
-      logger.info("[getReferralDashboard] Step 7: Active promotions");
-      const activePromos = await getActivePromotions(
-        chatterId,
-        chatter.country || "",
-        "threshold_50"
-      );
-
-      const activePromotion =
-        activePromos.length > 0
-          ? {
-              id: activePromos[0].id || "",
-              name: activePromos[0].name || "",
-              multiplier: activePromos[0].multiplier || 1,
-              endsAt: activePromos[0].endDate?.toDate?.()?.toISOString?.() || "",
-            }
-          : null;
-
       // Calculate qualified N1 count — use chatter doc counter or separate count query
       // (filleulsN1 is limited to 50, so filter would be inaccurate for large networks)
       const qualifiedFilleulsN1 = chatter.qualifiedReferralsCount ?? filleulsN1.filter((f) => f.threshold50Reached).length;
@@ -231,7 +210,7 @@ export const getReferralDashboard = onCall(
               filleulsNeeded: 0,
               bonusAmount: 0,
             },
-        activePromotion,
+        activePromotion: null,
       };
     } catch (error: any) {
       logger.error("[getReferralDashboard] Error", {

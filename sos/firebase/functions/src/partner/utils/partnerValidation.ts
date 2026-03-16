@@ -5,7 +5,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { PARTNER_CONSTANTS, type SupportedPartnerLanguage, type PartnerCategory, type PartnerTrafficTier } from "../types";
 
-const VALID_LANGUAGES: SupportedPartnerLanguage[] = ["fr", "en", "es", "de", "pt", "ar", "ch", "ru", "hi"];
+const VALID_LANGUAGES: SupportedPartnerLanguage[] = ["fr", "en", "es", "de", "pt", "ar", "zh", "ru", "hi"];
 
 const VALID_CATEGORIES: PartnerCategory[] = [
   "expatriation", "travel", "legal", "finance", "insurance",
@@ -23,7 +23,7 @@ export function validateEmail(email: string): boolean {
 export function validateWebsiteUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:" || parsed.protocol === "http:";
+    return parsed.protocol === "https:";
   } catch {
     return false;
   }

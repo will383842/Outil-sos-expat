@@ -495,7 +495,7 @@ const ChatterLanding: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-sm sm:text-base text-white/90 mb-3">
-                  <FormattedMessage id="chatter.landing.money.method2.desc" defaultMessage="Poster dans groupes Facebook/Telegram/WhatsApp d'expats. Copier-coller simple. 1 appel = 3-5$." />
+                  <FormattedMessage id="chatter.landing.money.method2.desc" defaultMessage="Poster dans groupes Facebook/Telegram/WhatsApp d'expats. Copier-coller simple. 1 appel = {clientCallRange}$." values={{ clientCallRange: rates.clientCallRange }} />
                 </p>
                 <div className="bg-black/30 border border-amber-500/30 rounded-xl p-3">
                   <p className="text-xs sm:text-sm font-bold text-amber-400">
@@ -1037,7 +1037,7 @@ const ChatterLanding: React.FC = () => {
 
                   {/* Message motivant */}
                   <p className="text-sm sm:text-base font-bold mb-2">
-                    <FormattedMessage id="chatter.landing.calc.motivation" defaultMessage="🎯 Sans compter VOS appels directs à 3 à 5$ !" />
+                    <FormattedMessage id="chatter.landing.calc.motivation" defaultMessage="🎯 Sans compter VOS appels directs à {clientCallRange}$ !" values={{ clientCallRange: rates.clientCallRange }} />
                   </p>
                   <p className="text-xs sm:text-sm">
                     <FormattedMessage id="chatter.landing.calc.forever" defaultMessage="À vie. Tant que votre agence tourne." />

@@ -111,15 +111,6 @@ export {
   adminGetReferralCommissions,
 } from "./callables/admin/referral";
 
-// Admin Promotions
-export {
-  adminGetPromotions,
-  adminCreatePromotion,
-  adminUpdatePromotion,
-  adminDeletePromotion,
-  adminGetPromotionStats,
-  adminDuplicatePromotion,
-} from "./callables/admin/promotions";
 
 // Captain Chatter (user callable)
 export { getCaptainDashboard } from "./callables/captain";
@@ -205,8 +196,6 @@ export {
 export {
   // chatterValidatePendingCommissions → consolidatedValidateCommissions
   // chatterReleaseValidatedCommissions → consolidatedReleaseCommissions
-  chatterMonthlyRecurringCommissions,
-  chatterValidatePendingReferralCommissions,
   // Weekly Challenges
   chatterCreateWeeklyChallenge,
   chatterUpdateChallengeLeaderboard,

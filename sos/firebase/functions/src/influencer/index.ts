@@ -69,13 +69,6 @@ export {
   adminUpdateAntiFraudConfig,
   adminExportInfluencers,
   adminBulkInfluencerAction,
-  // Promotions Admin Callables
-  adminGetInfluencerPromotions,
-  adminCreateInfluencerPromotion,
-  adminUpdateInfluencerPromotion,
-  adminDeleteInfluencerPromotion,
-  adminGetInfluencerPromotionStats,
-  adminDuplicateInfluencerPromotion,
   // Admin withdrawals
   adminGetInfluencerWithdrawals,
   // Admin delete

@@ -20,6 +20,7 @@ import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'fir
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
+import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import {
@@ -210,6 +211,7 @@ const CaptainLanding: React.FC = () => {
   // Country-based currency
   const { countryCode, lang: urlLang } = useCountryFromUrl();
   const { config: countryConfig } = useCountryLandingConfig('chatter', countryCode, urlLang || langCode);
+  const { rates } = usePublicCommissionRates('chatter');
   const hideConversionCurrencies = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'AUD'];
   const local = (usd: number) => {
     if (hideConversionCurrencies.includes(countryConfig.currency.code)) return '';
@@ -480,7 +482,7 @@ const CaptainLanding: React.FC = () => {
     },
     {
       q: intl.formatMessage({ id: 'captain.faq.q3', defaultMessage: "Comment sont calcules les revenus ?" }),
-      a: intl.formatMessage({ id: 'captain.faq.a3', defaultMessage: "2-3$ par appel de votre equipe + bonus palier mensuel (25-400$) + bonus qualite (100$/mois). Plus vos appels perso a 3-5$. Tout est cumule." }, { expatDollar, lawyerDollar, minTier: TIERS[0]?.bonus ?? 25, maxTier: maxTierBonus, qualityBonus: qualityBonusDollar }),
+      a: intl.formatMessage({ id: 'captain.faq.a3', defaultMessage: "2-3$ par appel de votre equipe + bonus palier mensuel (25-400$) + bonus qualite (100$/mois). Plus vos appels perso a {clientCallRange}$. Tout est cumule." }, { expatDollar, lawyerDollar, minTier: TIERS[0]?.bonus ?? 25, maxTier: maxTierBonus, qualityBonus: qualityBonusDollar, clientCallRange: rates.clientCallRange }),
     },
     {
       q: intl.formatMessage({ id: 'captain.faq.q4', defaultMessage: "C'est vraiment evolutif ?" }),

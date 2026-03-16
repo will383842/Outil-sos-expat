@@ -11,7 +11,7 @@ import { Timestamp } from "firebase-admin/firestore";
 // ENUMS
 // ============================================================
 
-export type SupportedPartnerLanguage = "fr" | "en" | "es" | "de" | "pt" | "ar" | "ch" | "ru" | "hi";
+export type SupportedPartnerLanguage = "fr" | "en" | "es" | "de" | "pt" | "ar" | "zh" | "ru" | "hi";
 
 export type PartnerCategory =
   | "expatriation"

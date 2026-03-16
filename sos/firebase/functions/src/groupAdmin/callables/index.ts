@@ -31,13 +31,6 @@ export {
   adminGetGroupAdminConfigHistory,
   adminGetRecruitmentsList,
   adminGetGroupAdminRecruits,
-  // Promotions
-  adminGetGroupAdminPromotions,
-  adminCreateGroupAdminPromotion,
-  adminUpdateGroupAdminPromotion,
-  adminDeleteGroupAdminPromotion,
-  adminGetGroupAdminPromotionStats,
-  adminDuplicateGroupAdminPromotion,
   // Visibility
   adminToggleGroupAdminVisibility,
   // Delete
