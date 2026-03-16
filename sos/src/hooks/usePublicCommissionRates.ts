@@ -173,11 +173,14 @@ function extractRatesFromDoc(role: string, data: Record<string, any>): RawRates 
   }
 
   // Blogger, Influencer, GroupAdmin use similar field names
+  // Legacy fields: commissionClientAmount / commissionRecruitmentAmount (single value, no lawyer/expat split)
+  const legacyClient = data.commissionClientAmount;
+  const legacyRecruitment = data.commissionRecruitmentAmount;
   return {
-    clientCallLawyer: data.commissionClientAmountLawyer ?? data.commissionClientCallAmountLawyer ?? 500,
-    clientCallExpat: data.commissionClientAmountExpat ?? data.commissionClientCallAmountExpat ?? 300,
-    providerCallLawyer: data.commissionRecruitmentAmountLawyer ?? data.commissionProviderCallAmountLawyer ?? 500,
-    providerCallExpat: data.commissionRecruitmentAmountExpat ?? data.commissionProviderCallAmountExpat ?? 300,
+    clientCallLawyer: data.commissionClientAmountLawyer ?? data.commissionClientCallAmountLawyer ?? legacyClient ?? 500,
+    clientCallExpat: data.commissionClientAmountExpat ?? data.commissionClientCallAmountExpat ?? legacyClient ?? 300,
+    providerCallLawyer: data.commissionRecruitmentAmountLawyer ?? data.commissionProviderCallAmountLawyer ?? legacyRecruitment ?? 500,
+    providerCallExpat: data.commissionRecruitmentAmountExpat ?? data.commissionProviderCallAmountExpat ?? legacyRecruitment ?? 300,
     n1CallAmount: data.commissionN1CallAmount ?? 0,
     n2CallAmount: data.commissionN2CallAmount ?? 0,
     minimumWithdrawal: data.minimumWithdrawalAmount ?? 3000,
