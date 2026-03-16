@@ -27,6 +27,8 @@ import {
   X,
   Copy,
   Check,
+  Users,
+  FileText,
 } from 'lucide-react';
 
 interface PartnerDashboardLayoutProps {
@@ -61,6 +63,18 @@ const PartnerDashboardLayout: React.FC<PartnerDashboardLayoutProps> = ({ childre
       label: intl.formatMessage({ id: 'partner.menu.earnings', defaultMessage: 'Mes gains' }),
       icon: <DollarSign className="w-5 h-5" />,
       path: '/partner/gains',
+    },
+    {
+      id: 'subscribers',
+      label: intl.formatMessage({ id: 'partner.menu.subscribers', defaultMessage: 'Mes abonnés' }),
+      icon: <Users className="w-5 h-5" />,
+      path: '/partner/abonnes',
+    },
+    {
+      id: 'agreement',
+      label: intl.formatMessage({ id: 'partner.menu.agreement', defaultMessage: 'Mon accord' }),
+      icon: <FileText className="w-5 h-5" />,
+      path: '/partner/accord',
     },
     {
       id: 'statistics',

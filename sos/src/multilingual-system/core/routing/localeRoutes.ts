@@ -371,6 +371,8 @@ export type RouteKey =
   | "partner-resources"  // /partner/ressources -> /partner/resources, etc.
   | "partner-profile"    // /partner/profil -> /partner/profile, etc.
   | "partner-payments"   // /partner/paiements -> /partner/payments, etc.
+  | "partner-subscribers" // /partner/abonnes -> /partner/subscribers, etc.
+  | "partner-agreement"   // /partner/accord -> /partner/agreement, etc.
   | "partner-suspended"  // /partner/suspendu -> /partner/suspended, etc.
   | "partner-telegram"   // /partner/telegram -> /partner/telegram, etc.
   | "press";             // /presse -> /press, /prensa, etc.
@@ -1622,6 +1624,28 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "partner/zhifu",
     hi: "partner/bhugtan",
     ar: "partner/المدفوعات",
+  },
+  "partner-subscribers": {
+    fr: "partner/abonnes",
+    en: "partner/subscribers",
+    es: "partner/suscriptores",
+    de: "partner/abonnenten",
+    ru: "partner/podpischiki",
+    pt: "partner/assinantes",
+    ch: "partner/dingyuezhe",
+    hi: "partner/subscribers",
+    ar: "partner/المشتركين",
+  },
+  "partner-agreement": {
+    fr: "partner/accord",
+    en: "partner/agreement",
+    es: "partner/acuerdo",
+    de: "partner/vereinbarung",
+    ru: "partner/soglashenie",
+    pt: "partner/acordo",
+    ch: "partner/xieyi",
+    hi: "partner/agreement",
+    ar: "partner/الاتفاقية",
   },
   "partner-suspended": {
     fr: "partner/suspendu",

@@ -226,6 +226,8 @@ const PartnerWidgets = lazy(() => import('./pages/Partner/PartnerWidgets'));
 const PartnerResources = lazy(() => import('./pages/Partner/PartnerResources'));
 const PartnerProfile = lazy(() => import('./pages/Partner/PartnerProfile'));
 const PartnerPayments = lazy(() => import('./pages/Partner/PartnerPayments'));
+const PartnerSubscribers = lazy(() => import('./pages/Partner/PartnerSubscribers'));
+const PartnerAgreement = lazy(() => import('./pages/Partner/PartnerAgreement'));
 const PartnerSuspended = lazy(() => import('./pages/Partner/PartnerSuspended'));
 const PartnerTelegramOnboarding = lazy(() => import('./pages/Partner/PartnerTelegramOnboarding'));
 const PartnerLanding = lazy(() => import('./pages/Partners/PartnerLanding'));
@@ -489,6 +491,8 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/partner/telegram", component: PartnerTelegramOnboarding, protected: true, role: 'partner', translated: "partner-telegram" },
   { path: "/partner/tableau-de-bord", component: PartnerDashboard, protected: true, role: 'partner', translated: "partner-dashboard" },
   { path: "/partner/gains", component: PartnerEarnings, protected: true, role: 'partner', translated: "partner-earnings" },
+  { path: "/partner/abonnes", component: PartnerSubscribers, protected: true, role: 'partner', translated: "partner-subscribers" },
+  { path: "/partner/accord", component: PartnerAgreement, protected: true, role: 'partner', translated: "partner-agreement" },
   { path: "/partner/statistiques", component: PartnerClicks, protected: true, role: 'partner', translated: "partner-clicks" },
   { path: "/partner/widgets", component: PartnerWidgets, protected: true, role: 'partner', translated: "partner-widgets" },
   { path: "/partner/ressources", component: PartnerResources, protected: true, role: 'partner', translated: "partner-resources" },

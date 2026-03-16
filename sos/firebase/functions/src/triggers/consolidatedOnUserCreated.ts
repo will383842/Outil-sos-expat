@@ -45,6 +45,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 
 // Secret imports (needed for the secrets array in trigger config)
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../lib/secrets";
+import { PARTNER_ENGINE_URL_SECRET, PARTNER_ENGINE_API_KEY_SECRET } from "../partner/triggers/forwardToPartnerEngine";
 import {
   GOOGLE_ADS_CUSTOMER_ID,
   GOOGLE_ADS_LEAD_CONVERSION_ID,
@@ -80,6 +81,8 @@ export const consolidatedOnUserCreated = onDocumentCreated(
       GOOGLE_ADS_CLIENT_ID,
       GOOGLE_ADS_CLIENT_SECRET,
       META_CAPI_TOKEN,
+      PARTNER_ENGINE_URL_SECRET,
+      PARTNER_ENGINE_API_KEY_SECRET,
     ],
   },
   async (event) => {
@@ -135,6 +138,19 @@ export const consolidatedOnUserCreated = onDocumentCreated(
     } else {
       results.affiliate = "skipped (unified system active)";
     }
+
+    // Partner Engine: forward subscriber registration if partnerInviteToken exists
+    wave1.push(
+      safeRun("partnerEngine", async () => {
+        const userData = event.data?.data();
+        if (userData?.partnerInviteToken) {
+          const { handlePartnerSubscriberRegistered } = await import("../partner/triggers/forwardToPartnerEngine");
+          await handlePartnerSubscriberRegistered(event);
+        } else {
+          results.partnerEngine = "skipped (no inviteToken)";
+        }
+      })
+    );
 
     await Promise.all(wave1);
 
