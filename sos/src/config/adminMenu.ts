@@ -608,6 +608,13 @@ export const adminMenuTree: AdminMenuItem[] = [
         descriptionKey: "admin.menu.affiliation.description",
         children: [
           {
+            id: "affiliate-overview",
+            labelKey: "admin.menu.affiliateOverview",
+            path: "/admin/affiliates/overview",
+            icon: LayoutDashboard,
+            descriptionKey: "admin.menu.affiliateOverview.description",
+          },
+          {
             id: "affiliate-dashboard",
             labelKey: "admin.menu.affiliateDashboard",
             path: "/admin/affiliates/dashboard",

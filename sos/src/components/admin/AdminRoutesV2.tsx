@@ -352,6 +352,9 @@ const AdminCommissionPlans = lazy(
 const AdminUnifiedCommissions = lazy(
   () => import("../../pages/admin/AdminUnifiedCommissions")
 );
+const AdminAffiliateOverview = lazy(
+  () => import("../../pages/admin/AdminAffiliateOverview")
+);
 // AdminAffiliatePayouts removed — redirected to centralized AdminPaymentsDashboard
 const AdminAffiliateDashboard = lazy(
   () => import("../../pages/admin/AdminAffiliateDashboard")
@@ -1188,7 +1191,16 @@ const AdminRoutesV2: React.FC = () => {
       />
 
       {/* 🤝 AFFILIATION */}
-      {/* Dashboard Affiliés - Vue d'ensemble */}
+      {/* Vue d'ensemble unifiée - Tous les rôles affiliés */}
+      <Route
+        path="affiliates/overview"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminAffiliateOverview />
+          </Suspense>
+        }
+      />
+      {/* Dashboard Affiliés génériques */}
       <Route
         path="affiliates/dashboard"
         element={
