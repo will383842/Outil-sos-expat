@@ -32,6 +32,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
+import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
 
 // ============================================================================
 // STYLES - Mobile-first with performance hints
@@ -223,6 +224,7 @@ const ChatterLanding: React.FC = () => {
   // Country-specific config
   const { countryCode, lang: urlLang } = useCountryFromUrl();
   const { config: countryConfig } = useCountryLandingConfig('chatter', countryCode, urlLang || langCode);
+  const { rates } = usePublicCommissionRates('chatter');
 
   // SEO: canonical URL + hrefLang
   const htmlLang = langCode === 'ch' ? 'zh' : langCode;
@@ -316,9 +318,9 @@ const ChatterLanding: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Calcul réaliste des revenus MLM
-  const teamEarningsN1 = teamSizeN1 * callsPerChatter * 1; // 1$/appel niveau 1
-  const teamEarningsN2 = teamSizeN2 * callsPerChatter * 0.5; // 0,50$/appel niveau 2
+  // Calcul réaliste des revenus MLM (dynamique depuis admin config)
+  const teamEarningsN1 = teamSizeN1 * callsPerChatter * rates.n1;
+  const teamEarningsN2 = teamSizeN2 * callsPerChatter * rates.n2;
   const teamEarnings = teamEarningsN1 + teamEarningsN2;
 
   // Local currency helper — returns " (6 000 FCFA)" or empty string
@@ -384,7 +386,7 @@ const ChatterLanding: React.FC = () => {
               <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Source 1 : Appels directs */}
                 <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border rounded-xl p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-black mb-1">3-5$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">{rates.clientCallRange}$</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source1" defaultMessage="par appel direct" /></div>
                 </div>
 
@@ -399,7 +401,7 @@ const ChatterLanding: React.FC = () => {
                   <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="chatter.landing.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">1500$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">{rates.providerCall * 30 * 10}$</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
                 </div>
               </div>
@@ -409,8 +411,12 @@ const ChatterLanding: React.FC = () => {
                 <p className="text-xs sm:text-sm">
                   <FormattedMessage
                     id="chatter.landing.hero.partnerExample"
-                    defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × 5$ × 6 mois = {total} passifs !"
-                    values={{ total: <span className="text-purple-400 font-bold">900$</span> }}
+                    defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × {providerRate}$ × {months} mois = {total} passifs !"
+                    values={{
+                      providerRate: rates.providerCall,
+                      months: rates.linkDuration,
+                      total: <span className="text-purple-400 font-bold">{rates.providerCall * 30 * rates.linkDuration}$</span>,
+                    }}
                   />
                 </p>
               </div>
@@ -589,7 +595,7 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.landing.source1.desc" defaultMessage="Parcourez les groupes Facebook et forums. Aidez ceux qui ont besoin en partageant votre lien." />
                 </p>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-black">
-                  3-5${local(4)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
+                  {rates.clientCallRange}${local(rates.clientCallMax)} / <FormattedMessage id="chatter.landing.perCall" defaultMessage="appel" />
                 </div>
               </article>
 
@@ -606,10 +612,10 @@ const ChatterLanding: React.FC = () => {
                 </p>
                 <div className="space-y-1 sm:space-y-2">
                   <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-green-400">
-                    +1${local(1)} <FormattedMessage id="chatter.landing.source2.level1" defaultMessage="niveau 1" />
+                    +{rates.n1}${local(rates.n1)} <FormattedMessage id="chatter.landing.source2.level1" defaultMessage="niveau 1" />
                   </div>
                   <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-cyan-400">
-                    +0,50${local(0.5)} <FormattedMessage id="chatter.landing.source2.level2" defaultMessage="niveau 2" />
+                    +{rates.n2}${local(rates.n2)} <FormattedMessage id="chatter.landing.source2.level2" defaultMessage="niveau 2" />
                   </div>
                 </div>
               </article>
@@ -628,7 +634,11 @@ const ChatterLanding: React.FC = () => {
                   <FormattedMessage id="chatter.landing.source3.title.new" defaultMessage="Trouvez des partenaires" />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5">
-                  <FormattedMessage id="chatter.landing.source3.desc.new" defaultMessage="Invitez des avocats ou expatriés aidants. Gagnez 5$ sur CHAQUE appel qu'ils reçoivent pendant 6 mois !" />
+                  <FormattedMessage
+                    id="chatter.landing.source3.desc.new"
+                    defaultMessage="Invitez des avocats ou expatriés aidants. Gagnez {providerRate}$ sur CHAQUE appel qu'ils reçoivent pendant {months} mois !"
+                    values={{ providerRate: rates.providerCall, months: rates.linkDuration }}
+                  />
                 </p>
 
                 {/* Calculs vendeurs */}
@@ -638,13 +648,13 @@ const ChatterLanding: React.FC = () => {
                       <span className="text-sm sm:text-base">
                         <FormattedMessage id="chatter.landing.source3.calc1" defaultMessage="1 partenaire (30 appels/mois)" />
                       </span>
-                      <span className="text-lg sm:text-xl font-black">150$/mois</span>
+                      <span className="text-lg sm:text-xl font-black">{rates.providerCall * 30}$/mois</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm sm:text-base">
-                        <FormattedMessage id="chatter.landing.source3.calc2" defaultMessage="× 6 mois =" />
+                        <FormattedMessage id="chatter.landing.source3.calc2" defaultMessage="× {months} mois =" values={{ months: rates.linkDuration }} />
                       </span>
-                      <span className="text-xl sm:text-2xl font-black">900$</span>
+                      <span className="text-xl sm:text-2xl font-black">{rates.providerCall * 30 * rates.linkDuration}$</span>
                     </div>
                     <div className="border-t pt-3 mt-3">
                       <div className="flex items-center justify-between">
@@ -652,7 +662,7 @@ const ChatterLanding: React.FC = () => {
                           <FormattedMessage id="chatter.landing.source3.calc3" defaultMessage="10 partenaires =" />
                         </span>
                         <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                          9 000$
+                          {(rates.providerCall * 30 * rates.linkDuration * 10).toLocaleString()}$
                         </span>
                       </div>
                     </div>
@@ -894,7 +904,7 @@ const ChatterLanding: React.FC = () => {
                         <FormattedMessage id="chatter.landing.agency.you" defaultMessage="Vous = Le directeur" />
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-amber-400">
-                        3-5${local(4)} / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
+                        {rates.clientCallRange}${local(rates.clientCallMax)} / <FormattedMessage id="chatter.landing.agency.persoCall" defaultMessage="appel perso" />
                       </div>
                     </div>
                   </div>
@@ -911,7 +921,7 @@ const ChatterLanding: React.FC = () => {
                         <span className="text-green-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitée" />)</span>
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-green-400">
-                        +1${local(1)} <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
+                        +{rates.n1}${local(rates.n1)} <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
                       </div>
                     </div>
                   </div>
@@ -928,7 +938,7 @@ const ChatterLanding: React.FC = () => {
                         <span className="text-cyan-400 font-bold">(<FormattedMessage id="chatter.landing.unlimited" defaultMessage="illimitées" />)</span>
                       </div>
                       <div className="!text-lg sm:!text-xl lg:!text-2xl font-bold text-cyan-400">
-                        +0,50${local(0.5)} <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
+                        +{rates.n2}${local(rates.n2)} <FormattedMessage id="chatter.landing.agency.perCall" defaultMessage="sur chaque appel" />
                       </div>
                     </div>
                   </div>
@@ -1072,7 +1082,7 @@ const ChatterLanding: React.FC = () => {
             {/* Payments */}
             <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center max-w-3xl mx-auto">
               <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5 lg:mb-6">
-                <FormattedMessage id="chatter.landing.payment.info" defaultMessage="Retrait dès 30$ • Reçu en 48h" />
+                <FormattedMessage id="chatter.landing.payment.info" defaultMessage="Reçu en 48h" />
               </p>
               <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4">
                 {formatPaymentMethodDisplay(countryConfig.paymentMethods).map((m, i) => (

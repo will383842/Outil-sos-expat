@@ -42,6 +42,17 @@ const ClientTab: React.FC = () => {
 
   if (loading || !configs) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-gray-500 animate-spin" /></div>;
 
+  // Helper: format discount dynamically based on type from config
+  const fmtDiscount = (cfg: any) => {
+    const type = cfg?.clientDiscountType ?? 'fixed';
+    if (type === 'percent') return `${cfg?.clientDiscountPercent ?? 5}%`;
+    return formatCents(cfg?.clientDiscountAmount ?? 500);
+  };
+  const discountTypeLabel = (cfg: any) => {
+    const type = cfg?.clientDiscountType ?? 'fixed';
+    return type === 'percent' ? 'percent' as const : 'fixed' as const;
+  };
+
   const rows = [
     {
       role: 'Chatter',
@@ -52,20 +63,20 @@ const ClientTab: React.FC = () => {
     {
       role: 'Influenceur',
       icon: '📈',
-      discount: `${configs.influencer.clientDiscountPercent ?? 5}%`,
-      discountType: 'percent' as const,
+      discount: fmtDiscount(configs.influencer),
+      discountType: discountTypeLabel(configs.influencer),
     },
     {
       role: 'Blogueur',
       icon: '✏️',
-      discount: '0% (pas de remise)',
+      discount: 'Aucune remise',
       discountType: 'none' as const,
     },
     {
       role: 'Admin Groupe',
       icon: '👥',
-      discount: formatCents(configs.groupAdmin.clientDiscountAmount ?? 500),
-      discountType: 'fixed' as const,
+      discount: fmtDiscount(configs.groupAdmin),
+      discountType: discountTypeLabel(configs.groupAdmin),
     },
     {
       role: 'Partenaire',

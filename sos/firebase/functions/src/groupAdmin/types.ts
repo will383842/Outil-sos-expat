@@ -1149,8 +1149,12 @@ export interface GroupAdminConfig {
   /** Number of client referrals required from recruit to trigger activation bonus */
   activationCallsRequired: number;
 
+  /** Client discount type: 'fixed' ($) or 'percent' (%) */
+  clientDiscountType: 'percent' | 'fixed';
   /** Client discount amount in cents ($5 = 500) */
   clientDiscountAmount: number;
+  /** Client discount percentage (5% = 5) */
+  clientDiscountPercent: number;
 
   /** Payment processing mode */
   paymentMode: "manual" | "automatic";
@@ -1223,7 +1227,9 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   commissionActivationBonusAmount: 500,  // $5 activation bonus (recruit makes 2 referrals)
   commissionN1RecruitBonusAmount: 100,   // $1 when N1 recruits a N2
   activationCallsRequired: 2,            // 2 referrals needed to trigger activation bonus
+  clientDiscountType: "fixed" as const,  // 'fixed' ($) or 'percent' (%)
   clientDiscountAmount: 500,             // $5 discount for client
+  clientDiscountPercent: 0,              // 0% (not used when type=fixed)
   paymentMode: "manual",                 // manual | automatic
 
   recruitmentWindowMonths: 6,

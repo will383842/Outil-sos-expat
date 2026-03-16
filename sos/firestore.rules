@@ -2077,8 +2077,8 @@ service cloud.firestore {
 
     // Configuration du système chatter
     match /chatter_config/{docId} {
-      // Lecture: chatters actifs ou admin (contient les paramètres de bonus)
-      allow read: if isChatter() || isAdmin();
+      // Lecture: doc 'current' public (landing pages dynamiques) + chatters/admin pour le reste
+      allow read: if docId == 'current' || isChatter() || isAdmin();
       // Écriture: admin uniquement
       allow write: if isAdmin();
     }
@@ -2437,8 +2437,8 @@ service cloud.firestore {
 
     // Configuration du système influenceur
     match /influencer_config/{docId} {
-      // Lecture: influenceurs actifs ou admin (contient les paramètres de commission)
-      allow read: if isInfluencer() || isAdmin();
+      // Lecture: doc 'current' public (landing pages dynamiques) + influenceurs/admin pour le reste
+      allow read: if docId == 'current' || isInfluencer() || isAdmin();
       // Écriture: admin uniquement
       allow write: if isAdmin();
     }
@@ -2574,8 +2574,8 @@ service cloud.firestore {
 
     // Configuration du système blogueur
     match /blogger_config/{docId} {
-      // Lecture: blogueurs actifs ou admin (contient les paramètres de commission)
-      allow read: if isBlogger() || isAdmin();
+      // Lecture: doc 'current' public (landing pages dynamiques) + blogueurs/admin pour le reste
+      allow read: if docId == 'current' || isBlogger() || isAdmin();
       // Écriture: admin uniquement
       allow write: if isAdmin();
     }
@@ -2828,8 +2828,8 @@ service cloud.firestore {
 
     // Configuration du système GroupAdmin
     match /group_admin_config/{docId} {
-      // Lecture: GroupAdmins actifs ou admin (contient les paramètres de commission)
-      allow read: if isGroupAdmin() || isAdmin();
+      // Lecture: doc 'current' public (landing pages dynamiques) + GroupAdmins/admin pour le reste
+      allow read: if docId == 'current' || isGroupAdmin() || isAdmin();
       // Écriture: admin uniquement
       allow write: if isAdmin();
     }

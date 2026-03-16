@@ -33,6 +33,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
+import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
 
 // ============================================================================
 // STYLES - Mobile-first with performance hints
@@ -200,6 +201,7 @@ const GroupAdminLanding: React.FC = () => {
   // Country-specific config
   const { countryCode, lang: urlLang } = useCountryFromUrl();
   const { config: countryConfig } = useCountryLandingConfig('groupadmin', countryCode, urlLang || langCode);
+  const { rates } = usePublicCommissionRates('groupadmin');
 
   // VENDEUR: Ne montrer la conversion QUE si le montant reste attractif (pas en Europe avec des 0,XX€)
   const local = (usd: number) => {
@@ -239,15 +241,15 @@ const GroupAdminLanding: React.FC = () => {
     },
     {
       q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q2', defaultMessage: 'When do I get paid?' }),
-      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a2', defaultMessage: 'Commissions become available 7 days after the client\'s consultation. You can withdraw anytime once you have at least $25.' }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a2', defaultMessage: 'Commissions become available 7 days after the client\'s consultation. You can withdraw anytime.' }),
     },
     {
       q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q3', defaultMessage: 'What payment methods are available?' }),
       a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a3', defaultMessage: 'We support PayPal, Wise, Mobile Money, and bank transfers to over 100 countries.' }),
     },
     {
-      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q4', defaultMessage: 'How does the $5 discount work for my members?' }),
-      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a4', defaultMessage: 'Every call made through your affiliate link gives your community members a $5 discount. Your members save money while you earn $5/call (lawyer) or $3/call (expat).' }),
+      q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q4', defaultMessage: 'How does the {discount} discount work for my members?' }, { discount: rates.discountLabel }),
+      a: intl.formatMessage({ id: 'groupAdmin.landing.faq.a4', defaultMessage: 'Every call made through your affiliate link gives your community members a {discount} discount. Your members save money while you earn {clientCallMax}$/call (lawyer) or {clientCallExpat}$/call (expat).' }, { discount: rates.discountLabel, clientCallMax: rates.clientCallMax, clientCallExpat: Math.round(rates.clientCallExpat / 100) }),
     },
     {
       q: intl.formatMessage({ id: 'groupAdmin.landing.faq.q5', defaultMessage: 'What kind of groups are eligible?' }),
@@ -258,8 +260,8 @@ const GroupAdminLanding: React.FC = () => {
   return (
     <Layout showFooter={false}>
       <SEOHead
-        title={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner - Earn $3-5 per Call + $5 Discount | SOS-Expat' })}
-        description={intl.formatMessage({ id: 'groupAdmin.landing.seo.description', defaultMessage: 'Monetize your group or community. Earn $5/call (lawyer) or $3/call (expat) via your affiliate link, plus a $5 discount for your members on every call. Ready-to-use tools in 9 languages.' })}
+        title={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner - Earn ${clientCallRange} per Call + {discount} Discount | SOS-Expat' }, { clientCallRange: rates.clientCallRange, discount: rates.discountLabel })}
+        description={intl.formatMessage({ id: 'groupAdmin.landing.seo.description', defaultMessage: 'Monetize your group or community. Earn {clientCallMax}$/call (lawyer) or {clientCallExpat}$/call (expat) via your affiliate link, plus a {discount} discount for your members on every call. Ready-to-use tools in 9 languages.' }, { clientCallMax: rates.clientCallMax, clientCallExpat: Math.round(rates.clientCallExpat / 100), discount: rates.discountLabel })}
       />
 
       {/* Custom styles */}
@@ -310,7 +312,7 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.hero.example.small" defaultMessage="Groupe moyen (5K membres)" />
                   </div>
                   <div className="text-white/90">
-                    <FormattedMessage id="groupAdmin.landing.hero.example.small.calc" defaultMessage="50-100 appels/mois = 500-1000$" />
+                    <FormattedMessage id="groupAdmin.landing.hero.example.small.calc" defaultMessage="50-100 appels/mois = {low}-{high}$" values={{ low: 50 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200), high: 100 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200) }} />
                   </div>
                 </div>
                 <div className="bg-white/10 rounded-lg p-2 sm:p-3">
@@ -318,14 +320,15 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.hero.example.large" defaultMessage="Gros groupe (20K+ membres)" />
                   </div>
                   <div className="text-white/90">
-                    <FormattedMessage id="groupAdmin.landing.hero.example.large.calc" defaultMessage="200-500 appels/mois = 2000-5000$" />
+                    <FormattedMessage id="groupAdmin.landing.hero.example.large.calc" defaultMessage="200-500 appels/mois = {low}-{high}$" values={{ low: 200 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200), high: 500 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200) }} />
                   </div>
                 </div>
               </div>
               <p className="text-sm sm:text-base text-white/90 mt-3 text-center">
                 <FormattedMessage
                   id="groupAdmin.landing.hero.new.subtitle2"
-                  defaultMessage="💡 Vos membres économisent 5$/appel = Win-win total !"
+                  defaultMessage="💡 Vos membres économisent {discount}/appel = Win-win total !"
+                  values={{ discount: rates.discountLabel }}
                 />
               </p>
             </div>
@@ -346,12 +349,12 @@ const GroupAdminLanding: React.FC = () => {
                   <div className="text-xs uppercase font-bold text-green-400 mb-2">
                     <FormattedMessage id="groupAdmin.landing.hero.source1.label" defaultMessage="📱 VOS MEMBRES" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black text-green-400 mb-1">300-3000$</div>
+                  <div className="text-3xl sm:text-4xl font-black text-green-400 mb-1">{Math.round(rates.clientCallExpat / 100) * 100}-{rates.clientCallMax * 600}$</div>
                   <div className="text-sm font-semibold mb-2">
                     <FormattedMessage id="groupAdmin.landing.hero.source1.subtitle" defaultMessage="par mois" />
                   </div>
                   <div className="text-xs opacity-80">
-                    <FormattedMessage id="groupAdmin.landing.hero.source1.detail" defaultMessage="3-5$/appel × votre trafic" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source1.detail" defaultMessage="{clientCallRange}$/appel × votre trafic" values={{ clientCallRange: rates.clientCallRange }} />
                   </div>
                 </div>
 
@@ -365,7 +368,7 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.hero.source2.subtitle" defaultMessage="bonus de recrutement" />
                   </div>
                   <div className="text-xs opacity-80">
-                    <FormattedMessage id="groupAdmin.landing.hero.source2.detail" defaultMessage="5$ activation + 1$/appel membres" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.detail" defaultMessage="{providerCall}$ activation + {n1}$/appel membres" values={{ providerCall: rates.providerCall, n1: rates.n1 }} />
                   </div>
                 </div>
 
@@ -377,12 +380,12 @@ const GroupAdminLanding: React.FC = () => {
                   <div className="text-xs uppercase font-bold text-purple-400 mb-2 mt-1">
                     <FormattedMessage id="groupAdmin.landing.hero.source3.label" defaultMessage="⚖️ AVOCATS/AIDANTS" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black text-purple-400 mb-1">900-9000$</div>
+                  <div className="text-3xl sm:text-4xl font-black text-purple-400 mb-1">{rates.providerCall * 180}-{rates.providerCall * 1800}$</div>
                   <div className="text-sm font-semibold mb-2">
                     <FormattedMessage id="groupAdmin.landing.hero.source3.subtitle" defaultMessage="100% passifs" />
                   </div>
                   <div className="text-xs opacity-80">
-                    <FormattedMessage id="groupAdmin.landing.hero.source3.detail" defaultMessage="5$/appel × partenaires" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.detail" defaultMessage="{providerCall}$/appel × partenaires" values={{ providerCall: rates.providerCall }} />
                   </div>
                 </div>
               </div>
@@ -399,10 +402,10 @@ const GroupAdminLanding: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs opacity-90 mb-1">
-                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="20 admins × 5$ activation + 1$/appel membres" />
+                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="20 admins × {providerCall}$ activation + {n1}$/appel membres" values={{ providerCall: rates.providerCall, n1: rates.n1 }} />
                     </div>
                     <div className="text-2xl font-black text-green-400">
-                      = 1000$ <span className="text-sm font-normal text-white/80">
+                      = {20 * rates.providerCall + 200 * rates.n1}$ <span className="text-sm font-normal text-white/80">
                         <FormattedMessage id="groupAdmin.landing.hero.example1.frequency" defaultMessage="bonus" />
                       </span>
                     </div>
@@ -417,10 +420,10 @@ const GroupAdminLanding: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs opacity-90 mb-1">
-                      <FormattedMessage id="groupAdmin.landing.hero.example2.calc" defaultMessage="300 appels/mois × 5$" />
+                      <FormattedMessage id="groupAdmin.landing.hero.example2.calc" defaultMessage="300 appels/mois × {providerCall}$" values={{ providerCall: rates.providerCall }} />
                     </div>
                     <div className="text-2xl font-black text-green-400">
-                      = 1500$ <span className="text-sm font-normal text-white/80">
+                      = {300 * rates.providerCall}$ <span className="text-sm font-normal text-white/80">
                         <FormattedMessage id="groupAdmin.landing.hero.example2.frequency" defaultMessage="/mois passifs" />
                       </span>
                     </div>
@@ -579,7 +582,7 @@ const GroupAdminLanding: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm sm:text-base text-white">
-                    <FormattedMessage id="groupAdmin.landing.value.problem4.solution" defaultMessage="Avec VOTRE lien = 5$ de réduction. Aide pro accessible. Membre reconnaissant." />
+                    <FormattedMessage id="groupAdmin.landing.value.problem4.solution" defaultMessage="Avec VOTRE lien = {discount} de réduction. Aide pro accessible. Membre reconnaissant." values={{ discount: rates.discountLabel }} />
                   </p>
                 </div>
               </div>
@@ -593,7 +596,7 @@ const GroupAdminLanding: React.FC = () => {
                 <FormattedMessage id="groupAdmin.landing.value.winwin.title" defaultMessage="Vous ne vendez pas. Vous AIDEZ et gagnez." />
               </h3>
               <p className="text-base sm:text-lg text-gray-200 max-w-2xl mx-auto mb-4">
-                <FormattedMessage id="groupAdmin.landing.value.winwin.desc" defaultMessage="Chaque membre aidé = problème résolu + 5$ économisés pour lui + 3-5$ gagnés pour vous. Tout le monde gagne." />
+                <FormattedMessage id="groupAdmin.landing.value.winwin.desc" defaultMessage="Chaque membre aidé = problème résolu + {discount} économisés pour lui + {clientCallRange}$ gagnés pour vous. Tout le monde gagne." values={{ discount: rates.discountLabel, clientCallRange: rates.clientCallRange }} />
               </p>
               <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-300 px-4 py-2 rounded-full font-bold">
                 <span>✅</span>
@@ -663,7 +666,7 @@ const GroupAdminLanding: React.FC = () => {
                   <FormattedMessage id="groupAdmin.landing.step3.title" defaultMessage="Répondez & Gagnez" />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl">
-                  <FormattedMessage id="groupAdmin.landing.step3.description" defaultMessage="Quand un membre a un problème d'expat, soumettez-lui SOS-Expat : mise en relation téléphonique en moins de 5 minutes avec un avocat ou un expatrié aidant. Vous gagnez 5$/appel (avocat) ou 3$/appel (expat), il économise 5$." />
+                  <FormattedMessage id="groupAdmin.landing.step3.description" defaultMessage="Quand un membre a un problème d'expat, soumettez-lui SOS-Expat : mise en relation téléphonique en moins de 5 minutes avec un avocat ou un expatrié aidant. Vous gagnez {clientCallMax}$/appel (avocat) ou {clientCallExpat}$/appel (expat), il économise {discount}." values={{ clientCallMax: rates.clientCallMax, clientCallExpat: Math.round(rates.clientCallExpat / 100), discount: rates.discountLabel }} />
                 </p>
               </article>
             </div>
@@ -745,19 +748,20 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.calc.monthlyEarnings" defaultMessage="VOS REVENUS MENSUELS ESTIMÉS" />
                   </p>
                   <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 mb-2" aria-live="polite">
-                    +{Math.round((groupMembers * conversionRate / 100) * 4)}$
+                    +{Math.round((groupMembers * conversionRate / 100) * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200))}$
                   </p>
 
                   {/* Détails */}
                   <div className="text-xs sm:text-sm mb-1">
                     <FormattedMessage
                       id="groupAdmin.landing.calc.details"
-                      defaultMessage="{members} membres × {rate}% = {calls} appels × 4$ avg = {earnings}$/mois"
+                      defaultMessage="{members} membres × {rate}% = {calls} appels × {avg}$ avg = {earnings}$/mois"
                       values={{
                         members: groupMembers.toLocaleString(),
                         rate: conversionRate.toFixed(1),
                         calls: Math.round(groupMembers * conversionRate / 100),
-                        earnings: Math.round((groupMembers * conversionRate / 100) * 4)
+                        avg: Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200),
+                        earnings: Math.round((groupMembers * conversionRate / 100) * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200))
                       }}
                     />
                   </div>
@@ -816,10 +820,10 @@ const GroupAdminLanding: React.FC = () => {
                   <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
                 </div>
                 <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-1 sm:mb-2">
-                  <FormattedMessage id="groupAdmin.landing.benefit1.title" defaultMessage="$5/$3 Per Call" />
+                  <FormattedMessage id="groupAdmin.landing.benefit1.title" defaultMessage="${clientCallMax}/${clientCallExpat} Per Call" values={{ clientCallMax: rates.clientCallMax, clientCallExpat: Math.round(rates.clientCallExpat / 100) }} />
                 </h3>
                 <p className="text-xs sm:text-sm lg:text-base">
-                  <FormattedMessage id="groupAdmin.landing.benefit1.description" defaultMessage="Earn $5 (lawyer) or $3 (expat) for every call generated through your affiliate link." />
+                  <FormattedMessage id="groupAdmin.landing.benefit1.description" defaultMessage="Earn ${clientCallMax} (lawyer) or ${clientCallExpat} (expat) for every call generated through your affiliate link." values={{ clientCallMax: rates.clientCallMax, clientCallExpat: Math.round(rates.clientCallExpat / 100) }} />
                 </p>
               </div>
 
@@ -855,10 +859,10 @@ const GroupAdminLanding: React.FC = () => {
                   <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
                 </div>
                 <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-1 sm:mb-2">
-                  <FormattedMessage id="groupAdmin.landing.benefit4.title" defaultMessage="$5 Off Every Call" />
+                  <FormattedMessage id="groupAdmin.landing.benefit4.title" defaultMessage="{discount} Off Every Call" values={{ discount: rates.discountLabel }} />
                 </h3>
                 <p className="text-xs sm:text-sm lg:text-base">
-                  <FormattedMessage id="groupAdmin.landing.benefit4.description" defaultMessage="Your community members get $5 off on every call made through your link." />
+                  <FormattedMessage id="groupAdmin.landing.benefit4.description" defaultMessage="Your community members get {discount} off on every call made through your link." values={{ discount: rates.discountLabel }} />
                 </p>
               </div>
             </div>
@@ -949,8 +953,8 @@ const GroupAdminLanding: React.FC = () => {
             {/* Recap pills */}
             <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 mb-8 sm:mb-10">
               {[
-                { id: 'groupAdmin.landing.recap.perCall', defaultMessage: '$3-5 per call' },
-                { id: 'groupAdmin.landing.recap.discount', defaultMessage: '$5 discount for members' },
+                { id: 'groupAdmin.landing.recap.perCall', defaultMessage: `$${rates.clientCallRange} per call` },
+                { id: 'groupAdmin.landing.recap.discount', defaultMessage: `${rates.discountLabel} discount for members` },
                 { id: 'groupAdmin.landing.recap.languages', defaultMessage: 'FR · EN · ES · PT · AR · DE · IT · NL · ZH' },
                 { id: 'groupAdmin.landing.recap.free', defaultMessage: '100% free' },
               ].map((item, i) => (

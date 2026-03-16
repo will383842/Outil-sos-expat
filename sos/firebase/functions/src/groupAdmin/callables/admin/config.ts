@@ -87,7 +87,9 @@ interface UpdateConfigInput {
   commissionActivationBonusAmount?: number;
   commissionN1RecruitBonusAmount?: number;
   activationCallsRequired?: number;
+  clientDiscountType?: "percent" | "fixed";
   clientDiscountAmount?: number;
+  clientDiscountPercent?: number;
   paymentMode?: "manual" | "automatic";
   recruitmentWindowMonths?: number;
   attributionWindowDays?: number;
@@ -130,6 +132,7 @@ export const adminUpdateGroupAdminConfig = onCall(
       ["commissionActivationBonusAmount", "Activation bonus cannot be negative"],
       ["commissionN1RecruitBonusAmount", "N1 recruit bonus cannot be negative"],
       ["clientDiscountAmount", "Client discount cannot be negative"],
+      ["clientDiscountPercent", "Client discount percent cannot be negative"],
     ];
     for (const [field, msg] of numericFields) {
       if (input[field] !== undefined && (input[field] as number) < 0) {
@@ -139,6 +142,10 @@ export const adminUpdateGroupAdminConfig = onCall(
 
     if (input.activationCallsRequired !== undefined && (input.activationCallsRequired < 1 || input.activationCallsRequired > 10)) {
       throw new HttpsError("invalid-argument", "Activation calls required must be between 1 and 10");
+    }
+
+    if (input.clientDiscountType !== undefined && !["percent", "fixed"].includes(input.clientDiscountType)) {
+      throw new HttpsError("invalid-argument", "Client discount type must be 'percent' or 'fixed'");
     }
 
     if (input.paymentMode !== undefined && !["manual", "automatic"].includes(input.paymentMode)) {
@@ -172,7 +179,9 @@ export const adminUpdateGroupAdminConfig = onCall(
       if (input.commissionActivationBonusAmount !== undefined) updates.commissionActivationBonusAmount = input.commissionActivationBonusAmount;
       if (input.commissionN1RecruitBonusAmount !== undefined) updates.commissionN1RecruitBonusAmount = input.commissionN1RecruitBonusAmount;
       if (input.activationCallsRequired !== undefined) updates.activationCallsRequired = input.activationCallsRequired;
+      if (input.clientDiscountType !== undefined) updates.clientDiscountType = input.clientDiscountType;
       if (input.clientDiscountAmount !== undefined) updates.clientDiscountAmount = input.clientDiscountAmount;
+      if (input.clientDiscountPercent !== undefined) updates.clientDiscountPercent = input.clientDiscountPercent;
       if (input.paymentMode !== undefined) updates.paymentMode = input.paymentMode;
       if (input.recruitmentWindowMonths !== undefined) updates.recruitmentWindowMonths = input.recruitmentWindowMonths;
       if (input.attributionWindowDays !== undefined) updates.attributionWindowDays = input.attributionWindowDays;

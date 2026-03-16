@@ -16,7 +16,9 @@ interface InfluencerConfig {
   commissionClientAmountExpat?: number;
   commissionRecruitmentAmountLawyer?: number;
   commissionRecruitmentAmountExpat?: number;
+  clientDiscountType?: 'percent' | 'fixed';
   clientDiscountPercent?: number;
+  clientDiscountAmount?: number;
   minimumWithdrawalAmount?: number;
   commissionValidationDays?: number;
   commissionReleaseHours?: number;
@@ -62,7 +64,9 @@ const InfluencerTab: React.FC = () => {
           commissionClientAmountExpat: config.commissionClientAmountExpat,
           commissionRecruitmentAmountLawyer: config.commissionRecruitmentAmountLawyer,
           commissionRecruitmentAmountExpat: config.commissionRecruitmentAmountExpat,
+          clientDiscountType: config.clientDiscountType,
           clientDiscountPercent: config.clientDiscountPercent,
+          clientDiscountAmount: config.clientDiscountAmount,
           minimumWithdrawalAmount: config.minimumWithdrawalAmount,
           commissionValidationDays: config.commissionValidationDays,
           commissionReleaseHours: config.commissionReleaseHours,
@@ -157,15 +161,41 @@ const InfluencerTab: React.FC = () => {
           <Percent className="w-5 h-5 text-purple-500" />
           Remise client
         </h3>
-        <div className="max-w-xs">
-          <label className={UI.label}>Pourcentage de remise</label>
-          <div className="relative">
-            <input type="number" min={0} max={100} step={1}
-              value={config.clientDiscountPercent ?? 5}
-              onChange={(e) => update('clientDiscountPercent', parseInt(e.target.value) || 0)}
-              className={`${UI.input} pr-8`} />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+        <div className="mb-3">
+          <label className={UI.label}>Type de remise</label>
+          <div className="flex gap-3 mt-1">
+            {([{ value: 'fixed', label: 'Montant fixe ($)' }, { value: 'percent', label: 'Pourcentage (%)' }] as const).map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="discountType" value={opt.value}
+                  checked={(config.clientDiscountType ?? 'fixed') === opt.value}
+                  onChange={() => update('clientDiscountType', opt.value as any)}
+                  className="w-4 h-4 text-purple-500 focus:ring-purple-500" />
+                <span className="text-gray-700 dark:text-gray-300 text-sm">{opt.label}</span>
+              </label>
+            ))}
           </div>
+        </div>
+        <div className="max-w-xs">
+          {(config.clientDiscountType ?? 'fixed') === 'fixed' ? (
+            <>
+              <label className={UI.label}>Montant remise (cents)</label>
+              <input type="number" value={config.clientDiscountAmount ?? 500}
+                onChange={(e) => update('clientDiscountAmount', parseInt(e.target.value) || 0)}
+                className={UI.input} min={0} step={100} />
+              <p className="text-xs text-gray-500 mt-1">= {formatCents(config.clientDiscountAmount ?? 500)}</p>
+            </>
+          ) : (
+            <>
+              <label className={UI.label}>Pourcentage de remise</label>
+              <div className="relative">
+                <input type="number" min={0} max={100} step={1}
+                  value={config.clientDiscountPercent ?? 5}
+                  onChange={(e) => update('clientDiscountPercent', parseInt(e.target.value) || 0)}
+                  className={`${UI.input} pr-8`} />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

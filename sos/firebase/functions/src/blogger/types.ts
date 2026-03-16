@@ -1303,8 +1303,12 @@ export interface BloggerConfig {
   /** Commission recruitment — expat provider (300 cents = $3) */
   commissionRecruitmentAmountExpat?: number;
 
+  /** Client discount type: 'fixed' ($) or 'percent' (%) */
+  clientDiscountType: 'percent' | 'fixed';
   /** Client discount percentage (0% for bloggers) */
   clientDiscountPercent: number;
+  /** Client discount fixed amount in cents (500 = $5) */
+  clientDiscountAmount: number;
 
   // ---- Recruitment Window ----
 
@@ -1389,7 +1393,9 @@ export const DEFAULT_BLOGGER_CONFIG: Omit<
   commissionClientAmountExpat: 300,        // $3 - expat
   commissionRecruitmentAmountLawyer: 500,  // $5 - lawyer
   commissionRecruitmentAmountExpat: 300,   // $3 - expat
-  clientDiscountPercent: 0,          // 0% discount (vs 5% for influencers)
+  clientDiscountType: 'fixed' as const, // 'fixed' ($) or 'percent' (%)
+  clientDiscountPercent: 0,            // 0% discount (vs 5% for influencers)
+  clientDiscountAmount: 0,             // $0 (no discount for bloggers)
 
   recruitmentWindowMonths: 6,
 
