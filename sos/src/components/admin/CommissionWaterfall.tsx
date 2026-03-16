@@ -25,11 +25,8 @@ import {
   XCircle,
   ExternalLink,
   Calculator,
-  TrendingUp,
   Gift,
   Star,
-  Zap,
-  Flame,
 } from 'lucide-react';
 
 // Design tokens
@@ -60,11 +57,6 @@ interface CommissionDetailed {
   sourceType: string | null;
   sourceDetails?: Record<string, unknown>;
   baseAmount: number;
-  levelBonus: number;
-  top3Bonus: number;
-  zoomBonus: number;
-  streakBonus?: number;
-  monthlyTopMultiplier?: number;
   amount: number;
   currency: string;
   calculationDetails: string;
@@ -126,10 +118,6 @@ const getTypeIcon = (type: string) => {
       return <Star className="w-5 h-5" />;
     case 'provider_call':
       return <User className="w-5 h-5" />;
-    case 'bonus_level':
-      return <TrendingUp className="w-5 h-5" />;
-    case 'bonus_streak':
-      return <Flame className="w-5 h-5" />;
     case 'bonus_top3':
       return <Star className="w-5 h-5" />;
     default:
@@ -151,10 +139,6 @@ const getTypeColor = (type: string): string => {
       return 'from-yellow-500 to-orange-500';
     case 'provider_call':
       return 'from-purple-500 to-pink-600';
-    case 'bonus_level':
-      return 'from-teal-500 to-cyan-500';
-    case 'bonus_streak':
-      return 'from-red-500 to-orange-500';
     case 'bonus_top3':
       return 'from-yellow-400 to-yellow-600';
     default:
@@ -170,8 +154,6 @@ const getTypeLabel = (type: string): string => {
     activation_bonus: 'Activation Bonus',
     n1_recruit_bonus: 'N1 Recruit Bonus',
     provider_call: 'Provider Call Commission',
-    bonus_level: 'Level Up Bonus',
-    bonus_streak: 'Streak Bonus',
     bonus_top3: 'Top 3 Monthly Bonus',
     tier_bonus: 'Tier Milestone Bonus',
     manual_adjustment: 'Manual Adjustment',
@@ -239,36 +221,11 @@ const WaterfallNode: React.FC<{
   </div>
 );
 
-// Bonus Badge Component
-const BonusBadge: React.FC<{
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-}> = ({ label, value, icon }) => {
-  if (value <= 1) return null;
-  const percentage = Math.round((value - 1) * 100);
-  return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-500/20 dark:to-orange-500/20 rounded-full">
-      {icon}
-      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-        {label}: +{percentage}%
-      </span>
-    </div>
-  );
-};
-
 // Main Component
 const CommissionWaterfall: React.FC<CommissionWaterfallProps> = ({
   commission,
   onClose,
 }) => {
-  const hasMultipliers =
-    commission.levelBonus > 1 ||
-    commission.top3Bonus > 1 ||
-    commission.zoomBonus > 1 ||
-    (commission.streakBonus && commission.streakBonus > 1) ||
-    (commission.monthlyTopMultiplier && commission.monthlyTopMultiplier > 1);
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className={UI.card + " max-w-2xl w-full max-h-[90vh] overflow-y-auto"}>
@@ -389,47 +346,6 @@ const CommissionWaterfall: React.FC<CommissionWaterfallProps> = ({
             )}
           </div>
 
-          {/* Bonus Multipliers */}
-          {hasMultipliers && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                Applied Bonuses
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                <BonusBadge
-                  label="Level"
-                  value={commission.levelBonus}
-                  icon={<TrendingUp className="w-4 h-4 text-yellow-700" />}
-                />
-                <BonusBadge
-                  label="Top 3"
-                  value={commission.top3Bonus}
-                  icon={<Star className="w-4 h-4 text-yellow-700" />}
-                />
-                <BonusBadge
-                  label="Zoom"
-                  value={commission.zoomBonus}
-                  icon={<Users className="w-4 h-4 text-yellow-700" />}
-                />
-                {commission.streakBonus && (
-                  <BonusBadge
-                    label="Streak"
-                    value={commission.streakBonus}
-                    icon={<Flame className="w-4 h-4 text-yellow-700" />}
-                  />
-                )}
-                {commission.monthlyTopMultiplier && (
-                  <BonusBadge
-                    label="Monthly Top"
-                    value={commission.monthlyTopMultiplier}
-                    icon={<Star className="w-4 h-4 text-yellow-700" />}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Calculation Breakdown */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -445,50 +361,6 @@ const CommissionWaterfall: React.FC<CommissionWaterfallProps> = ({
                   {formatCurrency(commission.baseAmount)}
                 </span>
               </div>
-              {commission.levelBonus > 1 && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Level Bonus (x{commission.levelBonus.toFixed(2)})
-                  </span>
-                  <span className="font-medium text-green-600">
-                    +
-                    {formatCurrency(
-                      commission.baseAmount * (commission.levelBonus - 1)
-                    )}
-                  </span>
-                </div>
-              )}
-              {commission.top3Bonus > 1 && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Top 3 Bonus (x{commission.top3Bonus.toFixed(2)})
-                  </span>
-                  <span className="font-medium text-green-600">
-                    +
-                    {formatCurrency(
-                      commission.baseAmount *
-                        commission.levelBonus *
-                        (commission.top3Bonus - 1)
-                    )}
-                  </span>
-                </div>
-              )}
-              {commission.zoomBonus > 1 && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Zoom Bonus (x{commission.zoomBonus.toFixed(2)})
-                  </span>
-                  <span className="font-medium text-green-600">
-                    +
-                    {formatCurrency(
-                      commission.baseAmount *
-                        commission.levelBonus *
-                        commission.top3Bonus *
-                        (commission.zoomBonus - 1)
-                    )}
-                  </span>
-                </div>
-              )}
               <div className="pt-2 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
                 <span className="font-semibold text-gray-900 dark:text-white">
                   Final Amount

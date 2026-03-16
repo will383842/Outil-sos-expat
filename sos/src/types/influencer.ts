@@ -260,7 +260,10 @@ export interface InfluencerCommission {
 
   // Type and amounts
   type: InfluencerCommissionType;
+  /** Amount in cents (backend V2 field name) */
+  amount?: number;
   baseAmount: number;
+  /** @deprecated Backend now returns `amount`. Kept for backward compatibility. */
   finalAmount: number;
 
   // Status

@@ -51,6 +51,9 @@ const LevelProgressCard: React.FC<LevelProgressCardProps> = ({ className = '' })
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config;
 
+  // Levels removed from backend — hide card entirely when level is undefined
+  if (!chatter?.level) return null;
+
   // Use backend config thresholds (cents→dollars) or fallback to defaults
   const LEVEL_THRESHOLDS: Record<number, number> = config?.levelThresholds
     ? {

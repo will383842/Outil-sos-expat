@@ -77,7 +77,7 @@ interface ChatterDetail {
   language?: string;
   languages: string[];
   status: string;
-  level: number;
+  level?: number;
   role?: string;
   captainId?: string | null;
   captainInfo?: { id: string; firstName: string; lastName: string; email: string } | null;
@@ -429,10 +429,12 @@ const AdminChatterDetail: React.FC = () => {
               </h1>
               <div className="flex items-center gap-3 mt-1">
                 <StatusBadge status={mapChatterStatus(chatter.status)} label={chatter.status} size="sm" />
-                <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                  <Star className="w-4 h-4 text-red-500" />
-                  {getLevelName(chatter.level)}
-                </span>
+                {chatter.level != null && (
+                  <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                    <Star className="w-4 h-4 text-red-500" />
+                    {getLevelName(chatter.level)}
+                  </span>
+                )}
                 {(chatter as any).role === 'captainChatter' && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                     <Crown className="w-3.5 h-3.5" />

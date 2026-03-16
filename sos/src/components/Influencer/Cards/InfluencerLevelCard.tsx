@@ -134,6 +134,9 @@ const InfluencerLevelCard = memo(function InfluencerLevelCard({
   const [progressAnimated, setProgressAnimated] = useState(false);
   const [badgesVisible, setBadgesVisible] = useState(false);
 
+  // If no level data is available (backend removed levels), render nothing
+  if (!backendLevel && !totalEarned && !levelThresholds) return null;
+
   const thresholds = levelThresholds ?? DEFAULT_THRESHOLDS;
   const LEVEL_CONFIG = buildLevelConfig(thresholds);
 

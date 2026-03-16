@@ -113,7 +113,7 @@ const BloggerEarnings: React.FC = () => {
 
     const rows = filteredCommissions.map(c => [
       formatDateForCSV(c.createdAt),
-      c.type === 'client_referral' ? 'Client référé' : c.type === 'recruitment' ? 'Recrutement' : c.type,
+      c.type === 'client_referral' ? 'Client référé' : c.type === 'recruitment' ? 'Recrutement' : c.type === 'n1_call' ? 'Commission N1' : c.type === 'n2_call' ? 'Commission N2' : c.type === 'activation_bonus' ? 'Bonus activation' : c.type === 'tier_bonus' ? 'Bonus palier' : c.type === 'n1_recruit_bonus' ? 'Bonus recrutement N1' : c.type,
       c.description || '-',
       c.status,
       formatCurrencyForCSV(c.amount),
@@ -254,6 +254,21 @@ const BloggerEarnings: React.FC = () => {
               <option value="recruitment">
                 {intl.formatMessage({ id: 'blogger.earnings.filter.recruitment', defaultMessage: 'Recrutement' })}
               </option>
+              <option value="n1_call">
+                {intl.formatMessage({ id: 'blogger.earnings.filter.n1_call', defaultMessage: 'Commission N1' })}
+              </option>
+              <option value="n2_call">
+                {intl.formatMessage({ id: 'blogger.earnings.filter.n2_call', defaultMessage: 'Commission N2' })}
+              </option>
+              <option value="activation_bonus">
+                {intl.formatMessage({ id: 'blogger.earnings.filter.activation_bonus', defaultMessage: 'Bonus activation' })}
+              </option>
+              <option value="tier_bonus">
+                {intl.formatMessage({ id: 'blogger.earnings.filter.tier_bonus', defaultMessage: 'Bonus palier' })}
+              </option>
+              <option value="n1_recruit_bonus">
+                {intl.formatMessage({ id: 'blogger.earnings.filter.n1_recruit_bonus', defaultMessage: 'Bonus recrutement N1' })}
+              </option>
               <option value="manual_adjustment">
                 {intl.formatMessage({ id: 'blogger.earnings.filter.adjustment', defaultMessage: 'Ajustements' })}
               </option>
@@ -378,6 +393,16 @@ const BloggerEarnings: React.FC = () => {
                             ? intl.formatMessage({ id: 'blogger.type.client', defaultMessage: 'Client' })
                             : commission.type === 'recruitment'
                             ? intl.formatMessage({ id: 'blogger.type.recruitment', defaultMessage: 'Recrutement' })
+                            : commission.type === 'n1_call'
+                            ? intl.formatMessage({ id: 'blogger.type.n1_call', defaultMessage: 'N1' })
+                            : commission.type === 'n2_call'
+                            ? intl.formatMessage({ id: 'blogger.type.n2_call', defaultMessage: 'N2' })
+                            : commission.type === 'activation_bonus'
+                            ? intl.formatMessage({ id: 'blogger.type.activation_bonus', defaultMessage: 'Activation' })
+                            : commission.type === 'tier_bonus'
+                            ? intl.formatMessage({ id: 'blogger.type.tier_bonus', defaultMessage: 'Palier' })
+                            : commission.type === 'n1_recruit_bonus'
+                            ? intl.formatMessage({ id: 'blogger.type.n1_recruit_bonus', defaultMessage: 'Bonus N1' })
                             : intl.formatMessage({ id: 'blogger.type.adjustment', defaultMessage: 'Ajustement' })}
                         </span>
                       </td>

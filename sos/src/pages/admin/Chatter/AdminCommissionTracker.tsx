@@ -62,8 +62,6 @@ const COMMISSION_TYPES = [
   { value: 'activation_bonus', label: 'Activation Bonus ($5)' },
   { value: 'n1_recruit_bonus', label: 'N1 Recruit Bonus ($1)' },
   { value: 'provider_call', label: 'Provider Call ($5)' },
-  { value: 'bonus_level', label: 'Level Bonus' },
-  { value: 'bonus_streak', label: 'Streak Bonus' },
   { value: 'bonus_top3', label: 'Top 3 Bonus' },
   { value: 'tier_bonus', label: 'Tier Bonus' },
   { value: 'manual_adjustment', label: 'Manual Adjustment' },
@@ -98,11 +96,6 @@ interface CommissionDetailed {
   sourceType: string | null;
   sourceDetails?: Record<string, unknown>;
   baseAmount: number;
-  levelBonus: number;
-  top3Bonus: number;
-  zoomBonus: number;
-  streakBonus?: number;
-  monthlyTopMultiplier?: number;
   amount: number;
   currency: string;
   calculationDetails: string;

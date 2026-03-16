@@ -34,9 +34,6 @@ import InfluencerStatsCard from '@/components/Influencer/Cards/InfluencerStatsCa
 // ============================================================================
 // LAZY-LOADED BELOW-FOLD COMPONENTS - Code splitting
 // ============================================================================
-const InfluencerLevelCard = lazy(() =>
-  import('@/components/Influencer/Cards/InfluencerLevelCard').then(m => ({ default: m.InfluencerLevelCard }))
-);
 const InfluencerMotivationWidget = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerMotivationWidget').then(m => ({ default: m.InfluencerMotivationWidget }))
 );
@@ -156,7 +153,7 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, in
     </div>
     <div className="text-right">
       <p className="text-sm dark:text-green-400 font-bold">
-        +{formatAmount(commission.finalAmount)}
+        +{formatAmount(commission.amount ?? commission.finalAmount)}
       </p>
       <span className={`text-xs px-2 py-0.5 rounded-full ${
         commission.status === 'available'
@@ -268,17 +265,17 @@ const InfluencerDashboard: React.FC = () => {
   const earningsBreakdown = useMemo(() => ({
     clientReferrals: thisMonthCommissions
       .filter(c => c.type === 'client_referral')
-      .reduce((sum, c) => sum + c.finalAmount, 0),
+      .reduce((sum, c) => sum + (c.amount ?? c.finalAmount), 0),
     recruitmentCommissions: thisMonthCommissions
       .filter(c => c.type === 'recruitment')
-      .reduce((sum, c) => sum + c.finalAmount, 0),
+      .reduce((sum, c) => sum + (c.amount ?? c.finalAmount), 0),
   }), [thisMonthCommissions]);
 
   const activityFeedItems = useMemo(() =>
     recentCommissions.map(c => ({
       id: c.id,
       type: c.type as 'client_referral' | 'recruitment' | 'withdrawal' | 'badge_earned',
-      amount: c.finalAmount,
+      amount: c.amount ?? c.finalAmount,
       createdAt: c.createdAt,
     })),
     [recentCommissions]
@@ -562,39 +559,24 @@ const InfluencerDashboard: React.FC = () => {
         </Suspense>
 
         {/* ================================================================ */}
-        {/* LEVEL + STATS ROW */}
+        {/* STATS ROW */}
         {/* ================================================================ */}
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Level Card */}
-          <Suspense fallback={<CardSkeleton height="h-48" />}>
-            <div className="lg:col-span-1 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
-              <InfluencerLevelCard
-                totalEarned={influencer?.totalEarned || 0}
-                level={influencer?.level}
-                levelProgress={influencer?.levelProgress}
-                levelThresholds={config?.levelThresholds}
+        <div className="grid sm:grid-cols-4 gap-3 sm:gap-4">
+          {[
+            { label: intl.formatMessage({ id: 'influencer.dashboard.stats.monthlyEarnings', defaultMessage: 'Ce mois' }), value: formatAmount(influencer?.currentMonthEarnings || 0), icon: <DollarSign className="w-5 h-5" />, color: 'green' as const, delay: 400 },
+            { label: intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients' }), value: (influencer?.totalClientsReferred || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'red' as const, delay: 450 },
+            { label: intl.formatMessage({ id: 'influencer.dashboard.stats.recruits', defaultMessage: 'Recrutés' }), value: (influencer?.totalProvidersRecruited || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'purple' as const, delay: 500 },
+            { label: intl.formatMessage({ id: 'influencer.dashboard.stats.rank', defaultMessage: 'Classement' }), value: influencer?.currentMonthRank ? `#${influencer.currentMonthRank}` : '-', icon: <Trophy className="w-5 h-5" />, color: 'yellow' as const, delay: 550 },
+          ].map((stat, i) => (
+            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${stat.delay}ms` }}>
+              <InfluencerStatsCard
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+                color={stat.color}
               />
             </div>
-          </Suspense>
-
-          {/* Monthly Stats */}
-          <div className="lg:col-span-2 grid sm:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.monthlyEarnings', defaultMessage: 'Ce mois' }), value: formatAmount(influencer?.currentMonthEarnings || 0), icon: <DollarSign className="w-5 h-5" />, color: 'green' as const, delay: 400 },
-              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.clients', defaultMessage: 'Clients' }), value: (influencer?.totalClientsReferred || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'red' as const, delay: 450 },
-              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.recruits', defaultMessage: 'Recrutés' }), value: (influencer?.totalProvidersRecruited || 0).toString(), icon: <Users className="w-5 h-5" />, color: 'purple' as const, delay: 500 },
-              { label: intl.formatMessage({ id: 'influencer.dashboard.stats.rank', defaultMessage: 'Classement' }), value: influencer?.currentMonthRank ? `#${influencer.currentMonthRank}` : '-', icon: <Trophy className="w-5 h-5" />, color: 'yellow' as const, delay: 550 },
-            ].map((stat, i) => (
-              <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${stat.delay}ms` }}>
-                <InfluencerStatsCard
-                  label={stat.label}
-                  value={stat.value}
-                  icon={stat.icon}
-                  color={stat.color}
-                />
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
 
         {/* ================================================================ */}

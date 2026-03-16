@@ -24,7 +24,6 @@ interface ChatterConfig {
   releaseDelayHours?: number;
   recruitmentLinkDurationMonths?: number;
   attributionWindowDays?: number;
-  levelThresholds?: { level2: number; level3: number; level4: number; level5: number };
   telegramBonusAmount?: number;
   piggyBankUnlockThreshold?: number;
   recruitmentMilestones?: Array<{ count: number; bonus: number }>;
@@ -308,26 +307,6 @@ const ChatterTab: React.FC = () => {
               onChange={(e) => update('attributionWindowDays', parseInt(e.target.value) || 0)}
               className={UI.input} min={1} />
           </div>
-        </div>
-      </div>
-
-      {/* Level Thresholds */}
-      <div className={`${UI.card} p-6`}>
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Seuils de niveau (gains totaux en cents)</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {([2, 3, 4, 5] as const).map((level) => {
-            const key = `level${level}` as 'level2' | 'level3' | 'level4' | 'level5';
-            const val = config.levelThresholds?.[key] ?? 0;
-            return (
-              <div key={level}>
-                <label className={UI.label}>Niveau {level}</label>
-                <input type="number" value={val}
-                  onChange={(e) => update('levelThresholds', { ...config.levelThresholds, [key]: parseInt(e.target.value) || 0 })}
-                  className={UI.input} min={0} step={1000} />
-                <p className="text-xs text-gray-500 mt-1">= {formatCents(val)}</p>
-              </div>
-            );
-          })}
         </div>
       </div>
 

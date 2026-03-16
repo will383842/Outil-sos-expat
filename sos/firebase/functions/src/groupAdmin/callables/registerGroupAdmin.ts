@@ -465,6 +465,10 @@ export const registerGroupAdmin = onCall(
         bestStreak: 0,
         lastActivityDate: null,
         badges: [],
+        totalClientCalls: 0,
+        isActivated: false,
+        activationBonusPaid: false,
+        tierBonusesPaid: [],
 
         recruitedBy,
         recruitedByCode,

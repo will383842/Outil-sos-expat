@@ -89,6 +89,7 @@ export type GroupAdminCommissionType =
   | "activation_bonus"   // $5 when recruit makes their 2nd referral
   | "n1_recruit_bonus"   // $1 when N1 recruits a N2
   | "provider_call"      // $5/$3 per recruited provider call (6 months)
+  | "tier_bonus"         // Recruitment milestone tier bonus
   | "recruitment"        // Legacy: kept for backward compat
   | "manual_adjustment"; // Admin manual adjustment
 
@@ -317,6 +318,15 @@ export interface GroupAdmin {
 
   /** Milestone tier bonuses already paid (indices) */
   tierBonusesPaid?: number[];
+
+  /** Whether this GroupAdmin has been activated (met activation criteria) */
+  isActivated?: boolean;
+
+  /** Whether the activation bonus has been paid */
+  activationBonusPaid?: boolean;
+
+  /** Total client calls referred (for activation tracking) */
+  totalClientCalls?: number;
 
   // ---- Commission Plan (Lifetime Rate Lock) ----
 

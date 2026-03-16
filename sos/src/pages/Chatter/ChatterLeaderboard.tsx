@@ -251,43 +251,45 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
   // Tab 2: Ma Progression
   const progressionTab = (
     <div className="space-y-4">
-      {/* Current level card */}
-      <div className={`${UI.card} p-5`}>
-        <div className="flex items-center gap-4 mb-4">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-            LEVEL_COLORS[(chatter?.level || 1) as keyof typeof LEVEL_COLORS]?.bg || 'bg-gray-100'
-          }`}>
-            <div className="flex gap-0.5">
-              {Array.from({ length: chatter?.level || 1 }, (_, i) => (
-                <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              ))}
+      {/* Current level card — only shown if level data exists */}
+      {chatter?.level != null && (
+        <div className={`${UI.card} p-5`}>
+          <div className="flex items-center gap-4 mb-4">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+              LEVEL_COLORS[(chatter.level || 1) as keyof typeof LEVEL_COLORS]?.bg || 'bg-gray-100'
+            }`}>
+              <div className="flex gap-0.5">
+                {Array.from({ length: chatter.level || 1 }, (_, i) => (
+                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">
+                <FormattedMessage id="chatter.progression.currentLevel" defaultMessage="Niveau actuel" />
+              </p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white">
+                {LEVEL_COLORS[(chatter.level || 1) as keyof typeof LEVEL_COLORS]?.name || `Level ${chatter.level}`}
+              </p>
             </div>
           </div>
-          <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wider">
-              <FormattedMessage id="chatter.progression.currentLevel" defaultMessage="Niveau actuel" />
-            </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">
-              {LEVEL_COLORS[(chatter?.level || 1) as keyof typeof LEVEL_COLORS]?.name || `Level ${chatter?.level}`}
-            </p>
-          </div>
-        </div>
 
-        {/* Progress bar */}
-        {(chatter?.level || 1) < 5 && (
-          <div>
-            <div className="h-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
-                style={{ width: `${chatter?.levelProgress || 0}%` }}
-              />
+          {/* Progress bar */}
+          {(chatter.level || 1) < 5 && (
+            <div>
+              <div className="h-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
+                  style={{ width: `${chatter?.levelProgress || 0}%` }}
+                />
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                {chatter?.levelProgress || 0}% — <FormattedMessage id="chatter.progression.nextLevel" defaultMessage="vers le prochain niveau" />
+              </p>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-              {chatter?.levelProgress || 0}% — <FormattedMessage id="chatter.progression.nextLevel" defaultMessage="vers le prochain niveau" />
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Streak */}
       <div className={`${UI.card} p-4`}>

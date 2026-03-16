@@ -303,9 +303,9 @@ function YourNextGoal({
     goalIcon = <Zap className="h-5 w-5" />;
     goalColor = 'text-purple-500';
     progressPercent = piggyBank.progressPercent;
-  } else {
-    const nextLevel = (chatter?.level || 1) + 1;
-    if (nextLevel > 5) return null;
+  } else if (chatter?.level != null && (chatter.level || 1) < 5) {
+    // Level goal — only shown if level data exists (levels removed from backend)
+    const nextLevel = (chatter.level || 1) + 1;
     goalMessage = intl.formatMessage(
       { id: 'chatter.howToEarn.nextGoal.nextLevel', defaultMessage: 'Continuez — niveau {level} à portée ({progress}%)' },
       { level: nextLevel, progress: chatter?.levelProgress || 0 }
@@ -313,6 +313,9 @@ function YourNextGoal({
     goalReward = intl.formatMessage({ id: 'chatter.howToEarn.nextGoal.levelShort', defaultMessage: 'Niv. {level}' }, { level: nextLevel });
     goalIcon = <Star className="h-5 w-5" />;
     progressPercent = chatter?.levelProgress || 0;
+  } else {
+    // No applicable goal to display
+    return null;
   }
 
   return (

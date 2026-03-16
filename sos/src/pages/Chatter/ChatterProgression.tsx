@@ -749,14 +749,16 @@ function ChatterProgression() {
         </p>
       </div>
 
-      {/* 1. Level Progression */}
-      <LevelProgressionSection
-        level={chatter.level}
-        levelProgress={chatter.levelProgress}
-        config={config}
-        forecast={forecast}
-        lang={lang}
-      />
+      {/* 1. Level Progression — only shown if level data exists */}
+      {chatter.level != null && (
+        <LevelProgressionSection
+          level={chatter.level}
+          levelProgress={chatter.levelProgress ?? 0}
+          config={config}
+          forecast={forecast}
+          lang={lang}
+        />
+      )}
 
       {/* 2. Recruitment Tiers */}
       <RecruitmentTierSection

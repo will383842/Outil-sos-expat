@@ -39,9 +39,6 @@ export type ChatterCommissionType =
   // Monthly rewards
   | "bonus_top3"         // Monthly top 3 rewards (2.0x / 1.5x / 1.15x multipliers)
   // Other bonuses
-  | "bonus_level"        // Level-up bonus
-  | "bonus_streak"       // Streak bonus
-  | "bonus_zoom"         // Zoom attendance bonus
   | "bonus_telegram"     // Telegram onboarding bonus ($50, unlocked at $150 earnings)
   | "manual_adjustment"  // Admin manual adjustment
   // Captain Chatter commissions
@@ -203,8 +200,10 @@ export interface ChatterData {
   bio?: string;
 
   status: ChatterStatus;
-  level: ChatterLevel;
-  levelProgress: number;
+  /** @deprecated Levels removed from backend — kept optional for cached data */
+  level?: ChatterLevel;
+  /** @deprecated Levels removed from backend — kept optional for cached data */
+  levelProgress?: number;
 
   /** Unified affiliate code (new system: 1 code, 1 link /r/CODE) */
   affiliateCode?: string;
@@ -226,13 +225,16 @@ export interface ChatterData {
 
   currentStreak: number;
   bestStreak: number;
-  lastActivityDate: string | null;
+  /** @deprecated Streak/activity tracking removed from backend — kept optional for cached data */
+  lastActivityDate?: string | null;
   badges: ChatterBadgeType[];
   currentMonthRank: number | null;
   bestRank: number | null;
 
-  zoomMeetingsAttended: number;
-  lastZoomAttendance: string | null;
+  /** @deprecated Zoom tracking removed from backend — kept optional for cached data */
+  zoomMeetingsAttended?: number;
+  /** @deprecated Zoom tracking removed from backend — kept optional for cached data */
+  lastZoomAttendance?: string | null;
 
   preferredPaymentMethod: ChatterPaymentMethod | null;
   pendingWithdrawalId: string | null;
@@ -273,8 +275,9 @@ export interface ChatterData {
   activationBonusPaid: boolean;
   recruiterCommissionPaid?: boolean;
 
-  // Monthly Top Multiplier (reward for top 3)
+  /** @deprecated Monthly top multiplier removed from backend — kept optional for cached data */
   monthlyTopMultiplier?: number;
+  /** @deprecated Monthly top multiplier removed from backend — kept optional for cached data */
   monthlyTopMultiplierMonth?: string | null;
 
   // Visibility
@@ -334,17 +337,6 @@ export interface ChatterCommission {
   sourceId: string | null;
   sourceType: "call_session" | "user" | "provider" | "bonus" | null;
   baseAmount: number;
-  /** Level bonus multiplier (1.0 = no bonus) */
-  levelBonus: number;
-  /** Top 3 bonus multiplier (1.0 = no bonus) */
-  top3Bonus: number;
-  /** Zoom bonus multiplier (1.0 = no bonus) */
-  zoomBonus: number;
-  // AUDIT-FIX M4: Added missing bonus fields that exist in backend
-  /** Streak bonus multiplier (1.0 = no bonus) */
-  streakBonus?: number;
-  /** Monthly top multiplier */
-  monthlyTopMultiplier?: number;
   amount: number;
   currency: "USD";
   calculationDetails: string;
@@ -466,7 +458,8 @@ export interface ChatterLeaderboardEntry {
   monthlyEarnings: number;
   monthlyClients: number;
   monthlyRecruits: number;
-  level: ChatterLevel;
+  /** @deprecated Levels removed from backend */
+  level?: ChatterLevel;
 }
 
 // ============================================================================

@@ -20,7 +20,7 @@
 
 export type BloggerStatus = 'active' | 'suspended' | 'banned';
 
-export type BloggerCommissionType = 'client_referral' | 'recruitment' | 'manual_adjustment';
+export type BloggerCommissionType = 'client_referral' | 'recruitment' | 'n1_call' | 'n2_call' | 'activation_bonus' | 'n1_recruit_bonus' | 'tier_bonus' | 'manual_adjustment';
 
 export type BloggerCommissionStatus = 'pending' | 'validated' | 'available' | 'paid' | 'cancelled';
 
