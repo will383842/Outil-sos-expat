@@ -27,9 +27,6 @@ function ensureInitialized() {
   }
 }
 
-/** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 60;
-
 interface CallSession {
   id: string;
   status: string;
@@ -72,16 +69,6 @@ export async function handleCallCompleted(
 
   const sessionId = event.params.sessionId;
   const db = getFirestore();
-
-    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
-    if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) {
-      logger.warn("[influencerOnCallCompleted] Call too short for commission", {
-        sessionId,
-        duration: afterData.duration,
-        minimum: MIN_CALL_DURATION_SECONDS,
-      });
-      return;
-    }
 
     // Check if influencer commission already created
     if (afterData.influencerCommissionCreated) {
@@ -272,14 +259,26 @@ export async function handleCallCompleted(
             isActivated: true,
           });
 
-          // Pay activation bonus to recruiter (if recruiter has $100+ in direct commissions)
+          // Pay activation bonus to recruiter (if recruiter has $100+ in direct commissions THIS MONTH)
           const recruiterId = freshInfluencer.recruitedBy;
           const recruiterDoc = await db.collection("influencers").doc(recruiterId).get();
           if (recruiterDoc.exists) {
             const recruiter = recruiterDoc.data() as Influencer;
             const minDirectCommissions = config.activationMinDirectCommissions || 10000;
 
-            if ((recruiter.totalEarned || 0) >= minDirectCommissions && !freshInfluencer.activationBonusPaid) {
+            // Check recruiter's direct commissions THIS MONTH (not lifetime)
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthStartTs = Timestamp.fromDate(monthStart);
+            const recruiterMonthlySnap = await db.collection("influencer_commissions")
+              .where("influencerId", "==", recruiterId)
+              .where("type", "in", ["client_call", "client_referral"])
+              .where("createdAt", ">=", monthStartTs)
+              .get();
+            let recruiterMonthlyDirect = 0;
+            recruiterMonthlySnap.forEach(d => { recruiterMonthlyDirect += d.data().amount || 0; });
+
+            if (recruiterMonthlyDirect >= minDirectCommissions && !freshInfluencer.activationBonusPaid) {
               const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount
                 ?? recruiter.lockedRates?.commissionActivationBonusAmount
                 ?? config.commissionActivationBonusAmount ?? 500;

@@ -120,14 +120,13 @@ const COMMISSION_TABLE = {
       title: "Captain Chatter (exclusif)",
       icon: <Crown className="w-5 h-5" />,
       rows: [
-        { label: "Captain call (avocat)", chatter: "$3", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$3", note: "Appels chatters sous responsabilité" },
-        { label: "Captain call (expat)", chatter: "$2", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$2", note: "" },
+        { label: "Captain call (avocat)", chatter: "$2", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$2", note: "Appels chatters sous responsabilité" },
+        { label: "Captain call (expat)", chatter: "$1", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$1", note: "" },
         { label: "Bronze (20+ appels)", chatter: "$25", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$25", note: "20 appels équipe/mois" },
         { label: "Argent (50+ appels)", chatter: "$50", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$50", note: "50 appels/mois" },
-        { label: "Or (100+ appels)", chatter: "$100", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$100", note: "" },
-        { label: "Platine (200+ appels)", chatter: "$200", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$200", note: "" },
-        { label: "Diamant (400+ appels)", chatter: "$400", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$400", note: "" },
-        { label: "Quality Bonus", chatter: "$100", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$100", note: "10+ recrues actives + $100 commissions équipe" },
+        { label: "Or (100+ appels)", chatter: "$100", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$100", note: "100 appels/mois" },
+        { label: "Platine (200+ appels)", chatter: "$200", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$200", note: "200 appels/mois" },
+        { label: "Diamant (400+ appels)", chatter: "$400", influencer: "—", blogger: "—", groupAdmin: "—", affiliate: "—", promo: "$400", note: "400 appels/mois" },
       ],
     },
   ],
@@ -150,8 +149,8 @@ const BONUSES_AND_CONDITIONS = [
     title: "Top 3 mensuel cross-rôle",
     icon: <Star className="w-5 h-5" />,
     items: [
-      { milestone: "1ère place", bonus: "$200", condition: "$50+ commissions équipe (N1+N2) + 3+ recrutements dans le mois" },
-      { milestone: "2e place", bonus: "$100", condition: "Idem — classement sur total commissions (client + N1 + N2)" },
+      { milestone: "1ère place", bonus: "$200", condition: "$100+ commissions directes (client) dans le mois + 3+ nouveaux recrutements" },
+      { milestone: "2e place", bonus: "$100", condition: "Idem — classé sur total commissions directes du mois" },
       { milestone: "3e place", bonus: "$50", condition: "Idem — calculé le 1er du mois à 01:00 UTC" },
     ],
   },
@@ -159,23 +158,23 @@ const BONUSES_AND_CONDITIONS = [
     title: "Conditions d'activation du bonus",
     icon: <Zap className="w-5 h-5" />,
     items: [
-      { milestone: "Activation filleul", bonus: "$5", condition: "Le filleul doit faire 2 appels clients payants" },
-      { milestone: "Condition recruteur", bonus: "—", condition: "Le recruteur doit avoir gagné $100+ en commissions directes pour débloquer le bonus" },
-      { milestone: "Bonus N1 recrut.", bonus: "$1", condition: "Quand ton filleul N1 recrute quelqu'un qui s'active (2 appels)" },
+      { milestone: "Activation filleul", bonus: "$5", condition: "Le filleul doit faire 2 appels clients dont le paiement a été capturé" },
+      { milestone: "Condition recruteur", bonus: "—", condition: "Le recruteur doit avoir gagné $100+ en commissions directes (client) dans le mois en cours" },
+      { milestone: "Bonus N1 recrut.", bonus: "$1", condition: "Quand ton filleul N1 recrute quelqu'un qui s'active (2 appels payés)" },
     ],
   },
 ];
 
 const PARAMS_TABLE = [
-  { param: "Retrait minimum", value: "$30" },
-  { param: "Frais de retrait", value: "$3 fixe" },
+  { param: "Retrait minimum", value: "$30 (tous rôles)" },
+  { param: "Frais de retrait", value: "$3 fixe par transaction" },
   { param: "Attribution (cookie)", value: "30 jours" },
-  { param: "Hold period (Chatter)", value: "48h" },
-  { param: "Hold period (autres)", value: "7 jours" },
+  { param: "Hold period", value: "24h (unifié tous rôles)" },
   { param: "Release delay", value: "24h après validation" },
-  { param: "Réduction client (Influenceur)", value: "5%" },
+  { param: "Réduction client (Influenceur)", value: "$5 fixe" },
   { param: "Réduction client (GroupAdmin)", value: "$5 fixe" },
-  { param: "Réduction client (autres)", value: "$0" },
+  { param: "Réduction client (autres rôles)", value: "$0" },
+  { param: "Durée min appel (anti-fraude)", value: "Basé sur paiement capturé (pas durée)" },
 ];
 
 // ============================================================================

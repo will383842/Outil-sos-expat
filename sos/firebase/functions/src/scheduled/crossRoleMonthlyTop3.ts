@@ -5,7 +5,7 @@
  * Cash prizes: 1st=$200, 2nd=$100, 3rd=$50 (no multipliers).
  *
  * Conditions to receive the prize:
- * - Minimum $50 in team commissions (N1+N2) during the month
+ * - Minimum $100 in direct client commissions during the month
  * - Minimum 3 new recruitments during the month
  *
  * Runs on the 1st of each month at 01:00 UTC.
@@ -26,8 +26,8 @@ const PRIZES = [
   { place: 3, amount: 5000 },  // $50
 ];
 
-const MIN_TEAM_COMMISSIONS = 5000;  // $50 minimum in N1+N2 commissions
-const MIN_RECRUITMENTS = 3;         // minimum 3 new recruits in the month
+const MIN_DIRECT_COMMISSIONS = 10000;  // $100 minimum in direct client commissions
+const MIN_RECRUITMENTS = 3;            // minimum 3 new recruits in the month
 
 // ============================================================================
 // TYPES
@@ -147,7 +147,7 @@ export const crossRoleMonthlyTop3 = onSchedule(
               totalTeamCommissions: teamTotal,
               totalAll: total,
               newRecruits,
-              meetsConditions: teamTotal >= MIN_TEAM_COMMISSIONS && newRecruits >= MIN_RECRUITMENTS,
+              meetsConditions: clientTotal >= MIN_DIRECT_COMMISSIONS && newRecruits >= MIN_RECRUITMENTS,
             });
           }
         }
@@ -209,7 +209,7 @@ export const crossRoleMonthlyTop3 = onSchedule(
             totalTeamCommissions: teamTotal,
             totalAll: total,
             newRecruits: referralsSnap.size,
-            meetsConditions: teamTotal >= MIN_TEAM_COMMISSIONS && referralsSnap.size >= MIN_RECRUITMENTS,
+            meetsConditions: clientTotal >= MIN_DIRECT_COMMISSIONS && referralsSnap.size >= MIN_RECRUITMENTS,
           });
         }
       }
@@ -301,7 +301,7 @@ export const crossRoleMonthlyTop3 = onSchedule(
       totalParticipants: allEntries.length,
       eligibleParticipants: allEntries.filter(e => e.meetsConditions).length,
       conditions: {
-        minTeamCommissions: MIN_TEAM_COMMISSIONS,
+        minDirectCommissions: MIN_DIRECT_COMMISSIONS,
         minRecruitments: MIN_RECRUITMENTS,
       },
       prizes: PRIZES,

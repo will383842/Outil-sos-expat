@@ -8,7 +8,7 @@
  * - Influencer recruitment commissions ($5 one-time when recruit reaches $50)
  * - Monthly Top 3 leaderboard with bonus multipliers
  * - Promotional tools (banners, widgets, QR codes)
- * - 5% client discount via referral links
+ * - $5 fixed client discount via referral links
  */
 
 import { Timestamp } from "firebase-admin/firestore";
@@ -1125,13 +1125,13 @@ export const DEFAULT_INFLUENCER_CONFIG: Omit<
   commissionRecruitmentAmountLawyer: 500,  // $5 - lawyer
   commissionRecruitmentAmountExpat: 300,   // $3 - expat
   clientDiscountType: 'fixed' as const,  // 'fixed' ($) or 'percent' (%)
-  clientDiscountPercent: 5,              // 5% discount for referred clients
-  clientDiscountAmount: 500,             // $5 fixed discount (default)
+  clientDiscountPercent: 0,              // 0% (not used when type=fixed)
+  clientDiscountAmount: 500,             // $5 fixed discount
 
   recruitmentWindowMonths: 6,
 
   minimumWithdrawalAmount: 3000,     // $30
-  validationHoldPeriodDays: 7,       // 7 days minimum
+  validationHoldPeriodDays: 1,       // 1 day (unified 24h for all roles)
   releaseDelayHours: 24,             // 1 day after validation
 
   attributionWindowDays: 30,

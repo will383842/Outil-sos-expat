@@ -95,9 +95,10 @@ export const chatterResetCaptainMonthly = onSchedule(
     }
 
     const tiers = config.captainTiers || DEFAULT_CHATTER_CONFIG.captainTiers!;
-    const qualityBonusAmount = config.captainQualityBonusAmount || DEFAULT_CHATTER_CONFIG.captainQualityBonusAmount!;
-    const qualityMinRecruits = config.captainQualityBonusMinRecruits ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinRecruits!;
-    const qualityMinCommissions = config.captainQualityBonusMinCommissions ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinCommissions!;
+    // Quality bonus DISABLED — amount set to 0 in config defaults
+    const qualityBonusAmount = config.captainQualityBonusAmount ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusAmount ?? 0;
+    const qualityMinRecruits = config.captainQualityBonusMinRecruits ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinRecruits ?? 0;
+    const qualityMinCommissions = config.captainQualityBonusMinCommissions ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusMinCommissions ?? 0;
 
     // Query all captains
     const captainsQuery = await db
@@ -183,7 +184,8 @@ export const chatterResetCaptainMonthly = onSchedule(
           }
         }
 
-        // 3. Pay quality bonus — HYBRID: automatic criteria OR admin override
+        // 3. Pay quality bonus — DISABLED when qualityBonusAmount is 0
+        // HYBRID: automatic criteria OR admin override
         // Criteria: N1 active recruits >= threshold AND monthly captain_call commissions >= threshold
         // Admin veto: captainQualityBonusEnabled can force-enable (admin override)
         const n1CountQuery = await db
@@ -211,7 +213,7 @@ export const chatterResetCaptainMonthly = onSchedule(
         const criteriaMetCommissions = monthlyTeamCommissions >= qualityMinCommissions;
         const criteriaMet = criteriaMetN1 && criteriaMetCommissions;
         const adminOverride = captain.captainQualityBonusEnabled === true;
-        const shouldPayQualityBonus = criteriaMet || adminOverride;
+        const shouldPayQualityBonus = qualityBonusAmount > 0 && (criteriaMet || adminOverride);
 
         if (shouldPayQualityBonus) {
           const reason = criteriaMet

@@ -35,9 +35,6 @@ function ensureInitialized() {
   }
 }
 
-/** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 60;
-
 /** Prefix used by GroupAdmin affiliate codes */
 const GROUP_ADMIN_CODE_PREFIX = "GROUP-";
 
@@ -73,16 +70,6 @@ export async function handleCallCompleted(
   const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
 
   if (!wasNotPaid || !isNowPaid) {
-    return;
-  }
-
-  // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
-  if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) {
-    logger.warn("[onCallCompletedGroupAdmin] Call too short for commission", {
-      sessionId: event.params.sessionId,
-      duration: afterData.duration,
-      minimum: MIN_CALL_DURATION_SECONDS,
-    });
     return;
   }
 
@@ -313,7 +300,6 @@ export async function handleProviderRecruitmentCommission(
   const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
 
   if (!wasNotPaid || !isNowPaid) return;
-  if (!afterData.duration || afterData.duration < MIN_CALL_DURATION_SECONDS) return;
 
   const sessionId = event.params.sessionId;
 

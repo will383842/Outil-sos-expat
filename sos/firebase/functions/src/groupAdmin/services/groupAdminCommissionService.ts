@@ -383,15 +383,24 @@ async function checkAndPayActivationBonus(groupAdminId: string, _callId: string)
     const recruiterIndividualRates = recruiterData?.individualRates;
     const amount = await getActivationBonusAmount(recruiterLockedRates, recruiterIndividualRates);
 
-    // Check recruiter's direct commissions before paying activation bonus ($100 minimum)
+    // Check recruiter's direct commissions THIS MONTH (not lifetime)
     const config = await getGroupAdminConfig();
-    const recruiterTotalEarned = recruiterData?.totalEarned || 0;
     const minDirectCommissions = config.activationMinDirectCommissions || 10000;
+    const nowDate = new Date();
+    const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+    const monthStartTs = Timestamp.fromDate(monthStart);
+    const recruiterMonthlySnap = await getDb().collection("group_admin_commissions")
+      .where("groupAdminId", "==", groupAdmin.recruitedBy)
+      .where("type", "in", ["client_referral"])
+      .where("createdAt", ">=", monthStartTs)
+      .get();
+    let recruiterMonthlyDirect = 0;
+    recruiterMonthlySnap.forEach(d => { recruiterMonthlyDirect += d.data().amount || 0; });
 
-    if (recruiterTotalEarned < minDirectCommissions) {
-      logger.info("[GroupAdminCommission] Recruiter hasn't reached minimum for activation bonus", {
+    if (recruiterMonthlyDirect < minDirectCommissions) {
+      logger.info("[GroupAdminCommission] Recruiter hasn't reached minimum for activation bonus this month", {
         recruiterId: groupAdmin.recruitedBy,
-        totalEarned: recruiterTotalEarned,
+        monthlyDirect: recruiterMonthlyDirect,
         required: minDirectCommissions,
         recruitedId: groupAdminId,
       });

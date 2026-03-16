@@ -216,7 +216,7 @@ export const getCaptainDashboard = onCall(
         criteriaMet,
         adminOverride,
         qualified: criteriaMet || adminOverride,
-        bonusAmount: config.captainQualityBonusAmount || DEFAULT_CHATTER_CONFIG.captainQualityBonusAmount!,
+        bonusAmount: config.captainQualityBonusAmount ?? DEFAULT_CHATTER_CONFIG.captainQualityBonusAmount ?? 0,
       },
       tierProgression: {
         currentTier: currentTier ? { name: currentTier.name, bonus: currentTier.bonus } : null,

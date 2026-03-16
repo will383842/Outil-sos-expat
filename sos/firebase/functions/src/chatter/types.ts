@@ -1105,8 +1105,8 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   commissionClientCallAmountExpat: 300,    // $3 - Client call with expat
   commissionProviderCallAmountLawyer: 500, // $5 - Provider call with lawyer
   commissionProviderCallAmountExpat: 300,  // $3 - Provider call with expat
-  commissionCaptainCallAmountLawyer: 300, // $3 - Captain call with lawyer
-  commissionCaptainCallAmountExpat: 200,  // $2 - Captain call with expat
+  commissionCaptainCallAmountLawyer: 200, // $2 - Captain call with lawyer
+  commissionCaptainCallAmountExpat: 100,  // $1 - Captain call with expat
   captainTiers: [
     { name: "Bronze", minCalls: 20, bonus: 2500 },
     { name: "Argent", minCalls: 50, bonus: 5000 },
@@ -1114,9 +1114,9 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
     { name: "Platine", minCalls: 200, bonus: 20000 },
     { name: "Diamant", minCalls: 400, bonus: 40000 },
   ],
-  captainQualityBonusAmount: 10000,       // $100 - Quality bonus
-  captainQualityBonusMinRecruits: 10,    // Min 10 active N1 recruits
-  captainQualityBonusMinCommissions: 10000, // Min $100 monthly team commissions
+  captainQualityBonusAmount: 0,           // DISABLED - Quality bonus removed
+  captainQualityBonusMinRecruits: 0,     // DISABLED - Quality bonus removed
+  captainQualityBonusMinCommissions: 0,  // DISABLED - Quality bonus removed
   recruitmentWindowMonths: 6,             // 6 months window for recruitment commissions
   providerRecruitmentDurationMonths: 6,   // @deprecated Use recruitmentWindowMonths instead
 
@@ -1133,7 +1133,7 @@ export const DEFAULT_CHATTER_CONFIG: Omit<
   recruitmentLinkDurationMonths: 6,
 
   minimumWithdrawalAmount: 3000,     // $30
-  validationHoldPeriodHours: 48,     // 2 days
+  validationHoldPeriodHours: 24,     // 1 day (unified 24h for all roles)
   releaseDelayHours: 24,             // 1 day after validation
 
   attributionWindowDays: 30,

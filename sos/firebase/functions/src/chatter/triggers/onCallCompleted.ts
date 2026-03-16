@@ -48,9 +48,6 @@ function ensureInitialized() {
   }
 }
 
-/** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 60;
-
 interface CallSession {
   id: string;
   status: string;
@@ -104,16 +101,6 @@ export async function handleCallCompleted(
 
   const sessionId = event.params.sessionId;
   const session = afterData;
-
-    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
-    if (!session.duration || session.duration < MIN_CALL_DURATION_SECONDS) {
-      logger.warn("[chatterOnCallCompleted] Call too short for commission", {
-        sessionId,
-        duration: session.duration,
-        minimum: MIN_CALL_DURATION_SECONDS,
-      });
-      return;
-    }
 
     logger.info("[chatterOnCallCompleted] Processing completed call", {
       sessionId,
@@ -346,14 +333,23 @@ export async function handleCallCompleted(
         const activationBonusAmount = getActivationBonusAmount(config, recruiterLockedRates, recruiterIndividualRates);
         const chatterData = activationResult.chatterData!;
 
-        // Check recruiter's direct commissions before paying activation bonus ($100 minimum)
-        const recruiterTotalEarned = recruiterDataForBonus?.totalEarned || 0;
+        // Check recruiter's direct commissions THIS MONTH (not lifetime)
         const minDirectCommissions = config.activationMinDirectCommissions || 10000;
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthStartTs = Timestamp.fromDate(monthStart);
+        const recruiterMonthlySnap = await db.collection("chatter_commissions")
+          .where("chatterId", "==", activationResult.recruitedBy)
+          .where("type", "in", ["client_call", "client_referral"])
+          .where("createdAt", ">=", monthStartTs)
+          .get();
+        let recruiterMonthlyDirect = 0;
+        recruiterMonthlySnap.forEach(d => { recruiterMonthlyDirect += d.data().amount || 0; });
 
-        if (recruiterTotalEarned < minDirectCommissions) {
-          logger.info("[chatterOnCallCompleted] Recruiter hasn't reached minimum for activation bonus", {
+        if (recruiterMonthlyDirect < minDirectCommissions) {
+          logger.info("[chatterOnCallCompleted] Recruiter hasn't reached minimum for activation bonus this month", {
             recruiterId: activationResult.recruitedBy,
-            totalEarned: recruiterTotalEarned,
+            monthlyDirect: recruiterMonthlyDirect,
             required: minDirectCommissions,
             recruitedChatterId: chatterId,
           });

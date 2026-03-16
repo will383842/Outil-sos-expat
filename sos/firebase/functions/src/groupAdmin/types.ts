@@ -1264,7 +1264,7 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
 
   recruitmentWindowMonths: 6,
   attributionWindowDays: 30,
-  validationHoldPeriodDays: 7,
+  validationHoldPeriodDays: 1,       // 1 day (unified 24h for all roles)
   releaseDelayHours: 24,
 
   minimumWithdrawalAmount: 3000,       // $30

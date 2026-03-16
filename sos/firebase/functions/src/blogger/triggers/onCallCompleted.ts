@@ -20,9 +20,6 @@ import { checkAndPayRecruitmentCommission } from "../services/bloggerRecruitment
 import { awardBloggerRecruitmentCommission } from "./onProviderRegistered";
 import { getBloggerConfigCached } from "../utils/bloggerConfigService";
 
-/** Minimum call duration in seconds to earn commission (anti-fraud) */
-const MIN_CALL_DURATION_SECONDS = 60;
-
 /**
  * Check and award blogger commission when a call is completed
  *
@@ -44,14 +41,6 @@ export async function checkBloggerClientReferral(
     const config = await getBloggerConfigCached();
     if (!config.isSystemActive) {
       return { awarded: false, error: "Blogger system not active" };
-    }
-
-    // Minimum call duration check (anti-fraud: prevent 1-second call commissions)
-    if (!callDuration || callDuration < MIN_CALL_DURATION_SECONDS) {
-      logger.warn("[checkBloggerClientReferral] Call too short for commission", {
-        callSessionId, callDuration, minimum: MIN_CALL_DURATION_SECONDS,
-      });
-      return { awarded: false, error: "Call too short for commission" };
     }
 
     // 2. Look for blogger attribution for this client
@@ -275,7 +264,19 @@ async function awardBloggerCommission(
         const recruiter = recruiterDoc.data() as Blogger;
         const minDirect = bloggerConfig.activationMinDirectCommissions || 10000;
 
-        if ((recruiter.totalEarned || 0) >= minDirect && !freshBlogger.activationBonusPaid) {
+        // Check recruiter's direct commissions THIS MONTH (not lifetime)
+        const nowDate = new Date();
+        const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+        const monthStartTs = Timestamp.fromDate(monthStart);
+        const recruiterMonthlySnap = await db.collection("blogger_commissions")
+          .where("bloggerId", "==", recruiterId)
+          .where("type", "in", ["client_call", "client_referral"])
+          .where("createdAt", ">=", monthStartTs)
+          .get();
+        let recruiterMonthlyDirect = 0;
+        recruiterMonthlySnap.forEach(d => { recruiterMonthlyDirect += d.data().amount || 0; });
+
+        if (recruiterMonthlyDirect >= minDirect && !freshBlogger.activationBonusPaid) {
           const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount
             ?? recruiter.lockedRates?.commissionActivationBonusAmount
             ?? bloggerConfig.commissionActivationBonusAmount ?? 500;

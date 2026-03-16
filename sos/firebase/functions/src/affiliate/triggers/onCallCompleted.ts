@@ -141,15 +141,6 @@ export async function handleCallCompleted(
       // 3. Calculate call duration
       const callDuration = after.duration || after.durationSeconds || 0;
 
-      // 3b. Skip if call too short (anti-fraud, harmonized with other roles)
-      if (!callDuration || callDuration < 60) {
-        logger.info("[affiliateOnCallCompleted] Skipping - call too short", {
-          sessionId,
-          clientId,
-        });
-        return;
-      }
-
       // 5. Get call amounts
       const connectionFee = after.pricing?.connectionFee || after.connectionFee || 0;
       const totalAmount = after.pricing?.totalAmount || after.totalAmount || 0;
@@ -402,7 +393,19 @@ export async function handleCallCompleted(
                 ?? recruiter.lockedRates?.activationMinDirectCommissions
                 ?? 10000; // $100 default
 
-            if ((recruiter.totalEarned || 0) >= minDirect && !freshUser.activationBonusPaid) {
+            // Check recruiter's direct commissions THIS MONTH (not lifetime)
+            const nowDate = new Date();
+            const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+            const monthStartTs = Timestamp.fromDate(monthStart);
+            const recruiterMonthlySnap = await db.collection("affiliate_commissions")
+              .where("referrerId", "==", recruiterId)
+              .where("type", "in", ["referral_first_call", "referral_recurring_call"])
+              .where("createdAt", ">=", monthStartTs)
+              .get();
+            let recruiterMonthlyDirect = 0;
+            recruiterMonthlySnap.forEach(d => { recruiterMonthlyDirect += d.data().amount || 0; });
+
+            if (recruiterMonthlyDirect >= minDirect && !freshUser.activationBonusPaid) {
               const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount
                 ?? recruiter.lockedRates?.commissionActivationBonusAmount
                 ?? 500; // $5
