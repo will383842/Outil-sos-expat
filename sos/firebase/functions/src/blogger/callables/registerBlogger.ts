@@ -272,14 +272,17 @@ export const registerBlogger = onCall(
       const recruitmentCode = input.recruitmentCode || (input as any).recruiterCode;
 
       if (recruitmentCode) {
+        // Enforce attribution window from config (dynamic, admin-configurable)
+        const attributionWindowDays = config.attributionWindowDays ?? 30;
         let referralExpired = false;
         if (input.referralCapturedAt) {
           const capturedDate = new Date(input.referralCapturedAt);
-          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          const windowMs = attributionWindowDays * 24 * 60 * 60 * 1000;
           if (Date.now() - capturedDate.getTime() > windowMs) {
-            logger.warn("[registerBlogger] Recruitment code expired (>30 days)", {
+            logger.warn(`[registerBlogger] Recruitment code expired (>${attributionWindowDays} days)`, {
               code: recruitmentCode,
               capturedAt: input.referralCapturedAt,
+              windowDays: attributionWindowDays,
             });
             referralExpired = true;
           }

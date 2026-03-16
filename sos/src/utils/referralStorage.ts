@@ -29,8 +29,27 @@ export interface StoredReferral {
 // CONSTANTS
 // ============================================================================
 
-/** 30 days in milliseconds */
-export const ATTRIBUTION_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+/** Default attribution window: 30 days in milliseconds (overridable via setAttributionWindowDays) */
+const DEFAULT_ATTRIBUTION_WINDOW_DAYS = 30;
+let _attributionWindowDays = DEFAULT_ATTRIBUTION_WINDOW_DAYS;
+
+/** Current attribution window in milliseconds (reads from admin config if set) */
+export function getAttributionWindowMs(): number {
+  return _attributionWindowDays * 24 * 60 * 60 * 1000;
+}
+
+/**
+ * Set the attribution window from admin config.
+ * Call this once at app startup after fetching config from Firestore.
+ */
+export function setAttributionWindowDays(days: number): void {
+  if (days > 0 && days <= 365) {
+    _attributionWindowDays = days;
+  }
+}
+
+/** @deprecated Use getAttributionWindowMs() instead — kept for backward compat */
+export const ATTRIBUTION_WINDOW_MS = DEFAULT_ATTRIBUTION_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 /** localStorage key prefix per actor type */
 const STORAGE_KEY_PREFIX = 'sos_referral_';
@@ -84,7 +103,7 @@ function deobfuscate(data: string): string {
 // ============================================================================
 
 /**
- * Store a referral code in localStorage with 30-day expiration.
+ * Store a referral code in localStorage with configurable expiration.
  */
 export function storeReferralCode(
   code: string,
@@ -105,7 +124,7 @@ export function storeReferralCode(
     actorType,
     codeType,
     capturedAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + ATTRIBUTION_WINDOW_MS).toISOString(),
+    expiresAt: new Date(now.getTime() + getAttributionWindowMs()).toISOString(),
     ...tracking,
   };
 
@@ -328,7 +347,7 @@ export function storeUnifiedReferral(
     actorType: 'client', // unified = role-agnostic, stored as 'client'
     codeType: 'client',
     capturedAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + ATTRIBUTION_WINDOW_MS).toISOString(),
+    expiresAt: new Date(now.getTime() + getAttributionWindowMs()).toISOString(),
     ...tracking,
   };
 
@@ -510,5 +529,54 @@ export function migrateFromLegacyStorage(): void {
     }
   } catch (err) {
     console.warn('[referralStorage] Legacy migration failed:', err);
+  }
+}
+
+// ============================================================================
+// DYNAMIC CONFIG INITIALIZATION
+// ============================================================================
+
+let _configInitialized = false;
+
+/**
+ * Load attribution window from Firestore affiliate_config/current.
+ * Call once at app startup. Uses a local cache key to avoid fetching on every page load.
+ * Falls back to 30 days if fetch fails.
+ */
+export async function initAttributionWindowFromConfig(): Promise<void> {
+  if (_configInitialized) return;
+  _configInitialized = true;
+
+  try {
+    // Check localStorage cache first (refreshed every 1 hour)
+    const cached = localStorage.getItem('sos_attribution_window_cache');
+    if (cached) {
+      const { days, cachedAt } = JSON.parse(cached);
+      const ONE_HOUR = 60 * 60 * 1000;
+      if (Date.now() - cachedAt < ONE_HOUR && days > 0) {
+        setAttributionWindowDays(days);
+        return;
+      }
+    }
+
+    // Fetch from Firestore
+    const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+    const { getApp } = await import('firebase/app');
+    const db = getFirestore(getApp());
+    const configDoc = await getDoc(doc(db, 'affiliate_config', 'current'));
+
+    if (configDoc.exists()) {
+      const windowDays = configDoc.data()?.attribution?.windowDays;
+      if (typeof windowDays === 'number' && windowDays > 0) {
+        setAttributionWindowDays(windowDays);
+        localStorage.setItem('sos_attribution_window_cache', JSON.stringify({
+          days: windowDays,
+          cachedAt: Date.now(),
+        }));
+      }
+    }
+  } catch (err) {
+    // Silent fail — uses default 30 days
+    console.warn('[referralStorage] Failed to load attribution window from config:', err);
   }
 }

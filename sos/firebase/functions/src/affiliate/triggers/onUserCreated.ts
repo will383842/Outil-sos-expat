@@ -119,7 +119,8 @@ export async function handleAffiliateUserCreated(event: any) {
 
       const pendingReferralCode = userData.pendingReferralCode;
       if (pendingReferralCode) {
-        // Enforce 30-day attribution window
+        // Enforce attribution window from config (dynamic, admin-configurable)
+        const attributionWindowDays = config.attribution?.windowDays ?? 30;
         const referralCapturedAt = userData.referralCapturedAt;
         let referralExpired = false;
         if (!referralCapturedAt) {
@@ -131,12 +132,13 @@ export async function handleAffiliateUserCreated(event: any) {
           referralExpired = true;
         } else {
           const capturedDate = new Date(referralCapturedAt);
-          const windowMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+          const windowMs = attributionWindowDays * 24 * 60 * 60 * 1000;
           if (Date.now() - capturedDate.getTime() > windowMs) {
-            logger.warn("[affiliateOnUserCreated] Referral code expired (>30 days)", {
+            logger.warn(`[affiliateOnUserCreated] Referral code expired (>${attributionWindowDays} days)`, {
               userId,
               code: pendingReferralCode,
               capturedAt: referralCapturedAt,
+              windowDays: attributionWindowDays,
               expiredAgo: `${Math.round((Date.now() - capturedDate.getTime()) / (24 * 60 * 60 * 1000))} days`,
             });
             referralExpired = true;

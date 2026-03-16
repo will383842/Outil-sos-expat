@@ -27,7 +27,7 @@ import ProviderOnlineManager from './components/providers/ProviderOnlineManager'
 import { useFCM } from './hooks/useFCM';
 // AFFILIATE: Capture referral codes from URL
 import { useReferralCapture } from './hooks/useAffiliate';
-import { migrateFromLegacyStorage, storeReferralCode, storeUnifiedReferral } from './utils/referralStorage';
+import { migrateFromLegacyStorage, storeReferralCode, storeUnifiedReferral, initAttributionWindowFromConfig } from './utils/referralStorage';
 import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
 import { captureAffiliateRef, setAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
@@ -710,8 +710,10 @@ const ReferralCodeCapture: React.FC = () => {
   }, []);
 
   // Migrate legacy localStorage keys to new format (runs once)
+  // Also load dynamic attribution window from admin config
   useEffect(() => {
     migrateFromLegacyStorage();
+    initAttributionWindowFromConfig();
   }, []);
 
   useEffect(() => {
