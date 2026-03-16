@@ -269,6 +269,26 @@ export const IaAccessTab: React.FC = () => {
       const snapshot = await getDocs(usersQuery);
       const providersList: ProviderIAAccess[] = [];
 
+      // Charger les sos_profiles en parallèle pour récupérer les photos
+      const profileIds = snapshot.docs.map(d => d.id);
+      const profilePhotos = new Map<string, string>();
+      // Batch getDoc en parallèle (max 10 à la fois pour ne pas surcharger)
+      for (let i = 0; i < profileIds.length; i += 10) {
+        const batch = profileIds.slice(i, i + 10);
+        const results = await Promise.all(
+          batch.map(id => getDoc(doc(db, 'sos_profiles', id)).catch(() => null))
+        );
+        results.forEach((snap, idx) => {
+          if (snap?.exists()) {
+            const pData = snap.data();
+            const photo = pData.profilePhoto || pData.photoURL || pData.avatar || '';
+            if (photo && photo !== '/default-avatar.png') {
+              profilePhotos.set(batch[idx], photo);
+            }
+          }
+        });
+      }
+
       for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
 
@@ -282,13 +302,17 @@ export const IaAccessTab: React.FC = () => {
           accessStatus = 'trial';
         }
 
+        // Photo: users > sos_profiles > fallback
+        const userPhoto = data.profilePhoto || data.photoURL || data.avatar || '';
+        const photo = (userPhoto && userPhoto !== '/default-avatar.png') ? userPhoto : (profilePhotos.get(docSnap.id) || '');
+
         providersList.push({
           id: docSnap.id,
           email: data.email || '',
           displayName: data.displayName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A',
           firstName: data.firstName,
           lastName: data.lastName,
-          profilePhoto: data.profilePhoto || data.photoURL || '',
+          profilePhoto: photo,
           role: data.role === 'provider' ? (data.providerType || 'lawyer') : data.role,
           accessStatus,
           forcedAIAccess: data.forcedAIAccess === true,
