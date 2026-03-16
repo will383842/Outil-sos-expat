@@ -152,6 +152,7 @@ interface AvailableProvider {
   name: string;
   email: string;
   type: 'lawyer' | 'expat';
+  profilePhoto?: string;
 }
 
 interface AvailableUser {
