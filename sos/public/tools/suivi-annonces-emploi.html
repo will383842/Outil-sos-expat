@@ -457,15 +457,20 @@ select option{background:var(--surface2)}
 
     <!-- SITES VIEW -->
     <div class="view" id="view-sites">
+      <!-- SITES DASHBOARD -->
+      <div id="sites-dashboard" style="margin-bottom:1.2rem"></div>
       <div class="content-header" style="margin-bottom:1rem">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">Sites référencés</div>
-        <button class="btn btn-primary btn-sm" onclick="openSiteModal()">+ Ajouter un site</button>
+        <div style="font-family:’Syne’,sans-serif;font-weight:700;font-size:1rem">Sites référencés</div>
+        <div class="btn-group">
+          <input type="text" id="sites-search" placeholder="Filtrer sites..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;outline:none;width:180px" oninput="renderSites()">
+          <button class="btn btn-primary btn-sm" onclick="openSiteModal()">+ Ajouter un site</button>
+        </div>
       </div>
       <div class="table-wrapper">
         <table class="table">
           <thead><tr>
             <th>Nom</th><th>URL</th><th>Pays</th><th>Langue</th><th>Catégorie</th>
-            <th>Pré-approbation</th><th>Gratuit/Payant</th><th>Validité</th><th>Annonces</th><th>Réponses</th><th>Actions</th>
+            <th>Pré-approbation</th><th>Gratuit/Payant</th><th>Validité</th><th>Annonces</th><th>Actives</th><th>Réponses</th><th>Actions</th>
           </tr></thead>
           <tbody id="sites-tbody"></tbody>
         </table>
@@ -474,6 +479,8 @@ select option{background:var(--surface2)}
           <h3>Aucun site</h3><p>Référencez les sites d’annonces</p>
         </div>
       </div>
+      <!-- COVERAGE BY COUNTRY / LANGUAGE -->
+      <div id="sites-coverage-detail" style="margin-top:1.5rem"></div>
     </div>
 
     <!-- TRASH VIEW -->
@@ -1505,10 +1512,92 @@ function renderGaps(){
 function renderSites(){
   var tbody=document.getElementById("sites-tbody");
   var empty=document.getElementById("sites-empty");
+  var searchF=(document.getElementById("sites-search")?document.getElementById("sites-search").value:"").toLowerCase();
+
+  // ---- DASHBOARD ----
+  var totalSites=sites.length;
+  var freeSites=sites.filter(function(s){return !s.isPaid;}).length;
+  var paidSites=totalSites-freeSites;
+  var totalAdsCount=ads.length;
+  var activeAds=ads.filter(function(a){return a.status==="active";}).length;
+  var activeRate=totalAdsCount?Math.round((activeAds/totalAdsCount)*100):0;
+
+  // Countries & langs from ads
+  var adCountries=new Set();var adLangs=new Set();
+  ads.forEach(function(a){if(a.country)adCountries.add(a.country);if(a.lang)adLangs.add(a.lang);});
+
+  var dash=document.getElementById("sites-dashboard");
+  dash.innerHTML="<div class=\"analytics-grid\" style=\"grid-template-columns:repeat(6,1fr)\">"+
+    "<div class=\"analytics-card\"><div class=\"analytics-card-title\">Sites</div><div class=\"analytics-card-value blue\">"+totalSites+"</div><div class=\"analytics-card-sub\">"+freeSites+" gratuits / "+paidSites+" payants</div></div>"+
+    "<div class=\"analytics-card\"><div class=\"analytics-card-title\">Annonces totales</div><div class=\"analytics-card-value green\">"+totalAdsCount+"</div></div>"+
+    "<div class=\"analytics-card\"><div class=\"analytics-card-title\">Actives</div><div class=\"analytics-card-value\" style=\"color:var(--active)\">"+activeAds+"</div><div class=\"analytics-card-sub\">"+activeRate+"% du total</div></div>"+
+    "<div class=\"analytics-card\"><div class=\"analytics-card-title\">Pays couverts</div><div class=\"analytics-card-value purple\">"+adCountries.size+"</div><div class=\"analytics-card-sub\">/ 197 ("+Math.round(adCountries.size/197*100)+"%)</div></div>"+
+    "<div class=\"analytics-card\"><div class=\"analytics-card-title\">Langues</div><div class=\"analytics-card-value yellow\">"+adLangs.size+"</div><div class=\"analytics-card-sub\">/ 25 possibles</div></div>"+
+    "<div class=\"analytics-card\"><div class=\"analytics-card-title\">R\u00e9ponses totales</div><div class=\"analytics-card-value green\">"+ads.reduce(function(t,a){return t+(a.responses||0);},0)+"</div></div></div>";
+
+  // ---- COVERAGE DETAIL ----
+  var covDetail=document.getElementById("sites-coverage-detail");
+  // By country: count ads, active ads, sites
+  var byCountry={};
+  ads.forEach(function(a){
+    if(!a.country)return;
+    if(!byCountry[a.country])byCountry[a.country]={total:0,active:0,langs:new Set(),sites:new Set(),responses:0};
+    byCountry[a.country].total++;
+    if(a.status==="active")byCountry[a.country].active++;
+    if(a.lang)byCountry[a.country].langs.add(a.lang);
+    if(a.site)byCountry[a.country].sites.add(a.site);
+    byCountry[a.country].responses+=(a.responses||0);
+  });
+  var countrySorted=Object.keys(byCountry).sort(function(a,b){return byCountry[b].total-byCountry[a].total;});
+
+  // By language
+  var byLang={};
+  ads.forEach(function(a){
+    if(!a.lang)return;
+    if(!byLang[a.lang])byLang[a.lang]={total:0,active:0,countries:new Set(),responses:0};
+    byLang[a.lang].total++;
+    if(a.status==="active")byLang[a.lang].active++;
+    if(a.country)byLang[a.lang].countries.add(a.country);
+    byLang[a.lang].responses+=(a.responses||0);
+  });
+  var langSorted=Object.keys(byLang).sort(function(a,b){return byLang[b].total-byLang[a].total;});
+
+  covDetail.innerHTML=
+    "<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:1rem\">"+
+    // LEFT: by country
+    "<div><div class=\"analytics-section-title\">Couverture par pays ("+countrySorted.length+")</div>"+
+    "<div class=\"table-wrapper\" style=\"max-height:400px;overflow-y:auto\"><table class=\"stats-table\"><thead><tr><th>Pays</th><th>Annonces</th><th>Actives</th><th>Taux</th><th>Langues</th><th>Sites</th><th>R\u00e9p.</th></tr></thead><tbody>"+
+    countrySorted.map(function(c){
+      var d=byCountry[c];var rate=d.total?Math.round(d.active/d.total*100):0;
+      var barColor=rate>=60?"var(--accent)":rate>=30?"var(--warn)":"var(--danger)";
+      return "<tr><td style=\"font-weight:500\">"+c+"</td><td>"+d.total+"</td><td>"+d.active+"</td>"+
+        "<td><div class=\"perf-bar\"><div class=\"perf-fill\" style=\"width:"+rate+"%;background:"+barColor+"\"></div></div>"+rate+"%</td>"+
+        "<td>"+Array.from(d.langs).map(function(l){return "<span class=\"lang-badge\" style=\"margin:1px\">"+l.toUpperCase()+"</span>";}).join("")+"</td>"+
+        "<td style=\"color:var(--muted)\">"+d.sites.size+"</td>"+
+        "<td style=\"color:var(--accent)\">"+d.responses+"</td></tr>";
+    }).join("")+
+    "</tbody></table></div></div>"+
+    // RIGHT: by language
+    "<div><div class=\"analytics-section-title\">Couverture par langue ("+langSorted.length+")</div>"+
+    "<div class=\"table-wrapper\" style=\"max-height:400px;overflow-y:auto\"><table class=\"stats-table\"><thead><tr><th>Langue</th><th>Annonces</th><th>Actives</th><th>Taux</th><th>Pays</th><th>R\u00e9p.</th></tr></thead><tbody>"+
+    langSorted.map(function(l){
+      var d=byLang[l];var rate=d.total?Math.round(d.active/d.total*100):0;
+      var barColor=rate>=60?"var(--accent)":rate>=30?"var(--warn)":"var(--danger)";
+      return "<tr><td style=\"font-weight:500\"><span class=\"lang-badge\">"+langLabel(l)+"</span></td><td>"+d.total+"</td><td>"+d.active+"</td>"+
+        "<td><div class=\"perf-bar\"><div class=\"perf-fill\" style=\"width:"+rate+"%;background:"+barColor+"\"></div></div>"+rate+"%</td>"+
+        "<td>"+d.countries.size+" pays</td>"+
+        "<td style=\"color:var(--accent)\">"+d.responses+"</td></tr>";
+    }).join("")+
+    "</tbody></table></div></div></div>";
+
+  // ---- SITES TABLE ----
   if(!sites.length){tbody.innerHTML="";empty.style.display="block";return;}
   empty.style.display="none";
-  tbody.innerHTML=sites.map(function(s){
+  var filtered=sites;
+  if(searchF) filtered=sites.filter(function(s){return (s.name||"").toLowerCase().indexOf(searchF)!==-1||(s.url||"").toLowerCase().indexOf(searchF)!==-1||(s.country||"").toLowerCase().indexOf(searchF)!==-1||(s.category||"").toLowerCase().indexOf(searchF)!==-1;});
+  tbody.innerHTML=filtered.map(function(s){
     var sa=ads.filter(function(a){return a.site===s.name;});
+    var activeCount=sa.filter(function(a){return a.status==="active";}).length;
     var sr=sa.reduce(function(t,a){return t+(a.responses||0);},0);
     return "<tr style=\""+(s.isPaid?"opacity:.6;background:rgba(239,68,68,.03)":"")+"\">"+
       "<td style=\"font-weight:500\">"+s.name+(s.isPaid?" <span style=\"color:var(--danger);font-size:.7rem\">Payant</span>":"")+"</td>"+
@@ -1520,6 +1609,7 @@ function renderSites(){
       "<td><span class=\"badge "+(s.isPaid?"badge-paid":"badge-free")+"\">"+(s.isPaid?"Payant":"Gratuit")+"</span></td>"+
       "<td style=\"font-size:.75rem;color:var(--muted)\">"+(s.validity?s.validity+"j":"\u221e")+"</td>"+
       "<td style=\"color:var(--accent2)\">"+sa.length+"</td>"+
+      "<td style=\"color:var(--active)\">"+activeCount+"</td>"+
       "<td style=\"color:var(--accent)\">"+sr+"</td>"+
       "<td><div class=\"actions-cell\">"+
       "<button class=\"icon-btn\" onclick=\"editSite(\u0027"+s.id+"\u0027)\">\u270f</button>"+
@@ -1652,18 +1742,28 @@ async function saveAd(){
     poster:document.getElementById("f-poster").value.trim(),
     tags:[].concat(currentTags)
   };
-  // Handle paid site
+  // Handle site: auto-create if unknown, update if known
   var isPaid=document.getElementById("f-is-paid").checked;
   if(data.site){
     var siteIdx=sites.findIndex(function(s){return s.name===data.site;});
     if(siteIdx!==-1){
+      // Update existing site
       sites[siteIdx].isPaid=isPaid;
       if(isPaid&&!sites[siteIdx].paidDetectedAt) sites[siteIdx].paidDetectedAt=new Date().toISOString();
+      // Update country/lang if site doesn't have one yet
+      if(!sites[siteIdx].country&&data.country) sites[siteIdx].country=data.country;
+      if(!sites[siteIdx].lang&&data.lang) sites[siteIdx].lang=data.lang;
+      if(!sites[siteIdx].url&&data.siteUrl) sites[siteIdx].url=data.siteUrl;
       await apiPut("/sites/"+sites[siteIdx].id,toSnake(sites[siteIdx]));
-    }else if(isPaid){
-      var newSite={name:data.site,url:data.siteUrl||"",isPaid:true,paidDetectedAt:new Date().toISOString(),audit:[]};
+    }else{
+      // Auto-create new site (always, not just when paid)
+      var newSite={name:data.site,url:data.siteUrl||"",country:data.country||"",lang:data.lang||"",isPaid:isPaid,audit:[]};
+      if(isPaid) newSite.paidDetectedAt=new Date().toISOString();
+      addAudit(newSite,"Auto-cr\u00e9\u00e9 depuis annonce par "+currentOperator);
       var sRes=await apiPost("/sites",toSnake(newSite));
       if(sRes&&sRes.data) sites.unshift(toCamel(sRes.data));
+      else{newSite.id=uid();newSite.createdAt=new Date().toISOString();sites.unshift(newSite);}
+      saveSitesData(sites);
     }
   }
   if(editingId){
@@ -2065,8 +2165,20 @@ var savedName=localStorage.getItem(AUTH_NAME_KEY);
 var savedSecret=localStorage.getItem("sos_adtracker_api_secret");
 if(savedName) document.getElementById("auth-name").value=savedName;
 if(savedSecret) document.getElementById("auth-password").value=savedSecret;
-// Auto-login if both are saved
-if(savedName&&savedSecret){attemptLogin();}
+// Auto-login if both are saved (clear saved secret on failure)
+if(savedName&&savedSecret){
+  attemptLogin().then(function(){
+    // If still on auth gate, the secret was wrong — clear it
+    if(!document.getElementById("auth-gate").classList.contains("hidden")){
+      localStorage.removeItem("sos_adtracker_api_secret");
+      document.getElementById("auth-password").value="";
+      var errEl=document.getElementById("auth-error");
+      errEl.style.color="var(--warn)";
+      errEl.textContent="Secret API expir\u00e9 ou chang\u00e9. Entrez le nouveau.";
+      errEl.style.display="block";
+    }
+  });
+}
 </script>
 </body>
 </html>
