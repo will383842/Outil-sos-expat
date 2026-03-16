@@ -282,6 +282,7 @@ select option{background:var(--surface2)}
   <div class="header-actions">
     <div class="sync-status" id="sync-status"><span class="sync-dot" id="sync-dot"></span> <span id="sync-text">Cloud sync</span></div>
     <div class="operator-badge" id="operator-badge">Operateur</div>
+    <button class="btn btn-outline btn-sm" onclick="logout()" style="font-size:.7rem;padding:4px 10px">Déconnexion</button>
     <div class="dropdown-wrap">
       <button class="btn btn-outline btn-sm" onclick="toggleExportMenu()">Export</button>
       <div class="dropdown-menu" id="export-dropdown">
@@ -750,6 +751,18 @@ async function attemptLogin(){
     errEl.textContent="Impossible de joindre l\u2019API: "+e.message;
     API_SECRET="";
   }
+}
+
+function logout(){
+  localStorage.removeItem("sos_adtracker_api_secret");
+  localStorage.removeItem(AUTH_NAME_KEY);
+  localStorage.removeItem(AUTH_HASH_KEY);
+  API_SECRET="";
+  currentOperator="";
+  document.getElementById("auth-gate").classList.remove("hidden");
+  document.getElementById("app-container").style.display="none";
+  document.getElementById("auth-password").value="";
+  document.getElementById("auth-error").style.display="none";
 }
 
 function loginSuccess(name, pwd){
