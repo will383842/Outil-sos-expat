@@ -422,11 +422,18 @@ export const IaAccessTab: React.FC = () => {
     setError(null);
 
     try {
-      await updateDoc(doc(db, 'users', provider.id), {
+      const resetData = {
         aiCallsUsed: 0,
         aiQuotaResetAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
+      };
+      // Écrire dans users ET sos_profiles pour déclencher le sync vers Outil
+      await Promise.all([
+        updateDoc(doc(db, 'users', provider.id), resetData),
+        updateDoc(doc(db, 'sos_profiles', provider.id), resetData).catch(() => {
+          // sos_profiles peut ne pas exister pour certains users
+        }),
+      ]);
 
       setProviders(prev => prev.map(p =>
         p.id === provider.id ? { ...p, aiCallsUsed: 0, aiQuotaResetAt: new Date() } : p
@@ -450,13 +457,15 @@ export const IaAccessTab: React.FC = () => {
     setError(null);
 
     try {
-      const promises = Array.from(selectedIds).map(id =>
-        updateDoc(doc(db, 'users', id), {
-          aiCallsUsed: 0,
-          aiQuotaResetAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        })
-      );
+      const resetData = {
+        aiCallsUsed: 0,
+        aiQuotaResetAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      const promises = Array.from(selectedIds).flatMap(id => [
+        updateDoc(doc(db, 'users', id), resetData),
+        updateDoc(doc(db, 'sos_profiles', id), resetData).catch(() => {}),
+      ]);
 
       await Promise.all(promises);
 
