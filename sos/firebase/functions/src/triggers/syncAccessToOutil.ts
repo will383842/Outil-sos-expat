@@ -21,8 +21,8 @@ import { logger } from "firebase-functions";
 // P0 FIX: Import secrets from centralized secrets.ts - NEVER call defineSecret() here!
 import { OUTIL_SYNC_API_KEY } from "../lib/secrets";
 
-// URL de l'endpoint syncProvider dans Outil-sos-expat (Cloud Run v2)
-const OUTIL_SYNC_ENDPOINT = "https://syncprovider-r47sd2uiqa-ew.a.run.app";
+// URL de l'endpoint syncProvider dans Outil-sos-expat (Cloud Functions)
+const OUTIL_SYNC_ENDPOINT = "https://europe-west1-outils-sos-expat.cloudfunctions.net/syncProvider";
 
 interface UserAccessData {
   forcedAIAccess?: boolean;
