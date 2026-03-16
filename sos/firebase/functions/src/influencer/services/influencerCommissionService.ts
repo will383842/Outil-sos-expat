@@ -88,7 +88,22 @@ export function calculateCommissionAmount(
   config: InfluencerConfig,
   providerType?: 'lawyer' | 'expat'
 ): number {
-  // PRIORITY 1: Locked rates (Lifetime Rate Lock — takes absolute precedence)
+  // PRIORITY 1: Individual admin overrides (highest priority)
+  if (influencer.individualRates) {
+    const individual = influencer.individualRates;
+    if (type === 'client_referral') {
+      if (providerType === 'lawyer' && individual.commissionClientAmountLawyer != null) return individual.commissionClientAmountLawyer;
+      if (providerType === 'expat' && individual.commissionClientAmountExpat != null) return individual.commissionClientAmountExpat;
+      if (individual.commissionClientAmount != null) return individual.commissionClientAmount;
+    }
+    if (type === 'recruitment') {
+      if (providerType === 'lawyer' && individual.commissionRecruitmentAmountLawyer != null) return individual.commissionRecruitmentAmountLawyer;
+      if (providerType === 'expat' && individual.commissionRecruitmentAmountExpat != null) return individual.commissionRecruitmentAmountExpat;
+      if (individual.commissionRecruitmentAmount != null) return individual.commissionRecruitmentAmount;
+    }
+  }
+
+  // PRIORITY 2: Locked rates (Lifetime Rate Lock)
   if (influencer.lockedRates) {
     const locked = influencer.lockedRates;
     if (type === 'client_referral') {
@@ -103,7 +118,7 @@ export function calculateCommissionAmount(
     }
   }
 
-  // PRIORITY 2: Config overrides by provider type
+  // PRIORITY 3: Config overrides by provider type
   if (providerType === 'lawyer') {
     if (type === 'client_referral' && config.commissionClientAmountLawyer != null) return config.commissionClientAmountLawyer;
     if (type === 'recruitment' && config.commissionRecruitmentAmountLawyer != null) return config.commissionRecruitmentAmountLawyer;

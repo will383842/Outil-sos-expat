@@ -88,7 +88,7 @@ export const getGroupAdminRecruits = onCall(
       // 3. Get config for activation threshold and bonus amount (Chatter-style)
       const [threshold, bonusAmount] = await Promise.all([
         getActivationCallsRequired(), // 2 referrals required (not $200)
-        getActivationBonusAmount(),   // $5 = 500 cents (not $50)
+        getActivationBonusAmount(groupAdmin.lockedRates, groupAdmin.individualRates),   // $5 = 500 cents (not $50)
       ]);
 
       // 4. Get all groupAdmin recruits

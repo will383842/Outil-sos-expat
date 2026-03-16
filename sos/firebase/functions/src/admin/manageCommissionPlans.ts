@@ -17,6 +17,148 @@ import { clearPlanCache } from "../lib/planResolver";
 import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
 // ============================================================================
+// PROPAGATE PLAN RATES TO {role}_config/current DOCS
+// Landing pages read from these docs via usePublicCommissionRates hook
+// ============================================================================
+
+async function propagatePlanToConfigs(
+  db: FirebaseFirestore.Firestore,
+  plan: Omit<CommissionPlan, "id"> | null
+): Promise<void> {
+  const batch = db.batch();
+
+  if (plan) {
+    // Active plan: propagate plan rates to config docs
+    const chatterRef = db.doc("chatter_config/current");
+    batch.set(chatterRef, {
+      ...plan.chatterRates,
+      _activePlanName: plan.name,
+      _propagatedAt: Timestamp.now(),
+    }, { merge: true });
+
+    const influencerRef = db.doc("influencer_config/current");
+    batch.set(influencerRef, {
+      // Map influencer field names to config field names
+      commissionClientAmount: plan.influencerRates.commissionClientAmount,
+      commissionClientAmountLawyer: plan.influencerRates.commissionClientAmountLawyer ?? null,
+      commissionClientAmountExpat: plan.influencerRates.commissionClientAmountExpat ?? null,
+      commissionRecruitmentAmount: plan.influencerRates.commissionRecruitmentAmount,
+      commissionRecruitmentAmountLawyer: plan.influencerRates.commissionRecruitmentAmountLawyer ?? null,
+      commissionRecruitmentAmountExpat: plan.influencerRates.commissionRecruitmentAmountExpat ?? null,
+      _activePlanName: plan.name,
+      _propagatedAt: Timestamp.now(),
+    }, { merge: true });
+
+    const bloggerRef = db.doc("blogger_config/current");
+    batch.set(bloggerRef, {
+      commissionClientAmount: plan.bloggerRates.commissionClientAmount,
+      commissionClientAmountLawyer: plan.bloggerRates.commissionClientAmountLawyer ?? null,
+      commissionClientAmountExpat: plan.bloggerRates.commissionClientAmountExpat ?? null,
+      commissionRecruitmentAmount: plan.bloggerRates.commissionRecruitmentAmount,
+      commissionRecruitmentAmountLawyer: plan.bloggerRates.commissionRecruitmentAmountLawyer ?? null,
+      commissionRecruitmentAmountExpat: plan.bloggerRates.commissionRecruitmentAmountExpat ?? null,
+      _activePlanName: plan.name,
+      _propagatedAt: Timestamp.now(),
+    }, { merge: true });
+
+    const groupAdminRef = db.doc("group_admin_config/current");
+    batch.set(groupAdminRef, {
+      commissionClientCallAmount: plan.groupAdminRates.commissionClientCallAmount ?? null,
+      commissionClientAmountLawyer: plan.groupAdminRates.commissionClientAmountLawyer ?? null,
+      commissionClientAmountExpat: plan.groupAdminRates.commissionClientAmountExpat ?? null,
+      commissionN1CallAmount: plan.groupAdminRates.commissionN1CallAmount,
+      commissionN2CallAmount: plan.groupAdminRates.commissionN2CallAmount,
+      commissionActivationBonusAmount: plan.groupAdminRates.commissionActivationBonusAmount,
+      commissionN1RecruitBonusAmount: plan.groupAdminRates.commissionN1RecruitBonusAmount,
+      _activePlanName: plan.name,
+      _propagatedAt: Timestamp.now(),
+    }, { merge: true });
+
+    logger.info("[manageCommissionPlans] Plan rates propagated to config docs", {
+      planName: plan.name,
+    });
+  } else {
+    // No active plan: revert to default rates
+    // Delete all plan-propagated commission fields + metadata so config services
+    // fall back to their DEFAULT_*_CONFIG values
+    const { FieldValue } = await import("firebase-admin/firestore");
+    const del = FieldValue.delete();
+
+    // Chatter: remove all propagated fields
+    const chatterRef = db.doc("chatter_config/current");
+    batch.set(chatterRef, {
+      commissionClientCallAmount: del,
+      commissionClientCallAmountLawyer: del,
+      commissionClientCallAmountExpat: del,
+      commissionN1CallAmount: del,
+      commissionN2CallAmount: del,
+      commissionActivationBonusAmount: del,
+      commissionN1RecruitBonusAmount: del,
+      commissionProviderCallAmount: del,
+      commissionProviderCallAmountLawyer: del,
+      commissionProviderCallAmountExpat: del,
+      commissionCaptainCallAmountLawyer: del,
+      commissionCaptainCallAmountExpat: del,
+      _activePlanName: del,
+      _propagatedAt: del,
+    }, { merge: true });
+
+    // Influencer: remove all propagated fields
+    const influencerRef = db.doc("influencer_config/current");
+    batch.set(influencerRef, {
+      commissionClientAmount: del,
+      commissionClientAmountLawyer: del,
+      commissionClientAmountExpat: del,
+      commissionRecruitmentAmount: del,
+      commissionRecruitmentAmountLawyer: del,
+      commissionRecruitmentAmountExpat: del,
+      _activePlanName: del,
+      _propagatedAt: del,
+    }, { merge: true });
+
+    // Blogger: remove all propagated fields
+    const bloggerRef = db.doc("blogger_config/current");
+    batch.set(bloggerRef, {
+      commissionClientAmount: del,
+      commissionClientAmountLawyer: del,
+      commissionClientAmountExpat: del,
+      commissionRecruitmentAmount: del,
+      commissionRecruitmentAmountLawyer: del,
+      commissionRecruitmentAmountExpat: del,
+      _activePlanName: del,
+      _propagatedAt: del,
+    }, { merge: true });
+
+    // GroupAdmin: remove all propagated fields
+    const groupAdminRef = db.doc("group_admin_config/current");
+    batch.set(groupAdminRef, {
+      commissionClientCallAmount: del,
+      commissionClientAmountLawyer: del,
+      commissionClientAmountExpat: del,
+      commissionN1CallAmount: del,
+      commissionN2CallAmount: del,
+      commissionActivationBonusAmount: del,
+      commissionN1RecruitBonusAmount: del,
+      _activePlanName: del,
+      _propagatedAt: del,
+    }, { merge: true });
+
+    logger.info("[manageCommissionPlans] Plan rates reverted to defaults on config docs");
+  }
+
+  await batch.commit();
+}
+
+/**
+ * Check if a plan is currently active (within date range and enabled)
+ */
+function isPlanCurrentlyActive(plan: { isActive: boolean; startDate: Timestamp; endDate: Timestamp }): boolean {
+  if (!plan.isActive) return false;
+  const now = new Date();
+  return plan.startDate.toDate() <= now && plan.endDate.toDate() >= now;
+}
+
+// ============================================================================
 // CALLABLE: manageCommissionPlans
 // ============================================================================
 
@@ -209,6 +351,11 @@ async function createPlan(
   await planRef.set(plan);
   clearPlanCache();
 
+  // Propagate to config docs if plan is currently active
+  if (isPlanCurrentlyActive(plan)) {
+    await propagatePlanToConfigs(db, plan);
+  }
+
   logger.info("[manageCommissionPlans] Plan created", {
     planId: planRef.id,
     name: data.name,
@@ -258,6 +405,19 @@ async function updatePlan(
   await planRef.update(updates);
   clearPlanCache();
 
+  // Re-check if plan is currently active after update and propagate
+  const updatedDoc = await planRef.get();
+  const updatedPlan = updatedDoc.data() as CommissionPlan;
+  if (isPlanCurrentlyActive(updatedPlan)) {
+    await propagatePlanToConfigs(db, updatedPlan);
+  } else {
+    // Plan was deactivated or date range changed — check if ANY other plan is active
+    const activePlanResult = await getActivePlan(db);
+    if (!activePlanResult.plan) {
+      await propagatePlanToConfigs(db, null); // Revert to defaults
+    }
+  }
+
   logger.info("[manageCommissionPlans] Plan updated", {
     planId: data.planId,
     adminId,
@@ -282,6 +442,12 @@ async function deletePlan(db: FirebaseFirestore.Firestore, planId: string) {
 
   await planRef.delete();
   clearPlanCache();
+
+  // Check if any other plan is active, revert if not
+  const activePlanResult = await getActivePlan(db);
+  if (!activePlanResult.plan) {
+    await propagatePlanToConfigs(db, null);
+  }
 
   logger.info("[manageCommissionPlans] Plan deleted", { planId });
 

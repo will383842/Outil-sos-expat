@@ -310,6 +310,8 @@ export interface Blogger {
   rateLockDate?: string;
   /** Snapshot of commission rates frozen at registration (amounts in cents) */
   lockedRates?: Record<string, number>;
+  /** Admin-set individual rate overrides (highest priority, separate from plan snapshot) */
+  individualRates?: Record<string, number>;
 
   // ---- Recruitment (who recruited this blogger) ----
 

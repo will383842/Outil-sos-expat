@@ -275,9 +275,19 @@ export function getFlashBonusMultiplier(_config: ChatterConfig): number {
  * lockedRates take absolute priority over config when present
  * Note: All multipliers have been permanently removed.
  */
-export function getClientCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null): number {
+export function getClientCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
   let base: number;
-  // Locked rates take priority (lifetime rate lock)
+  // PRIORITY 1: Individual admin overrides
+  if (individualRates) {
+    if (providerType === 'lawyer' && individualRates.commissionClientCallAmountLawyer != null) {
+      return Math.round(individualRates.commissionClientCallAmountLawyer);
+    } else if (providerType === 'expat' && individualRates.commissionClientCallAmountExpat != null) {
+      return Math.round(individualRates.commissionClientCallAmountExpat);
+    } else if (individualRates.commissionClientCallAmount != null) {
+      return Math.round(individualRates.commissionClientCallAmount);
+    }
+  }
+  // PRIORITY 2: Locked rates (lifetime rate lock)
   if (lockedRates) {
     if (providerType === 'lawyer' && lockedRates.commissionClientCallAmountLawyer != null) {
       base = lockedRates.commissionClientCallAmountLawyer;
@@ -308,8 +318,8 @@ function getClientCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'exp
  * Get commission amount for N1 referral call
  * Applies flash bonus multiplier if active
  */
-export function getN1CallCommission(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
-  const base = lockedRates?.commissionN1CallAmount ?? config.commissionN1CallAmount ?? 100;
+export function getN1CallCommission(config: ChatterConfig, lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
+  const base = individualRates?.commissionN1CallAmount ?? lockedRates?.commissionN1CallAmount ?? config.commissionN1CallAmount ?? 100;
   return Math.round(base);
 }
 
@@ -317,8 +327,8 @@ export function getN1CallCommission(config: ChatterConfig, lockedRates?: Record<
  * Get commission amount for N2 referral call
  * Applies flash bonus multiplier if active
  */
-export function getN2CallCommission(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
-  const base = lockedRates?.commissionN2CallAmount ?? config.commissionN2CallAmount ?? 50;
+export function getN2CallCommission(config: ChatterConfig, lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
+  const base = individualRates?.commissionN2CallAmount ?? lockedRates?.commissionN2CallAmount ?? config.commissionN2CallAmount ?? 50;
   return Math.round(base);
 }
 
@@ -326,8 +336,8 @@ export function getN2CallCommission(config: ChatterConfig, lockedRates?: Record<
  * Get activation bonus amount (after referral's 2nd call)
  * Applies flash bonus multiplier if active
  */
-export function getActivationBonusAmount(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
-  const base = lockedRates?.commissionActivationBonusAmount ?? config.commissionActivationBonusAmount ?? 500;
+export function getActivationBonusAmount(config: ChatterConfig, lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
+  const base = individualRates?.commissionActivationBonusAmount ?? lockedRates?.commissionActivationBonusAmount ?? config.commissionActivationBonusAmount ?? 500;
   return Math.round(base);
 }
 
@@ -335,8 +345,8 @@ export function getActivationBonusAmount(config: ChatterConfig, lockedRates?: Re
  * Get N1 recruit bonus amount (when N1 recruits someone who activates)
  * Applies flash bonus multiplier if active
  */
-export function getN1RecruitBonusAmount(config: ChatterConfig, lockedRates?: Record<string, number> | null): number {
-  const base = lockedRates?.commissionN1RecruitBonusAmount ?? config.commissionN1RecruitBonusAmount ?? 100;
+export function getN1RecruitBonusAmount(config: ChatterConfig, lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
+  const base = individualRates?.commissionN1RecruitBonusAmount ?? lockedRates?.commissionN1RecruitBonusAmount ?? config.commissionN1RecruitBonusAmount ?? 100;
   return Math.round(base);
 }
 
@@ -351,8 +361,19 @@ export function getActivationCallsRequired(config: ChatterConfig): number {
  * Get commission amount for recruited provider's call
  * Applies flash bonus multiplier if active
  */
-export function getProviderCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null): number {
+export function getProviderCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
   let base: number;
+  // PRIORITY 1: Individual admin overrides
+  if (individualRates) {
+    if (providerType === 'lawyer' && individualRates.commissionProviderCallAmountLawyer != null) {
+      return Math.round(individualRates.commissionProviderCallAmountLawyer);
+    } else if (providerType === 'expat' && individualRates.commissionProviderCallAmountExpat != null) {
+      return Math.round(individualRates.commissionProviderCallAmountExpat);
+    } else if (individualRates.commissionProviderCallAmount != null) {
+      return Math.round(individualRates.commissionProviderCallAmount);
+    }
+  }
+  // PRIORITY 2: Locked rates (lifetime rate lock)
   if (lockedRates) {
     if (providerType === 'lawyer' && lockedRates.commissionProviderCallAmountLawyer != null) {
       base = lockedRates.commissionProviderCallAmountLawyer;
@@ -382,16 +403,26 @@ function getProviderCallBase(config: ChatterConfig, providerType?: 'lawyer' | 'e
  * Get commission amount for captain chatter calls (N1/N2 of captain)
  * Flash bonus is applied when active (same as regular chatters)
  */
-export function getCaptainCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null): number {
+export function getCaptainCallCommission(config: ChatterConfig, providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): number {
   let base: number;
+  // PRIORITY 1: Individual admin overrides
+  if (individualRates) {
+    if (providerType === 'lawyer' && individualRates.commissionCaptainCallAmountLawyer != null) {
+      return Math.round(individualRates.commissionCaptainCallAmountLawyer);
+    } else if (providerType === 'expat' && individualRates.commissionCaptainCallAmountExpat != null) {
+      return Math.round(individualRates.commissionCaptainCallAmountExpat);
+    } else if (individualRates.commissionCaptainCallAmount != null) {
+      return Math.round(individualRates.commissionCaptainCallAmount);
+    }
+  }
+  // PRIORITY 2: Locked rates (lifetime rate lock)
   if (lockedRates) {
     if (providerType === 'lawyer' && lockedRates.commissionCaptainCallAmountLawyer != null) {
       base = lockedRates.commissionCaptainCallAmountLawyer;
     } else if (providerType === 'expat' && lockedRates.commissionCaptainCallAmountExpat != null) {
       base = lockedRates.commissionCaptainCallAmountExpat;
-    } else if (lockedRates.commissionClientCallAmount != null) {
-      base = lockedRates.commissionClientCallAmount;
     } else {
+      // BUG FIX: was using commissionClientCallAmount, should fall through to config
       base = getCaptainCallBase(config, providerType);
     }
   } else {

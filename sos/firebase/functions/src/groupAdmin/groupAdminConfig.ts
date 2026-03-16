@@ -162,8 +162,14 @@ export async function areWithdrawalsEnabled(): Promise<boolean> {
  * Locked rates take absolute priority over config when present.
  * Lawyer = $5, Expat = $3, fallback = $3
  */
-export async function getClientCommissionAmount(providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null): Promise<number> {
-  // Locked rates take priority (Lifetime Rate Lock)
+export async function getClientCommissionAmount(providerType?: 'lawyer' | 'expat', lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): Promise<number> {
+  // PRIORITY 1: Individual admin overrides
+  if (individualRates) {
+    if (providerType === 'lawyer' && individualRates.commissionClientAmountLawyer != null) return individualRates.commissionClientAmountLawyer;
+    if (providerType === 'expat' && individualRates.commissionClientAmountExpat != null) return individualRates.commissionClientAmountExpat;
+    if (individualRates.commissionClientCallAmount != null) return individualRates.commissionClientCallAmount;
+  }
+  // PRIORITY 2: Locked rates (Lifetime Rate Lock)
   if (lockedRates) {
     if (providerType === 'lawyer' && lockedRates.commissionClientAmountLawyer != null) return lockedRates.commissionClientAmountLawyer;
     if (providerType === 'expat' && lockedRates.commissionClientAmountExpat != null) return lockedRates.commissionClientAmountExpat;
@@ -182,7 +188,8 @@ export async function getClientCommissionAmount(providerType?: 'lawyer' | 'expat
 /**
  * Get N1 call commission amount in cents ($1 per N1 recruit's client call)
  */
-export async function getN1CallAmount(lockedRates?: Record<string, number> | null): Promise<number> {
+export async function getN1CallAmount(lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): Promise<number> {
+  if (individualRates?.commissionN1CallAmount != null) return individualRates.commissionN1CallAmount;
   if (lockedRates?.commissionN1CallAmount != null) return lockedRates.commissionN1CallAmount;
   const config = await getGroupAdminConfig();
   return config.commissionN1CallAmount ?? 100;
@@ -191,7 +198,8 @@ export async function getN1CallAmount(lockedRates?: Record<string, number> | nul
 /**
  * Get N2 call commission amount in cents ($0.50 per N2 recruit's client call)
  */
-export async function getN2CallAmount(lockedRates?: Record<string, number> | null): Promise<number> {
+export async function getN2CallAmount(lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): Promise<number> {
+  if (individualRates?.commissionN2CallAmount != null) return individualRates.commissionN2CallAmount;
   if (lockedRates?.commissionN2CallAmount != null) return lockedRates.commissionN2CallAmount;
   const config = await getGroupAdminConfig();
   return config.commissionN2CallAmount ?? 50;
@@ -200,7 +208,8 @@ export async function getN2CallAmount(lockedRates?: Record<string, number> | nul
 /**
  * Get activation bonus amount in cents ($5 when recruit makes 2 referrals)
  */
-export async function getActivationBonusAmount(lockedRates?: Record<string, number> | null): Promise<number> {
+export async function getActivationBonusAmount(lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): Promise<number> {
+  if (individualRates?.commissionActivationBonusAmount != null) return individualRates.commissionActivationBonusAmount;
   if (lockedRates?.commissionActivationBonusAmount != null) return lockedRates.commissionActivationBonusAmount;
   const config = await getGroupAdminConfig();
   return config.commissionActivationBonusAmount ?? 500;
@@ -209,7 +218,8 @@ export async function getActivationBonusAmount(lockedRates?: Record<string, numb
 /**
  * Get N1 recruit bonus amount in cents ($1 when N1 recruits a N2)
  */
-export async function getN1RecruitBonusAmount(lockedRates?: Record<string, number> | null): Promise<number> {
+export async function getN1RecruitBonusAmount(lockedRates?: Record<string, number> | null, individualRates?: Record<string, number> | null): Promise<number> {
+  if (individualRates?.commissionN1RecruitBonusAmount != null) return individualRates.commissionN1RecruitBonusAmount;
   if (lockedRates?.commissionN1RecruitBonusAmount != null) return lockedRates.commissionN1RecruitBonusAmount;
   const config = await getGroupAdminConfig();
   return config.commissionN1RecruitBonusAmount ?? 100;

@@ -127,8 +127,9 @@ export async function createBloggerCommission(
     }
 
     // 4. Calculate amount (FIXED - NO BONUSES)
-    // Locked rates (Lifetime Rate Lock) take priority over config
+    // Priority: individualRates > lockedRates > config > defaults
     const locked = blogger.lockedRates;
+    const individual = blogger.individualRates;
     let amount: number;
 
     if (inputBaseAmount !== undefined) {
@@ -136,7 +137,29 @@ export async function createBloggerCommission(
     } else {
       switch (type) {
         case "client_referral":
-          if (locked) {
+          // PRIORITY 1: Individual admin overrides
+          if (individual) {
+            if (providerType === 'lawyer' && individual.commissionClientAmountLawyer != null) {
+              amount = individual.commissionClientAmountLawyer;
+            } else if (providerType === 'expat' && individual.commissionClientAmountExpat != null) {
+              amount = individual.commissionClientAmountExpat;
+            } else if (individual.commissionClientAmount != null) {
+              amount = individual.commissionClientAmount;
+            } else if (locked) {
+              // PRIORITY 2: Locked rates
+              if (providerType === 'lawyer' && locked.commissionClientAmountLawyer != null) {
+                amount = locked.commissionClientAmountLawyer;
+              } else if (providerType === 'expat' && locked.commissionClientAmountExpat != null) {
+                amount = locked.commissionClientAmountExpat;
+              } else if (locked.commissionClientAmount != null) {
+                amount = locked.commissionClientAmount;
+              } else {
+                amount = getClientAmountFromConfig(config, providerType);
+              }
+            } else {
+              amount = getClientAmountFromConfig(config, providerType);
+            }
+          } else if (locked) {
             if (providerType === 'lawyer' && locked.commissionClientAmountLawyer != null) {
               amount = locked.commissionClientAmountLawyer;
             } else if (providerType === 'expat' && locked.commissionClientAmountExpat != null) {
@@ -151,7 +174,29 @@ export async function createBloggerCommission(
           }
           break;
         case "recruitment":
-          if (locked) {
+          // PRIORITY 1: Individual admin overrides
+          if (individual) {
+            if (providerType === 'lawyer' && individual.commissionRecruitmentAmountLawyer != null) {
+              amount = individual.commissionRecruitmentAmountLawyer;
+            } else if (providerType === 'expat' && individual.commissionRecruitmentAmountExpat != null) {
+              amount = individual.commissionRecruitmentAmountExpat;
+            } else if (individual.commissionRecruitmentAmount != null) {
+              amount = individual.commissionRecruitmentAmount;
+            } else if (locked) {
+              // PRIORITY 2: Locked rates
+              if (providerType === 'lawyer' && locked.commissionRecruitmentAmountLawyer != null) {
+                amount = locked.commissionRecruitmentAmountLawyer;
+              } else if (providerType === 'expat' && locked.commissionRecruitmentAmountExpat != null) {
+                amount = locked.commissionRecruitmentAmountExpat;
+              } else if (locked.commissionRecruitmentAmount != null) {
+                amount = locked.commissionRecruitmentAmount;
+              } else {
+                amount = getRecruitmentAmountFromConfig(config, providerType);
+              }
+            } else {
+              amount = getRecruitmentAmountFromConfig(config, providerType);
+            }
+          } else if (locked) {
             if (providerType === 'lawyer' && locked.commissionRecruitmentAmountLawyer != null) {
               amount = locked.commissionRecruitmentAmountLawyer;
             } else if (providerType === 'expat' && locked.commissionRecruitmentAmountExpat != null) {

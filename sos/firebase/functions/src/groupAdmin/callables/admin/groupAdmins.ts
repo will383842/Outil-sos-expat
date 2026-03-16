@@ -1115,18 +1115,18 @@ export const adminUpdateGroupAdminLockedRates = onCall(
       }
 
       const currentData = groupAdminDoc.data()!;
-      const currentRates = currentData.lockedRates || {};
+      const currentRates = currentData.individualRates || {};
       const mergedRates = { ...currentRates, ...sanitizedRates };
 
       await groupAdminRef.update({
-        lockedRates: mergedRates,
+        individualRates: mergedRates,
         ...(currentData.commissionPlanId ? {} : {
           commissionPlanName: `Admin override by ${adminId}`,
           rateLockDate: new Date().toISOString(),
         }),
       });
 
-      logger.info("[adminUpdateGroupAdminLockedRates] Rates updated", {
+      logger.info("[adminUpdateGroupAdminLockedRates] individualRates updated", {
         groupAdminId,
         adminId,
         previousRates: currentRates,
@@ -1137,7 +1137,7 @@ export const adminUpdateGroupAdminLockedRates = onCall(
     } catch (error) {
       if (error instanceof HttpsError) throw error;
       logger.error("[adminUpdateGroupAdminLockedRates] Error", { error });
-      throw new HttpsError("internal", "Failed to update locked rates");
+      throw new HttpsError("internal", "Failed to update individualRates");
     }
   }
 );

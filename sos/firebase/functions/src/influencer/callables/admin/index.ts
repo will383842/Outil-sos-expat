@@ -1120,18 +1120,18 @@ export const adminUpdateInfluencerLockedRates = onCall(
       }
 
       const currentData = influencerDoc.data()!;
-      const currentRates = currentData.lockedRates || {};
+      const currentRates = currentData.individualRates || {};
       const mergedRates = { ...currentRates, ...sanitizedRates };
 
       await influencerRef.update({
-        lockedRates: mergedRates,
+        individualRates: mergedRates,
         ...(currentData.commissionPlanId ? {} : {
           commissionPlanName: `Admin override by ${adminId}`,
           rateLockDate: new Date().toISOString(),
         }),
       });
 
-      logger.info("[adminUpdateInfluencerLockedRates] Rates updated", {
+      logger.info("[adminUpdateInfluencerLockedRates] individualRates updated", {
         influencerId,
         adminId,
         previousRates: currentRates,
@@ -1142,7 +1142,7 @@ export const adminUpdateInfluencerLockedRates = onCall(
     } catch (error) {
       if (error instanceof HttpsError) throw error;
       logger.error("[adminUpdateInfluencerLockedRates] Error", { error });
-      throw new HttpsError("internal", "Failed to update locked rates");
+      throw new HttpsError("internal", "Failed to update individualRates");
     }
   }
 );

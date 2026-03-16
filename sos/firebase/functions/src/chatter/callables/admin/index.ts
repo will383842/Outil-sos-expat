@@ -1093,11 +1093,11 @@ export const adminUpdateChatterLockedRates = onCall(
       }
 
       const currentData = chatterDoc.data()!;
-      const currentRates = currentData.lockedRates || {};
+      const currentRates = currentData.individualRates || {};
       const mergedRates = { ...currentRates, ...sanitizedRates };
 
       await chatterRef.update({
-        lockedRates: mergedRates,
+        individualRates: mergedRates,
         // Set plan metadata if not already present
         ...(currentData.commissionPlanId ? {} : {
           commissionPlanName: `Admin override by ${adminId}`,
@@ -1105,7 +1105,7 @@ export const adminUpdateChatterLockedRates = onCall(
         }),
       });
 
-      logger.info("[adminUpdateChatterLockedRates] Rates updated", {
+      logger.info("[adminUpdateChatterLockedRates] individualRates updated", {
         chatterId,
         adminId,
         previousRates: currentRates,
@@ -1116,7 +1116,7 @@ export const adminUpdateChatterLockedRates = onCall(
     } catch (error) {
       if (error instanceof HttpsError) throw error;
       logger.error("[adminUpdateChatterLockedRates] Error", { error });
-      throw new HttpsError("internal", "Failed to update locked rates");
+      throw new HttpsError("internal", "Failed to update individualRates");
     }
   }
 );

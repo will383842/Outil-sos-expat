@@ -163,8 +163,13 @@ function planRatesToRecord(
 export function getLockedRate(
   lockedRates: Record<string, number> | undefined | null,
   key: string,
-  fallback: number
+  fallback: number,
+  individualRates?: Record<string, number> | null
 ): number {
+  // individualRates take absolute priority
+  if (individualRates && key in individualRates) {
+    return individualRates[key];
+  }
   if (lockedRates && key in lockedRates) {
     return lockedRates[key];
   }
@@ -193,9 +198,17 @@ export function getLockedRateByProviderType(
   providerType: "lawyer" | "expat" | undefined,
   configGeneric: number,
   configLawyer: number | undefined,
-  configExpat: number | undefined
+  configExpat: number | undefined,
+  individualRates?: Record<string, number> | null
 ): number {
-  // If locked rates exist, use them (they take absolute priority)
+  // individualRates take absolute priority
+  if (individualRates) {
+    if (providerType === "lawyer" && lawyerKey in individualRates) return individualRates[lawyerKey];
+    if (providerType === "expat" && expatKey in individualRates) return individualRates[expatKey];
+    if (genericKey in individualRates) return individualRates[genericKey];
+  }
+
+  // lockedRates second priority
   if (lockedRates) {
     if (providerType === "lawyer" && lawyerKey in lockedRates) {
       return lockedRates[lawyerKey];
@@ -208,7 +221,7 @@ export function getLockedRateByProviderType(
     }
   }
 
-  // No locked rates or key not found — use global config
+  // Config fallback
   if (providerType === "lawyer" && configLawyer != null) {
     return configLawyer;
   }

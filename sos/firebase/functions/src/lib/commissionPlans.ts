@@ -143,4 +143,6 @@ export interface LockedRatesFields {
   rateLockDate?: string;
   /** Snapshot of commission rates frozen at registration */
   lockedRates?: Record<string, number>;
+  /** Admin-set individual rate overrides (highest priority, separate from plan snapshot) */
+  individualRates?: Record<string, number>;
 }

@@ -53,7 +53,8 @@ export function calculateCommission(
   capturedRates?: CapturedRates,
   actionType?: CommissionActionType,
   providerType?: 'lawyer' | 'expat',
-  lockedRates?: Record<string, number> | null
+  lockedRates?: Record<string, number> | null,
+  individualRates?: Record<string, number> | null
 ): CommissionCalculationResult {
   if (!rule.enabled) {
     return {
@@ -68,7 +69,39 @@ export function calculateCommission(
     };
   }
 
-  // Override by provider type if split amounts are defined
+  // PRIORITY 1: Individual admin overrides (highest priority)
+  if (individualRates && providerType && actionType) {
+    const individualAmount = getIndividualOrLockedAmount(individualRates, actionType, providerType);
+    if (individualAmount != null) {
+      return {
+        success: true,
+        amount: individualAmount,
+        calculationType: 'fixed',
+        baseAmount: baseAmountCents,
+        fixedAmount: individualAmount,
+        rateApplied: null,
+        calculationDetails: `Taux individuel admin: ${formatCents(individualAmount)}`,
+      };
+    }
+  }
+
+  // PRIORITY 2: Locked rates from commission plan at registration (lifetime lock)
+  if (lockedRates && providerType && actionType) {
+    const lockedAmount = getIndividualOrLockedAmount(lockedRates, actionType, providerType);
+    if (lockedAmount != null) {
+      return {
+        success: true,
+        amount: lockedAmount,
+        calculationType: 'fixed',
+        baseAmount: baseAmountCents,
+        fixedAmount: lockedAmount,
+        rateApplied: null,
+        calculationDetails: `Taux plan verrouillé: ${formatCents(lockedAmount)}`,
+      };
+    }
+  }
+
+  // PRIORITY 3: Rule-level provider type split (global config)
   if (providerType === 'lawyer' && rule.fixedAmountLawyer != null) {
     return {
       success: true,
@@ -96,8 +129,8 @@ export function calculateCommission(
     let amount = 0;
     let calculationDetails = "";
 
-    // Get rate to apply: lockedRates (plan) > capturedRates (legacy) > rule defaults
-    const effectiveRate = getEffectiveRate(rule, capturedRates, actionType, lockedRates);
+    // PRIORITY 4: capturedRates (legacy) > rule defaults
+    const effectiveRate = getEffectiveRate(rule, capturedRates, actionType);
 
     switch (rule.type) {
       case "fixed":
@@ -184,13 +217,13 @@ export function calculateCommission(
 }
 
 /**
- * Get effective rate: lockedRates (plan) > capturedRates (legacy) > rule defaults
+ * Get effective rate: capturedRates (legacy) > rule defaults
+ * Note: individualRates and lockedRates are handled earlier in calculateCommission()
  */
 function getEffectiveRate(
   rule: CommissionRule,
   capturedRates?: CapturedRates,
-  actionType?: CommissionActionType,
-  lockedRates?: Record<string, number> | null
+  actionType?: CommissionActionType
 ): { fixedAmount: number; percentageRate: number } {
   if (!actionType) {
     return {
@@ -203,27 +236,27 @@ function getEffectiveRate(
   switch (actionType) {
     case "referral_signup":
       return {
-        fixedAmount: lockedRates?.signupBonus ?? capturedRates?.signupBonus ?? rule.fixedAmount,
+        fixedAmount: capturedRates?.signupBonus ?? rule.fixedAmount,
         percentageRate: 0,
       };
 
     case "referral_first_call":
     case "referral_recurring_call":
       return {
-        fixedAmount: lockedRates?.callFixedBonus ?? capturedRates?.callFixedBonus ?? rule.fixedAmount,
-        percentageRate: lockedRates?.callCommissionRate ?? capturedRates?.callCommissionRate ?? rule.percentageRate,
+        fixedAmount: capturedRates?.callFixedBonus ?? rule.fixedAmount,
+        percentageRate: capturedRates?.callCommissionRate ?? rule.percentageRate,
       };
 
     case "referral_subscription":
     case "referral_subscription_renewal":
       return {
-        fixedAmount: lockedRates?.subscriptionFixedBonus ?? capturedRates?.subscriptionFixedBonus ?? rule.fixedAmount,
-        percentageRate: lockedRates?.subscriptionRate ?? capturedRates?.subscriptionRate ?? rule.percentageRate,
+        fixedAmount: capturedRates?.subscriptionFixedBonus ?? rule.fixedAmount,
+        percentageRate: capturedRates?.subscriptionRate ?? rule.percentageRate,
       };
 
     case "referral_provider_validated":
       return {
-        fixedAmount: lockedRates?.providerValidationBonus ?? capturedRates?.providerValidationBonus ?? rule.fixedAmount,
+        fixedAmount: capturedRates?.providerValidationBonus ?? rule.fixedAmount,
         percentageRate: 0,
       };
 
@@ -239,6 +272,36 @@ function getEffectiveRate(
         percentageRate: rule.percentageRate,
       };
   }
+}
+
+/**
+ * Check individualRates or lockedRates for a provider-type-specific amount.
+ * Maps action types to their corresponding rate keys.
+ */
+function getIndividualOrLockedAmount(
+  rates: Record<string, number>,
+  actionType: CommissionActionType,
+  providerType: 'lawyer' | 'expat'
+): number | null {
+  // Map action types to rate key prefixes
+  const keyMap: Record<string, { lawyer: string; expat: string; generic: string }> = {
+    referral_first_call: { lawyer: 'callFixedBonusLawyer', expat: 'callFixedBonusExpat', generic: 'callFixedBonus' },
+    referral_recurring_call: { lawyer: 'callFixedBonusLawyer', expat: 'callFixedBonusExpat', generic: 'callFixedBonus' },
+    referral_signup: { lawyer: 'signupBonus', expat: 'signupBonus', generic: 'signupBonus' },
+    referral_provider_validated: { lawyer: 'providerValidationBonus', expat: 'providerValidationBonus', generic: 'providerValidationBonus' },
+  };
+
+  const keys = keyMap[actionType];
+  if (!keys) return null;
+
+  const specificKey = providerType === 'lawyer' ? keys.lawyer : keys.expat;
+  if (specificKey in rates && rates[specificKey] != null) {
+    return rates[specificKey];
+  }
+  if (keys.generic in rates && rates[keys.generic] != null) {
+    return rates[keys.generic];
+  }
+  return null;
 }
 
 /**

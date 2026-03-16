@@ -2183,18 +2183,18 @@ export const adminUpdateBloggerLockedRates = onCall(
       }
 
       const currentData = bloggerDoc.data()!;
-      const currentRates = currentData.lockedRates || {};
+      const currentRates = currentData.individualRates || {};
       const mergedRates = { ...currentRates, ...sanitizedRates };
 
       await bloggerRef.update({
-        lockedRates: mergedRates,
+        individualRates: mergedRates,
         ...(currentData.commissionPlanId ? {} : {
           commissionPlanName: `Admin override by ${adminId}`,
           rateLockDate: new Date().toISOString(),
         }),
       });
 
-      logger.info("[adminUpdateBloggerLockedRates] Rates updated", {
+      logger.info("[adminUpdateBloggerLockedRates] individualRates updated", {
         bloggerId,
         adminId,
         previousRates: currentRates,
@@ -2205,7 +2205,7 @@ export const adminUpdateBloggerLockedRates = onCall(
     } catch (error) {
       if (error instanceof HttpsError) throw error;
       logger.error("[adminUpdateBloggerLockedRates] Error", { error });
-      throw new HttpsError("internal", "Failed to update locked rates");
+      throw new HttpsError("internal", "Failed to update individualRates");
     }
   }
 );
