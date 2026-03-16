@@ -283,7 +283,7 @@ export function getPartnerStats(
 }
 
 export function getPartnerEarningsBreakdown(): Promise<EarningsBreakdown> {
-  return apiCall<EarningsBreakdown>('/partner/earnings');
+  return apiCall<EarningsBreakdown>('/partner/earnings/breakdown');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -409,8 +409,8 @@ export function adminBulkDeleteSubscribers(
   partnerId: string,
   ids: number[],
 ): Promise<void> {
-  return apiCall<void>(`/admin/partners/${partnerId}/subscribers/bulk-delete`, {
-    method: 'POST',
+  return apiCall<void>(`/admin/partners/${partnerId}/subscribers/bulk`, {
+    method: 'DELETE',
     body: { ids } as Record<string, unknown>,
   });
 }
@@ -437,4 +437,91 @@ export function adminGetAuditLog(params?: {
   if (params?.cursor) p.cursor = params.cursor;
 
   return apiCall<PaginatedResponse<any>>('/admin/audit-log', { params: p });
+}
+
+// --- Missing endpoints that exist in backend ---
+
+export function adminGetAgreementDetail(
+  partnerId: string,
+  agreementId: number,
+): Promise<Agreement> {
+  return apiCall<Agreement>(`/admin/partners/${partnerId}/agreements/${agreementId}`);
+}
+
+export function adminGetPartnerActivity(
+  partnerId: string,
+  params?: { cursor?: string },
+): Promise<PaginatedResponse<SubscriberActivity>> {
+  const p: Record<string, string> = {};
+  if (params?.cursor) p.cursor = params.cursor;
+
+  return apiCall<PaginatedResponse<SubscriberActivity>>(
+    `/admin/partners/${partnerId}/activity`,
+    { params: p },
+  );
+}
+
+export function adminGetCsvImportDetail(id: number): Promise<CsvImportResult> {
+  return apiCall<CsvImportResult>(`/admin/csv-imports/${id}`);
+}
+
+export function adminGetPartnerAuditLog(
+  partnerId: string,
+  params?: { cursor?: string },
+): Promise<PaginatedResponse<any>> {
+  const p: Record<string, string> = {};
+  if (params?.cursor) p.cursor = params.cursor;
+
+  return apiCall<PaginatedResponse<any>>(
+    `/admin/partners/${partnerId}/audit-log`,
+    { params: p },
+  );
+}
+
+export interface EmailTemplate {
+  id: number;
+  partner_firebase_id: string;
+  type: 'invitation' | 'reminder' | 'expiration';
+  subject: string;
+  body_html: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export function adminGetEmailTemplates(
+  partnerId: string,
+): Promise<EmailTemplate[]> {
+  return apiCall<EmailTemplate[]>(`/admin/partners/${partnerId}/email-templates`);
+}
+
+export function adminUpdateEmailTemplate(
+  partnerId: string,
+  type: string,
+  data: { subject: string; body_html: string; is_active?: boolean },
+): Promise<EmailTemplate> {
+  return apiCall<EmailTemplate>(`/admin/partners/${partnerId}/email-templates/${type}`, {
+    method: 'PUT',
+    body: data as Record<string, unknown>,
+  });
+}
+
+export function adminDeleteEmailTemplate(
+  partnerId: string,
+  type: string,
+): Promise<void> {
+  return apiCall<void>(`/admin/partners/${partnerId}/email-templates/${type}`, {
+    method: 'DELETE',
+  });
+}
+
+export function adminUpdatePartnerSubscriber(
+  partnerId: string,
+  subscriberId: number,
+  data: Partial<Subscriber>,
+): Promise<Subscriber> {
+  return apiCall<Subscriber>(`/admin/partners/${partnerId}/subscribers/${subscriberId}`, {
+    method: 'PUT',
+    body: data as Record<string, unknown>,
+  });
 }
