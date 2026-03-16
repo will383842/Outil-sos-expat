@@ -398,7 +398,9 @@ export async function handleCallCompleted(
           const recruiterDoc = await db.collection("users").doc(recruiterId).get();
           if (recruiterDoc.exists) {
             const recruiter = recruiterDoc.data()!;
-            const minDirect = 10000; // $100
+            const minDirect = recruiter.individualRates?.activationMinDirectCommissions
+                ?? recruiter.lockedRates?.activationMinDirectCommissions
+                ?? 10000; // $100 default
 
             if ((recruiter.totalEarned || 0) >= minDirect && !freshUser.activationBonusPaid) {
               const activationAmount = recruiter.individualRates?.commissionActivationBonusAmount

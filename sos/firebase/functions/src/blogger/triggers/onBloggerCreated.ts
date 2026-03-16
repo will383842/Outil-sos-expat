@@ -154,6 +154,22 @@ export const onBloggerCreated = onDocumentCreated(
             createdAt: Timestamp.now(),
           });
 
+          // Calculate and set parrainNiveau2Id (N2 grandparent)
+          const recruiterDoc = await db.collection("bloggers").doc(blogger.recruitedBy).get();
+          if (recruiterDoc.exists) {
+            const recruiterData = recruiterDoc.data();
+            if (recruiterData?.recruitedBy) {
+              await db.collection("bloggers").doc(bloggerId).update({
+                parrainNiveau2Id: recruiterData.recruitedBy,
+                updatedAt: Timestamp.now(),
+              });
+              logger.info("[onBloggerCreated] Set parrainNiveau2Id", {
+                bloggerId,
+                parrainNiveau2Id: recruiterData.recruitedBy,
+              });
+            }
+          }
+
           logger.info("[onBloggerCreated] Recruiter totalRecruits incremented + notified", {
             bloggerId,
             recruiterId: blogger.recruitedBy,

@@ -307,10 +307,24 @@ export async function handleAffiliateUserCreated(event: any) {
 
       // 10. Update referrer stats if applicable
       if (referredByUserId) {
+        const referrerDoc = await db.collection("users").doc(referredByUserId).get();
+        const referrerData = referrerDoc.exists ? referrerDoc.data() : null;
+
         await db.collection("users").doc(referredByUserId).update({
           "affiliateStats.totalReferrals": FieldValue.increment(1),
           updatedAt: Timestamp.now(),
         });
+
+        // Calculate parrainNiveau2Id for N2 MLM (grandparent referrer)
+        if (referrerData?.referredByUserId) {
+          await db.collection("users").doc(userId).update({
+            parrainNiveau2Id: referrerData.referredByUserId,
+          });
+          logger.info("[affiliateOnUserCreated] Set parrainNiveau2Id", {
+            userId,
+            parrainNiveau2Id: referrerData.referredByUserId,
+          });
+        }
 
         logger.info("[affiliateOnUserCreated] Updated referrer stats", {
           referrerId: referredByUserId,
