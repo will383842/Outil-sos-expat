@@ -254,17 +254,21 @@ select option{background:var(--surface2)}
   <div class="auth-box">
     <h2>Suivi Annonces Emploi</h2>
     <p>Connectez-vous pour accéder au tableau de bord</p>
-    <div class="auth-field">
-      <label>Votre nom / pseudo</label>
-      <input type="text" id="auth-name" placeholder="ex: William, Marie..." autofocus>
-    </div>
-    <div class="auth-field">
-      <label>Mot de passe maître</label>
-      <input type="password" id="auth-password" placeholder="Mot de passe d’accès">
-    </div>
-    <div class="auth-error" id="auth-error">Mot de passe incorrect</div>
-    <button class="btn-auth" onclick="attemptLogin()">Accéder</button>
-    <p style="font-size:.72rem;color:var(--muted);margin-top:1rem">Première connexion ? Le mot de passe sera défini automatiquement.</p>
+    <form id="auth-form" action="https://sos-expat.com/tools/job-tracker.html" method="GET" onsubmit="event.preventDefault();attemptLogin();">
+      <div class="auth-field">
+        <label for="auth-name">Votre nom / pseudo</label>
+        <input type="email" id="auth-name" name="username" autocomplete="username" placeholder="ex: williamsjullin@gmail.com" autofocus>
+      </div>
+      <div class="auth-field">
+        <label for="auth-password">Secret API</label>
+        <div class="password-field">
+          <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Secret API (ENGINE_API_SECRET)">
+          <button type="button" class="eye-btn" onclick="toggleAuthPwd()">&#x1f441;</button>
+        </div>
+      </div>
+      <div class="auth-error" id="auth-error">Mot de passe incorrect</div>
+      <button type="submit" class="btn-auth">Accéder</button>
+    </form>
   </div>
 </div>
 
@@ -753,6 +757,11 @@ async function attemptLogin(){
   }
 }
 
+function toggleAuthPwd(){
+  var i=document.getElementById("auth-password");
+  i.type=i.type==="password"?"text":"password";
+}
+
 function logout(){
   localStorage.removeItem("sos_adtracker_api_secret");
   localStorage.removeItem(AUTH_NAME_KEY);
@@ -794,10 +803,7 @@ function migrateAllPasswords(){
   if(changed){saveData(ads);saveSitesData(sites);}
 }
 
-// Enter key on auth
-document.getElementById("auth-password").addEventListener("keydown",function(e){
-  if(e.key==="Enter") attemptLogin();
-});
+// Enter key handled by <form> onsubmit — no manual listener needed
 document.getElementById("auth-name").addEventListener("keydown",function(e){
   if(e.key==="Enter") document.getElementById("auth-password").focus();
 });
