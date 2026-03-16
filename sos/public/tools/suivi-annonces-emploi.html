@@ -868,24 +868,29 @@ async function apiDelete(path,body){
 // ================================================================
 // STORAGE — PostgreSQL primary, localStorage cache
 // ================================================================
-// Map camelCase (frontend) <-> snake_case (backend)
+// Map camelCase (frontend) <-> snake_case (backend) — deep recursive
 function toSnake(obj){
-  if(!obj||typeof obj!=="object") return obj;
+  if(obj===null||obj===undefined) return obj;
+  if(typeof obj!=="object") return obj;
+  if(obj instanceof Date) return obj.toISOString();
   if(Array.isArray(obj)) return obj.map(toSnake);
   var out={};
   for(var k in obj){
+    if(!obj.hasOwnProperty(k)) continue;
     var sk=k.replace(/([A-Z])/g,function(m){return"_"+m.toLowerCase();});
-    out[sk]=obj[k];
+    out[sk]=toSnake(obj[k]);
   }
   return out;
 }
 function toCamel(obj){
-  if(!obj||typeof obj!=="object") return obj;
+  if(obj===null||obj===undefined) return obj;
+  if(typeof obj!=="object") return obj;
   if(Array.isArray(obj)) return obj.map(toCamel);
   var out={};
   for(var k in obj){
+    if(!obj.hasOwnProperty(k)) continue;
     var ck=k.replace(/_([a-z])/g,function(_,c){return c.toUpperCase();});
-    out[ck]=obj[k];
+    out[ck]=toCamel(obj[k]);
   }
   return out;
 }
