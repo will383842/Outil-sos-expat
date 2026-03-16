@@ -240,7 +240,7 @@ const BloggerLanding: React.FC = () => {
 
   // SEO
   const seoTitle = intl.formatMessage({ id: 'blogger.landing.seo.title', defaultMessage: 'Become a SOS-Expat Blogger Partner | Earn ${clientCallMax}$/call with your blog' }, { clientCallMax: rates.clientCallMax });
-  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Insert our widget in your articles. Earn ${clientCallMax}$ per call, {providerCall}$ per call from recruited providers. Widgets, logos, banners included. Withdraw via Wise or PayPal.' }, { clientCallMax: rates.clientCallMax, providerCall: rates.providerCall });
+  const seoDescription = intl.formatMessage({ id: 'blogger.landing.seo.description', defaultMessage: 'Insert our widget in your articles. Earn ${clientCallMax}$ per call, {providerCallRange}$ per call from recruited providers. Widgets, logos, banners included. Withdraw via Wise or PayPal.' }, { clientCallMax: rates.clientCallMax, providerCallRange: rates.providerCallRange });
   const ctaAriaLabel = intl.formatMessage({ id: 'blogger.aria.cta.main', defaultMessage: 'Start earning money with your blog - Register as a Blogger Partner for free' });
 
   // FAQ
@@ -354,7 +354,7 @@ const BloggerLanding: React.FC = () => {
                   <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="blogger.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.providerCall * 30 * 10}</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.providerCallMax * 30 * 10}</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source3" defaultMessage="avec 10 partenaires" /></div>
                 </div>
               </div>
@@ -364,8 +364,8 @@ const BloggerLanding: React.FC = () => {
                 <p className="text-xs sm:text-sm">
                   <FormattedMessage
                     id="blogger.hero.partnerExample"
-                    defaultMessage="💡 1 prestataire recruté = 30 appels/mois × ${providerCall}$ = {total}/mois passifs à vie !"
-                    values={{ providerCall: rates.providerCall, total: <span className="text-purple-400 font-bold">${rates.providerCall * 30}</span> }}
+                    defaultMessage="💡 1 prestataire recruté = 30 appels/mois × ${providerCallMax}$ = {total}/mois passifs à vie !"
+                    values={{ providerCallMax: rates.providerCallMax, total: <span className="text-purple-400 font-bold">${rates.providerCallMax * 30}</span> }}
                   />
                 </p>
               </div>
@@ -1059,14 +1059,14 @@ const BloggerLanding: React.FC = () => {
                     <UserPlus className="w-5 h-5 text-purple-400" aria-hidden="true" />
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-black">${rates.providerCall}</div>
+                    <div className="text-2xl sm:text-3xl font-black">${rates.providerCallRange}</div>
                     <div className="text-xs sm:text-sm">
-                      <FormattedMessage id="blogger.earnings.partner" defaultMessage="Per call to your lawyer or expat helper partners" />
+                      <FormattedMessage id="blogger.earnings.partner" defaultMessage="Per call to your recruited partners" />
                     </div>
                   </div>
                 </div>
                 <p className="text-sm">
-                  <FormattedMessage id="blogger.earnings.partner.desc" defaultMessage="Recrutez un prestataire (avocat, aidant, expert...) sur SOS-Expat. Chaque fois qu'il reçoit un appel, vous gagnez {providerCall}$ passivement, sans rien faire !" values={{ providerCall: rates.providerCall }} />
+                  <FormattedMessage id="blogger.earnings.partner.desc" defaultMessage="Recrutez un prestataire sur SOS-Expat : {providerCall}$/appel (avocat), {providerCallExp}$/appel (aidant expat). Chaque fois qu'il reçoit un appel, vous gagnez passivement, sans rien faire !" values={{ providerCall: rates.providerCall, providerCallExp: rates.providerCallExp }} />
                 </p>
               </div>
               <div className="bg-white/10 border rounded-2xl p-5 sm:p-6">
@@ -1099,7 +1099,7 @@ const BloggerLanding: React.FC = () => {
                 <FormattedMessage id="blogger.passive.title" defaultMessage="Find Lawyer & Helper Partners" />
               </h2>
               <p className="text-base sm:text-lg max-w-2xl mx-auto">
-                <FormattedMessage id="blogger.passive.subtitle" defaultMessage="Connaissez un avocat, un aidant ou tout autre expert ? Aidez-les à rejoindre SOS-Expat et gagnez {providerCall}$ à chaque fois qu'ils reçoivent un appel — des revenus passifs illimités !" values={{ providerCall: rates.providerCall }} />
+                <FormattedMessage id="blogger.passive.subtitle" defaultMessage="Connaissez un avocat, un aidant ou tout autre expert ? Aidez-les à rejoindre SOS-Expat et gagnez {providerCallRange}$ à chaque fois qu'ils reçoivent un appel — des revenus passifs illimités !" values={{ providerCallRange: rates.providerCallRange }} />
               </p>
             </div>
 
@@ -1115,7 +1115,7 @@ const BloggerLanding: React.FC = () => {
                     <FormattedMessage id="blogger.passive.you" defaultMessage="VOUS" />
                   </span>
                   <span className="text-gray-300 text-xs sm:text-sm text-center">
-                    <FormattedMessage id="blogger.passive.you.earn" defaultMessage="${clientCallRange}/client + {providerCall}$/appel des prestataires" values={{ clientCallRange: rates.clientCallRange, providerCall: rates.providerCall }} />
+                    <FormattedMessage id="blogger.passive.you.earn" defaultMessage="${clientCallRange}/client + {providerCallRange}$/appel des prestataires" values={{ clientCallRange: rates.clientCallRange, providerCallRange: rates.providerCallRange }} />
                   </span>
                 </div>
 
@@ -1124,16 +1124,16 @@ const BloggerLanding: React.FC = () => {
                 {/* Partners */}
                 <div className="flex justify-center gap-4 sm:gap-8 w-full">
                   {[
-                    { emoji: '⚖️', labelId: 'blogger.passive.partner1', labelDefault: 'Avocat' },
-                    { emoji: '🌍', labelId: 'blogger.passive.partner2', labelDefault: 'Aidant expat' },
-                    { emoji: '💼', labelId: 'blogger.passive.partner3', labelDefault: 'Expert' },
+                    { emoji: '⚖️', labelId: 'blogger.passive.partner1', labelDefault: 'Avocat', rate: rates.providerCall },
+                    { emoji: '🌍', labelId: 'blogger.passive.partner2', labelDefault: 'Aidant expat', rate: rates.providerCallExp },
+                    { emoji: '💼', labelId: 'blogger.passive.partner3', labelDefault: 'Expert', rate: rates.providerCallRange },
                   ].map((item, i) => (
                     <div key={i} className="flex flex-col items-center gap-1">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 border border-white/20 rounded-full flex items-center justify-center text-xl sm:text-2xl">{item.emoji}</div>
                       <span className="text-xs sm:text-sm font-medium text-center">
                         <FormattedMessage id={item.labelId} defaultMessage={item.labelDefault} />
                       </span>
-                      <span className="text-xs text-green-400 font-bold">+${rates.providerCall}/appel</span>
+                      <span className="text-xs text-green-400 font-bold">+${item.rate}/appel</span>
                     </div>
                   ))}
                 </div>
@@ -1145,7 +1145,7 @@ const BloggerLanding: React.FC = () => {
                   <FormattedMessage id="blogger.passive.example" defaultMessage="Exemple : 3 prestataires recrutés, 20 appels/mois chacun" />
                 </p>
                 <p className="text-xl sm:text-2xl font-black text-green-400">
-                  = ${rates.providerCall * 60}/mois <FormattedMessage id="blogger.passive.passive" defaultMessage="de revenus passifs par mois !" />
+                  = ${rates.providerCallMax * 60}/mois <FormattedMessage id="blogger.passive.passive" defaultMessage="de revenus passifs par mois !" />
                 </p>
               </div>
             </div>

@@ -41,15 +41,18 @@ export interface CommissionRates {
   clientDiscountAmount: number;   // e.g. 500 ($5 in cents)
 
   // Formatted helpers (dollars)
-  clientCallRange: string;    // e.g. "3-5" (min-max of lawyer/expat)
-  clientCallMax: number;      // e.g. 5 (dollars, max of lawyer/expat)
-  providerCall: number;       // e.g. 5 (dollars, lawyer rate)
-  n1: number;                 // e.g. 1 (dollars)
-  n2: number;                 // e.g. 0.5 (dollars)
-  minWithdrawal: number;      // e.g. 30 (dollars)
-  linkDuration: number;       // e.g. 6 (months)
-  discount: number;           // e.g. 5 (5% or $5 depending on type)
-  discountLabel: string;      // e.g. "5%" or "5$"
+  clientCallRange: string;      // e.g. "3-5" (min-max of lawyer/expat)
+  clientCallMax: number;        // e.g. 5 (dollars, max of lawyer/expat)
+  providerCall: number;         // e.g. 5 (dollars, lawyer rate)
+  providerCallExp: number;      // e.g. 3 (dollars, expat rate)
+  providerCallRange: string;    // e.g. "3-5" or "5" (min-max of lawyer/expat recruitment)
+  providerCallMax: number;      // e.g. 5 (dollars, max of recruitment rates)
+  n1: number;                   // e.g. 1 (dollars)
+  n2: number;                   // e.g. 0.5 (dollars)
+  minWithdrawal: number;        // e.g. 30 (dollars)
+  linkDuration: number;         // e.g. 6 (months)
+  discount: number;             // e.g. 5 (5% or $5 depending on type)
+  discountLabel: string;        // e.g. "5%" or "5$"
 }
 
 type RoleConfigCollection = 'chatter_config' | 'influencer_config' | 'blogger_config' | 'group_admin_config';
@@ -140,11 +143,19 @@ function buildRates(raw: RawRates): CommissionRates {
     ? `${raw.clientDiscountAmount / 100}$`
     : `${raw.clientDiscountPercent}%`;
 
+  const provLawyer = raw.providerCallLawyer / 100;
+  const provExpat = raw.providerCallExpat / 100;
+  const provMin = Math.min(provLawyer, provExpat);
+  const provMax = Math.max(provLawyer, provExpat);
+
   return {
     ...raw,
     clientCallRange: minDollars === maxDollars ? `${maxDollars}` : `${minDollars}-${maxDollars}`,
     clientCallMax: maxDollars,
-    providerCall: raw.providerCallLawyer / 100,
+    providerCall: provLawyer,
+    providerCallExp: provExpat,
+    providerCallRange: provMin === provMax ? `${provMax}` : `${provMin}-${provMax}`,
+    providerCallMax: provMax,
     n1: raw.n1CallAmount / 100,
     n2: raw.n2CallAmount / 100,
     minWithdrawal: raw.minimumWithdrawal / 100,

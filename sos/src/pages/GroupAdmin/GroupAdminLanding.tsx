@@ -368,7 +368,7 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.hero.source2.subtitle" defaultMessage="bonus de recrutement" />
                   </div>
                   <div className="text-xs opacity-80">
-                    <FormattedMessage id="groupAdmin.landing.hero.source2.detail" defaultMessage="{providerCall}$ activation + {n1}$/appel membres" values={{ providerCall: rates.providerCall, n1: rates.n1 }} />
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.detail" defaultMessage="{providerCallRange}$ activation + {n1}$/appel membres" values={{ providerCallRange: rates.providerCallRange, n1: rates.n1 }} />
                   </div>
                 </div>
 
@@ -380,12 +380,12 @@ const GroupAdminLanding: React.FC = () => {
                   <div className="text-xs uppercase font-bold text-purple-400 mb-2 mt-1">
                     <FormattedMessage id="groupAdmin.landing.hero.source3.label" defaultMessage="⚖️ AVOCATS/AIDANTS" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black text-purple-400 mb-1">{rates.providerCall * 180}-{rates.providerCall * 1800}$</div>
+                  <div className="text-3xl sm:text-4xl font-black text-purple-400 mb-1">{rates.providerCallMax * 180}-{rates.providerCallMax * 1800}$</div>
                   <div className="text-sm font-semibold mb-2">
                     <FormattedMessage id="groupAdmin.landing.hero.source3.subtitle" defaultMessage="100% passifs" />
                   </div>
                   <div className="text-xs opacity-80">
-                    <FormattedMessage id="groupAdmin.landing.hero.source3.detail" defaultMessage="{providerCall}$/appel × partenaires" values={{ providerCall: rates.providerCall }} />
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.detail" defaultMessage="{providerCall}$ (avocat) / {providerCallExp}$ (aidant) × partenaires" values={{ providerCall: rates.providerCall, providerCallExp: rates.providerCallExp }} />
                   </div>
                 </div>
               </div>
@@ -402,10 +402,10 @@ const GroupAdminLanding: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs opacity-90 mb-1">
-                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="20 admins × {providerCall}$ activation + {n1}$/appel membres" values={{ providerCall: rates.providerCall, n1: rates.n1 }} />
+                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="20 admins × {providerCallRange}$ activation + {n1}$/appel membres" values={{ providerCallRange: rates.providerCallRange, n1: rates.n1 }} />
                     </div>
                     <div className="text-2xl font-black text-green-400">
-                      = {20 * rates.providerCall + 200 * rates.n1}$ <span className="text-sm font-normal text-white/80">
+                      = {20 * rates.providerCallMax + 200 * rates.n1}$ <span className="text-sm font-normal text-white/80">
                         <FormattedMessage id="groupAdmin.landing.hero.example1.frequency" defaultMessage="bonus" />
                       </span>
                     </div>

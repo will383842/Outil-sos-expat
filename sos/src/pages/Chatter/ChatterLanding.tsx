@@ -401,7 +401,7 @@ const ChatterLanding: React.FC = () => {
                   <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="chatter.landing.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">{rates.providerCall * 30 * 10}$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">{rates.providerCallMax * 30 * 10}$</div>
                   <div className="text-xs sm:text-sm"><FormattedMessage id="chatter.landing.hero.source3" defaultMessage="avec 10 partenaires" /></div>
                 </div>
               </div>
@@ -413,9 +413,9 @@ const ChatterLanding: React.FC = () => {
                     id="chatter.landing.hero.partnerExample"
                     defaultMessage="💡 1 partenaire (avocat/aidant) = 30 appels/mois × {providerRate}$ × {months} mois = {total} passifs !"
                     values={{
-                      providerRate: rates.providerCall,
+                      providerRate: rates.providerCallMax,
                       months: rates.linkDuration,
-                      total: <span className="text-purple-400 font-bold">{rates.providerCall * 30 * rates.linkDuration}$</span>,
+                      total: <span className="text-purple-400 font-bold">{rates.providerCallMax * 30 * rates.linkDuration}$</span>,
                     }}
                   />
                 </p>
@@ -531,21 +531,21 @@ const ChatterLanding: React.FC = () => {
               <article className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="text-3xl" aria-hidden="true">
-                    <FormattedMessage id="chatter.landing.money.method4.title" defaultMessage="⚖️ Recruter partenaires (5$/appel)" />
+                    <FormattedMessage id="chatter.landing.money.method4.title" defaultMessage="⚖️ Recruter partenaires ({providerRange}$/appel)" values={{ providerRange: rates.providerCallRange }} />
                   </div>
                 </div>
                 <div className="mb-3">
                   <span className="inline-flex items-center gap-1.5 bg-purple-500/20 border border-purple-500/30 rounded-full px-3 py-1 text-xs sm:text-sm font-bold text-purple-400">
                     <DollarSign className="w-3 h-3" aria-hidden="true" />
-                    <FormattedMessage id="chatter.landing.money.method4.time" defaultMessage="900$/partenaire" />
+                    <FormattedMessage id="chatter.landing.money.method4.time" defaultMessage="{total}$/partenaire" values={{ total: rates.providerCallMax * 30 * rates.linkDuration }} />
                   </span>
                 </div>
                 <p className="text-sm sm:text-base text-white/90 mb-3">
-                  <FormattedMessage id="chatter.landing.money.method4.desc" defaultMessage="Trouver 1 avocat/expat helper. Il fait 30 appels/mois × 5$ × 6 mois = 900$ passifs pour VOUS. Répétable à l'infini." />
+                  <FormattedMessage id="chatter.landing.money.method4.desc" defaultMessage="Trouver 1 avocat ({providerRate}$/appel) ou expat helper ({providerRateExp}$/appel). 30 appels/mois × {months} mois = {total}$ passifs pour VOUS. Répétable à l'infini." values={{ providerRate: rates.providerCall, providerRateExp: rates.providerCallExp, months: rates.linkDuration, total: rates.providerCallMax * 30 * rates.linkDuration }} />
                 </p>
                 <div className="bg-black/30 border border-purple-500/30 rounded-xl p-3">
                   <p className="text-xs sm:text-sm font-bold text-purple-400">
-                    🔥 <FormattedMessage id="chatter.landing.money.method4.action" defaultMessage="10 partenaires = 9000$" />
+                    🔥 <FormattedMessage id="chatter.landing.money.method4.action" defaultMessage="10 partenaires = {total}$" values={{ total: (rates.providerCallMax * 30 * rates.linkDuration * 10).toLocaleString() }} />
                   </p>
                 </div>
               </article>
@@ -636,8 +636,8 @@ const ChatterLanding: React.FC = () => {
                 <p className="text-base sm:text-lg lg:text-xl mb-4 sm:mb-5">
                   <FormattedMessage
                     id="chatter.landing.source3.desc.new"
-                    defaultMessage="Invitez des avocats ou expatriés aidants. Gagnez {providerRate}$ sur CHAQUE appel qu'ils reçoivent pendant {months} mois !"
-                    values={{ providerRate: rates.providerCall, months: rates.linkDuration }}
+                    defaultMessage="Invitez des avocats ou expatriés aidants. Gagnez {providerRange}$ sur CHAQUE appel qu'ils reçoivent pendant {months} mois !"
+                    values={{ providerRange: rates.providerCallRange, months: rates.linkDuration }}
                   />
                 </p>
 
@@ -648,13 +648,13 @@ const ChatterLanding: React.FC = () => {
                       <span className="text-sm sm:text-base">
                         <FormattedMessage id="chatter.landing.source3.calc1" defaultMessage="1 partenaire (30 appels/mois)" />
                       </span>
-                      <span className="text-lg sm:text-xl font-black">{rates.providerCall * 30}$/mois</span>
+                      <span className="text-lg sm:text-xl font-black">{rates.providerCallMax * 30}$/mois</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm sm:text-base">
                         <FormattedMessage id="chatter.landing.source3.calc2" defaultMessage="× {months} mois =" values={{ months: rates.linkDuration }} />
                       </span>
-                      <span className="text-xl sm:text-2xl font-black">{rates.providerCall * 30 * rates.linkDuration}$</span>
+                      <span className="text-xl sm:text-2xl font-black">{rates.providerCallMax * 30 * rates.linkDuration}$</span>
                     </div>
                     <div className="border-t pt-3 mt-3">
                       <div className="flex items-center justify-between">
@@ -662,7 +662,7 @@ const ChatterLanding: React.FC = () => {
                           <FormattedMessage id="chatter.landing.source3.calc3" defaultMessage="10 partenaires =" />
                         </span>
                         <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                          {(rates.providerCall * 30 * rates.linkDuration * 10).toLocaleString()}$
+                          {(rates.providerCallMax * 30 * rates.linkDuration * 10).toLocaleString()}$
                         </span>
                       </div>
                     </div>

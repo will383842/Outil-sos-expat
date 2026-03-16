@@ -265,18 +265,18 @@ const InfluencerLanding: React.FC = () => {
   }, []);
 
   const seoTitle = intl.formatMessage({ id: 'influencer.landing.seo.title', defaultMessage: `Become a SOS-Expat Influencer | Earn $${rates.clientCallMax}/client helping people find legal help` });
-  const seoDescription = intl.formatMessage({ id: 'influencer.landing.seo.description', defaultMessage: `Promote SOS-Expat on YouTube, Instagram, TikTok. Earn $${rates.clientCallMax} per call, $${rates.providerCall} per call to lawyer or expat helper partners. Promo tools included. Withdraw via Wise or PayPal.` });
+  const seoDescription = intl.formatMessage({ id: 'influencer.landing.seo.description', defaultMessage: `Promote SOS-Expat on YouTube, Instagram, TikTok. Earn $${rates.clientCallMax} per call, $${rates.providerCallRange} per call to lawyer or expat helper partners. Promo tools included. Withdraw via Wise or PayPal.` });
   const ctaAriaLabel = intl.formatMessage({ id: 'influencer.hero.cta', defaultMessage: 'Become an Influencer - It\'s Free' });
 
   const faqs = [
     { question: intl.formatMessage({ id: 'influencer.faq.q1', defaultMessage: "What exactly do I have to do as an Influencer?" }), answer: intl.formatMessage({ id: 'influencer.faq.a1', defaultMessage: `Create content about expat life, travel, or immigration on YouTube, Instagram, TikTok or your blog. Include your unique affiliate link. When your followers call a lawyer or expat helper, you earn $${rates.clientCallMax}. That's it!` }) },
-    { question: intl.formatMessage({ id: 'influencer.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'influencer.faq.a2', defaultMessage: `It depends on your audience size. 10 calls = $100. 50 calls = $500. Some influencers earn $1000-5000/month by finding lawyer or expat helper partners and earning $${rates.providerCall} per call they receive.` }) },
+    { question: intl.formatMessage({ id: 'influencer.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'influencer.faq.a2', defaultMessage: `It depends on your audience size. 10 calls = $100. 50 calls = $500. Some influencers earn $1000-5000/month by finding lawyer or expat helper partners and earning $${rates.providerCallRange} per call they receive.` }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q3', defaultMessage: "What is an 'expat helper'?" }), answer: intl.formatMessage({ id: 'influencer.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q4', defaultMessage: "What promo tools do I get?" }), answer: intl.formatMessage({ id: 'influencer.faq.a4', defaultMessage: "You get ready-made banners, interactive widgets for your website, personalized QR codes, promo texts in 9 languages, and high-quality logos. Everything you need to promote professionally." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q5', defaultMessage: "How and when do I get paid?" }), answer: intl.formatMessage({ id: 'influencer.faq.a5', defaultMessage: "Withdraw anytime. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q6', defaultMessage: "What discount do my followers get?" }), answer: intl.formatMessage({ id: 'influencer.faq.a6', defaultMessage: `Your followers automatically get ${rates.discountLabel} off their first call when they use your link. It's an exclusive benefit for your community!` }) },
     { question: intl.formatMessage({ id: 'influencer.faq.q7', defaultMessage: "What audience size do I need?" }), answer: intl.formatMessage({ id: 'influencer.faq.a7', defaultMessage: "There's no minimum! Micro-influencers with 1,000 engaged followers often convert better than mega-influencers. It's about engagement, not size. Quality over quantity!" }) },
-    { question: intl.formatMessage({ id: 'influencer.faq.q8', defaultMessage: "Can I recruit lawyers or helpers?" }), answer: intl.formatMessage({ id: 'influencer.faq.a8', defaultMessage: `Yes! Find lawyers or expat helpers to join the platform. You earn $${rates.providerCall} for every call they receive during their first ${rates.linkDuration} months. It's passive income from their success!` }) },
+    { question: intl.formatMessage({ id: 'influencer.faq.q8', defaultMessage: "Can I recruit lawyers or helpers?" }), answer: intl.formatMessage({ id: 'influencer.faq.a8', defaultMessage: `Yes! Find lawyers or expat helpers to join the platform. You earn $${rates.providerCall}/call for a recruited lawyer or $${rates.providerCallExp}/call for an expat helper during their first ${rates.linkDuration} months. It's passive income from their success!` }) },
   ];
 
   const contentTypes = [
@@ -765,11 +765,11 @@ const InfluencerLanding: React.FC = () => {
                     <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-black">${rates.providerCall}{local(rates.providerCall)}</div>
+                    <div className="text-2xl sm:text-3xl font-black">${rates.providerCallRange}{local(rates.providerCallMax)}</div>
                     <div className="text-xs sm:text-sm"><FormattedMessage id="influencer.earnings.partner" defaultMessage="Per call to your lawyer or expat helper partners" /></div>
                   </div>
                 </div>
-                <p className="text-xs sm:text-sm"><FormattedMessage id="influencer.earnings.partner.desc" defaultMessage={`Find a lawyer or expat helper to join. Earn $${rates.providerCall} passively every time they receive a call!`} /></p>
+                <p className="text-xs sm:text-sm"><FormattedMessage id="influencer.earnings.partner.desc" defaultMessage={`Find a lawyer or expat helper to join. Earn $${rates.providerCall}/call (lawyer) or $${rates.providerCallExp}/call (expat helper) passively!`} /></p>
               </div>
 
               <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border rounded-2xl p-5 sm:p-6">
@@ -797,7 +797,7 @@ const InfluencerLanding: React.FC = () => {
               <FormattedMessage id="influencer.network.title" defaultMessage="Build Your Network, Earn More" />
             </h2>
             <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-12">
-              <FormattedMessage id="influencer.network.subtitle" defaultMessage={`Recruit lawyers and expat helpers. Earn $${rates.providerCall} per call they receive for ${rates.linkDuration} months!`} />
+              <FormattedMessage id="influencer.network.subtitle" defaultMessage={`Recruit lawyers and expat helpers. Earn $${rates.providerCallRange} per call they receive for ${rates.linkDuration} months!`} />
             </p>
 
             <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-10 max-w-3xl mx-auto">
@@ -806,19 +806,19 @@ const InfluencerLanding: React.FC = () => {
                   <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-black" />
                 </div>
                 <span className="font-bold text-base sm:text-lg"><FormattedMessage id="influencer.network.you" defaultMessage="YOU" /></span>
-                <span className="text-xs sm:text-sm"><FormattedMessage id="influencer.network.you.earn" defaultMessage={`$${rates.clientCallMax}/client + $${rates.providerCall}/call from partners`} /></span>
+                <span className="text-xs sm:text-sm"><FormattedMessage id="influencer.network.you.earn" defaultMessage={`$${rates.clientCallMax}/client + $${rates.providerCallRange}/call from partners`} /></span>
 
                 <div className="text-2xl sm:text-3xl my-3 sm:my-4" aria-hidden="true">↓</div>
 
                 <div className="flex justify-center gap-4 sm:gap-8">
                   {[
-                    { emoji: '⚖️', label: intl.formatMessage({ id: 'influencer.network.lawyer', defaultMessage: 'Lawyer' }) },
-                    { emoji: '🌍', label: intl.formatMessage({ id: 'influencer.network.helper', defaultMessage: 'Helper' }) },
+                    { emoji: '⚖️', label: intl.formatMessage({ id: 'influencer.network.lawyer', defaultMessage: 'Lawyer' }), rate: rates.providerCall },
+                    { emoji: '🌍', label: intl.formatMessage({ id: 'influencer.network.helper', defaultMessage: 'Helper' }), rate: rates.providerCallExp },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-full flex items-center justify-center text-xl sm:text-2xl">{item.emoji}</div>
                       <span className="mt-1 text-sm font-medium">{item.label}</span>
-                      <span className="text-xs">+${rates.providerCall}/call</span>
+                      <span className="text-xs">+${item.rate}/call</span>
                     </div>
                   ))}
                 </div>
@@ -826,7 +826,7 @@ const InfluencerLanding: React.FC = () => {
 
               <div className="mt-6 sm:mt-8 bg-green-500/10 border rounded-2xl p-4 text-center">
                 <p className="font-semibold text-sm sm:text-base mb-1"><FormattedMessage id="influencer.network.example" defaultMessage="Example: 3 lawyers/helpers receiving 20 calls/month each" /></p>
-                <p className="text-xl sm:text-2xl font-black">= ${rates.providerCall * 60}/month <FormattedMessage id="influencer.network.passive" defaultMessage={`passive income for ${rates.linkDuration} months!`} /></p>
+                <p className="text-xl sm:text-2xl font-black">= ${rates.providerCallMax * 60}/month <FormattedMessage id="influencer.network.passive" defaultMessage={`passive income for ${rates.linkDuration} months!`} /></p>
               </div>
             </div>
           </div>
