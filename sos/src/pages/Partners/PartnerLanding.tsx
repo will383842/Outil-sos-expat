@@ -3,8 +3,8 @@
  *
  * Dark premium design with cyan/blue identity for Partners.
  * Mobile-first, accessible, glassmorphism cards, micro-animations.
- * Targets: websites, agencies, media, associations, corporations
- * with an expat/travel/immigration audience.
+ * Targets: B2B partners — real estate agencies, banks, insurance companies,
+ * relocation firms, law firms, associations, media, international corporations.
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -49,6 +49,7 @@ import {
   Timer,
   Languages,
   PhoneCall,
+  Landmark,
 } from 'lucide-react';
 
 // ============================================================================
@@ -343,7 +344,7 @@ const ApplicationForm: React.FC = () => {
       return intl.formatMessage({ id: 'partner.landing.form.error.email', defaultMessage: 'Valid email is required' });
     if (!form.country) return intl.formatMessage({ id: 'partner.landing.form.error.country', defaultMessage: 'Country is required' });
     if (!form.language) return intl.formatMessage({ id: 'partner.landing.form.error.language', defaultMessage: 'Language is required' });
-    if (!form.websiteUrl.trim() || !form.websiteUrl.startsWith('https://'))
+    if (form.websiteUrl.trim() && !form.websiteUrl.startsWith('https://'))
       return intl.formatMessage({ id: 'partner.landing.form.error.websiteUrl', defaultMessage: 'Website URL must start with https://' });
     if (!form.websiteName.trim()) return intl.formatMessage({ id: 'partner.landing.form.error.websiteName', defaultMessage: 'Website name is required' });
     if (!form.websiteCategory) return intl.formatMessage({ id: 'partner.landing.form.error.category', defaultMessage: 'Category is required' });
@@ -374,7 +375,7 @@ const ApplicationForm: React.FC = () => {
         phone: form.phone.trim() || undefined,
         country: form.country,
         language: form.language,
-        websiteUrl: form.websiteUrl.trim(),
+        websiteUrl: form.websiteUrl.trim() || undefined,
         websiteName: form.websiteName.trim(),
         websiteCategory: form.websiteCategory,
         websiteTraffic: form.websiteTraffic || undefined,
@@ -525,7 +526,7 @@ const ApplicationForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="pf-websiteUrl" className={labelClass}>
-            <FormattedMessage id="partner.landing.form.websiteUrl" defaultMessage="Website URL" /> *
+            <FormattedMessage id="partner.landing.form.websiteUrl" defaultMessage="Website URL" />
           </label>
           <input
             id="pf-websiteUrl"
@@ -535,7 +536,6 @@ const ApplicationForm: React.FC = () => {
             onChange={handleChange}
             placeholder="https://"
             className={inputClass}
-            required
             autoComplete="url"
           />
         </div>
@@ -696,9 +696,9 @@ const PartnerLanding: React.FC = () => {
       icon: TrendingUp,
       gradient: 'from-cyan-500 to-blue-500',
       titleId: 'partner.landing.v2.value.monetize.title',
-      titleDefault: 'Monétisez votre audience',
+      titleDefault: 'Nouvelle source de revenus',
       descId: 'partner.landing.v2.value.monetize.desc',
-      descDefault: 'Vos lecteurs et visiteurs ont déjà besoin d\'aide à l\'étranger. Transformez ce trafic en revenus récurrents sans effort.',
+      descDefault: 'Vos clients ont déjà besoin d\'aide juridique et administrative à l\'étranger. Recommandez SOS-Expat et touchez des commissions sur chaque appel.',
     },
     {
       icon: Handshake,
@@ -706,7 +706,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.value.custom.title',
       titleDefault: 'Commissions sur mesure',
       descId: 'partner.landing.v2.value.custom.desc',
-      descDefault: 'Nous négocions des taux adaptés à votre volume et votre audience. Pas de grille fixe, un accord fait pour vous.',
+      descDefault: 'Chaque partenariat est unique. Nous négocions les taux en fonction de votre secteur, volume et profil client. Pas de grille fixe.',
     },
     {
       icon: Code,
@@ -714,7 +714,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.value.tools.title',
       titleDefault: 'Outils clés en main',
       descId: 'partner.landing.v2.value.tools.desc',
-      descDefault: 'Widget personnalisable, API, dashboard de suivi en temps réel et un account manager dédié pour vous accompagner.',
+      descDefault: 'Widget intégrable, lien affilié, QR code, dashboard de suivi et un account manager dédié pour piloter votre partenariat.',
     },
   ];
 
@@ -726,7 +726,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.steps.apply.title',
       titleDefault: 'Postulez',
       descId: 'partner.landing.v2.steps.apply.desc',
-      descDefault: 'Remplissez le formulaire ci-dessous avec les informations sur votre site et votre audience.',
+      descDefault: 'Remplissez le formulaire ci-dessous avec les informations sur votre entreprise et votre clientèle.',
     },
     {
       icon: Handshake,
@@ -734,7 +734,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.steps.negotiate.title',
       titleDefault: 'Nous négocions ensemble',
       descId: 'partner.landing.v2.steps.negotiate.desc',
-      descDefault: 'Notre équipe vous contacte pour définir vos taux de commission et votre plan d\'intégration.',
+      descDefault: 'Notre équipe vous contacte pour définir vos taux de commission et le mode de recommandation adapté à votre activité.',
     },
     {
       icon: Code,
@@ -742,7 +742,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.steps.integrate.title',
       titleDefault: 'Intégrez',
       descId: 'partner.landing.v2.steps.integrate.desc',
-      descDefault: 'Ajoutez notre widget ou API sur votre site. Notre équipe technique vous accompagne.',
+      descDefault: 'Partagez votre lien affilié, QR code ou intégrez notre widget. Notre équipe vous accompagne.',
     },
     {
       icon: DollarSign,
@@ -750,20 +750,22 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.steps.earn.title',
       titleDefault: 'Gagnez',
       descId: 'partner.landing.v2.steps.earn.desc',
-      descDefault: 'Recevez des commissions sur chaque appel généré par votre audience. Suivi en temps réel.',
+      descDefault: 'Recevez des commissions sur chaque appel généré par vos recommandations. Suivi en temps réel.',
     },
   ];
 
   // ---- Partner profiles ----
   const partnerProfiles = [
-    { icon: Globe, titleId: 'partner.landing.v2.profiles.expat', titleDefault: 'Sites d\'expatriation' },
-    { icon: Plane, titleId: 'partner.landing.v2.profiles.travel', titleDefault: 'Blogs voyage' },
-    { icon: Scale, titleId: 'partner.landing.v2.profiles.legal', titleDefault: 'Cabinets juridiques' },
-    { icon: Shield, titleId: 'partner.landing.v2.profiles.insurance', titleDefault: 'Assureurs' },
-    { icon: Building2, titleId: 'partner.landing.v2.profiles.relocation', titleDefault: 'Agences relocation' },
-    { icon: Megaphone, titleId: 'partner.landing.v2.profiles.media', titleDefault: 'Médias' },
-    { icon: Heart, titleId: 'partner.landing.v2.profiles.association', titleDefault: 'Associations' },
-    { icon: Briefcase, titleId: 'partner.landing.v2.profiles.corporate', titleDefault: 'Entreprises' },
+    { icon: Landmark, titleId: 'partner.landing.v2.profiles.embassy', titleDefault: 'Ambassades & consulats' },
+    { icon: Building2, titleId: 'partner.landing.v2.profiles.realestate', titleDefault: 'Agences immobilières' },
+    { icon: CreditCard, titleId: 'partner.landing.v2.profiles.banking', titleDefault: 'Banques & fintech' },
+    { icon: Shield, titleId: 'partner.landing.v2.profiles.insurance', titleDefault: 'Compagnies d\'assurance' },
+    { icon: Plane, titleId: 'partner.landing.v2.profiles.relocation', titleDefault: 'Cabinets de relocation' },
+    { icon: Scale, titleId: 'partner.landing.v2.profiles.legal', titleDefault: 'Cabinets d\'avocats' },
+    { icon: Heart, titleId: 'partner.landing.v2.profiles.association', titleDefault: 'Associations (toutes nationalités)' },
+    { icon: Megaphone, titleId: 'partner.landing.v2.profiles.media', titleDefault: 'Médias & presse' },
+    { icon: GraduationCap, titleId: 'partner.landing.v2.profiles.education', titleDefault: 'Écoles & universités' },
+    { icon: Briefcase, titleId: 'partner.landing.v2.profiles.corporate', titleDefault: 'Entreprises internationales' },
   ];
 
   // ---- Advantages ----
@@ -773,7 +775,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.advantages.commission.title',
       titleDefault: 'Commissions négociées',
       descId: 'partner.landing.v2.advantages.commission.desc',
-      descDefault: 'Pas de taux fixe. Nous adaptons les commissions à votre volume, votre audience et votre secteur.',
+      descDefault: 'Pas de taux fixe. Nous adaptons les commissions à votre volume, votre clientèle et votre secteur.',
     },
     {
       icon: BarChart3,
@@ -787,7 +789,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.advantages.widget.title',
       titleDefault: 'Widget personnalisable',
       descId: 'partner.landing.v2.advantages.widget.desc',
-      descDefault: 'Notre widget s\'intègre à votre charte graphique. Couleurs, taille, position : tout est configurable.',
+      descDefault: 'Widget, lien affilié, QR code : choisissez le format qui convient à votre activité. Tout est personnalisable.',
     },
     {
       icon: HeadphonesIcon,
@@ -801,7 +803,7 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.advantages.discount.title',
       titleDefault: 'Réduction pour votre audience',
       descId: 'partner.landing.v2.advantages.discount.desc',
-      descDefault: 'Offrez une valeur ajoutée à vos visiteurs avec une réduction négociée sur les appels SOS-Expat.',
+      descDefault: 'Offrez une valeur ajoutée à vos clients avec une réduction négociée sur les appels SOS-Expat.',
     },
     {
       icon: CreditCard,
@@ -904,11 +906,11 @@ const PartnerLanding: React.FC = () => {
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight">
                 <FormattedMessage
                   id="partner.landing.v2.hero.title"
-                  defaultMessage="Générez des revenus avec votre audience {highlight}"
+                  defaultMessage="Proposez une aide juridique et administrative à vos clients {highlight}"
                   values={{
                     highlight: (
                       <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                        {intl.formatMessage({ id: 'partner.landing.v2.hero.highlight', defaultMessage: 'expat' })}
+                        {intl.formatMessage({ id: 'partner.landing.v2.hero.highlight', defaultMessage: 'expatriés' })}
                       </span>
                     ),
                   }}
@@ -919,7 +921,7 @@ const PartnerLanding: React.FC = () => {
               <p className="text-lg md:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
                 <FormattedMessage
                   id="partner.landing.v2.hero.subtitle"
-                  defaultMessage="Intégrez SOS-Expat sur votre site et touchez des commissions sur chaque appel. Taux négociés, outils clés en main, support dédié."
+                  defaultMessage="Entreprises, ambassades, consulats, associations — offrez à vos clients et membres un accès direct à des avocats et experts expatriation dans 197 pays. Commissions négociées, accompagnement dédié."
                 />
               </p>
 
@@ -1044,19 +1046,19 @@ const PartnerLanding: React.FC = () => {
         <section className="section-content section-lazy" aria-labelledby="profiles-heading">
           <div className="max-w-6xl mx-auto">
             <p className="text-sm font-semibold uppercase tracking-widest text-cyan-400 text-center mb-4">
-              <FormattedMessage id="partner.landing.v2.profiles.overline" defaultMessage="Ouvert à tous les secteurs" />
+              <FormattedMessage id="partner.landing.v2.profiles.overline" defaultMessage="Tous les secteurs concernés" />
             </p>
             <h2 id="profiles-heading" className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-6">
-              <FormattedMessage id="partner.landing.v2.profiles.title" defaultMessage="Pour qui est ce programme ?" />
+              <FormattedMessage id="partner.landing.v2.profiles.title" defaultMessage="Qui peut devenir partenaire ?" />
             </h2>
             <p className="text-gray-400 text-center max-w-2xl mx-auto mb-14 text-lg">
               <FormattedMessage
                 id="partner.landing.v2.profiles.subtitle"
-                defaultMessage="Toute organisation avec une audience expatriée, voyageuse ou en mobilité internationale peut devenir partenaire."
+                defaultMessage="Entreprises, ambassades, consulats, associations, institutions — toute organisation en contact avec des expatriés, voyageurs ou professionnels en mobilité internationale, partout dans le monde."
               />
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
               {partnerProfiles.map((profile, i) => {
                 const Icon = profile.icon;
                 return (

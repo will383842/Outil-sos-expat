@@ -205,6 +205,44 @@ export const submitPartnerApplication = onCall(
         createdAt: now,
       });
 
+      // 6. Also create in contact_messages for admin inbox visibility
+      const contactRef = db.collection("contact_messages").doc();
+      await contactRef.set({
+        id: contactRef.id,
+        name: `${input.firstName.trim()} ${input.lastName.trim()}`,
+        firstName: sanitizeText(input.firstName.trim()),
+        lastName: sanitizeText(input.lastName.trim()),
+        email: normalizedEmail,
+        phone: input.phone?.trim() || null,
+        subject: `Candidature partenaire — ${input.websiteName.trim()}`,
+        message: [
+          `Entreprise/Site : ${input.websiteName.trim()}`,
+          `URL : ${normalizedUrl}`,
+          `Catégorie : ${input.websiteCategory}`,
+          input.websiteTraffic ? `Trafic : ${input.websiteTraffic}` : null,
+          input.websiteDescription ? `Description : ${input.websiteDescription}` : null,
+          input.message ? `\nMessage :\n${input.message}` : null,
+        ].filter(Boolean).join("\n"),
+        category: "partner",
+        type: "contact_message",
+        source: "partner_application_form",
+        status: "new",
+        isRead: false,
+        responded: false,
+        priority: "high",
+        adminNotified: false,
+        adminTags: ["partner", "application"],
+        createdAt: now,
+        metadata: {
+          partnerApplicationId: appRef.id,
+          websiteName: input.websiteName.trim(),
+          websiteUrl: normalizedUrl,
+          websiteCategory: input.websiteCategory,
+          country: input.country.toUpperCase(),
+          language: input.language,
+        },
+      });
+
       logger.info("[submitPartnerApplication] Application submitted", {
         applicationId: appRef.id,
         email: normalizedEmail,
