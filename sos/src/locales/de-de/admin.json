@@ -743,6 +743,8 @@
   "admin.receivedCalls.title": "Empfangene Anrufe",
   "admin.sidebar.collapse": "Einklappen",
   "admin.sidebar.expand": "Ausklappen",
+  "admin.menu.affiliationPartnership": "Affiliation & Partnerschaft",
+  "admin.menu.affiliationPartnership.description": "Partnerprogramm und Partnerverwaltung",
   "admin.menu.affiliation": "Affiliate & Partner",
   "admin.menu.affiliation.description": "Partnerprogramm und Affiliates",
   "admin.menu.affiliatePayouts": "Affiliate-Auszahlungen",

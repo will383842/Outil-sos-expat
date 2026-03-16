@@ -560,6 +560,8 @@
   "admin.providerActions.suspendedSuccess": "服务商已暂停",
   "admin.sidebar.collapse": "收起",
   "admin.sidebar.expand": "展开",
+  "admin.menu.affiliationPartnership": "联盟与合作",
+  "admin.menu.affiliationPartnership.description": "联盟计划和合作伙伴管理",
   "admin.menu.affiliation": "联盟与合作伙伴",
   "admin.menu.affiliation.description": "联盟计划和合作伙伴",
   "admin.menu.affiliatePayouts": "联盟支付",

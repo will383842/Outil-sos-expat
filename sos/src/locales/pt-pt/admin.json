@@ -560,6 +560,8 @@
   "admin.providerActions.suspendedSuccess": "Prestador suspenso",
   "admin.sidebar.collapse": "Recolher",
   "admin.sidebar.expand": "Expandir",
+  "admin.menu.affiliationPartnership": "Afiliação & Parceria",
+  "admin.menu.affiliationPartnership.description": "Programa de afiliação e gestão de parceiros",
   "admin.menu.affiliation": "Afiliação e Parceiros",
   "admin.menu.affiliation.description": "Programa de afiliados e parceiros",
   "admin.menu.affiliatePayouts": "Pagamentos de Afiliados",

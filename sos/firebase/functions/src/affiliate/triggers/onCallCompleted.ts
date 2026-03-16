@@ -443,33 +443,8 @@ export async function handleCallCompleted(
                 amount: activationAmount,
               });
 
-              // N1 Recruit Bonus to grand-parrain
-              if (recruiter.recruitedBy) {
-                const gpDoc = await db.collection("users").doc(recruiter.recruitedBy).get();
-                if (gpDoc.exists) {
-                  const gp = gpDoc.data()!;
-                  const n1RecruitAmt = gp.individualRates?.commissionN1RecruitBonusAmount
-                    ?? gp.lockedRates?.commissionN1RecruitBonusAmount
-                    ?? 100;
-
-                  const n1rRef = db.collection("affiliate_commissions").doc();
-                  await n1rRef.set({
-                    id: n1rRef.id,
-                    referrerId: recruiter.recruitedBy,
-                    type: "n1_recruit_bonus",
-                    amount: n1RecruitAmt,
-                    status: "pending",
-                    source: { type: "recruitment", details: { activatedUserId: referredByUserId, recruiterId } },
-                    description: `Bonus N1 recrutement`,
-                    createdAt: Timestamp.now(),
-                  });
-
-                  await db.collection("users").doc(recruiter.recruitedBy).update({
-                    pendingBalance: FieldValue.increment(n1RecruitAmt),
-                    totalCommissions: FieldValue.increment(1),
-                  });
-                }
-              }
+              // N1 Recruit Bonus removed — redundant with N2 commissions
+              // (grandparent already earns N2 call commissions automatically)
             }
           }
         }

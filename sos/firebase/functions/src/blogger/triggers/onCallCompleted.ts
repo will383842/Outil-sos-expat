@@ -294,24 +294,8 @@ async function awardBloggerCommission(
             logger.info("[bloggerOnCallCompleted] Activation bonus paid", { recruiterId, activatedId: bloggerId });
           }
 
-          // N1 Recruit Bonus to grand-parrain
-          if (recruiter.recruitedBy) {
-            const gpDoc = await db.collection("bloggers").doc(recruiter.recruitedBy).get();
-            if (gpDoc.exists) {
-              const gp = gpDoc.data() as Blogger;
-              const n1RecruitAmt = gp.individualRates?.commissionN1RecruitBonusAmount
-                ?? gp.lockedRates?.commissionN1RecruitBonusAmount
-                ?? bloggerConfig.commissionN1RecruitBonusAmount ?? 100;
-
-              await createBloggerCommission({
-                bloggerId: recruiter.recruitedBy,
-                type: "n1_recruit_bonus",
-                source: { id: bloggerId, type: "user", details: { activatedBloggerId: bloggerId, recruiterId } },
-                baseAmount: n1RecruitAmt,
-                description: `Bonus N1 recrutement: ${bloggerId} activé via ${recruiterId}`,
-              });
-            }
-          }
+          // N1 Recruit Bonus removed — redundant with N2 commissions
+          // (grandparent already earns N2 call commissions automatically)
         }
       }
     }

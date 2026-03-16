@@ -10,8 +10,7 @@
  * 2. N1 CALL: $1 - when your direct referral (N1) makes a call
  * 3. N2 CALL: $0.50 - when your N1's referral (N2) makes a call
  * 4. ACTIVATION BONUS: $5 - ONLY after referral's 2nd client call (anti-fraud)
- * 5. N1 RECRUIT BONUS: $1 - when your N1 recruits someone who activates
- * 6. CAPTAIN CALL: $3 (lawyer) / $2 (expat) - replaces N1/N2 for captains
+ * 5. CAPTAIN CALL: $3 (lawyer) / $2 (expat) - replaces N1/N2 for captains
  *
  * Removed (OLD SYSTEM):
  * - NO commission at signup (was $2)
@@ -405,75 +404,9 @@ export async function handleCallCompleted(
             logger.warn("[chatterOnCallCompleted] Failed to notify Motivation Engine (referral_activated)", { error: err });
           });
 
-          // ========================================================================
-          // 4. N1 RECRUIT BONUS ($1) - When N1 recruits someone who activates
-          // P1-8 FIX: Added idempotence flag to prevent double-credit
-          // ========================================================================
-
-          // Check if the recruiter (N1) was also recruited by someone (N2 parrain)
-          const recruiterDoc = await db.collection("chatters").doc(activationResult.recruitedBy).get();
-          if (recruiterDoc.exists) {
-            const recruiter = recruiterDoc.data() as Chatter;
-
-            // P1-8 FIX: Check idempotence flag before paying N1 recruit bonus
-            const activatedChatterDoc = await db.collection("chatters").doc(chatterId).get();
-            const activatedChatterData = activatedChatterDoc.data();
-            const n1RecruitBonusPaid = activatedChatterData?.n1RecruitBonusPaid === true;
-
-            if (recruiter.recruitedBy && !n1RecruitBonusPaid) {
-              // Use recruiter's recruiter (grand-parrain) lockedRates if available
-              const grandParrainDoc = await db.collection("chatters").doc(recruiter.recruitedBy).get();
-              const grandParrainData = grandParrainDoc.exists ? grandParrainDoc.data() as Chatter : undefined;
-              const grandParrainLockedRates = grandParrainData?.lockedRates;
-              const grandParrainIndividualRates = grandParrainData?.individualRates;
-              const n1RecruitBonusAmount = getN1RecruitBonusAmount(config, grandParrainLockedRates, grandParrainIndividualRates);
-
-              const n1RecruitResult = await createCommission({
-                chatterId: recruiter.recruitedBy,
-                type: "n1_recruit_bonus",
-                source: {
-                  id: chatterId,
-                  type: "user",
-                  details: {
-                    providerId: chatterId,
-                    providerEmail: chatterData.email,
-                    bonusType: "n1_recruit",
-                    bonusReason: `N1 ${recruiter.firstName} ${recruiter.lastName.charAt(0)}. a recrut\u00e9 ${chatterData.firstName} qui s'est activ\u00e9`,
-                  },
-                },
-                baseAmount: n1RecruitBonusAmount,
-                description: `Bonus recrutement N1`,
-                skipFraudCheck: true,
-              });
-
-              if (n1RecruitResult.success) {
-                // P1-8 FIX: Set idempotence flag on activated chatter
-                await db.collection("chatters").doc(chatterId).update({
-                  n1RecruitBonusPaid: true,
-                });
-
-                logger.info("[chatterOnCallCompleted] N1 recruit bonus paid", {
-                  n2ParrainId: recruiter.recruitedBy,
-                  n1RecruiterId: activationResult.recruitedBy,
-                  activatedChatterId: chatterId,
-                  commissionId: n1RecruitResult.commissionId,
-                  amount: n1RecruitResult.amount,
-                });
-
-                await createCommissionNotification(
-                  db,
-                  recruiter.recruitedBy,
-                  "commission_earned",
-                  "n1_recruit_bonus",
-                  "Bonus recrutement N1 !",
-                  `Votre filleul ${recruiter.firstName} ${recruiter.lastName.charAt(0)}. a recrut\u00e9 un nouveau chatter activ\u00e9 ! +$${(n1RecruitBonusAmount / 100).toFixed(2)}`,
-                  n1RecruitResult.commissionId!,
-                  n1RecruitResult.amount!
-                );
-              }
-            }
-          }
-        }
+          // N1 RECRUIT BONUS removed — redundant with N2 commissions
+          // (grandparent already earns N2 call commissions automatically)
+        } // end if (bonusResult.success)
         } // end else (recruiter meets $100 threshold)
       }
 

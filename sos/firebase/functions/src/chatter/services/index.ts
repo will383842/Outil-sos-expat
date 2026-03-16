@@ -131,22 +131,6 @@ export {
   runComprehensiveFraudCheck,
 } from "./chatterReferralFraudService";
 
-// Promotion Service
-export {
-  createPromotion,
-  updatePromotion,
-  deletePromotion,
-  getAllPromotions,
-  getActivePromotions,
-  getBestPromoMultiplier,
-  getPromotion,
-  getPromotionStats,
-  deactivateExpiredPromotions,
-  checkPromotionBudgets,
-  CreatePromotionInput,
-  UpdatePromotionInput,
-} from "./chatterPromotionService";
-
 // Telegram Bonus Service
 export {
   checkAndPayTelegramBonus,

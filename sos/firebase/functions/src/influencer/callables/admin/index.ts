@@ -891,23 +891,6 @@ export const adminExportInfluencers = onCall(
 );
 
 // ============================================================================
-// BULK ACTIONS ON INFLUENCERS
-// ============================================================================
-
-// ============================================================================
-// PROMOTIONS (re-exported from promotions.ts)
-// ============================================================================
-
-export {
-  adminGetInfluencerPromotions,
-  adminCreateInfluencerPromotion,
-  adminUpdateInfluencerPromotion,
-  adminDeleteInfluencerPromotion,
-  adminGetInfluencerPromotionStats,
-  adminDuplicateInfluencerPromotion,
-} from "./promotions";
-
-// ============================================================================
 // BULK ACTIONS
 // ============================================================================
 

@@ -563,6 +563,8 @@
   "admin.providerActions.suspendedSuccess": "प्रदाता निलंबित",
   "admin.sidebar.collapse": "संक्षिप्त करें",
   "admin.sidebar.expand": "विस्तार करें",
+  "admin.menu.affiliationPartnership": "संबद्धता और साझेदारी",
+  "admin.menu.affiliationPartnership.description": "संबद्धता कार्यक्रम और साझेदार प्रबंधन",
   "admin.menu.affiliation": "सहबद्धता और साझेदार",
   "admin.menu.affiliation.description": "सहबद्ध कार्यक्रम और साझेदार",
   "admin.menu.affiliatePayouts": "सहबद्ध भुगतान",

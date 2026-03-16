@@ -743,6 +743,8 @@
   "admin.receivedCalls.title": "Llamadas recibidas",
   "admin.sidebar.collapse": "Contraer",
   "admin.sidebar.expand": "Expandir",
+  "admin.menu.affiliationPartnership": "Afiliación & Asociación",
+  "admin.menu.affiliationPartnership.description": "Programa de afiliación y gestión de socios",
   "admin.menu.affiliation": "Afiliación y Socios",
   "admin.menu.affiliation.description": "Programa de afiliados y socios",
   "admin.menu.affiliatePayouts": "Pagos de Afiliados",

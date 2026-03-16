@@ -10,12 +10,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functionsAffiliate } from '@/config/firebase';
 import Layout from '@/components/layout/Layout';
-import SEOHead from '@/components/layout/SEOHead';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
+import { getLocaleString, getTranslatedRouteSlug } from '@/multilingual-system/core/routing/localeRoutes';
+import { useApp } from '@/contexts/AppContext';
 import {
   ArrowRight,
   Check,
@@ -142,6 +144,29 @@ const COUNTRIES = [
 const LANGUAGES = ['fr','en','es','de','pt','ar','ch','ru','hi'] as const;
 
 // ============================================================================
+// SEO CONSTANTS (same pattern as Home.tsx for unification)
+// ============================================================================
+const SEO_CONSTANTS = {
+  SITE_NAME: 'SOS Expat',
+  BASE_URL: 'https://sos-expat.com',
+  LOGO_URL: 'https://sos-expat.com/sos-logo.webp',
+  OG_IMAGE_URL: 'https://sos-expat.com/og-image.png',
+  TWITTER_HANDLE: '@sosexpat',
+  SOCIAL: {
+    facebook: 'https://facebook.com/sosexpat',
+    linkedin: 'https://linkedin.com/company/sosexpat',
+    twitter: 'https://twitter.com/sosexpat',
+  },
+} as const;
+
+const OG_LOCALES: Record<string, string> = {
+  fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE',
+  pt: 'pt_BR', ru: 'ru_RU', zh: 'zh_CN', ch: 'zh_CN', ar: 'ar_SA', hi: 'hi_IN',
+};
+
+const SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'] as const;
+
+// ============================================================================
 // FAQ ACCORDION
 // ============================================================================
 const FAQItem: React.FC<{
@@ -151,29 +176,31 @@ const FAQItem: React.FC<{
   onToggle: () => void;
 }> = ({ questionId, answerId, isOpen, onToggle }) => {
   return (
-    <div className="border border-white/10 rounded-xl overflow-hidden glass-card">
+    <div className="border border-white/10 rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-colors min-h-[44px]"
+        className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-left min-h-[48px]"
         aria-expanded={isOpen}
         aria-controls={`faq-answer-${answerId}`}
       >
-        <span className="text-white font-medium pr-4">
+        <span className="text-base sm:text-lg font-semibold text-white pr-2">
           <FormattedMessage id={questionId} />
         </span>
-        {isOpen ? (
-          <Minus className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-        ) : (
-          <Plus className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-        )}
+        <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-cyan-500 text-white' : 'bg-white/10 text-cyan-400'}`}>
+          {isOpen ? (
+            <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
+          ) : (
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          )}
+        </span>
       </button>
       <div
         id={`faq-answer-${answerId}`}
         role="region"
         aria-labelledby={questionId}
-        className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+        className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
       >
-        <div className="px-5 pb-5 text-gray-400 leading-relaxed">
+        <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base text-gray-400 leading-relaxed">
           <FormattedMessage id={answerId} />
         </div>
       </div>
@@ -393,9 +420,9 @@ const ApplicationForm: React.FC = () => {
     }
   };
 
-  const inputClass = "w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all min-h-[44px]";
-  const selectClass = "w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all appearance-none min-h-[44px]";
-  const labelClass = "block text-sm font-medium text-gray-300 mb-1.5";
+  const inputClass = "w-full px-4 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all min-h-[48px]";
+  const selectClass = "w-full px-4 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all appearance-none min-h-[48px]";
+  const labelClass = "block text-sm sm:text-base font-medium text-gray-300 mb-1.5";
 
   if (submitted) {
     return (
@@ -404,10 +431,10 @@ const ApplicationForm: React.FC = () => {
           <Check className="w-10 h-10 text-white" />
         </div>
         <h3 className="text-2xl font-bold text-white mb-4">
-          <FormattedMessage id="partner.landing.form.success.title" defaultMessage="Application received!" />
+          <FormattedMessage id="partner.landing.form.success.title" defaultMessage="Message envoyé !" />
         </h3>
         <p className="text-gray-400 max-w-md mx-auto">
-          <FormattedMessage id="partner.landing.form.success.message" defaultMessage="Thank you for your interest. Our team will review your application and get back to you within 48 hours." />
+          <FormattedMessage id="partner.landing.form.success.message" defaultMessage="Merci pour votre intérêt. Notre équipe vous recontacte sous 48h pour discuter de votre partenariat." />
         </p>
       </div>
     );
@@ -644,13 +671,13 @@ const ApplicationForm: React.FC = () => {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-lg rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+        className="w-full py-3 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-base sm:text-lg rounded-2xl transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[48px] sm:min-h-[56px] will-change-transform"
       >
         {submitting ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <>
-            <FormattedMessage id="partner.landing.form.submit" defaultMessage="Submit application" />
+            <FormattedMessage id="partner.landing.form.submit" defaultMessage="Nous contacter" />
             <ArrowRight className="w-5 h-5" />
           </>
         )}
@@ -665,48 +692,221 @@ const ApplicationForm: React.FC = () => {
 const PartnerLanding: React.FC = () => {
   const intl = useIntl();
   const location = useLocation();
+  const { language } = useApp();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const applyRef = useRef<HTMLDivElement>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
 
-  const scrollToApply = () => {
-    applyRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const openContactModal = () => setShowContactModal(true);
+  const closeContactModal = () => setShowContactModal(false);
 
-  // Schema.org Organization JSON-LD
-  const organizationJsonLd = useMemo(() => JSON.stringify({
+  // Sticky CTA: show after scrolling past hero
+  useEffect(() => {
+    const onScroll = () => {
+      setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // ======= URL Construction (same pattern as Home) =======
+  const defaultLocale = getLocaleString(language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar');
+  const partnerSlug = getTranslatedRouteSlug('partner-landing' as any, language as any) || 'devenir-partenaire';
+  const canonicalUrl = `${SEO_CONSTANTS.BASE_URL}/${defaultLocale}/${partnerSlug}`;
+
+  // ======= SEO Meta Data =======
+  const seoData = useMemo(() => ({
+    title: intl.formatMessage({ id: 'partner.landing.v2.seo.title', defaultMessage: 'Programme Partenaire B2B - SOS-Expat | Assistance Juridique Expatriés' }),
+    description: intl.formatMessage({ id: 'partner.landing.v2.seo.description', defaultMessage: 'Devenez partenaire SOS-Expat et offrez à vos clients un accès à des avocats et experts expatriation dans 197 pays. Accord sur mesure, outils d\'intégration, dashboard temps réel.' }),
+    keywords: intl.formatMessage({ id: 'seo.partner.keywords', defaultMessage: 'partenaire SOS Expat, programme partenariat B2B expatriés, assistance juridique internationale, widget intégration, ambassade partenaire, assurance expatrié, relocation, association expatriés, avocat expatrié, aide administrative internationale, accord B2B sur mesure, service expatriation entreprise' }),
+    ogTitle: intl.formatMessage({ id: 'seo.partner.ogTitle', defaultMessage: 'Programme Partenaire SOS-Expat | Offrez un Service Juridique d\'Exception à Vos Clients Expatriés' }),
+    ogDescription: intl.formatMessage({ id: 'seo.partner.ogDescription', defaultMessage: 'Recommandez SOS-Expat à vos clients expatriés : avocats et experts dans 197 pays, 9 langues, 24/7. Accord de partenariat sur mesure, outils d\'intégration, account manager dédié.' }),
+    twitterTitle: intl.formatMessage({ id: 'seo.partner.twitterTitle', defaultMessage: 'Partenaire SOS-Expat | Assistance Juridique Expatriés B2B' }),
+    twitterDescription: intl.formatMessage({ id: 'seo.partner.twitterDescription', defaultMessage: 'Ambassades, entreprises, associations : offrez à vos clients expatriés un accès à des avocats et experts dans 197 pays. Widget, lien, QR code. Dashboard temps réel.' }),
+  }), [intl]);
+
+  // ======= JSON-LD Schema.org — Organization (enriched, with @id) =======
+  const jsonLdOrganization = useMemo(() => ({
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'SOS-Expat',
-    url: 'https://www.sos-expat.com',
-    logo: 'https://www.sos-expat.com/og-image.png',
-    description: intl.formatMessage({
-      id: 'partner.landing.v2.seo.description',
-      defaultMessage: 'Monetize your expat audience with the SOS-Expat partner program. Custom commissions, integration tools, and dedicated support.',
-    }),
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'partnerships',
-      availableLanguage: ['French', 'English', 'Spanish', 'German', 'Portuguese', 'Arabic', 'Russian', 'Hindi', 'Chinese'],
+    '@id': `${SEO_CONSTANTS.BASE_URL}/#organization`,
+    'name': SEO_CONSTANTS.SITE_NAME,
+    'url': SEO_CONSTANTS.BASE_URL,
+    'logo': {
+      '@type': 'ImageObject',
+      'url': SEO_CONSTANTS.LOGO_URL,
+      'width': 512,
+      'height': 512,
     },
+    'description': seoData.description,
+    'sameAs': Object.values(SEO_CONSTANTS.SOCIAL),
+    'contactPoint': {
+      '@type': 'ContactPoint',
+      'contactType': 'partnerships',
+      'availableLanguage': ['French', 'English', 'Spanish', 'German', 'Portuguese', 'Russian', 'Chinese', 'Arabic', 'Hindi'],
+      'areaServed': 'Worldwide',
+    },
+    'knowsAbout': [
+      'Expatriation', 'Legal assistance abroad', 'Immigration law', 'International relocation',
+      'International law', 'B2B partnerships', 'Administrative assistance for expats',
+      'Consular services', 'Cross-border legal advice', 'Expat support services',
+    ],
+  }), [seoData.description]);
+
+  // ======= JSON-LD — WebSite (SearchAction) =======
+  const jsonLdWebSite = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SEO_CONSTANTS.BASE_URL}/#website`,
+    'name': SEO_CONSTANTS.SITE_NAME,
+    'url': SEO_CONSTANTS.BASE_URL,
+    'inLanguage': language,
+    'potentialAction': {
+      '@type': 'SearchAction',
+      'target': {
+        '@type': 'EntryPoint',
+        'urlTemplate': `${SEO_CONSTANTS.BASE_URL}/recherche?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  }), [language]);
+
+  // ======= JSON-LD — FAQPage (8 FAQ items from the page) =======
+  const jsonLdFAQ = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': Array.from({ length: 8 }, (_, i) => ({
+      '@type': 'Question',
+      'name': intl.formatMessage({ id: `partner.landing.v2.faq.q${i + 1}` }),
+      'acceptedAnswer': {
+        '@type': 'Answer',
+        'text': intl.formatMessage({ id: `partner.landing.v2.faq.a${i + 1}` }),
+      },
+    })),
   }), [intl]);
+
+  // ======= JSON-LD — BreadcrumbList =======
+  const jsonLdBreadcrumb = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Accueil' }),
+        'item': `${SEO_CONSTANTS.BASE_URL}/${defaultLocale}`,
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': intl.formatMessage({ id: 'partner.landing.v2.seo.title', defaultMessage: 'Programme Partenaire' }),
+        'item': canonicalUrl,
+      },
+    ],
+  }), [intl, defaultLocale, canonicalUrl]);
+
+  // ======= JSON-LD — HowTo (4 steps from the page) =======
+  const jsonLdHowTo = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    'name': intl.formatMessage({ id: 'partner.landing.v2.hero.badge', defaultMessage: 'Programme Partenaire Premium' }),
+    'description': seoData.description,
+    'totalTime': 'PT10M',
+    'step': [
+      {
+        '@type': 'HowToStep',
+        'position': 1,
+        'name': intl.formatMessage({ id: 'partner.landing.v2.steps.apply.title', defaultMessage: 'Échangeons' }),
+        'text': intl.formatMessage({ id: 'partner.landing.v2.steps.apply.desc', defaultMessage: 'Contactez-nous pour nous parler de votre organisation.' }),
+      },
+      {
+        '@type': 'HowToStep',
+        'position': 2,
+        'name': intl.formatMessage({ id: 'partner.landing.v2.steps.negotiate.title', defaultMessage: 'Construisons ensemble' }),
+        'text': intl.formatMessage({ id: 'partner.landing.v2.steps.negotiate.desc', defaultMessage: 'Nous définissons ensemble les termes de votre partenariat.' }),
+      },
+      {
+        '@type': 'HowToStep',
+        'position': 3,
+        'name': intl.formatMessage({ id: 'partner.landing.v2.steps.integrate.title', defaultMessage: 'Intégrez' }),
+        'text': intl.formatMessage({ id: 'partner.landing.v2.steps.integrate.desc', defaultMessage: 'Partagez votre lien, QR code ou intégrez notre widget.' }),
+      },
+      {
+        '@type': 'HowToStep',
+        'position': 4,
+        'name': intl.formatMessage({ id: 'partner.landing.v2.steps.earn.title', defaultMessage: 'Profitez' }),
+        'text': intl.formatMessage({ id: 'partner.landing.v2.steps.earn.desc', defaultMessage: 'Vos clients accèdent à un service d\'exception et vous profitez des avantages négociés.' }),
+      },
+    ],
+  }), [intl, seoData.description]);
+
+  // ======= JSON-LD — Speakable WebPage (AI) =======
+  const jsonLdSpeakable = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${canonicalUrl}#webpage`,
+    'url': canonicalUrl,
+    'name': seoData.title,
+    'description': seoData.description,
+    'isPartOf': { '@id': `${SEO_CONSTANTS.BASE_URL}/#website` },
+    'about': { '@id': `${SEO_CONSTANTS.BASE_URL}/#organization` },
+    'speakable': {
+      '@type': 'SpeakableSpecification',
+      'cssSelector': ['#partner-heading', '#value-heading', '#howto-heading', '#faq-heading', '#cta-heading'],
+    },
+    'specialty': 'B2B Partner Program for Expatriation Services',
+  }), [canonicalUrl, seoData]);
+
+  // ======= JSON-LD — ProfessionalService (B2B offering) =======
+  const jsonLdService = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    '@id': `${SEO_CONSTANTS.BASE_URL}/#partner-service`,
+    'name': `${SEO_CONSTANTS.SITE_NAME} - Partner Program`,
+    'url': canonicalUrl,
+    'provider': { '@type': 'Organization', '@id': `${SEO_CONSTANTS.BASE_URL}/#organization` },
+    'areaServed': { '@type': 'Place', 'name': 'Worldwide' },
+    'serviceType': 'B2B Partnership Program',
+    'description': seoData.description,
+    'hasOfferCatalog': {
+      '@type': 'OfferCatalog',
+      'name': intl.formatMessage({ id: 'partner.landing.v2.value.custom.title', defaultMessage: 'Un partenariat sur mesure' }),
+      'itemListElement': [
+        {
+          '@type': 'Offer',
+          'itemOffered': {
+            '@type': 'Service',
+            'name': intl.formatMessage({ id: 'partner.landing.v2.value.monetize.title', defaultMessage: 'Un service complémentaire pour votre audience' }),
+          },
+        },
+        {
+          '@type': 'Offer',
+          'itemOffered': {
+            '@type': 'Service',
+            'name': intl.formatMessage({ id: 'partner.landing.v2.value.tools.title', defaultMessage: 'Outils clés en main' }),
+          },
+        },
+      ],
+    },
+  }), [intl, canonicalUrl, seoData.description]);
 
   // ---- Value proposition cards ----
   const valueCards = [
     {
-      icon: TrendingUp,
+      icon: Users,
       gradient: 'from-cyan-500 to-blue-500',
       titleId: 'partner.landing.v2.value.monetize.title',
-      titleDefault: 'Nouvelle source de revenus',
+      titleDefault: 'Un service complémentaire pour votre audience',
       descId: 'partner.landing.v2.value.monetize.desc',
-      descDefault: 'Vos clients ont déjà besoin d\'aide juridique et administrative à l\'étranger. Recommandez SOS-Expat et touchez des commissions sur chaque appel.',
+      descDefault: 'Vos clients, membres ou abonnés ont besoin d\'aide juridique et administrative à l\'étranger. SOS-Expat prend en charge ce service pour vous : une tâche en moins, une vraie valeur ajoutée pour votre communauté.',
     },
     {
       icon: Handshake,
       gradient: 'from-blue-500 to-indigo-500',
       titleId: 'partner.landing.v2.value.custom.title',
-      titleDefault: 'Commissions sur mesure',
+      titleDefault: 'Un partenariat sur mesure',
       descId: 'partner.landing.v2.value.custom.desc',
-      descDefault: 'Chaque partenariat est unique. Nous négocions les taux en fonction de votre secteur, volume et profil client. Pas de grille fixe.',
+      descDefault: 'Chaque collaboration est unique. Nous construisons ensemble un accord adapté à vos objectifs : commissions, réductions pour vos clients, co-branding, ou toute formule qui vous convient.',
     },
     {
       icon: Code,
@@ -724,17 +924,17 @@ const PartnerLanding: React.FC = () => {
       icon: MessageSquare,
       color: 'from-cyan-500 to-blue-500',
       titleId: 'partner.landing.v2.steps.apply.title',
-      titleDefault: 'Postulez',
+      titleDefault: 'Échangeons',
       descId: 'partner.landing.v2.steps.apply.desc',
-      descDefault: 'Remplissez le formulaire ci-dessous avec les informations sur votre entreprise et votre clientèle.',
+      descDefault: 'Contactez-nous pour nous parler de votre organisation et de votre audience. Nous vous répondons sous 48h.',
     },
     {
       icon: Handshake,
       color: 'from-blue-500 to-indigo-500',
       titleId: 'partner.landing.v2.steps.negotiate.title',
-      titleDefault: 'Nous négocions ensemble',
+      titleDefault: 'Construisons ensemble',
       descId: 'partner.landing.v2.steps.negotiate.desc',
-      descDefault: 'Notre équipe vous contacte pour définir vos taux de commission et le mode de recommandation adapté à votre activité.',
+      descDefault: 'Nous définissons ensemble les termes de votre partenariat : services pour vos clients, avantages mutuels, mode de recommandation.',
     },
     {
       icon: Code,
@@ -742,15 +942,15 @@ const PartnerLanding: React.FC = () => {
       titleId: 'partner.landing.v2.steps.integrate.title',
       titleDefault: 'Intégrez',
       descId: 'partner.landing.v2.steps.integrate.desc',
-      descDefault: 'Partagez votre lien affilié, QR code ou intégrez notre widget. Notre équipe vous accompagne.',
+      descDefault: 'Partagez votre lien, QR code ou intégrez notre widget sur votre site. Notre équipe vous accompagne.',
     },
     {
-      icon: DollarSign,
+      icon: TrendingUp,
       color: 'from-purple-500 to-pink-500',
       titleId: 'partner.landing.v2.steps.earn.title',
-      titleDefault: 'Gagnez',
+      titleDefault: 'Profitez',
       descId: 'partner.landing.v2.steps.earn.desc',
-      descDefault: 'Recevez des commissions sur chaque appel généré par vos recommandations. Suivi en temps réel.',
+      descDefault: 'Vos clients accèdent à un service d\'exception, et vous bénéficiez des avantages négociés dans votre accord. Suivi en temps réel.',
     },
   ];
 
@@ -773,9 +973,9 @@ const PartnerLanding: React.FC = () => {
     {
       icon: DollarSign,
       titleId: 'partner.landing.v2.advantages.commission.title',
-      titleDefault: 'Commissions négociées',
+      titleDefault: 'Accord flexible et négocié',
       descId: 'partner.landing.v2.advantages.commission.desc',
-      descDefault: 'Pas de taux fixe. Nous adaptons les commissions à votre volume, votre clientèle et votre secteur.',
+      descDefault: 'Pas de formule imposée. Nous adaptons les termes du partenariat à vos objectifs : commissions, avantages clients, visibilité croisée.',
     },
     {
       icon: BarChart3,
@@ -856,23 +1056,104 @@ const PartnerLanding: React.FC = () => {
 
   return (
     <Layout showFooter={false}>
-      <SEOHead
-        title={intl.formatMessage({
-          id: 'partner.landing.v2.seo.title',
-          defaultMessage: 'Programme Partenaire Premium - SOS-Expat',
-        })}
-        description={intl.formatMessage({
-          id: 'partner.landing.v2.seo.description',
-          defaultMessage: 'Monetize your expat audience with the SOS-Expat partner program. Custom commissions, integration tools, and dedicated support.',
-        })}
-      />
-      <HreflangLinks pathname={location.pathname} />
+      {/* ================= SEO HEAD — FULL (unified with Home.tsx) ================= */}
+      <Helmet>
+        {/* Base */}
+        <html lang={language} />
+        <title>{seoData.title}</title>
+        <meta name="title" content={seoData.title} />
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta name="author" content={SEO_CONSTANTS.SITE_NAME} />
 
-      {/* Schema.org JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: organizationJsonLd }}
-      />
+        {/* Robots */}
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+        {/* Viewport & charset */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+
+        {/* Other meta */}
+        <meta name="language" content={language} />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="rating" content="general" />
+        <meta name="distribution" content="global" />
+
+        {/* AI-specific meta signals */}
+        <meta name="ai-crawlable" content="true" />
+        <meta name="content-language" content={language} />
+        <meta name="document-state" content="dynamic" />
+        <meta name="content-type" content="B2B Partner Landing Page" />
+        <meta name="expertise-level" content="professional" />
+        <meta name="trustworthiness" content="high" />
+        <meta name="content-quality" content="high" />
+        <meta name="summary" content={seoData.ogDescription} />
+
+        {/* Canonical */}
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Hreflang — handled by HreflangLinks component below (avoids duplicate hreflang) */}
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:site_name" content={SEO_CONSTANTS.SITE_NAME} />
+        <meta property="og:title" content={seoData.ogTitle} />
+        <meta property="og:description" content={seoData.ogDescription} />
+        <meta property="og:image" content={SEO_CONSTANTS.OG_IMAGE_URL} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={seoData.ogTitle} />
+        <meta property="og:locale" content={OG_LOCALES[language] || 'en_US'} />
+        {SUPPORTED_LANGS.filter(l => l !== language).map((lang) => (
+          <meta key={lang} property="og:locale:alternate" content={OG_LOCALES[lang]} />
+        ))}
+
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta name="twitter:title" content={seoData.twitterTitle} />
+        <meta name="twitter:description" content={seoData.twitterDescription} />
+        <meta name="twitter:image" content={SEO_CONSTANTS.OG_IMAGE_URL} />
+        <meta name="twitter:site" content={SEO_CONSTANTS.TWITTER_HANDLE} />
+        <meta name="twitter:creator" content={SEO_CONSTANTS.TWITTER_HANDLE} />
+
+        {/* Security */}
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+        {/* Preconnect — ordered by priority */}
+        <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+        {/* JSON-LD Schema.org — 7 schemas (same as Home) */}
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdOrganization)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdWebSite)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdService)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdFAQ)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdBreadcrumb)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdSpeakable)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdHowTo)}
+        </script>
+      </Helmet>
+      <HreflangLinks pathname={location.pathname} />
 
       <style>{globalStyles}</style>
 
@@ -903,10 +1184,10 @@ const PartnerLanding: React.FC = () => {
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight">
+              <h1 id="partner-heading" className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight">
                 <FormattedMessage
                   id="partner.landing.v2.hero.title"
-                  defaultMessage="Proposez une aide juridique et administrative à vos clients {highlight}"
+                  defaultMessage="Un service juridique et administratif complet pour vos clients {highlight}"
                   values={{
                     highlight: (
                       <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
@@ -921,17 +1202,17 @@ const PartnerLanding: React.FC = () => {
               <p className="text-lg md:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
                 <FormattedMessage
                   id="partner.landing.v2.hero.subtitle"
-                  defaultMessage="Entreprises, ambassades, consulats, associations — offrez à vos clients et membres un accès direct à des avocats et experts expatriation dans 197 pays. Commissions négociées, accompagnement dédié."
+                  defaultMessage="Offrez à vos clients, membres ou abonnés un accès direct à des avocats et experts expatriation dans 197 pays, 24h/24. Une tâche en moins pour vos équipes, un service complémentaire d'exception pour votre communauté."
                 />
               </p>
 
               {/* CTA */}
               <button
-                onClick={scrollToApply}
-                className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-lg rounded-2xl transition-all animate-pulse-glow-cyan min-h-[44px] shadow-2xl shadow-cyan-500/20"
-                aria-label={intl.formatMessage({ id: 'partner.landing.v2.hero.cta.aria', defaultMessage: 'Scroll to application form' })}
+                onClick={openContactModal}
+                className="inline-flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-base sm:text-lg rounded-2xl transition-all active:scale-[0.98] animate-pulse-glow-cyan min-h-[48px] sm:min-h-[56px] shadow-2xl shadow-cyan-500/20 will-change-transform"
+                aria-label={intl.formatMessage({ id: 'partner.landing.v2.hero.cta.aria', defaultMessage: 'Ouvrir le formulaire de contact partenaire' })}
               >
-                <FormattedMessage id="partner.landing.v2.hero.cta" defaultMessage="Postuler maintenant" />
+                <FormattedMessage id="partner.landing.v2.hero.cta" defaultMessage="Discutons de votre partenariat" />
                 <ArrowRight className="w-5 h-5" />
               </button>
 
@@ -948,6 +1229,13 @@ const PartnerLanding: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden sm:flex flex-col items-center gap-1" aria-hidden="true">
+            <div className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-1.5">
+              <div className="w-1.5 h-3 rounded-full bg-cyan-400/60 animate-pulse" />
             </div>
           </div>
 
@@ -969,7 +1257,7 @@ const PartnerLanding: React.FC = () => {
               <FormattedMessage id="partner.landing.v2.value.overline" defaultMessage="Pourquoi SOS-Expat ?" />
             </p>
             <h2 id="value-heading" className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-16">
-              <FormattedMessage id="partner.landing.v2.value.title" defaultMessage="Un partenariat qui rapporte" />
+              <FormattedMessage id="partner.landing.v2.value.title" defaultMessage="Pourquoi devenir partenaire ?" />
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
@@ -993,6 +1281,17 @@ const PartnerLanding: React.FC = () => {
                 );
               })}
             </div>
+
+            {/* Inline CTA after value props */}
+            <div className="text-center mt-12">
+              <button
+                onClick={openContactModal}
+                className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-base sm:text-lg rounded-2xl transition-all active:scale-[0.98] min-h-[48px] sm:min-h-[56px] shadow-lg shadow-cyan-500/10 will-change-transform"
+              >
+                <FormattedMessage id="partner.landing.v2.inline.cta" defaultMessage="Discutons de votre partenariat" />
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1001,13 +1300,13 @@ const PartnerLanding: React.FC = () => {
         ================================================================ */}
         <section
           className="section-content section-lazy bg-gradient-to-b from-black via-gray-950 to-black"
-          aria-labelledby="steps-heading"
+          aria-labelledby="howto-heading"
         >
           <div className="max-w-6xl mx-auto">
             <p className="text-sm font-semibold uppercase tracking-widest text-cyan-400 text-center mb-4">
               <FormattedMessage id="partner.landing.v2.steps.overline" defaultMessage="Simple et rapide" />
             </p>
-            <h2 id="steps-heading" className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-16">
+            <h2 id="howto-heading" className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-16">
               <FormattedMessage id="partner.landing.v2.steps.title" defaultMessage="Comment ça marche" />
             </h2>
 
@@ -1075,6 +1374,17 @@ const PartnerLanding: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Inline CTA after profiles */}
+            <div className="text-center mt-12">
+              <button
+                onClick={openContactModal}
+                className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/10 text-cyan-400 font-bold text-base sm:text-lg rounded-2xl transition-all active:scale-[0.98] min-h-[48px] sm:min-h-[56px] will-change-transform"
+              >
+                <FormattedMessage id="partner.landing.v2.inline.cta2" defaultMessage="Votre secteur est concerné ? Parlons-en" />
+                <ArrowRight className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </section>
@@ -1172,60 +1482,123 @@ const PartnerLanding: React.FC = () => {
         </section>
 
         {/* ================================================================
-            SECTION 9 — CTA FINAL + APPLICATION FORM
+            SECTION 9 — CTA FINAL (Partnership value)
         ================================================================ */}
         <section
-          id="apply"
-          ref={applyRef}
           className="section-content section-lazy relative"
-          aria-labelledby="apply-heading"
+          aria-labelledby="cta-heading"
         >
           {/* Background accent */}
           <div className="absolute inset-0 bg-gradient-to-b from-black via-cyan-950/10 to-black" aria-hidden="true" />
 
-          <div className="relative max-w-2xl mx-auto">
-            {/* Final CTA text */}
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full text-cyan-400 text-sm font-semibold mb-6">
-                <Handshake className="w-4 h-4" />
-                <FormattedMessage id="partner.landing.v2.apply.badge" defaultMessage="Candidature gratuite" />
-              </div>
-
-              <h2 id="apply-heading" className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                <FormattedMessage id="partner.landing.v2.apply.title" defaultMessage="Rejoignez le réseau" />
-              </h2>
-              <p className="text-gray-400 text-lg max-w-xl mx-auto">
-                <FormattedMessage
-                  id="partner.landing.v2.apply.subtitle"
-                  defaultMessage="Remplissez le formulaire ci-dessous. Notre équipe vous recontacte sous 48h pour discuter de votre partenariat."
-                />
-              </p>
+          <div className="relative max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full text-cyan-400 text-sm font-semibold mb-6">
+              <Handshake className="w-4 h-4" />
+              <FormattedMessage id="partner.landing.v2.cta.badge" defaultMessage="Sans engagement" />
             </div>
 
-            {/* Form card */}
-            <div className="glass-card rounded-3xl p-6 md:p-10">
-              <ApplicationForm />
-            </div>
-
-            {/* Footer note */}
-            <p className="text-center text-gray-500 text-sm mt-8">
+            <h2 id="cta-heading" className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+              <FormattedMessage id="partner.landing.v2.cta.title" defaultMessage="Offrez un service d'exception à votre communauté" />
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-6 leading-relaxed">
               <FormattedMessage
-                id="partner.landing.v2.apply.footer"
-                defaultMessage="En soumettant ce formulaire, vous acceptez d'être contacté par l'équipe SOS-Expat. Aucun engagement, aucun frais."
+                id="partner.landing.v2.cta.subtitle"
+                defaultMessage="Un partenariat avec SOS-Expat, c'est un service complémentaire pour vos clients, une tâche en moins pour vos équipes, et une vraie valeur ajoutée pour votre organisation. Parlons-en."
               />
             </p>
+            <p className="text-gray-500 text-sm mb-10">
+              <FormattedMessage
+                id="partner.landing.v2.cta.reassurance"
+                defaultMessage="Aucun engagement, aucun frais. Notre équipe vous recontacte sous 48h."
+              />
+            </p>
+
+            <button
+              onClick={openContactModal}
+              className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-base sm:text-lg rounded-2xl transition-all active:scale-[0.98] animate-pulse-glow-cyan min-h-[48px] sm:min-h-[56px] shadow-2xl shadow-cyan-500/20 will-change-transform"
+            >
+              <FormattedMessage id="partner.landing.v2.cta.button" defaultMessage="Démarrer la conversation" />
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         </section>
 
         {/* ================================================================
+            MODAL — Contact Form (Popup)
+        ================================================================ */}
+        {showContactModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-heading"
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={closeContactModal}
+              aria-hidden="true"
+            />
+
+            {/* Modal content */}
+            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-950 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl">
+              {/* Close button */}
+              <button
+                onClick={closeContactModal}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                aria-label={intl.formatMessage({ id: 'partner.landing.v2.modal.close', defaultMessage: 'Fermer' })}
+              >
+                <Plus className="w-5 h-5 text-gray-400 rotate-45" />
+              </button>
+
+              <div className="text-center mb-8">
+                <h3 id="modal-heading" className="text-2xl md:text-3xl font-bold text-white mb-3">
+                  <FormattedMessage id="partner.landing.v2.modal.title" defaultMessage="Parlons de votre partenariat" />
+                </h3>
+                <p className="text-gray-400">
+                  <FormattedMessage id="partner.landing.v2.modal.subtitle" defaultMessage="Partagez-nous quelques informations, nous vous recontactons sous 48h pour construire ensemble votre partenariat." />
+                </p>
+              </div>
+
+              <ApplicationForm />
+
+              <p className="text-center text-gray-500 text-xs mt-6">
+                <FormattedMessage
+                  id="partner.landing.v2.modal.footer"
+                  defaultMessage="En soumettant ce formulaire, vous acceptez d'être contacté par l'équipe SOS-Expat. Aucun engagement, aucun frais."
+                />
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ================================================================
             MINI FOOTER
         ================================================================ */}
-        <footer className="border-t border-white/5 py-8 text-center" role="contentinfo">
+        <footer className="border-t border-white/5 py-8 pb-24 lg:pb-8 text-center" role="contentinfo">
           <p className="text-gray-500 text-sm">
             &copy; {new Date().getFullYear()} SOS-Expat.{' '}
             <FormattedMessage id="partner.landing.v2.footer.rights" defaultMessage="Tous droits réservés." />
           </p>
         </footer>
+      </div>
+
+      {/* ================================================================
+          STICKY CTA — Mobile only (same pattern as affiliate pages)
+      ================================================================ */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden transition-all duration-300 ${showStickyCTA && !showContactModal ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div className="bg-black/90 backdrop-blur-md border-t border-white/10 px-4 py-3">
+          <button
+            onClick={openContactModal}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-base rounded-2xl transition-all active:scale-[0.98] min-h-[48px] sm:min-h-[52px] shadow-lg shadow-cyan-500/20 will-change-transform"
+          >
+            <FormattedMessage id="partner.landing.v2.hero.cta" defaultMessage="Discutons de votre partenariat" />
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </Layout>
   );

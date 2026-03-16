@@ -1161,6 +1161,14 @@ export interface GroupAdminConfig {
   commissionActivationBonusAmount: number;
   /** N1 recruit bonus: $1 when N1 recruits a N2 */
   commissionN1RecruitBonusAmount: number;
+  /** Commission per recruited provider call — fallback (cents) */
+  commissionProviderCallAmount?: number;
+  /** Commission per recruited lawyer call (cents) */
+  commissionProviderCallAmountLawyer?: number;
+  /** Commission per recruited expat call (cents) */
+  commissionProviderCallAmountExpat?: number;
+  /** Duration in months for provider recruitment commissions */
+  providerRecruitmentDurationMonths?: number;
   /** Number of client referrals required from recruit to trigger activation bonus */
   activationCallsRequired: number;
 
@@ -1247,6 +1255,10 @@ export const DEFAULT_GROUP_ADMIN_CONFIG: Omit<GroupAdminConfig, "updatedAt" | "u
   commissionN2CallAmount: 50,            // $0.50 per N2 recruit's client call
   commissionActivationBonusAmount: 500,  // $5 activation bonus (recruit makes 2 referrals)
   commissionN1RecruitBonusAmount: 100,   // $1 when N1 recruits a N2
+  commissionProviderCallAmount: 500,     // $5 per recruited provider call (fallback)
+  commissionProviderCallAmountLawyer: 500, // $5 per recruited lawyer call
+  commissionProviderCallAmountExpat: 300,  // $3 per recruited expat call
+  providerRecruitmentDurationMonths: 6,  // 6 months commission window for provider recruits
   activationCallsRequired: 2,            // 2 referrals needed to trigger activation bonus
   activationMinDirectCommissions: 10000, // $100 minimum direct commissions to unlock activation bonus
   recruitmentMilestones: [

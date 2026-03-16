@@ -85,36 +85,7 @@ export async function createClientReferralCommission(
 
     // Get commission amount (split by provider type)
     // Locked rates on the recipient's doc take priority (Lifetime Rate Lock)
-    let amount = await getClientCommissionAmount(providerType, groupAdmin.lockedRates, groupAdmin.individualRates);
-
-    // Check for active promotions
-    let promoId: string | undefined;
-    let promoMultiplier: number | undefined;
-
-    try {
-      const { getBestPromoMultiplier } = await import("./groupAdminPromotionService");
-      const promoResult = await getBestPromoMultiplier(
-        groupAdminId,
-        groupAdmin.country || "",
-        "client_referral"
-      );
-      if (promoResult.multiplier > 1.0) {
-        const beforePromo = amount;
-        amount = Math.round(amount * promoResult.multiplier);
-        promoId = promoResult.promoId || undefined;
-        promoMultiplier = promoResult.multiplier;
-
-        // Track budget spend asynchronously
-        const bonusFromPromo = amount - beforePromo;
-        if (promoResult.promoId) {
-          import("./groupAdminPromotionService").then(({ trackBudgetSpend }) => {
-            trackBudgetSpend(promoResult.promoId!, bonusFromPromo).catch((e: unknown) => console.warn("[groupAdminCommission] trackBudgetSpend failed:", e));
-          }).catch((e: unknown) => console.warn("[groupAdminCommission] import groupAdminPromotionService failed:", e));
-        }
-      }
-    } catch {
-      // Promotion service unavailable — proceed without promo
-    }
+    const amount = await getClientCommissionAmount(providerType, groupAdmin.lockedRates, groupAdmin.individualRates);
 
     // P0 FIX: Atomic transaction — commission creation + balance update
     const commissionRef = getDb().collection("group_admin_commissions").doc();
@@ -133,7 +104,6 @@ export async function createClientReferralCommission(
       createdAt: now,
       sourceClientId: clientId,
       sourceCallId: callId,
-      ...(promoId ? { promotionId: promoId, promoMultiplier } : {}),
     };
 
     await getDb().runTransaction(async (tx) => {
@@ -693,12 +663,16 @@ export async function createN2CallCommission(
 
 /**
  * Create a N1 recruit bonus commission ($1) when a N1 recruit recruits a new N2.
- * Called from onGroupAdminCreated when the new GA has a recruitedBy that has a recruitedBy.
+ * DISABLED: Redundant with N2 commissions — grandparent already earns N2 call commissions automatically.
  */
 export async function createN1RecruitBonusCommission(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   n1AdminId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   n2AdminId: string
 ): Promise<void> {
+  // N1 recruit bonus removed — redundant with N2 commissions
+  return;
   try {
     // Duplicate check
     const dupCheck = await getDb()

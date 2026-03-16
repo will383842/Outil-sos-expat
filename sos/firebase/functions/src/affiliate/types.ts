@@ -970,9 +970,9 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
 
   commissionRules: {
     referral_signup: {
-      enabled: true,
+      enabled: false,
       type: "fixed",
-      fixedAmount: 200, // 2€
+      fixedAmount: 0,
       percentageRate: 0,
       baseAmount: null,
       conditions: {
@@ -980,7 +980,7 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
         minAccountAgeDays: 0,
         onlyFirstTime: true,
       },
-      description: "2€ par inscription validée",
+      description: "Désactivé — pas de commission à l'inscription",
     },
     referral_first_call: {
       enabled: true,
@@ -1015,40 +1015,40 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
       fixedAmountExpat: 300,   // $3 override for expat
     },
     referral_subscription: {
-      enabled: true,
+      enabled: false,
       type: "percentage",
       fixedAmount: 0,
-      percentageRate: 0.15, // 15%
+      percentageRate: 0,
       baseAmount: null,
       applyTo: "first_month",
       conditions: {
         planTypes: ["solo", "multi", "enterprise"],
         onlyFirstSubscription: true,
       },
-      description: "15% du premier mois d'abonnement",
+      description: "Désactivé — pas de commission sur les abonnements",
     },
     referral_subscription_renewal: {
-      enabled: true,
+      enabled: false,
       type: "percentage",
       fixedAmount: 0,
-      percentageRate: 0.05, // 5%
+      percentageRate: 0,
       baseAmount: null,
       conditions: {
-        maxMonths: 12, // 1 year
+        maxMonths: 12,
       },
-      description: "5% des renouvellements (max 12 mois)",
+      description: "Désactivé — pas de commission sur les renouvellements",
     },
     referral_provider_validated: {
-      enabled: true,
+      enabled: false,
       type: "fixed",
-      fixedAmount: 2000, // 20€
+      fixedAmount: 0,
       percentageRate: 0,
       baseAmount: null,
       conditions: {
         requireKYCComplete: true,
         requireFirstCall: false,
       },
-      description: "20€ si prestataire parrainé complète son KYC",
+      description: "Désactivé — pas de bonus prestataire",
     },
   },
 

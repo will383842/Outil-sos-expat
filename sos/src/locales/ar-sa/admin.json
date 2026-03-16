@@ -563,6 +563,8 @@
   "admin.providerActions.suspendedSuccess": "تم تعليق مقدم الخدمة",
   "admin.sidebar.collapse": "طي",
   "admin.sidebar.expand": "توسيع",
+  "admin.menu.affiliationPartnership": "التسويق بالعمولة والشراكة",
+  "admin.menu.affiliationPartnership.description": "برنامج التسويق بالعمولة وإدارة الشركاء",
   "admin.menu.affiliation": "الشراكات والتسويق بالعمولة",
   "admin.menu.affiliation.description": "برنامج الشركاء والتسويق بالعمولة",
   "admin.menu.affiliatePayouts": "مدفوعات الشركاء",

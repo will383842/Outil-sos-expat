@@ -28,15 +28,6 @@ export {
 } from "./recruitments";
 
 export {
-  adminGetGroupAdminPromotions,
-  adminCreateGroupAdminPromotion,
-  adminUpdateGroupAdminPromotion,
-  adminDeleteGroupAdminPromotion,
-  adminGetGroupAdminPromotionStats,
-  adminDuplicateGroupAdminPromotion,
-} from "./promotions";
-
-export {
   adminToggleGroupAdminVisibility,
 } from "./toggleVisibility";
 

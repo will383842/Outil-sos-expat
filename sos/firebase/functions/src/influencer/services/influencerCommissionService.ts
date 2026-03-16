@@ -270,45 +270,11 @@ export async function createCommission(
       return { success: false, error: `Invalid amount: must be a non-negative integer (cents). Got: ${baseCommissionAmount}` };
     }
 
-    // 5b. Check for active promotions
-    let promoMultiplier = 1.0;
-    let promoId: string | null = null;
-    let promoName: string | null = null;
+    // 5b. All commissions are fixed amounts only (no multipliers).
+    const commissionAmount = baseCommissionAmount;
+    const calculationDetails = `Base: ${baseCommissionAmount} (fixed, no multipliers)`;
 
-    try {
-      const { getBestPromoMultiplier: getPromo } = await import("./influencerPromotionService");
-      const promoResult = await getPromo(
-        influencerId,
-        influencer.country || "",
-        type
-      );
-      promoMultiplier = promoResult.multiplier;
-      promoId = promoResult.promoId;
-      promoName = promoResult.promoName;
-    } catch {
-      // Promotion service unavailable — proceed without promo
-    }
-
-    // 5c. All commissions are fixed amounts only (no multipliers).
-    let commissionAmount = baseCommissionAmount;
-    let calculationDetails = `Base: ${baseCommissionAmount} (fixed, no multipliers)`;
-
-    // 5d. Apply promotion multiplier
-    if (promoMultiplier > 1.0) {
-      const beforePromo = commissionAmount;
-      commissionAmount = Math.round(commissionAmount * promoMultiplier);
-      const bonusFromPromo = commissionAmount - beforePromo;
-      calculationDetails += ` | Promo "${promoName}" x${promoMultiplier} (+${bonusFromPromo})`;
-
-      // Track budget spend asynchronously
-      if (promoId) {
-        import("./influencerPromotionService").then(({ trackBudgetSpend }) => {
-          trackBudgetSpend(promoId!, bonusFromPromo).catch((e: unknown) => console.warn("[influencerCommission] trackBudgetSpend failed:", e));
-        }).catch((e: unknown) => console.warn("[influencerCommission] import influencerPromotionService failed:", e));
-      }
-    }
-
-    // 5e. Create timestamp
+    // 5c. Create timestamp
     const now = Timestamp.now();
 
     // 6. Create commission document
@@ -333,7 +299,6 @@ export async function createCommission(
       availableAt: null,
       withdrawalId: null,
       paidAt: null,
-      ...(promoId ? { promotionId: promoId, promoMultiplier } : {}),
       createdAt: now,
       updatedAt: now,
     };

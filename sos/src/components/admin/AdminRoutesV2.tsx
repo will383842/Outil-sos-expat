@@ -127,20 +127,11 @@ const AdminExpats = lazy(() => import("../../pages/admin/AdminExpats"));
 const AdminClientsFraud = lazy(
   () => import("../../pages/admin/Clients/AdminClientsFraud")
 );
-const AdminClientsPromotions = lazy(
-  () => import("../../pages/admin/Clients/AdminClientsPromotions")
-);
 const AdminLawyersFraud = lazy(
   () => import("../../pages/admin/Lawyers/AdminLawyersFraud")
 );
-const AdminLawyersPromotions = lazy(
-  () => import("../../pages/admin/Lawyers/AdminLawyersPromotions")
-);
 const AdminExpatsFraud = lazy(
   () => import("../../pages/admin/Expats/AdminExpatsFraud")
-);
-const AdminExpatsPromotions = lazy(
-  () => import("../../pages/admin/Expats/AdminExpatsPromotions")
 );
 const AdminClientsAnalytics = lazy(
   () => import("../../pages/admin/Clients/AdminClientsAnalytics")
@@ -392,9 +383,6 @@ const AdminCaptainCoverage = lazy(
 const AdminChatterReferrals = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterReferrals")
 );
-const AdminChatterPromotions = lazy(
-  () => import("../../pages/admin/Chatter/AdminChatterPromotions")
-);
 const AdminChatterFraud = lazy(
   () => import("../../pages/admin/Chatter/AdminChatterFraud")
 );
@@ -447,9 +435,6 @@ const AdminInfluencerAnalytics = lazy(
 const AdminInfluencerFraud = lazy(
   () => import("../../pages/admin/Influencer/AdminInfluencerFraud")
 );
-const AdminInfluencersPromotions = lazy(
-  () => import("../../pages/admin/Influencers/AdminInfluencersPromotions")
-);
 
 // ===== LAZY IMPORTS - BLOGGER =====
 const AdminBloggersList = lazy(
@@ -480,9 +465,6 @@ const AdminBloggerAnalytics = lazy(
 const AdminBloggerFraud = lazy(
   () => import("../../pages/admin/Blogger/AdminBloggerFraud")
 );
-const AdminBloggersPromotions = lazy(
-  () => import("../../pages/admin/Bloggers/AdminBloggersPromotions")
-);
 
 // ===== LAZY IMPORTS - GROUPADMIN =====
 const AdminGroupAdminsList = lazy(
@@ -503,9 +485,6 @@ const AdminGroupAdminsPosts = lazy(
 );
 const AdminGroupAdminsRecruitments = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsRecruitments")
-);
-const AdminGroupAdminsPromotions = lazy(
-  () => import("../../pages/admin/GroupAdmins/AdminGroupAdminsPromotions")
 );
 const AdminGroupAdminAnalytics = lazy(
   () => import("../../pages/admin/GroupAdmins/AdminGroupAdminAnalytics")
@@ -539,9 +518,6 @@ const AdminPartnerApplications = lazy(
 );
 const AdminPartnersFraud = lazy(
   () => import("../../pages/admin/Partners/AdminPartnersFraud")
-);
-const AdminPartnersPromotions = lazy(
-  () => import("../../pages/admin/Partners/AdminPartnersPromotions")
 );
 
 // ===== LAZY IMPORTS - CENTRALIZED PAYMENTS =====
@@ -1390,14 +1366,6 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="chatters/promotions"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminChatterPromotions />
-          </Suspense>
-        }
-      />
-      <Route
         path="chatters/fraud"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -1543,14 +1511,6 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="influencers/promotions"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminInfluencersPromotions />
-          </Suspense>
-        }
-      />
-      <Route
         path="influencers/analytics"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -1644,14 +1604,6 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
-      <Route
-        path="bloggers/promotions"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminBloggersPromotions />
-          </Suspense>
-        }
-      />
 
       {/* 👥 GROUP-ADMINS (Facebook Group Administrators) */}
       <Route
@@ -1707,14 +1659,6 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
       <Route
-        path="group-admins/promotions"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminGroupAdminsPromotions />
-          </Suspense>
-        }
-      />
-      <Route
         path="group-admins/analytics"
         element={
           <Suspense fallback={<LoadingSpinner />}>
@@ -1741,23 +1685,19 @@ const AdminRoutesV2: React.FC = () => {
       <Route path="partners/stats" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersStats /></Suspense>} />
       <Route path="partners/applications" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnerApplications /></Suspense>} />
       <Route path="partners/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersFraud /></Suspense>} />
-      <Route path="partners/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminPartnersPromotions /></Suspense>} />
 
       {/* 👤 CLIENTS (Affiliate) */}
       <Route path="clients/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsFraud /></Suspense>} />
-      <Route path="clients/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsPromotions /></Suspense>} />
       <Route path="clients/analytics" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsAnalytics /></Suspense>} />
       <Route path="clients/config" element={<Suspense fallback={<LoadingSpinner />}><AdminClientsConfig /></Suspense>} />
 
       {/* ⚖️ LAWYERS (Affiliate) */}
       <Route path="lawyers/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersFraud /></Suspense>} />
-      <Route path="lawyers/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersPromotions /></Suspense>} />
       <Route path="lawyers/analytics" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersAnalytics /></Suspense>} />
       <Route path="lawyers/config" element={<Suspense fallback={<LoadingSpinner />}><AdminLawyersConfig /></Suspense>} />
 
       {/* 🌍 EXPATS (Affiliate) */}
       <Route path="expats/fraud" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsFraud /></Suspense>} />
-      <Route path="expats/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsPromotions /></Suspense>} />
       <Route path="expats/analytics" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsAnalytics /></Suspense>} />
       <Route path="expats/config" element={<Suspense fallback={<LoadingSpinner />}><AdminExpatsConfig /></Suspense>} />
 
@@ -2287,7 +2227,6 @@ export const useAdminRouteValidation = () => {
       "/admin/influencers/leaderboard",
       "/admin/influencers/config",
       "/admin/influencers/resources",
-      "/admin/influencers/promotions",
       "/admin/bloggers",
       "/admin/bloggers/:bloggerId",
       "/admin/bloggers/payments",
@@ -2302,7 +2241,6 @@ export const useAdminRouteValidation = () => {
       "/admin/group-admins/resources",
       "/admin/group-admins/posts",
       "/admin/group-admins/config",
-      "/admin/group-admins/promotions",
       "/admin/payments",
       "/admin/payments/withdrawals",
       "/admin/payments/:userType/:withdrawalId",

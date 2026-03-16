@@ -560,6 +560,8 @@
   "admin.providerActions.suspendedSuccess": "Провайдер приостановлен",
   "admin.sidebar.collapse": "Свернуть",
   "admin.sidebar.expand": "Развернуть",
+  "admin.menu.affiliationPartnership": "Аффилиация и Партнёрство",
+  "admin.menu.affiliationPartnership.description": "Партнёрская программа и управление партнёрами",
   "admin.menu.affiliation": "Партнёрство и аффилиаты",
   "admin.menu.affiliation.description": "Партнёрская программа и аффилиаты",
   "admin.menu.affiliatePayouts": "Выплаты партнёрам",
