@@ -94,6 +94,7 @@ export const aaaBusySimulation = scheduler.onSchedule(
       // Catégoriser les profils AAA
       const simulatedBusy: admin.firestore.QueryDocumentSnapshot[] = [];
       const expiredBusy: admin.firestore.QueryDocumentSnapshot[] = [];
+      const staleSimulation: admin.firestore.QueryDocumentSnapshot[] = [];
       const availableForSimulation: admin.firestore.QueryDocumentSnapshot[] = [];
 
       for (const doc of aaaSnapshot.docs) {
@@ -106,8 +107,11 @@ export const aaaBusySimulation = scheduler.onSchedule(
         }
 
         if (simulatedAt > 0) {
-          // Ce profil est en busy simulé
-          if (nowMs - simulatedAt >= busyDurationMs) {
+          if (data.availability !== 'busy') {
+            // Champs simulation stales (un vrai appel a libéré ce profil entre-temps)
+            // → nettoyer les marqueurs et traiter comme disponible
+            staleSimulation.push(doc);
+          } else if (nowMs - simulatedAt >= busyDurationMs) {
             // Expiré → à libérer
             expiredBusy.push(doc);
           } else {
@@ -121,7 +125,32 @@ export const aaaBusySimulation = scheduler.onSchedule(
         }
       }
 
-      console.log(`🤖 [AAA Simulation] État: ${simulatedBusy.length} busy actifs, ${expiredBusy.length} expirés, ${availableForSimulation.length} disponibles`);
+      console.log(`🤖 [AAA Simulation] État: ${simulatedBusy.length} busy actifs, ${expiredBusy.length} expirés, ${staleSimulation.length} stales, ${availableForSimulation.length} disponibles`);
+
+      // 2b. Nettoyer les profils avec des champs simulation stales
+      // (un vrai appel a libéré le profil mais n'a pas nettoyé les marqueurs AAA)
+      if (staleSimulation.length > 0) {
+        let staleBatch = db.batch();
+        let staleOpCount = 0;
+        for (const doc of staleSimulation) {
+          const cleanupData: Record<string, any> = {
+            aaaBusySimulatedAt: admin.firestore.FieldValue.delete(),
+            aaaPreviousAvailability: admin.firestore.FieldValue.delete(),
+          };
+          staleBatch.update(doc.ref, cleanupData);
+          staleBatch.update(db.collection('users').doc(doc.id), cleanupData);
+          staleOpCount += 2;
+          if (staleOpCount >= BATCH_SAFE_LIMIT) {
+            await staleBatch.commit();
+            staleBatch = db.batch();
+            staleOpCount = 0;
+          }
+        }
+        if (staleOpCount > 0) {
+          await staleBatch.commit();
+        }
+        console.log(`🤖 [AAA Simulation] 🧹 ${staleSimulation.length} profils avec champs simulation stales nettoyés`);
+      }
 
       // 3. Libérer les profils expirés
       if (expiredBusy.length > 0) {
@@ -129,10 +158,15 @@ export const aaaBusySimulation = scheduler.onSchedule(
         let releaseOpCount = 0;
 
         for (const doc of expiredBusy) {
-          const releaseData = buildReleaseData(now);
+          const data = doc.data();
+          const releaseData = buildReleaseData(now, data.aaaPreviousAvailability);
           releaseBatch.update(doc.ref, releaseData);
           releaseBatch.update(db.collection('users').doc(doc.id), releaseData);
           releaseOpCount += 2;
+
+          if (data.aaaPreviousAvailability === 'offline') {
+            console.log(`🤖 [AAA Simulation] → ${doc.id} était offline avant → restauré offline`);
+          }
 
           if (releaseOpCount >= BATCH_SAFE_LIMIT) {
             await releaseBatch.commit();
@@ -160,7 +194,8 @@ export const aaaBusySimulation = scheduler.onSchedule(
         let relBatch = db.batch();
         let relOpCount = 0;
         for (const doc of profilesToRelease) {
-          const releaseData = buildReleaseData(now);
+          const data = doc.data();
+          const releaseData = buildReleaseData(now, data.aaaPreviousAvailability);
           relBatch.update(doc.ref, releaseData);
           relBatch.update(db.collection('users').doc(doc.id), releaseData);
           relOpCount += 2;
@@ -205,6 +240,7 @@ export const aaaBusySimulation = scheduler.onSchedule(
         const staggerOffset = i * staggerMs;
         const simulatedAt = admin.firestore.Timestamp.fromMillis(nowMs - staggerOffset);
 
+        const docData = doc.data();
         const busyData: Record<string, any> = {
           availability: 'busy',
           isOnline: true,
@@ -213,6 +249,8 @@ export const aaaBusySimulation = scheduler.onSchedule(
           busyReason: 'in_call',
           busyBySibling: false,
           aaaBusySimulatedAt: simulatedAt,
+          // Sauvegarder l'état précédent pour le restaurer après la simulation
+          aaaPreviousAvailability: docData.availability || 'available',
           lastStatusChange: now,
           lastActivityCheck: now,
           lastActivity: now,
@@ -245,20 +283,23 @@ export const aaaBusySimulation = scheduler.onSchedule(
 );
 
 /**
- * Construit l'objet de release pour remettre un profil en available.
+ * Construit l'objet de release pour remettre un profil dans son état précédent.
+ * Si le profil était offline avant la simulation, il repasse offline.
  * Supprime tous les champs busy pour un nettoyage complet.
  */
-function buildReleaseData(now: admin.firestore.Timestamp): Record<string, any> {
+function buildReleaseData(now: admin.firestore.Timestamp, previousAvailability?: string): Record<string, any> {
+  const wasOffline = previousAvailability === 'offline';
   return {
-    availability: 'available',
-    isOnline: true,
-    isActive: true,
+    availability: wasOffline ? 'offline' : 'available',
+    isOnline: !wasOffline,
+    isActive: !wasOffline,
     busySince: admin.firestore.FieldValue.delete(),
     busyReason: admin.firestore.FieldValue.delete(),
     busyBySibling: admin.firestore.FieldValue.delete(),
     busySiblingProviderId: admin.firestore.FieldValue.delete(),
     busySiblingCallSessionId: admin.firestore.FieldValue.delete(),
     aaaBusySimulatedAt: admin.firestore.FieldValue.delete(),
+    aaaPreviousAvailability: admin.firestore.FieldValue.delete(),
     lastStatusChange: now,
     lastActivityCheck: now,
     lastActivity: now,
@@ -289,7 +330,7 @@ async function releaseAllSimulatedBusy(db: admin.firestore.Firestore): Promise<v
       // Ne libérer que les profils effectivement en simulation busy
       if (!data.aaaBusySimulatedAt || data.availability !== 'busy') continue;
 
-      const releaseData = buildReleaseData(now);
+      const releaseData = buildReleaseData(now, data.aaaPreviousAvailability);
       batch.update(doc.ref, releaseData);
       batch.update(db.collection('users').doc(doc.id), releaseData);
       opCount += 2;

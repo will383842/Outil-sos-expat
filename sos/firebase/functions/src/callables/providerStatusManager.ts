@@ -610,6 +610,9 @@ export async function setProviderAvailable(
         offlineSince: admin.firestore.FieldValue.delete(),
         // Clean up safety timeout task ID
         busySafetyTimeoutTaskId: admin.firestore.FieldValue.delete(),
+        // Clean up AAA simulation fields (si un vrai appel a overridé une simulation)
+        aaaBusySimulatedAt: admin.firestore.FieldValue.delete(),
+        aaaPreviousAvailability: admin.firestore.FieldValue.delete(),
         lastStatusChange: now,
         lastActivityCheck: now,
         lastActivity: now,

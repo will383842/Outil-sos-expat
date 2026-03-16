@@ -96,7 +96,7 @@ service cloud.firestore {
                                    'bannedAt', 'bannedReason', 'forcedAiAccess',
                                    'forceAiAccess', 'forcedAIAccess', 'freeTrialUntil',
                                    'freeTrialGrantedBy', 'stripeCustomerId',
-                                   'payoutMode', 'aaaPayoutMode', 'isAAA', 'aaaBusySimulatedAt',
+                                   'payoutMode', 'aaaPayoutMode', 'isAAA', 'aaaBusySimulatedAt', 'aaaPreviousAvailability',
                                    'affiliateCode', 'referredBy', 'referredByUserId',
                                    'capturedRates', 'lockedRates',
                                    'commissionPlanId', 'commissionPlanName', 'rateLockDate',
@@ -139,7 +139,7 @@ service cloud.firestore {
                           .hasAny(['stripeAccountId', 'paypalMerchantId', 'stripeCustomerId',
                                    'totalEarnings', 'totalPayPalEarnings', 'pendingBalance', 'reservedBalance',
                                    'paypalEmailVerified', 'paypalEmailVerifiedAt',
-                                   'payoutMode', 'aaaPayoutMode', 'isAAA', 'aaaBusySimulatedAt',
+                                   'payoutMode', 'aaaPayoutMode', 'isAAA', 'aaaBusySimulatedAt', 'aaaPreviousAvailability',
                                    'isFeatured', 'featuredAt', 'featuredBy']))
                        || isAdmin();
       allow delete: if isAdmin();
