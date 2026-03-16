@@ -84,7 +84,7 @@ export async function checkAndPayRecruitmentMilestones(
         [`${ctx.role}Id`]: ctx.affiliateId,
         type: ctx.commissionType,
         amount: milestone.bonus,
-        status: "validated",
+        status: "pending",
         source: {
           id: null,
           type: "milestone",
@@ -96,15 +96,14 @@ export async function checkAndPayRecruitmentMilestones(
         },
         description: `Milestone bonus: ${milestone.recruits} recrues → $${milestone.bonus / 100}`,
         createdAt: now,
-        validatedAt: now,
-        availableAt: now, // Immediately available
       });
 
-      // Update affiliate doc: add to tierBonusesPaid + credit balance
+      // Update affiliate doc: add to tierBonusesPaid + increment pending balance
+      // Commission will be validated then released by scheduled functions
       await db.collection(ctx.collection).doc(ctx.affiliateId).update({
         tierBonusesPaid: FieldValue.arrayUnion(i),
-        availableBalance: FieldValue.increment(milestone.bonus),
-        totalEarned: FieldValue.increment(milestone.bonus),
+        pendingBalance: FieldValue.increment(milestone.bonus),
+        totalCommissions: FieldValue.increment(1),
       });
 
       paidMilestones.push({

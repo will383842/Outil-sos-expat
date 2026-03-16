@@ -407,14 +407,14 @@ export async function handleCallCompleted(
                 ?? recruiter.lockedRates?.commissionActivationBonusAmount
                 ?? 500; // $5
 
-              // Create activation bonus commission
+              // Create activation bonus commission (pending — goes through validation/release cycle)
               const actRef = db.collection("affiliate_commissions").doc();
               await actRef.set({
                 id: actRef.id,
                 referrerId: recruiterId,
                 type: "activation_bonus",
                 amount: activationAmount,
-                status: "validated",
+                status: "pending",
                 source: {
                   type: "activation",
                   details: {
@@ -424,13 +424,12 @@ export async function handleCallCompleted(
                 },
                 description: `Bonus activation: filleul activé`,
                 createdAt: Timestamp.now(),
-                validatedAt: Timestamp.now(),
               });
 
-              // Credit recruiter
+              // Increment pending balance (will be validated/released by scheduled function)
               await db.collection("users").doc(recruiterId).update({
-                availableBalance: FieldValue.increment(activationAmount),
-                totalEarned: FieldValue.increment(activationAmount),
+                pendingBalance: FieldValue.increment(activationAmount),
+                totalCommissions: FieldValue.increment(1),
               });
 
               await db.collection("users").doc(referredByUserId).update({ activationBonusPaid: true });
@@ -456,16 +455,15 @@ export async function handleCallCompleted(
                     referrerId: recruiter.recruitedBy,
                     type: "n1_recruit_bonus",
                     amount: n1RecruitAmt,
-                    status: "validated",
+                    status: "pending",
                     source: { type: "recruitment", details: { activatedUserId: referredByUserId, recruiterId } },
                     description: `Bonus N1 recrutement`,
                     createdAt: Timestamp.now(),
-                    validatedAt: Timestamp.now(),
                   });
 
                   await db.collection("users").doc(recruiter.recruitedBy).update({
-                    availableBalance: FieldValue.increment(n1RecruitAmt),
-                    totalEarned: FieldValue.increment(n1RecruitAmt),
+                    pendingBalance: FieldValue.increment(n1RecruitAmt),
+                    totalCommissions: FieldValue.increment(1),
                   });
                 }
               }
@@ -488,19 +486,18 @@ export async function handleCallCompleted(
               referrerId: freshUser.recruitedBy,
               type: "n1_call",
               amount: n1Amt,
-              status: "validated",
+              status: "pending",
               source: {
                 type: "n1_call",
                 details: { originUserId: referredByUserId, clientId: after?.clientId, providerType: after?.providerType },
               },
               description: `Commission N1: appel client référé`,
               createdAt: Timestamp.now(),
-              validatedAt: Timestamp.now(),
             });
 
             await db.collection("users").doc(freshUser.recruitedBy).update({
-              availableBalance: FieldValue.increment(n1Amt),
-              totalEarned: FieldValue.increment(n1Amt),
+              pendingBalance: FieldValue.increment(n1Amt),
+              totalCommissions: FieldValue.increment(1),
             });
           }
         }
@@ -520,19 +517,18 @@ export async function handleCallCompleted(
               referrerId: freshUser.parrainNiveau2Id,
               type: "n2_call",
               amount: n2Amt,
-              status: "validated",
+              status: "pending",
               source: {
                 type: "n2_call",
                 details: { originUserId: referredByUserId, n1Id: freshUser.recruitedBy, providerType: after?.providerType },
               },
               description: `Commission N2: appel client référé`,
               createdAt: Timestamp.now(),
-              validatedAt: Timestamp.now(),
             });
 
             await db.collection("users").doc(freshUser.parrainNiveau2Id).update({
-              availableBalance: FieldValue.increment(n2Amt),
-              totalEarned: FieldValue.increment(n2Amt),
+              pendingBalance: FieldValue.increment(n2Amt),
+              totalCommissions: FieldValue.increment(1),
             });
           }
         }
