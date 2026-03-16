@@ -18,6 +18,7 @@
 
 import { useState, useEffect } from 'react';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import AdminLayout from '../../../components/admin/AdminLayout';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../contexts/useAuth';
@@ -251,11 +252,14 @@ export function PaymentsMonitoringDashboard() {
 
   if (loading) {
     return (
-      <LoadingSpinner size="large" color="blue" text="Chargement des paiements..." fullPage />
+      <AdminLayout>
+        <LoadingSpinner size="large" color="blue" text="Chargement des paiements..." fullPage />
+      </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout>
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
@@ -453,6 +457,7 @@ export function PaymentsMonitoringDashboard() {
         </div>
       </div>
     </div>
+    </AdminLayout>
   );
 }
 
