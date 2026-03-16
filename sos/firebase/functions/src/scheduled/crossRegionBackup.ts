@@ -15,6 +15,7 @@ import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "firebase-functions";
+import { forwardEventToEngine } from "../telegram/forwardToEngine";
 
 // CRITICAL: Lazy initialization to avoid deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -194,6 +195,15 @@ export const dailyCrossRegionBackup = onSchedule(
             acknowledged: false,
             createdAt: admin.firestore.Timestamp.now(),
           });
+
+          // Notification Telegram backup partiel
+          await forwardEventToEngine("security.alert", undefined, {
+            alertType: "backup_failure",
+            userEmail: "system",
+            ipAddress: "-",
+            country: "-",
+            details: `Cross-region backup PARTIEL: ${allErrors.length} erreurs de copie`,
+          });
         }
       } else {
         logger.info(`[CrossRegionBackup] Completed successfully. Copied: ${totalCopied} files`);
@@ -217,6 +227,15 @@ export const dailyCrossRegionBackup = onSchedule(
         message: `Cross-region backup failed: ${err.message}`,
         acknowledged: false,
         createdAt: admin.firestore.Timestamp.now(),
+      });
+
+      // Notification Telegram
+      await forwardEventToEngine("security.alert", undefined, {
+        alertType: "backup_failure",
+        userEmail: "system",
+        ipAddress: "-",
+        country: "-",
+        details: `Cross-region backup ECHOUE: ${err.message}`,
       });
 
       throw error;

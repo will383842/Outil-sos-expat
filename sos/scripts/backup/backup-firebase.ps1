@@ -10,7 +10,7 @@
 # ============================================================
 
 param(
-    [string]$BackupRoot = "C:\FirebaseBackups\sos-expat",
+    [string]$BackupRoot = "C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat",
     [string]$ProjectId = "sos-urgently-ac307",
     [int]$RetentionDays = 30
 )

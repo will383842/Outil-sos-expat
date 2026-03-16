@@ -23,7 +23,7 @@ set TASK=SOS-Expat-Backup-Auto
 
 echo Nom tache: %TASK%
 echo Heure: 03:00 chaque nuit
-echo Destination: C:\Users\willi\Documents\BACKUP_SOS-Expat
+echo Destination: C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat
 echo.
 
 schtasks /delete /tn "%TASK%" /f 2>nul

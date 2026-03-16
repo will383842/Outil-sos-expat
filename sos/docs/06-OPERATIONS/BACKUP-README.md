@@ -40,7 +40,7 @@ Double-cliquez sur **`backup-now.bat`**
 ## Emplacement des sauvegardes
 
 ```
-C:\FirebaseBackups\sos-expat\
+C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat\
     2024-01-15_02-00-00\
         firestore\           <- Base de donnees
         storage\             <- Fichiers uploades
@@ -94,7 +94,7 @@ async function restore(backupPath) {
 }
 
 // Utilisation:
-// restore('C:/FirebaseBackups/sos-expat/2024-01-15_02-00-00');
+// restore('C:/Users/willi/Documents/Projets/VS_CODE/Sauvegardes/Sauv_sos_expat/2024-01-15_02-00-00');
 ```
 
 ### Restaurer Authentication
@@ -165,8 +165,8 @@ Verifiez vos permissions IAM dans la console Google Cloud.
 
 | Type | Frequence | Retention | Emplacement |
 |------|-----------|-----------|-------------|
-| Local | Quotidien | 30 jours | C:\FirebaseBackups |
+| Local | Quotidien | 30 jours | C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat |
 | Cloud | Hebdomadaire | 6 mois | Google Drive / OneDrive |
 | Externe | Mensuel | 1 an | Disque dur externe |
 
-**Conseil**: Synchronisez `C:\FirebaseBackups` avec Google Drive ou OneDrive pour avoir une copie cloud automatique de vos backups locaux.
+**Conseil**: Synchronisez `C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat` avec Google Drive ou OneDrive pour avoir une copie cloud automatique de vos backups locaux.

@@ -16,6 +16,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as functions from "firebase-functions/v1";
 import { logger } from "firebase-functions";
 import * as crypto from "crypto";
+import { forwardEventToEngine } from "../telegram/forwardToEngine";
 
 // ============================================================================
 // CONFIGURATION
@@ -455,6 +456,15 @@ export const monthlySecretsConfigBackup = onSchedule(
         message: `Secrets/config backup failed: ${err.message}`,
         acknowledged: false,
         createdAt: admin.firestore.Timestamp.now(),
+      });
+
+      // Notification Telegram
+      await forwardEventToEngine("security.alert", undefined, {
+        alertType: "backup_failure",
+        userEmail: "system",
+        ipAddress: "-",
+        country: "-",
+        details: `Secrets/config backup ECHOUE: ${err.message}`,
       });
 
       throw error;

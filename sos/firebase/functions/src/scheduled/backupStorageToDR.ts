@@ -10,6 +10,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions";
+import { forwardEventToEngine } from "../telegram/forwardToEngine";
 import { Storage } from "@google-cloud/storage";
 
 // ============================================================================
@@ -28,6 +29,12 @@ const CONFIG = {
     "documents/",          // Documents KYC
     "invoices/",           // Factures PDF
     "auth_backups/",       // Backups Auth (déjà copiés mais on s'assure)
+    "chatter_photos/",     // Photos chatters
+    "blogger_photos/",     // Photos bloggers
+    "influencer_photos/",  // Photos influencers
+    "group_admin_photos/", // Photos group admins
+    "disputes/",           // Preuves litiges
+    "sitemaps/",           // Sitemaps SEO
   ],
   // Préfixes à exclure (fichiers temporaires)
   EXCLUDE_PREFIXES: [
@@ -44,12 +51,12 @@ const CONFIG = {
 // ============================================================================
 
 /**
- * Backup hebdomadaire des fichiers Storage vers DR
- * 2025-01-16: Réduit de quotidien à hebdomadaire (dimanche) pour économies (~€8/mois)
+ * Backup quotidien des fichiers Storage vers DR
+ * 2026-03-16: Remonté à quotidien pour réduire le RPO de 7j à 24h
  */
 export const backupStorageToDR = onSchedule(
   {
-    schedule: "0 5 * * 0", // Dimanche 5h du matin (était: tous les jours)
+    schedule: "0 5 * * *", // Tous les jours à 5h du matin
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",  // FIX: 512MiB needs cpu>=0.5, reduced to 256MiB
@@ -160,6 +167,15 @@ export const backupStorageToDR = onSchedule(
           acknowledged: false,
           createdAt: admin.firestore.Timestamp.now(),
         });
+
+        // Notification Telegram backup partiel
+        await forwardEventToEngine("security.alert", undefined, {
+          alertType: "backup_failure",
+          userEmail: "system",
+          ipAddress: "-",
+          country: "-",
+          details: `Storage backup DR PARTIEL: ${stats.errorFiles} fichiers en erreur`,
+        });
       }
 
     } catch (error: unknown) {
@@ -172,6 +188,15 @@ export const backupStorageToDR = onSchedule(
         message: `Storage backup to DR failed: ${err.message}`,
         acknowledged: false,
         createdAt: admin.firestore.Timestamp.now(),
+      });
+
+      // Notification Telegram
+      await forwardEventToEngine("security.alert", undefined, {
+        alertType: "backup_failure",
+        userEmail: "system",
+        ipAddress: "-",
+        country: "-",
+        details: `Storage backup DR ECHOUE: ${err.message}`,
       });
 
       throw error;

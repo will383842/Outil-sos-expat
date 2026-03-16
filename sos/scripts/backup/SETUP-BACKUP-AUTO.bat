@@ -11,7 +11,7 @@ echo ============================================================
 echo.
 echo Ce script va creer une tache planifiee Windows qui:
 echo - Execute un backup complet tous les jours a 02:00
-echo - Sauvegarde dans: C:\Users\willi\Documents\BACKUP_SOS-Expat
+echo - Sauvegarde dans: C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat
 echo - Conserve les 30 derniers jours de backups
 echo.
 echo IMPORTANT: Ce script doit etre execute en tant qu'ADMINISTRATEUR

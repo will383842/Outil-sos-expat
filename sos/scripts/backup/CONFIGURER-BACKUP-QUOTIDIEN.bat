@@ -24,7 +24,7 @@ if %errorLevel% neq 0 (
 
 set SCRIPT_PATH=%~dp0auto-backup-complete.ps1
 set TASK_NAME=SOS-Expat-Backup-Quotidien
-set BACKUP_DEST=C:\Users\willi\Documents\BACKUP_SOS-Expat
+set BACKUP_DEST=C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat
 
 echo Configuration:
 echo   Nom de la tache: %TASK_NAME%

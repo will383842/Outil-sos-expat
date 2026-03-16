@@ -12,7 +12,7 @@
 # ============================================================
 
 param(
-    [string]$BackupRoot = "C:\Users\willi\Documents\BACKUP_SOS-Expat",
+    [string]$BackupRoot = "C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat",
     [string]$ProjectId = "sos-urgently-ac307",
     [int]$RetentionDays = 30
 )

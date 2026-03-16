@@ -109,7 +109,7 @@ Write-Host ""
 # 6. VERIFIER LES BACKUPS LOCAUX
 # ============================================================
 Write-Host "6. BACKUPS LOCAUX" -ForegroundColor Cyan
-$localBackupDir = "C:\Users\willi\Documents\BACKUP_SOS-Expat"
+$localBackupDir = "C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat"
 if (Test-Path $localBackupDir) {
     $localBackups = Get-ChildItem $localBackupDir -Directory | Sort-Object CreationTime -Descending | Select-Object -First 5
     if ($localBackups.Count -gt 0) {

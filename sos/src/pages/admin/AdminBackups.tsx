@@ -28,6 +28,11 @@ import {
   RotateCcw,
   Eye,
   Info,
+  Send,
+  Zap,
+  MessageCircle,
+  Search,
+  Briefcase,
 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
@@ -270,6 +275,7 @@ const AdminBackups: React.FC = () => {
   const [codeError, setCodeError] = useState("");
 
   // UI state
+  const [activeSection, setActiveSection] = useState<"sos-expat" | "telegram-engine" | "motivation-engine" | "whatsapp-campaigns" | "influenceurs-tracker" | "offres-emploi">("sos-expat");
   const [activeTab, setActiveTab] = useState<"overview" | "restore" | "history" | "local">("overview");
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
@@ -538,6 +544,34 @@ const AdminBackups: React.FC = () => {
           </Button>
         </div>
 
+        {/* Section Tabs */}
+        <div className="border-b mb-6 overflow-x-auto">
+          <nav className="flex gap-1 min-w-max">
+            {[
+              { id: "sos-expat" as const, label: "SOS Expat", icon: Database },
+              { id: "telegram-engine" as const, label: "Telegram Engine", icon: Send },
+              { id: "motivation-engine" as const, label: "Motivation Engine", icon: Zap },
+              { id: "whatsapp-campaigns" as const, label: "WhatsApp Campaigns", icon: MessageCircle },
+              { id: "influenceurs-tracker" as const, label: "Influenceurs Tracker", icon: Search },
+              { id: "offres-emploi" as const, label: "Offres Emploi", icon: Briefcase },
+            ].map(section => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`flex items-center gap-2 px-3 py-2.5 border-b-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeSection === section.id
+                    ? "border-red-600 text-red-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <section.icon size={16} />
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {activeSection === "sos-expat" && (<>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg border p-4">
@@ -1050,7 +1084,7 @@ const AdminBackups: React.FC = () => {
                 <div>
                   <h3 className="font-medium text-green-900">Sauvegardes Locales (PC)</h3>
                   <p className="text-sm text-green-700 mt-1">
-                    Ces sauvegardes sont stockées sur votre ordinateur local dans <code className="bg-green-100 px-1 rounded">C:\Users\willi\Documents\BACKUP_SOS-Expat</code>.
+                    Ces sauvegardes sont stockées sur votre ordinateur local dans <code className="bg-green-100 px-1 rounded">C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat</code>.
                     Elles sont indépendantes de Google Cloud et vous protègent en cas de bannissement ou de perte d'accès.
                   </p>
                 </div>
@@ -1218,8 +1252,204 @@ const AdminBackups: React.FC = () => {
             </div>
           </div>
         )}
+        </>)}
+
+        {/* Other project sections */}
+        {activeSection !== "sos-expat" && (
+          <ProjectBackupSection
+            projectId={activeSection}
+            projectConfig={{
+              "telegram-engine": {
+                name: "Telegram Engine",
+                icon: Send,
+                color: "blue",
+                description: "Bot Telegram SOS Expat (3 bots: main, inbox, withdrawals)",
+                tech: "Laravel + PostgreSQL + Redis",
+                vps: "95.216.179.163 (/opt/engine-telegram/)",
+                db: "PostgreSQL (tg-postgres) — engine-telegram-sos-expat",
+                localCode: "VS_CODE/engine_telegram_sos_expat/",
+                backupPath: "Sauvegardes/Sauv_telegram_engine/",
+              },
+              "motivation-engine": {
+                name: "Motivation Engine",
+                icon: Zap,
+                color: "yellow",
+                description: "Moteur de motivation et gamification",
+                tech: "Laravel + PostgreSQL + Redis",
+                vps: "95.216.179.163 (/opt/engine-motivation/)",
+                db: "PostgreSQL (mt-postgres) — motivation_engine",
+                localCode: "Code source sur le VPS uniquement",
+                backupPath: "Sauvegardes/Sauv_motivation_engine/",
+              },
+              "whatsapp-campaigns": {
+                name: "WhatsApp Campaigns",
+                icon: MessageCircle,
+                color: "green",
+                description: "Outil de campagnes WhatsApp avec Baileys",
+                tech: "Laravel + MySQL + Redis + Baileys",
+                vps: "95.216.179.163 (/opt/whatsapp-campaigns/)",
+                db: "MySQL (wc-mysql) — whatsapp_campaigns",
+                localCode: "VS_CODE/Outils_communication/Whatsapp_campaigns_sos_expat/",
+                backupPath: "Sauvegardes/Sauv_whatsapp_campaigns/",
+              },
+              "influenceurs-tracker": {
+                name: "Influenceurs Tracker",
+                icon: Search,
+                color: "purple",
+                description: "Suivi et gestion des influenceurs",
+                tech: "Laravel + MySQL + Redis",
+                vps: "95.216.179.163 (/opt/influenceurs-tracker/)",
+                db: "MySQL (inf-mysql) — influenceurs_tracker",
+                localCode: "VS_CODE/Outils_communication/Influenceurs_tracker_sos_expat/",
+                backupPath: "Sauvegardes/Sauv_influenceurs_tracker/",
+              },
+              "offres-emploi": {
+                name: "Offres Emploi Engine",
+                icon: Briefcase,
+                color: "orange",
+                description: "Moteur de suivi des offres d'emploi (job tracker)",
+                tech: "Laravel (module dans Telegram Engine)",
+                vps: "95.216.179.163 (dans /opt/engine-telegram/)",
+                db: "PostgreSQL (tg-postgres) — tables job_*",
+                localCode: "VS_CODE/Offres_emploi_engine/",
+                backupPath: "Sauvegardes/Sauv_offres_emploi/",
+              },
+            }[activeSection]}
+          />
+        )}
       </div>
     </AdminLayout>
+  );
+};
+
+// -------------------------
+// Project Backup Section Component
+// -------------------------
+const ProjectBackupSection: React.FC<{
+  projectId: string;
+  projectConfig: {
+    name: string;
+    icon: React.FC<{ size?: number | string; className?: string }>;
+    color: string;
+    description: string;
+    tech: string;
+    vps: string;
+    db: string;
+    localCode: string;
+    backupPath: string;
+  };
+}> = ({ projectId: _projectId, projectConfig: config }) => {
+  const Icon = config.icon;
+  const colorMap: Record<string, string> = {
+    blue: "bg-blue-100 text-blue-600 border-blue-200",
+    yellow: "bg-yellow-100 text-yellow-600 border-yellow-200",
+    green: "bg-green-100 text-green-600 border-green-200",
+    purple: "bg-purple-100 text-purple-600 border-purple-200",
+    orange: "bg-orange-100 text-orange-600 border-orange-200",
+  };
+  const colors = colorMap[config.color] || colorMap.blue;
+
+  return (
+    <div className="space-y-6">
+      {/* Project Info Card */}
+      <div className={`border rounded-lg p-6 ${colors.split(" ").slice(0, 1).join(" ")} bg-opacity-30`}>
+        <div className="flex items-start gap-4">
+          <div className={`p-3 rounded-lg ${colors}`}>
+            <Icon size={24} />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold">{config.name}</h2>
+            <p className="text-sm text-gray-600 mt-1">{config.description}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Details Grid */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white border rounded-lg p-5">
+          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <Database size={16} className="text-gray-400" />
+            Infrastructure
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Stack</span>
+              <span className="font-mono text-gray-700">{config.tech}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">VPS</span>
+              <span className="font-mono text-gray-700 text-right text-xs">{config.vps}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Base de donnees</span>
+              <span className="font-mono text-gray-700 text-right text-xs">{config.db}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-lg p-5">
+          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <HardDrive size={16} className="text-gray-400" />
+            Sauvegarde
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Code source</span>
+              <span className="font-mono text-gray-700 text-right text-xs">{config.localCode}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Dossier backup</span>
+              <span className="font-mono text-gray-700 text-right text-xs">{config.backupPath}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Frequence</span>
+              <span className="text-gray-700">Quotidien (03:00)</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Retention</span>
+              <span className="text-gray-700">30 jours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Backup Contents */}
+      <div className="bg-white border rounded-lg p-5">
+        <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <FileText size={16} className="text-gray-400" />
+          Contenu de chaque sauvegarde
+        </h3>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+            <CheckCircle size={16} className="text-green-600" />
+            <span className="text-sm">Code source complet</span>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+            <CheckCircle size={16} className="text-green-600" />
+            <span className="text-sm">Dump base de donnees</span>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+            <CheckCircle size={16} className="text-green-600" />
+            <span className="text-sm">Configs VPS (.env, Docker)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium text-blue-900">Sauvegarde automatique</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              Ce projet est sauvegarde automatiquement chaque jour a 03:00 via la tache planifiee Windows.
+              Le backup inclut le dump de la base de donnees, le code source local et les configurations du VPS.
+              En cas d'echec, une notification Telegram est envoyee.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

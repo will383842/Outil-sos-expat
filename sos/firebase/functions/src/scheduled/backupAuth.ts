@@ -12,6 +12,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
+import { forwardEventToEngine } from '../telegram/forwardToEngine';
 
 // ============================================================================
 // CONFIGURATION
@@ -245,6 +246,15 @@ export const backupFirebaseAuth = onSchedule(
         success: false,
         error: err.message,
         createdAt: admin.firestore.Timestamp.now()
+      });
+
+      // Notification Telegram
+      await forwardEventToEngine("security.alert", undefined, {
+        alertType: "backup_failure",
+        userEmail: "system",
+        ipAddress: "-",
+        country: "-",
+        details: `Auth backup ECHOUE: ${err.message}`,
       });
 
       throw error;

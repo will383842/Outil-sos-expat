@@ -15,6 +15,7 @@ import * as crypto from "crypto";
 import { logger } from "firebase-functions";
 // P2-6 FIX: Use shared constants instead of magic numbers
 import { FIRESTORE_BATCH_LIMIT } from "../lib/constants";
+import { forwardEventToEngine } from "../telegram/forwardToEngine";
 
 // CRITICAL: Lazy initialization to avoid deployment timeout
 const IS_DEPLOYMENT_ANALYSIS =
@@ -206,6 +207,15 @@ async function performBackup(schedule: string, backupType: 'morning' | 'midday' 
       message: `${backupType} Firestore backup failed: ${err.message}`,
       acknowledged: false,
       createdAt: admin.firestore.Timestamp.now(),
+    });
+
+    // Notification Telegram
+    await forwardEventToEngine("security.alert", undefined, {
+      alertType: "backup_failure",
+      userEmail: "system",
+      ipAddress: "-",
+      country: "-",
+      details: `Firestore backup (${backupType}) ECHOUE: ${err.message}`,
     });
 
     throw error;

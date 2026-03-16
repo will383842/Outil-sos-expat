@@ -61,7 +61,7 @@ if %errorLevel% equ 0 (
     echo.
     echo Pour lancer manuellement: double-cliquez sur "backup-now.bat"
     echo.
-    echo Les backups seront stockes dans: C:\FirebaseBackups\sos-expat
+    echo Les backups seront stockes dans: C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat
     echo.
 ) else (
     echo.

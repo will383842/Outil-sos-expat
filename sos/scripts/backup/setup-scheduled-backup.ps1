@@ -36,7 +36,7 @@ Write-Host "Configuration:" -ForegroundColor Cyan
 Write-Host "  Nom de la tache: $TaskName"
 Write-Host "  Script: $ScriptPath"
 Write-Host "  Heure: $BackupTime (tous les jours)"
-Write-Host "  Destination: C:\Users\willi\Documents\BACKUP_SOS-Expat"
+Write-Host "  Destination: C:\Users\willi\Documents\Projets\VS_CODE\Sauvegardes\Sauv_sos_expat"
 Write-Host ""
 
 # Supprimer l'ancienne tâche si elle existe
