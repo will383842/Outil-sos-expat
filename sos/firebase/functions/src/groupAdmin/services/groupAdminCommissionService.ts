@@ -696,7 +696,7 @@ export async function createN1RecruitBonusCommission(
     const commissionRef = getDb().collection("group_admin_commissions").doc();
     const now = Timestamp.now();
     const currentMonth = new Date().toISOString().substring(0, 7);
-    const recruitName = n2 ? `${n2.firstName} ${n2.lastName}` : n2AdminId;
+    const recruitName = n2 ? `${(n2 as GroupAdmin).firstName ?? ""} ${(n2 as GroupAdmin).lastName ?? ""}`.trim() || n2AdminId : n2AdminId;
 
     const commission: GroupAdminCommission = {
       id: commissionRef.id,

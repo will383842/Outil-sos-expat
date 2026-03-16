@@ -31,16 +31,56 @@ interface CommissionPlan {
 
 const manageCommissionPlansFn = httpsCallable(functions, 'manageCommissionPlans');
 
-const RATE_FIELDS = [
-  { key: 'client_call_lawyer', label: 'Appel client (avocat)' },
-  { key: 'client_call_expat', label: 'Appel client (expatrié)' },
-  { key: 'recruitment_lawyer', label: 'Recrutement (avocat)' },
-  { key: 'recruitment_expat', label: 'Recrutement (expatrié)' },
-  { key: 'n1_call', label: 'N1 appel' },
-  { key: 'n2_call', label: 'N2 appel' },
-  { key: 'activation_bonus', label: 'Bonus activation' },
-  { key: 'recruit_bonus', label: 'Bonus recrutement' },
-];
+/** Per-role rate fields matching backend CommissionPlan interfaces */
+const RATE_FIELDS_BY_ROLE: Record<string, { key: string; label: string }[]> = {
+  chatterRates: [
+    { key: 'commissionClientCallAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientCallAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientCallAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+    { key: 'commissionProviderCallAmount', label: 'Appel prestataire (générique)' },
+    { key: 'commissionProviderCallAmountLawyer', label: 'Appel prestataire (avocat)' },
+    { key: 'commissionProviderCallAmountExpat', label: 'Appel prestataire (expatrié)' },
+    { key: 'commissionCaptainCallAmountLawyer', label: 'Captain (avocat)' },
+    { key: 'commissionCaptainCallAmountExpat', label: 'Captain (expatrié)' },
+  ],
+  influencerRates: [
+    { key: 'commissionClientAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionRecruitmentAmount', label: 'Recrutement (générique)' },
+    { key: 'commissionRecruitmentAmountLawyer', label: 'Recrutement (avocat)' },
+    { key: 'commissionRecruitmentAmountExpat', label: 'Recrutement (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+  bloggerRates: [
+    { key: 'commissionClientAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionRecruitmentAmount', label: 'Recrutement (générique)' },
+    { key: 'commissionRecruitmentAmountLawyer', label: 'Recrutement (avocat)' },
+    { key: 'commissionRecruitmentAmountExpat', label: 'Recrutement (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+  groupAdminRates: [
+    { key: 'commissionClientCallAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+};
 
 const ROLES = [
   { key: 'chatterRates', label: 'Chatter' },
@@ -169,29 +209,33 @@ const PlansTab: React.FC = () => {
   const renderRateEditor = (
     rates: Record<string, number>,
     onChange: (key: string, val: number) => void,
-    roleLabel: string
-  ) => (
-    <div className="space-y-2">
-      <p className="text-xs font-medium text-gray-500 uppercase">{roleLabel}</p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {RATE_FIELDS.map(({ key, label }) => (
-          <div key={key}>
-            <label className="text-xs text-gray-400">{label}</label>
-            <input
-              type="number"
-              value={rates[key] ?? ''}
-              onChange={(e) => onChange(key, parseInt(e.target.value) || 0)}
-              placeholder="—"
-              className={`${UI.input} text-xs py-1.5`}
-              min={0}
-              step={50}
-            />
-            {rates[key] > 0 && <p className="text-xs text-gray-400 mt-0.5">= {formatCents(rates[key])}</p>}
-          </div>
-        ))}
+    roleLabel: string,
+    roleKey: string
+  ) => {
+    const fields = RATE_FIELDS_BY_ROLE[roleKey] || [];
+    return (
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-gray-500 uppercase">{roleLabel}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {fields.map(({ key, label }) => (
+            <div key={key}>
+              <label className="text-xs text-gray-400">{label}</label>
+              <input
+                type="number"
+                value={rates[key] ?? ''}
+                onChange={(e) => onChange(key, parseInt(e.target.value) || 0)}
+                placeholder="—"
+                className={`${UI.input} text-xs py-1.5`}
+                min={0}
+                step={50}
+              />
+              {rates[key] > 0 && <p className="text-xs text-gray-400 mt-0.5">= {formatCents(rates[key])}</p>}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>;
 
@@ -311,7 +355,8 @@ const PlansTab: React.FC = () => {
                 {renderRateEditor(
                   (newPlan as any)[key] || {},
                   (rateKey, val) => setNewPlan(p => ({ ...p, [key]: { ...(p as any)[key], [rateKey]: val } })),
-                  label
+                  label,
+                  key
                 )}
               </div>
             ))}
@@ -408,7 +453,8 @@ const PlansTab: React.FC = () => {
                         {renderRateEditor(
                           (current as any)[key] || {},
                           (rateKey, val) => setEditing({ ...current, [key]: { ...(current as any)[key], [rateKey]: val } }),
-                          label
+                          label,
+                          key
                         )}
                       </div>
                     ))}

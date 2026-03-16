@@ -11,7 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { TelegramBot } from "./types";
-import { EVENT_TYPES, EVENT_LABELS } from "./types";
+import { EVENT_TYPES, EVENT_LABELS, EVENT_CATEGORIES } from "./types";
 import {
   fetchTelegramBots,
   updateTelegramBot,
@@ -26,22 +26,25 @@ function maskToken(token: string): string {
   return `${token.slice(0, 4)}****${token.slice(-3)}`;
 }
 
-/** Bot slug display names and colors */
-const BOT_META: Record<string, { label: string; color: string; description: string }> = {
+/** Bot slug display names, colors, and family */
+const BOT_META: Record<string, { label: string; color: string; family: string; description: string }> = {
   main: {
     label: "Principal",
     color: "bg-blue-100 text-blue-700",
-    description: "Inscriptions, appels, paiements, prestataires, avis, alertes",
+    family: "Business & Monitoring",
+    description: "Inscriptions, appels, paiements, prestataires, avis, alertes sécurité, rapports",
   },
   inbox: {
     label: "Inbox",
     color: "bg-green-100 text-green-700",
-    description: "Messages contacts, feedbacks, candidatures captains et partenaires",
+    family: "Inbox & Candidatures",
+    description: "Messages contacts, feedbacks utilisateurs, candidatures captains et partenaires",
   },
   withdrawals: {
     label: "Retraits",
     color: "bg-orange-100 text-orange-700",
-    description: "Demandes de retrait uniquement",
+    family: "Retraits",
+    description: "Demandes de retrait et changements de statut (en cours, complété, échoué)",
   },
 };
 
@@ -264,7 +267,9 @@ const AdminTelegramBots: React.FC = () => {
                         {meta.label}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{meta.description}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      <span className="font-medium">{meta.family}</span> — {meta.description}
+                    </p>
                   </div>
                 </div>
 
@@ -382,33 +387,45 @@ const AdminTelegramBots: React.FC = () => {
                   )}
                 </div>
 
-                {/* Notification toggles */}
+                {/* Notification toggles — grouped by category */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2">
+                  <label className="block text-xs font-medium text-gray-500 mb-3">
                     Notifications actives
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {EVENT_TYPES.map((eventType) => {
-                      const isActive = state.notifications[eventType] ?? false;
-                      return (
-                        <label
-                          key={eventType}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isActive}
-                            onChange={() =>
-                              handleNotificationToggle(bot.id, eventType)
-                            }
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-xs text-gray-700">
-                            {EVENT_LABELS[eventType] || eventType}
+                  <div className="space-y-3">
+                    {EVENT_CATEGORIES.map((category) => (
+                      <div key={category.key}>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="text-xs">{category.emoji}</span>
+                          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                            {category.label}
                           </span>
-                        </label>
-                      );
-                    })}
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          {category.events.map((eventType) => {
+                            const isActive = state.notifications[eventType] ?? false;
+                            return (
+                              <label
+                                key={eventType}
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isActive}
+                                  onChange={() =>
+                                    handleNotificationToggle(bot.id, eventType)
+                                  }
+                                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-xs text-gray-700">
+                                  {EVENT_LABELS[eventType] || eventType}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

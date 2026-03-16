@@ -564,6 +564,8 @@
   "admin.menu.affiliationPartnership.description": "联盟计划和合作伙伴管理",
   "admin.menu.affiliation": "联盟与合作伙伴",
   "admin.menu.affiliation.description": "联盟计划和合作伙伴",
+  "admin.menu.affiliateOverview": "概览",
+  "admin.menu.affiliateOverview.description": "所有联盟成员概览",
   "admin.menu.affiliatePayouts": "联盟支付",
   "admin.menu.affiliatePayouts.description": "管理联盟支付",
   "admin.menu.affiliatesList": "联盟列表",

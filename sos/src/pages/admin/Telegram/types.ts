@@ -117,32 +117,77 @@ export const ROLE_LABELS: Record<TelegramRole, string> = {
 
 /** All event types handled by the Telegram engine */
 export const EVENT_TYPES = [
+  // Business — inscriptions, appels, prestataires
   'new_registration',
   'call_completed',
-  'payment_received',
-  'daily_report',
   'new_provider',
+  // Paiements
+  'payment_received',
+  'paypal_payment',
+  // Retraits
+  'withdrawal_request',
+  'withdrawal_status',
+  // Inbox — messages, feedbacks, candidatures
   'new_contact_message',
+  'user_feedback',
+  'captain_application',
+  'partner_application',
+  // Monitoring — avis, sécurité, rapports
   'negative_review',
   'security_alert',
-  'withdrawal_request',
-  'captain_application',
-  'user_feedback',
-  'partner_application',
+  'daily_report',
 ] as const;
+
+/** Event type categories for grouped display in admin UI */
+export type EventCategory = 'business' | 'payments' | 'withdrawals' | 'inbox' | 'monitoring';
+
+export const EVENT_CATEGORIES: { key: EventCategory; label: string; emoji: string; events: string[] }[] = [
+  {
+    key: 'business',
+    label: 'Business',
+    emoji: '📊',
+    events: ['new_registration', 'call_completed', 'new_provider'],
+  },
+  {
+    key: 'payments',
+    label: 'Paiements',
+    emoji: '💳',
+    events: ['payment_received', 'paypal_payment'],
+  },
+  {
+    key: 'withdrawals',
+    label: 'Retraits',
+    emoji: '🏦',
+    events: ['withdrawal_request', 'withdrawal_status'],
+  },
+  {
+    key: 'inbox',
+    label: 'Inbox & Candidatures',
+    emoji: '📬',
+    events: ['new_contact_message', 'user_feedback', 'captain_application', 'partner_application'],
+  },
+  {
+    key: 'monitoring',
+    label: 'Monitoring',
+    emoji: '🔔',
+    events: ['negative_review', 'security_alert', 'daily_report'],
+  },
+];
 
 /** French labels for event types */
 export const EVENT_LABELS: Record<string, string> = {
   new_registration: 'Nouvelle inscription',
   call_completed: 'Appel terminé',
-  payment_received: 'Paiement reçu',
-  daily_report: 'Rapport quotidien',
   new_provider: 'Nouveau prestataire',
+  payment_received: 'Paiement Stripe',
+  paypal_payment: 'Paiement PayPal',
+  withdrawal_request: 'Demande de retrait',
+  withdrawal_status: 'Changement statut retrait',
   new_contact_message: 'Message contact',
+  user_feedback: 'Feedback utilisateur',
+  captain_application: 'Candidature Captain',
+  partner_application: 'Candidature partenaire',
   negative_review: 'Avis négatif',
   security_alert: 'Alerte sécurité',
-  withdrawal_request: 'Demande de retrait',
-  captain_application: 'Candidature Captain',
-  user_feedback: 'Feedback utilisateur',
-  partner_application: 'Candidature partenaire',
+  daily_report: 'Rapport quotidien',
 };

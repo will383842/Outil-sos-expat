@@ -5,9 +5,8 @@
  * - Threshold-based commissions ($10 → $1, $50 → $4, N2 $50 → $2)
  * - Per-call commissions: N1 = $1/call, N2 = $0.50/call (real-time via onCallCompleted)
  * - Tier bonuses (5/10/20/50/100/500 qualified filleuls)
- * - Promotion multipliers (hackathons, special events)
  *
- * NOTE: Old monthly 5% recurring system has been REMOVED.
+ * NOTE: Old monthly 5% recurring system and promo multipliers have been REMOVED.
  * Commissions are now paid in real-time per call via the onCallCompleted trigger.
  */
 
@@ -17,7 +16,6 @@ import {
   Chatter,
   ChatterReferralCommission,
   ChatterTierBonusHistory,
-  ChatterPromotion,
   REFERRAL_CONFIG,
 } from "../types";
 import { getChatterConfigCached } from "../utils/chatterConfigService";
@@ -287,86 +285,6 @@ export function getNextTierBonus(chatter: Chatter): {
 }
 
 // ============================================================================
-// PROMOTION MULTIPLIER
-// ============================================================================
-
-export interface PromoMultiplierResult {
-  multiplier: number;
-  promoId: string | null;
-  promoName: string | null;
-}
-
-/**
- * Get the best active promotion multiplier for a chatter
- */
-export async function getActivePromoMultiplier(
-  chatterId: string,
-  commissionType: string
-): Promise<PromoMultiplierResult> {
-  const db = getFirestore();
-  const result: PromoMultiplierResult = {
-    multiplier: 1.0,
-    promoId: null,
-    promoName: null,
-  };
-
-  try {
-    const chatterDoc = await db.collection("chatters").doc(chatterId).get();
-    if (!chatterDoc.exists) return result;
-
-    const chatter = chatterDoc.data() as Chatter;
-    const now = Timestamp.now();
-
-    // Query active promotions
-    const promosQuery = await db
-      .collection("chatter_promotions")
-      .where("isActive", "==", true)
-      .where("startDate", "<=", now)
-      .where("endDate", ">=", now)
-      .get();
-
-    let bestMultiplier = 1.0;
-    let bestPromo: ChatterPromotion | null = null;
-
-    for (const promoDoc of promosQuery.docs) {
-      const promo = promoDoc.data() as ChatterPromotion;
-
-      // Check if promotion applies to this commission type
-      if (!promo.appliesToTypes.includes(commissionType as any)) {
-        continue;
-      }
-
-      // Check country restrictions
-      if (promo.targetCountries.length > 0 && !promo.targetCountries.includes(chatter.country)) {
-        continue;
-      }
-
-      // Check budget
-      if (promo.maxBudget > 0 && promo.currentSpent >= promo.maxBudget) {
-        continue;
-      }
-
-      // Take the best multiplier
-      if (promo.multiplier > bestMultiplier) {
-        bestMultiplier = promo.multiplier;
-        bestPromo = promo;
-      }
-    }
-
-    if (bestPromo) {
-      result.multiplier = bestMultiplier;
-      result.promoId = bestPromo.id;
-      result.promoName = bestPromo.name;
-    }
-
-    return result;
-  } catch (error) {
-    logger.error("[getActivePromoMultiplier] Error", { chatterId, error });
-    return result;
-  }
-}
-
-// ============================================================================
 // CREATE REFERRAL COMMISSION (INTERNAL)
 // ============================================================================
 
@@ -381,7 +299,7 @@ interface CreateReferralCommissionInput {
 }
 
 /**
- * Create a referral commission with all multipliers applied
+ * Create a referral commission (finalAmount = baseAmount, no multipliers)
  */
 async function createReferralCommission(input: CreateReferralCommissionInput): Promise<string | null> {
   const db = getFirestore();
@@ -406,20 +324,11 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
     const filleulDoc = await db.collection("chatters").doc(input.filleulId).get();
     const filleul = filleulDoc.exists ? (filleulDoc.data() as Chatter) : null;
 
-    // Calculate multipliers
-    const promoResult = await getActivePromoMultiplier(input.parrainId, input.type);
-
-    // Calculate final amount
-    const finalAmount = Math.floor(
-      input.baseAmount * promoResult.multiplier
-    );
+    // Final amount = base amount (no multipliers)
+    const finalAmount = input.baseAmount;
 
     // Build calculation details string
-    let calculationDetails = `Base: $${(input.baseAmount / 100).toFixed(2)}`;
-    if (promoResult.multiplier > 1) {
-      calculationDetails += ` x ${promoResult.multiplier} (${promoResult.promoName})`;
-    }
-    calculationDetails += ` = $${(finalAmount / 100).toFixed(2)}`;
+    const calculationDetails = `Base: $${(input.baseAmount / 100).toFixed(2)} = $${(finalAmount / 100).toFixed(2)}`;
 
     // Create commission document
     const now = Timestamp.now();
@@ -436,14 +345,12 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
       type: input.type,
       level: input.level,
       baseAmount: input.baseAmount,
-      promoMultiplier: promoResult.multiplier,
+      promoMultiplier: 1.0,
       amount: finalAmount,
-      // recurringMonth and filleulMonthlyEarnings removed - old 5% system deprecated
       tierReached: input.tierReached,
       currency: "USD",
       status: "pending",
       calculationDetails,
-      promotionId: promoResult.promoId || undefined,
       createdAt: now,
       updatedAt: now,
     };
@@ -467,16 +374,6 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
         referralEarnings: (freshParrain.referralEarnings || 0) + finalAmount,
         updatedAt: now,
       });
-
-      // Update promotion spend if applicable
-      if (promoResult.promoId && promoResult.multiplier > 1) {
-        const bonusAmount = finalAmount - input.baseAmount;
-        transaction.update(db.collection("chatter_promotions").doc(promoResult.promoId), {
-          currentSpent: FieldValue.increment(bonusAmount),
-          participantCount: FieldValue.increment(1),
-          updatedAt: now,
-        });
-      }
     });
 
     logger.info("[createReferralCommission] Commission created", {
@@ -486,7 +383,6 @@ async function createReferralCommission(input: CreateReferralCommissionInput): P
       type: input.type,
       baseAmount: input.baseAmount,
       finalAmount,
-      promoMultiplier: promoResult.multiplier,
     });
 
     return commissionRef.id;

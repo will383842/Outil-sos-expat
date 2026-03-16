@@ -50,6 +50,36 @@ const mapAffiliateStatus = (status: AffiliateStatus): { statusType: StatusType; 
   return map[status] || { statusType: "inactive", label: status };
 };
 
+const getRoleLabel = (role: string): string => {
+  const labels: Record<string, string> = {
+    chatter: "Chatter",
+    captain_chatter: "Captain",
+    influencer: "Influenceur",
+    blogger: "Blogueur",
+    group_admin: "Admin Groupe",
+    client: "Client",
+    lawyer: "Avocat",
+    expat: "Expat",
+    partner: "Partenaire",
+  };
+  return labels[role] || role;
+};
+
+const getRoleBadgeClass = (role: string): string => {
+  const classes: Record<string, string> = {
+    chatter: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    captain_chatter: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    influencer: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    blogger: "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300",
+    group_admin: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    client: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
+    lawyer: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+    expat: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
+    partner: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+  };
+  return classes[role] || "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+};
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -408,10 +438,11 @@ const AdminAffiliatesList: React.FC = () => {
 
   // Export to CSV
   const exportToCsv = () => {
-    const headers = ["Email", "Nom", "Code", "Statut", "Gains totaux", "Solde disponible", "Filleuls", "Date creation", "Dernière connexion"];
+    const headers = ["Email", "Nom", "Rôle", "Code", "Statut", "Gains totaux", "Solde disponible", "Filleuls", "Date creation", "Dernière connexion"];
     const rows = filteredAffiliates.map((a) => [
       a.email,
       a.displayName,
+      getRoleLabel(a.role),
       a.affiliateCode,
       a.affiliateStatus,
       (a.totalEarned / 100).toFixed(2),
@@ -567,6 +598,9 @@ const AdminAffiliatesList: React.FC = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Statut
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Rôle
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Filleuls
                   </th>
@@ -587,14 +621,14 @@ const AdminAffiliatesList: React.FC = () => {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {isLoading && affiliates.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center">
+                    <td colSpan={9} className="px-4 py-12 text-center">
                       <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
                       <p className="text-sm text-gray-500 mt-2">Chargement...</p>
                     </td>
                   </tr>
                 ) : filteredAffiliates.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center">
+                    <td colSpan={9} className="px-4 py-12 text-center">
                       <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-sm text-gray-500">Aucun affilié trouvé</p>
                     </td>
@@ -637,6 +671,11 @@ const AdminAffiliatesList: React.FC = () => {
                       </td>
                       <td className="px-4 py-4">
                         <StatusBadge status={mapAffiliateStatus(affiliate.affiliateStatus).statusType} label={mapAffiliateStatus(affiliate.affiliateStatus).label} size="sm" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(affiliate.role)}`}>
+                          {getRoleLabel(affiliate.role)}
+                        </span>
                       </td>
                       <td className="px-4 py-4 text-right">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">

@@ -254,8 +254,15 @@ export async function createCommission(
     if (inputAmount !== undefined) {
       // Manual override
       baseCommissionAmount = inputAmount;
+    } else if (
+      type !== 'client_referral' && type !== 'recruitment' && baseAmount !== undefined && baseAmount > 0
+    ) {
+      // For n1_call, n2_call, activation_bonus, tier_bonus, etc.:
+      // The trigger already pre-calculated the correct amount using lockedRates/individualRates/config.
+      // calculateCommissionAmount() only handles client_referral/recruitment, so use baseAmount directly.
+      baseCommissionAmount = baseAmount;
     } else {
-      // V2: Calculate using captured rates or current rules
+      // V2: Calculate using captured rates or current rules (for client_referral/recruitment)
       const base = baseAmount
         || source.details?.totalAmount
         || source.details?.connectionFee

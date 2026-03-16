@@ -100,6 +100,7 @@ interface GroupAdminDetail {
 
   // Commission Plan
   lockedRates?: Record<string, number>;
+  individualRates?: Record<string, number>;
   commissionPlanName?: string;
   rateLockDate?: string;
 
@@ -254,7 +255,7 @@ const AdminGroupAdminDetail: React.FC = () => {
   const startEditRates = () => {
     const currentRates: Record<string, number> = {};
     for (const field of GROUP_ADMIN_RATE_FIELDS) {
-      currentRates[field.key] = admin?.lockedRates?.[field.key] ?? field.default;
+      currentRates[field.key] = admin?.individualRates?.[field.key] ?? admin?.lockedRates?.[field.key] ?? field.default;
     }
     setRatesForm(currentRates);
     setRatesEditing(true);
@@ -587,7 +588,7 @@ const AdminGroupAdminDetail: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Wallet className="w-4 h-4" />
-                  Taux de commission (lockedRates)
+                  Taux de commission (individualRates)
                 </h3>
                 {!ratesEditing ? (
                   <button onClick={startEditRates} className={`${UI.button.secondary} px-3 py-1.5 text-sm`}>
@@ -611,7 +612,7 @@ const AdminGroupAdminDetail: React.FC = () => {
               )}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {GROUP_ADMIN_RATE_FIELDS.map(field => {
-                  const currentValue = admin.lockedRates?.[field.key];
+                  const currentValue = admin.individualRates?.[field.key] ?? admin.lockedRates?.[field.key];
                   return (
                     <div key={field.key} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
                       <p className="text-[10px] uppercase font-medium text-gray-400 dark:text-gray-500 mb-1">{field.label}</p>
@@ -639,7 +640,7 @@ const AdminGroupAdminDetail: React.FC = () => {
                   );
                 })}
               </div>
-              {!admin.lockedRates && !ratesEditing && (
+              {!admin.individualRates && !admin.lockedRates && !ratesEditing && (
                 <p className="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   Pas de taux verrouillés — utilise la config globale (entre parenthèses)

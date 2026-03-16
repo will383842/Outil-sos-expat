@@ -567,6 +567,8 @@
   "admin.menu.affiliationPartnership.description": "संबद्धता कार्यक्रम और साझेदार प्रबंधन",
   "admin.menu.affiliation": "सहबद्धता और साझेदार",
   "admin.menu.affiliation.description": "सहबद्ध कार्यक्रम और साझेदार",
+  "admin.menu.affiliateOverview": "अवलोकन",
+  "admin.menu.affiliateOverview.description": "सभी सहयोगियों का अवलोकन",
   "admin.menu.affiliatePayouts": "सहबद्ध भुगतान",
   "admin.menu.affiliatePayouts.description": "सहबद्धों को भुगतान प्रबंधन",
   "admin.menu.affiliatesList": "सहबद्धों की सूची",

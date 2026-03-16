@@ -13,7 +13,7 @@ import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { getApps, initializeApp } from "firebase-admin/app";
 
-import { isAffiliateSystemActive } from "../utils/configService";
+import { isAffiliateSystemActive, getAffiliateConfigCached } from "../utils/configService";
 import { createCommission } from "../services/commissionService";
 
 
@@ -369,6 +369,15 @@ export async function handleCallCompleted(
         // N1/N2 NETWORK COMMISSIONS + ACTIVATION BONUS
         // ============================================================
 
+        // Calculate availableAt for manual commission writes (same logic as commissionService)
+        const affiliateConfig = await getAffiliateConfigCached();
+        const holdPeriodHours = affiliateConfig.withdrawal.holdPeriodHours;
+        const nowTs = Timestamp.now();
+        const availableAt =
+          holdPeriodHours > 0
+            ? Timestamp.fromDate(new Date(nowTs.toMillis() + holdPeriodHours * 60 * 60 * 1000))
+            : nowTs;
+
         // Increment totalClientCalls on referrer's user doc
         await db.collection("users").doc(referredByUserId).update({
           totalClientCalls: FieldValue.increment(1),
@@ -381,11 +390,11 @@ export async function handleCallCompleted(
         if (
           !freshUser?.isActivated &&
           totalCalls >= 2 &&
-          freshUser?.recruitedBy
+          freshUser?.referredByUserId
         ) {
           await db.collection("users").doc(referredByUserId).update({ isActivated: true });
 
-          const recruiterId = freshUser.recruitedBy;
+          const recruiterId = freshUser.referredByUserId;
           const recruiterDoc = await db.collection("users").doc(recruiterId).get();
           if (recruiterDoc.exists) {
             const recruiter = recruiterDoc.data()!;
@@ -417,7 +426,8 @@ export async function handleCallCompleted(
                 referrerId: recruiterId,
                 type: "activation_bonus",
                 amount: activationAmount,
-                status: "pending",
+                status: holdPeriodHours > 0 ? "pending" : "available",
+                availableAt,
                 source: {
                   type: "activation",
                   details: {
@@ -432,6 +442,7 @@ export async function handleCallCompleted(
               // Increment pending balance (will be validated/released by scheduled function)
               await db.collection("users").doc(recruiterId).update({
                 pendingBalance: FieldValue.increment(activationAmount),
+                totalEarned: FieldValue.increment(activationAmount),
                 totalCommissions: FieldValue.increment(1),
               });
 
@@ -450,8 +461,8 @@ export async function handleCallCompleted(
         }
 
         // --- N1 COMMISSION ---
-        if (freshUser?.recruitedBy) {
-          const n1Doc = await db.collection("users").doc(freshUser.recruitedBy).get();
+        if (freshUser?.referredByUserId) {
+          const n1Doc = await db.collection("users").doc(freshUser.referredByUserId).get();
           if (n1Doc.exists) {
             const n1 = n1Doc.data()!;
             const n1Amt = n1.individualRates?.commissionN1CallAmount
@@ -461,10 +472,11 @@ export async function handleCallCompleted(
             const n1Ref = db.collection("affiliate_commissions").doc();
             await n1Ref.set({
               id: n1Ref.id,
-              referrerId: freshUser.recruitedBy,
+              referrerId: freshUser.referredByUserId,
               type: "n1_call",
               amount: n1Amt,
-              status: "pending",
+              status: holdPeriodHours > 0 ? "pending" : "available",
+              availableAt,
               source: {
                 type: "n1_call",
                 details: { originUserId: referredByUserId, clientId: after?.clientId, providerType: after?.providerType },
@@ -473,8 +485,9 @@ export async function handleCallCompleted(
               createdAt: Timestamp.now(),
             });
 
-            await db.collection("users").doc(freshUser.recruitedBy).update({
+            await db.collection("users").doc(freshUser.referredByUserId).update({
               pendingBalance: FieldValue.increment(n1Amt),
+              totalEarned: FieldValue.increment(n1Amt),
               totalCommissions: FieldValue.increment(1),
             });
           }
@@ -495,10 +508,11 @@ export async function handleCallCompleted(
               referrerId: freshUser.parrainNiveau2Id,
               type: "n2_call",
               amount: n2Amt,
-              status: "pending",
+              status: holdPeriodHours > 0 ? "pending" : "available",
+              availableAt,
               source: {
                 type: "n2_call",
-                details: { originUserId: referredByUserId, n1Id: freshUser.recruitedBy, providerType: after?.providerType },
+                details: { originUserId: referredByUserId, n1Id: freshUser.referredByUserId, providerType: after?.providerType },
               },
               description: `Commission N2: appel client référé`,
               createdAt: Timestamp.now(),
@@ -506,23 +520,24 @@ export async function handleCallCompleted(
 
             await db.collection("users").doc(freshUser.parrainNiveau2Id).update({
               pendingBalance: FieldValue.increment(n2Amt),
+              totalEarned: FieldValue.increment(n2Amt),
               totalCommissions: FieldValue.increment(1),
             });
           }
         }
 
         // --- MILESTONE CHECK ---
-        if (freshUser?.recruitedBy) {
+        if (freshUser?.referredByUserId) {
           const { checkAndPayRecruitmentMilestones } = await import("../../lib/milestoneService");
-          const milestoneRecruiterDoc = await db.collection("users").doc(freshUser.recruitedBy).get();
+          const milestoneRecruiterDoc = await db.collection("users").doc(freshUser.referredByUserId).get();
           if (milestoneRecruiterDoc.exists) {
             const milestoneRecruiter = milestoneRecruiterDoc.data()!;
             const recruitsSnap = await db.collection("users")
-              .where("recruitedBy", "==", freshUser.recruitedBy)
+              .where("referredByUserId", "==", freshUser.referredByUserId)
               .get();
 
             await checkAndPayRecruitmentMilestones({
-              affiliateId: freshUser.recruitedBy,
+              affiliateId: freshUser.referredByUserId,
               role: "affiliate",
               collection: "users",
               commissionCollection: "affiliate_commissions",

@@ -107,7 +107,6 @@ export {
   checkAndApplyThresholds,
   checkAndApplyTierBonuses,
   getNextTierBonus,
-  getActivePromoMultiplier,
   validateReferralCommission,
   releaseReferralCommission,
   validatePendingReferralCommissions,
@@ -115,7 +114,6 @@ export {
   REFERRAL_CONFIG,
   ThresholdResult,
   TierBonusResult,
-  PromoMultiplierResult,
 } from "./chatterReferralService";
 
 // Referral Fraud Service

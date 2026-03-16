@@ -747,6 +747,8 @@
   "admin.menu.affiliationPartnership.description": "Partnerprogramm und Partnerverwaltung",
   "admin.menu.affiliation": "Affiliate & Partner",
   "admin.menu.affiliation.description": "Partnerprogramm und Affiliates",
+  "admin.menu.affiliateOverview": "Übersicht",
+  "admin.menu.affiliateOverview.description": "Übersicht aller Partner",
   "admin.menu.affiliatePayouts": "Affiliate-Auszahlungen",
   "admin.menu.affiliatePayouts.description": "Verwaltung der Affiliate-Zahlungen",
   "admin.menu.affiliatesList": "Affiliate-Liste",

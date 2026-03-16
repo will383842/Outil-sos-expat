@@ -1111,7 +1111,7 @@ const ChatterLanding: React.FC = () => {
                   key={i}
                   index={i}
                   question={<FormattedMessage id={item.q} />}
-                  answer={<FormattedMessage id={item.a} />}
+                  answer={<FormattedMessage id={item.a} values={{ clientCallRange: rates.clientCallRange, n1: rates.n1, n2: rates.n2 }} />}
                   isOpen={openFAQ === i}
                   onToggle={() => setOpenFAQ(openFAQ === i ? null : i)}
                 />

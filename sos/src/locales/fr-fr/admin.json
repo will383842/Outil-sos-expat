@@ -1973,6 +1973,8 @@
   "admin.menu.affiliation.description": "Programme d'affiliation",
   "admin.menu.partnerships": "Partenariat",
   "admin.menu.partnerships.description": "Gestion des partenaires",
+  "admin.menu.affiliateOverview": "Vue d'ensemble",
+  "admin.menu.affiliateOverview.description": "Vue d'ensemble de tous les affiliés",
   "admin.menu.affiliateDashboard": "Tableau de bord Affiliés",
   "admin.menu.affiliateDashboard.description": "Vue d'ensemble et KPIs du programme",
   "admin.menu.affiliatePayouts": "Paiements Affiliés",

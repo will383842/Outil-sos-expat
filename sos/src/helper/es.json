@@ -3974,7 +3974,7 @@
   "groupAdmin.landing.calc.calls": "llamadas/mes estimadas",
   "groupAdmin.landing.calc.conversion": "Tasa de conversión: {rate}%",
   "groupAdmin.landing.calc.conversionHelp": "% de miembros que usan el servicio por mes",
-  "groupAdmin.landing.calc.details": "{members} miembros × {rate}% conversión × {clientCallRange}$ = ${earnings}/mes",
+  "groupAdmin.landing.calc.details": "{members} miembros × {rate}% = {calls} llamadas × {avg}$ avg = {earnings}$/mes",
   "groupAdmin.landing.calc.members": "Miembros en tu grupo: {count}",
   "groupAdmin.landing.calc.monthlyEarnings": "TUS INGRESOS MENSUALES ESTIMADOS",
   "groupAdmin.landing.calc.motivation": "🎯 ¡Sin contar los abogados/asistentes que puedes reclutar!",

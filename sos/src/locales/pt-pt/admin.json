@@ -564,6 +564,8 @@
   "admin.menu.affiliationPartnership.description": "Programa de afiliação e gestão de parceiros",
   "admin.menu.affiliation": "Afiliação e Parceiros",
   "admin.menu.affiliation.description": "Programa de afiliados e parceiros",
+  "admin.menu.affiliateOverview": "Visão geral",
+  "admin.menu.affiliateOverview.description": "Visão geral de todos os afiliados",
   "admin.menu.affiliatePayouts": "Pagamentos de Afiliados",
   "admin.menu.affiliatePayouts.description": "Gestão de pagamentos aos afiliados",
   "admin.menu.affiliatesList": "Lista de Afiliados",

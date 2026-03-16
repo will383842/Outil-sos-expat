@@ -567,6 +567,8 @@
   "admin.menu.affiliationPartnership.description": "برنامج التسويق بالعمولة وإدارة الشركاء",
   "admin.menu.affiliation": "الشراكات والتسويق بالعمولة",
   "admin.menu.affiliation.description": "برنامج الشركاء والتسويق بالعمولة",
+  "admin.menu.affiliateOverview": "نظرة عامة",
+  "admin.menu.affiliateOverview.description": "نظرة عامة على جميع المسوقين",
   "admin.menu.affiliatePayouts": "مدفوعات الشركاء",
   "admin.menu.affiliatePayouts.description": "إدارة مدفوعات الشركاء",
   "admin.menu.affiliatesList": "قائمة الشركاء",

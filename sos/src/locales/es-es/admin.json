@@ -747,6 +747,8 @@
   "admin.menu.affiliationPartnership.description": "Programa de afiliación y gestión de socios",
   "admin.menu.affiliation": "Afiliación y Socios",
   "admin.menu.affiliation.description": "Programa de afiliados y socios",
+  "admin.menu.affiliateOverview": "Resumen",
+  "admin.menu.affiliateOverview.description": "Resumen de todos los afiliados",
   "admin.menu.affiliatePayouts": "Pagos de Afiliados",
   "admin.menu.affiliatePayouts.description": "Gestión de pagos a afiliados",
   "admin.menu.affiliatesList": "Lista de Afiliados",

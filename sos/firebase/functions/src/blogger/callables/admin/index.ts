@@ -2157,6 +2157,10 @@ export const adminUpdateBloggerLockedRates = onCall(
       "commissionRecruitmentAmount",
       "commissionRecruitmentAmountLawyer",
       "commissionRecruitmentAmountExpat",
+      "commissionN1CallAmount",
+      "commissionN2CallAmount",
+      "commissionActivationBonusAmount",
+      "commissionN1RecruitBonusAmount",
     ];
 
     const sanitizedRates: Record<string, number> = {};

@@ -540,6 +540,7 @@ export async function cancelCommission(
       const userRef = db.collection("users").doc(commission.referrerId);
 
       const balanceUpdate: Record<string, FieldValue | Timestamp> = {
+        totalEarned: FieldValue.increment(-commission.amount),
         updatedAt: now,
       };
 

@@ -2005,6 +2005,8 @@
   "admin.menu.affiliateCommissions.description": "All program commissions",
   "admin.menu.affiliateConfig": "Affiliate Configuration",
   "admin.menu.affiliateConfig.description": "Affiliate program settings",
+  "admin.menu.affiliateOverview": "Overview",
+  "admin.menu.affiliateOverview.description": "Overview of all affiliates",
   "admin.menu.affiliateDashboard": "Affiliate Dashboard",
   "admin.menu.affiliateDashboard.description": "Overview and program KPIs",
   "admin.menu.affiliateFraud": "Fraud Alerts",

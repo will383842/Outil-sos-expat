@@ -235,6 +235,27 @@ export async function handleCallCompleted(
       },
       createdAt: Timestamp.now(),
     });
+
+    // 10. Forward to Partner Engine if client is a partner subscriber
+    try {
+      const { forwardCallToPartnerEngine } = await import("./forwardToPartnerEngine");
+      await forwardCallToPartnerEngine({
+        callSessionId: sessionId,
+        clientUid: clientId,
+        providerType,
+        duration,
+        amountPaidCents: Math.round(connectionFee * 100),
+        discountAppliedCents: 0,
+        partnerId,
+      });
+    } catch (fwdError) {
+      // Non-blocking: Partner Engine sync failure should not affect Firebase commission
+      logger.warn("[partnerOnCallCompleted] Forward to Partner Engine failed (non-blocking)", {
+        sessionId,
+        partnerId,
+        error: fwdError instanceof Error ? fwdError.message : String(fwdError),
+      });
+    }
   } catch (error) {
     logger.error("[partnerOnCallCompleted] Error processing partner commission", {
       sessionId,

@@ -31,7 +31,6 @@ import {
   getN1CallCommission,
   getN2CallCommission,
   getActivationBonusAmount,
-  getN1RecruitBonusAmount,
   getActivationCallsRequired,
   getProviderCallCommission,
   getProviderRecruitmentDurationMonths,

@@ -70,6 +70,7 @@ const RegisterClient: React.FC = () => {
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
   const referralCode = searchParams.get('ref') || getUnifiedReferralCode() || '';
+  const partnerInviteToken = searchParams.get('partnerInviteToken') || '';
 
   const { register, loginWithGoogle, isLoading, error, user, isFullyReady } = useAuth();
   const { language } = useApp();
@@ -438,6 +439,7 @@ const RegisterClient: React.FC = () => {
           language={currentLang}
           prefillEmail={prefillEmail}
           referralCode={referralCode}
+          partnerInviteToken={partnerInviteToken}
           redirect={redirect}
           navigate={navigate}
           authError={error || googleError || undefined}

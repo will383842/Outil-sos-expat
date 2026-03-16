@@ -95,10 +95,10 @@ const TermsChatters: React.FC = () => {
       trustedByHelpers: "Rejoignez 5K+ ambassadeurs actifs",
       keyFeatures: "Points clés",
       features: [
-        "Commissions attractives jusqu'à 50%",
+        "Commissions selon le barème en vigueur",
         "Paiements rapides sous 7 jours",
         "Programme de parrainage multi-niveaux",
-        "Bonus early adopter +50%",
+        "Barème consultable dans votre dashboard",
       ],
       languageToggle: "Changer de langue",
       sections: {
@@ -136,10 +136,10 @@ const TermsChatters: React.FC = () => {
       trustedByHelpers: "Join 5K+ active ambassadors",
       keyFeatures: "Key features",
       features: [
-        "Attractive commissions up to 50%",
+        "Commissions per current rate schedule",
         "Fast payments within 7 days",
         "Multi-level referral program",
-        "Early adopter +50% bonus",
+        "Rates visible in your dashboard",
       ],
       languageToggle: "Switch language",
       sections: {
@@ -696,43 +696,22 @@ const TermsChatters: React.FC = () => {
 
 ## 4. Commissions et rémunération
 
-4.1. **Commissions Clients.** Le Chatter perçoit une commission sur chaque appel payant généré via son Code Affilié :
-- Niveau 1-2 : **15%** du montant de la transaction
-- Niveau 3 : **20%**
-- Niveau 4 : **25%**
-- Niveau 5 : **30%**
-- Early Adopter : **+50%** bonus permanent
+4.1. **Commissions Clients.** Le Chatter perçoit une commission fixe sur chaque appel payant généré via son Code Affilié. Le montant par appel est défini dans le **barème en vigueur**, consultable à tout moment dans votre tableau de bord.
 
-4.2. **Commissions de Recrutement (Filleul N1).** Le Chatter perçoit des commissions sur les performances de ses Filleuls N1, pendant **12 mois** à compter de la date d'inscription de chaque Filleul N1. **Conditions cumulatives pour percevoir cette commission :**
-- Le Chatter doit réaliser un minimum de **$50 de commissions directes** (article 4.1) au cours du mois civil concerné
-- Le Chatter doit assurer la formation et le suivi de ses Filleuls N1 : partage des ressources du programme, réponse aux questions dans un délai de 48h, accompagnement dans la prise en main du dashboard
-- En l'absence de ces conditions sur un mois donné, les commissions N1 de ce mois sont suspendues (non rétroactives)
-- **5€** par Chatter N1 activé (2+ appels, versé à l'activation, sans condition de seuil)
-- **1$** par appel client de vos filleuls N1 (pendant 12 mois, soumis aux conditions ci-dessus)
+4.2. **Commissions de Recrutement (Filleul N1).** Le Chatter perçoit des commissions sur les performances de ses Filleuls N1, pendant la **durée définie dans le barème en vigueur** à compter de la date d'inscription de chaque Filleul N1. Le montant par appel est indiqué dans votre tableau de bord.
 
-4.3. **Commissions de Recrutement (Filleul N2).** Le Chatter perçoit des commissions sur les performances de ses Filleuls N2, pendant **12 mois** à compter de la date d'inscription de chaque Filleul N2. Les **mêmes conditions cumulatives** qu'en 4.2 s'appliquent.
-- **0.50$** par appel client de vos filleuls N2 (pendant 12 mois, soumis aux conditions ci-dessus)
+4.3. **Commissions de Recrutement (Filleul N2).** Le Chatter perçoit des commissions sur les performances de ses Filleuls N2, pendant la **durée définie dans le barème en vigueur** à compter de la date d'inscription de chaque Filleul N2. Le montant par appel est indiqué dans votre tableau de bord.
 
-4.4. **Durée maximale des commissions d'affiliation.** Les commissions sur les Filleuls (N1 et N2) sont versées pendant **12 mois maximum** à compter de la date d'inscription de chaque filleul. Passé ce délai, le Chatter conserve uniquement ses commissions directes (article 4.1). Il peut recruter de nouveaux filleuls pour démarrer de nouvelles périodes de 12 mois.
+4.4. **Durée maximale des commissions d'affiliation.** Les commissions sur les Filleuls (N1 et N2) sont versées pendant la **durée maximale définie dans le barème en vigueur** à compter de la date d'inscription de chaque filleul. Passé ce délai, le Chatter conserve uniquement ses commissions directes (article 4.1). Il peut recruter de nouveaux filleuls pour démarrer de nouvelles périodes.
 
-4.5. **Barèmes de commissions (récapitulatif).**
-
-| Type de commission | Montant | Durée | Conditions |
-|---|---|---|---|
-| Appel client direct (via code affilié) | 15-30% | Illimitée | Aucune |
-| Activation Filleul Chatter N1 | 5€ | Unique | À l'activation |
-| Appel client via Filleul N1 | 1$/appel | 12 mois | $50/mois + formation |
-| Appel client via Filleul N2 | 0.50$/appel | 12 mois | $50/mois + formation |
+4.5. **Barème en vigueur.** Les montants exacts des commissions, les durées et les conditions applicables sont consultables à tout moment dans votre **tableau de bord affilié**. SOS Expat se réserve le droit de modifier le barème avec un préavis de **30 jours** notifié par email.
 
 4.6. **Seuils de paiement.** Les commissions sont validées après :
 - Période de rétractation client (14 jours)
 - Validation anti-fraude automatique
-- Atteinte du seuil minimum de retrait (**20€**)
+- Atteinte du **seuil minimum de retrait** indiqué dans votre tableau de bord
 
-4.7. **Bonus et défis.** Des bonus supplémentaires peuvent être accordés via :
-- Défis hebdomadaires
-- Paliers de recrutement (5, 10, 20, 50, 100, 500 filleuls)
-- Événements spéciaux
+4.7. **Bonus et défis.** Des bonus supplémentaires peuvent être accordés via des événements spéciaux ou des paliers de performance, selon les conditions publiées dans le tableau de bord.
 
 ---
 
@@ -782,7 +761,9 @@ const TermsChatters: React.FC = () => {
 
 6.5. **Indépendance.** Le Chatter agit en **prestataire indépendant** ; aucun lien d'emploi, mandat ou agence n'est créé avec SOS Expat. Il est seul responsable de ses cotisations sociales et obligations fiscales.
 
-6.6. **Exclusivité partielle.** Le Chatter peut promouvoir d'autres services, sauf concurrents directs de SOS Expat (plateformes de mise en relation avec des avocats ou experts expatriés).
+6.6. **Conformité locale.** Le Chatter est seul responsable de vérifier et respecter les obligations légales, fiscales et réglementaires applicables dans son pays de résidence ou d'exercice. Cela inclut notamment : l'obtention de tout statut juridique requis (auto-entrepreneur, micro-entreprise, freelance ou équivalent local), l'immatriculation auprès des autorités compétentes, la déclaration de ses revenus d'affiliation, et le respect de toute réglementation locale relative à l'activité de recommandation commerciale ou de marketing d'affiliation. SOS Expat n'est pas responsable du non-respect par le Chatter de ses obligations locales.
+
+6.7. **Exclusivité partielle.** Le Chatter peut promouvoir d'autres services, sauf concurrents directs de SOS Expat (plateformes de mise en relation avec des avocats ou experts expatriés).
 
 ---
 

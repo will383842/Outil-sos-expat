@@ -668,6 +668,14 @@ export const adminMenuTree: AdminMenuItem[] = [
               },
             ],
           },
+          // Sous-section : Captain Chatters (onglet dédié)
+          {
+            id: "chatters-captains",
+            labelKey: "admin.menu.chattersCaptains",
+            path: "/admin/chatters/captains",
+            icon: Crown,
+            descriptionKey: "admin.menu.chattersCaptains.description",
+          },
           // Sous-section : Chatters
           {
             id: "chatters",
@@ -735,14 +743,6 @@ export const adminMenuTree: AdminMenuItem[] = [
                 descriptionKey: "admin.menu.chattersConfig.description",
               },
             ],
-          },
-          // Sous-section : Captain Chatters (onglet dédié)
-          {
-            id: "chatters-captains",
-            labelKey: "admin.menu.chattersCaptains",
-            path: "/admin/chatters/captains",
-            icon: Crown,
-            descriptionKey: "admin.menu.chattersCaptains.description",
           },
           // Sous-section : Influenceurs
           {

@@ -564,6 +564,8 @@
   "admin.menu.affiliationPartnership.description": "Партнёрская программа и управление партнёрами",
   "admin.menu.affiliation": "Партнёрство и аффилиаты",
   "admin.menu.affiliation.description": "Партнёрская программа и аффилиаты",
+  "admin.menu.affiliateOverview": "Обзор",
+  "admin.menu.affiliateOverview.description": "Обзор всех партнёров",
   "admin.menu.affiliatePayouts": "Выплаты партнёрам",
   "admin.menu.affiliatePayouts.description": "Управление выплатами партнёрам",
   "admin.menu.affiliatesList": "Список партнёров",

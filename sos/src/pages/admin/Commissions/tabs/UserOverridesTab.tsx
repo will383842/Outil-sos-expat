@@ -33,17 +33,76 @@ interface UserCommissionSummary {
   commissionCount: number;
 }
 
-const RATE_KEYS = [
-  { key: 'client_call_lawyer', label: 'Appel client (avocat)' },
-  { key: 'client_call_expat', label: 'Appel client (expatrié)' },
-  { key: 'recruitment_lawyer', label: 'Recrutement (avocat)' },
-  { key: 'recruitment_expat', label: 'Recrutement (expatrié)' },
-  { key: 'n1_call', label: 'N1 appel' },
-  { key: 'n2_call', label: 'N2 appel' },
-  { key: 'activation_bonus', label: 'Bonus activation' },
-  { key: 'recruit_bonus', label: 'Bonus recrutement' },
-  { key: 'captain_call_lawyer', label: 'Captain avocat' },
-  { key: 'captain_call_expat', label: 'Captain expatrié' },
+/** Per-role rate keys matching backend commission field names */
+const RATE_KEYS_BY_ROLE: Record<string, { key: string; label: string }[]> = {
+  chatter: [
+    { key: 'commissionClientCallAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientCallAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientCallAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+    { key: 'commissionProviderCallAmount', label: 'Appel prestataire (générique)' },
+    { key: 'commissionProviderCallAmountLawyer', label: 'Appel prestataire (avocat)' },
+    { key: 'commissionProviderCallAmountExpat', label: 'Appel prestataire (expatrié)' },
+    { key: 'commissionCaptainCallAmountLawyer', label: 'Captain (avocat)' },
+    { key: 'commissionCaptainCallAmountExpat', label: 'Captain (expatrié)' },
+  ],
+  influencer: [
+    { key: 'commissionClientAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionRecruitmentAmount', label: 'Recrutement (générique)' },
+    { key: 'commissionRecruitmentAmountLawyer', label: 'Recrutement (avocat)' },
+    { key: 'commissionRecruitmentAmountExpat', label: 'Recrutement (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+  blogger: [
+    { key: 'commissionClientAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionRecruitmentAmount', label: 'Recrutement (générique)' },
+    { key: 'commissionRecruitmentAmountLawyer', label: 'Recrutement (avocat)' },
+    { key: 'commissionRecruitmentAmountExpat', label: 'Recrutement (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+  groupAdmin: [
+    { key: 'commissionClientCallAmount', label: 'Appel client (générique)' },
+    { key: 'commissionClientAmountLawyer', label: 'Appel client (avocat)' },
+    { key: 'commissionClientAmountExpat', label: 'Appel client (expatrié)' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+  affiliate: [
+    { key: 'signupBonus', label: 'Bonus inscription' },
+    { key: 'callCommissionRate', label: 'Taux commission appel' },
+    { key: 'callFixedBonus', label: 'Bonus fixe appel' },
+    { key: 'subscriptionRate', label: 'Taux abonnement' },
+    { key: 'subscriptionFixedBonus', label: 'Bonus fixe abonnement' },
+    { key: 'providerValidationBonus', label: 'Bonus validation prestataire' },
+    { key: 'commissionN1CallAmount', label: 'N1 appel' },
+    { key: 'commissionN2CallAmount', label: 'N2 appel' },
+    { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+    { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
+  ],
+};
+
+/** Fallback keys shown when user role is unknown */
+const RATE_KEYS_FALLBACK = [
+  { key: 'commissionClientCallAmount', label: 'Appel client' },
+  { key: 'commissionN1CallAmount', label: 'N1 appel' },
+  { key: 'commissionN2CallAmount', label: 'N2 appel' },
+  { key: 'commissionActivationBonusAmount', label: 'Bonus activation' },
+  { key: 'commissionN1RecruitBonusAmount', label: 'Bonus recrutement N1' },
 ];
 
 const UserOverridesTab: React.FC = () => {
@@ -273,7 +332,7 @@ const UserOverridesTab: React.FC = () => {
               <span className="text-xs font-normal text-gray-400">(priorité maximale)</span>
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {RATE_KEYS.map(({ key, label }) => (
+              {(RATE_KEYS_BY_ROLE[userInfo.role || ''] || RATE_KEYS_FALLBACK).map(({ key, label }) => (
                 <div key={key}>
                   <label className="text-xs text-gray-500">{label}</label>
                   <input
