@@ -58,6 +58,7 @@ import {
   Timestamp,
   QueryConstraint,
 } from 'firebase/firestore';
+import { Link as LinkIcon } from 'lucide-react';
 import { db, functions, functionsAffiliate } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import AdminErrorState from '../../components/admin/AdminErrorState';
@@ -218,6 +219,10 @@ const AdminUsers: React.FC = () => {
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editTargetUser, setEditTargetUser] = useState<AdminUser | null>(null);
+
+  // Last affiliate click date (fetched on-demand when modal opens)
+  const [lastAffiliateClick, setLastAffiliateClick] = useState<Date | null>(null);
+  const [affiliateClickLoading, setAffiliateClickLoading] = useState(false);
 
   // Sync selectedRole when navigating between /users/chatters, /users/influencers, etc.
   useEffect(() => {
@@ -403,6 +408,44 @@ const AdminUsers: React.FC = () => {
         return;
     }
     window.open(url, '_blank');
+  };
+
+  // Affiliate click collections per role
+  const affiliateClickCollections: Partial<Record<Role, { collection: string; field: string }>> = {
+    chatter: { collection: 'chatter_affiliate_clicks', field: 'chatterId' },
+    influencer: { collection: 'influencer_affiliate_clicks', field: 'influencerId' },
+    blogger: { collection: 'blogger_affiliate_clicks', field: 'bloggerId' },
+    groupAdmin: { collection: 'group_admin_affiliate_clicks', field: 'groupAdminId' },
+    partner: { collection: 'partner_affiliate_clicks', field: 'partnerId' },
+    client: { collection: 'affiliate_clicks', field: 'referrerId' },
+    lawyer: { collection: 'affiliate_clicks', field: 'referrerId' },
+    expat: { collection: 'affiliate_clicks', field: 'referrerId' },
+  };
+
+  const fetchLastAffiliateClick = async (user: AdminUser) => {
+    setLastAffiliateClick(null);
+    const config = affiliateClickCollections[user.role];
+    if (!config) return;
+
+    setAffiliateClickLoading(true);
+    try {
+      const clickQuery = query(
+        collection(db, config.collection),
+        where(config.field, '==', user.id),
+        orderBy('clickedAt', 'desc'),
+        limit(1)
+      );
+      const snap = await getDocs(clickQuery);
+      if (!snap.empty) {
+        const clickedAt = snap.docs[0].data().clickedAt;
+        setLastAffiliateClick(clickedAt?.toDate?.() || null);
+      }
+    } catch (err) {
+      // Collection may not exist for this role — ignore silently
+      console.warn('[AdminUsers] Failed to fetch last affiliate click:', err);
+    } finally {
+      setAffiliateClickLoading(false);
+    }
   };
 
   const getRoleLabel = (role: Role): string => {
@@ -937,7 +980,7 @@ const AdminUsers: React.FC = () => {
             <button
               onClick={() => {
                 const csvContent = [
-                  ['ID', 'Prénom', 'Nom', 'Email', 'Rôle', 'Pays', 'En ligne', 'Banni', 'Inscription'].join(','),
+                  '\uFEFF' + ['ID', 'Prénom', 'Nom', 'Email', 'Rôle', 'Pays', 'En ligne', 'Banni', 'Inscription', 'Dernière connexion'].join(','),
                   ...filteredUsers.map((u) =>
                     [
                       u.id,
@@ -949,6 +992,7 @@ const AdminUsers: React.FC = () => {
                       u.isOnline ? 'Oui' : 'Non',
                       u.isBanned ? 'Oui' : 'Non',
                       formatDate(u.createdAt),
+                      u.lastLoginAt.getTime() > 0 ? formatDate(u.lastLoginAt) : '',
                     ].join(',')
                   ),
                 ].join('\n');
@@ -1470,8 +1514,11 @@ const AdminUsers: React.FC = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Pays
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Inscription
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSortChange('createdAt')}>
+                    Inscription {sortField === 'createdAt' && (sortDirection === 'desc' ? '↓' : '↑')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSortChange('lastLoginAt')}>
+                    Dernière connexion {sortField === 'lastLoginAt' && (sortDirection === 'desc' ? '↓' : '↑')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -1481,7 +1528,7 @@ const AdminUsers: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center">
+                    <td colSpan={9} className="px-6 py-4 text-center">
                       <LoadingSpinner text={adminT.loading} />
                     </td>
                   </tr>
@@ -1526,6 +1573,9 @@ const AdminUsers: React.FC = () => {
                       <td className="px-6 py-4 text-sm text-gray-900">{u.status ?? (u.isBanned ? 'Banni' : u.isOnline ? 'En ligne' : 'Hors ligne')}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{u.country ?? u.currentCountry ?? '—'}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{formatDate(u.createdAt)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {u.lastLoginAt.getTime() > 0 ? formatDate(u.lastLoginAt) : '—'}
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="flex flex-wrap gap-2">
                           <Button
@@ -1534,6 +1584,7 @@ const AdminUsers: React.FC = () => {
                             onClick={() => {
                               setSelectedUser(u);
                               setShowUserModal(true);
+                              fetchLastAffiliateClick(u);
                             }}
                           >
                             Voir
@@ -1611,7 +1662,7 @@ const AdminUsers: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
                       Aucun utilisateur trouvé
                     </td>
                   </tr>
@@ -1709,7 +1760,19 @@ const AdminUsers: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <Clock className="w-5 h-5 text-gray-400" />
                     <span className="text-gray-900">
-                      Dernière connexion le {formatDate(selectedUser.lastLoginAt)}
+                      Dernière connexion : {selectedUser.lastLoginAt.getTime() > 0 ? formatDate(selectedUser.lastLoginAt) : 'Jamais'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <LinkIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-gray-900">
+                      Dernier clic affilié :{' '}
+                      {affiliateClickLoading
+                        ? 'Chargement...'
+                        : lastAffiliateClick
+                        ? formatDate(lastAffiliateClick)
+                        : 'Aucun'}
                     </span>
                   </div>
                 </div>
