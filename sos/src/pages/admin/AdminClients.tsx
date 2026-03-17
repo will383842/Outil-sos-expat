@@ -830,10 +830,10 @@ const AdminClients: React.FC = () => {
                         <div className="flex items-center gap-3 min-w-[200px]">
                           <div className="relative flex-shrink-0">
                             <img
-                              src={c.photoURL || c.profilePhoto || '/default-avatar.png'}
+                              src={c.photoURL || c.profilePhoto || '/default-avatar.webp'}
                               alt=""
                               className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                              onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.png'; }}
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }}
                             />
                             <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${c.status === 'active' ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                           </div>
@@ -972,9 +972,9 @@ const AdminClients: React.FC = () => {
             {/* Header */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <img src={selectedClient.photoURL || selectedClient.profilePhoto || '/default-avatar.png'} alt=""
+                <img src={selectedClient.photoURL || selectedClient.profilePhoto || '/default-avatar.webp'} alt=""
                   className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-100"
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.png'; }} />
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }} />
                 <span className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white ${selectedClient.status === 'active' ? 'bg-emerald-500' : 'bg-gray-300'}`} />
               </div>
               <div>

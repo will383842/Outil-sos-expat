@@ -61,6 +61,7 @@ const Reviews = lazy(() => import("../components/review/Reviews"));
 // 👉 Pricing admin
 import { usePricingConfig, getEffectivePrice } from "../services/pricingService";
 import { trackMetaViewContent } from "../utils/metaPixel";
+import { trackEvent } from "../utils/ga4";
 import { useMetaTracking } from "../hooks/useMetaTracking";
 
 // Imports des traductions AAA
@@ -1575,9 +1576,25 @@ const ProviderProfile: React.FC = () => {
     loadProviderData();
   }, [id, typeParam, countryParam, langParam, preferredLangKey, params.slug, params.profileId, params.name, params.nameSlug, params.nameId]);
 
+  // GA4: Track view_provider with enriched international data
+  useEffect(() => {
+    if (!provider || !realProviderId) return;
+
+    const { locale: currentLocale } = parseLocaleFromPath(location.pathname);
+    trackEvent('view_provider', {
+      provider_id: realProviderId,
+      provider_type: provider.type,
+      provider_country: provider.country,
+      provider_languages: provider.languages?.join(','),
+      provider_rating: provider.rating,
+      provider_review_count: provider.reviewCount,
+      page_locale: currentLocale,
+    });
+  }, [realProviderId]); // Only fire once per provider load
+
   useEffect(() => {
     if (!realProviderId) return;
-    
+
     setOnlineStatus((s) => ({
       ...s,
       listenerActive: true,
@@ -1839,7 +1856,7 @@ const ProviderProfile: React.FC = () => {
     (e: React.SyntheticEvent<HTMLImageElement>) => {
       const img = e.target as HTMLImageElement;
       img.onerror = null;
-      img.src = "/default-avatar.png";
+      img.src = "/default-avatar.webp";
     },
     []
   );
@@ -1869,7 +1886,7 @@ const ProviderProfile: React.FC = () => {
     provider?.profilePhoto ||
     provider?.photoURL ||
     provider?.avatar ||
-    "/default-avatar.png";
+    "/default-avatar.webp";
 
   // Image OG dynamique avec overlay pour les réseaux sociaux
   const mainPhoto: string = (provider?.id || provider?.uid)
@@ -2200,10 +2217,10 @@ const ProviderProfile: React.FC = () => {
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <img
-                          src={suggestion.profilePhoto || '/default-avatar.png'}
+                          src={suggestion.profilePhoto || '/default-avatar.webp'}
                           alt={suggestion.fullName || 'Expert'}
                           className="w-12 h-12 rounded-full object-cover border-2 border-gray-700 group-hover:border-red-500/50 transition-colors"
-                          onError={(e) => { e.currentTarget.src = '/default-avatar.png'; }}
+                          onError={(e) => { e.currentTarget.src = '/default-avatar.webp'; }}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-white truncate">{suggestion.fullName}</p>

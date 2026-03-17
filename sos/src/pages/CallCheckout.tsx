@@ -3067,7 +3067,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                     src={
                       provider.avatar ||
                       provider.profilePhoto ||
-                      "/default-avatar.png"
+                      "/default-avatar.webp"
                     }
                     className="w-5 h-5 rounded-full object-cover"
                     onError={(e) => {
@@ -4349,7 +4349,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   src={
                     provider.avatar ||
                     provider.profilePhoto ||
-                    "/default-avatar.png"
+                    "/default-avatar.webp"
                   }
                   alt={provider.name || "Expert"}
                   className="w-12 h-12 rounded-lg object-cover ring-2 ring-white shadow-sm"

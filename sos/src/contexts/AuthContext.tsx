@@ -338,7 +338,7 @@ const processProfilePhoto = async (
   provider: 'google' | 'manual'
 ): Promise<string> => {
   try {
-    if (!photoUrl) return '/default-avatar.png';
+    if (!photoUrl) return '/default-avatar.webp';
 
     if (provider === 'google' && photoUrl.includes('googleusercontent.com')) {
       try {
@@ -353,11 +353,11 @@ const processProfilePhoto = async (
       } catch {
         /* no-op */ void 0;
       }
-      return '/default-avatar.png';
+      return '/default-avatar.webp';
     }
 
     if (photoUrl.startsWith('data:image')) {
-      if (typeof document === 'undefined') return '/default-avatar.png';
+      if (typeof document === 'undefined') return '/default-avatar.webp';
       
       // Use image optimizer to standardize size and convert to WebP
       const { optimizeProfileImage, getOptimalFormat, getFileExtension } = await import('../utils/imageOptimizer');
@@ -380,14 +380,14 @@ const processProfilePhoto = async (
         return url;
       } catch (error) {
         devError('[Auth] Image optimization failed, falling back to default:', error);
-        return '/default-avatar.png';
+        return '/default-avatar.webp';
       }
     }
 
     if (photoUrl.startsWith('http')) return photoUrl;
-    return '/default-avatar.png';
+    return '/default-avatar.webp';
   } catch {
-    return '/default-avatar.png';
+    return '/default-avatar.webp';
   }
 };
 
@@ -563,9 +563,9 @@ const createUserDocumentInFirestore = async (
       firstName: firstName || '',
       lastName: lastName || '',
       fullName,
-      photoURL: firebaseUser.photoURL || '/default-avatar.png',
-      profilePhoto: firebaseUser.photoURL || '/default-avatar.png',
-      avatar: firebaseUser.photoURL || '/default-avatar.png',
+      photoURL: firebaseUser.photoURL || '/default-avatar.webp',
+      profilePhoto: firebaseUser.photoURL || '/default-avatar.webp',
+      avatar: firebaseUser.photoURL || '/default-avatar.webp',
       isVerified: firebaseUser.emailVerified,
       isVerifiedEmail: firebaseUser.emailVerified,
       isActive: true,
@@ -599,9 +599,9 @@ const createUserDocumentInFirestore = async (
         displayName: fullName,
         
         // ===== PHOTO =====
-        profilePhoto: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
-        photoURL: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
-        avatar: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
+        profilePhoto: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.webp',
+        photoURL: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.webp',
+        avatar: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.webp',
         
         // ===== CONTACT =====
         phone: additionalData.phone || null,
@@ -718,9 +718,9 @@ const createUserDocumentInFirestore = async (
         lastName: lastName || '',
         fullName: fullName,
         name: fullName,
-        profilePhoto: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
-        photoURL: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
-        avatar: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.png',
+        profilePhoto: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.webp',
+        photoURL: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.webp',
+        avatar: additionalData.profilePhoto || firebaseUser.photoURL || '/default-avatar.webp',
         phone: additionalData.phone || null,
         phoneCountryCode: additionalData.phoneCountryCode || null,
         country: additionalData.country || additionalData.currentCountry || '',
@@ -2110,7 +2110,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       // ✅ OPTIMISÉ: getIdToken(true) force le refresh token, 500ms de marge pour réseaux lents (3G/4G)
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      let finalProfilePhotoURL = '/default-avatar.png';
+      let finalProfilePhotoURL = '/default-avatar.webp';
       if (userData.profilePhoto?.startsWith('data:image')) {
         finalProfilePhotoURL = await processProfilePhoto(userData.profilePhoto, cred.user.uid, 'manual');
       } else if (userData.profilePhoto?.startsWith('http')) {
@@ -2174,7 +2174,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         userId: cred.user.uid,
         role: userData.role,
         email,
-        hasProfilePhoto: !!finalProfilePhotoURL && finalProfilePhotoURL !== '/default-avatar.png',
+        hasProfilePhoto: !!finalProfilePhotoURL && finalProfilePhotoURL !== '/default-avatar.webp',
         isApproved: approvalData.isApproved,
         approvalStatus: approvalData.approvalStatus,
         deviceInfo

@@ -261,7 +261,7 @@ export function normalizeProvider(providerData: unknown): Provider {
   const yearsOfExperience = Math.max(0, toNum(o.yearsOfExperience, toNum(o.yearsAsExpat, 1)));
 
   // media / description (utilise toLocalizedStr pour gérer les objets {fr: "...", en: "..."})
-  const avatar = toStr(o.avatar) || toStr(o.profilePhoto) || toStr(o.providerAvatar) || '/default-avatar.png';
+  const avatar = toStr(o.avatar) || toStr(o.profilePhoto) || toStr(o.providerAvatar) || '/default-avatar.webp';
   const description = toLocalizedStr(o.description) || toLocalizedStr(o.bio) || toLocalizedStr(o.professionalDescription) || toLocalizedStr(o.experienceDescription) || '';
 
   // Pays d'intervention (practiceCountries, operatingCountries, interventionCountries)
@@ -425,7 +425,7 @@ export function createDefaultProvider(providerId: string): Provider {
     reviewCount: 0,
     yearsOfExperience: 1,
     isOnline: false,
-    avatar: '/default-avatar.png',
+    avatar: '/default-avatar.webp',
     description: '',
     price: 19,
     isVisible: true,
@@ -440,7 +440,7 @@ export function createDefaultProvider(providerId: string): Provider {
     role: 'expat',
     currentCountry: 'France',
     currentPresenceCountry: 'France',
-    profilePhoto: '/default-avatar.png',
+    profilePhoto: '/default-avatar.webp',
     email: '',
     phone: '',
     phoneNumber: '',

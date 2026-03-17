@@ -168,7 +168,7 @@ export const normalizeUserData = (
       (userData?.profilePhoto as string) ||
       (userData?.photoURL as string) ||
       (userData?.avatar as string) ||
-      "/default-avatar.png",
+      "/default-avatar.webp",
     isActive: userData?.isActive !== false,
     isApproved: !!userData?.isApproved,
     isVerified: !!userData?.isVerified,
@@ -206,7 +206,7 @@ export const normalizeUserData = (
       (userData?.avatar as string) ||
       (userData?.profilePhoto as string) ||
       (userData?.photoURL as string) ||
-      "/default-avatar.png",
+      "/default-avatar.webp",
     isSOS:
       (userData?.isSOS as boolean) ||
       (userData?.role as string) === "lawyer" ||
@@ -372,7 +372,7 @@ export const createUserProfile = async (userData: Partial<User>) => {
     if (!userData.id) throw new Error("User ID is required");
 
     // Photo de profil (support base64 et URL)
-    let finalProfilePhoto = "/default-avatar.png";
+    let finalProfilePhoto = "/default-avatar.webp";
     if (userData.profilePhoto) {
       if (userData.profilePhoto.startsWith("data:image")) {
         // Use image optimizer to standardize size and convert to WebP
@@ -628,7 +628,7 @@ export const updateUserOnlineStatus = async (
           profilePhoto:
             getStr(u.profilePhoto) ||
             getStr(u.photoURL) ||
-            getStr(u.avatar, "/default-avatar.png"),
+            getStr(u.avatar, "/default-avatar.webp"),
           isActive: true,
           isApproved: getBool(u.isApproved, false),
           isVerified: getBool(u.isVerified, false),

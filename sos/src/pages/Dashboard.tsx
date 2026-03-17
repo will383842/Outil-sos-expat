@@ -3690,7 +3690,7 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
                           >
                             <img
                               src={
-                                (f.photo || "/default-avatar.png") +
+                                (f.photo || "/default-avatar.webp") +
                                 `?v=${Date.now()}`
                               }
                               alt={f.name}

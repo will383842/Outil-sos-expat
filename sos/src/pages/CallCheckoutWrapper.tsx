@@ -145,8 +145,8 @@ const reconstructProviderFromBooking = (bookingData: BookingData): Provider => {
     type: (bookingData.providerType as 'lawyer' | 'expat') || 'expat',
     country: bookingData.providerCountry || 'FR',
     currentCountry: bookingData.providerCountry || 'FR',
-    avatar: bookingData.providerAvatar || '/default-avatar.png',
-    profilePhoto: bookingData.providerAvatar || '/default-avatar.png',
+    avatar: bookingData.providerAvatar || '/default-avatar.webp',
+    profilePhoto: bookingData.providerAvatar || '/default-avatar.webp',
     email: `${(bookingData.providerName || 'expert').toLowerCase().replace(/\s+/g, '')}@example.com`,
     // ✅ CORRECTION: S'assurer que tous les champs de téléphone sont remplis
     phone: phoneToUse,
@@ -194,8 +194,8 @@ const createImprovedDefaultProvider = (providerId: string): Provider => {
     type: 'expat',
     country: 'FR',
     currentCountry: 'FR',
-    avatar: '/default-avatar.png',
-    profilePhoto: '/default-avatar.png',
+    avatar: '/default-avatar.webp',
+    profilePhoto: '/default-avatar.webp',
     email: `expert${providerShortId}@example.com`,
     // P1-3 FIX: Pas de faux numéro — la validation bloquera si pas de téléphone réel
     phone: '',

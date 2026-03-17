@@ -229,7 +229,7 @@ const FALLBACK_PROVIDERS: Provider[] = [
     isOnline: true,
     price: 49,
     duration: 20,
-    avatar: "/default-avatar.png",
+    avatar: "/default-avatar.webp",
     description: "Avocate spécialisée en droit de l'immigration avec plus de 12 ans d'expérience.",
   },
   {
@@ -247,7 +247,7 @@ const FALLBACK_PROVIDERS: Provider[] = [
     isOnline: false,
     price: 49,
     duration: 20,
-    avatar: "/default-avatar.png",
+    avatar: "/default-avatar.webp",
     description: "Avocat d'affaires expert en droit commercial européen.",
   },
   {
@@ -265,7 +265,7 @@ const FALLBACK_PROVIDERS: Provider[] = [
     isOnline: true,
     price: 19,
     duration: 30,
-    avatar: "/default-avatar.png",
+    avatar: "/default-avatar.webp",
     description: "Expatriée en Allemagne depuis 8 ans, je vous aide dans vos démarches.",
   },
   {
@@ -283,7 +283,7 @@ const FALLBACK_PROVIDERS: Provider[] = [
     isOnline: true,
     price: 19,
     duration: 30,
-    avatar: "/default-avatar.png",
+    avatar: "/default-avatar.webp",
     description: "Installé aux USA depuis 10 ans, expert en visa et fiscalité américaine.",
   },
   {
@@ -301,7 +301,7 @@ const FALLBACK_PROVIDERS: Provider[] = [
     isOnline: true,
     price: 49,
     duration: 20,
-    avatar: "/default-avatar.png",
+    avatar: "/default-avatar.webp",
     description: "Avocate hispanophone spécialisée en droit de l'immigration en Espagne.",
   },
   {
@@ -319,7 +319,7 @@ const FALLBACK_PROVIDERS: Provider[] = [
     isOnline: false,
     price: 19,
     duration: 30,
-    avatar: "/default-avatar.png",
+    avatar: "/default-avatar.webp",
     description: "Expert Canada : immigration, permis de travail et études.",
   },
 ];
@@ -1040,7 +1040,7 @@ const generateAllSchemas = (
         description: provider.type === "lawyer"
           ? intl.formatMessage({ id: "sosCall.profession.lawyer" })
           : intl.formatMessage({ id: "sosCall.profession.expat" }),
-        image: provider.avatar || `${BASE_URL}/default-avatar.png`,
+        image: provider.avatar || `${BASE_URL}/default-avatar.webp`,
         provider: {
           "@type": "Organization",
           "@id": `${BASE_URL}/#organization`,
@@ -1283,9 +1283,9 @@ const ModernProfileCard: React.FC<{
   const handleImageError = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
       const target = e.currentTarget;
-      if (target.src !== "/default-avatar.png" && !imageError) {
+      if (target.src !== "/default-avatar.webp" && !imageError) {
         setImageError(true);
-        target.src = "/default-avatar.png";
+        target.src = "/default-avatar.webp";
       }
     },
     [imageError]
@@ -1418,7 +1418,7 @@ const ModernProfileCard: React.FC<{
           style={{ height: "55%" }}
         >
           <img
-            src={provider.avatar || "/default-avatar.png"}
+            src={provider.avatar || "/default-avatar.webp"}
             alt={intl.formatMessage(
               { id: "sosCall.card.imageAlt" },
               { name: provider.name }
@@ -2429,7 +2429,7 @@ const SOSCall: React.FC = () => {
           const photo = data.profilePhoto || data.photoURL || data.avatar;
           return typeof photo === "string" && photo.trim() !== ""
             ? photo
-            : "/default-avatar.png";
+            : "/default-avatar.webp";
         })(),
         education: data.education || data.lawSchool || undefined,
         certifications: data.certifications || undefined,

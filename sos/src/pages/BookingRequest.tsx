@@ -1249,12 +1249,12 @@ const ProviderCardCompact = ({
             alt={`Photo de ${provider.name}`}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/default-avatar.png";
+              (e.target as HTMLImageElement).src = "/default-avatar.webp";
             }}
           />
         ) : (
           <img
-            src="/default-avatar.png"
+            src="/default-avatar.webp"
             alt="Avatar par défaut"
             className="w-full h-full object-cover"
           />
@@ -3685,12 +3685,12 @@ const BookingRequest: React.FC = () => {
                         alt={`Photo de ${provider.name}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/default-avatar.png";
+                          (e.target as HTMLImageElement).src = "/default-avatar.webp";
                         }}
                       />
                     ) : (
                       <img
-                        src="/default-avatar.png"
+                        src="/default-avatar.webp"
                         alt="Avatar par défaut"
                         className="w-full h-full object-cover"
                       />

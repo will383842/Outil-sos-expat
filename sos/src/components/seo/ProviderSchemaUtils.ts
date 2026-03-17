@@ -78,7 +78,7 @@ export function generateProviderItemSchema(
         ? 'Service juridique professionnel'
         : 'Service de conseil pour expatriés'
     ),
-    image: provider.avatar || `${baseUrl}/default-avatar.png`,
+    image: provider.avatar || `${baseUrl}/default-avatar.webp`,
     provider: {
       '@type': 'Organization',
       '@id': `${baseUrl}/#organization`,

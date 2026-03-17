@@ -26,7 +26,7 @@ export default function FeaturedBadge({ isFeatured, size = 'sm', className = '' 
 
   return (
     <img
-      src="/badges/featured-badge.png"
+      src="/badges/featured-badge.webp"
       alt={label}
       title={label}
       aria-label={label}

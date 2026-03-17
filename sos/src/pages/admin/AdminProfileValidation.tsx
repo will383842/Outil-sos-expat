@@ -682,7 +682,7 @@ const AdminProfileValidation: React.FC = () => {
                                 src={item.profilePhoto}
                                 alt=""
                                 className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                                onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.png'; }}
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }}
                               />
                             ) : (
                               <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center ring-2 ring-white">
@@ -817,7 +817,7 @@ const AdminProfileValidation: React.FC = () => {
                 {selectedItem.profilePhoto ? (
                   <img src={selectedItem.profilePhoto} alt=""
                     className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-100"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.png'; }} />
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }} />
                 ) : (
                   <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center ring-2 ring-gray-100">
                     <User size={24} className="text-gray-400" />

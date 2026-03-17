@@ -287,7 +287,7 @@ const ProfileEdit: React.FC = () => {
     if (!photo.file) return userData?.photoURL;
 
     try {
-      if (userData?.photoURL && userData.photoURL !== "/default-avatar.png") {
+      if (userData?.photoURL && userData.photoURL !== "/default-avatar.webp") {
         try {
           await deleteObject(ref(storage, userData.photoURL));
         } catch (err) {
@@ -679,7 +679,7 @@ const ProfileEdit: React.FC = () => {
               <div className="relative inline-block">
                 {photo.preview || userData?.photoURL ? (
                   <img
-                    src={photo.preview || userData?.photoURL || "/default-avatar.png"}
+                    src={photo.preview || userData?.photoURL || "/default-avatar.webp"}
                     alt={t("profileEdit.photo.alt")}
                     className="w-24 h-24 rounded-full object-cover border-4 border-red-200"
                   />

@@ -16,7 +16,7 @@ import type { Provider } from '@/types/provider';
 // Le fallback (skeleton ou cache) s'affichera si Firestore est lent
 const FIRESTORE_TIMEOUT_MS = 3000;
 
-const DEFAULT_AVATAR = '/default-avatar.png';
+const DEFAULT_AVATAR = '/default-avatar.webp';
 
 interface ProfileCarouselProps {
   className?: string;

@@ -894,10 +894,10 @@ const AdminExpats: React.FC = () => {
                         <div className="flex items-center gap-3 min-w-[200px]">
                           <div className="relative flex-shrink-0">
                             <img
-                              src={e.photoURL || e.profilePhoto || '/default-avatar.png'}
+                              src={e.photoURL || e.profilePhoto || '/default-avatar.webp'}
                               alt=""
                               className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                              onError={(ev) => { (ev.target as HTMLImageElement).src = '/default-avatar.png'; }}
+                              onError={(ev) => { (ev.target as HTMLImageElement).src = '/default-avatar.webp'; }}
                             />
                             <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${e.isOnline ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                           </div>
@@ -1074,9 +1074,9 @@ const AdminExpats: React.FC = () => {
             {/* Header */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <img src={selectedExpat.photoURL || selectedExpat.profilePhoto || '/default-avatar.png'} alt=""
+                <img src={selectedExpat.photoURL || selectedExpat.profilePhoto || '/default-avatar.webp'} alt=""
                   className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-100"
-                  onError={(ev) => { (ev.target as HTMLImageElement).src = '/default-avatar.png'; }} />
+                  onError={(ev) => { (ev.target as HTMLImageElement).src = '/default-avatar.webp'; }} />
                 <span className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white ${selectedExpat.isOnline ? 'bg-emerald-500' : 'bg-gray-300'}`} />
               </div>
               <div>

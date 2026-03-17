@@ -282,7 +282,7 @@ export const IaAccessTab: React.FC = () => {
           if (snap?.exists()) {
             const pData = snap.data();
             const photo = pData.profilePhoto || pData.photoURL || pData.avatar || '';
-            if (photo && photo !== '/default-avatar.png') {
+            if (photo && photo !== '/default-avatar.webp') {
               profilePhotos.set(batch[idx], photo);
             }
           }
@@ -304,7 +304,7 @@ export const IaAccessTab: React.FC = () => {
 
         // Photo: users > sos_profiles > fallback
         const userPhoto = data.profilePhoto || data.photoURL || data.avatar || '';
-        const photo = (userPhoto && userPhoto !== '/default-avatar.png') ? userPhoto : (profilePhotos.get(docSnap.id) || '');
+        const photo = (userPhoto && userPhoto !== '/default-avatar.webp') ? userPhoto : (profilePhotos.get(docSnap.id) || '');
 
 
         providersList.push({

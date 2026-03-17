@@ -398,7 +398,7 @@ const ProfileValidation: React.FC = () => {
                 {/* En-tête du profil */}
                 <div className="flex gap-4 mb-4">
                   <img
-                    src={profile.profilePhoto || '/default-avatar.png'}
+                    src={profile.profilePhoto || '/default-avatar.webp'}
                     alt={profile.fullName}
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                     loading="lazy"
