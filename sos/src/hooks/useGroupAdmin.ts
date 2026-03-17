@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { functionsAffiliate } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminView } from '@/contexts/AdminViewContext';
 import type { BaseNotification } from '@/types/notification';
 import {
   GroupAdmin,
@@ -56,6 +57,8 @@ interface UseGroupAdminReturn {
 
 export function useGroupAdmin(): UseGroupAdminReturn {
   const { user } = useAuth();
+  const { effectiveUserId, isAdminView } = useAdminView();
+  const targetUid = effectiveUserId || user?.uid;
   const db = getFirestore();
   const [profile, setProfile] = useState<GroupAdmin | null>(null);
   const [recentCommissions, setRecentCommissions] = useState<GroupAdminCommission[]>([]);
@@ -70,7 +73,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
   const isGroupAdmin = !!profile;
 
   const fetchDashboard = useCallback(async () => {
-    if (!user || user.role !== 'groupAdmin') {
+    if (!user || (!isAdminView && user.role !== 'groupAdmin')) {
       setIsLoading(false);
       return;
     }
@@ -79,7 +82,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
       setIsLoading(true);
       setError(null);
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
-      const result = await getDashboard({});
+      const result = await getDashboard(isAdminView && targetUid ? { userId: targetUid } : {});
       const data = result.data as GroupAdminDashboardResponse;
 
       setProfile(data.profile);
@@ -102,11 +105,11 @@ export function useGroupAdmin(): UseGroupAdminReturn {
 
   // Real-time notifications subscription (normalizes `read` → `isRead`)
   useEffect(() => {
-    if (!user?.uid || !isGroupAdmin) return;
+    if (!targetUid || !isGroupAdmin) return;
 
     const notificationsQuery = query(
       collection(db, 'group_admin_notifications'),
-      where('groupAdminId', '==', user.uid),
+      where('groupAdminId', '==', targetUid),
       orderBy('createdAt', 'desc'),
       limit(30)
     );
@@ -138,12 +141,12 @@ export function useGroupAdmin(): UseGroupAdminReturn {
     );
 
     return () => unsubscribe();
-  }, [user?.uid, isGroupAdmin, db]);
+  }, [targetUid, isGroupAdmin, db]);
 
   // Mark single notification as read
   const markNotificationRead = useCallback(
     async (notificationId: string): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         const notificationRef = doc(db, 'group_admin_notifications', notificationId);
@@ -156,13 +159,13 @@ export function useGroupAdmin(): UseGroupAdminReturn {
         console.error('[useGroupAdmin] Failed to mark notification as read:', err);
       }
     },
-    [user?.uid, db]
+    [targetUid, db]
   );
 
   // Mark all notifications as read
   const markAllNotificationsRead = useCallback(
     async (): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         const batch = writeBatch(db);
@@ -185,7 +188,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
         console.error('[useGroupAdmin] Failed to mark all notifications as read:', err);
       }
     },
-    [user?.uid, db, notifications]
+    [targetUid, db, notifications]
   );
 
   const unreadNotificationsCount = useMemo(() => {

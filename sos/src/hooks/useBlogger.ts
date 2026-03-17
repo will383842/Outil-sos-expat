@@ -22,6 +22,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { db, functionsAffiliate } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdminView } from '../contexts/AdminViewContext';
 import {
   Blogger,
   BloggerCommission,
@@ -92,6 +93,8 @@ interface UseBloggerReturn {
 
 export function useBlogger(): UseBloggerReturn {
   const { user } = useAuth();
+  const { effectiveUserId, isAdminView } = useAdminView();
+  const targetUid = effectiveUserId || user?.uid;
 
   // State
   const [dashboardData, setDashboardData] = useState<BloggerDashboardData | null>(null);
@@ -115,18 +118,18 @@ export function useBlogger(): UseBloggerReturn {
   // ============================================================================
 
   const refreshDashboard = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!targetUid) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const getBloggerDashboard = httpsCallable<unknown, BloggerDashboardData>(
+      const getBloggerDashboard = httpsCallable<{ userId?: string }, BloggerDashboardData>(
         functionsAffiliate,
         'getBloggerDashboard'
       );
 
-      const result = await getBloggerDashboard({});
+      const result = await getBloggerDashboard(isAdminView && targetUid ? { userId: targetUid } : {});
       setDashboardData(result.data);
       setIsBlogger(true);
     } catch (err: unknown) {
@@ -139,14 +142,14 @@ export function useBlogger(): UseBloggerReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid]);
+  }, [targetUid]);
 
   // ============================================================================
   // FETCH LEADERBOARD
   // ============================================================================
 
   const refreshLeaderboard = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!targetUid) return;
 
     setIsLoadingLeaderboard(true);
 
@@ -163,19 +166,19 @@ export function useBlogger(): UseBloggerReturn {
     } finally {
       setIsLoadingLeaderboard(false);
     }
-  }, [user?.uid]);
+  }, [targetUid]);
 
   // ============================================================================
   // REAL-TIME SUBSCRIPTIONS
   // ============================================================================
 
   useEffect(() => {
-    if (!user?.uid || !isBlogger) return;
+    if (!targetUid || !isBlogger) return;
 
     // Subscribe to commissions
     const commissionsQuery = query(
       collection(db, 'blogger_commissions'),
-      where('bloggerId', '==', user.uid),
+      where('bloggerId', '==', targetUid),
       orderBy('createdAt', 'desc'),
       limit(50)
     );
@@ -202,7 +205,7 @@ export function useBlogger(): UseBloggerReturn {
     // Subscribe to withdrawals
     const withdrawalsQuery = query(
       collection(db, 'blogger_withdrawals'),
-      where('bloggerId', '==', user.uid),
+      where('bloggerId', '==', targetUid),
       orderBy('requestedAt', 'desc'),
       limit(20)
     );
@@ -228,7 +231,7 @@ export function useBlogger(): UseBloggerReturn {
     // Subscribe to notifications
     const notificationsQuery = query(
       collection(db, 'blogger_notifications'),
-      where('bloggerId', '==', user.uid),
+      where('bloggerId', '==', targetUid),
       orderBy('createdAt', 'desc'),
       limit(20)
     );
@@ -253,7 +256,7 @@ export function useBlogger(): UseBloggerReturn {
       unsubWithdrawals();
       unsubNotifications();
     };
-  }, [user?.uid, isBlogger]);
+  }, [targetUid, isBlogger]);
 
   // Initial load
   useEffect(() => {
@@ -380,7 +383,7 @@ export function useBlogger(): UseBloggerReturn {
 
   const markAllNotificationsRead = useCallback(
     async (): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         const batch = writeBatch(db);
@@ -402,7 +405,7 @@ export function useBlogger(): UseBloggerReturn {
         console.error('[useBlogger] Failed to mark all notifications as read:', err);
       }
     },
-    [user?.uid, notifications]
+    [targetUid, notifications]
   );
 
   // ============================================================================

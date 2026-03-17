@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { AdminViewProvider } from './contexts/AdminViewContext';
 
 // Sentry - initialiser EN PREMIER pour capturer toutes les erreurs
 import { initSentry } from './config/sentry';
@@ -37,7 +38,9 @@ const RootApp = (
       <AuthProvider>
         <AppProvider>
           <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-            <App />
+            <AdminViewProvider>
+              <App />
+            </AdminViewProvider>
           </BrowserRouter>
         </AppProvider>
       </AuthProvider>

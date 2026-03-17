@@ -5452,6 +5452,16 @@
       "fieldPath": "expiresAt",
       "indexes": [],
       "ttl": true
+    },
+    {
+      "collectionGroup": "modules",
+      "fieldPath": "moduleId",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
     }
   ]
 }

@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
+import { useAdminView } from "../contexts/AdminViewContext";
 import { storeReferralCode, getStoredReferral, clearStoredReferral } from "../utils/referralStorage";
 import {
   ChatterDashboardData,
@@ -97,6 +98,9 @@ interface UseChatterReturn {
 
 export function useChatter(): UseChatterReturn {
   const { user } = useAuth();
+  const { effectiveUserId, isAdminView } = useAdminView();
+  // Use effectiveUserId (admin impersonation) or fall back to authenticated user
+  const targetUid = effectiveUserId || user?.uid;
   const [dashboardData, setDashboardData] = useState<ChatterDashboardData | null>(null);
   const [commissions, setCommissions] = useState<ChatterCommission[]>([]);
   const [withdrawals, setWithdrawals] = useState<ChatterWithdrawal[]>([]);
@@ -120,7 +124,7 @@ export function useChatter(): UseChatterReturn {
   // Fetch all list data (commissions, withdrawals, notifications) via getDocs
   // Respects cache TTL — only fetches stale data
   const fetchListData = useCallback(async (forceRefresh = false) => {
-    if (!user?.uid) return;
+    if (!targetUid) return;
 
     const needsCommissions = forceRefresh || !isCacheValid(commissionsCache.current, CACHE_TTL.commissions);
     const needsWithdrawals = forceRefresh || !isCacheValid(withdrawalsCache.current, CACHE_TTL.withdrawals);
@@ -135,7 +139,7 @@ export function useChatter(): UseChatterReturn {
     if (needsCommissions) {
       const commissionsQuery = query(
         collection(db, "chatter_commissions"),
-        where("chatterId", "==", user.uid),
+        where("chatterId", "==", targetUid),
         orderBy("createdAt", "desc"),
         limit(50)
       );
@@ -146,7 +150,7 @@ export function useChatter(): UseChatterReturn {
     if (needsWithdrawals) {
       const withdrawalsQuery = query(
         collection(db, "payment_withdrawals"),
-        where("userId", "==", user.uid),
+        where("userId", "==", targetUid),
         where("userType", "==", "chatter"),
         orderBy("requestedAt", "desc"),
         limit(20)
@@ -158,7 +162,7 @@ export function useChatter(): UseChatterReturn {
     if (needsNotifications) {
       const notificationsQuery = query(
         collection(db, "chatter_notifications"),
-        where("chatterId", "==", user.uid),
+        where("chatterId", "==", targetUid),
         orderBy("createdAt", "desc"),
         limit(30)
       );
@@ -218,11 +222,11 @@ export function useChatter(): UseChatterReturn {
         setNotifications(parsed);
       }
     });
-  }, [user?.uid, db]);
+  }, [targetUid, db]);
 
   // Fetch dashboard data + list data in parallel (with cache TTL)
   const refreshDashboard = useCallback(async (forceRefresh = false) => {
-    if (!user?.uid) {
+    if (!targetUid) {
       setDashboardData(null);
       setIsLoading(false);
       return;
@@ -242,14 +246,15 @@ export function useChatter(): UseChatterReturn {
     setError(null);
 
     try {
-      const getChatterDashboardFn = httpsCallable<{ level?: string }, ChatterDashboardData>(
+      const getChatterDashboardFn = httpsCallable<{ level?: string; userId?: string }, ChatterDashboardData>(
         functionsAffiliate,
         "getChatterDashboard"
       );
 
       // Phase 1: Fetch essential data (fast — skips trends/comparison/forecast)
+      const callPayload = { level: "essential" as const, ...(isAdminView && targetUid ? { userId: targetUid } : {}) };
       const [result] = await Promise.all([
-        getChatterDashboardFn({ level: "essential" }),
+        getChatterDashboardFn(callPayload),
         fetchListData(forceRefresh),
       ]);
 
@@ -258,7 +263,7 @@ export function useChatter(): UseChatterReturn {
 
       // Phase 2: Fetch deferred data (trends, comparison, forecast) in background
       if (!result.data.trends) {
-        getChatterDashboardFn({ level: "full" }).then((fullResult) => {
+        getChatterDashboardFn({ level: "full", ...(isAdminView && targetUid ? { userId: targetUid } : {}) }).then((fullResult) => {
           dashboardCache.current = { data: fullResult.data, fetchedAt: Date.now() };
           setDashboardData(fullResult.data);
         }).catch(() => {
@@ -276,14 +281,14 @@ export function useChatter(): UseChatterReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functionsAffiliate, fetchListData]);
+  }, [targetUid, functionsAffiliate, fetchListData]);
 
   // Request withdrawal
   const requestWithdrawal = useCallback(
     async (
       input: RequestWithdrawalInput
     ): Promise<{ success: boolean; withdrawalId?: string; message: string }> => {
-      if (!user?.uid) {
+      if (!targetUid) {
         throw new Error("User must be authenticated");
       }
 
@@ -303,7 +308,7 @@ export function useChatter(): UseChatterReturn {
         message: result.data.message,
       };
     },
-    [user?.uid, functionsAffiliate, refreshDashboard]
+    [targetUid, functionsAffiliate, refreshDashboard]
   );
 
   // Update profile
@@ -311,7 +316,7 @@ export function useChatter(): UseChatterReturn {
     async (
       input: UpdateChatterProfileInput
     ): Promise<{ success: boolean; message: string }> => {
-      if (!user?.uid) {
+      if (!targetUid) {
         throw new Error("User must be authenticated");
       }
 
@@ -326,13 +331,13 @@ export function useChatter(): UseChatterReturn {
       await refreshDashboard(true);
       return result.data;
     },
-    [user?.uid, functionsAffiliate, refreshDashboard]
+    [targetUid, functionsAffiliate, refreshDashboard]
   );
 
   // Mark notification as read
   const markNotificationRead = useCallback(
     async (notificationId: string): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         // Update directly in Firestore (allowed by rules)
@@ -347,13 +352,13 @@ export function useChatter(): UseChatterReturn {
         // Silently fail - notification read status is not critical
       }
     },
-    [user?.uid, db]
+    [targetUid, db]
   );
 
   // Mark all notifications as read
   const markAllNotificationsRead = useCallback(
     async (): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         const { doc, Timestamp, writeBatch } = await import("firebase/firestore");
@@ -379,7 +384,7 @@ export function useChatter(): UseChatterReturn {
         // Silently fail - notification read status is not critical
       }
     },
-    [user?.uid, db, notifications]
+    [targetUid, db, notifications]
   );
 
   // Initial fetch

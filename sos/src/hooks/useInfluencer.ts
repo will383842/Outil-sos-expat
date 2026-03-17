@@ -23,6 +23,7 @@ import {
 } from "firebase/firestore";
 import { functionsAffiliate } from "@/config/firebase";
 import { useAuth } from "../contexts/AuthContext";
+import { useAdminView } from "../contexts/AdminViewContext";
 import {
   InfluencerDashboardData,
   InfluencerCommission,
@@ -81,6 +82,8 @@ interface UseInfluencerReturn {
 
 export function useInfluencer(): UseInfluencerReturn {
   const { user } = useAuth();
+  const { effectiveUserId, isAdminView } = useAdminView();
+  const targetUid = effectiveUserId || user?.uid;
   const [dashboardData, setDashboardData] = useState<InfluencerDashboardData | null>(null);
   const [commissions, setCommissions] = useState<InfluencerCommission[]>([]);
   const [withdrawals, setWithdrawals] = useState<InfluencerWithdrawal[]>([]);
@@ -99,7 +102,7 @@ export function useInfluencer(): UseInfluencerReturn {
 
   // Fetch dashboard data
   const refreshDashboard = useCallback(async () => {
-    if (!user?.uid) {
+    if (!targetUid) {
       setDashboardData(null);
       setIsLoading(false);
       return;
@@ -109,12 +112,12 @@ export function useInfluencer(): UseInfluencerReturn {
     setError(null);
 
     try {
-      const getInfluencerDashboardFn = httpsCallable<void, InfluencerDashboardData>(
+      const getInfluencerDashboardFn = httpsCallable<{ userId?: string } | void, InfluencerDashboardData>(
         functionsAffiliate,
         "getInfluencerDashboard"
       );
 
-      const result = await getInfluencerDashboardFn();
+      const result = await getInfluencerDashboardFn(isAdminView && targetUid ? { userId: targetUid } : undefined);
       setDashboardData(result.data);
     } catch (err) {
       console.error("[useInfluencer] Error fetching dashboard:", err);
@@ -128,11 +131,11 @@ export function useInfluencer(): UseInfluencerReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, functionsAffiliate]);
+  }, [targetUid, functionsAffiliate]);
 
   // Fetch leaderboard data
   const refreshLeaderboard = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!targetUid) return;
 
     try {
       const getLeaderboardFn = httpsCallable<void, InfluencerLeaderboardData>(
@@ -145,7 +148,7 @@ export function useInfluencer(): UseInfluencerReturn {
     } catch (err) {
       console.error("[useInfluencer] Error fetching leaderboard:", err);
     }
-  }, [user?.uid, functionsAffiliate]);
+  }, [targetUid, functionsAffiliate]);
 
   /**
    * @deprecated This method is deprecated.
@@ -159,7 +162,7 @@ export function useInfluencer(): UseInfluencerReturn {
     async (
       input: RequestInfluencerWithdrawalInput
     ): Promise<{ success: boolean; withdrawalId?: string; message: string }> => {
-      if (!user?.uid) {
+      if (!targetUid) {
         throw new Error("User must be authenticated");
       }
 
@@ -176,7 +179,7 @@ export function useInfluencer(): UseInfluencerReturn {
         message: result.data.message,
       };
     },
-    [user?.uid, functionsAffiliate, refreshDashboard]
+    [targetUid, functionsAffiliate, refreshDashboard]
   );
 
   // Update profile
@@ -184,7 +187,7 @@ export function useInfluencer(): UseInfluencerReturn {
     async (
       input: UpdateInfluencerProfileInput
     ): Promise<{ success: boolean; message: string }> => {
-      if (!user?.uid) {
+      if (!targetUid) {
         throw new Error("User must be authenticated");
       }
 
@@ -197,13 +200,13 @@ export function useInfluencer(): UseInfluencerReturn {
       await refreshDashboard();
       return result.data;
     },
-    [user?.uid, functionsAffiliate, refreshDashboard]
+    [targetUid, functionsAffiliate, refreshDashboard]
   );
 
   // Mark notification as read
   const markNotificationRead = useCallback(
     async (notificationId: string): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         const { doc, updateDoc, Timestamp } = await import("firebase/firestore");
@@ -216,13 +219,13 @@ export function useInfluencer(): UseInfluencerReturn {
         console.error("[useInfluencer] Failed to mark notification as read:", error);
       }
     },
-    [user?.uid, db]
+    [targetUid, db]
   );
 
   // Mark all notifications as read
   const markAllNotificationsRead = useCallback(
     async (): Promise<void> => {
-      if (!user?.uid) return;
+      if (!targetUid) return;
 
       try {
         const { doc, Timestamp, writeBatch } = await import("firebase/firestore");
@@ -245,16 +248,16 @@ export function useInfluencer(): UseInfluencerReturn {
         console.error("[useInfluencer] Failed to mark all notifications as read:", error);
       }
     },
-    [user?.uid, db, notifications]
+    [targetUid, db, notifications]
   );
 
   // Subscribe to commissions
   useEffect(() => {
-    if (!user?.uid || !isInfluencer) return;
+    if (!targetUid || !isInfluencer) return;
 
     const commissionsQuery = query(
       collection(db, "influencer_commissions"),
-      where("influencerId", "==", user.uid),
+      where("influencerId", "==", targetUid),
       orderBy("createdAt", "desc"),
       limit(50)
     );
@@ -281,15 +284,15 @@ export function useInfluencer(): UseInfluencerReturn {
     );
 
     return () => unsubscribe();
-  }, [user?.uid, isInfluencer, db]);
+  }, [targetUid, isInfluencer, db]);
 
   // Subscribe to withdrawals
   useEffect(() => {
-    if (!user?.uid || !isInfluencer) return;
+    if (!targetUid || !isInfluencer) return;
 
     const withdrawalsQuery = query(
       collection(db, "influencer_withdrawals"),
-      where("influencerId", "==", user.uid),
+      where("influencerId", "==", targetUid),
       orderBy("requestedAt", "desc"),
       limit(20)
     );
@@ -317,15 +320,15 @@ export function useInfluencer(): UseInfluencerReturn {
     );
 
     return () => unsubscribe();
-  }, [user?.uid, isInfluencer, db]);
+  }, [targetUid, isInfluencer, db]);
 
   // Subscribe to notifications
   useEffect(() => {
-    if (!user?.uid || !isInfluencer) return;
+    if (!targetUid || !isInfluencer) return;
 
     const notificationsQuery = query(
       collection(db, "influencer_notifications"),
-      where("influencerId", "==", user.uid),
+      where("influencerId", "==", targetUid),
       orderBy("createdAt", "desc"),
       limit(30)
     );
@@ -349,15 +352,15 @@ export function useInfluencer(): UseInfluencerReturn {
     );
 
     return () => unsubscribe();
-  }, [user?.uid, isInfluencer, db]);
+  }, [targetUid, isInfluencer, db]);
 
   // Subscribe to referrals (recruited providers)
   useEffect(() => {
-    if (!user?.uid || !isInfluencer) return;
+    if (!targetUid || !isInfluencer) return;
 
     const referralsQuery = query(
       collection(db, "influencer_referrals"),
-      where("influencerId", "==", user.uid),
+      where("influencerId", "==", targetUid),
       orderBy("createdAt", "desc"),
       limit(50)
     );
@@ -382,7 +385,7 @@ export function useInfluencer(): UseInfluencerReturn {
     );
 
     return () => unsubscribe();
-  }, [user?.uid, isInfluencer, db]);
+  }, [targetUid, isInfluencer, db]);
 
   // Initial fetch
   useEffect(() => {

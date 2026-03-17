@@ -170,6 +170,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         const hasRole = checkUserRole(user, allowedRoles);
         if (hasRole) {
           setAuthState('authorized');
+        } else if (user.role === 'admin' && new URLSearchParams(location.search).has('adminView')) {
+          // Admin impersonation: allow admin to view any role's dashboard
+          devLog('[ProtectedRoute] Admin viewing user dashboard via adminView param');
+          setAuthState('authorized');
         } else {
           // User is logged in but has wrong role — redirect to their own dashboard
           // instead of login page (which would cause infinite redirect loop)

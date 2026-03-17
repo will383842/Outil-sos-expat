@@ -15,7 +15,7 @@
  * - Onglet "Archives" par categorie
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
 import {
   collection,
@@ -55,6 +55,8 @@ import {
   X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Smile } from 'lucide-react';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { sendInboxReply } from '../../api/sendInboxReply';
 
 // ============================================================================
@@ -182,11 +184,29 @@ const AdminInbox: React.FC = () => {
 
   // Reply state
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+  const [emojiPickerOpenFor, setEmojiPickerOpenFor] = useState<string | null>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const [sendingReply, setSendingReply] = useState<Record<string, boolean>>({});
   const [archiving, setArchiving] = useState<Record<string, boolean>>({});
   const [deleting, setDeleting] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // ---- Emoji picker: close on click outside ----
+  useEffect(() => {
+    if (!emojiPickerOpenFor) return;
+    const handler = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setEmojiPickerOpenFor(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [emojiPickerOpenFor]);
+
+  const handleEmojiClick = (itemId: string, emojiData: EmojiClickData) => {
+    setReplyTexts((p) => ({ ...p, [itemId]: (p[itemId] || '') + emojiData.emoji }));
+  };
 
   // ---- Extract email from raw data per category ----
   const getEmail = (category: string, raw: Record<string, unknown>): string => {
@@ -977,13 +997,36 @@ const AdminInbox: React.FC = () => {
                             <Mail className="w-3 h-3" />
                             Repondre a {item.email}
                           </div>
-                          <textarea
-                            value={replyText}
-                            onChange={(e) => setReplyTexts((p) => ({ ...p, [item.id]: e.target.value }))}
-                            placeholder="Ecrire votre reponse..."
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none"
-                            rows={3}
-                          />
+                          <div className="relative">
+                            <textarea
+                              value={replyText}
+                              onChange={(e) => setReplyTexts((p) => ({ ...p, [item.id]: e.target.value }))}
+                              placeholder="Ecrire votre reponse..."
+                              className="w-full border border-gray-200 rounded-lg p-3 pr-10 text-sm resize-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none"
+                              rows={3}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEmojiPickerOpenFor(emojiPickerOpenFor === item.id ? null : item.id)}
+                              className="absolute top-2 right-2 p-1 text-gray-400 hover:text-indigo-500 transition-colors rounded"
+                              title="Ajouter un emoji"
+                            >
+                              <Smile className="w-5 h-5" />
+                            </button>
+                            {emojiPickerOpenFor === item.id && (
+                              <div ref={emojiPickerRef} className="absolute right-0 bottom-full mb-1 z-50">
+                                <EmojiPicker
+                                  onEmojiClick={(data) => handleEmojiClick(item.id, data)}
+                                  theme={Theme.AUTO}
+                                  width={320}
+                                  height={400}
+                                  searchPlaceHolder="Rechercher..."
+                                  previewConfig={{ showPreview: false }}
+                                  lazyLoadEmojis
+                                />
+                              </div>
+                            )}
+                          </div>
                           <button
                             onClick={() => handleReply(item)}
                             disabled={isSending || !replyText.trim()}

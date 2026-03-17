@@ -1924,6 +1924,9 @@ export {
   adminGetOrphanedProvidersStats,
 } from './callables/adminCleanupOrphanedProviders';
 
+// Universal admin user deletion (all roles)
+export { adminDeleteUser } from './callables/adminDeleteUser';
+
 // ========== ALERTES DISPONIBILITE PRESTATAIRES ==========
 export {
   checkLowProviderAvailability,

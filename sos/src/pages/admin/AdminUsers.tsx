@@ -38,6 +38,8 @@ import {
   ShieldCheck,
   Edit3,
   Save,
+  Trash2,
+  CheckSquare2,
 } from 'lucide-react';
 
 import { httpsCallable } from 'firebase/functions';
@@ -47,7 +49,6 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  deleteDoc,
   query,
   where,
   orderBy,
@@ -381,19 +382,19 @@ const AdminUsers: React.FC = () => {
       case 'lawyer':
       case 'expat':
       case 'client':
-        url = `/dashboard?userId=${user.id}`;
+        url = `/dashboard?adminView=${user.id}`;
         break;
       case 'chatter':
-        url = `/chatter/tableau-de-bord?userId=${user.id}`;
+        url = `/chatter/tableau-de-bord?adminView=${user.id}`;
         break;
       case 'influencer':
-        url = `/influencer/tableau-de-bord?userId=${user.id}`;
+        url = `/influencer/tableau-de-bord?adminView=${user.id}`;
         break;
       case 'blogger':
-        url = `/blogger/tableau-de-bord?userId=${user.id}`;
+        url = `/blogger/tableau-de-bord?adminView=${user.id}`;
         break;
       case 'groupAdmin':
-        url = `/group-admin/tableau-de-bord?userId=${user.id}`;
+        url = `/group-admin/tableau-de-bord?adminView=${user.id}`;
         break;
       case 'partner':
         url = `/admin/partners/${user.id}`;
@@ -434,8 +435,18 @@ const AdminUsers: React.FC = () => {
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
 
+  // Delete states
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
+  const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('');
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState({ current: 0, total: 0 });
+
   const handleDeleteUser = (user: AdminUser) => {
     setSelectedUser(user);
+    setDeleteReason('');
+    setDeleteConfirmText('');
     setShowDeleteModal(true);
   };
 
@@ -451,27 +462,30 @@ const AdminUsers: React.FC = () => {
     setIsActionLoading(true);
 
     try {
-      if (providerRoles.includes(selectedUser.role)) {
-        await deleteDoc(doc(db, 'sos_profiles', selectedUser.id));
-      }
+      const deleteUserFn = httpsCallable(functions, 'adminDeleteUser');
+      const result = await deleteUserFn({
+        userId: selectedUser.id,
+        reason: deleteReason || undefined,
+      });
 
-      await deleteDoc(doc(db, 'users', selectedUser.id));
+      const data = result.data as { success: boolean; message: string; deletedSubDocs: number };
 
       setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
+      setSelectedUserIds((prev) => {
+        const next = new Set(prev);
+        next.delete(selectedUser.id);
+        return next;
+      });
 
       setShowDeleteModal(false);
       setSelectedUser(null);
+      setDeleteReason('');
+      setDeleteConfirmText('');
 
-      await addDoc(collection(db, 'logs'), {
-        type: 'user_deleted',
-        userId: selectedUser.id,
-        deletedBy: currentUser?.id ?? null,
-        timestamp: serverTimestamp(),
-      });
+      toast.success(data.message || 'Utilisateur supprimé avec succès');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-       
-      toast.error("Erreur lors de la suppression de l'utilisateur");
+      toast.error(`Erreur: ${message}`);
       logError({
         origin: 'frontend',
         error: `Error deleting user: ${message}`,
@@ -479,6 +493,71 @@ const AdminUsers: React.FC = () => {
       });
     } finally {
       setIsActionLoading(false);
+    }
+  };
+
+  // Bulk delete
+  const handleBulkDelete = () => {
+    if (selectedUserIds.size === 0) return;
+    setBulkDeleteReason('');
+    setBulkDeleteConfirmText('');
+    setBulkDeleteProgress({ current: 0, total: 0 });
+    setShowBulkDeleteModal(true);
+  };
+
+  const executeBulkDelete = async () => {
+    const ids = Array.from(selectedUserIds);
+    setBulkDeleteProgress({ current: 0, total: ids.length });
+    setIsActionLoading(true);
+
+    const deleteUserFn = httpsCallable(functions, 'adminDeleteUser');
+    const errors: string[] = [];
+
+    for (let i = 0; i < ids.length; i++) {
+      const userId = ids[i];
+      const user = users.find((u) => u.id === userId);
+      try {
+        await deleteUserFn({
+          userId,
+          reason: bulkDeleteReason || 'Suppression en lot depuis admin',
+        });
+        setBulkDeleteProgress({ current: i + 1, total: ids.length });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`${user?.firstName || userId}: ${msg}`);
+      }
+    }
+
+    // Remove deleted users from list
+    const deletedIds = new Set(ids.filter((id) => !errors.some((e) => e.startsWith(id))));
+    setUsers((prev) => prev.filter((u) => !deletedIds.has(u.id)));
+    setSelectedUserIds(new Set());
+
+    setShowBulkDeleteModal(false);
+    setIsActionLoading(false);
+
+    if (errors.length > 0) {
+      toast.error(`${ids.length - errors.length}/${ids.length} supprimés. ${errors.length} erreur(s).`);
+    } else {
+      toast.success(`${ids.length} utilisateur(s) supprimé(s) avec succès`);
+    }
+  };
+
+  // Selection helpers
+  const toggleSelectUser = (userId: string) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map((u) => u.id)));
     }
   };
 
@@ -1333,10 +1412,34 @@ const AdminUsers: React.FC = () => {
           </div>
         )}
 
-        {/* Compteur de résultats */}
-        <div className="mb-4 text-sm text-gray-600">
-          {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
-          {Object.values(advancedFilters).some((v) => v !== 'all') && ' (filtré)'}
+        {/* Compteur de résultats + Barre d'actions bulk */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
+            {Object.values(advancedFilters).some((v) => v !== 'all') && ' (filtré)'}
+            {selectedUserIds.size > 0 && (
+              <span className="ml-2 font-semibold text-red-700">
+                — {selectedUserIds.size} sélectionné{selectedUserIds.size > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          {selectedUserIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedUserIds(new Set())}
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
+              >
+                Désélectionner tout
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              >
+                <Trash2 size={14} />
+                Supprimer {selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -1344,6 +1447,14 @@ const AdminUsers: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
+                  <th scope="col" className="px-3 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer"
+                    />
+                  </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Photo
                   </th>
@@ -1370,13 +1481,21 @@ const AdminUsers: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center">
+                    <td colSpan={8} className="px-6 py-4 text-center">
                       <LoadingSpinner text={adminT.loading} />
                     </td>
                   </tr>
                 ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-gray-50">
+                    <tr key={u.id} className={`hover:bg-gray-50 ${selectedUserIds.has(u.id) ? 'bg-red-50' : ''}`}>
+                      <td className="px-3 py-4 w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.has(u.id)}
+                          onChange={() => toggleSelectUser(u.id)}
+                          className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="h-12 w-12 rounded-full bg-gray-100 overflow-hidden border">
@@ -1492,7 +1611,7 @@ const AdminUsers: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                       Aucun utilisateur trouvé
                     </td>
                   </tr>
@@ -1707,7 +1826,7 @@ const AdminUsers: React.FC = () => {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Confirmer la suppression"
+        title={`Supprimer ${selectedUser?.firstName || ''} ${selectedUser?.lastName || ''}`}
         size="small"
       >
         {selectedUser && (
@@ -1719,28 +1838,155 @@ const AdminUsers: React.FC = () => {
                   <h3 className="text-sm font-medium text-red-800">Attention : Cette action est irréversible</h3>
                   <div className="mt-2 text-sm text-red-700">
                     <p>
-                      Vous êtes sur le point de supprimer définitivement l'utilisateur :
+                      Utilisateur : <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>
                       <br />
-                      <strong>
-                        {selectedUser.firstName} {selectedUser.lastName}
-                      </strong>
+                      Role : <span className={`px-2 py-0.5 text-xs rounded-full ${getRoleBadgeColor(selectedUser.role)}`}>{getRoleLabel(selectedUser.role)}</span>
+                      <br />
+                      Email : {selectedUser.email}
                     </p>
-                    <p className="mt-1">Toutes les données associées seront également supprimées.</p>
+                    <p className="mt-2">
+                      Toutes les données seront supprimées : compte Firebase Auth, documents Firestore,
+                      commissions, retraits, notifications et sous-collections associées.
+                    </p>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Raison de la suppression
+              </label>
+              <textarea
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="Raison optionnelle..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tapez <strong>SUPPRIMER</strong> pour confirmer
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="SUPPRIMER"
+              />
             </div>
 
             <div className="flex justify-end space-x-3">
               <Button onClick={() => setShowDeleteModal(false)} variant="outline" disabled={isActionLoading}>
                 Annuler
               </Button>
-              <Button onClick={confirmDeleteUser} className="bg-red-600 hover:bg-red-700" loading={isActionLoading}>
-                Confirmer la suppression
+              <Button
+                onClick={confirmDeleteUser}
+                className="bg-red-600 hover:bg-red-700"
+                loading={isActionLoading}
+                disabled={deleteConfirmText !== 'SUPPRIMER'}
+              >
+                <Trash2 size={16} className="mr-2" />
+                Supprimer définitivement
               </Button>
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal de suppression en lot */}
+      <Modal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        title={`Supprimer ${selectedUserIds.size} utilisateur${selectedUserIds.size > 1 ? 's' : ''}`}
+        size="small"
+      >
+        <div className="space-y-4">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Suppression en lot irréversible</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>
+                    Vous allez supprimer <strong>{selectedUserIds.size}</strong> utilisateur{selectedUserIds.size > 1 ? 's' : ''} définitivement.
+                  </p>
+                  <p className="mt-1">
+                    Pour chaque compte : Firebase Auth, documents Firestore, commissions, retraits,
+                    et toutes les sous-collections seront supprimés.
+                  </p>
+                  <div className="mt-2 max-h-32 overflow-y-auto">
+                    {Array.from(selectedUserIds).map((id) => {
+                      const u = users.find((user) => user.id === id);
+                      return (
+                        <div key={id} className="text-xs py-0.5">
+                          {u ? `${u.firstName || ''} ${u.lastName || ''} (${getRoleLabel(u.role)})` : id}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Raison</label>
+            <textarea
+              value={bulkDeleteReason}
+              onChange={(e) => setBulkDeleteReason(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder="Raison optionnelle..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tapez <strong>SUPPRIMER</strong> pour confirmer
+            </label>
+            <input
+              type="text"
+              value={bulkDeleteConfirmText}
+              onChange={(e) => setBulkDeleteConfirmText(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder="SUPPRIMER"
+            />
+          </div>
+
+          {bulkDeleteProgress.total > 0 && (
+            <div>
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Progression</span>
+                <span>{bulkDeleteProgress.current}/{bulkDeleteProgress.total}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-red-600 h-2 rounded-full transition-all"
+                  style={{ width: `${(bulkDeleteProgress.current / bulkDeleteProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3">
+            <Button onClick={() => setShowBulkDeleteModal(false)} variant="outline" disabled={isActionLoading}>
+              Annuler
+            </Button>
+            <Button
+              onClick={executeBulkDelete}
+              className="bg-red-600 hover:bg-red-700"
+              loading={isActionLoading}
+              disabled={bulkDeleteConfirmText !== 'SUPPRIMER'}
+            >
+              <Trash2 size={16} className="mr-2" />
+              Supprimer {selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''}
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Modal de bannissement */}

@@ -80,17 +80,30 @@ export const adminGetTrainingModules = onCall(
           const module = { id: doc.id, ...doc.data() } as ChatterTrainingModule;
 
           // Count students who started this module
-          const progressQuery = await db
-            .collectionGroup("modules")
-            .where("moduleId", "==", doc.id)
-            .count()
-            .get();
+          let studentsCount = 0;
+          try {
+            const progressQuery = await db
+              .collectionGroup("modules")
+              .where("moduleId", "==", doc.id)
+              .count()
+              .get();
+            studentsCount = progressQuery.data().count;
+          } catch (err) {
+            logger.warn("[adminGetTrainingModules] Failed to count students for module", { moduleId: doc.id, err });
+          }
+
+          const createdAt = module.createdAt;
+          const updatedAt = module.updatedAt;
 
           return {
             ...module,
-            createdAt: (module.createdAt as unknown as Timestamp).toDate().toISOString() as unknown as Timestamp,
-            updatedAt: (module.updatedAt as unknown as Timestamp).toDate().toISOString() as unknown as Timestamp,
-            studentsCount: progressQuery.data().count,
+            createdAt: (createdAt && typeof (createdAt as any).toDate === "function"
+              ? (createdAt as unknown as Timestamp).toDate().toISOString()
+              : createdAt || null) as unknown as Timestamp,
+            updatedAt: (updatedAt && typeof (updatedAt as any).toDate === "function"
+              ? (updatedAt as unknown as Timestamp).toDate().toISOString()
+              : updatedAt || null) as unknown as Timestamp,
+            studentsCount,
           };
         })
       );

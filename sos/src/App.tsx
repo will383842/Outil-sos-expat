@@ -21,6 +21,7 @@ import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
 import { FeedbackButton } from './components/feedback';
 import { OfflineBanner } from './components/common/OfflineBanner';
+import AdminViewBanner from './components/common/AdminViewBanner';
 import ProviderOnlineManager from './components/providers/ProviderOnlineManager';
 
 // FCM Push Notifications — P0-1 FIX: was never imported/called
@@ -1016,6 +1017,7 @@ const App: React.FC = () => {
   return (
     <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
       <OfflineBanner />
+      <AdminViewBanner />
       <WizardProvider>
       <PWAProvider
         enableOfflineStorage={true}
