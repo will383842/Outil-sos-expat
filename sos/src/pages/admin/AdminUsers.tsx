@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useAdminTranslations } from '../../utils/adminTranslations';
@@ -48,7 +48,7 @@ import {
   Timestamp,
   QueryConstraint,
 } from 'firebase/firestore';
-import { db, functions, functionsAffiliate } from '../../config/firebase';
+import { db, functions } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import AdminErrorState from '../../components/admin/AdminErrorState';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -184,7 +184,7 @@ function timeAgo(date: Date): string {
   const diff = now - date.getTime();
   if (diff < 0 || date.getTime() === 0) return '—';
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "A l'instant";
+  if (minutes < 1) return "À l'instant";
   if (minutes < 60) return `il y a ${minutes}min`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `il y a ${hours}h`;
@@ -398,12 +398,12 @@ const AdminUsers: React.FC = () => {
         updates.updatedAt = serverTimestamp();
         await updateDoc(userRef, updates);
       }
-      toast.success('Profil mis a jour');
+      toast.success('Profil mis à jour');
       setShowEditModal(false);
       setPage(1);
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      toast.error(err.message || 'Erreur lors de la mise a jour');
+      toast.error(err.message || 'Erreur lors de la mise à jour');
     } finally { setEditLoading(false); }
   };
 
@@ -459,7 +459,7 @@ const AdminUsers: React.FC = () => {
       setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
       setSelectedUserIds((prev) => { const n = new Set(prev); n.delete(selectedUser.id); return n; });
       setShowDeleteModal(false); setSelectedUser(null); setDeleteReason(''); setDeleteConfirmText('');
-      toast.success(data.message || 'Utilisateur supprime');
+      toast.success(data.message || 'Utilisateur supprimé');
     } catch (err) {
       toast.error(`Erreur: ${err instanceof Error ? err.message : String(err)}`);
       logError({ origin: 'frontend', error: `Error deleting user: ${err instanceof Error ? err.message : String(err)}`, context: { userId: selectedUser.id } });
@@ -486,8 +486,8 @@ const AdminUsers: React.FC = () => {
     const deletedIds = new Set(ids.filter((id) => !errors.some((e) => e.startsWith(id))));
     setUsers((prev) => prev.filter((u) => !deletedIds.has(u.id)));
     setSelectedUserIds(new Set()); setShowBulkDeleteModal(false); setIsActionLoading(false);
-    if (errors.length > 0) toast.error(`${ids.length - errors.length}/${ids.length} supprimes.`);
-    else toast.success(`${ids.length} utilisateur(s) supprimes`);
+    if (errors.length > 0) toast.error(`${ids.length - errors.length}/${ids.length} supprimés.`);
+    else toast.success(`${ids.length} utilisateur(s) supprimés`);
   };
 
   const toggleSelectUser = (userId: string) => {
@@ -525,9 +525,9 @@ const AdminUsers: React.FC = () => {
       }
       setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isBanned: false, banReason: '' } : u));
       await addDoc(collection(db, 'logs'), { type: 'user_unbanned', userId, unbannedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
-      toast.success('Utilisateur reactived');
+      toast.success('Utilisateur réactivé');
     } catch (err) {
-      toast.error("Erreur lors de la reactivation");
+      toast.error("Erreur lors de la réactivation");
       logError({ origin: 'frontend', error: `Error unbanning: ${err instanceof Error ? err.message : String(err)}`, context: { userId } });
     } finally { setIsActionLoading(false); }
   };
@@ -557,7 +557,7 @@ const AdminUsers: React.FC = () => {
       setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible } : u));
       await addDoc(collection(db, 'logs'), { type: !isCurrentlyVisible ? 'user_set_visible' : 'user_set_invisible', userId, changedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
     } catch (err) {
-      toast.error('Erreur changement visibilite');
+      toast.error('Erreur changement visibilité');
       logError({ origin: 'frontend', error: `Error toggling visibility: ${err instanceof Error ? err.message : String(err)}`, context: { userId } });
     } finally { setIsActionLoading(false); }
   };
@@ -581,7 +581,7 @@ const AdminUsers: React.FC = () => {
 
   const exportCsv = () => {
     const rows = [
-      '\uFEFF' + ['ID', 'Prenom', 'Nom', 'Email', 'Role', 'Pays', 'En ligne', 'Banni', 'Inscription', 'Derniere connexion'].join(','),
+      '\uFEFF' + ['ID', 'Prénom', 'Nom', 'Email', 'Rôle', 'Pays', 'En ligne', 'Banni', 'Inscription', 'Dernière connexion'].join(','),
       ...filteredUsers.map((u) => [
         u.id, u.firstName || '', u.lastName || '', u.email || '', ROLE_CONFIG[u.role]?.label || u.role,
         u.country || u.currentCountry || '', u.isOnline ? 'Oui' : 'Non', u.isBanned ? 'Oui' : 'Non',
@@ -649,7 +649,7 @@ const AdminUsers: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-gray-900 tracking-tight">Utilisateurs</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{filteredUsers.length} resultat{filteredUsers.length > 1 ? 's' : ''}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{filteredUsers.length} résultat{filteredUsers.length > 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -719,9 +719,9 @@ const AdminUsers: React.FC = () => {
             <select value={`${sortField}-${sortDirection}`}
               onChange={(e) => { const [f, d] = e.target.value.split('-') as ['createdAt'|'lastLoginAt'|'fullName','asc'|'desc']; setSortField(f); setSortDirection(d); setPage(1); }}
               className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-w-[160px]">
-              <option value="createdAt-desc">Plus recents</option>
+              <option value="createdAt-desc">Plus récents</option>
               <option value="createdAt-asc">Plus anciens</option>
-              <option value="lastLoginAt-desc">Connexion recente</option>
+              <option value="lastLoginAt-desc">Connexion récente</option>
               <option value="fullName-asc">Nom A-Z</option>
             </select>
 
@@ -746,19 +746,19 @@ const AdminUsers: React.FC = () => {
         {showAdvancedFilters && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4 animate-in slide-in-from-top-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">Filtres avances</h3>
+              <h3 className="text-sm font-semibold text-gray-700">Filtres avancés</h3>
               <button onClick={() => setAdvancedFilters({ onlineStatus: 'all', bannedStatus: 'all', emailVerified: 'all', approvalStatus: 'all', visibilityStatus: 'all', language: 'all' })}
                 className="text-xs text-red-600 hover:text-red-800 font-medium flex items-center gap-1">
-                <RefreshCw size={12} /> Reinitialiser
+                <RefreshCw size={12} /> Réinitialiser
               </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
                 { key: 'onlineStatus' as const, label: 'Statut', options: [['all','Tous'],['online','En ligne'],['offline','Hors ligne']] },
                 { key: 'bannedStatus' as const, label: 'Compte', options: [['all','Tous'],['active','Actif'],['banned','Banni']] },
-                { key: 'emailVerified' as const, label: 'Email', options: [['all','Tous'],['verified','Verifie'],['unverified','Non verifie']] },
-                { key: 'approvalStatus' as const, label: 'Approbation', options: [['all','Tous'],['approved','Approuve'],['pending','En attente'],['rejected','Rejete']] },
-                { key: 'visibilityStatus' as const, label: 'Visibilite', options: [['all','Tous'],['visible','Visible'],['hidden','Masque']] },
+                { key: 'emailVerified' as const, label: 'Email', options: [['all','Tous'],['verified','Vérifié'],['unverified','Non vérifié']] },
+                { key: 'approvalStatus' as const, label: 'Approbation', options: [['all','Tous'],['approved','Approuvé'],['pending','En attente'],['rejected','Rejeté']] },
+                { key: 'visibilityStatus' as const, label: 'Visibilité', options: [['all','Tous'],['visible','Visible'],['hidden','Masqué']] },
               ].map(({ key, label, options }) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
@@ -784,11 +784,11 @@ const AdminUsers: React.FC = () => {
         {selectedUserIds.size > 0 && (
           <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
             <span className="text-sm font-medium text-red-800">
-              {selectedUserIds.size} selectionne{selectedUserIds.size > 1 ? 's' : ''}
+              {selectedUserIds.size} sélectionné{selectedUserIds.size > 1 ? 's' : ''}
             </span>
             <div className="flex items-center gap-2">
               <button onClick={() => setSelectedUserIds(new Set())} className="text-sm text-red-600 hover:text-red-800 font-medium">
-                Deselectionner
+                Désélectionner
               </button>
               <button onClick={handleBulkDelete}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
@@ -815,7 +815,7 @@ const AdminUsers: React.FC = () => {
                     <span className="inline-flex items-center gap-1">Inscription <SortIcon field="createdAt" /></span>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 hidden lg:table-cell" onClick={() => handleSortChange('lastLoginAt')}>
-                    <span className="inline-flex items-center gap-1">Derniere connexion <SortIcon field="lastLoginAt" /></span>
+                    <span className="inline-flex items-center gap-1">Dernière connexion <SortIcon field="lastLoginAt" /></span>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
                   <th className="px-4 py-3 w-12"></th>
@@ -881,7 +881,7 @@ const AdminUsers: React.FC = () => {
 
                       {/* Last login */}
                       <td className="px-4 py-3 hidden lg:table-cell">
-                        <span className="text-sm text-gray-500" title={u.lastLoginAt.getTime() > 0 ? formatDateFull(u.lastLoginAt) : 'Jamais connecte'}>
+                        <span className="text-sm text-gray-500" title={u.lastLoginAt.getTime() > 0 ? formatDateFull(u.lastLoginAt) : 'Jamais connecté'}>
                           {timeAgo(u.lastLoginAt)}
                         </span>
                       </td>
@@ -951,7 +951,7 @@ const AdminUsers: React.FC = () => {
                               {u.isBanned ? (
                                 <button onClick={() => void handleUnbanUser(u.id)}
                                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <UserPlus size={14} /> Reactiver le compte
+                                  <UserPlus size={14} /> Réactiver le compte
                                 </button>
                               ) : (
                                 <button onClick={() => handleBanUser(u)}
@@ -970,7 +970,7 @@ const AdminUsers: React.FC = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={8} className="py-16 text-center text-gray-400 text-sm">Aucun utilisateur trouve</td></tr>
+                  <tr><td colSpan={8} className="py-16 text-center text-gray-400 text-sm">Aucun utilisateur trouvé</td></tr>
                 )}
               </tbody>
             </table>
@@ -992,7 +992,7 @@ const AdminUsers: React.FC = () => {
       {/* ================================================================== */}
       {/* MODAL: USER DETAIL                                                */}
       {/* ================================================================== */}
-      <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Detail utilisateur" size="large">
+      <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Détail utilisateur" size="large">
         {selectedUser && (
           <div className="space-y-6">
             {/* Header */}
@@ -1028,14 +1028,14 @@ const AdminUsers: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Phone size={15} className="text-gray-400 flex-shrink-0" />
-                    <span className="text-sm text-gray-900">{selectedUser.phoneCountryCode} {selectedUser.phone || 'Non renseigne'}</span>
+                    <span className="text-sm text-gray-900">{selectedUser.phoneCountryCode} {selectedUser.phone || 'Non renseigné'}</span>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Globe size={15} className="text-gray-400 flex-shrink-0" />
                     <span className="text-sm text-gray-900">
                       {selectedUser.country || selectedUser.currentCountry
                         ? `${getCountryFlag(selectedUser.country || selectedUser.currentCountry || '')} ${getCountryName(selectedUser.country || selectedUser.currentCountry || '', 'fr') || selectedUser.country || selectedUser.currentCountry}`
-                        : 'Non renseigne'}
+                        : 'Non renseigné'}
                     </span>
                   </div>
                   {selectedUser.languages && selectedUser.languages.length > 0 && (
@@ -1053,7 +1053,7 @@ const AdminUsers: React.FC = () => {
 
               {/* Dates & Activity */}
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activite</h4>
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activité</h4>
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
@@ -1065,7 +1065,7 @@ const AdminUsers: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <Clock size={15} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Derniere connexion</span>
+                      <span className="text-sm text-gray-600">Dernière connexion</span>
                     </div>
                     <span className="text-sm font-medium text-gray-900" title={selectedUser.lastLoginAt.getTime() > 0 ? formatDateFull(selectedUser.lastLoginAt) : ''}>
                       {selectedUser.lastLoginAt.getTime() > 0 ? timeAgo(selectedUser.lastLoginAt) : 'Jamais'}
@@ -1074,7 +1074,7 @@ const AdminUsers: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <LinkIcon size={15} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">Dernier clic affilie</span>
+                      <span className="text-sm text-gray-600">Dernier clic affilié</span>
                     </div>
                     <span className="text-sm font-medium text-gray-900">
                       {affiliateClickLoading ? (
@@ -1093,8 +1093,8 @@ const AdminUsers: React.FC = () => {
               <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Compte</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: 'Email verifie', value: !!(selectedUser.emailVerified || selectedUser.isVerifiedEmail), yes: 'Oui', no: 'Non' },
-                  { label: 'Approuve', value: !!selectedUser.isApproved, yes: 'Oui', no: 'En attente' },
+                  { label: 'Email vérifié', value: !!(selectedUser.emailVerified || selectedUser.isVerifiedEmail), yes: 'Oui', no: 'Non' },
+                  { label: 'Approuvé', value: !!selectedUser.isApproved, yes: 'Oui', no: 'En attente' },
                   { label: 'En ligne', value: !!selectedUser.isOnline, yes: 'En ligne', no: 'Hors ligne' },
                   ...(PROVIDER_ROLES.includes(selectedUser.role)
                     ? [
@@ -1151,9 +1151,9 @@ const AdminUsers: React.FC = () => {
               <div className="flex gap-3">
                 <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-semibold text-red-800">Action irreversible</h3>
+                  <h3 className="text-sm font-semibold text-red-800">Action irréversible</h3>
                   <p className="mt-1 text-sm text-red-700">
-                    <strong>{selectedUser.firstName} {selectedUser.lastName}</strong> ({ROLE_CONFIG[selectedUser.role]?.label}) sera supprime definitivement avec toutes ses donnees.
+                    <strong>{selectedUser.firstName} {selectedUser.lastName}</strong> ({ROLE_CONFIG[selectedUser.role]?.label}) sera supprimé définitivement avec toutes ses données.
                   </p>
                 </div>
               </div>
@@ -1187,8 +1187,8 @@ const AdminUsers: React.FC = () => {
             <div className="flex gap-3">
               <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-sm font-semibold text-red-800">Suppression en lot irreversible</h3>
-                <p className="mt-1 text-sm text-red-700">{selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''} seront supprimes.</p>
+                <h3 className="text-sm font-semibold text-red-800">Suppression en lot irréversible</h3>
+                <p className="mt-1 text-sm text-red-700">{selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''} seront supprimés.</p>
                 <div className="mt-2 max-h-24 overflow-y-auto space-y-0.5">
                   {Array.from(selectedUserIds).map((id) => {
                     const u = users.find((user) => user.id === id);
@@ -1267,7 +1267,7 @@ const AdminUsers: React.FC = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Prenom</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Prénom</label>
                 <input type="text" value={editFields.firstName} onChange={(e) => setEditFields((p) => ({ ...p, firstName: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
               </div>
@@ -1284,7 +1284,7 @@ const AdminUsers: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Telephone</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Téléphone</label>
                 <input type="tel" value={editFields.phone} onChange={(e) => setEditFields((p) => ({ ...p, phone: e.target.value }))} placeholder="+33 6 12 34 56 78"
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
               </div>
@@ -1307,7 +1307,7 @@ const AdminUsers: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Langues (separees par virgule)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Langues (séparées par virgule)</label>
               <input type="text" value={editFields.languages} onChange={(e) => setEditFields((p) => ({ ...p, languages: e.target.value }))} placeholder="fr, en, es"
                 className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
             </div>
