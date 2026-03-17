@@ -39,15 +39,17 @@ const LANGUAGE_TO_COUNTRY: Record<string, string> = {
   ar: 'sa',  // Arabic -> Saudi Arabia
 };
 
-// ✅ WHITELIST: Locales valides pour SEO (empêche es-FR, zh-HR, etc.)
+// ✅ WHITELIST: Only CANONICAL locales for sitemaps (one per language = default country)
+// Non-canonical variants (fr-be, en-gb, zh-tw, etc.) are 301-redirected in _redirects
+// and must NOT appear in sitemaps (Google flags "Page with redirect" error)
 const VALID_LOCALES = new Set([
-  'fr-fr', 'fr-ca', 'fr-be', 'fr-ch',
-  'en-us', 'en-gb', 'en-ca', 'en-au',
-  'es-es', 'es-mx', 'es-ar',
-  'de-de', 'de-at', 'de-ch',
-  'pt-pt', 'pt-br',
+  'fr-fr',
+  'en-us',
+  'es-es',
+  'de-de',
+  'pt-pt',
   'ru-ru',
-  'zh-cn', 'zh-tw',
+  'zh-cn',
   'ar-sa',
   'hi-in'
 ]);
@@ -205,13 +207,18 @@ export const sitemapProfiles = onRequest(
             }
             const xDefaultUrl = `${SITE_URL}/${xDefaultSlug}`;
 
+            // Use profile's updatedAt if available, fallback to today
+            const profileLastmod = profile.updatedAt?.toDate?.()
+              ? profile.updatedAt.toDate().toISOString().split('T')[0]
+              : today;
+
             urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <lastmod>${today}</lastmod>
+    <lastmod>${profileLastmod}</lastmod>
   </url>`);
           });
         } else if (profile.slug) {
@@ -507,13 +514,18 @@ export const sitemapLanding = onRequest(
 
           // x-default uses French locale
           const defaultLocale = getLocaleString('fr');
+          // Use page's updatedAt if available, fallback to today
+          const pageLastmod = page.updatedAt?.toDate?.()
+            ? page.updatedAt.toDate().toISOString().split('T')[0]
+            : today;
+
           urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${slug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <lastmod>${today}</lastmod>
+    <lastmod>${pageLastmod}</lastmod>
   </url>`);
         });
       });

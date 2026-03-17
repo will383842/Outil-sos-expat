@@ -195,6 +195,54 @@
 /pt-ru/* /pt-pt/:splat 301
 /pt-ru /pt-pt 301
 
+# Chinese (zh) cross-language mismatches
+/zh-de/* /zh-cn/:splat 301
+/zh-de /zh-cn 301
+/zh-es/* /zh-cn/:splat 301
+/zh-es /zh-cn 301
+/zh-pt/* /zh-cn/:splat 301
+/zh-pt /zh-cn 301
+/zh-ru/* /zh-cn/:splat 301
+/zh-ru /zh-cn 301
+/zh-gb/* /zh-cn/:splat 301
+/zh-gb /zh-cn 301
+/zh-in/* /zh-cn/:splat 301
+/zh-in /zh-cn 301
+/zh-sa/* /zh-cn/:splat 301
+/zh-sa /zh-cn 301
+
+# Arabic (ar) cross-language mismatches
+/ar-de/* /ar-sa/:splat 301
+/ar-de /ar-sa 301
+/ar-es/* /ar-sa/:splat 301
+/ar-es /ar-sa 301
+/ar-pt/* /ar-sa/:splat 301
+/ar-pt /ar-sa 301
+/ar-ru/* /ar-sa/:splat 301
+/ar-ru /ar-sa 301
+/ar-cn/* /ar-sa/:splat 301
+/ar-cn /ar-sa 301
+/ar-gb/* /ar-sa/:splat 301
+/ar-gb /ar-sa 301
+/ar-in/* /ar-sa/:splat 301
+/ar-in /ar-sa 301
+
+# Hindi (hi) cross-language mismatches
+/hi-de/* /hi-in/:splat 301
+/hi-de /hi-in 301
+/hi-es/* /hi-in/:splat 301
+/hi-es /hi-in 301
+/hi-pt/* /hi-in/:splat 301
+/hi-pt /hi-in 301
+/hi-ru/* /hi-in/:splat 301
+/hi-ru /hi-in 301
+/hi-cn/* /hi-in/:splat 301
+/hi-cn /hi-in 301
+/hi-gb/* /hi-in/:splat 301
+/hi-gb /hi-in 301
+/hi-sa/* /hi-in/:splat 301
+/hi-sa /hi-in 301
+
 # =============================================
 # Legacy blog/external URLs
 # =============================================

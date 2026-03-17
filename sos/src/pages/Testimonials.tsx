@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocaleNavigate } from "../multilingual-system";
+import { getLocaleString } from "../multilingual-system/core/routing/localeRoutes";
 import { Helmet } from "react-helmet-async";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import {
@@ -421,7 +422,7 @@ const Testimonials: React.FC = () => {
         "@type": "ListItem",
         "position": 2,
         "name": intl.formatMessage({ id: "testy.hero.titleFirst" }) + " " + intl.formatMessage({ id: "testy.hero.titleSecond" }),
-        "item": `${SEO_BASE_URL}/${language}/testimonials`
+        "item": `${SEO_BASE_URL}/${getLocaleString(language as any)}/testimonials`
       }
     ]
   }), [intl, language]);
@@ -668,13 +669,13 @@ const Testimonials: React.FC = () => {
         <title>{intl.formatMessage({ id: "testy.hero.titleFirst" })} {intl.formatMessage({ id: "testy.hero.titleSecond" })} | SOS Expat</title>
         <meta name="description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <link rel="canonical" href={`${SEO_BASE_URL}/${language}/testimonials`} />
+        <link rel="canonical" href={`${SEO_BASE_URL}/${getLocaleString(language as any)}/testimonials`} />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${intl.formatMessage({ id: "testy.hero.titleFirst" })} ${intl.formatMessage({ id: "testy.hero.titleSecond" })} | SOS Expat`} />
         <meta property="og:description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
-        <meta property="og:url" content={`${SEO_BASE_URL}/${language}/testimonials`} />
+        <meta property="og:url" content={`${SEO_BASE_URL}/${getLocaleString(language as any)}/testimonials`} />
         <meta property="og:image" content={`${SEO_BASE_URL}/og-image.png`} />
 
         {/* Twitter Card */}

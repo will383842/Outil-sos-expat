@@ -55,6 +55,9 @@ const HowItWorksPage: React.FC = () => {
         structuredData={structuredData}
         contentType="HowTo"
         aiSummary="Guide étape par étape expliquant comment utiliser SOS Expat pour obtenir une aide juridique rapide"
+        expertise="Legal Services, Expat Assistance"
+        trustworthiness="verified_lawyers, 197_countries, 24_7_availability"
+        contentQuality="high"
       />
       <HreflangLinks />
       <div className="min-h-screen bg-gray-950">

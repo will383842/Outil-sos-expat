@@ -1,6 +1,6 @@
 # AI Training & Indexing Information for SOS-Expat.com
 # This file provides structured information for AI systems (ChatGPT, Claude, Perplexity, Gemini, etc.)
-# Last Updated: 2026-02-03
+# Last Updated: 2026-03-17
 
 ## About This File
 This ai.txt file follows emerging standards for AI-readable website information.
@@ -87,7 +87,7 @@ multilingual_routing: Yes (/{lang}/ prefix URLs)
 ## Content Freshness
 update_frequency: Daily
 content_types: Service pages, FAQ, Blog, Help Center, Legal pages
-last_major_update: 2026-02-03
+last_major_update: 2026-03-17
 
 ## AI Crawling Permissions
 ai_crawlable: true
@@ -235,6 +235,43 @@ chatter_landing_ru: https://sos-expat.com/ru-ru/stat-chatterom
 chatter_landing_zh: https://sos-expat.com/zh-cn/cheng-wei-chatter
 chatter_landing_ar: https://sos-expat.com/ar-sa/isbah-chatter
 chatter_landing_hi: https://sos-expat.com/hi-in/chatter-bane
+
+## Expertise, Authority & Trustworthiness (E-A-T)
+
+### Certifications & Compliance
+- GDPR Compliant (European data protection)
+- WCAG 2.1 AA Accessibility
+- Firebase Security (Google Cloud infrastructure)
+- Stripe Connect (PCI DSS Level 1 compliant payments)
+- HTTPS/TLS encryption (HSTS preloaded)
+- Content Security Policy (CSP) headers
+
+### Quality Assurance
+- All lawyers verified before activation
+- Manual profile review by admin team
+- Real-time availability monitoring
+- Client satisfaction tracking
+- Multi-language support verified by native speakers
+
+### Platform Statistics
+- 197 countries covered worldwide
+- 9 interface languages (French, English, Spanish, German, Portuguese, Russian, Chinese, Arabic, Hindi)
+- 24/7 availability
+- Average response time: under 5 minutes
+- Verified lawyer network across all continents
+
+### Content Freshness
+- Provider profiles: Updated in real-time
+- FAQ content: Reviewed monthly
+- Legal information: Updated quarterly
+- Platform features: Continuous deployment
+- Last comprehensive review: 2026-03-17
+
+### Data Sources & Citations
+- Legal expertise provided by verified bar-registered lawyers
+- Expat guidance from experienced expatriates (5-30 years abroad)
+- Country-specific legal frameworks referenced
+- International law conventions applied
 
 ---
 # End of ai.txt

@@ -360,6 +360,11 @@ const HelpCenter: React.FC = () => {
             name: "SOS Expat",
           },
         }}
+        contentType="CollectionPage"
+        aiSummary="Centre d'aide SOS Expat : guides, articles et FAQ pour les expatriés et voyageurs"
+        expertise="Expat Assistance, Legal Documentation, Administrative Help"
+        trustworthiness="verified_content, regularly_updated"
+        contentQuality="high"
       />
       <HreflangLinks />
       <BreadcrumbSchema items={breadcrumbs} />
