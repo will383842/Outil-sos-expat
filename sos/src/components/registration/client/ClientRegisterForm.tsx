@@ -51,6 +51,7 @@ interface ClientRegisterFormProps {
   language: string;
   prefillEmail: string;
   referralCode: string;
+  partnerInviteToken?: string;
   redirect: string;
   navigate: (path: string, options?: Record<string, unknown>) => void;
   authError?: string;
@@ -100,6 +101,7 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
   language,
   prefillEmail,
   referralCode,
+  partnerInviteToken,
   redirect,
   navigate,
   authError,
@@ -353,6 +355,11 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
           acceptanceMethod: 'checkbox_click',
         },
       };
+
+      // Partner subscriber tracking (from invitation link)
+      if (partnerInviteToken) {
+        userData.partnerInviteToken = partnerInviteToken;
+      }
 
       // Affiliate tracking
       if (referralCode) {
