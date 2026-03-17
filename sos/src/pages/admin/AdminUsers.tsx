@@ -152,7 +152,7 @@ const USERS_PER_PAGE = 20;
 const ROLE_CONFIG: Record<Role, { label: string; color: string; dot: string; bg: string }> = {
   client:     { label: 'Client',       color: 'text-blue-700',    dot: 'bg-blue-500',    bg: 'bg-blue-50 border-blue-200' },
   lawyer:     { label: 'Avocat',       color: 'text-purple-700',  dot: 'bg-purple-500',  bg: 'bg-purple-50 border-purple-200' },
-  expat:      { label: 'Expert',       color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
+  expat:      { label: 'Expatrié',     color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
   admin:      { label: 'Admin',        color: 'text-amber-700',   dot: 'bg-amber-500',   bg: 'bg-amber-50 border-amber-200' },
   chatter:    { label: 'Chatter',      color: 'text-pink-700',    dot: 'bg-pink-500',    bg: 'bg-pink-50 border-pink-200' },
   influencer: { label: 'Influenceur',  color: 'text-orange-700',  dot: 'bg-orange-500',  bg: 'bg-orange-50 border-orange-200' },
@@ -667,7 +667,7 @@ const AdminUsers: React.FC = () => {
             { key: 'all', label: 'Tous', count: userCounts.all },
             { key: 'client', label: 'Clients', count: userCounts.client || 0 },
             { key: 'lawyer', label: 'Avocats', count: userCounts.lawyer || 0 },
-            { key: 'expat', label: 'Experts', count: userCounts.expat || 0 },
+            { key: 'expat', label: 'Expatriés', count: userCounts.expat || 0 },
             { key: 'chatter', label: 'Chatters', count: userCounts.chatter || 0 },
             { key: 'influencer', label: 'Influenceurs', count: userCounts.influencer || 0 },
             { key: 'blogger', label: 'Blogueurs', count: userCounts.blogger || 0 },
@@ -777,6 +777,49 @@ const AdminUsers: React.FC = () => {
                 </select>
               </div>
             </div>
+
+            {/* Active filter chips */}
+            {activeFilterCount > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-gray-200">
+                <span className="text-xs text-gray-500 mr-1">Actifs :</span>
+                {advancedFilters.onlineStatus !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
+                    {advancedFilters.onlineStatus === 'online' ? 'En ligne' : 'Hors ligne'}
+                    <button onClick={() => setAdvancedFilters((p) => ({ ...p, onlineStatus: 'all' }))} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
+                  </span>
+                )}
+                {advancedFilters.bannedStatus !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
+                    {advancedFilters.bannedStatus === 'banned' ? 'Banni' : 'Actif'}
+                    <button onClick={() => setAdvancedFilters((p) => ({ ...p, bannedStatus: 'all' }))} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
+                  </span>
+                )}
+                {advancedFilters.emailVerified !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
+                    Email {advancedFilters.emailVerified === 'verified' ? 'vérifié' : 'non vérifié'}
+                    <button onClick={() => setAdvancedFilters((p) => ({ ...p, emailVerified: 'all' }))} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
+                  </span>
+                )}
+                {advancedFilters.approvalStatus !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
+                    {advancedFilters.approvalStatus === 'approved' ? 'Approuvé' : advancedFilters.approvalStatus === 'pending' ? 'En attente' : 'Rejeté'}
+                    <button onClick={() => setAdvancedFilters((p) => ({ ...p, approvalStatus: 'all' }))} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
+                  </span>
+                )}
+                {advancedFilters.visibilityStatus !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
+                    {advancedFilters.visibilityStatus === 'visible' ? 'Visible' : 'Masqué'}
+                    <button onClick={() => setAdvancedFilters((p) => ({ ...p, visibilityStatus: 'all' }))} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
+                  </span>
+                )}
+                {advancedFilters.language !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
+                    {advancedFilters.language}
+                    <button onClick={() => setAdvancedFilters((p) => ({ ...p, language: 'all' }))} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -1113,10 +1156,10 @@ const AdminUsers: React.FC = () => {
               </div>
             </div>
 
-            {selectedUser.isBanned && selectedUser.banReason && (
+            {selectedUser.isBanned && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                 <h4 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Raison du bannissement</h4>
-                <p className="text-sm text-red-700">{selectedUser.banReason}</p>
+                <p className="text-sm text-red-700">{selectedUser.banReason || 'Aucune raison spécifiée'}</p>
               </div>
             )}
 
