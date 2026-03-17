@@ -52,6 +52,7 @@ import {
   normalizeUserData,
 } from "../utils/firestore";
 import SEOHead from "../components/layout/SEOHead";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { Review } from "../types";
 
 // 👉 Lazy load du composant Reviews (non critique au premier rendu)
@@ -401,18 +402,7 @@ const LOCALE_MAPPING: Record<string, string> = {
   'hi': 'hi-IN'
 };
 
-// Format avec underscore pour Open Graph og:locale
-const OG_LOCALE_MAPPING: Record<string, string> = {
-  'fr': 'fr_FR',
-  'en': 'en_US',
-  'es': 'es_ES',
-  'de': 'de_DE',
-  'pt': 'pt_BR',
-  'ru': 'ru_RU',
-  'zh': 'zh_CN',
-  'ar': 'ar_SA',
-  'hi': 'hi_IN'
-};
+// OG_LOCALE_MAPPING removed — handled by SEOHead component
 
 const formatJoinDate = (val: TSLike, langCode: string): string | undefined => {
   if (!val) return undefined;
@@ -800,13 +790,9 @@ const ProviderProfile: React.FC = () => {
   // État pour le wizard d'authentification rapide
   const [showAuthWizard, setShowAuthWizard] = useState(false);
 
-  const seoUpdatedRef = useRef(false);
-  const lastUrlRef = useRef<string>('');
   const providerLoadedRef = useRef(false);
 
   useEffect(() => {
-    seoUpdatedRef.current = false;
-    lastUrlRef.current = '';
     providerLoadedRef.current = false;
   }, [id, params.slug, params.profileId]);
 
@@ -1654,143 +1640,7 @@ const ProviderProfile: React.FC = () => {
     }
   }, [isLoading, provider, notFound, navigate]);
 
-  const updateSEOMetadata = useCallback(() => {
-    if (!provider || isLoading || seoUpdatedRef.current) return;
-    
-    try {
-      const fullSlug = generateSlug({
-        firstName: provider.firstName || '',
-        lastName: provider.lastName || '',
-        role: provider.type,
-        country: provider.country,
-        languages: provider.languages || [],
-        specialties: provider.type === 'lawyer' 
-          ? (provider.specialties || [])
-          : (provider.helpTypes || []),
-        locale: language,
-      });
-      
-      const seoUrl = `/${fullSlug}`;
-
-      const displayName = formatPublicName(provider);
-      const isLawyer = provider.type === "lawyer";
-      
-      const roleLabel = isLawyer
-        ? intl.formatMessage({ id: "providerProfile.lawyer" })
-        : intl.formatMessage({ id: "providerProfile.expat" });
-      
-      const pageTitle = `${displayName} - ${roleLabel} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)} | SOS Expat & Travelers`;
-      
-      document.title = pageTitle;
-
-      const updateOrCreateMeta = (property: string, content: string): void => {
-        let meta = document.querySelector(
-          `meta[property="${property}"]`
-        ) as HTMLMetaElement | null;
-        if (!meta) {
-          meta = document.createElement("meta");
-          meta.setAttribute("property", property);
-          document.head.appendChild(meta);
-        }
-        meta.setAttribute("content", content);
-      };
-
-      const updateOrCreateMetaName = (name: string, content: string): void => {
-        let meta = document.querySelector(
-          `meta[name="${name}"]`
-        ) as HTMLMetaElement | null;
-        if (!meta) {
-          meta = document.createElement("meta");
-          meta.setAttribute("name", name);
-          document.head.appendChild(meta);
-        }
-        meta.setAttribute("content", content);
-      };
-
-      const ogDesc = pickDescription(provider, preferredLangKey, intl).slice(0, 160);
-
-      // ✅ Image OG dynamique avec overlay (nom, rôle, pays)
-      // Utilise le service Firebase pour générer une image optimisée pour les réseaux sociaux
-      const dynamicOgImageUrl = `${getCloudFunctionUrl('generateOgImage', 'europe-west1')}/${provider.id || provider.uid}?lang=${language}`;
-
-      // Fallback vers l'image de profil simple
-      const fallbackImage =
-        provider.profilePhoto ||
-        provider.photoURL ||
-        provider.avatar ||
-        "/default-avatar.png";
-      const fallbackImageUrl = fallbackImage.startsWith('http') ? fallbackImage : `${window.location.origin}${fallbackImage}`;
-
-      // Utiliser l'image dynamique si le profil a un ID, sinon fallback
-      const fullImageUrl = (provider.id || provider.uid) ? dynamicOgImageUrl : fallbackImageUrl;
-
-      // ✅ Open Graph
-      updateOrCreateMeta("og:title", pageTitle);
-      updateOrCreateMeta("og:description", ogDesc);
-      updateOrCreateMeta("og:image", fullImageUrl);
-      updateOrCreateMeta("og:image:width", "1200");
-      updateOrCreateMeta("og:image:height", "630");
-      updateOrCreateMeta("og:url", window.location.origin + window.location.pathname);
-      updateOrCreateMeta("og:type", "profile");
-      updateOrCreateMeta("og:site_name", "SOS Expat & Travelers");
-      updateOrCreateMeta(
-        "og:locale",
-        OG_LOCALE_MAPPING[preferredLangKey] || "en_US"
-      );
-
-      // ✅ Twitter Card
-      updateOrCreateMetaName("twitter:card", "summary_large_image");
-      updateOrCreateMetaName("twitter:site", "@SOSExpat");
-      updateOrCreateMetaName("twitter:creator", "@SOSExpat");
-      updateOrCreateMetaName("twitter:title", pageTitle);
-      updateOrCreateMetaName("twitter:description", ogDesc);
-      updateOrCreateMetaName("twitter:image", fullImageUrl);
-      updateOrCreateMetaName("twitter:image:alt", ogDesc);
-
-      // ✅ Robots
-      updateOrCreateMetaName("robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
-      
-      // ✅ Mobile
-      updateOrCreateMetaName("format-detection", "telephone=yes");
-
-      // ✅ Hreflang pour SEO international
-      const SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'];
-      const baseUrl = window.location.origin;
-
-      document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
-
-      SUPPORTED_LANGS.forEach(lang => {
-        const link = document.createElement('link');
-        link.rel = 'alternate';
-        // Convertir 'ch' en 'zh-Hans' pour le standard hreflang SEO
-        link.hreflang = lang === 'ch' ? 'zh-Hans' : lang;
-
-        // Générer l'URL avec le slug actuel pour chaque langue
-        const pathWithoutLang = window.location.pathname.replace(/^\/(fr-[a-z]{2}|en-[a-z]{2}|es-[a-z]{2}|de-[a-z]{2}|pt-[a-z]{2}|ru-[a-z]{2}|zh-[a-z]{2}|ar-[a-z]{2}|hi-[a-z]{2}|fr|en|es|de|pt|ru|ch|ar|hi)/, '');
-        const urlLang = lang === 'ch' ? 'zh' : lang;
-        const defaultLocales: Record<string, string> = { fr: 'fr', en: 'us', de: 'de', es: 'es', pt: 'br', ru: 'ru', ch: 'cn', ar: 'sa', hi: 'in' };
-        link.href = `${baseUrl}/${urlLang}-${defaultLocales[lang]}${pathWithoutLang}`;
-        document.head.appendChild(link);
-      });
-
-      const xDefaultLink = document.createElement('link');
-      xDefaultLink.rel = 'alternate';
-      xDefaultLink.hreflang = 'x-default';
-      // x-default pointe vers la version française
-      xDefaultLink.href = `${baseUrl}/fr-fr${window.location.pathname.replace(/^\/(fr-[a-z]{2}|en-[a-z]{2}|es-[a-z]{2}|de-[a-z]{2}|pt-[a-z]{2}|ru-[a-z]{2}|zh-[a-z]{2}|ar-[a-z]{2}|hi-[a-z]{2}|fr|en|es|de|pt|ru|ch|ar|hi)/, '')}`;
-      document.head.appendChild(xDefaultLink);
-      
-      seoUpdatedRef.current = true;
-    } catch (e) {
-      console.error("Error updating SEO metadata:", e);
-    }
-  }, [provider, isLoading, preferredLangKey, intl, language, realProviderId]);
-
-  useEffect(() => {
-    if (provider && !isLoading) {
-      updateSEOMetadata();
-    }
-  }, [provider, isLoading, updateSEOMetadata]);
+  // SEO metadata handled entirely by <SEOHead> + <HreflangLinks> components below
 
   const handleBookCall = useCallback(() => {
     if (!provider) {
@@ -2421,6 +2271,9 @@ const ProviderProfile: React.FC = () => {
             : structuredData
         }
       />
+
+      {/* Hreflang links for international SEO */}
+      <HreflangLinks pathname={location.pathname} />
 
       {/* AAA profiles: noindex to prevent Google indexing test profiles */}
       {isAAAProfile && <meta name="robots" content="noindex" />}

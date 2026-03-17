@@ -148,6 +148,9 @@ export const sitemapProfiles = onRequest(
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
 
+        // Skip AAA test/demo profiles from sitemap
+        if (profile.isAAA === true || doc.id.startsWith('aaa_')) return;
+
         // Utilise les slugs multilingues si disponibles
         const slugs = profile.slugs as Record<string, string> | undefined;
         const hasSlugs = slugs && typeof slugs === 'object' && Object.keys(slugs).length > 0;
