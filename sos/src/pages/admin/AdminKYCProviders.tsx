@@ -193,12 +193,30 @@ const AdminKYCProviders: React.FC = () => {
     }
     setCheckingStatus(provider.id);
     try {
-      const checkStatus = httpsCallable(functions, 'checkStripeAccountStatus');
+      const checkStatus = httpsCallable(functions, 'admin_check_provider_stripe_status');
       const result = await checkStatus({ providerId: provider.id });
-      const data = result.data as { chargesEnabled?: boolean; payoutsEnabled?: boolean };
-      toast.success(
-        `Stripe: charges=${data.chargesEnabled ? 'OK' : 'NON'}, payouts=${data.payoutsEnabled ? 'OK' : 'NON'}`
-      );
+      const data = result.data as {
+        chargesEnabled?: boolean;
+        payoutsEnabled?: boolean;
+        kycCompleted?: boolean;
+        accountInvalid?: boolean;
+        pendingTransfersProcessed?: number;
+        message?: string;
+      };
+
+      if (data.accountInvalid) {
+        toast.error(`Compte Stripe invalide ou revoque pour ${provider.stripeAccountId}`);
+      } else {
+        const parts = [
+          `Charges: ${data.chargesEnabled ? 'OK' : 'NON'}`,
+          `Payouts: ${data.payoutsEnabled ? 'OK' : 'NON'}`,
+        ];
+        if (data.kycCompleted) parts.push('KYC complet');
+        if (data.pendingTransfersProcessed && data.pendingTransfersProcessed > 0) {
+          parts.push(`${data.pendingTransfersProcessed} transfert(s) debloques`);
+        }
+        toast.success(parts.join(' | '));
+      }
       await fetchData();
     } catch (error) {
       console.error('Error checking Stripe status:', error);

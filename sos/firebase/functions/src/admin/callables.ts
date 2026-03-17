@@ -1,6 +1,6 @@
 // firebase/functions/src/admin/callables.ts
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { ALLOWED_ORIGINS } from "../lib/functionConfigs";
 
@@ -513,4 +513,146 @@ export const adminBulkRefund = onCall({
     failed,
     results,
   };
+});
+
+// ========== ADMIN CHECK PROVIDER STRIPE STATUS ==========
+
+import Stripe from "stripe";
+import {
+  STRIPE_SECRET_KEY_TEST,
+  STRIPE_SECRET_KEY_LIVE,
+  getStripeSecretKey,
+} from "../lib/secrets";
+import { processPendingTransfersForProvider } from "../PendingTransferProcessor";
+
+/**
+ * Admin callable to check a provider's Stripe KYC status
+ * Unlike checkStripeAccountStatus (user-facing), this uses providerId param
+ * and can trigger pending transfer release if KYC is now complete.
+ */
+export const admin_check_provider_stripe_status = onCall({
+  region: "europe-west1",
+  memory: "256MiB",
+  cpu: 0.083,
+  timeoutSeconds: 120,
+  secrets: [STRIPE_SECRET_KEY_TEST, STRIPE_SECRET_KEY_LIVE],
+}, async (req) => {
+  assertAdmin(req);
+
+  const { providerId } = req.data || {};
+  if (!providerId || typeof providerId !== "string") {
+    throw new HttpsError("invalid-argument", "providerId is required");
+  }
+
+  const db = getDb();
+
+  // Get provider's Stripe account from sos_profiles
+  const profileDoc = await db.collection("sos_profiles").doc(providerId).get();
+  if (!profileDoc.exists) {
+    throw new HttpsError("not-found", `Provider ${providerId} not found in sos_profiles`);
+  }
+
+  const profileData = profileDoc.data()!;
+  const stripeAccountId = profileData.stripeAccountId as string | undefined;
+
+  if (!stripeAccountId) {
+    // Check if PayPal provider
+    if (profileData.paypalEmail) {
+      return {
+        success: true,
+        gateway: "paypal",
+        paypalEmail: profileData.paypalEmail,
+        paypalEmailVerified: profileData.paypalEmailVerified || false,
+        message: "Ce prestataire utilise PayPal, pas Stripe.",
+      };
+    }
+    throw new HttpsError("failed-precondition", "Ce prestataire n'a pas de compte Stripe configuré");
+  }
+
+  // Initialize Stripe
+  const secretKey = getStripeSecretKey();
+  if (!secretKey || !secretKey.startsWith("sk_")) {
+    throw new HttpsError("internal", "Stripe secret key not configured");
+  }
+
+  const stripe = new Stripe(secretKey, {
+    apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
+  });
+
+  try {
+    const account = await stripe.accounts.retrieve(stripeAccountId);
+
+    const chargesEnabled = account.charges_enabled || false;
+    const payoutsEnabled = account.payouts_enabled || false;
+    const detailsSubmitted = account.details_submitted || false;
+    const currentlyDue = account.requirements?.currently_due || [];
+    const isComplete = detailsSubmitted && chargesEnabled && payoutsEnabled && currentlyDue.length === 0;
+
+    // Update sos_profiles
+    await db.collection("sos_profiles").doc(providerId).update({
+      chargesEnabled,
+      payoutsEnabled,
+      kycCompleted: isComplete,
+      ...(isComplete ? { kycCompletedAt: FieldValue.serverTimestamp() } : {}),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Update users collection
+    const usersRef = db.collection("users").doc(providerId);
+    const usersDoc = await usersRef.get();
+    if (usersDoc.exists) {
+      await usersRef.update({
+        chargesEnabled,
+        payoutsEnabled,
+        kycCompleted: isComplete,
+        kycStatus: isComplete ? "completed" : detailsSubmitted ? "in_progress" : "not_started",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    // If KYC is now complete, process pending transfers
+    let pendingTransfersResult = null;
+    if (isComplete) {
+      try {
+        pendingTransfersResult = await processPendingTransfersForProvider(providerId, stripeAccountId);
+      } catch (transferError) {
+        console.error(`[admin_check_provider_stripe_status] Error processing pending transfers for ${providerId}:`, transferError);
+      }
+    }
+
+    return {
+      success: true,
+      gateway: "stripe",
+      stripeAccountId,
+      chargesEnabled,
+      payoutsEnabled,
+      detailsSubmitted,
+      kycCompleted: isComplete,
+      currentlyDue,
+      disabledReason: account.requirements?.disabled_reason || null,
+      pendingTransfersProcessed: pendingTransfersResult ? pendingTransfersResult.succeeded : 0,
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+    // Detect invalid/revoked accounts
+    if (
+      errorMessage.includes("does not have access to account") ||
+      errorMessage.includes("No such account") ||
+      errorMessage.includes("account has been deleted")
+    ) {
+      return {
+        success: true,
+        gateway: "stripe",
+        stripeAccountId,
+        chargesEnabled: false,
+        payoutsEnabled: false,
+        kycCompleted: false,
+        accountInvalid: true,
+        message: `Compte Stripe invalide ou révoqué: ${stripeAccountId}`,
+      };
+    }
+
+    throw new HttpsError("internal", `Erreur Stripe: ${errorMessage}`);
+  }
 });
