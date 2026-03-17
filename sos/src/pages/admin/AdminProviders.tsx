@@ -1264,23 +1264,26 @@ const AdminProviders: React.FC = () => {
 
   // Individual action handlers
   const handleHideProvider = useCallback(async (provider: Provider) => {
+    if (isActionLoading) return;
     setIsActionLoading(true);
+    const name = provider.displayName || provider.email;
     try {
       if (provider.isVisible === false) {
         await callUnhideProvider({ providerId: provider.id });
-        toast.success(`${provider.displayName || provider.email} est maintenant visible`);
+        toast.success(`${name} est maintenant visible sur la plateforme`);
       } else {
         await callHideProvider({ providerId: provider.id });
-        toast.success(`${provider.displayName || provider.email} a ete masque`);
+        toast.success(`${name} est masque de la plateforme`);
       }
-      loadProviders(true);
+      await loadProviders(true);
     } catch (error) {
       console.error('Error toggling visibility:', error);
-      toast.error('Erreur lors du changement de visibilite');
+      const msg = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(`Erreur visibilite: ${msg}`);
     } finally {
       setIsActionLoading(false);
     }
-  }, [callHideProvider, callUnhideProvider, loadProviders]);
+  }, [callHideProvider, callUnhideProvider, loadProviders, isActionLoading]);
 
   const handleBlockProvider = useCallback(async (reason: string, banNote: string) => {
     if (!selectedProvider) return;
@@ -2076,12 +2079,14 @@ const AdminProviders: React.FC = () => {
                           {/* Hide/Unhide toggle */}
                           <button
                             onClick={() => handleHideProvider(provider)}
-                            className={`p-1.5 rounded ${
+                            disabled={isActionLoading}
+                            className={`p-1.5 rounded transition-colors ${
+                              isActionLoading ? 'opacity-50 cursor-not-allowed' :
                               provider.isVisible === false
                                 ? 'text-green-600 hover:text-green-800 hover:bg-green-50'
                                 : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                             }`}
-                            title={provider.isVisible === false ? 'Afficher' : 'Masquer'}
+                            title={provider.isVisible === false ? 'Rendre visible sur la plateforme' : 'Masquer de la plateforme'}
                           >
                             {provider.isVisible === false ? <Eye size={16} /> : <EyeOff size={16} />}
                           </button>
@@ -2096,7 +2101,9 @@ const AdminProviders: React.FC = () => {
                                 setShowBlockModal(true);
                               }
                             }}
-                            className={`p-1.5 rounded ${
+                            disabled={isActionLoading}
+                            className={`p-1.5 rounded transition-colors ${
+                              isActionLoading ? 'opacity-50 cursor-not-allowed' :
                               provider.isBanned
                                 ? 'text-green-600 hover:text-green-800 hover:bg-green-50'
                                 : 'text-red-600 hover:text-red-800 hover:bg-red-50'
@@ -2111,17 +2118,21 @@ const AdminProviders: React.FC = () => {
                             onClick={() => {
                               setSelectedProvider(provider);
                               if (provider.isSuspended) {
+                                setIsActionLoading(true);
                                 callUnsuspendProvider({ providerId: provider.id })
                                   .then(() => {
                                     toast.success('Suspension levee');
                                     loadProviders(true);
                                   })
-                                  .catch(() => toast.error('Erreur lors de la levee de suspension'));
+                                  .catch((err) => toast.error(`Erreur: ${err instanceof Error ? err.message : 'Erreur inconnue'}`))
+                                  .finally(() => setIsActionLoading(false));
                               } else {
                                 setShowSuspendModal(true);
                               }
                             }}
-                            className={`p-1.5 rounded ${
+                            disabled={isActionLoading}
+                            className={`p-1.5 rounded transition-colors ${
+                              isActionLoading ? 'opacity-50 cursor-not-allowed' :
                               provider.isSuspended
                                 ? 'text-green-600 hover:text-green-800 hover:bg-green-50'
                                 : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50'
