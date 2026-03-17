@@ -408,6 +408,9 @@ const Pricing: React.FC = () => {
         structuredData={pricingStructuredData}
         contentType="PriceSpecification"
         aiSummary="Tarifs transparents pour les consultations avec avocats et expatriés aidants sur SOS Expat"
+        expertise="Legal Services, International Consultations"
+        trustworthiness="transparent_pricing, no_hidden_fees, secure_payment"
+        contentQuality="high"
       />
       <BreadcrumbSchema
         items={[

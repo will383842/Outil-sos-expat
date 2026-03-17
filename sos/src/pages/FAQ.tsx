@@ -156,6 +156,10 @@ const FAQ: React.FC = () => {
         canonicalUrl="/faq"
         author="Manon"
         contentType="FAQPage"
+        expertise="Legal Services, Expat Assistance, International Law"
+        trustworthiness="verified_lawyers, gdpr_compliant, 197_countries"
+        contentQuality="high"
+        lastReviewed={new Date().toISOString().split('T')[0]}
       />
 
       {/* FAQPage JSON-LD (dedicated, clean schema for Google Rich Results) */}

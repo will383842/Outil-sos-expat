@@ -1101,6 +1101,8 @@ const Contact: React.FC = () => {
         structuredData={contactStructuredData}
         contentType="ContactPage"
         aiSummary="Page de contact SOS Expat pour demander de l'aide juridique ou des informations sur l'expatriation"
+        trustworthiness="gdpr_compliant, responsive_support"
+        contentQuality="high"
       />
       <BreadcrumbSchema
         items={[

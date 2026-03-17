@@ -2270,6 +2270,11 @@ const ProviderProfile: React.FC = () => {
             ? translation.seo.jsonLd
             : structuredData
         }
+        aiSummary={`${provider.firstName} is a verified ${isLawyer ? 'lawyer' : 'expat expert'} in ${getCountryName(provider.country, preferredLangKey)} with ${provider.yearsOfExperience || 0} years of experience. Available on SOS Expat for phone consultations in ${languagesList.join(', ')}.`}
+        expertise={isLawyer ? 'legal-professional' : 'expat-advisor'}
+        trustworthiness="verified-provider"
+        contentQuality="high"
+        lastReviewed={new Date().toISOString().split('T')[0]}
       />
 
       {/* Hreflang links for international SEO */}
