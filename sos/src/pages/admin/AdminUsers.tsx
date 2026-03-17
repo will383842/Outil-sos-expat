@@ -1,45 +1,35 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useAdminTranslations } from '../../utils/adminTranslations';
 import {
-  User,
   Search,
-  Scale,
-  UserCheck,
-  Shield,
-  Calendar,
-  Clock,
   Phone,
   Mail,
   Ban,
-  UserCog,
   MapPin,
   AlertTriangle,
   Filter,
   Download,
-  CheckSquare,
-  Square,
   RefreshCw,
   Globe,
   Eye,
   EyeOff,
-  Star,
-  Wifi,
-  WifiOff,
   Languages,
   MoreHorizontal,
   X,
-  MessageCircle,
-  Megaphone,
-  FileText,
-  Users as UsersIcon,
   ExternalLink,
-  ShieldCheck,
   Edit3,
   Save,
   Trash2,
-  CheckSquare2,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpDown,
+  Link as LinkIcon,
+  Clock,
+  Calendar,
+  Shield,
+  UserPlus,
 } from 'lucide-react';
 
 import { httpsCallable } from 'firebase/functions';
@@ -58,7 +48,6 @@ import {
   Timestamp,
   QueryConstraint,
 } from 'firebase/firestore';
-import { Link as LinkIcon } from 'lucide-react';
 import { db, functions, functionsAffiliate } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import AdminErrorState from '../../components/admin/AdminErrorState';
@@ -68,6 +57,10 @@ import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { logError } from '../../utils/logging';
 import { getCountryName, getCountryFlag } from '../../utils/formatters';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 type Role = 'client' | 'lawyer' | 'expat' | 'admin' | 'chatter' | 'influencer' | 'blogger' | 'groupAdmin' | 'partner';
 type Availability = 'available' | 'offline';
@@ -139,7 +132,6 @@ type AdminUser = {
   updatedAt: Date;
 };
 
-// Filtres avancés
 type AdvancedFilters = {
   onlineStatus: 'all' | 'online' | 'offline';
   bannedStatus: 'all' | 'banned' | 'active';
@@ -149,64 +141,122 @@ type AdvancedFilters = {
   language: string;
 };
 
-type MinimalCurrentUser = {
-  id: string;
-  role: Role;
-};
+type MinimalCurrentUser = { id: string; role: Role };
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const USERS_PER_PAGE = 20;
+
+const ROLE_CONFIG: Record<Role, { label: string; color: string; dot: string; bg: string }> = {
+  client:     { label: 'Client',       color: 'text-blue-700',    dot: 'bg-blue-500',    bg: 'bg-blue-50 border-blue-200' },
+  lawyer:     { label: 'Avocat',       color: 'text-purple-700',  dot: 'bg-purple-500',  bg: 'bg-purple-50 border-purple-200' },
+  expat:      { label: 'Expert',       color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
+  admin:      { label: 'Admin',        color: 'text-amber-700',   dot: 'bg-amber-500',   bg: 'bg-amber-50 border-amber-200' },
+  chatter:    { label: 'Chatter',      color: 'text-pink-700',    dot: 'bg-pink-500',    bg: 'bg-pink-50 border-pink-200' },
+  influencer: { label: 'Influenceur',  color: 'text-orange-700',  dot: 'bg-orange-500',  bg: 'bg-orange-50 border-orange-200' },
+  blogger:    { label: 'Blogueur',     color: 'text-teal-700',    dot: 'bg-teal-500',    bg: 'bg-teal-50 border-teal-200' },
+  groupAdmin: { label: 'Group Admin',  color: 'text-indigo-700',  dot: 'bg-indigo-500',  bg: 'bg-indigo-50 border-indigo-200' },
+  partner:    { label: 'Partenaire',   color: 'text-cyan-700',    dot: 'bg-cyan-500',    bg: 'bg-cyan-50 border-cyan-200' },
+};
+
+const AFFILIATE_CLICK_COLLECTIONS: Partial<Record<Role, { collection: string; field: string }>> = {
+  chatter:    { collection: 'chatter_affiliate_clicks',    field: 'chatterId' },
+  influencer: { collection: 'influencer_affiliate_clicks', field: 'influencerId' },
+  blogger:    { collection: 'blogger_affiliate_clicks',    field: 'bloggerId' },
+  groupAdmin: { collection: 'group_admin_affiliate_clicks', field: 'groupAdminId' },
+  partner:    { collection: 'partner_affiliate_clicks',    field: 'partnerId' },
+  client:     { collection: 'affiliate_clicks',            field: 'referrerId' },
+  lawyer:     { collection: 'affiliate_clicks',            field: 'referrerId' },
+  expat:      { collection: 'affiliate_clicks',            field: 'referrerId' },
+};
+
+const PROVIDER_ROLES: Role[] = ['lawyer', 'expat', 'chatter', 'influencer', 'blogger'];
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/** Relative time: "il y a 2h", "il y a 3j", etc. */
+function timeAgo(date: Date): string {
+  const now = Date.now();
+  const diff = now - date.getTime();
+  if (diff < 0 || date.getTime() === 0) return '—';
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "A l'instant";
+  if (minutes < 60) return `il y a ${minutes}min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `il y a ${days}j`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `il y a ${months} mois`;
+  return `il y a ${Math.floor(months / 12)}an${Math.floor(months / 12) > 1 ? 's' : ''}`;
+}
+
+function formatDateFull(date: Date): string {
+  if (date.getTime() === 0) return '—';
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  }).format(date);
+}
+
+function formatDateShort(date: Date): string {
+  if (date.getTime() === 0) return '—';
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit', month: 'short', year: 'numeric',
+  }).format(date);
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 const AdminUsers: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const adminT = useAdminTranslations();
-
-  // `useAuth` n'expose pas de types ici : on contraint juste ce qu'on utilise
   const { user: rawCurrentUser } = useAuth() as { user?: MinimalCurrentUser | null };
   const currentUser: MinimalCurrentUser | null | undefined = rawCurrentUser;
 
+  // --- State ---
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<'all' | Role>(() => {
-    const path = location.pathname;
-    if (path.includes('/users/chatters')) return 'chatter';
-    if (path.includes('/users/influencers')) return 'influencer';
-    if (path.includes('/users/bloggers')) return 'blogger';
-    if (path.includes('/users/group-admins')) return 'groupAdmin';
+    const p = location.pathname;
+    if (p.includes('/users/chatters')) return 'chatter';
+    if (p.includes('/users/influencers')) return 'influencer';
+    if (p.includes('/users/bloggers')) return 'blogger';
+    if (p.includes('/users/group-admins')) return 'groupAdmin';
     return 'all';
   });
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [showUserModal, setShowUserModal] = useState<boolean>(false);
-  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  const [showBanModal, setShowBanModal] = useState<boolean>(false);
-  const [banReason, setBanReason] = useState<string>('');
-  const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
-  const [page, setPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banReason, setBanReason] = useState('');
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [sortField, setSortField] = useState<'createdAt' | 'lastLoginAt' | 'fullName'>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [selectedCountry, setSelectedCountry] = useState<string>('all');
+  const [selectedCountry, setSelectedCountry] = useState('all');
   const [countries, setCountries] = useState<string[]>([]);
-
-  // Nouveaux états pour filtres avancés
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
-    onlineStatus: 'all',
-    bannedStatus: 'all',
-    emailVerified: 'all',
-    approvalStatus: 'all',
-    visibilityStatus: 'all',
-    language: 'all',
+    onlineStatus: 'all', bannedStatus: 'all', emailVerified: 'all',
+    approvalStatus: 'all', visibilityStatus: 'all', language: 'all',
   });
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
-
-  // États pour sélection multiple et bulk actions
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
-  const [showBulkActions, setShowBulkActions] = useState<boolean>(false);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
 
-  // État pour édition de profil
+  // Edit profile
   interface EditProfileFields {
     firstName: string; lastName: string; email: string; phone: string;
     phoneCountryCode: string; country: string; currentCountry: string;
@@ -220,123 +270,104 @@ const AdminUsers: React.FC = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [editTargetUser, setEditTargetUser] = useState<AdminUser | null>(null);
 
-  // Last affiliate click date (fetched on-demand when modal opens)
+  // Affiliate click
   const [lastAffiliateClick, setLastAffiliateClick] = useState<Date | null>(null);
   const [affiliateClickLoading, setAffiliateClickLoading] = useState(false);
 
-  // Sync selectedRole when navigating between /users/chatters, /users/influencers, etc.
+  // Delete
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
+  const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('');
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState({ current: 0, total: 0 });
+
+  // --- Close action menu on outside click ---
   useEffect(() => {
-    const path = location.pathname;
-    if (path.includes('/users/chatters')) setSelectedRole('chatter');
-    else if (path.includes('/users/influencers')) setSelectedRole('influencer');
-    else if (path.includes('/users/bloggers')) setSelectedRole('blogger');
-    else if (path.includes('/users/group-admins')) setSelectedRole('groupAdmin');
+    const handler = (e: MouseEvent) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // --- Sync role from URL ---
+  useEffect(() => {
+    const p = location.pathname;
+    if (p.includes('/users/chatters')) setSelectedRole('chatter');
+    else if (p.includes('/users/influencers')) setSelectedRole('influencer');
+    else if (p.includes('/users/bloggers')) setSelectedRole('blogger');
+    else if (p.includes('/users/group-admins')) setSelectedRole('groupAdmin');
   }, [location.pathname]);
 
-  // Roles that have profiles in sos_profiles collection
-  const providerRoles: Role[] = ['lawyer', 'expat', 'chatter', 'influencer', 'blogger'];
-
+  // --- Fetch users ---
   useEffect(() => {
-    // Vérification d’accès admin
-    if (!currentUser || currentUser.role !== 'admin') {
-      navigate('/admin/login');
-      return;
-    }
+    if (!currentUser || currentUser.role !== 'admin') { navigate('/admin/login'); return; }
 
     const fetchUsers = async () => {
       try {
         setLoading(true);
         setError(null);
+        const qc: QueryConstraint[] = [];
+        if (selectedRole !== 'all') qc.push(where('role', '==', selectedRole));
+        if (selectedCountry !== 'all') qc.push(where('country', '==', selectedCountry));
+        qc.push(orderBy(sortField, sortDirection));
+        qc.push(limit(page * USERS_PER_PAGE));
 
-        // Construction sûre des contraintes de requête (sans `any`)
-        const queryConstraints: QueryConstraint[] = [];
-
-        if (selectedRole !== 'all') {
-          queryConstraints.push(where('role', '==', selectedRole));
-        }
-
-        if (selectedCountry !== 'all') {
-          queryConstraints.push(where('country', '==', selectedCountry));
-        }
-
-        // Tri et pagination
-        queryConstraints.push(orderBy(sortField, sortDirection));
-        queryConstraints.push(limit(page * USERS_PER_PAGE));
-
-        const usersQuery = query(collection(db, 'users'), ...queryConstraints);
-        const usersSnapshot = await getDocs(usersQuery);
-
-        const usersData: AdminUser[] = usersSnapshot.docs.map((d) => {
-          const data = d.data() as FirestoreUser;
+        const snap = await getDocs(query(collection(db, 'users'), ...qc));
+        const data: AdminUser[] = snap.docs.map((d) => {
+          const raw = d.data() as FirestoreUser;
           return {
-            id: d.id,
-            ...data,
-            isBanned: Boolean(data.isBanned),
-            languages: data.languages || data.spokenLanguages || [],
-            createdAt: data.createdAt ? data.createdAt.toDate() : new Date(0),
-            lastLoginAt: data.lastLoginAt ? data.lastLoginAt.toDate() : new Date(0),
-            updatedAt: data.updatedAt ? data.updatedAt.toDate() : new Date(0),
+            id: d.id, ...raw,
+            isBanned: Boolean(raw.isBanned),
+            languages: raw.languages || raw.spokenLanguages || [],
+            createdAt: raw.createdAt?.toDate() || new Date(0),
+            lastLoginAt: raw.lastLoginAt?.toDate() || new Date(0),
+            updatedAt: raw.updatedAt?.toDate() || new Date(0),
           };
         });
 
-        const uniqueCountries = Array.from(
-          new Set(
-            usersData.map((u) => u.country ?? u.currentCountry ?? 'Non spécifié')
-          )
-        )
-          .filter((c): c is string => Boolean(c))
-          .sort((a, b) => a.localeCompare(b));
-
-        // Collecter toutes les langues uniques
-        const allLanguages = new Set<string>();
-        usersData.forEach((u) => {
-          (u.languages || []).forEach((lang) => allLanguages.add(lang));
-        });
-        setAvailableLanguages(Array.from(allLanguages).sort());
-
-        setUsers(usersData);
+        const uniqueCountries = Array.from(new Set(data.map((u) => u.country ?? u.currentCountry ?? '')))
+          .filter(Boolean).sort((a, b) => a.localeCompare(b));
+        const allLangs = new Set<string>();
+        data.forEach((u) => (u.languages || []).forEach((l) => allLangs.add(l)));
+        setAvailableLanguages(Array.from(allLangs).sort());
+        setUsers(data);
         setCountries(uniqueCountries);
-        setHasMore(usersSnapshot.docs.length === page * USERS_PER_PAGE);
+        setHasMore(snap.docs.length === page * USERS_PER_PAGE);
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-
-        console.error('Erreur lors du chargement des utilisateurs :', err);
-        logError({
-          origin: 'frontend',
-          error: `Error loading users: ${message}`,
-          context: { component: 'AdminUsers' },
-        });
-        setError('Erreur lors du chargement des utilisateurs. Veuillez réessayer.');
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('Error loading users:', err);
+        logError({ origin: 'frontend', error: `Error loading users: ${msg}`, context: { component: 'AdminUsers' } });
+        setError('Erreur lors du chargement. Veuillez réessayer.');
       } finally {
         setLoading(false);
       }
     };
-
     void fetchUsers();
   }, [currentUser, navigate, selectedRole, selectedCountry, sortField, sortDirection, page]);
 
+  // --- Handlers ---
   const handleEditUser = (user: AdminUser) => {
     setEditTargetUser(user);
     setEditFields({
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || '',
-      phone: user.phone || '',
+      firstName: user.firstName || '', lastName: user.lastName || '',
+      email: user.email || '', phone: user.phone || '',
       phoneCountryCode: user.phoneCountryCode || '',
-      country: user.country || '',
-      currentCountry: user.currentCountry || '',
+      country: user.country || '', currentCountry: user.currentCountry || '',
       languages: (user.languages || user.spokenLanguages || []).join(', '),
       adminNotes: (user as any).adminNotes || '',
     });
     setShowEditModal(true);
+    setOpenActionMenuId(null);
   };
 
   const handleSaveProfile = async () => {
     if (!editTargetUser) return;
     setEditLoading(true);
     try {
-      // For client/lawyer/expat use adminUpdateUserProfile (europe-west1)
-      // For affiliates redirect to their specific admin page
       const role = editTargetUser.role;
       if (['client', 'lawyer', 'expat'].includes(role)) {
         const fn = httpsCallable(functions, 'adminUpdateUserProfile');
@@ -352,11 +383,9 @@ const AdminUsers: React.FC = () => {
         const oldLangs = editTargetUser.languages || editTargetUser.spokenLanguages || [];
         if (JSON.stringify(newLangs) !== JSON.stringify(oldLangs)) updates.languages = newLangs;
         if (editFields.adminNotes !== ((editTargetUser as any).adminNotes || '')) updates.adminNotes = editFields.adminNotes;
-
         if (Object.keys(updates).length <= 2) { toast.error('Aucune modification'); setEditLoading(false); return; }
         await fn(updates);
       } else {
-        // Direct Firestore update for other roles
         const userRef = doc(db, 'users', editTargetUser.id);
         const updates: Record<string, any> = {};
         if (editFields.firstName !== (editTargetUser.firstName || '')) updates.firstName = editFields.firstName;
@@ -365,1818 +394,933 @@ const AdminUsers: React.FC = () => {
         if (editFields.phone !== (editTargetUser.phone || '')) updates.phone = editFields.phone;
         if (editFields.country !== (editTargetUser.country || '')) updates.country = editFields.country;
         if (editFields.adminNotes !== ((editTargetUser as any).adminNotes || '')) updates.adminNotes = editFields.adminNotes;
-
         if (Object.keys(updates).length === 0) { toast.error('Aucune modification'); setEditLoading(false); return; }
         updates.updatedAt = serverTimestamp();
         await updateDoc(userRef, updates);
       }
-
-      toast.success('Profil mis à jour');
+      toast.success('Profil mis a jour');
       setShowEditModal(false);
-      // Refresh users
       setPage(1);
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      toast.error(err.message || 'Erreur lors de la mise à jour');
+      toast.error(err.message || 'Erreur lors de la mise a jour');
     } finally { setEditLoading(false); }
   };
 
   const handleViewDashboard = (user: AdminUser) => {
     let url = '';
     switch (user.role) {
-      case 'lawyer':
-      case 'expat':
-      case 'client':
-        url = `/dashboard?adminView=${user.id}`;
-        break;
-      case 'chatter':
-        url = `/chatter/tableau-de-bord?adminView=${user.id}`;
-        break;
-      case 'influencer':
-        url = `/influencer/tableau-de-bord?adminView=${user.id}`;
-        break;
-      case 'blogger':
-        url = `/blogger/tableau-de-bord?adminView=${user.id}`;
-        break;
-      case 'groupAdmin':
-        url = `/group-admin/tableau-de-bord?adminView=${user.id}`;
-        break;
-      case 'partner':
-        url = `/admin/partners/${user.id}`;
-        break;
-      default:
-        return;
+      case 'lawyer': case 'expat': case 'client': url = `/dashboard?adminView=${user.id}`; break;
+      case 'chatter': url = `/chatter/tableau-de-bord?adminView=${user.id}`; break;
+      case 'influencer': url = `/influencer/tableau-de-bord?adminView=${user.id}`; break;
+      case 'blogger': url = `/blogger/tableau-de-bord?adminView=${user.id}`; break;
+      case 'groupAdmin': url = `/group-admin/tableau-de-bord?adminView=${user.id}`; break;
+      case 'partner': url = `/admin/partners/${user.id}`; break;
+      default: return;
     }
     window.open(url, '_blank');
-  };
-
-  // Affiliate click collections per role
-  const affiliateClickCollections: Partial<Record<Role, { collection: string; field: string }>> = {
-    chatter: { collection: 'chatter_affiliate_clicks', field: 'chatterId' },
-    influencer: { collection: 'influencer_affiliate_clicks', field: 'influencerId' },
-    blogger: { collection: 'blogger_affiliate_clicks', field: 'bloggerId' },
-    groupAdmin: { collection: 'group_admin_affiliate_clicks', field: 'groupAdminId' },
-    partner: { collection: 'partner_affiliate_clicks', field: 'partnerId' },
-    client: { collection: 'affiliate_clicks', field: 'referrerId' },
-    lawyer: { collection: 'affiliate_clicks', field: 'referrerId' },
-    expat: { collection: 'affiliate_clicks', field: 'referrerId' },
+    setOpenActionMenuId(null);
   };
 
   const fetchLastAffiliateClick = async (user: AdminUser) => {
     setLastAffiliateClick(null);
-    const config = affiliateClickCollections[user.role];
+    const config = AFFILIATE_CLICK_COLLECTIONS[user.role];
     if (!config) return;
-
     setAffiliateClickLoading(true);
     try {
-      const clickQuery = query(
+      const snap = await getDocs(query(
         collection(db, config.collection),
         where(config.field, '==', user.id),
         orderBy('clickedAt', 'desc'),
-        limit(1)
-      );
-      const snap = await getDocs(clickQuery);
+        limit(1),
+      ));
       if (!snap.empty) {
         const clickedAt = snap.docs[0].data().clickedAt;
         setLastAffiliateClick(clickedAt?.toDate?.() || null);
       }
-    } catch (err) {
-      // Collection may not exist for this role — ignore silently
-      console.warn('[AdminUsers] Failed to fetch last affiliate click:', err);
-    } finally {
-      setAffiliateClickLoading(false);
-    }
+    } catch { /* collection may not exist */ }
+    finally { setAffiliateClickLoading(false); }
   };
-
-  const getRoleLabel = (role: Role): string => {
-    const roleLabels: Record<Role, string> = {
-      client: 'Client',
-      lawyer: 'Avocat',
-      expat: 'Expatrié',
-      admin: 'Admin',
-      chatter: 'Chatter',
-      influencer: 'Influenceur',
-      blogger: 'Blogueur',
-      groupAdmin: 'Groupe Admin',
-      partner: 'Partenaire',
-    };
-    return roleLabels[role] || role;
-  };
-
-  const getRoleBadgeColor = (role: Role): string => {
-    const colors: Record<Role, string> = {
-      client: 'bg-blue-100 text-blue-800',
-      lawyer: 'bg-purple-100 text-purple-800',
-      expat: 'bg-green-100 text-green-800',
-      admin: 'bg-yellow-100 text-yellow-800',
-      chatter: 'bg-pink-100 text-pink-800',
-      influencer: 'bg-orange-100 text-orange-800',
-      blogger: 'bg-teal-100 text-teal-800',
-      groupAdmin: 'bg-indigo-100 text-indigo-800',
-      partner: 'bg-cyan-100 text-cyan-800',
-    };
-    return colors[role] || 'bg-gray-100 text-gray-800';
-  };
-
-  // Delete states
-  const [deleteReason, setDeleteReason] = useState('');
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-  const [bulkDeleteReason, setBulkDeleteReason] = useState('');
-  const [bulkDeleteConfirmText, setBulkDeleteConfirmText] = useState('');
-  const [bulkDeleteProgress, setBulkDeleteProgress] = useState({ current: 0, total: 0 });
 
   const handleDeleteUser = (user: AdminUser) => {
-    setSelectedUser(user);
-    setDeleteReason('');
-    setDeleteConfirmText('');
-    setShowDeleteModal(true);
+    setSelectedUser(user); setDeleteReason(''); setDeleteConfirmText(''); setShowDeleteModal(true); setOpenActionMenuId(null);
   };
 
   const handleBanUser = (user: AdminUser) => {
-    setSelectedUser(user);
-    setBanReason('');
-    setShowBanModal(true);
+    setSelectedUser(user); setBanReason(''); setShowBanModal(true); setOpenActionMenuId(null);
   };
 
   const confirmDeleteUser = async () => {
     if (!selectedUser) return;
-
     setIsActionLoading(true);
-
     try {
-      const deleteUserFn = httpsCallable(functions, 'adminDeleteUser');
-      const result = await deleteUserFn({
-        userId: selectedUser.id,
-        reason: deleteReason || undefined,
-      });
-
+      const result = await httpsCallable(functions, 'adminDeleteUser')({ userId: selectedUser.id, reason: deleteReason || undefined });
       const data = result.data as { success: boolean; message: string; deletedSubDocs: number };
-
       setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
-      setSelectedUserIds((prev) => {
-        const next = new Set(prev);
-        next.delete(selectedUser.id);
-        return next;
-      });
-
-      setShowDeleteModal(false);
-      setSelectedUser(null);
-      setDeleteReason('');
-      setDeleteConfirmText('');
-
-      toast.success(data.message || 'Utilisateur supprimé avec succès');
+      setSelectedUserIds((prev) => { const n = new Set(prev); n.delete(selectedUser.id); return n; });
+      setShowDeleteModal(false); setSelectedUser(null); setDeleteReason(''); setDeleteConfirmText('');
+      toast.success(data.message || 'Utilisateur supprime');
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      toast.error(`Erreur: ${message}`);
-      logError({
-        origin: 'frontend',
-        error: `Error deleting user: ${message}`,
-        context: { userId: selectedUser.id },
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
+      toast.error(`Erreur: ${err instanceof Error ? err.message : String(err)}`);
+      logError({ origin: 'frontend', error: `Error deleting user: ${err instanceof Error ? err.message : String(err)}`, context: { userId: selectedUser.id } });
+    } finally { setIsActionLoading(false); }
   };
 
-  // Bulk delete
   const handleBulkDelete = () => {
     if (selectedUserIds.size === 0) return;
-    setBulkDeleteReason('');
-    setBulkDeleteConfirmText('');
-    setBulkDeleteProgress({ current: 0, total: 0 });
-    setShowBulkDeleteModal(true);
+    setBulkDeleteReason(''); setBulkDeleteConfirmText(''); setBulkDeleteProgress({ current: 0, total: 0 }); setShowBulkDeleteModal(true);
   };
 
   const executeBulkDelete = async () => {
     const ids = Array.from(selectedUserIds);
     setBulkDeleteProgress({ current: 0, total: ids.length });
     setIsActionLoading(true);
-
-    const deleteUserFn = httpsCallable(functions, 'adminDeleteUser');
+    const deleteFn = httpsCallable(functions, 'adminDeleteUser');
     const errors: string[] = [];
-
     for (let i = 0; i < ids.length; i++) {
-      const userId = ids[i];
-      const user = users.find((u) => u.id === userId);
       try {
-        await deleteUserFn({
-          userId,
-          reason: bulkDeleteReason || 'Suppression en lot depuis admin',
-        });
+        await deleteFn({ userId: ids[i], reason: bulkDeleteReason || 'Suppression en lot' });
         setBulkDeleteProgress({ current: i + 1, total: ids.length });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        errors.push(`${user?.firstName || userId}: ${msg}`);
-      }
+      } catch (err) { errors.push(`${ids[i]}: ${err instanceof Error ? err.message : String(err)}`); }
     }
-
-    // Remove deleted users from list
     const deletedIds = new Set(ids.filter((id) => !errors.some((e) => e.startsWith(id))));
     setUsers((prev) => prev.filter((u) => !deletedIds.has(u.id)));
-    setSelectedUserIds(new Set());
-
-    setShowBulkDeleteModal(false);
-    setIsActionLoading(false);
-
-    if (errors.length > 0) {
-      toast.error(`${ids.length - errors.length}/${ids.length} supprimés. ${errors.length} erreur(s).`);
-    } else {
-      toast.success(`${ids.length} utilisateur(s) supprimé(s) avec succès`);
-    }
+    setSelectedUserIds(new Set()); setShowBulkDeleteModal(false); setIsActionLoading(false);
+    if (errors.length > 0) toast.error(`${ids.length - errors.length}/${ids.length} supprimes.`);
+    else toast.success(`${ids.length} utilisateur(s) supprimes`);
   };
 
-  // Selection helpers
   const toggleSelectUser = (userId: string) => {
-    setSelectedUserIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
-      return next;
-    });
+    setSelectedUserIds((prev) => { const n = new Set(prev); n.has(userId) ? n.delete(userId) : n.add(userId); return n; });
   };
-
   const toggleSelectAll = () => {
-    if (selectedUserIds.size === filteredUsers.length) {
-      setSelectedUserIds(new Set());
-    } else {
-      setSelectedUserIds(new Set(filteredUsers.map((u) => u.id)));
-    }
+    setSelectedUserIds(selectedUserIds.size === filteredUsers.length ? new Set() : new Set(filteredUsers.map((u) => u.id)));
   };
 
   const confirmBanUser = async () => {
     if (!selectedUser) return;
-
     setIsActionLoading(true);
-
     try {
-      await updateDoc(doc(db, 'users', selectedUser.id), {
-        isBanned: true,
-        banReason,
-        updatedAt: serverTimestamp(),
-      });
-
-      if (providerRoles.includes(selectedUser.role)) {
-        await updateDoc(doc(db, 'sos_profiles', selectedUser.id), {
-          isBanned: true,
-          isVisible: false,
-          isVisibleOnMap: false,
-          isOnline: false,
-          updatedAt: serverTimestamp(),
-        });
+      await updateDoc(doc(db, 'users', selectedUser.id), { isBanned: true, banReason, updatedAt: serverTimestamp() });
+      if (PROVIDER_ROLES.includes(selectedUser.role)) {
+        await updateDoc(doc(db, 'sos_profiles', selectedUser.id), { isBanned: true, isVisible: false, isVisibleOnMap: false, isOnline: false, updatedAt: serverTimestamp() });
       }
-
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === selectedUser.id ? { ...u, isBanned: true, banReason } : u
-        )
-      );
-
-      setShowBanModal(false);
-      setSelectedUser(null);
-
-      await addDoc(collection(db, 'logs'), {
-        type: 'user_banned',
-        userId: selectedUser.id,
-        bannedBy: currentUser?.id ?? null,
-        reason: banReason,
-        timestamp: serverTimestamp(),
-      });
+      setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, isBanned: true, banReason } : u));
+      setShowBanModal(false); setSelectedUser(null);
+      await addDoc(collection(db, 'logs'), { type: 'user_banned', userId: selectedUser.id, bannedBy: currentUser?.id ?? null, reason: banReason, timestamp: serverTimestamp() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-       
-      toast.error("Erreur lors du bannissement de l'utilisateur");
-      logError({
-        origin: 'frontend',
-        error: `Error banning user: ${message}`,
-        context: { userId: selectedUser.id },
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
+      toast.error("Erreur lors du bannissement");
+      logError({ origin: 'frontend', error: `Error banning user: ${err instanceof Error ? err.message : String(err)}`, context: { userId: selectedUser.id } });
+    } finally { setIsActionLoading(false); }
   };
 
   const handleUnbanUser = async (userId: string) => {
-    setIsActionLoading(true);
-
+    setIsActionLoading(true); setOpenActionMenuId(null);
     try {
-      await updateDoc(doc(db, 'users', userId), {
-        isBanned: false,
-        banReason: '',
-        updatedAt: serverTimestamp(),
-      });
-
+      await updateDoc(doc(db, 'users', userId), { isBanned: false, banReason: '', updatedAt: serverTimestamp() });
       const userDoc = await getDoc(doc(db, 'users', userId));
       const role = (userDoc.data()?.role ?? '') as Role;
-      if (providerRoles.includes(role)) {
-        await updateDoc(doc(db, 'sos_profiles', userId), {
-          isBanned: false,
-          isVisible: true,
-          isVisibleOnMap: true,
-          updatedAt: serverTimestamp(),
-        });
+      if (PROVIDER_ROLES.includes(role)) {
+        await updateDoc(doc(db, 'sos_profiles', userId), { isBanned: false, isVisible: true, isVisibleOnMap: true, updatedAt: serverTimestamp() });
       }
-
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId ? { ...u, isBanned: false, banReason: '' } : u
-        )
-      );
-
-      await addDoc(collection(db, 'logs'), {
-        type: 'user_unbanned',
-        userId,
-        unbannedBy: currentUser?.id ?? null,
-        timestamp: serverTimestamp(),
-      });
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isBanned: false, banReason: '' } : u));
+      await addDoc(collection(db, 'logs'), { type: 'user_unbanned', userId, unbannedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
+      toast.success('Utilisateur reactived');
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-       
-      toast.error("Erreur lors de la réactivation de l'utilisateur");
-      logError({
-        origin: 'frontend',
-        error: `Error unbanning user: ${message}`,
-        context: { userId },
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
+      toast.error("Erreur lors de la reactivation");
+      logError({ origin: 'frontend', error: `Error unbanning: ${err instanceof Error ? err.message : String(err)}`, context: { userId } });
+    } finally { setIsActionLoading(false); }
   };
 
   const handleToggleOnlineStatus = async (userId: string, isCurrentlyOnline: boolean) => {
-    setIsActionLoading(true);
-
+    setIsActionLoading(true); setOpenActionMenuId(null);
     try {
-      const newAvailability: Availability = !isCurrentlyOnline ? 'available' : 'offline';
-
-      await updateDoc(doc(db, 'users', userId), {
-        isOnline: !isCurrentlyOnline,
-        availability: newAvailability,
-        updatedAt: serverTimestamp(),
-      });
-
+      const newAvail: Availability = !isCurrentlyOnline ? 'available' : 'offline';
+      await updateDoc(doc(db, 'users', userId), { isOnline: !isCurrentlyOnline, availability: newAvail, updatedAt: serverTimestamp() });
       const userDoc = await getDoc(doc(db, 'users', userId));
       const role = (userDoc.data()?.role ?? '') as Role;
-      if (providerRoles.includes(role)) {
-        await updateDoc(doc(db, 'sos_profiles', userId), {
-          isOnline: !isCurrentlyOnline,
-          availability: newAvailability,
-          updatedAt: serverTimestamp(),
-        });
+      if (PROVIDER_ROLES.includes(role)) {
+        await updateDoc(doc(db, 'sos_profiles', userId), { isOnline: !isCurrentlyOnline, availability: newAvail, updatedAt: serverTimestamp() });
       }
-
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? { ...u, isOnline: !isCurrentlyOnline, availability: newAvailability }
-            : u
-        )
-      );
-
-      await addDoc(collection(db, 'logs'), {
-        type: !isCurrentlyOnline ? 'user_set_online' : 'user_set_offline',
-        userId,
-        changedBy: currentUser?.id ?? null,
-        timestamp: serverTimestamp(),
-      });
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isOnline: !isCurrentlyOnline, availability: newAvail } : u));
+      await addDoc(collection(db, 'logs'), { type: !isCurrentlyOnline ? 'user_set_online' : 'user_set_offline', userId, changedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-       
-      toast.error('Erreur lors de la modification du statut en ligne');
-      logError({
-        origin: 'frontend',
-        error: `Error toggling online status: ${message}`,
-        context: { userId },
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
+      toast.error('Erreur changement statut');
+      logError({ origin: 'frontend', error: `Error toggling online: ${err instanceof Error ? err.message : String(err)}`, context: { userId } });
+    } finally { setIsActionLoading(false); }
   };
 
   const handleToggleVisibility = async (userId: string, isCurrentlyVisible: boolean) => {
-    setIsActionLoading(true);
-
+    setIsActionLoading(true); setOpenActionMenuId(null);
     try {
-      await updateDoc(doc(db, 'sos_profiles', userId), {
-        isVisible: !isCurrentlyVisible,
-        isVisibleOnMap: !isCurrentlyVisible,
-        updatedAt: serverTimestamp(),
-      });
-
-      setUsers((prev) =>
-        prev.map((u) =>
-            u.id === userId
-              ? { ...u, isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible }
-              : u
-        )
-      );
-
-      await addDoc(collection(db, 'logs'), {
-        type: !isCurrentlyVisible ? 'user_set_visible' : 'user_set_invisible',
-        userId,
-        changedBy: currentUser?.id ?? null,
-        timestamp: serverTimestamp(),
-      });
+      await updateDoc(doc(db, 'sos_profiles', userId), { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() });
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible } : u));
+      await addDoc(collection(db, 'logs'), { type: !isCurrentlyVisible ? 'user_set_visible' : 'user_set_invisible', userId, changedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-       
-      toast.error('Erreur lors de la modification de la visibilité');
-      logError({
-        origin: 'frontend',
-        error: `Error toggling visibility: ${message}`,
-        context: { userId },
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
+      toast.error('Erreur changement visibilite');
+      logError({ origin: 'frontend', error: `Error toggling visibility: ${err instanceof Error ? err.message : String(err)}`, context: { userId } });
+    } finally { setIsActionLoading(false); }
   };
 
   const handleToggleFeatured = async (userId: string, isCurrentlyFeatured: boolean) => {
-    setIsActionLoading(true);
-
+    setIsActionLoading(true); setOpenActionMenuId(null);
     try {
-      await updateDoc(doc(db, 'sos_profiles', userId), {
-        featured: !isCurrentlyFeatured,
-        updatedAt: serverTimestamp(),
-      });
-
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, featured: !isCurrentlyFeatured } : u))
-      );
-
-      await addDoc(collection(db, 'logs'), {
-        type: !isCurrentlyFeatured ? 'user_set_featured' : 'user_unset_featured',
-        userId,
-        changedBy: currentUser?.id ?? null,
-        timestamp: serverTimestamp(),
-      });
+      await updateDoc(doc(db, 'sos_profiles', userId), { featured: !isCurrentlyFeatured, updatedAt: serverTimestamp() });
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, featured: !isCurrentlyFeatured } : u));
+      await addDoc(collection(db, 'logs'), { type: !isCurrentlyFeatured ? 'user_set_featured' : 'user_unset_featured', userId, changedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-       
-      toast.error('Erreur lors de la modification du statut mis en avant');
-      logError({
-        origin: 'frontend',
-        error: `Error toggling featured status: ${message}`,
-        context: { userId },
-      });
-    } finally {
-      setIsActionLoading(false);
-    }
+      toast.error('Erreur changement mise en avant');
+      logError({ origin: 'frontend', error: `Error toggling featured: ${err instanceof Error ? err.message : String(err)}`, context: { userId } });
+    } finally { setIsActionLoading(false); }
   };
-
-  const handleLoadMore = () => setPage((prev) => prev + 1);
 
   const handleSortChange = (field: 'createdAt' | 'lastLoginAt' | 'fullName') => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
+    if (sortField === field) setSortDirection((p) => (p === 'asc' ? 'desc' : 'asc'));
+    else { setSortField(field); setSortDirection('desc'); }
   };
 
-  const formatDate = (date: Date) =>
-    new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+  const exportCsv = () => {
+    const rows = [
+      '\uFEFF' + ['ID', 'Prenom', 'Nom', 'Email', 'Role', 'Pays', 'En ligne', 'Banni', 'Inscription', 'Derniere connexion'].join(','),
+      ...filteredUsers.map((u) => [
+        u.id, u.firstName || '', u.lastName || '', u.email || '', ROLE_CONFIG[u.role]?.label || u.role,
+        u.country || u.currentCountry || '', u.isOnline ? 'Oui' : 'Non', u.isBanned ? 'Oui' : 'Non',
+        formatDateFull(u.createdAt), u.lastLoginAt.getTime() > 0 ? formatDateFull(u.lastLoginAt) : '',
+      ].join(',')),
+    ].join('\n');
+    const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `utilisateurs_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
 
+  // --- Filters ---
   const filteredUsers = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     return users.filter((u) => {
-      // Filtre par rôle
-      const matchesRole = selectedRole === 'all' || u.role === selectedRole;
-
-      // Filtre par recherche
-      const matchesSearch =
-        term.length === 0 ||
-        u.firstName?.toLowerCase().includes(term) ||
-        u.lastName?.toLowerCase().includes(term) ||
-        u.email?.toLowerCase().includes(term) ||
-        u.id.toLowerCase().includes(term);
-
-      // Filtres avancés
-      const matchesOnlineStatus =
-        advancedFilters.onlineStatus === 'all' ||
-        (advancedFilters.onlineStatus === 'online' && u.isOnline) ||
-        (advancedFilters.onlineStatus === 'offline' && !u.isOnline);
-
-      const matchesBannedStatus =
-        advancedFilters.bannedStatus === 'all' ||
-        (advancedFilters.bannedStatus === 'banned' && u.isBanned) ||
-        (advancedFilters.bannedStatus === 'active' && !u.isBanned);
-
-      const matchesEmailVerified =
-        advancedFilters.emailVerified === 'all' ||
-        (advancedFilters.emailVerified === 'verified' && (u.emailVerified || u.isVerifiedEmail)) ||
-        (advancedFilters.emailVerified === 'unverified' && !(u.emailVerified || u.isVerifiedEmail));
-
-      const matchesApprovalStatus =
-        advancedFilters.approvalStatus === 'all' ||
-        (advancedFilters.approvalStatus === 'approved' && u.isApproved) ||
-        (advancedFilters.approvalStatus === 'pending' && !u.isApproved && !u.validationStatus) ||
-        (advancedFilters.approvalStatus === 'rejected' && u.validationStatus === 'rejected');
-
-      const matchesVisibility =
-        advancedFilters.visibilityStatus === 'all' ||
-        (advancedFilters.visibilityStatus === 'visible' && u.isVisible) ||
-        (advancedFilters.visibilityStatus === 'hidden' && !u.isVisible);
-
-      const matchesLanguage =
-        advancedFilters.language === 'all' ||
-        (u.languages || []).includes(advancedFilters.language);
-
-      return (
-        matchesRole &&
-        matchesSearch &&
-        matchesOnlineStatus &&
-        matchesBannedStatus &&
-        matchesEmailVerified &&
-        matchesApprovalStatus &&
-        matchesVisibility &&
-        matchesLanguage
-      );
+      if (selectedRole !== 'all' && u.role !== selectedRole) return false;
+      if (term.length > 0 && !u.firstName?.toLowerCase().includes(term) && !u.lastName?.toLowerCase().includes(term) && !u.email?.toLowerCase().includes(term) && !u.id.toLowerCase().includes(term)) return false;
+      if (advancedFilters.onlineStatus !== 'all' && ((advancedFilters.onlineStatus === 'online') !== !!u.isOnline)) return false;
+      if (advancedFilters.bannedStatus !== 'all' && ((advancedFilters.bannedStatus === 'banned') !== u.isBanned)) return false;
+      if (advancedFilters.emailVerified !== 'all' && ((advancedFilters.emailVerified === 'verified') !== !!(u.emailVerified || u.isVerifiedEmail))) return false;
+      if (advancedFilters.approvalStatus === 'approved' && !u.isApproved) return false;
+      if (advancedFilters.approvalStatus === 'pending' && (u.isApproved || u.validationStatus)) return false;
+      if (advancedFilters.approvalStatus === 'rejected' && u.validationStatus !== 'rejected') return false;
+      if (advancedFilters.visibilityStatus !== 'all' && ((advancedFilters.visibilityStatus === 'visible') !== !!u.isVisible)) return false;
+      if (advancedFilters.language !== 'all' && !(u.languages || []).includes(advancedFilters.language)) return false;
+      return true;
     });
   }, [users, selectedRole, searchTerm, advancedFilters]);
 
-  const userCounts = useMemo(
-    () => ({
-      all: users.length,
-      client: users.filter((u) => u.role === 'client').length,
-      lawyer: users.filter((u) => u.role === 'lawyer').length,
-      expat: users.filter((u) => u.role === 'expat').length,
-      admin: users.filter((u) => u.role === 'admin').length,
-      chatter: users.filter((u) => u.role === 'chatter').length,
-      influencer: users.filter((u) => u.role === 'influencer').length,
-      blogger: users.filter((u) => u.role === 'blogger').length,
-      groupAdmin: users.filter((u) => u.role === 'groupAdmin').length,
-    }),
-    [users]
-  );
+  const userCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: users.length };
+    for (const u of users) counts[u.role] = (counts[u.role] || 0) + 1;
+    return counts;
+  }, [users]);
 
-  if (loading && users.length === 0) return <div>{adminT.loading}</div>;
+  const activeFilterCount = useMemo(() => Object.values(advancedFilters).filter((v) => v !== 'all').length, [advancedFilters]);
+
+  // --- Sort icon helper ---
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return <ArrowUpDown size={14} className="text-gray-400" />;
+    return sortDirection === 'desc' ? <ChevronDown size={14} className="text-red-600" /> : <ChevronUp size={14} className="text-red-600" />;
+  };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
+  if (loading && users.length === 0) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="large" color="red" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="p-4 lg:p-6 space-y-5 max-w-[1600px] mx-auto">
+
+        {/* ===== HEADER ===== */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              <User className="w-6 h-6 text-red-600" /> Gestion des utilisateurs
-            </h1>
-            <p className="text-sm text-gray-500">Vue globale de tous les utilisateurs de la plateforme</p>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 tracking-tight">Utilisateurs</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{filteredUsers.length} resultat{filteredUsers.length > 1 ? 's' : ''}</p>
           </div>
-
           <div className="flex items-center gap-2">
-            <select
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="all">Tous les pays</option>
-              {countries.map((country) => (
-                <option key={country} value={country}>
-                  {getCountryFlag(country)} {getCountryName(country, 'fr') || country}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={`${sortField}-${sortDirection}`}
-              onChange={(e) => {
-                const [field, direction] = e.target.value.split('-') as [
-                  'createdAt' | 'lastLoginAt' | 'fullName',
-                  'asc' | 'desc'
-                ];
-                setSortField(field);
-                setSortDirection(direction);
-              }}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="createdAt-desc">Récent</option>
-              <option value="createdAt-asc">Ancien</option>
-              <option value="lastLoginAt-desc">Connexion récente</option>
-              <option value="fullName-asc">Nom A-Z</option>
-            </select>
-
-            <Button
-              variant="secondary"
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className={showAdvancedFilters ? 'bg-red-100' : ''}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filtres
-              {Object.values(advancedFilters).some((v) => v !== 'all') && (
-                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                  {Object.values(advancedFilters).filter((v) => v !== 'all').length}
-                </span>
-              )}
-            </Button>
-
-            <button
-              onClick={() => {
-                const csvContent = [
-                  '\uFEFF' + ['ID', 'Prénom', 'Nom', 'Email', 'Rôle', 'Pays', 'En ligne', 'Banni', 'Inscription', 'Dernière connexion'].join(','),
-                  ...filteredUsers.map((u) =>
-                    [
-                      u.id,
-                      u.firstName || '',
-                      u.lastName || '',
-                      u.email || '',
-                      u.role,
-                      u.country || u.currentCountry || '',
-                      u.isOnline ? 'Oui' : 'Non',
-                      u.isBanned ? 'Oui' : 'Non',
-                      formatDate(u.createdAt),
-                      u.lastLoginAt.getTime() > 0 ? formatDate(u.lastLoginAt) : '',
-                    ].join(',')
-                  ),
-                ].join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `utilisateurs_${new Date().toISOString().split('T')[0]}.csv`;
-                link.click();
-              }}
-              className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 flex items-center space-x-2 text-sm"
-            >
-              <Download size={16} />
-              <span>Export</span>
+            <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <Download size={15} />
+              Export
             </button>
           </div>
         </div>
 
-        {error && <AdminErrorState error={error} onRetry={() => { setPage(1); }} />}
+        {error && <AdminErrorState error={error} onRetry={() => setPage(1)} />}
 
-        {/* Cards synthèse - Ligne 1: Principaux */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <User className="w-5 h-5 text-gray-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Total</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.all}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <User className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Clients</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.client}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Scale className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Avocats</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.lawyer}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Globe className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Expatriés</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.expat}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Shield className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Admins</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.admin}</p>
-              </div>
-            </div>
-          </div>
+        {/* ===== ROLE PILLS ===== */}
+        <div className="flex flex-wrap gap-1.5">
+          {([
+            { key: 'all', label: 'Tous', count: userCounts.all },
+            { key: 'client', label: 'Clients', count: userCounts.client || 0 },
+            { key: 'lawyer', label: 'Avocats', count: userCounts.lawyer || 0 },
+            { key: 'expat', label: 'Experts', count: userCounts.expat || 0 },
+            { key: 'chatter', label: 'Chatters', count: userCounts.chatter || 0 },
+            { key: 'influencer', label: 'Influenceurs', count: userCounts.influencer || 0 },
+            { key: 'blogger', label: 'Blogueurs', count: userCounts.blogger || 0 },
+            { key: 'groupAdmin', label: 'Group Admin', count: userCounts.groupAdmin || 0 },
+            { key: 'partner', label: 'Partenaires', count: userCounts.partner || 0 },
+            { key: 'admin', label: 'Admins', count: userCounts.admin || 0 },
+          ] as { key: 'all' | Role; label: string; count: number }[]).map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => { setSelectedRole(key); setPage(1); }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                selectedRole === key
+                  ? 'bg-gray-900 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {key !== 'all' && <span className={`w-1.5 h-1.5 rounded-full ${ROLE_CONFIG[key as Role]?.dot || 'bg-gray-400'}`} />}
+              {label}
+              <span className={`${selectedRole === key ? 'text-gray-300' : 'text-gray-400'}`}>{count}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Cards synthèse - Ligne 2: Nouveaux rôles */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-pink-100 rounded-lg">
-                <MessageCircle className="w-5 h-5 text-pink-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Chatters</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.chatter}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Megaphone className="w-5 h-5 text-orange-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Influenceurs</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.influencer}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-teal-100 rounded-lg">
-                <FileText className="w-5 h-5 text-teal-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Blogueurs</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.blogger}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-xs font-medium text-gray-500">Groupe Admin</h3>
-                <p className="text-xl font-bold text-gray-900">{userCounts.groupAdmin}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Barre de recherche et filtres rapides */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Rechercher par nom, email, ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedRole('all')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Tous
+        {/* ===== SEARCH + FILTERS BAR ===== */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Rechercher par nom, email ou ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={14} />
               </button>
-              <button
-                onClick={() => setSelectedRole('client')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'client' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Clients
-              </button>
-              <button
-                onClick={() => setSelectedRole('lawyer')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'lawyer' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Avocats
-              </button>
-              <button
-                onClick={() => setSelectedRole('expat')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'expat' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Expatriés
-              </button>
-              <button
-                onClick={() => setSelectedRole('admin')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'admin' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Admins
-              </button>
-              <button
-                onClick={() => setSelectedRole('chatter')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'chatter' ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Chatters
-              </button>
-              <button
-                onClick={() => setSelectedRole('influencer')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'influencer' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Influenceurs
-              </button>
-              <button
-                onClick={() => setSelectedRole('blogger')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'blogger' ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Blogueurs
-              </button>
-              <button
-                onClick={() => setSelectedRole('groupAdmin')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  selectedRole === 'groupAdmin' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Groupe Admin
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Panneau filtres avancés */}
-        {showAdvancedFilters && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-blue-900 flex items-center gap-2">
-                <Filter size={18} />
-                Filtres avancés
-              </h3>
-              <button
-                onClick={() => {
-                  setAdvancedFilters({
-                    onlineStatus: 'all',
-                    bannedStatus: 'all',
-                    emailVerified: 'all',
-                    approvalStatus: 'all',
-                    visibilityStatus: 'all',
-                    language: 'all',
-                  });
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-              >
-                <RefreshCw size={14} />
-                Réinitialiser
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {/* Statut en ligne */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Wifi size={14} />
-                  Statut en ligne
-                </label>
-                <select
-                  value={advancedFilters.onlineStatus}
-                  onChange={(e) =>
-                    setAdvancedFilters((prev) => ({
-                      ...prev,
-                      onlineStatus: e.target.value as AdvancedFilters['onlineStatus'],
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Tous</option>
-                  <option value="online">En ligne</option>
-                  <option value="offline">Hors ligne</option>
-                </select>
-              </div>
-
-              {/* Statut banni */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Ban size={14} />
-                  Statut compte
-                </label>
-                <select
-                  value={advancedFilters.bannedStatus}
-                  onChange={(e) =>
-                    setAdvancedFilters((prev) => ({
-                      ...prev,
-                      bannedStatus: e.target.value as AdvancedFilters['bannedStatus'],
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Tous</option>
-                  <option value="active">Actif</option>
-                  <option value="banned">Banni</option>
-                </select>
-              </div>
-
-              {/* Email vérifié */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Mail size={14} />
-                  Email vérifié
-                </label>
-                <select
-                  value={advancedFilters.emailVerified}
-                  onChange={(e) =>
-                    setAdvancedFilters((prev) => ({
-                      ...prev,
-                      emailVerified: e.target.value as AdvancedFilters['emailVerified'],
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Tous</option>
-                  <option value="verified">Vérifié</option>
-                  <option value="unverified">Non vérifié</option>
-                </select>
-              </div>
-
-              {/* Statut approbation */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <UserCheck size={14} />
-                  Approbation
-                </label>
-                <select
-                  value={advancedFilters.approvalStatus}
-                  onChange={(e) =>
-                    setAdvancedFilters((prev) => ({
-                      ...prev,
-                      approvalStatus: e.target.value as AdvancedFilters['approvalStatus'],
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Tous</option>
-                  <option value="approved">Approuvé</option>
-                  <option value="pending">En attente</option>
-                  <option value="rejected">Rejeté</option>
-                </select>
-              </div>
-
-              {/* Visibilité (prestataires) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Eye size={14} />
-                  Visibilité
-                </label>
-                <select
-                  value={advancedFilters.visibilityStatus}
-                  onChange={(e) =>
-                    setAdvancedFilters((prev) => ({
-                      ...prev,
-                      visibilityStatus: e.target.value as AdvancedFilters['visibilityStatus'],
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Tous</option>
-                  <option value="visible">Visible</option>
-                  <option value="hidden">Masqué</option>
-                </select>
-              </div>
-
-              {/* Langue parlée */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Languages size={14} />
-                  Langue
-                </label>
-                <select
-                  value={advancedFilters.language}
-                  onChange={(e) =>
-                    setAdvancedFilters((prev) => ({
-                      ...prev,
-                      language: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Toutes</option>
-                  {availableLanguages.map((lang) => (
-                    <option key={lang} value={lang}>
-                      {lang}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Résumé des filtres actifs */}
-            {Object.values(advancedFilters).some((v) => v !== 'all') && (
-              <div className="mt-4 pt-4 border-t border-blue-200">
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-sm text-gray-600">Filtres actifs :</span>
-                  {advancedFilters.onlineStatus !== 'all' && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center gap-1">
-                      {advancedFilters.onlineStatus === 'online' ? 'En ligne' : 'Hors ligne'}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setAdvancedFilters((prev) => ({ ...prev, onlineStatus: 'all' }))}
-                      />
-                    </span>
-                  )}
-                  {advancedFilters.bannedStatus !== 'all' && (
-                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs flex items-center gap-1">
-                      {advancedFilters.bannedStatus === 'banned' ? 'Banni' : 'Actif'}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setAdvancedFilters((prev) => ({ ...prev, bannedStatus: 'all' }))}
-                      />
-                    </span>
-                  )}
-                  {advancedFilters.emailVerified !== 'all' && (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs flex items-center gap-1">
-                      Email {advancedFilters.emailVerified === 'verified' ? 'vérifié' : 'non vérifié'}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setAdvancedFilters((prev) => ({ ...prev, emailVerified: 'all' }))}
-                      />
-                    </span>
-                  )}
-                  {advancedFilters.approvalStatus !== 'all' && (
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs flex items-center gap-1">
-                      {advancedFilters.approvalStatus === 'approved'
-                        ? 'Approuvé'
-                        : advancedFilters.approvalStatus === 'pending'
-                        ? 'En attente'
-                        : 'Rejeté'}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setAdvancedFilters((prev) => ({ ...prev, approvalStatus: 'all' }))}
-                      />
-                    </span>
-                  )}
-                  {advancedFilters.visibilityStatus !== 'all' && (
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs flex items-center gap-1">
-                      {advancedFilters.visibilityStatus === 'visible' ? 'Visible' : 'Masqué'}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setAdvancedFilters((prev) => ({ ...prev, visibilityStatus: 'all' }))}
-                      />
-                    </span>
-                  )}
-                  {advancedFilters.language !== 'all' && (
-                    <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs flex items-center gap-1">
-                      {advancedFilters.language}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setAdvancedFilters((prev) => ({ ...prev, language: 'all' }))}
-                      />
-                    </span>
-                  )}
-                </div>
-              </div>
             )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select value={selectedCountry} onChange={(e) => { setSelectedCountry(e.target.value); setPage(1); }}
+              className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-w-[140px]">
+              <option value="all">Tous les pays</option>
+              {countries.map((c) => <option key={c} value={c}>{getCountryFlag(c)} {getCountryName(c, 'fr') || c}</option>)}
+            </select>
+
+            <select value={`${sortField}-${sortDirection}`}
+              onChange={(e) => { const [f, d] = e.target.value.split('-') as ['createdAt'|'lastLoginAt'|'fullName','asc'|'desc']; setSortField(f); setSortDirection(d); setPage(1); }}
+              className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-w-[160px]">
+              <option value="createdAt-desc">Plus recents</option>
+              <option value="createdAt-asc">Plus anciens</option>
+              <option value="lastLoginAt-desc">Connexion recente</option>
+              <option value="fullName-asc">Nom A-Z</option>
+            </select>
+
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium rounded-xl border transition-all ${
+                activeFilterCount > 0
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Filter size={15} />
+              Filtres
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 flex items-center justify-center bg-red-600 text-white text-[10px] font-bold rounded-full">{activeFilterCount}</span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* ===== ADVANCED FILTERS PANEL ===== */}
+        {showAdvancedFilters && (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4 animate-in slide-in-from-top-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-700">Filtres avances</h3>
+              <button onClick={() => setAdvancedFilters({ onlineStatus: 'all', bannedStatus: 'all', emailVerified: 'all', approvalStatus: 'all', visibilityStatus: 'all', language: 'all' })}
+                className="text-xs text-red-600 hover:text-red-800 font-medium flex items-center gap-1">
+                <RefreshCw size={12} /> Reinitialiser
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[
+                { key: 'onlineStatus' as const, label: 'Statut', options: [['all','Tous'],['online','En ligne'],['offline','Hors ligne']] },
+                { key: 'bannedStatus' as const, label: 'Compte', options: [['all','Tous'],['active','Actif'],['banned','Banni']] },
+                { key: 'emailVerified' as const, label: 'Email', options: [['all','Tous'],['verified','Verifie'],['unverified','Non verifie']] },
+                { key: 'approvalStatus' as const, label: 'Approbation', options: [['all','Tous'],['approved','Approuve'],['pending','En attente'],['rejected','Rejete']] },
+                { key: 'visibilityStatus' as const, label: 'Visibilite', options: [['all','Tous'],['visible','Visible'],['hidden','Masque']] },
+              ].map(({ key, label, options }) => (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+                  <select value={advancedFilters[key]} onChange={(e) => setAdvancedFilters((p) => ({ ...p, [key]: e.target.value }))}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20">
+                    {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </div>
+              ))}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Langue</label>
+                <select value={advancedFilters.language} onChange={(e) => setAdvancedFilters((p) => ({ ...p, language: e.target.value }))}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20">
+                  <option value="all">Toutes</option>
+                  {availableLanguages.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Compteur de résultats + Barre d'actions bulk */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
-            {Object.values(advancedFilters).some((v) => v !== 'all') && ' (filtré)'}
-            {selectedUserIds.size > 0 && (
-              <span className="ml-2 font-semibold text-red-700">
-                — {selectedUserIds.size} sélectionné{selectedUserIds.size > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-          {selectedUserIds.size > 0 && (
+        {/* ===== BULK ACTIONS BAR ===== */}
+        {selectedUserIds.size > 0 && (
+          <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <span className="text-sm font-medium text-red-800">
+              {selectedUserIds.size} selectionne{selectedUserIds.size > 1 ? 's' : ''}
+            </span>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSelectedUserIds(new Set())}
-                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
-              >
-                Désélectionner tout
+              <button onClick={() => setSelectedUserIds(new Set())} className="text-sm text-red-600 hover:text-red-800 font-medium">
+                Deselectionner
               </button>
-              <button
-                onClick={handleBulkDelete}
-                className="px-4 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
-              >
-                <Trash2 size={14} />
-                Supprimer {selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''}
+              <button onClick={handleBulkDelete}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                <Trash2 size={14} /> Supprimer
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* ===== TABLE ===== */}
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50 sticky top-0 z-10">
-                <tr>
-                  <th scope="col" className="px-3 py-3 w-10">
-                    <input
-                      type="checkbox"
-                      checked={filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer"
-                    />
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="pl-4 pr-2 py-3 w-10">
+                    <input type="checkbox" checked={filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length}
+                      onChange={toggleSelectAll} className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer" />
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Photo
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilisateur</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Pays</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700" onClick={() => handleSortChange('createdAt')}>
+                    <span className="inline-flex items-center gap-1">Inscription <SortIcon field="createdAt" /></span>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Utilisateur
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 hidden lg:table-cell" onClick={() => handleSortChange('lastLoginAt')}>
+                    <span className="inline-flex items-center gap-1">Derniere connexion <SortIcon field="lastLoginAt" /></span>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rôle
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Pays
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSortChange('createdAt')}>
-                    Inscription {sortField === 'createdAt' && (sortDirection === 'desc' ? '↓' : '↑')}
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSortChange('lastLoginAt')}>
-                    Dernière connexion {sortField === 'lastLoginAt' && (sortDirection === 'desc' ? '↓' : '↑')}
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center">
-                      <LoadingSpinner text={adminT.loading} />
-                    </td>
-                  </tr>
+                  <tr><td colSpan={8} className="py-16 text-center"><LoadingSpinner text={adminT.loading} /></td></tr>
                 ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => (
-                    <tr key={u.id} className={`hover:bg-gray-50 ${selectedUserIds.has(u.id) ? 'bg-red-50' : ''}`}>
-                      <td className="px-3 py-4 w-10">
-                        <input
-                          type="checkbox"
-                          checked={selectedUserIds.has(u.id)}
-                          onChange={() => toggleSelectUser(u.id)}
-                          className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500 cursor-pointer"
-                        />
+                    <tr key={u.id} className={`group transition-colors hover:bg-gray-50/80 ${selectedUserIds.has(u.id) ? 'bg-red-50/50' : ''}`}>
+                      {/* Checkbox */}
+                      <td className="pl-4 pr-2 py-3">
+                        <input type="checkbox" checked={selectedUserIds.has(u.id)} onChange={() => toggleSelectUser(u.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer" />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-12 w-12 rounded-full bg-gray-100 overflow-hidden border">
+
+                      {/* User */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3 min-w-[200px]">
+                          <div className="relative flex-shrink-0">
                             <img
                               src={u.photoURL || u.profilePhoto || '/default-avatar.png'}
-                              alt={`Photo de ${u.firstName || 'utilisateur'}`}
-                              className="h-12 w-12 object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.onerror = null;
-                                target.src = '/default-avatar.png';
-                              }}
+                              alt=""
+                              className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.png'; }}
                             />
+                            {/* Online dot */}
+                            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${u.isOnline ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {u.firstName} {u.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">{u.email}</div>
+                          <div className="min-w-0">
+                            <button
+                              onClick={() => { setSelectedUser(u); setShowUserModal(true); fetchLastAffiliateClick(u); }}
+                              className="text-sm font-medium text-gray-900 hover:text-red-600 transition-colors truncate block max-w-[180px]"
+                              title={`${u.firstName || ''} ${u.lastName || ''}`}
+                            >
+                              {u.firstName || ''} {u.lastName || ''}
+                            </button>
+                            <p className="text-xs text-gray-500 truncate max-w-[180px]">{u.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(u.role)}`}>
-                          {getRoleLabel(u.role)}
+
+                      {/* Role */}
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${ROLE_CONFIG[u.role]?.bg || 'bg-gray-50 border-gray-200'} ${ROLE_CONFIG[u.role]?.color || 'text-gray-700'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${ROLE_CONFIG[u.role]?.dot || 'bg-gray-400'}`} />
+                          {ROLE_CONFIG[u.role]?.label || u.role}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{u.status ?? (u.isBanned ? 'Banni' : u.isOnline ? 'En ligne' : 'Hors ligne')}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{u.country ?? u.currentCountry ?? '—'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{formatDate(u.createdAt)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {u.lastLoginAt.getTime() > 0 ? formatDate(u.lastLoginAt) : '—'}
+
+                      {/* Country */}
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <span className="text-sm text-gray-600">
+                          {u.country || u.currentCountry ? `${getCountryFlag(u.country || u.currentCountry || '')} ${getCountryName(u.country || u.currentCountry || '', 'fr') || u.country || u.currentCountry}` : '—'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="small"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setShowUserModal(true);
-                              fetchLastAffiliateClick(u);
-                            }}
-                          >
-                            Voir
-                          </Button>
-                          {/* Bouton Dashboard - Accès au dashboard du profil */}
-                          {u.role !== 'admin' && (
-                            <Button
-                              size="small"
-                              variant="outline"
-                              className="border-cyan-500 text-cyan-700 hover:bg-cyan-50"
-                              onClick={() => handleViewDashboard(u)}
-                            >
-                              <ExternalLink size={14} className="mr-1" />
-                              Dashboard
-                            </Button>
+
+                      {/* Created */}
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-600" title={formatDateFull(u.createdAt)}>{formatDateShort(u.createdAt)}</span>
+                      </td>
+
+                      {/* Last login */}
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        <span className="text-sm text-gray-500" title={u.lastLoginAt.getTime() > 0 ? formatDateFull(u.lastLoginAt) : 'Jamais connecte'}>
+                          {timeAgo(u.lastLoginAt)}
+                        </span>
+                      </td>
+
+                      {/* Status badges */}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {u.isBanned && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700">BANNI</span>
                           )}
-                          <Button
-                            size="small"
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleEditUser(u)}
-                          >
-                            <Edit3 size={14} className="mr-1" />
-                            Modifier
-                          </Button>
-                          {u.isBanned ? (
-                            <Button size="small" onClick={() => void handleUnbanUser(u.id)}>
-                              Réactiver
-                            </Button>
-                          ) : (
-                            <Button
-                              size="small"
-                              className="bg-orange-600 hover:bg-orange-700"
-                              onClick={() => handleBanUser(u)}
-                            >
-                              Bannir
-                            </Button>
+                          {u.featured && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">VEDETTE</span>
                           )}
-                          <Button
-                            size="small"
-                            variant="outline"
-                            className="border-red-600 text-red-700"
-                            onClick={() => handleDeleteUser(u)}
+                          {u.isApproved === false && !u.isBanned && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">EN ATTENTE</span>
+                          )}
+                          {!u.isBanned && u.isApproved !== false && !u.featured && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">
+                              {u.isOnline ? 'En ligne' : 'Hors ligne'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Actions dropdown */}
+                      <td className="px-3 py-3">
+                        <div className="relative" ref={openActionMenuId === u.id ? actionMenuRef : undefined}>
+                          <button
+                            onClick={() => setOpenActionMenuId(openActionMenuId === u.id ? null : u.id)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                           >
-                            Supprimer
-                          </Button>
-                          {/* Exemples d'actions directes */}
-                          <Button
-                            size="small"
-                            variant="outline"
-                            onClick={() => void handleToggleOnlineStatus(u.id, Boolean(u.isOnline))}
-                          >
-                            {u.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
-                          </Button>
-                          {(u.role === 'lawyer' || u.role === 'expat' || u.role === 'chatter' || u.role === 'influencer' || u.role === 'blogger') && (
-                            <>
-                              <Button
-                                size="small"
-                                variant="outline"
-                                onClick={() => void handleToggleVisibility(u.id, Boolean(u.isVisibleOnMap))}
-                              >
-                                {u.isVisibleOnMap ? 'Masquer carte' : 'Montrer carte'}
-                              </Button>
-                              <Button
-                                size="small"
-                                variant="outline"
-                                onClick={() => void handleToggleFeatured(u.id, Boolean(u.featured))}
-                              >
-                                {u.featured ? 'Retirer "à la une"' : 'Mettre "à la une"'}
-                              </Button>
-                            </>
+                            <MoreHorizontal size={16} />
+                          </button>
+
+                          {openActionMenuId === u.id && (
+                            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 animate-in fade-in slide-in-from-top-1">
+                              {u.role !== 'admin' && (
+                                <button onClick={() => handleViewDashboard(u)}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                  <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
+                                </button>
+                              )}
+                              <button onClick={() => handleEditUser(u)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <Edit3 size={14} className="text-gray-500" /> Modifier le profil
+                              </button>
+                              <button onClick={() => void handleToggleOnlineStatus(u.id, Boolean(u.isOnline))}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                {u.isOnline ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-emerald-600" />}
+                                {u.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
+                              </button>
+                              {PROVIDER_ROLES.includes(u.role) && (
+                                <>
+                                  <button onClick={() => void handleToggleVisibility(u.id, Boolean(u.isVisibleOnMap))}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <MapPin size={14} className="text-gray-500" />
+                                    {u.isVisibleOnMap ? 'Masquer carte' : 'Montrer carte'}
+                                  </button>
+                                  <button onClick={() => void handleToggleFeatured(u.id, Boolean(u.featured))}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <Shield size={14} className="text-amber-500" />
+                                    {u.featured ? 'Retirer vedette' : 'Mettre en vedette'}
+                                  </button>
+                                </>
+                              )}
+                              <div className="border-t border-gray-100 my-1" />
+                              {u.isBanned ? (
+                                <button onClick={() => void handleUnbanUser(u.id)}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                                  <UserPlus size={14} /> Reactiver le compte
+                                </button>
+                              ) : (
+                                <button onClick={() => handleBanUser(u)}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
+                                  <Ban size={14} /> Bannir
+                                </button>
+                              )}
+                              <button onClick={() => handleDeleteUser(u)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
+                                <Trash2 size={14} /> Supprimer
+                              </button>
+                            </div>
                           )}
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
-                      Aucun utilisateur trouvé
-                    </td>
-                  </tr>
+                  <tr><td colSpan={8} className="py-16 text-center text-gray-400 text-sm">Aucun utilisateur trouve</td></tr>
                 )}
               </tbody>
             </table>
           </div>
 
+          {/* Load more */}
           {hasMore && (
-            <div className="px-6 py-4 border-t border-gray-200">
-              <Button onClick={handleLoadMore} disabled={loading} fullWidth>
-                {loading ? adminT.loading : adminT.loadMore}
-              </Button>
+            <div className="border-t border-gray-100 px-4 py-3">
+              <button onClick={() => setPage((p) => p + 1)} disabled={loading}
+                className="w-full py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50">
+                {loading ? 'Chargement...' : 'Charger plus'}
+              </button>
             </div>
           )}
         </div>
+
       </div>
 
-      {/* Modal de détails utilisateur */}
-      <Modal
-        isOpen={showUserModal}
-        onClose={() => setShowUserModal(false)}
-        title="Détails de l'utilisateur"
-        size="large"
-      >
+      {/* ================================================================== */}
+      {/* MODAL: USER DETAIL                                                */}
+      {/* ================================================================== */}
+      <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Detail utilisateur" size="large">
         {selectedUser && (
           <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium overflow-hidden">
-                {selectedUser.profilePhoto || selectedUser.photoURL ? (
-                  <img
-                    src={selectedUser.profilePhoto || selectedUser.photoURL || ''}
-                    alt={selectedUser.firstName || 'utilisateur'}
-                    className="h-16 w-16 object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = '/default-avatar.png';
-                    }}
-                  />
-                ) : (
-                  selectedUser.firstName?.[0] || selectedUser.email?.[0] || 'U'
-                )}
+            {/* Header */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <img src={selectedUser.photoURL || selectedUser.profilePhoto || '/default-avatar.png'} alt=""
+                  className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-100"
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.png'; }} />
+                <span className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white ${selectedUser.isOnline ? 'bg-emerald-500' : 'bg-gray-300'}`} />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {selectedUser.firstName} {selectedUser.lastName}
-                </h3>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className={`px-2 py-1 text-xs rounded-full ${getRoleBadgeColor(selectedUser.role)}`}>
-                    {getRoleLabel(selectedUser.role)}
+                <h3 className="text-lg font-bold text-gray-900">{selectedUser.firstName} {selectedUser.lastName}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${ROLE_CONFIG[selectedUser.role]?.bg} ${ROLE_CONFIG[selectedUser.role]?.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${ROLE_CONFIG[selectedUser.role]?.dot}`} />
+                    {ROLE_CONFIG[selectedUser.role]?.label}
                   </span>
-                  {selectedUser.isBanned && (
-                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                      Banni
-                    </span>
-                  )}
-                  {selectedUser.isTestProfile && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                      Profil de test
-                    </span>
-                  )}
+                  {selectedUser.isBanned && <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-md text-xs font-semibold">BANNI</span>}
+                  {selectedUser.isTestProfile && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">Test</span>}
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Informations personnelles</h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{selectedUser.email}</span>
+            {/* Info cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Contact */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Contact</h4>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <Mail size={15} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-900 break-all">{selectedUser.email || '—'}</span>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">
-                      {selectedUser.phoneCountryCode} {selectedUser.phone || 'Non renseigné'}
+                  <div className="flex items-center gap-2.5">
+                    <Phone size={15} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-900">{selectedUser.phoneCountryCode} {selectedUser.phone || 'Non renseigne'}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Globe size={15} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-900">
+                      {selectedUser.country || selectedUser.currentCountry
+                        ? `${getCountryFlag(selectedUser.country || selectedUser.currentCountry || '')} ${getCountryName(selectedUser.country || selectedUser.currentCountry || '', 'fr') || selectedUser.country || selectedUser.currentCountry}`
+                        : 'Non renseigne'}
                     </span>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">
-                      {selectedUser.country || selectedUser.currentCountry || 'Non renseigné'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">Inscrit le {formatDate(selectedUser.createdAt)}</span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">
-                      Dernière connexion : {selectedUser.lastLoginAt.getTime() > 0 ? formatDate(selectedUser.lastLoginAt) : 'Jamais'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <LinkIcon className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">
-                      Dernier clic affilié :{' '}
-                      {affiliateClickLoading
-                        ? 'Chargement...'
-                        : lastAffiliateClick
-                        ? formatDate(lastAffiliateClick)
-                        : 'Aucun'}
-                    </span>
-                  </div>
+                  {selectedUser.languages && selectedUser.languages.length > 0 && (
+                    <div className="flex items-center gap-2.5">
+                      <Languages size={15} className="text-gray-400 flex-shrink-0" />
+                      <div className="flex flex-wrap gap-1">
+                        {selectedUser.languages.map((l) => (
+                          <span key={l} className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600">{l}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Paramètres du compte</h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Email vérifié</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedUser.emailVerified || selectedUser.isVerifiedEmail
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {selectedUser.emailVerified || selectedUser.isVerifiedEmail ? 'Oui' : 'Non'}
+              {/* Dates & Activity */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activite</h4>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Calendar size={15} className="text-gray-400" />
+                      <span className="text-sm text-gray-600">Inscription</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{formatDateShort(selectedUser.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Clock size={15} className="text-gray-400" />
+                      <span className="text-sm text-gray-600">Derniere connexion</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900" title={selectedUser.lastLoginAt.getTime() > 0 ? formatDateFull(selectedUser.lastLoginAt) : ''}>
+                      {selectedUser.lastLoginAt.getTime() > 0 ? timeAgo(selectedUser.lastLoginAt) : 'Jamais'}
                     </span>
                   </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Compte approuvé</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedUser.isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {selectedUser.isApproved ? 'Oui' : 'En attente'}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <LinkIcon size={15} className="text-gray-400" />
+                      <span className="text-sm text-gray-600">Dernier clic affilie</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {affiliateClickLoading ? (
+                        <span className="text-gray-400">...</span>
+                      ) : lastAffiliateClick ? (
+                        <span title={formatDateFull(lastAffiliateClick)}>{timeAgo(lastAffiliateClick)}</span>
+                      ) : 'Aucun'}
                     </span>
                   </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Statut en ligne</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedUser.isOnline ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {selectedUser.isOnline ? 'En ligne' : 'Hors ligne'}
-                    </span>
-                  </div>
-
-                  {(selectedUser.role === 'lawyer' || selectedUser.role === 'expat' || selectedUser.role === 'chatter' || selectedUser.role === 'influencer' || selectedUser.role === 'blogger') && (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Visible sur la carte</span>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            selectedUser.isVisibleOnMap ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {selectedUser.isVisibleOnMap ? 'Oui' : 'Non'}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Mis en avant</span>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            selectedUser.featured ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {selectedUser.featured ? 'Oui' : 'Non'}
-                        </span>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
 
-            {selectedUser.isBanned && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-red-800 mb-2">Raison du bannissement</h4>
-                <p className="text-red-700">{selectedUser.banReason || 'Aucune raison spécifiée'}</p>
+            {/* Account status */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Compte</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Email verifie', value: !!(selectedUser.emailVerified || selectedUser.isVerifiedEmail), yes: 'Oui', no: 'Non' },
+                  { label: 'Approuve', value: !!selectedUser.isApproved, yes: 'Oui', no: 'En attente' },
+                  { label: 'En ligne', value: !!selectedUser.isOnline, yes: 'En ligne', no: 'Hors ligne' },
+                  ...(PROVIDER_ROLES.includes(selectedUser.role)
+                    ? [
+                        { label: 'Visible carte', value: !!selectedUser.isVisibleOnMap, yes: 'Oui', no: 'Non' },
+                        { label: 'Vedette', value: !!selectedUser.featured, yes: 'Oui', no: 'Non' },
+                      ]
+                    : []),
+                ].map(({ label, value, yes, no }) => (
+                  <div key={label} className="flex flex-col items-center bg-white rounded-lg p-2.5 border border-gray-100">
+                    <span className="text-[10px] font-medium text-gray-400 uppercase">{label}</span>
+                    <span className={`mt-1 text-xs font-semibold ${value ? 'text-emerald-600' : 'text-gray-500'}`}>
+                      {value ? yes : no}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedUser.isBanned && selectedUser.banReason && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <h4 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Raison du bannissement</h4>
+                <p className="text-sm text-red-700">{selectedUser.banReason}</p>
               </div>
             )}
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button onClick={() => setShowUserModal(false)} variant="outline">
-                Fermer
-              </Button>
+            {/* ID */}
+            <div className="text-xs text-gray-400 font-mono select-all">ID: {selectedUser.id}</div>
 
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <Button onClick={() => setShowUserModal(false)} variant="outline" size="small">Fermer</Button>
               {selectedUser.role !== 'admin' && (
-                <Button
-                  onClick={() => {
-                    setShowUserModal(false);
-                    handleViewDashboard(selectedUser);
-                  }}
-                  className="bg-cyan-600 hover:bg-cyan-700"
-                >
-                  <ExternalLink size={16} className="mr-2" />
-                  Dashboard
+                <Button size="small" onClick={() => { setShowUserModal(false); handleViewDashboard(selectedUser); }}
+                  className="bg-cyan-600 hover:bg-cyan-700">
+                  <ExternalLink size={14} className="mr-1.5" /> Dashboard
                 </Button>
               )}
-
-              <Button
-                onClick={() => {
-                  setShowUserModal(false);
-                  handleEditUser(selectedUser);
-                }}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Edit3 size={16} className="mr-2" />
-                Modifier
+              <Button size="small" onClick={() => { setShowUserModal(false); handleEditUser(selectedUser); }}
+                className="bg-gray-900 hover:bg-gray-800">
+                <Edit3 size={14} className="mr-1.5" /> Modifier
               </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal de confirmation de suppression */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title={`Supprimer ${selectedUser?.firstName || ''} ${selectedUser?.lastName || ''}`}
-        size="small"
-      >
+      {/* ================================================================== */}
+      {/* MODAL: DELETE                                                      */}
+      {/* ================================================================== */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Supprimer l'utilisateur" size="small">
         {selectedUser && (
           <div className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="flex">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Attention : Cette action est irréversible</h3>
-                  <div className="mt-2 text-sm text-red-700">
-                    <p>
-                      Utilisateur : <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>
-                      <br />
-                      Role : <span className={`px-2 py-0.5 text-xs rounded-full ${getRoleBadgeColor(selectedUser.role)}`}>{getRoleLabel(selectedUser.role)}</span>
-                      <br />
-                      Email : {selectedUser.email}
-                    </p>
-                    <p className="mt-2">
-                      Toutes les données seront supprimées : compte Firebase Auth, documents Firestore,
-                      commissions, retraits, notifications et sous-collections associées.
-                    </p>
-                  </div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-red-800">Action irreversible</h3>
+                  <p className="mt-1 text-sm text-red-700">
+                    <strong>{selectedUser.firstName} {selectedUser.lastName}</strong> ({ROLE_CONFIG[selectedUser.role]?.label}) sera supprime definitivement avec toutes ses donnees.
+                  </p>
                 </div>
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Raison de la suppression
-              </label>
-              <textarea
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="Raison optionnelle..."
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Raison (optionnelle)</label>
+              <textarea value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)} rows={2}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 resize-none" placeholder="..." />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tapez <strong>SUPPRIMER</strong> pour confirmer
-              </label>
-              <input
-                type="text"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="SUPPRIMER"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tapez <strong className="text-red-600">SUPPRIMER</strong> pour confirmer</label>
+              <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" placeholder="SUPPRIMER" />
             </div>
-
-            <div className="flex justify-end space-x-3">
-              <Button onClick={() => setShowDeleteModal(false)} variant="outline" disabled={isActionLoading}>
-                Annuler
-              </Button>
-              <Button
-                onClick={confirmDeleteUser}
-                className="bg-red-600 hover:bg-red-700"
-                loading={isActionLoading}
-                disabled={deleteConfirmText !== 'SUPPRIMER'}
-              >
-                <Trash2 size={16} className="mr-2" />
-                Supprimer définitivement
+            <div className="flex justify-end gap-2 pt-2">
+              <Button onClick={() => setShowDeleteModal(false)} variant="outline" size="small" disabled={isActionLoading}>Annuler</Button>
+              <Button onClick={confirmDeleteUser} variant="danger" size="small" loading={isActionLoading} disabled={deleteConfirmText !== 'SUPPRIMER'}>
+                <Trash2 size={14} className="mr-1.5" /> Supprimer
               </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal de suppression en lot */}
-      <Modal
-        isOpen={showBulkDeleteModal}
-        onClose={() => setShowBulkDeleteModal(false)}
-        title={`Supprimer ${selectedUserIds.size} utilisateur${selectedUserIds.size > 1 ? 's' : ''}`}
-        size="small"
-      >
+      {/* ================================================================== */}
+      {/* MODAL: BULK DELETE                                                 */}
+      {/* ================================================================== */}
+      <Modal isOpen={showBulkDeleteModal} onClose={() => setShowBulkDeleteModal(false)} title={`Supprimer ${selectedUserIds.size} utilisateur${selectedUserIds.size > 1 ? 's' : ''}`} size="small">
         <div className="space-y-4">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Suppression en lot irréversible</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>
-                    Vous allez supprimer <strong>{selectedUserIds.size}</strong> utilisateur{selectedUserIds.size > 1 ? 's' : ''} définitivement.
-                  </p>
-                  <p className="mt-1">
-                    Pour chaque compte : Firebase Auth, documents Firestore, commissions, retraits,
-                    et toutes les sous-collections seront supprimés.
-                  </p>
-                  <div className="mt-2 max-h-32 overflow-y-auto">
-                    {Array.from(selectedUserIds).map((id) => {
-                      const u = users.find((user) => user.id === id);
-                      return (
-                        <div key={id} className="text-xs py-0.5">
-                          {u ? `${u.firstName || ''} ${u.lastName || ''} (${getRoleLabel(u.role)})` : id}
-                        </div>
-                      );
-                    })}
-                  </div>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-semibold text-red-800">Suppression en lot irreversible</h3>
+                <p className="mt-1 text-sm text-red-700">{selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''} seront supprimes.</p>
+                <div className="mt-2 max-h-24 overflow-y-auto space-y-0.5">
+                  {Array.from(selectedUserIds).map((id) => {
+                    const u = users.find((user) => user.id === id);
+                    return <div key={id} className="text-xs text-red-600">{u ? `${u.firstName || ''} ${u.lastName || ''} (${ROLE_CONFIG[u.role]?.label})` : id}</div>;
+                  })}
                 </div>
               </div>
             </div>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Raison</label>
-            <textarea
-              value={bulkDeleteReason}
-              onChange={(e) => setBulkDeleteReason(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              placeholder="Raison optionnelle..."
-            />
+            <textarea value={bulkDeleteReason} onChange={(e) => setBulkDeleteReason(e.target.value)} rows={2}
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none" />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tapez <strong>SUPPRIMER</strong> pour confirmer
-            </label>
-            <input
-              type="text"
-              value={bulkDeleteConfirmText}
-              onChange={(e) => setBulkDeleteConfirmText(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              placeholder="SUPPRIMER"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tapez <strong className="text-red-600">SUPPRIMER</strong></label>
+            <input type="text" value={bulkDeleteConfirmText} onChange={(e) => setBulkDeleteConfirmText(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20" placeholder="SUPPRIMER" />
           </div>
-
           {bulkDeleteProgress.total > 0 && (
             <div>
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Progression</span>
-                <span>{bulkDeleteProgress.current}/{bulkDeleteProgress.total}</span>
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Progression</span><span>{bulkDeleteProgress.current}/{bulkDeleteProgress.total}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-red-600 h-2 rounded-full transition-all"
-                  style={{ width: `${(bulkDeleteProgress.current / bulkDeleteProgress.total) * 100}%` }}
-                />
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className="bg-red-600 h-1.5 rounded-full transition-all" style={{ width: `${(bulkDeleteProgress.current / bulkDeleteProgress.total) * 100}%` }} />
               </div>
             </div>
           )}
-
-          <div className="flex justify-end space-x-3">
-            <Button onClick={() => setShowBulkDeleteModal(false)} variant="outline" disabled={isActionLoading}>
-              Annuler
-            </Button>
-            <Button
-              onClick={executeBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-              loading={isActionLoading}
-              disabled={bulkDeleteConfirmText !== 'SUPPRIMER'}
-            >
-              <Trash2 size={16} className="mr-2" />
-              Supprimer {selectedUserIds.size} utilisateur{selectedUserIds.size > 1 ? 's' : ''}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button onClick={() => setShowBulkDeleteModal(false)} variant="outline" size="small" disabled={isActionLoading}>Annuler</Button>
+            <Button onClick={executeBulkDelete} variant="danger" size="small" loading={isActionLoading} disabled={bulkDeleteConfirmText !== 'SUPPRIMER'}>
+              <Trash2 size={14} className="mr-1.5" /> Supprimer {selectedUserIds.size}
             </Button>
           </div>
         </div>
       </Modal>
 
-      {/* Modal de bannissement */}
-      <Modal
-        isOpen={showBanModal}
-        onClose={() => setShowBanModal(false)}
-        title="Bannir l'utilisateur"
-        size="small"
-      >
+      {/* ================================================================== */}
+      {/* MODAL: BAN                                                         */}
+      {/* ================================================================== */}
+      <Modal isOpen={showBanModal} onClose={() => setShowBanModal(false)} title="Bannir l'utilisateur" size="small">
         {selectedUser && (
           <div className="space-y-4">
-            <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
-              <div className="flex">
-                <Ban className="h-5 w-5 text-orange-400" />
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-orange-800">Bannissement d'utilisateur</h3>
-                  <div className="mt-2 text-sm text-orange-700">
-                    <p>
-                      Vous êtes sur le point de bannir l'utilisateur :
-                      <br />
-                      <strong>
-                        {selectedUser.firstName} {selectedUser.lastName}
-                      </strong>
-                    </p>
-                    <p className="mt-1">L'utilisateur ne pourra plus se connecter ni utiliser la plateforme.</p>
-                  </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <div className="flex gap-3">
+                <Ban className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-orange-800">Bannissement</h3>
+                  <p className="mt-1 text-sm text-orange-700">
+                    <strong>{selectedUser.firstName} {selectedUser.lastName}</strong> ne pourra plus se connecter.
+                  </p>
                 </div>
               </div>
             </div>
-
             <div>
-              <label htmlFor="banReason" className="block text-sm font-medium text-gray-700 mb-1">
-                Raison du bannissement
-              </label>
-              <textarea
-                id="banReason"
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="Expliquez la raison du bannissement..."
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Raison du bannissement</label>
+              <textarea value={banReason} onChange={(e) => setBanReason(e.target.value)} rows={3}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 resize-none" placeholder="Raison..." />
             </div>
-
-            <div className="flex justify-end space-x-3">
-              <Button onClick={() => setShowBanModal(false)} variant="outline" disabled={isActionLoading}>
-                Annuler
-              </Button>
-              <Button onClick={confirmBanUser} className="bg-orange-600 hover:bg-orange-700" loading={isActionLoading}>
-                Bannir l'utilisateur
+            <div className="flex justify-end gap-2 pt-2">
+              <Button onClick={() => setShowBanModal(false)} variant="outline" size="small" disabled={isActionLoading}>Annuler</Button>
+              <Button onClick={confirmBanUser} size="small" loading={isActionLoading} className="bg-orange-600 hover:bg-orange-700">
+                <Ban size={14} className="mr-1.5" /> Bannir
               </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* ========== EDIT PROFILE MODAL ========== */}
-      <Modal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        title={`Modifier le profil — ${editTargetUser?.firstName || ''} ${editTargetUser?.lastName || ''}`}
-      >
+      {/* ================================================================== */}
+      {/* MODAL: EDIT PROFILE                                                */}
+      {/* ================================================================== */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={`Modifier — ${editTargetUser?.firstName || ''} ${editTargetUser?.lastName || ''}`}>
         {editTargetUser && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-                <input type="text" value={editFields.firstName} onChange={(e) => setEditFields(prev => ({ ...prev, firstName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+                <label className="block text-xs font-medium text-gray-500 mb-1">Prenom</label>
+                <input type="text" value={editFields.firstName} onChange={(e) => setEditFields((p) => ({ ...p, firstName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                <input type="text" value={editFields.lastName} onChange={(e) => setEditFields(prev => ({ ...prev, lastName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1"><Mail size={14} className="inline mr-1" />Email</label>
-              <input type="email" value={editFields.email} onChange={(e) => setEditFields(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1"><Phone size={14} className="inline mr-1" />Téléphone</label>
-                <input type="tel" value={editFields.phone} onChange={(e) => setEditFields(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+33 6 12 34 56 78"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Indicatif pays</label>
-                <input type="text" value={editFields.phoneCountryCode} onChange={(e) => setEditFields(prev => ({ ...prev, phoneCountryCode: e.target.value }))}
-                  placeholder="+33"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1"><Globe size={14} className="inline mr-1" />Pays d'origine</label>
-                <input type="text" value={editFields.country} onChange={(e) => setEditFields(prev => ({ ...prev, country: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1"><MapPin size={14} className="inline mr-1" />Pays actuel</label>
-                <input type="text" value={editFields.currentCountry} onChange={(e) => setEditFields(prev => ({ ...prev, currentCountry: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+                <label className="block text-xs font-medium text-gray-500 mb-1">Nom</label>
+                <input type="text" value={editFields.lastName} onChange={(e) => setEditFields((p) => ({ ...p, lastName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1"><Languages size={14} className="inline mr-1" />Langues (séparées par virgule)</label>
-              <input type="text" value={editFields.languages} onChange={(e) => setEditFields(prev => ({ ...prev, languages: e.target.value }))}
-                placeholder="fr, en, es"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
+              <input type="email" value={editFields.email} onChange={(e) => setEditFields((p) => ({ ...p, email: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Telephone</label>
+                <input type="tel" value={editFields.phone} onChange={(e) => setEditFields((p) => ({ ...p, phone: e.target.value }))} placeholder="+33 6 12 34 56 78"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Indicatif</label>
+                <input type="text" value={editFields.phoneCountryCode} onChange={(e) => setEditFields((p) => ({ ...p, phoneCountryCode: e.target.value }))} placeholder="+33"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Pays d'origine</label>
+                <input type="text" value={editFields.country} onChange={(e) => setEditFields((p) => ({ ...p, country: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Pays actuel</label>
+                <input type="text" value={editFields.currentCountry} onChange={(e) => setEditFields((p) => ({ ...p, currentCountry: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1"><AlertTriangle size={14} className="inline mr-1" />Notes admin (internes)</label>
-              <textarea value={editFields.adminNotes} onChange={(e) => setEditFields(prev => ({ ...prev, adminNotes: e.target.value }))}
+              <label className="block text-xs font-medium text-gray-500 mb-1">Langues (separees par virgule)</label>
+              <input type="text" value={editFields.languages} onChange={(e) => setEditFields((p) => ({ ...p, languages: e.target.value }))} placeholder="fr, en, es"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Notes admin (internes)</label>
+              <textarea value={editFields.adminNotes} onChange={(e) => setEditFields((p) => ({ ...p, adminNotes: e.target.value }))}
                 rows={3} placeholder="Notes visibles uniquement par les admins..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-y" />
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 resize-y" />
             </div>
-
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button onClick={() => setShowEditModal(false)} variant="outline" disabled={editLoading}>
-                Annuler
-              </Button>
-              <Button onClick={handleSaveProfile} className="bg-green-600 hover:bg-green-700" loading={editLoading}>
-                <Save size={16} className="mr-2" />
-                Enregistrer
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <Button onClick={() => setShowEditModal(false)} variant="outline" size="small" disabled={editLoading}>Annuler</Button>
+              <Button onClick={handleSaveProfile} size="small" loading={editLoading} className="bg-gray-900 hover:bg-gray-800">
+                <Save size={14} className="mr-1.5" /> Enregistrer
               </Button>
             </div>
           </div>
