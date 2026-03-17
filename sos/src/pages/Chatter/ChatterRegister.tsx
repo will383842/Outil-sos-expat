@@ -440,7 +440,7 @@ const ChatterRegister: React.FC = () => {
               <p className="text-gray-500 mb-6">
                 <FormattedMessage
                   id="chatter.register.emailExists.hint"
-                  defaultMessage="Connectez-vous pour continuer votre inscription et recevoir votre bonus de $50."
+                  defaultMessage="Connectez-vous pour continuer votre inscription et recevoir votre bonus."
                 />
               </p>
 

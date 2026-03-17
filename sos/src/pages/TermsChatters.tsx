@@ -180,7 +180,7 @@ const TermsChatters: React.FC = () => {
         "Comisiones atractivas hasta el 50%",
         "Pagos rápidos en 7 días",
         "Programa de referidos multinivel",
-        "Bono early adopter +50%",
+        "Baremos consultables en tu panel",
       ],
       languageToggle: "Cambiar idioma",
       sections: {
@@ -221,7 +221,7 @@ const TermsChatters: React.FC = () => {
         "Attraktive Provisionen bis zu 50%",
         "Schnelle Zahlungen innerhalb von 7 Tagen",
         "Mehrstufiges Empfehlungsprogramm",
-        "Early Adopter +50% Bonus",
+        "Rates visible in your dashboard",
       ],
       languageToggle: "Sprache wechseln",
       sections: {
@@ -262,7 +262,7 @@ const TermsChatters: React.FC = () => {
         "Привлекательные комиссии до 50%",
         "Быстрые выплаты в течение 7 дней",
         "Многоуровневая реферальная программа",
-        "Бонус для первых +50%",
+        "Тарифы в вашей панели управления",
       ],
       languageToggle: "Сменить язык",
       sections: {
@@ -303,7 +303,7 @@ const TermsChatters: React.FC = () => {
         "50% तक आकर्षक कमीशन",
         "7 दिनों में तेज़ भुगतान",
         "बहु-स्तरीय रेफरल कार्यक्रम",
-        "अर्ली एडॉप्टर +50% बोनस",
+        "दरें आपके डैशबोर्ड में दिखाई देती हैं",
       ],
       languageToggle: "भाषा बदलें",
       sections: {
@@ -344,7 +344,7 @@ const TermsChatters: React.FC = () => {
         "高达 50% 的诱人佣金",
         "7 天内快速付款",
         "多级推荐计划",
-        "早期采用者 +50% 奖金",
+        "费率显示在您的仪表板中",
       ],
       languageToggle: "切换语言",
       sections: {
@@ -385,7 +385,7 @@ const TermsChatters: React.FC = () => {
         "عمولات جذابة تصل إلى 50%",
         "دفعات سريعة خلال 7 أيام",
         "برنامج إحالة متعدد المستويات",
-        "مكافأة المتبنين الأوائل +50%",
+        "الأسعار متاحة في لوحة التحكم",
       ],
       languageToggle: "تغيير اللغة",
       sections: {
@@ -426,7 +426,7 @@ const TermsChatters: React.FC = () => {
         "Comissões atrativas até 50%",
         "Pagamentos rápidos em 7 dias",
         "Programa de indicação multinível",
-        "Bônus early adopter +50%",
+        "Taxas visíveis no seu painel",
       ],
       languageToggle: "Mudar idioma",
       sections: {
@@ -656,7 +656,7 @@ const TermsChatters: React.FC = () => {
 
 **Filleul** : tout nouvel utilisateur (client, prestataire ou chatter) inscrit via le Code du Chatter.
 
-**Early Adopter** : Chatter parmi les 100 premiers inscrits dans un pays, bénéficiant d'un bonus de +50% à vie.
+**Early Adopter** : Chatter parmi les premiers inscrits dans un pays, pouvant bénéficier d'avantages spéciaux selon le programme en vigueur.
 
 **Niveau 1 (N1)** : Filleuls directs du Chatter.
 
@@ -690,7 +690,7 @@ const TermsChatters: React.FC = () => {
 
 3.4. **Niveaux.** Le Chatter peut progresser du niveau 1 à 5 selon ses performances, débloquant des avantages supplémentaires.
 
-3.5. **Early Adopter.** Les 100 premiers Chatters inscrits par pays bénéficient d'un bonus permanent de **+50%** sur toutes leurs commissions.
+3.5. **Early Adopter.** Les premiers Chatters inscrits par pays peuvent bénéficier d'avantages spéciaux selon le programme en vigueur, consultable dans le tableau de bord.
 
 ---
 
@@ -775,9 +775,9 @@ const TermsChatters: React.FC = () => {
 
 7.3. **Délais.** Paiements traités sous **7 jours ouvrés** après validation (délais bancaires supplémentaires possibles).
 
-7.4. **Seuil minimum.** Retrait possible à partir de **20€** de solde disponible.
+7.4. **Seuil minimum.** Retrait possible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
-7.5. **Devise et conversion.** Les commissions directes (4.1) sont exprimées en pourcentage de la transaction. Les commissions N1/N2 sont exprimées en USD. Conversion au taux Wise du jour si demandée ; **frais de conversion à la charge du Chatter**.
+7.5. **Devise et conversion.** Les commissions sont exprimées en USD. Conversion au taux du jour si demandée ; **frais de conversion à la charge du Chatter**.
 
 7.6. **Fonds non réclamés.** Si KYC non complété sous **180 jours**, fonds considérés abandonnés.
 
@@ -920,7 +920,7 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 **Referral**: any new user (client, provider, or chatter) registered via the Chatter's Code.
 
-**Early Adopter**: Chatter among the first 100 registered in a country, benefiting from a permanent +50% bonus.
+**Early Adopter**: Chatter among the first registered in a country, potentially benefiting from special advantages per the current program.
 
 **Level 1 (N1)**: Direct referrals of the Chatter.
 
@@ -954,49 +954,28 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 3.4. **Levels.** The Chatter can progress from level 1 to 5 based on performance, unlocking additional benefits.
 
-3.5. **Early Adopter.** The first 100 Chatters registered per country receive a permanent **+50%** bonus on all commissions.
+3.5. **Early Adopter.** The first Chatters registered per country may receive special advantages per the current program, visible in the dashboard.
 
 ---
 
 ## 4. Commissions and Compensation
 
-4.1. **Client Commissions.** The Chatter earns a commission on each paid call generated via their Affiliate Code:
-- Level 1-2: **15%** of transaction amount
-- Level 3: **20%**
-- Level 4: **25%**
-- Level 5: **30%**
-- Early Adopter: **+50%** permanent bonus
+4.1. **Client Commissions.** The Chatter earns a fixed commission on each paid call generated via their Affiliate Code. The amount per call is defined in the **current rate schedule**, available at all times in your dashboard.
 
-4.2. **Recruitment Commissions (N1 Referral).** The Chatter earns commissions on N1 Referral performance, for **12 months** from each N1 Referral's registration date. **Cumulative conditions to earn this commission:**
-- The Chatter must achieve a minimum of **$50 in direct commissions** (Article 4.1) during the calendar month concerned
-- The Chatter must ensure training and follow-up of their N1 Referrals: sharing program resources, responding to questions within 48 hours, assisting with dashboard onboarding
-- In the absence of these conditions in a given month, N1 commissions for that month are suspended (non-retroactive)
-- **€5** per activated N1 Chatter (2+ calls, paid at activation, no threshold condition)
-- **$1** per client call from your N1 referrals (for 12 months, subject to conditions above)
+4.2. **Recruitment Commissions (N1 Referral).** The Chatter earns commissions on N1 Referral performance, for the **duration defined in the current rate schedule** from each N1 Referral's registration date. The amount per call is indicated in your dashboard.
 
-4.3. **Recruitment Commissions (N2 Referral).** The Chatter earns commissions on N2 Referral performance, for **12 months** from each N2 Referral's registration date. The **same cumulative conditions** as in 4.2 apply.
-- **$0.50** per client call from your N2 referrals (for 12 months, subject to conditions above)
+4.3. **Recruitment Commissions (N2 Referral).** The Chatter earns commissions on N2 Referral performance, for the **duration defined in the current rate schedule** from each N2 Referral's registration date. The amount per call is indicated in your dashboard.
 
-4.4. **Maximum Affiliate Commission Duration.** Commissions on Referrals (N1 and N2) are paid for a **maximum of 12 months** from each referral's registration date. After this period, the Chatter retains only their direct commissions (Article 4.1). They may recruit new referrals to start new 12-month periods.
+4.4. **Maximum Affiliate Commission Duration.** Commissions on Referrals (N1 and N2) are paid for the **maximum duration defined in the current rate schedule** from each referral's registration date. After this period, the Chatter retains only their direct commissions (Article 4.1). They may recruit new referrals to start new periods.
 
-4.5. **Commission Schedule (summary).**
-
-| Commission Type | Amount | Duration | Conditions |
-|---|---|---|---|
-| Direct client call (via affiliate code) | 15-30% | Unlimited | None |
-| N1 Chatter Referral activation | €5 | One-time | At activation |
-| Client call via N1 Referral | $1/call | 12 months | $50/month + training |
-| Client call via N2 Referral | $0.50/call | 12 months | $50/month + training |
+4.5. **Current Rate Schedule.** Exact commission amounts, durations, and applicable conditions are available at all times in your **affiliate dashboard**. SOS Expat reserves the right to modify the rate schedule with **30 days' notice** by email.
 
 4.6. **Payment Thresholds.** Commissions are validated after:
 - Client withdrawal period (14 days)
 - Automatic anti-fraud validation
-- Reaching minimum withdrawal threshold (**€20**)
+- Reaching the **minimum withdrawal threshold** indicated in your dashboard
 
-4.7. **Bonuses and Challenges.** Additional bonuses may be granted through:
-- Weekly challenges
-- Recruitment milestones (5, 10, 20, 50, 100, 500 referrals)
-- Special events
+4.7. **Bonuses and Challenges.** Additional bonuses may be granted through special events or performance milestones, per conditions published in the dashboard.
 
 ---
 
@@ -1046,7 +1025,9 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 6.5. **Independence.** The Chatter acts as an **independent contractor**; no employment, agency, or mandate relationship is created with SOS Expat. They are solely responsible for their social contributions and tax obligations.
 
-6.6. **Partial Exclusivity.** The Chatter may promote other services, except direct SOS Expat competitors (platforms connecting clients to lawyers or expat experts).
+6.6. **Local Compliance.** The Chatter is solely responsible for verifying and complying with all legal, tax, and regulatory obligations applicable in their country of residence or activity. This includes but is not limited to: obtaining any required legal status (sole proprietor, freelancer, self-employed, or local equivalent), registration with relevant authorities, declaring affiliate income, and complying with any local regulations relating to commercial referral or affiliate marketing activities. SOS Expat is not responsible for the Chatter's failure to comply with their local obligations.
+
+6.7. **Partial Exclusivity.** The Chatter may promote other services, except direct SOS Expat competitors (platforms connecting clients to lawyers or expat experts).
 
 ---
 
@@ -1058,9 +1039,9 @@ Pour toute question concernant le programme Chatters, contactez-nous via le form
 
 7.3. **Timing.** Payments processed within **7 business days** after validation (additional bank delays possible).
 
-7.4. **Minimum Threshold.** Withdrawal from **€20** available balance.
+7.4. **Minimum Threshold.** Withdrawal from the **minimum threshold indicated in your dashboard**.
 
-7.5. **Currency and Conversion.** Direct commissions (4.1) are expressed as a percentage of the transaction. N1/N2 commissions are expressed in USD. Conversion at the daily Wise rate if requested; **conversion fees are at the Chatter's expense**.
+7.5. **Currency and Conversion.** Commissions are expressed in USD. Conversion at the daily rate if requested; **conversion fees are at the Chatter's expense**.
 
 7.6. **Unclaimed Funds.** If KYC is not completed within **180 days**, funds are considered abandoned.
 

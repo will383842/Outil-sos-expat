@@ -641,8 +641,8 @@ const BloggerRegister: React.FC = () => {
   const seoDescription = intl.formatMessage({ id: 'blogger.register.seo.description', defaultMessage: 'Inscrivez-vous au programme Blogger SOS-Expat.' });
 
   const benefits = [
-    { icon: <Gift className="w-5 h-5 text-purple-400" />, text: intl.formatMessage({ id: 'blogger.register.benefit1', defaultMessage: '$10 per referred client' }) },
-    { icon: <PenTool className="w-5 h-5 text-violet-400" />, text: intl.formatMessage({ id: 'blogger.register.benefit2', defaultMessage: '$5 per recruited provider' }) },
+    { icon: <Gift className="w-5 h-5 text-purple-400" />, text: intl.formatMessage({ id: 'blogger.register.benefit1', defaultMessage: 'Commission per referred client' }) },
+    { icon: <PenTool className="w-5 h-5 text-violet-400" />, text: intl.formatMessage({ id: 'blogger.register.benefit2', defaultMessage: 'Commission per recruited provider' }) },
     { icon: <BarChart3 className="w-5 h-5 text-blue-400" />, text: intl.formatMessage({ id: 'blogger.register.benefit3', defaultMessage: 'Banners, widgets, QR codes included' }) },
     { icon: <CheckCircle className="w-5 h-5 text-green-400" />, text: intl.formatMessage({ id: 'blogger.register.benefit4', defaultMessage: 'Instant activation (no quiz)' }) },
   ];
@@ -678,7 +678,7 @@ const BloggerRegister: React.FC = () => {
               <FormattedMessage id="blogger.register.title" defaultMessage="Become a Partner Blogger" />
             </h1>
             <p className="text-lg max-w-2xl mx-auto text-gray-300">
-              <FormattedMessage id="blogger.register.subtitle" defaultMessage="Earn $10 per referred client and $5 per recruited provider" />
+              <FormattedMessage id="blogger.register.subtitle" defaultMessage="Earn commissions per referred client and per recruited provider" />
             </p>
           </div>
 

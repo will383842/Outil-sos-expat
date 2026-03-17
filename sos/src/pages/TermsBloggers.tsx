@@ -89,8 +89,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "Rejoignez notre réseau de bloggeurs partenaires",
       keyFeatures: "Points clés",
       features: [
-        "$10 par appel client via widget/lien",
-        "$5 par appel des prestataires recrutés",
+        "Commission par appel selon le barème en vigueur",
+        "Commission recrutement selon le barème",
         "Widget d'intégration fourni",
         "Ressources HD : logos, bannières, textes",
       ],
@@ -130,8 +130,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "Join our partner blogger network",
       keyFeatures: "Key features",
       features: [
-        "$10 per client call via widget/link",
-        "$5 per call from recruited providers",
+        "Commission per call per current rate schedule",
+        "Recruitment commission per rate schedule",
         "Integration widget provided",
         "HD resources: logos, banners, texts",
       ],
@@ -171,8 +171,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "Únete a nuestra red de bloggers socios",
       keyFeatures: "Características clave",
       features: [
-        "$10 por llamada de cliente via widget/enlace",
-        "$5 por llamada de proveedores reclutados",
+        "Comisión por llamada según la tarifa vigente",
+        "Comisión de reclutamiento según la tarifa",
         "Widget de integración incluido",
         "Recursos HD: logos, banners, textos",
       ],
@@ -212,8 +212,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "Schließen Sie sich unserem Partner-Blogger-Netzwerk an",
       keyFeatures: "Hauptmerkmale",
       features: [
-        "$10 pro Kundengespräch via Widget/Link",
-        "$5 pro Gespräch der geworbenen Anbieter",
+        "Provision pro Anruf gemäß aktuellem Tarif",
+        "Rekrutierungsprovision gemäß Tarif",
         "Integrations-Widget inklusive",
         "HD-Ressourcen: Logos, Banner, Texte",
       ],
@@ -253,8 +253,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "Присоединяйтесь к нашей сети партнёров-блоггеров",
       keyFeatures: "Ключевые особенности",
       features: [
-        "$10 за каждый клиентский звонок через виджет/ссылку",
-        "$5 за звонки привлечённых провайдеров",
+        "Комиссия за звонок по текущему тарифу",
+        "Комиссия за рекрутинг по тарифу",
         "Интеграционный виджет в комплекте",
         "HD-ресурсы: логотипы, баннеры, тексты",
       ],
@@ -294,8 +294,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "हमारे भागीदार ब्लॉगर नेटवर्क से जुड़ें",
       keyFeatures: "मुख्य विशेषताएं",
       features: [
-        "विजेट/लिंक के माध्यम से $10 प्रति क्लाइंट कॉल",
-        "भर्ती प्रदाताओं के कॉल पर $5",
+        "वर्तमान दर अनुसूची के अनुसार प्रति कॉल कमीशन",
+        "दर अनुसूची के अनुसार भर्ती कमीशन",
         "एकीकरण विजेट प्रदान किया गया",
         "HD संसाधन: लोगो, बैनर, टेक्स्ट",
       ],
@@ -335,8 +335,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "加入我们的合作博主网络",
       keyFeatures: "主要功能",
       features: [
-        "通过小工具/链接每次客户通话 $10",
-        "每次招募提供商通话 $5",
+        "按现行费率表每次通话佣金",
+        "按费率表招募佣金",
         "提供集成小工具",
         "高清资源：标志、横幅、文字",
       ],
@@ -376,8 +376,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "انضم إلى شبكة المدونين الشركاء لدينا",
       keyFeatures: "الميزات الرئيسية",
       features: [
-        "$10 لكل مكالمة عميل عبر الأداة/الرابط",
-        "$5 لكل مكالمة للمزودين المجندين",
+        "عمولة لكل مكالمة وفقاً لجدول الأسعار الحالي",
+        "عمولة التوظيف وفقاً لجدول الأسعار",
         "أداة التكامل مرفقة",
         "موارد عالية الدقة: شعارات، لافتات، نصوص",
       ],
@@ -417,8 +417,8 @@ const TermsBloggers: React.FC = () => {
       trustedByHelpers: "Junte-se à nossa rede de bloggers parceiros",
       keyFeatures: "Características principais",
       features: [
-        "$10 por chamada de cliente via widget/link",
-        "$5 por chamada dos provedores recrutados",
+        "Comissão por chamada conforme tabela vigente",
+        "Comissão de recrutamento conforme tabela",
         "Widget de integração fornecido",
         "Recursos HD: logos, banners, textos",
       ],
@@ -642,9 +642,9 @@ const TermsBloggers: React.FC = () => {
 
 **Commission Directe** : rémunération versée pour chaque appel payant client généré via le widget ou le lien affilié du Bloggeur.
 
-**Commission de Recrutement Prestataire** : rémunération versée pour chaque appel payant réalisé par un prestataire recruté par le Bloggeur, pendant une période de **12 mois** à compter de l'inscription dudit prestataire.
+**Commission de Recrutement Prestataire** : rémunération versée pour chaque appel payant réalisé par un prestataire recruté par le Bloggeur, pendant **la durée définie dans le barème en vigueur** à compter de l'inscription dudit prestataire.
 
-**Commission de Recrutement Bloggeur** : rémunération versée pour chaque appel généré par un Bloggeur recruté (Filleul N1) ou par les filleuls de ce Bloggeur (Filleul N2), pendant une période de **12 mois** à compter de l'inscription.
+**Commission de Recrutement Bloggeur** : rémunération versée pour chaque appel généré par un Bloggeur recruté (Filleul N1) ou par les filleuls de ce Bloggeur (Filleul N2), pendant **la durée définie dans le barème en vigueur** à compter de l'inscription.
 
 **Filleul N1** : Bloggeur ou prestataire directement recruté par le Bloggeur.
 
@@ -690,11 +690,11 @@ const TermsBloggers: React.FC = () => {
 
 ## 4. Commissions et rémunération
 
-4.1. **Commission Directe – Appels Clients.** Le Bloggeur perçoit **$10** pour chaque appel payant généré via son widget ou son lien affilié client, sans limite de volume ni de durée.
+4.1. **Commission Directe – Appels Clients.** Le Bloggeur perçoit **le montant défini dans le barème en vigueur** pour chaque appel payant généré via son widget ou son lien affilié client, sans limite de volume ni de durée.
 
-4.2. **Commission de Recrutement Prestataire.** Le Bloggeur perçoit **$5** pour chaque appel payant réalisé par un prestataire qu'il a recruté, pendant **12 mois** à compter de la date d'inscription du prestataire. Passé ce délai, les commissions de recrutement prestataire cessent automatiquement.
+4.2. **Commission de Recrutement Prestataire.** Le Bloggeur perçoit **le montant défini dans le barème en vigueur** pour chaque appel payant réalisé par un prestataire qu'il a recruté, pendant **la durée définie dans le barème en vigueur** à compter de la date d'inscription du prestataire. Passé ce délai, les commissions de recrutement prestataire cessent automatiquement.
 
-4.3. **Prime de recrutement d'un Bloggeur.** Pour chaque Bloggeur recruté via le code de parrainage, le Bloggeur-parrain perçoit une **prime unique de $50** lorsque le Bloggeur recruté cumule **$200 de commissions totales**. Cette prime est versée **une seule fois** par Bloggeur recruté, sans commission récurrente sur les appels futurs de ce Bloggeur.
+4.3. **Prime de recrutement d'un Bloggeur.** Pour chaque Bloggeur recruté via le code de parrainage, le Bloggeur-parrain perçoit **la prime définie dans le barème en vigueur** lorsque le Bloggeur recruté atteint **le seuil défini dans le barème en vigueur** de commissions totales. Cette prime est versée **une seule fois** par Bloggeur recruté, sans commission récurrente sur les appels futurs de ce Bloggeur.
 
 4.4. **Modèle d'attribution (tracking).** Le suivi des recommandations est basé sur un **cookie Last-Click valable 30 jours** : tout clic sur le widget ou le lien affilié crée un cookie de 30 jours dans le navigateur du visiteur. Si ce visiteur effectue un appel payant dans ce délai, la commission est attribuée au Bloggeur. Un nouveau clic sur un autre lien affilié écrase le cookie précédent. Le Bloggeur reconnaît que la désactivation des cookies par l'utilisateur peut empêcher l'attribution.
 
@@ -714,11 +714,11 @@ const TermsBloggers: React.FC = () => {
 
 | Type de commission | Montant | Durée | Conditions |
 |---|---|---|---|
-| Appel client direct (widget/lien) | $10/appel | Illimitée | Aucune |
-| Appel via prestataire recruté | $5/appel | 12 mois max | Aucune |
-| Prime recrutement d'un bloggeur | $50 (unique) | Une seule fois | Bloggeur recruté atteint $200 cumulé |
+| Appel client direct (widget/lien) | Selon barème | Illimitée | Aucune |
+| Appel via prestataire recruté | Selon barème | Selon barème | Aucune |
+| Prime recrutement d'un bloggeur | Selon barème | Une seule fois | Selon barème |
 
-4.9. **Seuil de retrait.** Retrait disponible à partir de **$20** de solde validé.
+4.9. **Seuil de retrait.** Retrait disponible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
 ---
 
@@ -808,6 +808,8 @@ const TermsBloggers: React.FC = () => {
 
 6.8. **Indépendance.** Le Bloggeur agit en **prestataire indépendant** ; aucun lien d'emploi, contrat de travail, mandat ou relation d'agence n'est créé avec SOS Expat. Le Bloggeur est seul responsable de ses cotisations sociales et obligations fiscales.
 
+6.9. **Conformité locale.** Le Bloggeur est seul responsable de vérifier et respecter les obligations légales, fiscales et réglementaires applicables dans son pays de résidence ou d'exercice. Cela inclut notamment : l'obtention de tout statut juridique requis (auto-entrepreneur, micro-entreprise, freelance ou équivalent local), l'immatriculation auprès des autorités compétentes, la déclaration de ses revenus d'affiliation, et le respect de toute réglementation locale relative à l'activité de recommandation commerciale ou de marketing d'affiliation. SOS Expat n'est pas responsable du non-respect par le Bloggeur de ses obligations locales.
+
 ---
 
 ## 7. Paiement des commissions
@@ -821,7 +823,7 @@ const TermsBloggers: React.FC = () => {
 
 7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation. Les délais d'encaissement dépendent également de la banque du Bloggeur.
 
-7.4. **Seuil minimum.** Le retrait est possible à partir de **$20** de solde disponible.
+7.4. **Seuil minimum.** Le retrait est possible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
 7.5. **Devise et conversion.** Tous les paiements sont libellés en **USD**. Si le Bloggeur souhaite être payé dans une autre devise, la conversion s'effectue au taux du jour Wise au moment du virement. Les **frais de conversion sont à la charge du Bloggeur**.
 
@@ -982,9 +984,9 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 **Direct Commission**: compensation paid for each paid client call generated via the Blogger's widget or affiliate link.
 
-**Provider Recruitment Commission**: compensation paid for each paid call made by a provider recruited by the Blogger, for a period of **12 months** from said provider's registration date.
+**Provider Recruitment Commission**: compensation paid for each paid call made by a provider recruited by the Blogger, for **the duration defined in the current rate schedule** from said provider's registration date.
 
-**Blogger Recruitment Commission**: compensation paid for each call generated by a recruited Blogger (N1 Referral) or by that Blogger's referrals (N2 Referral), for a period of **12 months** from registration.
+**Blogger Recruitment Commission**: compensation paid for each call generated by a recruited Blogger (N1 Referral) or by that Blogger's referrals (N2 Referral), for **the duration defined in the current rate schedule** from registration.
 
 **N1 Referral**: Blogger or provider directly recruited by the Blogger.
 
@@ -1030,11 +1032,11 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 ## 4. Commissions and Compensation
 
-4.1. **Direct Commission – Client Calls.** The Blogger earns **$10** for each paid call generated via their widget or client affiliate link, with no volume or time limits.
+4.1. **Direct Commission – Client Calls.** The Blogger earns **the amount defined in the current rate schedule** for each paid call generated via their widget or client affiliate link, with no volume or time limits.
 
-4.2. **Provider Recruitment Commission.** The Blogger earns **$5** for each paid call made by a provider they recruited, for **12 months** from the provider's registration date. After this period, provider recruitment commissions cease automatically.
+4.2. **Provider Recruitment Commission.** The Blogger earns **the amount defined in the current rate schedule** for each paid call made by a provider they recruited, for **the duration defined in the current rate schedule** from the provider's registration date. After this period, provider recruitment commissions cease automatically.
 
-4.3. **Blogger Recruitment Bonus.** For each Blogger recruited via the referral code, the referring Blogger earns a **one-time bonus of $50** when the recruited Blogger accumulates **$200 in total commissions**. This bonus is paid **once per recruited Blogger**, with no recurring commission on that Blogger's future calls.
+4.3. **Blogger Recruitment Bonus.** For each Blogger recruited via the referral code, the referring Blogger earns **the bonus defined in the current rate schedule** when the recruited Blogger reaches **the threshold defined in the current rate schedule** in total commissions. This bonus is paid **once per recruited Blogger**, with no recurring commission on that Blogger's future calls.
 
 4.4. **Attribution Model (Tracking).** Recommendations are tracked using a **Last-Click cookie valid for 30 days**: any click on the widget or affiliate link creates a 30-day cookie in the visitor's browser. If that visitor makes a paid call within this period, the commission is attributed to the Blogger. A new click on another affiliate link overwrites the previous cookie. The Blogger acknowledges that cookie disabling may prevent attribution.
 
@@ -1054,11 +1056,11 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 | Commission Type | Amount | Duration | Conditions |
 |---|---|---|---|
-| Direct client call (widget/link) | $10/call | Unlimited | None |
-| Recruited provider call | $5/call | 12 months max | None |
-| Blogger recruitment bonus | $50 (once) | One-time | Recruited reaches $200 cumulative |
+| Direct client call (widget/link) | Per rate schedule | Unlimited | None |
+| Recruited provider call | Per rate schedule | Per rate schedule | None |
+| Blogger recruitment bonus | Per rate schedule | One-time | Per rate schedule |
 
-4.9. **Withdrawal Threshold.** Withdrawal is available from **$20** validated balance.
+4.9. **Withdrawal Threshold.** Withdrawal is available from the **minimum threshold shown in your dashboard**.
 
 ---
 
@@ -1105,6 +1107,8 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 6.8. **Independence.** The Blogger is an **independent contractor**; no employment relationship exists with SOS Expat. The Blogger is solely responsible for their social contributions and tax obligations.
 
+6.9. **Local Compliance.** The Blogger is solely responsible for verifying and complying with all legal, tax, and regulatory obligations applicable in their country of residence or operations. This includes but is not limited to: obtaining any required legal status (sole proprietor, micro-enterprise, freelancer, or local equivalent), registration with competent authorities, declaration of affiliate income, and compliance with any local regulations relating to commercial referral or affiliate marketing activities. SOS Expat is not liable for the Blogger's failure to comply with their local obligations.
+
 ---
 
 ## 7. Commission Payments
@@ -1115,7 +1119,7 @@ Pour toute question concernant le programme Bloggeurs, contactez-nous via le for
 
 7.3. **Timing.** Payments processed within **7 business days** after validation (plus bank processing time).
 
-7.4. **Minimum Threshold.** Withdrawal from **$20** validated balance.
+7.4. **Minimum Threshold.** Withdrawal from the **minimum threshold shown in your dashboard**.
 
 7.5. **Currency.** All payments in **USD**. Conversion to other currencies at Wise daily rate; **conversion fees at Blogger's expense**.
 

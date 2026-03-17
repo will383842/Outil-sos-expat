@@ -691,7 +691,7 @@ const TermsExpats: React.FC = () => {
 
 **Pays d'Intervention** : la juridiction principalement visée par la demande de l'Utilisateur au moment de la Mise en relation ; à défaut, le pays de résidence de l'Utilisateur à la date de la demande.
 
-**Frais de Mise en relation** : frais fixes dus à SOS par Mise en relation (art. 7) : **19 €** si paiement en **EUR** ou **25 $ USD** si paiement en **USD**, susceptibles d'évolution et/ou de **barèmes locaux** par pays/devise, avec effet prospectif.
+**Frais de Mise en relation** : frais fixes dus à SOS par Mise en relation (art. 7), dont le montant est défini dans le **barème en vigueur consultable dans le tableau de bord de l'Aidant**, susceptibles d'évolution et/ou de **barèmes locaux** par pays/devise, avec effet prospectif.
 
 **Prestataire(s) de paiement** : services tiers traitant les encaissements et la répartition des fonds.
 
@@ -765,7 +765,7 @@ const TermsExpats: React.FC = () => {
 
 ## 7. Frais, paiement unique et taxes
 
-7.1. **Frais de Mise en relation (forfait).** **19 € (EUR)** **ou** **25 $ (USD)** **par Mise en relation**, hors taxes et hors frais du Prestataire de paiement. SOS Expat peut modifier ces montants et/ou publier des **barèmes locaux** par pays/devise, avec effet prospectif.
+7.1. **Frais de Mise en relation (forfait).** Les frais sont définis dans le **barème en vigueur consultable dans le tableau de bord de l'Aidant**, par Mise en relation, hors taxes et hors frais du Prestataire de paiement. SOS Expat peut modifier ces montants et/ou publier des **barèmes locaux** par pays/devise, avec effet prospectif.
 
 7.2. **Paiement unique & répartition.** L'Utilisateur effectue **un paiement unique** via la Plateforme couvrant (i) la **rémunération de l'Aidant** (telle que convenue) et (ii) les **Frais de Mise en relation** d'SOS Expat. SOS Expat (ou son Prestataire) encaisse, **déduit** ses frais, puis **reverse** le solde à l'Aidant. L'Aidant **autorise** ces déductions et répartitions.
 
@@ -928,7 +928,7 @@ Pour toute question ou demande légale, contactez-nous :
 
 **Country of Operation:** the jurisdiction primarily targeted by the User’s request at the time of Connection; failing that, the User’s country of residence at the date of the request.
 
-**Connection Fee:** fixed fee payable to SOS per Connection (art. 7): **€19** if paid in EUR or **$25 USD** if paid in USD, subject to change and/or **local rate schedules** by country/currency, with prospective effect.
+**Connection Fee:** fixed fee payable to SOS per Connection (art. 7), the amount of which is defined in the **current fee schedule available in the Helper's dashboard**, subject to change and/or **local rate schedules** by country/currency, with prospective effect.
 
 **Payment Service Providers:** third-party services processing payments and fund distribution.
 
@@ -1002,7 +1002,7 @@ Pour toute question ou demande légale, contactez-nous :
 
 ## 7. Fees, Single Payment and Taxes
 
-7.1. **Connection Fee (flat rate): €19 (EUR) or $25 (USD)** per Connection, excluding taxes and Payment Provider fees. SOS Expat may modify these amounts and/or publish local rate schedules by country/currency, with prospective effect.
+7.1. **Connection Fee (flat rate).** The Connection Fee is defined in the **current fee schedule available in the Helper's dashboard**, per Connection, excluding taxes and Payment Provider fees. SOS Expat may modify these amounts and/or publish local rate schedules by country/currency, with prospective effect.
 
 7.2. **Single payment & distribution:** The User makes a single payment via the Platform covering (i) the Helper’s remuneration (as agreed) and (ii) SOS Expat’s Connection Fee. SOS Expat (or its Provider) collects, deducts its fee, and transfers the remaining balance to the Helper. The Helper authorizes such deductions and allocations.
 

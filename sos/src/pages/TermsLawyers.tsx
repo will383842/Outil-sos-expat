@@ -683,7 +683,7 @@ const TermsLawyers: React.FC = () => {
 
 **Pays d'Intervention** : la juridiction principalement visée par la Requête au moment de la Mise en relation. À défaut, le pays de résidence de l'Utilisateur au moment de la demande ; en cas de pluralité, la juridiction la plus étroitement liée à l'objet de la Requête.
 
-**Frais de Mise en relation** : frais dus à SOS pour chaque Mise en relation (art. 7) : **19 €** si payés en **EUR** ou **25 $ USD** si payés en **USD**, étant précisé qu'SOS Expat peut modifier ces montants et/ou publier des barèmes locaux par pays/devise, avec effet prospectif.
+**Frais de Mise en relation** : frais dus à SOS pour chaque Mise en relation (art. 7), dont le montant est défini dans le **barème en vigueur consultable dans le tableau de bord de l'Avocat**. SOS Expat peut modifier ces montants et/ou publier des barèmes locaux par pays/devise, avec effet prospectif.
 
 **Requête** : la situation/projet juridique exposé par l'Utilisateur.
 
@@ -814,7 +814,7 @@ Le bannissement est **définitif et irrévocable**. L'Avocat banni ne peut crée
 
 ## 7. Frais, paiement unique et taxes
 
-7.1. **Frais de Mise en relation (forfait).** Les Frais de Mise en relation s'élèvent actuellement à **19 € (EUR)** ou **25 $ (USD)** par Mise en relation, hors taxes et hors frais du Prestataire de paiement. **Ces montants sont indicatifs et susceptibles d'être modifiés à tout moment.** SOS Expat se réserve le droit de modifier ces montants et/ou de publier des barèmes locaux par pays/devise, avec effet prospectif après publication sur la Plateforme. L'Avocat est invité à consulter régulièrement la grille tarifaire en vigueur disponible dans son espace personnel.
+7.1. **Frais de Mise en relation (forfait).** Les Frais de Mise en relation sont définis dans la **grille tarifaire en vigueur consultable dans l'espace personnel de l'Avocat**, par Mise en relation, hors taxes et hors frais du Prestataire de paiement. **Ces montants sont susceptibles d'être modifiés à tout moment.** SOS Expat se réserve le droit de modifier ces montants et/ou de publier des barèmes locaux par pays/devise, avec effet prospectif après publication sur la Plateforme. L'Avocat est invité à consulter régulièrement la grille tarifaire en vigueur.
 
 7.2. **Structure du prix affiché au client et répartition des fonds.** Le prix affiché à l'Utilisateur sur la Plateforme **inclut** les Frais de Mise en relation de SOS Expat. L'Utilisateur effectue un paiement unique via la Plateforme. **La répartition des fonds s'effectue comme suit :**
 - (a) **Montant payé par l'Utilisateur** = Honoraires de l'Avocat + Frais de Mise en relation SOS Expat ;
@@ -1022,7 +1022,7 @@ Pour toute question ou demande légale : **https://sos-expat.com/contact**
 
 **Country of Intervention**: the jurisdiction primarily targeted by the Request at the time of the Connection. Failing that, the country of residence of the User at the time of the request; in case of multiple jurisdictions, the one most closely related to the subject of the Request.
 
-**Connection Fee**: fees owed to SOS for each Connection (art. 7): **€19** if paid in **EUR** or **$25 USD** if paid in **USD**, provided that SOS Expat may modify these amounts and/or publish local scales per country/currency, with prospective effect.
+**Connection Fee**: fees owed to SOS for each Connection (art. 7), the amount of which is defined in the **current fee schedule available in the Lawyer's dashboard**. SOS Expat may modify these amounts and/or publish local scales per country/currency, with prospective effect.
 
 **Request**: the legal situation/project presented by the User.
 
@@ -1153,7 +1153,7 @@ Banning is **permanent and irrevocable**. A banned Lawyer cannot create a new ac
 
 ## 7. Fees, Single Payment, and Taxes
 
-7.1. **Connection Fees (flat rate).** Connection Fees are currently **€19 (EUR)** or **$25 (USD)** per Connection, excluding taxes and Payment Provider fees. **These amounts are indicative and subject to change at any time.** SOS Expat reserves the right to modify these amounts and/or publish local scales per country/currency, with prospective effect after publication on the Platform. The Lawyer is encouraged to regularly consult the current fee schedule available in their personal dashboard.
+7.1. **Connection Fees (flat rate).** Connection Fees are defined in the **current fee schedule available in the Lawyer's personal dashboard**, per Connection, excluding taxes and Payment Provider fees. **These amounts are subject to change at any time.** SOS Expat reserves the right to modify these amounts and/or publish local scales per country/currency, with prospective effect after publication on the Platform. The Lawyer is encouraged to regularly consult the current fee schedule.
 
 7.2. **Price structure displayed to client and fund distribution.** The price displayed to the User on the Platform **includes** SOS Expat's Connection Fees. The User makes a single payment via the Platform. **Fund distribution is as follows:**
 - (a) **Amount paid by the User** = Lawyer's fees + SOS Expat Connection Fees;

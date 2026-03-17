@@ -88,8 +88,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "Rejoignez notre réseau d'influenceurs partenaires",
       keyFeatures: "Points clés",
       features: [
-        "$10 par appel client généré",
-        "Commissions à vie sur vos filleuls",
+        "Commissions selon le barème en vigueur",
+        "Barème consultable dans votre dashboard",
         "Ressources créatives exclusives",
         "Programme de parrainage multi-niveaux",
       ],
@@ -129,8 +129,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "Join our partner influencer network",
       keyFeatures: "Key features",
       features: [
-        "$10 per client call generated",
-        "Lifetime commissions on your referrals",
+        "Commissions per current rate schedule",
+        "Rates visible in your dashboard",
         "Exclusive creative resources",
         "Multi-level referral program",
       ],
@@ -170,8 +170,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "Únete a nuestra red de influencers socios",
       keyFeatures: "Características clave",
       features: [
-        "$10 por llamada de cliente generada",
-        "Comisiones de por vida en tus referidos",
+        "Comisiones según la tarifa vigente",
+        "Tarifas visibles en tu panel de control",
         "Recursos creativos exclusivos",
         "Programa de referidos multinivel",
       ],
@@ -211,8 +211,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "Schließen Sie sich unserem Partner-Influencer-Netzwerk an",
       keyFeatures: "Hauptmerkmale",
       features: [
-        "$10 pro generiertem Kundengespräch",
-        "Lebenslange Provisionen auf Ihre Empfehlungen",
+        "Provisionen gemäß aktuellem Tarif",
+        "Tarife einsehbar in Ihrem Dashboard",
         "Exklusive Kreativressourcen",
         "Mehrstufiges Empfehlungsprogramm",
       ],
@@ -252,8 +252,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "Присоединяйтесь к нашей сети партнёров-инфлюенсеров",
       keyFeatures: "Ключевые особенности",
       features: [
-        "$10 за каждый клиентский звонок",
-        "Пожизненные комиссии с рефералов",
+        "Комиссии согласно действующему тарифу",
+        "Тарифы доступны в вашей панели управления",
         "Эксклюзивные креативные ресурсы",
         "Многоуровневая реферальная программа",
       ],
@@ -293,8 +293,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "हमारे भागीदार इन्फ्लुएंसर नेटवर्क से जुड़ें",
       keyFeatures: "मुख्य विशेषताएं",
       features: [
-        "प्रति क्लाइंट कॉल $10",
-        "रेफरल पर आजीवन कमीशन",
+        "वर्तमान दर अनुसूची के अनुसार कमीशन",
+        "दरें आपके डैशबोर्ड में दिखाई देती हैं",
         "विशेष रचनात्मक संसाधन",
         "बहु-स्तरीय रेफरल कार्यक्रम",
       ],
@@ -334,8 +334,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "加入我们的合作网红网络",
       keyFeatures: "主要功能",
       features: [
-        "每次客户通话 $10",
-        "终身佣金推荐",
+        "佣金按现行费率表计算",
+        "费率可在您的仪表板中查看",
         "专属创意资源",
         "多级推荐计划",
       ],
@@ -375,8 +375,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "انضم إلى شبكة المؤثرين الشركاء لدينا",
       keyFeatures: "الميزات الرئيسية",
       features: [
-        "$10 لكل مكالمة عميل",
-        "عمولات مدى الحياة على إحالاتك",
+        "عمولات وفقاً لجدول الأسعار الحالي",
+        "الأسعار متاحة في لوحة التحكم الخاصة بك",
         "موارد إبداعية حصرية",
         "برنامج إحالة متعدد المستويات",
       ],
@@ -416,8 +416,8 @@ const TermsInfluencers: React.FC = () => {
       trustedByHelpers: "Junte-se à nossa rede de influenciadores parceiros",
       keyFeatures: "Características principais",
       features: [
-        "$10 por chamada de cliente gerada",
-        "Comissões vitalícias em seus indicados",
+        "Comissões conforme tabela de tarifas vigente",
+        "Tarifas visíveis no seu painel de controle",
         "Recursos criativos exclusivos",
         "Programa de indicação multinível",
       ],
@@ -683,20 +683,15 @@ const TermsInfluencers: React.FC = () => {
 
 ## 4. Commissions et rémunération
 
-4.1. **Commissions directes par appel.** L'Influenceur perçoit **$10** pour chaque appel payant généré via son Code Affilié, sans limite de volume ni de durée.
+4.1. **Commissions directes par appel.** L'Influenceur perçoit **le montant indiqué dans le barème en vigueur** pour chaque appel payant généré via son Code Affilié, sans limite de volume ni de durée. Le barème détaillé est consultable à tout moment dans le tableau de bord de l'Influenceur.
 
-4.2. **Niveaux de progression et bonus.** Le barème des commissions directes est bonifié selon le niveau atteint (déterminé par le volume mensuel d'activité) :
-- Niveau 1 : ×1,00 (base $10/appel)
-- Niveau 2 : ×1,10 (+10% → $11/appel)
-- Niveau 3 : ×1,20 (+20% → $12/appel)
-- Niveau 4 : ×1,35 (+35% → $13,50/appel)
-- Niveau 5 : ×1,50 (+50% → $15/appel)
+4.2. **Niveaux de progression et bonus.** Le barème des commissions directes peut être bonifié selon le niveau atteint (déterminé par le volume mensuel d'activité). Les niveaux, multiplicateurs et bonus applicables sont définis dans le barème en vigueur, consultable dans le tableau de bord de l'Influenceur.
 
-**Bonus Top 3 mensuel :** Les 3 meilleurs Influenceurs du mois perçoivent un multiplicateur supplémentaire sur toutes leurs commissions du mois : 1er rang ×2,00 / 2e rang ×1,50 / 3e rang ×1,15.
+**Bonus Top 3 mensuel :** Les 3 meilleurs Influenceurs du mois peuvent percevoir un multiplicateur supplémentaire sur toutes leurs commissions du mois. Les multiplicateurs applicables sont définis dans le barème en vigueur.
 
-4.3. **Commission de recrutement prestataire.** L'Influenceur perçoit **$5** pour chaque appel payant réalisé par un prestataire (avocat, expert expatrié) qu'il a recommandé via son code de recrutement, pendant **12 mois** à compter de la date d'inscription du prestataire. Cette commission cesse automatiquement à l'expiration du délai de 12 mois.
+4.3. **Commission de recrutement prestataire.** L'Influenceur perçoit **le montant indiqué dans le barème en vigueur** pour chaque appel payant réalisé par un prestataire (avocat, expert expatrié) qu'il a recommandé via son code de recrutement, pendant **la durée définie dans le barème en vigueur** à compter de la date d'inscription du prestataire.
 
-4.4. **Prime de recrutement d'Influenceur.** Pour chaque Influenceur recruté via le code de parrainage, l'Influenceur-parrain perçoit une **prime unique de $5** lorsque l'Influenceur recruté cumule **$50 de commissions totales**. Cette prime est versée **une seule fois** par Influenceur recruté, sans commission récurrente sur les appels futurs de cet Influenceur.
+4.4. **Prime de recrutement d'Influenceur.** Pour chaque Influenceur recruté via le code de parrainage, l'Influenceur-parrain peut percevoir une **prime unique** lorsque l'Influenceur recruté atteint le seuil de commissions cumulées défini dans le barème en vigueur. Le montant de la prime et le seuil d'activation sont consultables dans le tableau de bord. Cette prime est versée **une seule fois** par Influenceur recruté, sans commission récurrente sur les appels futurs de cet Influenceur.
 
 4.5. **Modèle d'attribution (tracking).** Le suivi des recommandations est basé sur un **cookie Last-Click valable 30 jours** : tout clic sur le lien affilié de l'Influenceur crée un cookie de 30 jours dans le navigateur du visiteur. Si ce visiteur effectue un appel payant dans ce délai, la commission est attribuée à l'Influenceur. Un nouveau clic sur un autre lien affilié écrase le cookie précédent (modèle Last-Click). L'Influenceur reconnaît que la désactivation des cookies par l'utilisateur peut empêcher l'attribution.
 
@@ -717,12 +712,12 @@ const TermsInfluencers: React.FC = () => {
 
 | Type de commission | Montant | Durée | Conditions |
 |---|---|---|---|
-| Appel client direct (via code affilié) | $10/appel (×bonus niveau) | Illimitée | Aucune |
-| Appel via prestataire recruté | $5/appel | 12 mois max | Aucune |
-| Prime recrutement d'un influenceur | $5 (unique) | Une seule fois | Recruté atteint $50 cumulé |
-| Bonus Top 3 mensuel | ×2,00 / ×1,50 / ×1,15 | Mensuel | Top 3 du mois |
+| Appel client direct (via code affilié) | Selon barème en vigueur | Illimitée | Aucune |
+| Appel via prestataire recruté | Selon barème en vigueur | Selon barème en vigueur | Aucune |
+| Prime recrutement d'un influenceur | Selon barème en vigueur | Une seule fois | Selon barème en vigueur |
+| Bonus Top 3 mensuel | Selon barème en vigueur | Mensuel | Top 3 du mois |
 
-4.10. **Seuil de retrait.** Retrait disponible à partir de **$20** de solde validé.
+4.10. **Seuil de retrait.** Retrait disponible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
 ---
 
@@ -803,6 +798,8 @@ const TermsInfluencers: React.FC = () => {
 
 6.7. **Indépendance.** L'Influenceur agit en **prestataire indépendant** ; aucun lien d'emploi, contrat de travail, mandat ou relation d'agence n'est créé avec SOS Expat. L'Influenceur est seul responsable de ses cotisations sociales et obligations fiscales.
 
+6.8. **Conformité locale.** L'Influenceur est seul responsable de vérifier et respecter les obligations légales, fiscales et réglementaires applicables dans son pays de résidence ou d'exercice. Cela inclut notamment : l'obtention de tout statut juridique requis (auto-entrepreneur, micro-entreprise, freelance ou équivalent local), l'immatriculation auprès des autorités compétentes, la déclaration de ses revenus d'affiliation, et le respect de toute réglementation locale relative à l'activité de recommandation commerciale ou de marketing d'affiliation. SOS Expat n'est pas responsable du non-respect par l'Influenceur de ses obligations locales.
+
 ---
 
 ## 7. Paiement des commissions
@@ -816,7 +813,7 @@ const TermsInfluencers: React.FC = () => {
 
 7.3. **Délais.** Les paiements sont traités sous **7 jours ouvrés** après validation. Les délais d'encaissement dépendent également de la banque de l'Influenceur.
 
-7.4. **Seuil minimum.** Le retrait est possible à partir de **$20** de solde disponible.
+7.4. **Seuil minimum.** Le retrait est possible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
 7.5. **Devise et conversion.** Tous les paiements sont libellés en **USD**. Si l'Influenceur souhaite être payé dans une autre devise, la conversion s'effectue au taux du jour Wise au moment du virement. Les **frais de conversion sont à la charge de l'Influenceur**.
 
@@ -1008,20 +1005,15 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 
 ## 4. Commissions and Compensation
 
-4.1. **Direct Call Commissions.** The Influencer earns **$10** for each paid call generated via their Affiliate Code, with no volume or time limits.
+4.1. **Direct Call Commissions.** The Influencer earns **the amount specified in the current rate schedule** for each paid call generated via their Affiliate Code, with no volume or time limits. The detailed rate schedule is available at any time in the Influencer's dashboard.
 
-4.2. **Progression Levels and Bonuses.** The direct commission rate is enhanced based on the level achieved (determined by monthly activity volume):
-- Level 1: ×1.00 (base $10/call)
-- Level 2: ×1.10 (+10% → $11/call)
-- Level 3: ×1.20 (+20% → $12/call)
-- Level 4: ×1.35 (+35% → $13.50/call)
-- Level 5: ×1.50 (+50% → $15/call)
+4.2. **Progression Levels and Bonuses.** The direct commission rate may be enhanced based on the level achieved (determined by monthly activity volume). Applicable levels, multipliers, and bonuses are defined in the current rate schedule, available in the Influencer's dashboard.
 
-**Monthly Top 3 Bonus:** The top 3 Influencers of the month receive an additional multiplier on all their commissions: 1st rank ×2.00 / 2nd rank ×1.50 / 3rd rank ×1.15.
+**Monthly Top 3 Bonus:** The top 3 Influencers of the month may receive an additional multiplier on all their commissions. Applicable multipliers are defined in the current rate schedule.
 
-4.3. **Provider Recruitment Commission.** The Influencer earns **$5** for each paid call made by a provider (lawyer, expat expert) they recommended via their recruitment code, for **12 months** from the provider's registration date. This commission ceases automatically upon expiry of the 12-month period.
+4.3. **Provider Recruitment Commission.** The Influencer earns **the amount specified in the current rate schedule** for each paid call made by a provider (lawyer, expat expert) they recommended via their recruitment code, for **the duration defined in the current rate schedule** from the provider's registration date.
 
-4.4. **Influencer Recruitment Bonus.** For each Influencer recruited via the referral code, the referring Influencer earns a **one-time bonus of $5** when the recruited Influencer accumulates **$50 in total commissions**. This bonus is paid **once per recruited Influencer**, with no recurring commission on that Influencer's future calls.
+4.4. **Influencer Recruitment Bonus.** For each Influencer recruited via the referral code, the referring Influencer may earn a **one-time bonus** when the recruited Influencer reaches the cumulative commission threshold defined in the current rate schedule. The bonus amount and activation threshold are available in the dashboard. This bonus is paid **once per recruited Influencer**, with no recurring commission on that Influencer's future calls.
 
 4.5. **Attribution Model (Tracking).** Recommendations are tracked using a **Last-Click cookie valid for 30 days**: any click on the Influencer's affiliate link creates a 30-day cookie in the visitor's browser. If that visitor makes a paid call within this period, the commission is attributed to the Influencer. A new click on another affiliate link overwrites the previous cookie (Last-Click model). The Influencer acknowledges that cookie disabling by the user may prevent attribution.
 
@@ -1042,12 +1034,12 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 
 | Commission Type | Amount | Duration | Conditions |
 |---|---|---|---|
-| Direct client call (via affiliate code) | $10/call (×level bonus) | Unlimited | None |
-| Call via recruited provider | $5/call | 12 months max | None |
-| Influencer recruitment bonus | $5 (once) | One-time | Recruited reaches $50 cumulative |
-| Monthly Top 3 Bonus | ×2.00 / ×1.50 / ×1.15 | Monthly | Top 3 of month |
+| Direct client call (via affiliate code) | Per current rate schedule | Unlimited | None |
+| Call via recruited provider | Per current rate schedule | Per current rate schedule | None |
+| Influencer recruitment bonus | Per current rate schedule | One-time | Per current rate schedule |
+| Monthly Top 3 Bonus | Per current rate schedule | Monthly | Top 3 of month |
 
-4.10. **Withdrawal Threshold.** Withdrawal is available from **$20** validated balance.
+4.10. **Withdrawal Threshold.** Withdrawal is available from the **minimum threshold indicated in your dashboard**.
 
 ---
 
@@ -1128,6 +1120,8 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 
 6.7. **Independence.** The Influencer acts as an **independent contractor**; no employment contract, agency, or mandate relationship is created with SOS Expat. The Influencer is solely responsible for their social contributions and tax obligations.
 
+6.8. **Local Compliance.** The Influencer is solely responsible for verifying and complying with all legal, tax, and regulatory obligations applicable in their country of residence or activity. This includes but is not limited to: obtaining any required legal status (sole proprietor, freelancer, self-employed, or local equivalent), registration with relevant authorities, declaring affiliate income, and complying with any local regulations relating to commercial referral or affiliate marketing activities. SOS Expat is not responsible for the Influencer's failure to comply with their local obligations.
+
 ---
 
 ## 7. Commission Payments
@@ -1141,7 +1135,7 @@ Pour toute question concernant le programme Influenceurs, contactez-nous via le 
 
 7.3. **Timing.** Payments are processed within **7 business days** after validation. Processing times also depend on the Influencer's bank.
 
-7.4. **Minimum Threshold.** Withdrawal is possible from **$20** available balance.
+7.4. **Minimum Threshold.** Withdrawal is possible from the **minimum threshold indicated in your dashboard**.
 
 7.5. **Currency and Conversion.** All payments are denominated in **USD**. If the Influencer wishes to be paid in another currency, conversion is made at the Wise rate on the day of transfer. **Conversion fees are at the Influencer's expense.**
 

@@ -592,7 +592,7 @@ const TermsAffiliate: React.FC = () => {
 
 ## 3. Retraits
 
-3.1 **Seuil minimum.** Le retrait est possible a partir de **30$** de solde disponible.
+3.1 **Seuil minimum.** Le retrait est possible a partir du **seuil minimum indique dans votre tableau de bord**.
 
 3.2 **Methodes de paiement.** Stripe (virement bancaire), PayPal, Mobile Money (selon le pays).
 
@@ -648,17 +648,29 @@ const TermsAffiliate: React.FC = () => {
 
 ---
 
-## 8. Dispositions generales
+## 8. Conformite locale et statut juridique
 
-8.1 **Droit applicable.** Droit estonien, sans prejudice des dispositions imperatives du pays de residence de l'affilie.
+8.1 **Responsabilite de l'affilie.** L'affilie est seul responsable de verifier et respecter les obligations legales, fiscales et reglementaires applicables dans son pays de residence ou d'exercice.
 
-8.2 **Modifications.** SOS Expat peut modifier les CGU avec un preavis de **30 jours** par email.
+8.2 **Statut juridique.** L'affilie doit obtenir tout statut juridique requis par la legislation de son pays (auto-entrepreneur, micro-entreprise, freelance, independant ou equivalent local) et s'immatriculer aupres des autorites competentes si necessaire.
 
-8.3 **Resiliation.** L'affilie peut resilier a tout moment. Les commissions validees restent payables.
+8.3 **Declaration des revenus.** L'affilie est tenu de declarer ses revenus d'affiliation conformement aux lois fiscales de son pays de residence.
+
+8.4 **Reglementation locale.** L'affilie doit se conformer a toute reglementation locale relative a l'activite de recommandation commerciale, de marketing d'affiliation ou de demarchage. SOS Expat n'est pas responsable du non-respect par l'affilie de ses obligations locales.
 
 ---
 
-## 9. Contact
+## 9. Dispositions generales
+
+9.1 **Droit applicable.** Droit estonien, sans prejudice des dispositions imperatives du pays de residence de l'affilie.
+
+9.2 **Modifications.** SOS Expat peut modifier les CGU avec un preavis de **30 jours** par email.
+
+9.3 **Resiliation.** L'affilie peut resilier a tout moment. Les commissions validees restent payables.
+
+---
+
+## 10. Contact
 
 Pour toute question concernant le programme d'affiliation, contactez-nous via le formulaire de contact ou a l'adresse : affiliate@sos-expat.com
 `;
@@ -695,7 +707,7 @@ Pour toute question concernant le programme d'affiliation, contactez-nous via le
 
 ## 3. Withdrawals
 
-3.1 **Minimum threshold.** Withdrawal is possible from **$30** available balance.
+3.1 **Minimum threshold.** Withdrawal is possible from the **minimum threshold indicated in your dashboard**.
 
 3.2 **Payment methods.** Stripe (bank transfer), PayPal, Mobile Money (depending on country).
 
@@ -751,17 +763,29 @@ Pour toute question concernant le programme d'affiliation, contactez-nous via le
 
 ---
 
-## 8. General Provisions
+## 8. Local Compliance and Legal Status
 
-8.1 **Governing law.** Estonian law, without prejudice to mandatory provisions of the affiliate's country of residence.
+8.1 **Affiliate responsibility.** The affiliate is solely responsible for verifying and complying with all legal, tax, and regulatory obligations applicable in their country of residence or activity.
 
-8.2 **Modifications.** SOS Expat may modify the Terms with **30 days' notice** by email.
+8.2 **Legal status.** The affiliate must obtain any legal status required by the laws of their country (sole proprietor, freelancer, self-employed, or local equivalent) and register with relevant authorities if necessary.
 
-8.3 **Termination.** The affiliate may terminate at any time. Validated commissions remain payable.
+8.3 **Income declaration.** The affiliate is required to declare their affiliate income in accordance with the tax laws of their country of residence.
+
+8.4 **Local regulations.** The affiliate must comply with any local regulations relating to commercial referral, affiliate marketing, or solicitation activities. SOS Expat is not responsible for the affiliate's failure to comply with their local obligations.
 
 ---
 
-## 9. Contact
+## 9. General Provisions
+
+9.1 **Governing law.** Estonian law, without prejudice to mandatory provisions of the affiliate's country of residence.
+
+9.2 **Modifications.** SOS Expat may modify the Terms with **30 days' notice** by email.
+
+9.3 **Termination.** The affiliate may terminate at any time. Validated commissions remain payable.
+
+---
+
+## 10. Contact
 
 For any questions about the affiliate program, contact us via the contact form or at: affiliate@sos-expat.com
 `;

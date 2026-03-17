@@ -638,9 +638,9 @@ const TermsGroupAdmins: React.FC = () => {
 
 **Admin Filleul** : tout autre Administrateur de Groupe recruté par l'Admin Groupe via son code de parrainage.
 
-**Commission de Recrutement Prestataire** : rémunération versée pour chaque appel payant réalisé par un Prestataire Recruté, pendant **12 mois** à compter de l'inscription dudit prestataire.
+**Commission de Recrutement Prestataire** : rémunération versée pour chaque appel payant réalisé par un Prestataire Recruté, pendant **la durée définie dans le barème en vigueur** à compter de l'inscription dudit prestataire.
 
-**Commission de Recrutement Admin** : rémunération versée pour chaque appel généré grâce aux Admins Filleuls (N1) ou leurs propres filleuls (N2), pendant **12 mois** à compter de l'inscription.
+**Commission de Recrutement Admin** : rémunération versée pour chaque appel généré grâce aux Admins Filleuls (N1) ou leurs propres filleuls (N2), pendant **la durée définie dans le barème en vigueur** à compter de l'inscription.
 
 **Code de Recrutement Prestataire** : identifiant unique permettant à l'Admin Groupe de recruter des prestataires.
 
@@ -685,11 +685,11 @@ const TermsGroupAdmins: React.FC = () => {
 
 ## 4. Commissions et rémunération
 
-4.1. **Commissions directes par appel client.** L'Admin Groupe perçoit **$10** pour chaque appel payant généré via son lien affilié, sans limite de volume ni de durée.
+4.1. **Commissions directes par appel client.** L'Admin Groupe perçoit **le montant défini dans le barème en vigueur** pour chaque appel payant généré via son lien affilié, sans limite de volume ni de durée.
 
-4.2. **Commission de Recrutement Prestataire.** L'Admin Groupe perçoit **$5** pour chaque appel payant réalisé par un Prestataire Recruté via son code de recrutement, pendant **12 mois** à compter de la date d'inscription dudit prestataire. Ces commissions cessent automatiquement à l'expiration du délai de 12 mois. L'Admin Groupe peut **re-recruter** de nouveaux prestataires pour démarrer de nouvelles périodes de 12 mois.
+4.2. **Commission de Recrutement Prestataire.** L'Admin Groupe perçoit **le montant défini dans le barème en vigueur** pour chaque appel payant réalisé par un Prestataire Recruté via son code de recrutement, pendant **la durée définie dans le barème en vigueur** à compter de la date d'inscription dudit prestataire. Ces commissions cessent automatiquement à l'expiration de la durée prévue. L'Admin Groupe peut **re-recruter** de nouveaux prestataires pour démarrer de nouvelles périodes.
 
-4.3. **Prime de recrutement d'un Admin Groupe.** Pour chaque Admin Groupe recruté via le code de parrainage, l'Admin-parrain perçoit une **prime unique de $50** lorsque l'Admin Groupe recruté cumule **$200 de commissions totales**. Cette prime est versée **une seule fois** par Admin recruté, sans commission récurrente sur les appels futurs de cet Admin.
+4.3. **Prime de recrutement d'un Admin Groupe.** Pour chaque Admin Groupe recruté via le code de parrainage, l'Admin-parrain perçoit une **prime unique dont le montant est défini dans le barème en vigueur**, lorsque l'Admin Groupe recruté atteint le **seuil de commissions totales indiqué dans le barème**. Cette prime est versée **une seule fois** par Admin recruté, sans commission récurrente sur les appels futurs de cet Admin.
 
 4.4. **Modèle d'attribution (tracking).** Le suivi des recommandations utilise un **cookie Last-Click valable 30 jours** : tout clic sur le lien affilié de l'Admin Groupe crée un cookie de 30 jours dans le navigateur du visiteur. Si ce visiteur effectue un appel payant dans ce délai, la commission est attribuée à l'Admin Groupe.
 
@@ -698,7 +698,7 @@ const TermsGroupAdmins: React.FC = () => {
 - Statut **« validée »** : après vérification anti-fraude automatique
 - Statut **« payable »** : au prochain cycle mensuel de paiement
 
-4.6. **Politique de remboursement et claw-back.** En cas de remboursement client ou chargeback bancaire, la commission est annulée ou récupérée sur le prochain paiement. SOS Expat peut récupérer des commissions versées en cas de fraude détectée a posteriori dans un délai de **12 mois**.
+4.6. **Politique de remboursement et claw-back.** En cas de remboursement client ou chargeback bancaire, la commission est annulée ou récupérée sur le prochain paiement. SOS Expat peut récupérer des commissions versées en cas de fraude détectée a posteriori dans le délai prévu par le barème en vigueur.
 
 4.7. **Absence de garantie de revenus.** SOS Expat ne garantit aucun niveau minimum de trafic, d'appels ou de revenus.
 
@@ -706,12 +706,12 @@ const TermsGroupAdmins: React.FC = () => {
 
 | Type de commission | Montant | Durée | Conditions |
 |---|---|---|---|
-| Appel client direct (via lien affilié) | $10/appel | Illimitée | Aucune |
-| Appel via prestataire recruté | $5/appel | 12 mois max | Aucune |
-| Prime recrutement d'un admin | $50 (unique) | Une seule fois | Admin recruté atteint $200 cumulé |
-| Bonus recrutement (10/25/50/100 prestataires) | Variable | Ponctuel | Seuils de recrutement atteints |
+| Appel client direct (via lien affilié) | Selon barème en vigueur | Illimitée | Aucune |
+| Appel via prestataire recruté | Selon barème en vigueur | Selon barème en vigueur | Aucune |
+| Prime recrutement d'un admin | Selon barème en vigueur | Une seule fois | Selon barème en vigueur |
+| Bonus recrutement (seuils de prestataires) | Selon barème en vigueur | Ponctuel | Seuils de recrutement atteints |
 
-4.9. **Seuil de retrait.** Retrait disponible à partir de **$20** de solde validé.
+4.9. **Seuil de retrait.** Retrait disponible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
 ---
 
@@ -775,6 +775,8 @@ const TermsGroupAdmins: React.FC = () => {
 
 6.8. **Indépendance.** L'Admin Groupe agit en **prestataire indépendant** ; aucun lien d'emploi, contrat de travail, mandat ou relation d'agence n'est créé avec SOS Expat. Il est seul responsable de ses cotisations sociales et obligations fiscales.
 
+6.9. **Conformité locale.** L'Admin Groupe est seul responsable de vérifier et respecter les obligations légales, fiscales et réglementaires applicables dans son pays de résidence ou d'exercice. Cela inclut notamment : l'obtention de tout statut juridique requis (auto-entrepreneur, micro-entreprise, freelance ou équivalent local), l'immatriculation auprès des autorités compétentes, la déclaration de ses revenus d'affiliation, et le respect de toute réglementation locale relative à l'activité de recommandation commerciale ou de marketing d'affiliation. SOS Expat n'est pas responsable du non-respect par l'Admin Groupe de ses obligations locales.
+
 ---
 
 ## 7. Paiement des commissions
@@ -785,7 +787,7 @@ const TermsGroupAdmins: React.FC = () => {
 
 7.3. **Délais.** Paiements traités sous **7 jours ouvrés** après validation (délais bancaires supplémentaires possibles).
 
-7.4. **Seuil minimum.** Retrait possible à partir de **$20** de solde disponible.
+7.4. **Seuil minimum.** Retrait possible à partir du **seuil minimum indiqué dans votre tableau de bord**.
 
 7.5. **Devise et conversion.** Tous les paiements sont libellés en **USD**. Conversion au taux Wise du jour si demandée ; **frais de conversion à la charge de l'Admin Groupe**.
 
@@ -856,7 +858,7 @@ const TermsGroupAdmins: React.FC = () => {
 
 ## 11. Responsabilité
 
-11.1. **Limitation de responsabilité.** La responsabilité totale de SOS Expat est limitée aux **commissions versées au cours des 12 derniers mois** précédant la réclamation.
+11.1. **Limitation de responsabilité.** La responsabilité totale de SOS Expat est limitée aux **commissions versées au cours de la période définie dans le barème en vigueur** précédant la réclamation.
 
 11.2. **Exclusion des dommages indirects.** SOS Expat exclut toute responsabilité pour dommages indirects, spéciaux, consécutifs ou punitifs.
 
@@ -931,9 +933,9 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 **Admin Referral**: any other Group Administrator recruited by the Group Admin via their referral code.
 
-**Provider Recruitment Commission**: compensation paid for each paid call made by a Recruited Provider, for **12 months** from said provider's registration date.
+**Provider Recruitment Commission**: compensation paid for each paid call made by a Recruited Provider, for **the duration defined in the current rate schedule** from said provider's registration date.
 
-**Admin Recruitment Commission**: compensation paid for each call generated by Admin Referrals (N1) or their own referrals (N2), for **12 months** from registration.
+**Admin Recruitment Commission**: compensation paid for each call generated by Admin Referrals (N1) or their own referrals (N2), for **the duration defined in the current rate schedule** from registration.
 
 **Provider Recruitment Code**: unique identifier enabling the Group Admin to recruit providers.
 
@@ -978,17 +980,17 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 ## 4. Commissions and Compensation
 
-4.1. **Direct Client Call Commissions.** The Group Admin earns **$10** for each paid call generated via their affiliate link, with no volume or time limits.
+4.1. **Direct Client Call Commissions.** The Group Admin earns **the amount defined in the current rate schedule** for each paid call generated via their affiliate link, with no volume or time limits.
 
-4.2. **Provider Recruitment Commission.** The Group Admin earns **$5** for each paid call made by a Recruited Provider via their recruitment code, for **12 months** from the provider's registration date. Commissions cease automatically after 12 months. The Group Admin may **re-recruit** new providers to start new 12-month periods.
+4.2. **Provider Recruitment Commission.** The Group Admin earns **the amount defined in the current rate schedule** for each paid call made by a Recruited Provider via their recruitment code, for **the duration defined in the current rate schedule** from the provider's registration date. Commissions cease automatically after the defined period. The Group Admin may **re-recruit** new providers to start new periods.
 
-4.3. **Admin Recruitment Bonus.** For each Group Admin recruited via the referral code, the referring Admin earns a **one-time bonus of $50** when the recruited Admin accumulates **$200 in total commissions**. This bonus is paid **once per recruited Admin**, with no recurring commission on that Admin's future calls.
+4.3. **Admin Recruitment Bonus.** For each Group Admin recruited via the referral code, the referring Admin earns a **one-time bonus as defined in the current rate schedule** when the recruited Admin reaches the **commission threshold indicated in the rate schedule**. This bonus is paid **once per recruited Admin**, with no recurring commission on that Admin's future calls.
 
 4.4. **Attribution Model (Tracking).** A **Last-Click cookie valid for 30 days** tracks recommendations. Any click on the affiliate link creates a 30-day cookie; a paid call within this period credits the commission.
 
 4.5. **Validation Period (Hold Period).** Commissions: "pending" (14-day client withdrawal period) → "validated" (after anti-fraud check) → "payable" (next monthly cycle).
 
-4.6. **Refund and Clawback Policy.** Client refund or bank chargeback: commission cancelled or deducted from next payment. Fraudulently obtained commissions recoverable within **12 months**.
+4.6. **Refund and Clawback Policy.** Client refund or bank chargeback: commission cancelled or deducted from next payment. Fraudulently obtained commissions recoverable within **the period defined in the current rate schedule**.
 
 4.7. **No Earnings Guarantee.** No minimum traffic, calls, or income guaranteed.
 
@@ -996,12 +998,12 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 | Commission Type | Amount | Duration | Conditions |
 |---|---|---|---|
-| Direct client call (via affiliate link) | $10/call | Unlimited | None |
-| Recruited provider call | $5/call | 12 months max | None |
-| Admin recruitment bonus | $50 (once) | One-time | Recruited reaches $200 cumulative |
-| Recruitment bonus (10/25/50/100 providers) | Variable | One-time | Recruitment thresholds |
+| Direct client call (via affiliate link) | Per current rate schedule | Unlimited | None |
+| Recruited provider call | Per current rate schedule | Per current rate schedule | None |
+| Admin recruitment bonus | Per current rate schedule | One-time | Per current rate schedule |
+| Recruitment bonus (provider thresholds) | Per current rate schedule | One-time | Recruitment thresholds |
 
-4.9. **Withdrawal Threshold.** Withdrawal from **$20** validated balance.
+4.9. **Withdrawal Threshold.** Withdrawal available from the **minimum threshold indicated in your dashboard**.
 
 ---
 
@@ -1065,6 +1067,8 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 6.8. **Independence.** The Group Admin acts as an **independent contractor**; no employment, work contract, mandate, or agency relationship is created with SOS Expat. They are solely responsible for their social contributions and tax obligations.
 
+6.9. **Local Compliance.** The Group Admin is solely responsible for verifying and complying with all legal, tax, and regulatory obligations applicable in their country of residence or operation. This includes, but is not limited to: obtaining any required legal status (sole proprietor, micro-enterprise, freelancer, or local equivalent), registration with the relevant authorities, declaration of affiliate income, and compliance with any local regulations relating to commercial referral or affiliate marketing activities. SOS Expat is not responsible for the Group Admin's failure to comply with their local obligations.
+
 ---
 
 ## 7. Commission Payments
@@ -1075,7 +1079,7 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 7.3. **Timing.** Payments processed within **7 business days** after validation (additional bank delays possible).
 
-7.4. **Minimum Threshold.** Withdrawal from **$20** available balance.
+7.4. **Minimum Threshold.** Withdrawal available from the **minimum threshold indicated in your dashboard**.
 
 7.5. **Currency and Conversion.** All payments are denominated in **USD**. Conversion at the daily Wise rate if requested; **conversion fees are at the Group Admin's expense**.
 
@@ -1146,7 +1150,7 @@ Pour toute question concernant le programme Administrateurs de Groupe, contactez
 
 ## 11. Liability
 
-11.1. **Liability Cap.** SOS Expat's total liability is limited to **commissions paid over the last 12 months** preceding the claim.
+11.1. **Liability Cap.** SOS Expat's total liability is limited to **commissions paid over the period defined in the current rate schedule** preceding the claim.
 
 11.2. **Exclusion of Indirect Damages.** SOS Expat excludes all liability for indirect, special, consequential, or punitive damages.
 
