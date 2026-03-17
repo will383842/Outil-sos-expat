@@ -146,6 +146,26 @@ if (typeof window !== 'undefined') {
   };
   // P1 FIX: Migration for AAA profiles AI access
   (window as any).migrateAaaProfiles = migrateAaaProfilesForAIAccess;
+  // Fix gendered bios for existing female AAA profiles
+  (window as any).migrateAaaBiosForGender = migrateAaaBiosForGender;
+  // Quick migration: add successRate to AAA profiles that don't have it
+  (window as any).migrateAaaSuccessRate = async (dryRun = true) => {
+    const snap = await getDocs(query(collection(db, 'sos_profiles'), where('isAAA', '==', true)));
+    const toFix = snap.docs.filter(d => !d.data().successRate);
+    console.log(`[AAA SuccessRate] ${toFix.length}/${snap.size} profiles need successRate`);
+    if (dryRun) return { total: snap.size, toFix: toFix.length };
+    let fixed = 0;
+    for (const d of toFix) {
+      const sr = randomInt(90, 100);
+      const tc = d.data().totalCalls || 0;
+      const sc = Math.round(tc * sr / 100);
+      await updateDoc(doc(db, 'sos_profiles', d.id), { successRate: sr, successfulCalls: sc });
+      await updateDoc(doc(db, 'users', d.id), { successRate: sr, successfulCalls: sc });
+      fixed++;
+    }
+    console.log(`[AAA SuccessRate] ✅ Fixed ${fixed} profiles`);
+    return { fixed };
+  };
 
   // Scripts de gestion des avis (reviews)
   (window as any).reviewsTools = {
@@ -158,6 +178,173 @@ if (typeof window !== 'undefined') {
     syncAll: syncAllReviewCounts,
     syncOne: syncOneProfileReviewCount,
   };
+}
+
+// ==========================================
+// 🔧 MIGRATION: Fix gendered bios for existing AAA profiles
+// ==========================================
+async function migrateAaaBiosForGender(dryRun = true) {
+  const { collection, query, where, getDocs, updateDoc, doc } = await import('firebase/firestore');
+  const { db } = await import('../../config/firebase');
+
+  console.log(`[AAA Bio Gender] Starting ${dryRun ? 'DRY RUN' : 'REAL MIGRATION'}...`);
+
+  // Load all AAA profiles from sos_profiles
+  const aaaQuery = query(collection(db, 'sos_profiles'), where('isAAA', '==', true));
+  const snapshot = await getDocs(aaaQuery);
+  console.log(`[AAA Bio Gender] Found ${snapshot.size} AAA profiles`);
+
+  // Load translation files
+  const frTranslations = (await import('../../helper/aaaprofiles/admin_aaa_fr.json')).default;
+
+  const femaleProfiles: { id: string; role: string; bio: any; specialties: string[]; country: string; experience: number }[] = [];
+  const maleProfiles: { id: string; role: string; bio: any }[] = [];
+
+  for (const d of snapshot.docs) {
+    const data = d.data();
+    const gender = data.gender;
+    const role = data.type || data.role || 'lawyer';
+    const bio = data.bio;
+
+    if (gender === 'female') {
+      // Check if bio FR contains masculine patterns
+      const bioFr = typeof bio === 'object' ? bio?.fr : bio;
+      const hasMasculineBio = bioFr && (
+        /\bAvocat\b/.test(bioFr) && !/\bAvocate\b/.test(bioFr) ||
+        /\bspécialisé\b/.test(bioFr) && !/\bspécialisée\b/.test(bioFr) ||
+        /\bExpatrié\b/.test(bioFr) && !/\bExpatriée\b/.test(bioFr) ||
+        /\bbasé\b/.test(bioFr) && !/\bbasée\b/.test(bioFr) ||
+        /\bExpert\b/.test(bioFr) && !/\bExperte\b/.test(bioFr) ||
+        /\bétabli\b/.test(bioFr) && !/\bétablie\b/.test(bioFr)
+      );
+
+      if (hasMasculineBio) {
+        femaleProfiles.push({
+          id: d.id, role,
+          bio,
+          specialties: data.specialties || data.helpTypes || [],
+          country: data.country || '',
+          experience: data.yearsOfExperience || data.yearsAsExpat || 5,
+        });
+      }
+    } else if (!gender) {
+      // Profiles without gender field - log them
+      console.warn(`[AAA Bio Gender] ⚠️ Profile ${d.id} (${data.fullName}) has no gender field`);
+    }
+  }
+
+  console.log(`[AAA Bio Gender] ${femaleProfiles.length} female profiles need bio migration`);
+
+  if (dryRun) {
+    femaleProfiles.forEach(p => console.log(`  Will fix: ${p.id} (${p.role})`));
+    console.log('[AAA Bio Gender] DRY RUN complete. Run migrateAaaBiosForGender(false) to apply.');
+    return { total: snapshot.size, toFix: femaleProfiles.length, fixed: 0 };
+  }
+
+  // Build pool of female bio templates per role
+  const bioTemplates: Record<string, Record<string, string[]>> = { lawyer: {}, expat: {} };
+  const allLangs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
+  const translationFiles: Record<string, any> = { fr: frTranslations };
+
+  // Load other language files
+  for (const lang of allLangs) {
+    if (lang === 'fr') continue;
+    try {
+      translationFiles[lang] = (await import(`../../helper/aaaprofiles/admin_aaa_${lang}.json`)).default;
+    } catch { console.warn(`Could not load ${lang} translations`); }
+  }
+
+  // Build template arrays per role per language
+  for (const role of ['lawyer', 'expat'] as const) {
+    for (const lang of allLangs) {
+      const t = translationFiles[lang];
+      if (!t) continue;
+      const bioSection = t?.admin?.aaa?.bio?.[role];
+      if (!bioSection) continue;
+
+      // Check if gendered structure exists (female sub-key)
+      if (bioSection.female && typeof bioSection.female === 'object') {
+        bioTemplates[role][lang] = Object.values(bioSection.female);
+      } else {
+        // Non-gendered language: use flat structure as-is
+        bioTemplates[role][lang] = Object.values(bioSection);
+      }
+    }
+  }
+
+  // Track used template indices per role+lang to avoid duplicates
+  const usedIndices: Record<string, Set<number>> = {};
+
+  // Also collect existing bios from ALL profiles to avoid duplicates with male profiles
+  for (const d of snapshot.docs) {
+    const data = d.data();
+    if (data.gender === 'female' && femaleProfiles.find(p => p.id === d.id)) continue; // will be regenerated
+    const bio = data.bio;
+    if (!bio || typeof bio !== 'object') continue;
+    const role = data.type || data.role || 'lawyer';
+    for (const lang of allLangs) {
+      const bioText = bio[lang];
+      if (!bioText) continue;
+      const key = `${role}_${lang}`;
+      if (!usedIndices[key]) usedIndices[key] = new Set();
+      const templates = bioTemplates[role]?.[lang];
+      if (templates) {
+        const idx = templates.indexOf(bioText);
+        if (idx >= 0) usedIndices[key].add(idx);
+      }
+    }
+  }
+
+  let fixed = 0;
+  for (const profile of femaleProfiles) {
+    const role = (profile.role === 'expat' ? 'expat' : 'lawyer') as Role;
+    const newBio: Record<string, string> = {};
+
+    for (const lang of allLangs) {
+      const templates = bioTemplates[role]?.[lang];
+      if (!templates || templates.length === 0) continue;
+
+      const key = `${role}_${lang}`;
+      if (!usedIndices[key]) usedIndices[key] = new Set();
+
+      // Find unused template
+      let idx = -1;
+      for (let attempt = 0; attempt < templates.length; attempt++) {
+        const candidate = Math.floor(Math.random() * templates.length);
+        if (!usedIndices[key].has(candidate)) {
+          idx = candidate;
+          break;
+        }
+      }
+      // If all used, just pick random (allow duplicate in that case)
+      if (idx === -1) idx = Math.floor(Math.random() * templates.length);
+
+      usedIndices[key].add(idx);
+
+      // Interpolate template with profile data
+      const specialtiesText = profile.specialties.join(', ');
+      const countryName = ensureCountryName(profile.country);
+      newBio[lang] = interpolateBio(templates[idx], {
+        specialties: specialtiesText,
+        help: specialtiesText,
+        services: specialtiesText,
+        country: countryName,
+        experience: profile.experience,
+      });
+    }
+
+    try {
+      await updateDoc(doc(db, 'sos_profiles', profile.id), { bio: newBio });
+      await updateDoc(doc(db, 'users', profile.id), { bio: newBio });
+      fixed++;
+      console.log(`[AAA Bio Gender] ✅ Fixed ${profile.id} (${role})`);
+    } catch (e) {
+      console.error(`[AAA Bio Gender] ❌ Error fixing ${profile.id}:`, e);
+    }
+  }
+
+  console.log(`[AAA Bio Gender] ✅ Complete! Fixed ${fixed}/${femaleProfiles.length} profiles`);
+  return { total: snapshot.size, toFix: femaleProfiles.length, fixed };
 }
 
 // ==========================================

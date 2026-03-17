@@ -10,7 +10,6 @@ import {
   query,
   where,
   getDocs,
-  Timestamp,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../../config/firebase';
@@ -29,8 +28,6 @@ import {
 import Button from '../../components/common/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { useAuth } from '../../contexts/AuthContext';
-
 // ============ TYPES ============
 
 interface ProviderProfile {
@@ -47,26 +44,8 @@ interface ProviderProfile {
   // PayPal fields
   paypalEmail?: string;
   paypalEmailVerified?: boolean;
-  // Payment method
-  paymentMethod?: 'stripe' | 'paypal' | 'bank_transfer' | 'wise' | 'mobile_money';
-}
-
-interface PendingTransfer {
-  id: string;
-  providerId: string;
-  providerAmount: number; // cents
-  currency: string;
-  status: string;
-  createdAt?: Timestamp;
-}
-
-interface PaypalBlockedOrder {
-  id: string;
-  providerId: string;
-  amount: number;
-  currency: string;
-  payoutPendingVerification?: boolean;
-  createdAt?: Timestamp;
+  // Payment gateway (set by onProviderCreated based on country)
+  paymentGateway?: 'stripe' | 'paypal';
 }
 
 interface BlockedInfo {
@@ -80,8 +59,6 @@ type StatusFilter = 'all' | 'verified' | 'pending' | 'blocked';
 // ============ COMPONENT ============
 
 const AdminKYCProviders: React.FC = () => {
-  const { user } = useAuth() as { user: { id: string } | null };
-
   // State
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<ProviderProfile[]>([]);
@@ -121,7 +98,7 @@ const AdminKYCProviders: React.FC = () => {
           payoutsEnabled: data.payoutsEnabled,
           paypalEmail: data.paypalEmail,
           paypalEmailVerified: data.paypalEmailVerified,
-          paymentMethod: data.paymentMethod,
+          paymentGateway: data.paymentGateway,
         });
       });
       setProviders(profilesData);
@@ -174,10 +151,10 @@ const AdminKYCProviders: React.FC = () => {
   // ============ HELPERS ============
 
   const getGateway = (p: ProviderProfile): 'stripe' | 'paypal' | 'none' => {
+    if (p.paymentGateway === 'stripe') return 'stripe';
+    if (p.paymentGateway === 'paypal') return 'paypal';
     if (p.stripeAccountId) return 'stripe';
     if (p.paypalEmail) return 'paypal';
-    if (p.paymentMethod === 'stripe') return 'stripe';
-    if (p.paymentMethod === 'paypal' || p.paymentMethod === 'bank_transfer' || p.paymentMethod === 'wise' || p.paymentMethod === 'mobile_money') return 'paypal';
     return 'none';
   };
 
@@ -455,7 +432,6 @@ const AdminKYCProviders: React.FC = () => {
                 ) : (
                   paginatedProviders.map((provider) => {
                     const gw = getGateway(provider);
-                    const status = getProviderStatus(provider);
                     const stripeBlocked = stripeBlockedMap.get(provider.id);
                     const paypalBlocked = paypalBlockedMap.get(provider.id);
 
