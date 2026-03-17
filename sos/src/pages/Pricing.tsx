@@ -19,6 +19,7 @@ import {
 import Layout from "../components/layout/Layout";
 import { useLocaleNavigate } from "../multilingual-system";
 import SEOHead from "../components/layout/SEOHead";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useApp } from "../contexts/AppContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -412,6 +413,7 @@ const Pricing: React.FC = () => {
         trustworthiness="transparent_pricing, no_hidden_fees, secure_payment"
         contentQuality="high"
       />
+      <HreflangLinks />
       <BreadcrumbSchema
         items={[
           { name: intl.formatMessage({ id: "nav.home" }), url: `/${language}` },

@@ -164,7 +164,7 @@ const NotFound: React.FC = () => {
         noindex={true}
       />
 
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-12">
+      <div data-page-not-found="true" className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-12">
         <div className="max-w-2xl w-full text-center">
           {/* 404 Icon/Number */}
           <div className="mb-8">

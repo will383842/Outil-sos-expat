@@ -92,19 +92,38 @@
   <!-- Canonical is injected dynamically by React Helmet for each page.
        No static canonical here: a wrong canonical (e.g., homepage) is worse than none. -->
 
-  <!-- 🔒 GOOGLE CONSENT MODE V2 - Must be FIRST before any Google tags -->
+  <!-- 🔒 GOOGLE CONSENT MODE V2 + GEO-CONSENT - Must be FIRST before any Google tags -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
 
-    // Set default consent state (denied until user consents) - GDPR/EEA compliance
+    // Geo-Consent: detect if user is in a region requiring consent (EU/EEA/UK/BR)
+    // Users outside these regions get analytics_storage: 'granted' by default
+    // This recovers ~130 countries where consent is NOT legally required
+    var __requiresConsent = true; // Safe default: require consent
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      // EU/EEA timezones start with Europe/, plus Iceland, Brazil LGPD
+      var consentZones = [
+        'Europe/', 'Atlantic/Reykjavik', 'Atlantic/Canary', 'Atlantic/Madeira',
+        'Atlantic/Azores', 'Atlantic/Faroe',
+        'America/Sao_Paulo', 'America/Fortaleza', 'America/Recife',
+        'America/Bahia', 'America/Belem', 'America/Manaus', 'America/Cuiaba',
+        'America/Porto_Velho', 'America/Boa_Vista', 'America/Campo_Grande',
+        'America/Araguaina', 'America/Maceio', 'America/Santarem'
+      ];
+      __requiresConsent = consentZones.some(function(z) { return tz.startsWith(z); });
+    } catch(e) {}
+
+    // Set default consent state
+    var defaultConsent = __requiresConsent ? 'denied' : 'granted';
     gtag('consent', 'default', {
-      'ad_storage': 'denied',
-      'ad_user_data': 'denied',
-      'ad_personalization': 'denied',
-      'analytics_storage': 'denied',
-      'functionality_storage': 'denied',
-      'personalization_storage': 'denied',
+      'ad_storage': defaultConsent,
+      'ad_user_data': defaultConsent,
+      'ad_personalization': defaultConsent,
+      'analytics_storage': defaultConsent,
+      'functionality_storage': defaultConsent,
+      'personalization_storage': defaultConsent,
       'security_storage': 'granted',
       'wait_for_update': 500
     });
@@ -114,7 +133,7 @@
     // Redact ad click identifiers when ad_storage is denied
     gtag('set', 'ads_data_redaction', true);
 
-    // Restore consent from localStorage if already given
+    // Restore consent from localStorage if already given (overrides geo-consent)
     (function () {
       try {
         var saved = localStorage.getItem('cookie_preferences');
@@ -131,6 +150,9 @@
         }
       } catch (e) { }
     })();
+
+    // Expose geo-consent status for debugging
+    window.__requiresConsent = __requiresConsent;
   </script>
 
   <!-- GA4 - ALWAYS LOADED (Consent Mode V2 handles what data is collected) -->
@@ -139,7 +161,7 @@
     gtag('js', new Date());
     gtag('config', 'G-CTVDEL29CP', {
       anonymize_ip: true,
-      send_page_view: true,
+      send_page_view: false,
       cookie_domain: 'auto'
     });
   </script>
@@ -242,7 +264,7 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="SOS Expat - Emergency assistance mobile app" />
-  <meta property="og:locale" content="en_US" />
+  <!-- og:locale injected dynamically by SEOHead per page/language -->
   <meta property="og:site_name" content="SOS Expat & Travelers" />
 
   <meta name="twitter:card" content="summary_large_image" />
@@ -254,10 +276,7 @@
   <meta name="twitter:creator" content="@sos-expat" />
   <meta name="twitter:site" content="@sos-expat" />
 
-  <!-- 🔍 BOTS -->
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:-1, max-video-preview:-1" />
+  <!-- 🔍 BOTS — robots meta injected dynamically by SEOHead (noindex for 404, index for all other pages) -->
 
   <!-- 🎨 CRITICAL CSS - TOUT EN CSS STATIQUE -->
   <style>
@@ -354,6 +373,12 @@
 </head>
 
 <body>
+  <!-- GTM noscript fallback (required for GTM to work without JS) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P53H3RLF"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+
   <!-- Meta Pixel noscript fallback -->
   <noscript>
     <img height="1" width="1" style="display:none"

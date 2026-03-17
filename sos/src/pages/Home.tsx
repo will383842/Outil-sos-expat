@@ -46,6 +46,7 @@ import { useApp } from "../contexts/AppContext";
 import { formatCurrency } from "../utils/localeFormatters";
 import { getTranslatedRouteSlug, getLocaleString } from "../multilingual-system/core/routing/localeRoutes";
 import { useLocalePath } from "../multilingual-system";
+import { getHreflangCode } from "../multilingual-system/components/HrefLang/HrefLangConstants";
 
 /* ================================
    CONSTANTES SEO (NE PAS TRADUIRE)
@@ -1159,15 +1160,14 @@ const OptimizedHomePage: React.FC = () => {
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
         
-        {/* Canonical - CONSTRUIT DYNAMIQUEMENT */}
-        <link rel="canonical" href={canonicalUrl} />
-        
+        {/* Canonical managed by SEOHead — removed manual duplicate */}
+
         {/* Hreflang - URLs avec locale complète (fr-fr, en-us, etc.) */}
         {SUPPORTED_LANGS.map((lang) => (
           <link
             key={lang}
             rel="alternate"
-            hrefLang={lang}
+            hrefLang={getHreflangCode(lang)}
             href={`${SEO_CONSTANTS.BASE_URL}/${getLocaleString(lang as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar")}`}
           />
         ))}

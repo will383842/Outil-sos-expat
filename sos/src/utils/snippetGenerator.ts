@@ -747,19 +747,34 @@ export function generateSnippets(
   // Meta Description optimisée
   const metaDescription = faqContent[0]?.answer.slice(0, 160) || '';
   
-  // H1 optimisé
-  const h1 = baseLang === 'fr'
-    ? `${name} - ${provider.type === 'lawyer' ? 'Avocat' : 'Expert Expatrié'} ${provider.languages[0]} en ${country}`
-    : `${name} - ${provider.type === 'lawyer' ? 'Lawyer' : 'Expat Expert'} in ${country}`;
-  
-  // H2 optimisés
-  const h2List = [
-    baseLang === 'fr' ? `Spécialités de ${name}` : `${name}'s Specialties`,
-    baseLang === 'fr' ? `Pourquoi choisir ${name} ?` : `Why choose ${name}?`,
-    baseLang === 'fr' ? `Avis clients` : `Client Reviews`,
-    baseLang === 'fr' ? `Réserver une consultation` : `Book a Consultation`,
-    baseLang === 'fr' ? `Questions fréquentes` : `Frequently Asked Questions`
-  ];
+  // H1 optimisé — localisé en 9 langues
+  const h1Translations: Record<string, { lawyer: string; expat: string; inWord: string }> = {
+    fr: { lawyer: 'Avocat', expat: 'Expert Expatrié', inWord: 'en' },
+    en: { lawyer: 'Lawyer', expat: 'Expat Expert', inWord: 'in' },
+    es: { lawyer: 'Abogado', expat: 'Experto en Expatriación', inWord: 'en' },
+    de: { lawyer: 'Anwalt', expat: 'Expat-Experte', inWord: 'in' },
+    pt: { lawyer: 'Advogado', expat: 'Especialista em Expatriação', inWord: 'em' },
+    ru: { lawyer: 'Адвокат', expat: 'Эксперт по экспатриации', inWord: 'в' },
+    ch: { lawyer: '律师', expat: '外籍专家', inWord: '在' },
+    ar: { lawyer: 'محامي', expat: 'خبير المغتربين', inWord: 'في' },
+    hi: { lawyer: 'वकील', expat: 'प्रवासी विशेषज्ञ', inWord: 'में' },
+  };
+  const h1T = h1Translations[baseLang] || h1Translations['en'];
+  const h1 = `${name} - ${provider.type === 'lawyer' ? h1T.lawyer : h1T.expat} ${h1T.inWord} ${country}`;
+
+  // H2 optimisés — localisés en 9 langues
+  const h2Translations: Record<string, string[]> = {
+    fr: [`Spécialités de ${name}`, `Pourquoi choisir ${name} ?`, `Avis clients`, `Réserver une consultation`, `Questions fréquentes`],
+    en: [`${name}'s Specialties`, `Why choose ${name}?`, `Client Reviews`, `Book a Consultation`, `Frequently Asked Questions`],
+    es: [`Especialidades de ${name}`, `¿Por qué elegir a ${name}?`, `Opiniones de clientes`, `Reservar una consulta`, `Preguntas frecuentes`],
+    de: [`Fachgebiete von ${name}`, `Warum ${name} wählen?`, `Kundenbewertungen`, `Beratung buchen`, `Häufig gestellte Fragen`],
+    pt: [`Especialidades de ${name}`, `Por que escolher ${name}?`, `Avaliações de clientes`, `Agendar uma consulta`, `Perguntas frequentes`],
+    ru: [`Специализации ${name}`, `Почему выбрать ${name}?`, `Отзывы клиентов`, `Записаться на консультацию`, `Часто задаваемые вопросы`],
+    ch: [`${name}的专业领域`, `为什么选择${name}？`, `客户评价`, `预约咨询`, `常见问题`],
+    ar: [`تخصصات ${name}`, `لماذا تختار ${name}؟`, `آراء العملاء`, `حجز استشارة`, `أسئلة شائعة`],
+    hi: [`${name} की विशेषज्ञता`, `${name} को क्यों चुनें?`, `ग्राहक समीक्षाएं`, `परामर्श बुक करें`, `अक्सर पूछे जाने वाले प्रश्न`],
+  };
+  const h2List = h2Translations[baseLang] || h2Translations['en'];
   
   return {
     faqSchema,

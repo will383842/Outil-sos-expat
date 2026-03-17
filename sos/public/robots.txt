@@ -19,16 +19,6 @@ Disallow: /booking-request
 Disallow: /payment-success
 Disallow: /admin
 Disallow: /api/
-Disallow: /_next/
-Disallow: /assets/
-
-# Fichiers statiques autorisés
-Allow: /assets/*.css
-Allow: /assets/*.js
-Allow: /assets/*.png
-Allow: /assets/*.jpg
-Allow: /assets/*.svg
-Allow: /assets/*.woff2
 
 # ===========================================
 # MOTEURS DE RECHERCHE PRINCIPAUX

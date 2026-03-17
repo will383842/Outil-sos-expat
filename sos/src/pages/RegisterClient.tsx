@@ -173,7 +173,7 @@ const RegisterClient: React.FC = () => {
     document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
     const langs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ar', 'hi', 'zh'];
     langs.forEach(lang => setLink('alternate', `${baseUrl}/${lang}/register`, lang));
-    setLink('alternate', `${baseUrl}/en/register`, 'x-default');
+    setLink('alternate', `${baseUrl}/fr-fr/inscription`, 'x-default');
 
     // JSON-LD
     const availableLanguages = intl.formatMessage({ id: 'registerClient.seo.availableLanguages' }).split(', ');

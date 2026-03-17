@@ -43,20 +43,38 @@ const memoryCache = new Map<string, { html: string; timestamp: number }>();
  * Includes search engines and AI crawlers
  */
 const BOT_USER_AGENTS = [
-  // Search engine bots
+  // Google bots (complete list)
   'googlebot',
+  'googlebot-mobile',
+  'googlebot-image',
+  'googlebot-news',
+  'googlebot-video',
+  'adsbot-google',
+  'adsbot-google-mobile',
+  'mediapartners-google',
+  'apis-google',
+  'google-inspectiontool',
+  'google-safety',
+  'storebot-google',
+  'googleother',
+  'google-extended',
+  'feedfetcher-google',
+
+  // Other search engine bots
   'bingbot',
+  'bingpreview',
+  'msnbot',
   'yandex',
   'baiduspider',
   'duckduckbot',
   'slurp',           // Yahoo
   'sogou',
   'exabot',
-  'facebot',
   'ia_archiver',     // Internet Archive
 
   // Social media bots
   'facebookexternalhit',
+  'facebot',
   'twitterbot',
   'linkedinbot',
   'whatsapp',
@@ -68,6 +86,7 @@ const BOT_USER_AGENTS = [
   // AI/LLM bots
   'gptbot',
   'chatgpt-user',
+  'oai-searchbot',
   'claudebot',
   'anthropic-ai',
   'perplexitybot',
@@ -181,7 +200,7 @@ function cacheHtml(path: string, html: string): void {
  * with the public SITE_URL so that canonical, og:url, hreflang etc. point
  * to the correct production domain.
  */
-async function renderPage(url: string): Promise<string> {
+async function renderPage(url: string): Promise<{ html: string; is404: boolean }> {
   // Lazy load puppeteer and chromium to avoid deployment timeout
   logger.info('Loading Puppeteer modules...');
   if (!puppeteer) {
@@ -251,12 +270,28 @@ async function renderPage(url: string): Promise<string> {
     // Get the rendered HTML
     let html = await page.content();
 
+    // Detect 404 pages: check for NotFound component or provider-not-found marker
+    // Note: page.evaluate runs in browser context where `document` exists
+    let is404 = false;
+    try {
+      is404 = await page.evaluate(`
+        !!(
+          document.querySelector('[data-page-not-found="true"]') ||
+          document.querySelector('[data-provider-not-found="true"]')
+        )
+      `) as boolean;
+    } catch (evalError) {
+      logger.warn('404 detection evaluate failed, assuming valid page', {
+        error: (evalError as Error).message,
+      });
+    }
+
     // Replace Pages origin domain with the public domain in ALL rendered output.
     // This ensures canonical, og:url, hreflang, JSON-LD @id, breadcrumbs etc.
     // all point to the production domain (sos-expat.com) and not pages.dev.
     html = html.split(PAGES_ORIGIN).join(SITE_URL);
 
-    return html;
+    return { html, is404 };
   } finally {
     if (browser) {
       await browser.close();
@@ -333,9 +368,19 @@ export const renderForBotsV2 = onRequest(
     try {
       // Render the page
       logger.info('Rendering page with Puppeteer', { url: fullUrl });
-      const html = await renderPage(fullUrl);
+      const { html, is404 } = await renderPage(fullUrl);
 
-      // Cache the result
+      if (is404) {
+        // Return HTTP 404 for not-found pages — do NOT cache 404s
+        logger.info('404 page detected, returning HTTP 404', { path: requestPath });
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.set('X-Render-Status', '404');
+        res.set('Cache-Control', 'public, max-age=3600'); // 1 hour for 404s (shorter than 24h for valid pages)
+        res.status(404).send(html);
+        return;
+      }
+
+      // Cache the result (only for valid pages)
       cacheHtml(requestPath, html);
 
       // Return the rendered HTML

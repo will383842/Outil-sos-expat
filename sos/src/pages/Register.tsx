@@ -471,7 +471,7 @@ const Register: React.FC = () => {
     const xDefault = document.createElement("link");
     xDefault.rel = "alternate";
     xDefault.hreflang = "x-default";
-    xDefault.href = alternates.en;
+    xDefault.href = alternates.fr;
     document.head.appendChild(xDefault);
 
     const structuredData = {

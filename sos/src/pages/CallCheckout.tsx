@@ -3883,8 +3883,8 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       twitterImageAlt: t("meta.twitter_image_alt"),
       canonicalUrl: `${window.location.origin}/${language}/checkout`,
       alternateUrls: {
-        fr: `${window.location.origin}/fr/checkout`,
-        en: `${window.location.origin}/en/checkout`,
+        fr: `${window.location.origin}/fr-fr/checkout`,
+        en: `${window.location.origin}/en-us/checkout`,
       } as Record<"fr" | "en", string>,
       locale: language as Lang,
       structuredData: {

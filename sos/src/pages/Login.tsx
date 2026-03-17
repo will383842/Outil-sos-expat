@@ -377,7 +377,7 @@ const Login: React.FC = () => {
       twitterDescription: intl.formatMessage({ id: "seo.login.twitter_description" }),
       canonicalUrl,
       alternateUrls: {
-        'x-default': `${baseUrl}/en-us/${getTranslatedRouteSlug('login', 'en')}`,
+        'x-default': `${baseUrl}/fr-fr/${getTranslatedRouteSlug('login', 'fr')}`,
         fr: `${baseUrl}/fr-fr/${getTranslatedRouteSlug('login', 'fr')}`,
         en: `${baseUrl}/en-us/${getTranslatedRouteSlug('login', 'en')}`,
         es: `${baseUrl}/es-es/${getTranslatedRouteSlug('login', 'es')}`,

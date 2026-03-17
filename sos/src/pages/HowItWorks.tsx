@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle, Users, MessageSquare } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useApp } from "../contexts/AppContext";
 import { useLocalePath } from "../multilingual-system";
@@ -55,6 +56,7 @@ const HowItWorksPage: React.FC = () => {
         contentType="HowTo"
         aiSummary="Guide étape par étape expliquant comment utiliser SOS Expat pour obtenir une aide juridique rapide"
       />
+      <HreflangLinks />
       <div className="min-h-screen bg-gray-950">
         {/* Header avec style moderne comme la home */}
         <section className="relative pt-20 pb-32 overflow-hidden">

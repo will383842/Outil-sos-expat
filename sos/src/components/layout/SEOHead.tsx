@@ -209,7 +209,14 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content={siteName} />
       <meta property="og:locale" content={locale} />
-      
+      {/* OG locale alternates for social media sharing (Facebook, LinkedIn) */}
+      {['fr_FR', 'en_US', 'es_ES', 'de_DE', 'pt_PT', 'ru_RU', 'zh_CN', 'ar_SA', 'hi_IN']
+        .filter(l => l !== locale)
+        .map(l => (
+          <meta key={l} property="og:locale:alternate" content={l} />
+        ))
+      }
+
       {fullCanonicalUrl && <meta property="og:url" content={fullCanonicalUrl} />}
       {fullOgImage && (
         <>

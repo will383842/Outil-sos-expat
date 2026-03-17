@@ -110,12 +110,30 @@ const DEFAULT_LOCALES: Record<string, string> = {
 };
 
 /**
- * Generate a random short ID
+ * Generate a DETERMINISTIC short ID from a Firebase UID.
+ * Same UID always produces the same shortId — critical for idempotent migration.
+ * Uses a simple hash function to convert UID → 6-char alphanumeric string.
  */
-function generateShortId(): string {
+function generateShortId(firebaseUid: string): string {
+  // Hash the UID deterministically
+  let hash = 0;
+  for (let i = 0; i < firebaseUid.length; i++) {
+    const char = firebaseUid.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  const absHash = Math.abs(hash);
+
+  // Convert hash to SHORT_ID_LENGTH characters using SHORT_ID_CHARS
   let shortId = '';
+  let remaining = absHash;
   for (let i = 0; i < SHORT_ID_LENGTH; i++) {
-    shortId += SHORT_ID_CHARS[Math.floor(Math.random() * SHORT_ID_CHARS.length)];
+    shortId += SHORT_ID_CHARS[remaining % SHORT_ID_CHARS.length];
+    remaining = Math.floor(remaining / SHORT_ID_CHARS.length);
+    // Mix in more entropy from UID for later chars
+    if (remaining === 0 && i < SHORT_ID_LENGTH - 1) {
+      remaining = Math.abs(hash * (i + 2)) || 1;
+    }
   }
   return shortId;
 }
@@ -262,7 +280,7 @@ export const migrateProfileSlugs = onRequest(
           // 1. Check/generate shortId
           let shortId = profile.shortId;
           if (!shortId || shortId.length !== 6) {
-            shortId = generateShortId();
+            shortId = generateShortId(profileId);
             updates.shortId = shortId;
             needsUpdate = true;
             console.log(`  📝 [${profileId}] Generated new shortId: ${shortId}`);

@@ -17,6 +17,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../config/firebase";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { BreadcrumbSchema, generateBreadcrumbs, FAQPageSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
@@ -161,6 +162,7 @@ const FAQ: React.FC = () => {
         contentQuality="high"
         lastReviewed={new Date().toISOString().split('T')[0]}
       />
+      <HreflangLinks />
 
       {/* FAQPage JSON-LD (dedicated, clean schema for Google Rich Results) */}
       {faqData.length > 0 && (

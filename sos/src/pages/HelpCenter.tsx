@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
@@ -360,6 +361,7 @@ const HelpCenter: React.FC = () => {
           },
         }}
       />
+      <HreflangLinks />
       <BreadcrumbSchema items={breadcrumbs} />
       <div className="min-h-screen bg-gray-50">
         {/* HERO */}

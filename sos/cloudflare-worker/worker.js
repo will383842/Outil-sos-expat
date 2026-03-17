@@ -828,7 +828,23 @@ function isAffiliatePath(pathname) {
  * @returns {boolean} - True if the path needs prerendering for bots
  */
 function needsPrerendering(pathname) {
-  return isProviderProfilePath(pathname) || isBlogPath(pathname) || isLandingPagePath(pathname);
+  // Explicit matches (profiles, blog, landing pages)
+  if (isProviderProfilePath(pathname) || isBlogPath(pathname) || isLandingPagePath(pathname)) {
+    return true;
+  }
+
+  // For ALL other locale-prefixed public paths, route bots through SSR
+  // so that Puppeteer can detect 404 pages (data-page-not-found) and return HTTP 404.
+  // Without this, SPA fallback always returns 200 even for non-existent pages → soft 404 in GSC.
+  // Exclude: assets, API, private routes, and non-locale paths
+  const EXCLUDED_PATHS = /^\/(dashboard|admin|api|profile\/edit|call-checkout|booking-request|payment-success|inscription|register|connexion|login|tableau-de-bord|panel|chatter|influencer|blogger|group-admin|captain)/i;
+  const isLocalePath = /^\/[a-z]{2}(-[a-z]{2})?\//i.test(pathname) || /^\/[a-z]{2}(-[a-z]{2})?\/?$/i.test(pathname);
+
+  if (isLocalePath && !EXCLUDED_PATHS.test(pathname)) {
+    return true;
+  }
+
+  return false;
 }
 
 /**

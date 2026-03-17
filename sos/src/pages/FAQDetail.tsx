@@ -600,16 +600,18 @@ const FAQDetail: React.FC = () => {
   // Generate alternate language URLs for hreflang tags
   // Map language codes to their locale strings for URLs (using getLocaleString format: lowercase with hyphen)
   // For hreflang, we use ISO format (e.g., "en-US"), but for URLs we use lowercase (e.g., "en-us")
+  // hreflangLocale must match HreflangLinks convention: simple lang code (fr, en, es...)
+  // except Chinese which uses zh-Hans (ISO 15924 script subtag)
   const localeMap: Record<string, { urlLocale: string; hreflangLocale: string }> = {
-    'fr': { urlLocale: 'fr-fr', hreflangLocale: 'fr-FR' },
-    'en': { urlLocale: 'en-us', hreflangLocale: 'en-US' },
-    'es': { urlLocale: 'es-es', hreflangLocale: 'es-ES' },
-    'ru': { urlLocale: 'ru-ru', hreflangLocale: 'ru-RU' },
-    'de': { urlLocale: 'de-de', hreflangLocale: 'de-DE' },
-    'hi': { urlLocale: 'hi-in', hreflangLocale: 'hi-IN' },
-    'pt': { urlLocale: 'pt-pt', hreflangLocale: 'pt-PT' },
+    'fr': { urlLocale: 'fr-fr', hreflangLocale: 'fr' },
+    'en': { urlLocale: 'en-us', hreflangLocale: 'en' },
+    'es': { urlLocale: 'es-es', hreflangLocale: 'es' },
+    'ru': { urlLocale: 'ru-ru', hreflangLocale: 'ru' },
+    'de': { urlLocale: 'de-de', hreflangLocale: 'de' },
+    'hi': { urlLocale: 'hi-in', hreflangLocale: 'hi' },
+    'pt': { urlLocale: 'pt-pt', hreflangLocale: 'pt' },
     'ch': { urlLocale: 'zh-cn', hreflangLocale: 'zh-Hans' },
-    'ar': { urlLocale: 'ar-sa', hreflangLocale: 'ar-SA' }
+    'ar': { urlLocale: 'ar-sa', hreflangLocale: 'ar' }
   };
 
   const supportedLanguages = ['fr', 'en', 'es', 'ru', 'de', 'hi', 'pt', 'ch', 'ar'];

@@ -3185,7 +3185,7 @@ const SOSCall: React.FC = () => {
             href={link.href}
           />
         ))}
-        <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}/en${PAGE_PATH}`} />
+        <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}/fr-fr/sos-appel`} />
         
         {/* ===== OPEN GRAPH (Facebook, LinkedIn) ===== */}
         <meta property="og:title" content={seoTitle} />

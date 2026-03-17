@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import Button from "../components/common/Button";
 import { useApp } from "../contexts/AppContext";
@@ -1104,6 +1105,7 @@ const Contact: React.FC = () => {
         trustworthiness="gdpr_compliant, responsive_support"
         contentQuality="high"
       />
+      <HreflangLinks />
       <BreadcrumbSchema
         items={[
           { name: t.home || "Accueil", url: `/${language}` },

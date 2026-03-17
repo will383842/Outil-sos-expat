@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocaleNavigate } from "../multilingual-system";
 import { Helmet } from "react-helmet-async";
+import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import {
   Star,
   MapPin,
@@ -689,6 +690,7 @@ const Testimonials: React.FC = () => {
           {JSON.stringify(jsonLdBreadcrumb)}
         </script>
       </Helmet>
+      <HreflangLinks />
 
       <div
         className="min-h-screen bg-gray-50"

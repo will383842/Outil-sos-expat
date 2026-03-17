@@ -216,10 +216,16 @@ export const onBlogPostUpdated = onDocumentUpdated(
     const wasUnpublished = before.status !== 'published' && !before.isPublished;
     const isNowPublished = after.status === 'published' || after.isPublished;
 
+    // Invalider le cache SSR si le contenu a changé (même sans transition de publication)
+    const slug = after.slug || postId;
+    if (slug) {
+      invalidateCache(slug);
+      console.log(`🗑️ Cache SSR invalidé pour blog ${postId}`);
+    }
+
     if (wasUnpublished && isNowPublished) {
       console.log(`📝 Article ${postId} vient d'être publié`);
 
-      const slug = after.slug || postId;
       const urls = generateBlogUrls(slug);
 
       const [indexNowResult, googleResult] = await Promise.all([
@@ -303,13 +309,19 @@ export const onHelpArticleUpdated = onDocumentUpdated(
 
     if (!before || !after) return;
 
+    // Invalider le cache SSR si le contenu a changé
+    const slug = after.slug || articleId;
+    if (slug) {
+      invalidateCache(slug);
+      console.log(`🗑️ Cache SSR invalidé pour help article ${articleId}`);
+    }
+
     const wasUnpublished = !before.isPublished && before.status !== 'published';
     const isNowPublished = after.isPublished || after.status === 'published';
 
     if (wasUnpublished && isNowPublished) {
       console.log(`📚 Article centre d'aide ${articleId} vient d'être publié`);
 
-      const slug = after.slug || articleId;
       const urls = generateHelpCenterUrls(slug);
 
       const [indexNowResult, googleResult] = await Promise.all([
@@ -389,13 +401,19 @@ export const onLandingPageUpdated = onDocumentUpdated(
 
     if (!before || !after) return;
 
+    // Invalider le cache SSR si le contenu a changé
+    const slug = after.slug || pageId;
+    if (slug) {
+      invalidateCache(slug);
+      console.log(`🗑️ Cache SSR invalidé pour landing ${pageId}`);
+    }
+
     const wasInactive = !before.isActive;
     const isNowActive = after.isActive;
 
     if (wasInactive && isNowActive) {
       console.log(`🎯 Landing page ${pageId} vient d'être activée`);
 
-      const slug = after.slug || pageId;
       const urls = generateLandingUrls(slug);
 
       const [indexNowResult, googleResult] = await Promise.all([
@@ -479,14 +497,20 @@ export const onFaqUpdated = onDocumentUpdated(
 
     if (!before || !after) return;
 
+    // Invalider le cache SSR si le contenu a changé
+    const faqSlug = typeof after.slug === 'object' ? (after.slug?.fr || after.slug?.en || faqId) : (after.slug || faqId);
+    if (faqSlug) {
+      invalidateCache(faqSlug);
+      console.log(`🗑️ Cache SSR invalidé pour FAQ ${faqId}`);
+    }
+
     const wasInactive = !before.isActive;
     const isNowActive = after.isActive;
 
     if (wasInactive && isNowActive) {
       console.log(`❓ FAQ ${faqId} vient d'être activé`);
 
-      const slug = typeof after.slug === 'object' ? (after.slug?.fr || after.slug?.en || faqId) : (after.slug || faqId);
-      const urls = generateFaqUrls(slug);
+      const urls = generateFaqUrls(faqSlug);
 
       const [indexNowResult, googleResult] = await Promise.all([
         submitToIndexNow(urls),

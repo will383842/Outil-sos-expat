@@ -78,7 +78,7 @@ export const LandingMeta = memo<LandingMetaProps>(({ data }) => {
           href={entry.url}
         />
       ))}
-      <link rel="alternate" hrefLang="x-default" href={SEO.baseUrl} />
+      <link rel="alternate" hrefLang="x-default" href={`${SEO.baseUrl}/fr-fr`} />
 
       {/* Open Graph */}
       <meta property="og:type" content={seo.ogType || 'website'} />
