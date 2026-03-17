@@ -16,6 +16,7 @@
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useIntl, FormattedMessage } from 'react-intl';
 import {
   collection,
@@ -185,6 +186,7 @@ const AdminInbox: React.FC = () => {
   // Reply state
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [emojiPickerOpenFor, setEmojiPickerOpenFor] = useState<string | null>(null);
+  const [emojiPickerPos, setEmojiPickerPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const [sendingReply, setSendingReply] = useState<Record<string, boolean>>({});
   const [archiving, setArchiving] = useState<Record<string, boolean>>({});
@@ -1007,14 +1009,28 @@ const AdminInbox: React.FC = () => {
                             />
                             <button
                               type="button"
-                              onClick={() => setEmojiPickerOpenFor(emojiPickerOpenFor === item.id ? null : item.id)}
+                              onClick={(e) => {
+                                if (emojiPickerOpenFor === item.id) {
+                                  setEmojiPickerOpenFor(null);
+                                } else {
+                                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                  setEmojiPickerPos({
+                                    top: rect.top - 410,
+                                    left: Math.min(rect.right - 320, window.innerWidth - 330),
+                                  });
+                                  setEmojiPickerOpenFor(item.id);
+                                }
+                              }}
                               className="absolute top-2 right-2 p-1 text-gray-400 hover:text-indigo-500 transition-colors rounded"
                               title="Ajouter un emoji"
                             >
                               <Smile className="w-5 h-5" />
                             </button>
-                            {emojiPickerOpenFor === item.id && (
-                              <div ref={emojiPickerRef} className="absolute right-0 bottom-full mb-1 z-50">
+                            {emojiPickerOpenFor === item.id && createPortal(
+                              <div
+                                ref={emojiPickerRef}
+                                style={{ position: 'fixed', top: emojiPickerPos.top, left: emojiPickerPos.left, zIndex: 9999 }}
+                              >
                                 <EmojiPicker
                                   onEmojiClick={(data) => handleEmojiClick(item.id, data)}
                                   theme={Theme.AUTO}
@@ -1024,7 +1040,8 @@ const AdminInbox: React.FC = () => {
                                   previewConfig={{ showPreview: false }}
                                   lazyLoadEmojis
                                 />
-                              </div>
+                              </div>,
+                              document.body
                             )}
                           </div>
                           <button
