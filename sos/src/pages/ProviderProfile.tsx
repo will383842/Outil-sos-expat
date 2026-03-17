@@ -921,8 +921,8 @@ const ProviderProfile: React.FC = () => {
         const translatedReviews = providerReviews.map(review => {
           const reviewWithKey = review as any;
           
-          const translatedComment = reviewWithKey.commentKey 
-            ? translateAAA(reviewWithKey.commentKey)
+          const translatedComment = reviewWithKey.commentKey
+            ? (translateAAA(reviewWithKey.commentKey) || review.comment)
             : review.comment;
           
           return { 
@@ -2265,6 +2265,7 @@ const ProviderProfile: React.FC = () => {
         canonicalUrl={canonicalUrl}
         ogImage={mainPhoto}
         ogType="profile"
+        noindex={isAAAProfile}
         structuredData={
           translation && !showOriginal && translation.seo?.jsonLd
             ? translation.seo.jsonLd
@@ -2279,9 +2280,6 @@ const ProviderProfile: React.FC = () => {
 
       {/* Hreflang links for international SEO */}
       <HreflangLinks pathname={location.pathname} />
-
-      {/* AAA profiles: noindex to prevent Google indexing test profiles */}
-      {isAAAProfile && <meta name="robots" content="noindex" />}
 
       {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage — no separate rendering) */}
       {snippetData && !isAAAProfile && (
