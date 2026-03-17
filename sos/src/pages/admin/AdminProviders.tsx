@@ -638,18 +638,23 @@ const BlockReasonModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   provider: Provider | null;
-  onConfirm: (reason: string) => void;
+  onConfirm: (reason: string, banNote: string) => void;
   isLoading: boolean;
   translations: ModalTranslations;
 }> = ({ isOpen, onClose, provider, onConfirm, isLoading, translations }) => {
   const [reason, setReason] = useState('');
+  const [banNote, setBanNote] = useState('');
 
   const handleConfirm = () => {
     if (!reason.trim()) {
       toast.error(translations.toastReasonRequired);
       return;
     }
-    onConfirm(reason);
+    if (!banNote.trim()) {
+      toast.error('Veuillez saisir une note pour le prestataire');
+      return;
+    }
+    onConfirm(reason, banNote);
   };
 
   const providerName = provider?.displayName || provider?.email || '';
@@ -684,6 +689,22 @@ const BlockReasonModal: React.FC<{
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Note visible par le prestataire *
+          </label>
+          <textarea
+            value={banNote}
+            onChange={(e) => setBanNote(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            rows={3}
+            placeholder="Cette note sera affichee sur le dashboard du prestataire bloque..."
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Cette note sera visible par le prestataire lorsqu'il se connectera.
+          </p>
+        </div>
+
         <div className="flex justify-end space-x-3 pt-4">
           <button
             onClick={onClose}
@@ -694,12 +715,62 @@ const BlockReasonModal: React.FC<{
           </button>
           <button
             onClick={handleConfirm}
-            disabled={isLoading || !reason.trim()}
+            disabled={isLoading || !reason.trim() || !banNote.trim()}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center"
           >
             {isLoading && <RefreshCw size={16} className="mr-2 animate-spin" />}
             <Ban size={16} className="mr-2" />
             {translations.bulkBlock}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// Unblock Confirmation Modal
+const UnblockConfirmModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  provider: Provider | null;
+  onConfirm: () => void;
+  isLoading: boolean;
+}> = ({ isOpen, onClose, provider, onConfirm, isLoading }) => {
+  const providerName = provider?.displayName || provider?.email || '';
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Debloquer le prestataire" size="medium">
+      <div className="space-y-4">
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start">
+            <Play className="text-green-600 mr-3 flex-shrink-0" size={20} />
+            <div>
+              <p className="text-sm font-medium text-green-800">
+                {providerName}
+              </p>
+              <p className="text-xs text-green-700 mt-1">
+                Le prestataire sera debloque et pourra de nouveau acceder a son compte.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center"
+          >
+            {isLoading && <RefreshCw size={16} className="mr-2 animate-spin" />}
+            <Play size={16} className="mr-2" />
+            Debloquer
           </button>
         </div>
       </div>
@@ -786,6 +857,7 @@ const AdminProviders: React.FC = () => {
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
+  const [showUnblockModal, setShowUnblockModal] = useState(false);
   const [bulkActionType, setBulkActionType] = useState<BulkActionType>('hide');
   const [isActionLoading, setIsActionLoading] = useState(false);
 
@@ -848,7 +920,7 @@ const AdminProviders: React.FC = () => {
   // Cloud Function calls
   const callHideProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'hideProvider');
   const callUnhideProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'unhideProvider');
-  const callBlockProvider = httpsCallable<{ providerId: string; reason: string }, ProviderActionResult>(functions, 'blockProvider');
+  const callBlockProvider = httpsCallable<{ providerId: string; reason: string; banNote?: string }, ProviderActionResult>(functions, 'blockProvider');
   const callUnblockProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'unblockProvider');
   const callSuspendProvider = httpsCallable<{ providerId: string; reason: string; until?: string }, ProviderActionResult>(functions, 'suspendProvider');
   const callUnsuspendProvider = httpsCallable<{ providerId: string }, ProviderActionResult>(functions, 'unsuspendProvider');
@@ -1210,26 +1282,37 @@ const AdminProviders: React.FC = () => {
     }
   }, [callHideProvider, callUnhideProvider, loadProviders]);
 
-  const handleBlockProvider = useCallback(async (reason: string) => {
+  const handleBlockProvider = useCallback(async (reason: string, banNote: string) => {
     if (!selectedProvider) return;
     setIsActionLoading(true);
     try {
-      if (selectedProvider.isBanned) {
-        await callUnblockProvider({ providerId: selectedProvider.id });
-        toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete debloque`);
-      } else {
-        await callBlockProvider({ providerId: selectedProvider.id, reason });
-        toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete bloque`);
-      }
+      await callBlockProvider({ providerId: selectedProvider.id, reason, banNote });
+      toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete bloque`);
       setShowBlockModal(false);
       loadProviders(true);
     } catch (error) {
-      console.error('Error toggling block:', error);
-      toast.error('Erreur lors du blocage/deblocage');
+      console.error('Error blocking provider:', error);
+      toast.error(`Erreur lors du blocage: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsActionLoading(false);
     }
-  }, [selectedProvider, callBlockProvider, callUnblockProvider, loadProviders]);
+  }, [selectedProvider, callBlockProvider, loadProviders]);
+
+  const handleUnblockProvider = useCallback(async () => {
+    if (!selectedProvider) return;
+    setIsActionLoading(true);
+    try {
+      await callUnblockProvider({ providerId: selectedProvider.id });
+      toast.success(`${selectedProvider.displayName || selectedProvider.email} a ete debloque`);
+      setShowUnblockModal(false);
+      loadProviders(true);
+    } catch (error) {
+      console.error('Error unblocking provider:', error);
+      toast.error(`Erreur lors du deblocage: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    } finally {
+      setIsActionLoading(false);
+    }
+  }, [selectedProvider, callUnblockProvider, loadProviders]);
 
   const handleSuspendProvider = useCallback(async (reason: string, until?: string) => {
     if (!selectedProvider) return;
@@ -2008,12 +2091,7 @@ const AdminProviders: React.FC = () => {
                             onClick={() => {
                               setSelectedProvider(provider);
                               if (provider.isBanned) {
-                                callUnblockProvider({ providerId: provider.id })
-                                  .then(() => {
-                                    toast.success('Prestataire debloque');
-                                    loadProviders(true);
-                                  })
-                                  .catch(() => toast.error('Erreur lors du deblocage'));
+                                setShowUnblockModal(true);
                               } else {
                                 setShowBlockModal(true);
                               }
@@ -2558,6 +2636,14 @@ const AdminProviders: React.FC = () => {
           onConfirm={handleBlockProvider}
           isLoading={isActionLoading}
           translations={modalTranslations}
+        />
+
+        <UnblockConfirmModal
+          isOpen={showUnblockModal}
+          onClose={() => setShowUnblockModal(false)}
+          provider={selectedProvider}
+          onConfirm={handleUnblockProvider}
+          isLoading={isActionLoading}
         />
 
         {/* GDPR Purge Modal */}

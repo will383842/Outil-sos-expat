@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../config/firebase';
+import { functionsWest3 as functions } from '../../config/firebase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { StatusType } from '@/components/admin/StatusBadge';

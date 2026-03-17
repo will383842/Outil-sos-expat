@@ -250,9 +250,22 @@ const AdminFinancePayouts: React.FC = () => {
     return "text-gray-600";
   };
 
-  // AUDIT-FIX C1: "retryPayPalPayout" does NOT exist in the backend
-  const handleRetryPayout = async (_item: FailedPayoutAlert) => {
-    setError('Fonction non disponible : retryPayPalPayout n\'est pas implémentée côté backend');
+  const handleRetryPayout = async (item: FailedPayoutAlert) => {
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const retryPayout = httpsCallable(functions, 'retryFailedPayout');
+      await retryPayout({ failedPayoutAlertId: item.id });
+      setSuccess('Payout relancé avec succès');
+      await loadData();
+      setSelectedItem(null);
+    } catch (err) {
+      console.error('Erreur retry payout:', err);
+      setError((err as Error).message || 'Erreur lors du retry du payout');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSendReminder = async (item: FailedPayoutAlert | PendingTransfer) => {

@@ -4,7 +4,7 @@ import { useIntl } from 'react-intl';
 import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorBoundary from '../common/ErrorBoundary';
-import { checkUserRole, isUserBanned } from '../../utils/auth';
+import { checkUserRole, getUserBanInfo, type BanInfo } from '../../utils/auth';
 import { devLog, devWarn, devError } from '../../utils/devLog';
 
 /**
@@ -88,6 +88,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   const [authState, setAuthState] = useState<AuthState>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [banInfo, setBanInfo] = useState<BanInfo | null>(null);
 
   // P0 FIX: Track time since component mounted to prevent premature redirects
   const mountTimeRef = useRef<number>(Date.now());
@@ -156,12 +157,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     try {
       // Timeout anti-latence sur le check de ban (8s - réduit pour éviter pages blanches prolongées)
-      const banned = await Promise.race([
-        isUserBanned(user.id),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('Authorization timeout')), 8000)),
+      const banResult = await Promise.race([
+        getUserBanInfo(user.id),
+        new Promise<BanInfo>((_, reject) => setTimeout(() => reject(new Error('Authorization timeout')), 8000)),
       ]);
 
-      if (banned) {
+      if (banResult.isBanned) {
+        setBanInfo(banResult);
         setAuthState('banned');
         return;
       }
@@ -277,10 +279,35 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
       case 'banned':
         return (
-          <div className="min-h-screen flex flex-col items-center justify-center p-4">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-red-600 mb-2">{intl.formatMessage({ id: 'auth.accountSuspended' })}</h2>
-              <p className="text-gray-600">{intl.formatMessage({ id: 'auth.contactSupport' })}</p>
+          <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+            <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-red-600 mb-2">{intl.formatMessage({ id: 'auth.accountSuspended' })}</h2>
+                <p className="text-gray-600">{intl.formatMessage({ id: 'auth.contactSupport' })}</p>
+              </div>
+
+              {banInfo?.banNote && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <h3 className="text-sm font-semibold text-red-800 mb-2">
+                    {intl.formatMessage({ id: 'auth.banNote', defaultMessage: 'Note de l\'administration' })}
+                  </h3>
+                  <p className="text-sm text-red-700 whitespace-pre-wrap">{banInfo.banNote}</p>
+                </div>
+              )}
+
+              <div className="text-center">
+                <a
+                  href="/contact"
+                  className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  {intl.formatMessage({ id: 'auth.contactSupport' })}
+                </a>
+              </div>
             </div>
           </div>
         );

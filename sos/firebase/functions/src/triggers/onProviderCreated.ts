@@ -901,6 +901,32 @@ export const onProviderCreated = onDocumentCreated(
       // ===== PAYPAL: Pas de création automatique, provider non visible =====
       await handlePayPalProvider(uid, data, providerType, countryCode, collectionName);
     }
+
+    // ===== VALIDATION QUEUE: Créer l'entrée pour la file d'attente admin =====
+    try {
+      const displayName = [data.firstName, data.lastName].filter(Boolean).join(" ") || data.email || uid;
+      await admin.firestore().collection("validation_queue").add({
+        providerId: uid,
+        providerName: displayName,
+        providerEmail: data.email || "",
+        providerType: providerType as "lawyer" | "expat",
+        providerCountry: countryCode,
+        status: "pending" as const,
+        submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        assignedTo: null,
+        assignedAt: null,
+        decision: null,
+        decisionBy: null,
+        decisionAt: null,
+        decisionReason: null,
+        requestedChanges: [],
+        changeHistory: [],
+      });
+      console.log(`[onProviderCreated] ✅ Validation queue entry created for ${providerType}: ${uid}`);
+    } catch (validationError) {
+      // Non-bloquant: si la queue échoue, le provider est quand même créé
+      console.error(`[onProviderCreated] ⚠️ Failed to create validation queue entry for ${uid}:`, validationError);
+    }
   }
 );
 

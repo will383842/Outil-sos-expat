@@ -861,12 +861,13 @@ const AdminUsers: React.FC = () => {
                     <span className="inline-flex items-center gap-1">Dernière connexion <SortIcon field="lastLoginAt" /></span>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Validation</th>
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr><td colSpan={8} className="py-16 text-center"><LoadingSpinner text={adminT.loading} /></td></tr>
+                  <tr><td colSpan={9} className="py-16 text-center"><LoadingSpinner text={adminT.loading} /></td></tr>
                 ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => (
                     <tr key={u.id} className={`group transition-colors hover:bg-gray-50/80 ${selectedUserIds.has(u.id) ? 'bg-red-50/50' : ''}`}>
@@ -938,15 +939,23 @@ const AdminUsers: React.FC = () => {
                           {u.featured && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">VEDETTE</span>
                           )}
-                          {u.isApproved === false && !u.isBanned && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">EN ATTENTE</span>
-                          )}
-                          {!u.isBanned && u.isApproved !== false && !u.featured && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">
+                          {!u.isBanned && (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${u.isOnline ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                               {u.isOnline ? 'En ligne' : 'Hors ligne'}
                             </span>
                           )}
                         </div>
+                      </td>
+
+                      {/* Validation */}
+                      <td className="px-4 py-3">
+                        {u.validationStatus === 'rejected' ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700">Refusé</span>
+                        ) : u.isApproved ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700">Approuvé</span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">En attente</span>
+                        )}
                       </td>
 
                       {/* Actions dropdown */}
@@ -1013,7 +1022,7 @@ const AdminUsers: React.FC = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={8} className="py-16 text-center text-gray-400 text-sm">Aucun utilisateur trouvé</td></tr>
+                  <tr><td colSpan={9} className="py-16 text-center text-gray-400 text-sm">Aucun utilisateur trouvé</td></tr>
                 )}
               </tbody>
             </table>

@@ -3434,5 +3434,9 @@ export {
   unifiedAutoMigrateAffiliateCodes,
 } from './unified/scheduled/autoMigrate';
 
+// ========== PAYOUT RETRY AFTER PAYPAL EMAIL VERIFICATION ==========
+// Trigger in europe-west3 that processes blocked payouts when provider verifies their PayPal email
+export { onPayoutRetryQueued } from './triggers/onPayoutRetryQueued';
+
 // ========== MARKETING CONTENT TRANSLATION ==========
 export { translateMarketingContent } from './translation/translateMarketingContent';

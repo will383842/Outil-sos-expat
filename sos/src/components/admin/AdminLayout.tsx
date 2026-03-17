@@ -202,9 +202,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   useEffect(() => {
     if (!user || user.role !== 'admin') return;
     const q = query(
-      collection(db, 'sos_profiles'),
-      where('type', 'in', ['lawyer', 'expat']),
-      where('approvalStatus', '==', 'pending')
+      collection(db, 'validation_queue'),
+      where('status', '==', 'pending')
     );
     getCountFromServer(q)
       .then((snap) => setPendingValidationCount(snap.data().count))

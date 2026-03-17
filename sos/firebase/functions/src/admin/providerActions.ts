@@ -355,7 +355,7 @@ export const unhideProvider = onCall(FUNCTION_CONFIG, async (req) => {
  */
 export const blockProvider = onCall(FUNCTION_CONFIG, async (req) => {
   const adminUid = assertAdmin(req);
-  const { providerId, reason } = req.data || {};
+  const { providerId, reason, banNote } = req.data || {};
 
   if (!providerId) {
     throw new HttpsError("invalid-argument", "providerId is required");
@@ -370,14 +370,20 @@ export const blockProvider = onCall(FUNCTION_CONFIG, async (req) => {
   }
 
   try {
-    await updateProviderAtomic(providerId, {
+    const updateData: Record<string, unknown> = {
       isBanned: true,
       isOnline: false,
       availability: "offline",
       bannedAt: admin.firestore.FieldValue.serverTimestamp(),
       bannedBy: adminUid,
       banReason: reason,
-    });
+    };
+
+    if (banNote) {
+      updateData.banNote = banNote;
+    }
+
+    await updateProviderAtomic(providerId, updateData);
 
     // Révoquer les tokens pour forcer une déconnexion immédiate
     try {
@@ -425,6 +431,7 @@ export const unblockProvider = onCall(FUNCTION_CONFIG, async (req) => {
       bannedAt: admin.firestore.FieldValue.delete(),
       bannedBy: admin.firestore.FieldValue.delete(),
       banReason: admin.firestore.FieldValue.delete(),
+      banNote: admin.firestore.FieldValue.delete(),
     });
 
     await logProviderAction(adminUid, providerId, "UNBLOCK");

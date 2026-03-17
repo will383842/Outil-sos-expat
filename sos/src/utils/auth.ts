@@ -434,23 +434,37 @@ export const checkUserRole = (
   return rolesArray.includes(user.role);
 };
 
+export interface BanInfo {
+  isBanned: boolean;
+  banReason?: string;
+  banNote?: string;
+}
+
 export const isUserBanned = async (userId: string): Promise<boolean> => {
+  const info = await getUserBanInfo(userId);
+  return info.isBanned;
+};
+
+export const getUserBanInfo = async (userId: string): Promise<BanInfo> => {
   try {
-    // Timeout court (3s) pour ne pas bloquer si Firestore est lent
-    // En cas de timeout, on assume que l'utilisateur n'est pas banni
-    const timeoutPromise = new Promise<boolean>((resolve) =>
-      setTimeout(() => resolve(false), 3000)
+    const timeoutPromise = new Promise<BanInfo>((resolve) =>
+      setTimeout(() => resolve({ isBanned: false }), 3000)
     );
-    const checkPromise = (async () => {
+    const checkPromise = (async (): Promise<BanInfo> => {
       const userDoc = await getDoc(doc(db, "users", userId));
-      if (!userDoc.exists()) return false;
-      return userDoc.data().isBanned === true;
+      if (!userDoc.exists()) return { isBanned: false };
+      const data = userDoc.data();
+      return {
+        isBanned: data.isBanned === true,
+        banReason: data.banReason,
+        banNote: data.banNote,
+      };
     })();
 
     return await Promise.race([checkPromise, timeoutPromise]);
   } catch (err: unknown) {
     console.error("Error checking if user is banned:", err);
-    return false; // En cas d'erreur, on laisse passer
+    return { isBanned: false };
   }
 };
 

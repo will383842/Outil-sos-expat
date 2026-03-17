@@ -5211,6 +5211,7 @@
   "aria.viewReviewFrom": "Voir l'avis de {name}",
   "auth.accessError": "Erreur d'accès",
   "auth.accountSuspended": "Compte suspendu",
+  "auth.banNote": "Note de l'administration",
   "auth.confirmPassword": "Confirmer le mot de passe",
   "auth.contactSupport": "Votre compte a été suspendu. Contactez le support pour plus d'informations.",
   "auth.continueWithGoogle": "Continuer avec Google",

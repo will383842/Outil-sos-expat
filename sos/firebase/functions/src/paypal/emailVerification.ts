@@ -691,6 +691,49 @@ export const verifyPayPalCode = onCall(
 
     await batch.commit();
 
+    // Auto-retry blocked payouts now that email is verified
+    try {
+      const blockedPayouts = await db
+        .collection("paypal_orders")
+        .where("providerId", "==", userId)
+        .where("payoutPendingVerification", "==", true)
+        .limit(50)
+        .get();
+
+      if (!blockedPayouts.empty) {
+        console.log(`[verifyPayPalCode] Found ${blockedPayouts.size} blocked payouts for ${userId}, queuing retries`);
+        const retryBatch = db.batch();
+        for (const doc of blockedPayouts.docs) {
+          const orderData = doc.data();
+          // Queue retry via intermediate collection (processed by europe-west3 trigger)
+          const retryRef = db.collection("payout_retry_queue").doc();
+          retryBatch.set(retryRef, {
+            orderId: doc.id,
+            providerId: userId,
+            providerEmail: normalizedEmail,
+            amount: orderData.providerAmount || orderData.amount,
+            currency: orderData.currency || "EUR",
+            callSessionId: orderData.callSessionId || null,
+            reason: "email_verified",
+            status: "pending",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          // Mark order as retry queued
+          retryBatch.update(doc.ref, {
+            payoutPendingVerification: false,
+            payoutRetryQueued: true,
+            payoutRetryReason: "email_verified",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+        await retryBatch.commit();
+        console.log(`[verifyPayPalCode] Queued ${blockedPayouts.size} payout retries for ${userId}`);
+      }
+    } catch (retryError) {
+      // Non-blocking: don't fail verification if retry queue fails
+      console.error(`[verifyPayPalCode] Failed to queue payout retries for ${userId}:`, retryError);
+    }
+
     // Annuler les rappels PayPal en attente (le provider est maintenant configuré)
     const pendingReminders = await db
       .collection("paypal_reminder_queue")

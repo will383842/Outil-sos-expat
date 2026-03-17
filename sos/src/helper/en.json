@@ -5209,6 +5209,7 @@
   "aria.viewReviewFrom": "View review from {name}",
   "auth.accessError": "Access Error",
   "auth.accountSuspended": "Account Suspended",
+  "auth.banNote": "Administration note",
   "auth.confirmPassword": "Confirm password",
   "auth.contactSupport": "Your account has been suspended. Contact support for more information.",
   "auth.continueWithGoogle": "Continue with Google",

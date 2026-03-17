@@ -53,6 +53,8 @@ export interface User {
   isVerified?: boolean;
   isVerifiedEmail?: boolean;
   isBanned?: boolean;
+  banReason?: string;
+  banNote?: string;
   isVisible?: boolean;
   isOnline?: boolean;
   isAAA?: boolean; // Profil AAA avec accès spéciaux

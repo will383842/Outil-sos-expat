@@ -591,9 +591,8 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
       });
 
       const averageRating = realReviewsCount > 0 ? totalRating / realReviewsCount : 0;
-      const successRate = totalCallsReceived > 0
-        ? Math.round((successfulCalls / totalCallsReceived) * 100)
-        : 0;
+      // +1 virtuel : tout prestataire démarre à 100%, puis moyenne avec les vrais appels
+      const successRate = Math.round(((successfulCalls + 1) / (totalCallsReceived + 1)) * 100);
 
       const stats: ProviderStats = {
         totalCallsReceived,
@@ -2023,7 +2022,9 @@ const ProviderProfile: React.FC = () => {
   }, [provider, preferredLangKey, intl, translation, showOriginal, viewingLanguage]);
 
   const isNewProvider = useMemo(() => {
-    return providerStats.completedCalls === 0 && providerStats.realReviewsCount === 0;
+    const calls = providerStats.completedCalls || provider?.totalCalls || 0;
+    const reviews = providerStats.realReviewsCount || provider?.reviewCount || 0;
+    return calls === 0 && reviews === 0;
   }, [providerStats]);
 
   // Use viewingLanguage for FAQ if user selected a translation, otherwise use header language
@@ -2635,7 +2636,7 @@ const ProviderProfile: React.FC = () => {
                             : (typeof provider.rating === "number" ? provider.rating.toFixed(1) : "--")}
                         </span>
                         <span className="text-gray-400">
-                          ({providerStats.realReviewsCount} <FormattedMessage id="providerProfile.reviews" />)
+                          ({providerStats.realReviewsCount || provider?.reviewCount || 0} <FormattedMessage id="providerProfile.reviews" />)
                         </span>
                       </div>
                     )}
@@ -2754,7 +2755,7 @@ const ProviderProfile: React.FC = () => {
                           <FormattedMessage id="providerProfile.completedCalls" />
                         </span>
                         <span className="font-semibold">
-                          {isLoadingStats ? "..." : providerStats.completedCalls}
+                          {isLoadingStats ? "..." : (providerStats.completedCalls || provider?.totalCalls || 0)}
                         </span>
                       </div>
                     </div>
@@ -3146,7 +3147,7 @@ const ProviderProfile: React.FC = () => {
                     <h3 id="reviews-heading" className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                       <Star size={20} className="text-yellow-500" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.customerReviews" />
-                      <span className="text-gray-600 font-normal">({providerStats.realReviewsCount})</span>
+                      <span className="text-gray-600 font-normal">({providerStats.realReviewsCount || provider?.reviewCount || 0})</span>
                     </h3>
 
                     {!isNewProvider && (
@@ -3182,8 +3183,8 @@ const ProviderProfile: React.FC = () => {
                     }>
                       <Reviews
                         mode="summary"
-                        averageRating={providerStats.averageRating || 0}
-                        totalReviews={providerStats.realReviewsCount}
+                        averageRating={providerStats.averageRating || provider?.rating || 0}
+                        totalReviews={providerStats.realReviewsCount || provider?.reviewCount || 0}
                         ratingDistribution={ratingDistribution}
                       />
                       <div className="mt-6">
@@ -3261,7 +3262,7 @@ const ProviderProfile: React.FC = () => {
                           <FormattedMessage id="providerProfile.reviews" />
                         </span>
                         <span className="font-semibold text-gray-900">
-                          {providerStats.realReviewsCount}
+                          {providerStats.realReviewsCount || provider?.reviewCount || 0}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -3269,7 +3270,7 @@ const ProviderProfile: React.FC = () => {
                           <FormattedMessage id="providerProfile.successRate" />
                         </span>
                         <span className="font-semibold text-gray-900">
-                          {isLoadingStats ? "..." : `${providerStats.successRate}%`}
+                          {isLoadingStats ? "..." : `${providerStats.successRate || provider?.successRate || 0}%`}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -3277,7 +3278,7 @@ const ProviderProfile: React.FC = () => {
                           <FormattedMessage id="providerProfile.completedCalls" />
                         </span>
                         <span className="font-semibold text-gray-900">
-                          {isLoadingStats ? "..." : providerStats.completedCalls}
+                          {isLoadingStats ? "..." : (providerStats.completedCalls || provider?.totalCalls || 0)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">

@@ -975,10 +975,18 @@ async function getUniqueBio(
   t: any,
   role: Role,
   langCode: string,
-  profileId: string
+  profileId: string,
+  gender: 'male' | 'female'
 ): Promise<string> {
-  const bioKey = `admin.aaa.bio.${role}`;
-  const templatesObj = t(bioKey, { returnObjects: true, lng: langCode });
+  // Try gendered path first, fallback to non-gendered for languages not yet migrated
+  const genderedKey = `admin.aaa.bio.${role}.${gender}`;
+  const fallbackKey = `admin.aaa.bio.${role}`;
+  let templatesObj = t(genderedKey, { returnObjects: true, lng: langCode });
+
+  // If gendered path returns the key itself (not found), fallback
+  if (!templatesObj || typeof templatesObj === 'string' && templatesObj === genderedKey) {
+    templatesObj = t(fallbackKey, { returnObjects: true, lng: langCode });
+  }
   
   // ✅ CONVERTIR L'OBJET EN ARRAY
   let templates: string[] = [];
@@ -997,7 +1005,7 @@ async function getUniqueBio(
     return t(fallbackKey, { lng: langCode });
   }
 
-  const key = `${role}_${langCode}`;
+  const key = `${role}_${langCode}_${gender}`;
   const used = memoryCache.usedBios.get(key) || new Set<number>();
   
   // 🛑 VÉRIFICATION CRITIQUE : Toutes les bios sont-elles utilisées ?
@@ -1116,7 +1124,8 @@ async function getMultilingualBio(
   profileId: string,
   specialties: string[],
   country: string,
-  experience: number
+  experience: number,
+  gender: 'male' | 'female'
 ): Promise<Record<string, string>> {
   const result: Record<string, string> = {};
   const bioLanguages = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
@@ -1126,7 +1135,7 @@ async function getMultilingualBio(
 
   for (const lang of bioLanguages) {
     try {
-      const bioTemplate = await getUniqueBio(t, role, lang, profileId);
+      const bioTemplate = await getUniqueBio(t, role, lang, profileId, gender);
 
       // ✅ CORRECTION : Traduire les codes en labels
       const translatedSpecialties = translateSpecialtyCodes(specialties, role, lang);
@@ -1155,19 +1164,30 @@ async function getMultilingualBio(
  */
 async function getMultilingualMotivation(
   country: string,
-  experience: number
+  experience: number,
+  gender: 'male' | 'female'
 ): Promise<Record<string, string>> {
   // 🛡️ S'assurer que c'est un nom de pays, pas un code ISO
   const countryName = ensureCountryName(country);
 
+  const frMaleTemplates: string[] = [
+    'Passionné par l\'aide aux expatriés à {country}',
+    'Expert de la vie d\'expatrié à {country} depuis {experience} ans',
+    'J\'accompagne les nouveaux arrivants à {country} dans leurs démarches',
+    'Expatrié expérimenté, je partage mes connaissances de {country}',
+    'Facilitateur d\'intégration pour expatriés à {country}'
+  ];
+
+  const frFemaleTemplates: string[] = [
+    'Passionnée par l\'aide aux expatriés à {country}',
+    'Experte de la vie d\'expatriée à {country} depuis {experience} ans',
+    'J\'accompagne les nouveaux arrivants à {country} dans leurs démarches',
+    'Expatriée expérimentée, je partage mes connaissances de {country}',
+    'Facilitatrice d\'intégration pour expatriés à {country}'
+  ];
+
   const motivationTemplates: Record<string, string[]> = {
-    fr: [
-      'Passionné par l\'aide aux expatriés à {country}',
-      'Expert de la vie d\'expatrié à {country} depuis {experience} ans',
-      'J\'accompagne les nouveaux arrivants à {country} dans leurs démarches',
-      'Expatrié expérimenté, je partage mes connaissances de {country}',
-      'Facilitateur d\'intégration pour expatriés à {country}'
-    ],
+    fr: gender === 'female' ? frFemaleTemplates : frMaleTemplates,
     en: [
       'Passionate about helping expats in {country}',
       'Expert in expat life in {country} for {experience} years',
@@ -2179,6 +2199,10 @@ const AdminAaaProfiles: React.FC = () => {
     const callsPerWeek = randomInt(1, 3);
     const totalCalls = Math.max(1, weeks * callsPerWeek);
 
+    // 📊 Taux de réussite réaliste (90-100%)
+    const successRate = randomInt(90, 100);
+    const successfulCalls = Math.round(totalCalls * successRate / 100);
+
     // ⭐ 1 à 2 avis par semaine depuis l'inscription
     const reviewsPerWeek = randomInt(1, 2);
     const reviewCount = Math.max(1, Math.min(totalCalls, weeks * reviewsPerWeek));
@@ -2243,7 +2267,8 @@ const AdminAaaProfiles: React.FC = () => {
       uid,
       finalSpecialties,
       country,
-      experience
+      experience,
+      gender
     );
 
     // 🆕 COORDONNÉES GPS RÉALISTES
@@ -2271,7 +2296,7 @@ const AdminAaaProfiles: React.FC = () => {
       affiliateCode: `AAA${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
       referralBy: null, bio,
       responseTime,
-      availability: 'offline', totalCalls, totalEarnings: 0, averageRating: rating,
+      availability: 'offline', totalCalls, successfulCalls, successRate, totalEarnings: 0, averageRating: rating,
       rating, reviewCount, isEarlyProvider: isEarly,
       mapLocation,
       gender, // ✅ Stocke le genre pour éviter les décalages photo/nom
@@ -2298,7 +2323,7 @@ const AdminAaaProfiles: React.FC = () => {
       });
     } else {
       const previousCountryCodes = previousCountries.map(c => getCountryCode(c));
-      const motivation = await getMultilingualMotivation(country, experience);
+      const motivation = await getMultilingualMotivation(country, experience, gender);
 
       Object.assign(baseUser, {
         helpTypes: finalSpecialties, // ✅ Utilise les spécialités validées
@@ -2478,7 +2503,7 @@ const AdminAaaProfiles: React.FC = () => {
       country: countryName,
       languages: languageNames,
       specialties: profile.specialties || profile.helpTypes || [],
-      description: profile.description || '',
+      description: profile.description || (typeof profile.bio === 'object' ? (profile.bio as any)?.fr || Object.values(profile.bio as any)[0] || '' : profile.bio || ''),
       isOnline: profile.isOnline,
       isVisible: profile.isVisible,
       isCallable: profile.isCallable,

@@ -113,7 +113,7 @@ const AdminThresholds = lazy(() => import("../../pages/admin/Finance/Thresholds"
 const AdminBalanceSheet = lazy(() => import("../../pages/admin/Finance/BalanceSheet"));
 const AdminProfitLoss = lazy(() => import("../../pages/admin/Finance/ProfitLoss"));
 const AdminCashFlow = lazy(() => import("../../pages/admin/Finance/CashFlow"));
-const AdminEscrow = lazy(() => import("../../pages/admin/Finance/Escrow"));
+// AdminEscrow removed — redirects to finance/payouts
 const CostMonitoring = lazy(() => import("../../pages/admin/Finance/CostMonitoring"));
 const AdminGcpCosts = lazy(() => import("../../pages/admin/Finance/AdminGcpCosts"));
 const AdminPlans = lazy(() => import("../../pages/admin/Finance/Plans"));
@@ -154,15 +154,13 @@ const AdminExpatsConfig = lazy(
 const AdminAaaProfiles = lazy(
   () => import("../../pages/admin/AdminAaaProfiles")
 );
-const AdminLawyerApprovals = lazy(
-  () => import("../../pages/admin/AdminApprovals")
+const AdminProfileValidation = lazy(
+  () => import("../../pages/admin/AdminProfileValidation")
 );
 const AdminKYCProviders = lazy(
   () => import("../../pages/admin/AdminKYCProviders")
 );
 const AdminReviews = lazy(() => import("../../pages/admin/AdminReviews"));
-// AdminProfileValidation redirigé vers AdminApprovals (Cloud Functions backend non implémentées)
-// Pour la validation des profils, utiliser AdminApprovals qui fonctionne avec Firestore direct
 
 // ===== LAZY IMPORTS - CALLS =====
 const AdminCalls = lazy(() => import("../../pages/admin/AdminCalls"));
@@ -789,7 +787,7 @@ const AdminRoutesV2: React.FC = () => {
         path="approvals/lawyers"
         element={
           <Suspense fallback={<LoadingSpinner />}>
-            <AdminLawyerApprovals />
+            <AdminProfileValidation />
           </Suspense>
         }
       />
@@ -809,9 +807,7 @@ const AdminRoutesV2: React.FC = () => {
           </Suspense>
         }
       />
-      {/* Redirection: /admin/validation -> /admin/approvals/lawyers
-          AdminProfileValidation était basé sur des Cloud Functions non implémentées.
-          Toute la validation des profils se fait maintenant via AdminApprovals */}
+      {/* Compat: /admin/validation redirige vers /admin/approvals/lawyers (AdminProfileValidation) */}
       <Route
         path="validation"
         element={<Navigate to="approvals/lawyers" replace />}
@@ -951,11 +947,7 @@ const AdminRoutesV2: React.FC = () => {
       />
       <Route
         path="finance/escrow"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <AdminEscrow />
-          </Suspense>
-        }
+        element={<Navigate to="/admin/finance/payouts" replace />}
       />
       <Route
         path="finance/exports"
