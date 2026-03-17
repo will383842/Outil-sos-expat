@@ -4,7 +4,7 @@ import { SUPPORTED_LANGUAGES, localeToPrefix, getHreflangCode } from "./HrefLang
 import { getRouteKeyFromSlug, getTranslatedRouteSlug } from "../../core/routing";
 
 interface Props {
-  pathname: string;
+  pathname?: string;
 }
 
 /**
