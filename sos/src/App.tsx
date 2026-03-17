@@ -11,7 +11,7 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
-import { trackEvent } from './utils/ga4';
+import { trackEvent, setUserId, setUserProperties } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
 import InternationalTracker from './components/analytics/InternationalTracker';
 import { setMetaPixelUserData, applyMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
@@ -646,19 +646,30 @@ const MetaPixelUserTracker: React.FC = () => {
     lastUserIdRef.current = currentUserId;
 
     if (user) {
+      // GA4: Set user ID and role properties
+      setUserId(user.uid);
+      const role = (user as any).role || (user as any).userRole || 'client';
+      setUserProperties({
+        user_role: role,
+        user_type: 'registered',
+      });
+
       // Utilisateur connecte - envoyer les donnees a Meta pour Advanced Matching
-      // Note: city, state, zipCode ne sont pas disponibles dans notre User type actuel
       setMetaPixelUserData({
         email: user.email || undefined,
         phone: user.phone || user.phoneNumber || undefined,
         firstName: user.firstName || user.displayName?.split(' ')[0] || undefined,
         lastName: user.lastName || user.displayName?.split(' ').slice(1).join(' ') || undefined,
         country: user.country || user.currentCountry || undefined,
-        userId: user.uid, // external_id pour Meta - ameliore le match rate de 20-30%
+        userId: user.uid,
       });
-      // IMPORTANT: Appliquer les donnees a Meta pour activer l'Advanced Matching
       applyMetaPixelUserData();
     } else {
+      // GA4: visitor (not logged in)
+      setUserProperties({
+        user_role: 'visitor',
+        user_type: 'visitor',
+      });
       // Utilisateur deconnecte - effacer les donnees
       clearMetaPixelUserData();
     }
