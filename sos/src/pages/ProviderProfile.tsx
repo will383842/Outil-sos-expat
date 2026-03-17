@@ -1056,7 +1056,29 @@ const ProviderProfile: React.FC = () => {
               console.warn("Reviews loading failed:", err);
             });
 
-            return; // Sortir ici - données déjà affichées
+            // Enrichir en arrière-plan avec les données complètes de Firestore (bio, motivation, etc.)
+            try {
+              const fullDoc = await getDoc(doc(db, 'sos_profiles', foundProviderId));
+              if (fullDoc.exists()) {
+                const fullData = fullDoc.data();
+                setProvider(prev => prev ? {
+                  ...prev,
+                  bio: fullData.bio || prev.bio,
+                  motivation: fullData.motivation || prev.motivation,
+                  description: prev.description || getFirstString(fullData.bio, preferredLangKey) || '',
+                  successRate: fullData.successRate || prev.successRate,
+                  totalCalls: fullData.totalCalls || prev.totalCalls,
+                  certifications: fullData.certifications || prev.certifications,
+                  lawSchool: fullData.lawSchool || prev.lawSchool,
+                  graduationYear: fullData.graduationYear || prev.graduationYear,
+                  education: fullData.education || prev.education,
+                } as SosProfile : prev);
+              }
+            } catch (enrichErr) {
+              console.warn('Background enrichment failed:', enrichErr);
+            }
+
+            return; // Sortir ici - données déjà affichées + enrichies
           }
         }
 
