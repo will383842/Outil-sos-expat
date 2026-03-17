@@ -1188,7 +1188,7 @@ const Testimonials: React.FC = () => {
               </button>
 
               <a
-                href="/register"
+                href={`/${getLocaleString(language as any)}/register`}
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-8 sm:px-12 py-4 sm:py-6 rounded-3xl font-bold text-lg sm:text-xl transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center gap-3 sm:gap-4 min-h-[56px] active:scale-95 touch-manipulation"
               >
                 <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />

@@ -261,6 +261,10 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
         page.waitForSelector('.provider-profile-name', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
         page.waitForSelector('h1', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
       ]);
+
+      // After initial selector resolves, give React Router 500ms to settle
+      // (data-react-snap-ready fires before route-level components like NotFound mount)
+      await new Promise(resolve => setTimeout(resolve, 500));
     } catch {
       // If no selector appears, wait longer for dynamic content
       logger.info('No ready selector found, waiting for dynamic content...');

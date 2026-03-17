@@ -505,7 +505,7 @@ const Consumers: React.FC = () => {
             </h3>
             <p className="text-gray-800 leading-relaxed mb-6 text-lg">{line}</p>
             <a
-              href="/contact"
+              href={`/${language === "fr" ? "fr-fr" : "en-us"}/contact`}
               className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
             >
               <Globe className="w-5 h-5" />
@@ -1176,7 +1176,7 @@ const defaultCh = `
 
               <div className="mt-8 flex items-center justify-center">
                 <a
-                  href="/contact"
+                  href={`/${language === "fr" ? "fr-fr" : "en-us"}/contact`}
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 text-white font-bold border-2 border-purple-400/50 hover:scale-105 transition-all"
                 >
                   <Globe className="w-5 h-5" />
@@ -1361,7 +1361,7 @@ const defaultCh = `
                       : "Hours: 24/7 • Response time: within 24h. For any request, please use our contact form."}
                   </p>
                   <a
-                    href="/contact"
+                    href={`/${language === "fr" ? "fr-fr" : "en-us"}/contact`}
                     className="mt-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 text-white font-bold border-2 border-purple-400/50 hover:scale-105 transition-all"
                   >
                     <Globe className="w-5 h-5" />
@@ -1378,7 +1378,7 @@ const defaultCh = `
                   </h2>
                   <p className="text-gray-700">{t.serviceHours}</p>
                   <a
-                    href="/contact"
+                    href={`/${language === "fr" ? "fr-fr" : "en-us"}/contact`}
                     className="mt-6 inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 text-white font-bold border-2 border-purple-400/50 hover:scale-105 transition-all"
                   >
                     <Globe className="w-5 h-5" />

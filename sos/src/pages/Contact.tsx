@@ -2173,21 +2173,21 @@ const Contact: React.FC = () => {
 
               <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
                 <a
-                  href="/politique-confidentialite"
+                  href={`/${lang === "fr" ? "fr-fr" : "en-us"}/privacy-policy`}
                   className="hover:text-emerald-600 underline transition-colors"
                 >
                   🔒
                   {intl.formatMessage({ id: "contact.privacy" })}
                 </a>
                 <a
-                  href="/centre-aide"
+                  href={`/${lang === "fr" ? "fr-fr" : "en-us"}/help-center`}
                   className="hover:text-emerald-600 underline transition-colors"
                 >
                   💬
                   {intl.formatMessage({ id: "contact.helpCenter" })}
                 </a>
                 <a
-                  href="/cgu-clients"
+                  href={`/${lang === "fr" ? "fr-fr" : "en-us"}/terms-clients`}
                   className="hover:text-emerald-600 underline transition-colors"
                 >
                   📋 {intl.formatMessage({ id: "contact.termsConditions" })}

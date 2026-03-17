@@ -445,7 +445,7 @@ const FAQ: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="/contact"
+                href={`/${currentLocale}/contact`}
                 className="group relative overflow-hidden bg-white text-red-600 hover:text-red-700 px-8 py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
               >
                 <Mail size={20} />
@@ -456,7 +456,7 @@ const FAQ: React.FC = () => {
               </a>
 
               <a
-                href="/sos-appel"
+                href={`/${currentLocale}/sos-appel`}
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:bg-white/10 flex items-center justify-center gap-2"
               >
                 <Phone size={20} />

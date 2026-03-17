@@ -2594,7 +2594,7 @@ const TestimonialDetail: React.FC = () => {
                   </div>
 
                   <a
-                    href="/sos-appel"
+                    href={`/${language === "fr" ? "fr-fr" : "en-us"}/sos-appel`}
                     className="group inline-flex items-center justify-center w-full px-6 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-lg hover:from-red-700 hover:to-orange-700 transition-all duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   >
                 
@@ -2648,7 +2648,7 @@ const TestimonialDetail: React.FC = () => {
             </p>
 
             <a
-              href="/testimonials"
+              href={`/${language === "fr" ? "fr-fr" : "en-us"}/testimonials`}
               className="group inline-flex items-center gap-3 bg-white text-gray-900 hover:bg-gray-100 px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-white/50"
             >
          

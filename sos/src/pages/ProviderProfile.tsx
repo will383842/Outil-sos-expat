@@ -1209,7 +1209,7 @@ const ProviderProfile: React.FC = () => {
 
           try {
             console.log(`📡 [ProviderProfile] Trying REST API for: ${testId}`);
-            const restResult = await getDocumentRest<Record<string, any>>('sos_profiles', testId, 5000);
+            const restResult = await getDocumentRest<Record<string, any>>('sos_profiles', testId, 3000);
             if (restResult.exists && restResult.data) {
               const data = restResult.data;
               const normalized = normalizeUserData(data, restResult.id);
@@ -1265,7 +1265,7 @@ const ProviderProfile: React.FC = () => {
             const ref = doc(db, "sos_profiles", firstId);
             const sdkPromise = getDoc(ref);
             const timeoutPromise = new Promise<null>((_, reject) =>
-              setTimeout(() => reject(new Error('SDK timeout')), 8000)
+              setTimeout(() => reject(new Error('SDK timeout')), 5000)
             );
             const snap = await Promise.race([sdkPromise, timeoutPromise]);
             if (snap && snap.exists()) {
