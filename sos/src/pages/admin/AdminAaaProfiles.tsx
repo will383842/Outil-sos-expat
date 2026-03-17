@@ -3347,11 +3347,11 @@ const AdminAaaProfiles: React.FC = () => {
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Langues</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profil</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays d'origine</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays d'intervention</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
@@ -3411,7 +3411,35 @@ const AdminAaaProfiles: React.FC = () => {
                               {getDisplayLanguages(profile)}
                             </div>
                           </td>
-                          
+
+                          {/* Genre - Toggle rapide */}
+                          <td className="px-3 py-4 whitespace-nowrap">
+                            <button
+                              onClick={async () => {
+                                const newGender: Gender = profile.gender === 'female' ? 'male' : 'female';
+                                try {
+                                  await updateDoc(doc(db, 'sos_profiles', profile.id), { gender: newGender });
+                                  await updateDoc(doc(db, 'users', profile.id), { gender: newGender });
+                                  setExistingProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, gender: newGender } : p));
+                                  toast.success(`Genre mis à jour: ${newGender === 'male' ? 'Homme' : 'Femme'}`);
+                                } catch (e) {
+                                  console.error('Error updating gender:', e);
+                                  toast.error('Erreur lors de la mise à jour du genre');
+                                }
+                              }}
+                              className={`px-2 py-1 text-xs rounded-full cursor-pointer transition-colors ${
+                                profile.gender === 'female'
+                                  ? 'bg-pink-100 text-pink-800 hover:bg-pink-200'
+                                  : profile.gender === 'male'
+                                    ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                              }`}
+                              title="Cliquer pour changer le genre"
+                            >
+                              {profile.gender === 'female' ? 'Femme' : profile.gender === 'male' ? 'Homme' : 'Non défini'}
+                            </button>
+                          </td>
+
                           {/* Profil (Nom, Email, Badge) */}
                           <td className="px-3 py-4">
                             <div className="min-w-[150px]">
@@ -3446,34 +3474,6 @@ const AdminAaaProfiles: React.FC = () => {
                             <span className={`px-2 py-1 text-xs rounded-full ${(profile.type || profile.role) === 'lawyer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                               {(profile.type || profile.role) === 'lawyer' ? 'Avocat' : 'Expatrié'}
                             </span>
-                          </td>
-                          
-                          {/* Genre - Toggle rapide */}
-                          <td className="px-3 py-4 whitespace-nowrap">
-                            <button
-                              onClick={async () => {
-                                const newGender: Gender = profile.gender === 'female' ? 'male' : 'female';
-                                try {
-                                  await updateDoc(doc(db, 'sos_profiles', profile.id), { gender: newGender });
-                                  await updateDoc(doc(db, 'users', profile.id), { gender: newGender });
-                                  setExistingProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, gender: newGender } : p));
-                                  toast.success(`Genre mis à jour: ${newGender === 'male' ? 'Homme' : 'Femme'}`);
-                                } catch (e) {
-                                  console.error('Error updating gender:', e);
-                                  toast.error('Erreur lors de la mise à jour du genre');
-                                }
-                              }}
-                              className={`px-2 py-1 text-xs rounded-full cursor-pointer transition-colors ${
-                                profile.gender === 'female'
-                                  ? 'bg-pink-100 text-pink-800 hover:bg-pink-200'
-                                  : profile.gender === 'male'
-                                    ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
-                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                              }`}
-                              title="Cliquer pour changer le genre"
-                            >
-                              {profile.gender === 'female' ? 'Femme' : profile.gender === 'male' ? 'Homme' : 'Non défini'}
-                            </button>
                           </td>
 
                           {/* Téléphone */}
