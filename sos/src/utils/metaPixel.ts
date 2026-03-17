@@ -1,7 +1,7 @@
 // src/utils/metaPixel.ts
 // Utilitaire Meta Pixel complet pour SPA React
 // Pixel ID: 2204016713738311
-// TRACKING SANS CONSENTEMENT - Pour maximiser les donnees de conversion
+// Respects GDPR: uses fbq consent grant/revoke + geo-consent from index.html
 
 import { generateSharedEventId } from './sharedEventId';
 import { detectUserCountry } from './trafficSource';
@@ -161,17 +161,34 @@ export const isFbqAvailable = (): boolean => {
 };
 
 /**
- * Fonction legacy - TOUJOURS retourne true (tracking sans consentement)
- * Conservee pour compatibilite avec le code existant
+ * Check if user has marketing consent.
+ * - If geo-consent says consent is NOT required (non-EU/BR) → true by default
+ * - If consent IS required → check localStorage cookie_preferences
  */
 export const hasMarketingConsent = (): boolean => {
-  // TRACKING SANS CONSENTEMENT - Toujours autoriser
-  return true;
+  if (typeof window === 'undefined') return false;
+
+  // Geo-consent: if user is outside EU/BR, consent is not required
+  const requiresConsent = (window as any).__requiresConsent;
+  if (requiresConsent === false) return true;
+
+  // Check actual consent from CookieBanner
+  try {
+    const saved = localStorage.getItem('cookie_preferences');
+    if (saved) {
+      const prefs = JSON.parse(saved) as { marketing?: boolean };
+      return prefs.marketing === true;
+    }
+  } catch {
+    // Invalid data
+  }
+
+  return false;
 };
 
 /**
  * Met a jour le consentement Meta Pixel via l'API native fbq
- * Note: Le tracking se fait meme sans consentement
+ * GDPR compliant: revoke stops tracking, grant resumes
  */
 export const updateMetaPixelNativeConsent = (granted: boolean): void => {
   window.__metaMarketingGranted = granted;
@@ -181,14 +198,14 @@ export const updateMetaPixelNativeConsent = (granted: boolean): void => {
   try {
     if (granted) {
       window.fbq!('consent', 'grant');
+      // Send a PageView now that consent is granted
+      trackMetaPageView();
     } else {
       window.fbq!('consent', 'revoke');
     }
-    // Toujours tracker le PageView
-    trackMetaPageView();
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`%c[MetaPixel] Consent ${granted ? 'GRANTED' : 'REVOKED'} - tracking continues`, 'color: #1877F2; font-weight: bold');
+      console.log(`[MetaPixel] Consent ${granted ? 'GRANTED' : 'REVOKED'}`);
     }
   } catch (error) {
     console.error('[MetaPixel] Erreur consent:', error);
@@ -629,18 +646,17 @@ export const trackMetaCustomEvent = (
 
 /**
  * Met a jour le consentement Meta Pixel (appele depuis CookieBanner)
- * Note: Le tracking se fait meme sans consentement
+ * GDPR compliant: only tracks PageView if consent is granted
  */
 export const updateMetaPixelConsent = (granted: boolean): void => {
   window.__metaMarketingGranted = granted;
 
-  // Toujours tracker le PageView
-  if (isFbqAvailable()) {
+  if (granted && isFbqAvailable()) {
     trackMetaPageView();
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('%c[MetaPixel] Consent updated (tracking continues):', 'color: #1877F2; font-weight: bold', granted);
+    console.log(`[MetaPixel] Consent updated: ${granted ? 'granted' : 'denied'}`);
   }
 };
 
@@ -657,7 +673,7 @@ let storedUserData: Record<string, string> = {};
  * IMPORTANT: Apres avoir appele cette fonction, appelez applyMetaPixelUserData()
  * pour envoyer les donnees a Meta via fbq('setUserData', ...).
  *
- * TRACKING SANS CONSENTEMENT - Les donnees sont toujours collectees
+ * Advanced Matching data is stored for CAPI server-side use
  *
  * Les donnees PII (email, telephone, prenom, nom) sont hashees en SHA256
  * avant d'etre stockees, pour coherence avec Google Ads Enhanced Conversions
@@ -783,7 +799,7 @@ export const setMetaPixelUserData = async (userData: {
  * L'Advanced Matching est gere via CAPI (Conversions API) cote serveur.
  * Cette fonction est conservee pour compatibilite mais ne fait plus d'appel fbq.
  *
- * TRACKING SANS CONSENTEMENT - Les donnees sont stockees localement pour CAPI
+ * Data is stored locally for CAPI server-side use
  */
 export const applyMetaPixelUserData = (): void => {
   if (Object.keys(storedUserData).length === 0) {

@@ -38,6 +38,7 @@ import { navigationLogger, firestoreLogger, callLogger } from "../utils/debugLog
 import { trackMetaPurchase, setMetaPixelUserData } from "../utils/metaPixel";
 import { trackGoogleAdsPurchase, setGoogleAdsUserData } from "../utils/googleAds";
 import { trackAdPurchase } from "../services/adAttributionService";
+import { trackEvent } from "../utils/ga4";
 import { getOrCreateEventId } from "../utils/sharedEventId";
 
 /* =========================
@@ -1086,6 +1087,20 @@ const SuccessPayment: React.FC = () => {
           ...(affiliateRef && { affiliate_ref: affiliateRef }),
         });
       })();
+
+      // GA4: purchase event (e-commerce standard)
+      trackEvent('purchase', {
+        transaction_id: orderId || callId || undefined,
+        value: amount,
+        currency: currency.toUpperCase(),
+        items: [{
+          item_id: providerId || undefined,
+          item_name: isLawyer ? 'lawyer_call' : 'expat_call',
+          item_category: isLawyer ? 'lawyer' : 'expat',
+          price: amount,
+          quantity: 1,
+        }],
+      });
 
       // Ad Attribution tracking (Firestore - pour dashboard admin)
       trackAdPurchase({

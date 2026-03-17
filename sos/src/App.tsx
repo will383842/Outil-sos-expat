@@ -13,6 +13,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
 import { trackEvent } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
+import InternationalTracker from './components/analytics/InternationalTracker';
 import { setMetaPixelUserData, applyMetaPixelUserData, clearMetaPixelUserData } from './utils/metaPixel';
 import { captureTrafficSource } from './utils/trafficSource';
 import { devLog } from './utils/devLog';
@@ -610,16 +611,10 @@ type Locale = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 // --------------------------------------------
 const PageViewTracker: React.FC = () => {
   const location = useLocation();
-  const isFirstRender = React.useRef(true);
 
   useEffect(() => {
-    // Skip initial render — index.html already sends the first page_view
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    // Consent Mode V2 handles what data is collected — always send events
+    // index.html has send_page_view: false — this component handles ALL page_views
+    // including the initial one. Consent Mode V2 handles what data is collected.
     trackEvent('page_view', {
       page_location: window.location.href,
       page_path: location.pathname,
@@ -1071,6 +1066,8 @@ const App: React.FC = () => {
           <ReferralCodeCapture />
           {/* AFFILIATE: Keep ?ref= visible in URL across ALL navigation */}
           <AffiliateRefSync />
+          {/* GA4: International user properties + content groups */}
+          <InternationalTracker />
           <div className={`App ${isMobile ? "mobile-layout" : "desktop-layout"}`}>
             <DefaultHelmet pathname={location.pathname} />
 

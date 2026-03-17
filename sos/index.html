@@ -93,7 +93,9 @@
        No static canonical here: a wrong canonical (e.g., homepage) is worse than none. -->
 
   <!-- 🔒 GOOGLE CONSENT MODE V2 + GEO-CONSENT - Must be FIRST before any Google tags -->
+  <!-- Disabled on localhost to avoid polluting production data -->
   <script>
+    window.__isLocalDev = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
 
@@ -155,20 +157,29 @@
     window.__requiresConsent = __requiresConsent;
   </script>
 
-  <!-- GA4 - ALWAYS LOADED (Consent Mode V2 handles what data is collected) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CTVDEL29CP"></script>
+  <!-- GA4 - Loaded in production only (Consent Mode V2 handles what data is collected) -->
   <script>
-    gtag('js', new Date());
-    gtag('config', 'G-CTVDEL29CP', {
-      anonymize_ip: true,
-      send_page_view: false,
-      cookie_domain: 'auto'
-    });
+    if (!window.__isLocalDev) {
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-CTVDEL29CP';
+      document.head.appendChild(s);
+      gtag('js', new Date());
+      gtag('config', 'G-CTVDEL29CP', {
+        anonymize_ip: true,
+        send_page_view: false,
+        cookie_domain: 'auto'
+      });
+    }
   </script>
 
-  <!-- ✅✅✅ META PIXEL (Facebook) — DIFFÉRÉ POUR PERFORMANCE -->
+  <!-- ✅✅✅ META PIXEL (Facebook) — DIFFÉRÉ + GDPR GEO-CONSENT (prod only) -->
   <script>
-    // Meta Pixel chargé après le rendu initial pour ne pas bloquer FCP
+    // Meta Pixel: loaded for all users, but uses fbq consent grant/revoke
+    // Skipped on localhost to avoid polluting production data
+    if (window.__isLocalDev) { /* Skip Meta Pixel in dev */ } else
+    // In EU/BR (__requiresConsent=true): pixel loads but consent is revoked
+    // until CookieBanner grants it. Outside EU/BR: consent granted by default.
     (function() {
       var initPixel = function () {
         var PIXEL_ID = '2204016713738311';
@@ -208,11 +219,31 @@
           s.parentNode.insertBefore(t, s)
         }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
+        // GDPR: Check if consent is required (set by geo-consent script above)
+        var needsConsent = window.__requiresConsent;
+        // Check if user already gave marketing consent (returning visitor)
+        var hasConsent = false;
+        try {
+          var saved = localStorage.getItem('cookie_preferences');
+          if (saved) { hasConsent = JSON.parse(saved).marketing === true; }
+        } catch (e) {}
+
+        // If consent required and not yet given: revoke before init
+        if (needsConsent && !hasConsent) {
+          fbq('consent', 'revoke');
+        }
+
         fbq('init', PIXEL_ID);
-        fbq('track', 'PageView');
+
+        // Only send PageView if consent is not required OR already granted
+        if (!needsConsent || hasConsent) {
+          fbq('track', 'PageView');
+          window.__metaMarketingGranted = true;
+        } else {
+          window.__metaMarketingGranted = false;
+        }
+
         try { sessionStorage.setItem(INIT_KEY, '1'); } catch (e) {}
-        window.__metaMarketingGranted = true;
-        window.metaPixelConsent = function () { };
       };
 
       // Différer l'init après le rendu initial (requestIdleCallback ou fallback)
