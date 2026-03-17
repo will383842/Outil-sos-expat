@@ -127,19 +127,19 @@ const STATUS_CONFIG: Record<ValidationStatus, { label: string; color: string; do
   pending:           { label: 'En attente',     color: 'text-yellow-700',  dot: 'bg-yellow-500',  bg: 'bg-yellow-50 border-yellow-200' },
   in_review:         { label: 'En cours',       color: 'text-blue-700',    dot: 'bg-blue-500',    bg: 'bg-blue-50 border-blue-200' },
   changes_requested: { label: 'Modifications',  color: 'text-orange-700',  dot: 'bg-orange-500',  bg: 'bg-orange-50 border-orange-200' },
-  approved:          { label: 'Approuve',        color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
-  rejected:          { label: 'Rejete',          color: 'text-red-700',     dot: 'bg-red-500',     bg: 'bg-red-50 border-red-200' },
+  approved:          { label: 'Approuvé',        color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
+  rejected:          { label: 'Rejeté',          color: 'text-red-700',     dot: 'bg-red-500',     bg: 'bg-red-50 border-red-200' },
 };
 
 const PROVIDER_TYPE_CONFIG: Record<ProviderType, { label: string; color: string; dot: string; bg: string }> = {
   lawyer: { label: 'Avocat',    color: 'text-purple-700',  dot: 'bg-purple-500',  bg: 'bg-purple-50 border-purple-200' },
-  expat:  { label: 'Expatrie',  color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
+  expat:  { label: 'Expatrié',  color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
 };
 
 const FIELD_OPTIONS = [
   { value: 'photo', label: 'Photo de profil' },
   { value: 'bio', label: 'Biographie' },
-  { value: 'specializations', label: 'Specialisations' },
+  { value: 'specializations', label: 'Spécialisations' },
   { value: 'languages', label: 'Langues' },
   { value: 'documents', label: 'Documents' },
   { value: 'kyc', label: 'Documents KYC' },
@@ -273,7 +273,7 @@ const AdminProfileValidation: React.FC = () => {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('Error loading validation queue:', err);
       logError({ origin: 'frontend', error: `Error loading validation queue: ${msg}`, context: { component: 'AdminProfileValidation' } });
-      setError('Erreur lors du chargement. Veuillez reessayer.');
+      setError('Erreur lors du chargement. Veuillez réessayer.');
       setQueue([]);
     } finally {
       setLoading(false);
@@ -293,7 +293,7 @@ const AdminProfileValidation: React.FC = () => {
     try {
       setIsProcessing(true);
       await assignValidationFn({ validationId: item.id });
-      toast.success('Dossier assigne avec succes');
+      toast.success('Dossier assigné avec succès');
       loadQueue();
     } catch (err) {
       console.error('Error assigning validation:', err);
@@ -308,7 +308,7 @@ const AdminProfileValidation: React.FC = () => {
     try {
       setIsProcessing(true);
       await approveProfileFn({ validationId: selectedItem.id, reason: actionReason });
-      toast.success('Profil approuve avec succes');
+      toast.success('Profil approuvé avec succès');
       setShowApproveModal(false);
       setShowDetailModal(false);
       setSelectedItem(null);
@@ -327,7 +327,7 @@ const AdminProfileValidation: React.FC = () => {
     try {
       setIsProcessing(true);
       await rejectProfileFn({ validationId: selectedItem.id, reason: actionReason });
-      toast.success('Profil rejete');
+      toast.success('Profil rejeté');
       setShowRejectModal(false);
       setShowDetailModal(false);
       setSelectedItem(null);
@@ -346,7 +346,7 @@ const AdminProfileValidation: React.FC = () => {
     try {
       setIsProcessing(true);
       await requestChangesFn({ validationId: selectedItem.id, changes });
-      toast.success('Demande de modifications envoyee');
+      toast.success('Demande de modifications envoyée');
       setShowChangesModal(false);
       setShowDetailModal(false);
       setSelectedItem(null);
@@ -474,7 +474,7 @@ const AdminProfileValidation: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-gray-900 tracking-tight">Validation des profils</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{filteredQueue.length} resultat{filteredQueue.length > 1 ? 's' : ''}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{filteredQueue.length} résultat{filteredQueue.length > 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -505,8 +505,8 @@ const AdminProfileValidation: React.FC = () => {
           {[
             { label: 'En attente', value: stats.pending, icon: Clock, iconColor: 'text-yellow-600', bgColor: 'bg-yellow-50' },
             { label: 'En cours', value: stats.inReview, icon: Eye, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
-            { label: 'Approuves aujourd\'hui', value: stats.approvedToday, icon: CheckCircle, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-            { label: 'Rejetes aujourd\'hui', value: stats.rejectedToday, icon: XCircle, iconColor: 'text-red-600', bgColor: 'bg-red-50' },
+            { label: 'Approuvés aujourd\'hui', value: stats.approvedToday, icon: CheckCircle, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+            { label: 'Rejetés aujourd\'hui', value: stats.rejectedToday, icon: XCircle, iconColor: 'text-red-600', bgColor: 'bg-red-50' },
           ].map(({ label, value, icon: Icon, iconColor, bgColor }) => (
             <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
@@ -529,8 +529,8 @@ const AdminProfileValidation: React.FC = () => {
             { key: 'pending' as const, label: 'En attente', count: statusCounts.pending || 0 },
             { key: 'in_review' as const, label: 'En cours', count: statusCounts.in_review || 0 },
             { key: 'changes_requested' as const, label: 'Modifications', count: statusCounts.changes_requested || 0 },
-            { key: 'approved' as const, label: 'Approuve', count: statusCounts.approved || 0 },
-            { key: 'rejected' as const, label: 'Rejete', count: statusCounts.rejected || 0 },
+            { key: 'approved' as const, label: 'Approuvé', count: statusCounts.approved || 0 },
+            { key: 'rejected' as const, label: 'Rejeté', count: statusCounts.rejected || 0 },
           ] as { key: ValidationStatus | 'all'; label: string; count: number }[]).map(({ key, label, count }) => (
             <button
               key={key}
@@ -574,7 +574,7 @@ const AdminProfileValidation: React.FC = () => {
             >
               <option value="all">Tous les types</option>
               <option value="lawyer">Avocat</option>
-              <option value="expat">Expatrie</option>
+              <option value="expat">Expatrié</option>
             </select>
 
             <select
@@ -585,7 +585,7 @@ const AdminProfileValidation: React.FC = () => {
               }}
               className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-w-[160px]"
             >
-              <option value="submittedAt-desc">Plus recents</option>
+              <option value="submittedAt-desc">Plus récents</option>
               <option value="submittedAt-asc">Plus anciens</option>
               <option value="providerName-asc">Nom A-Z</option>
               <option value="providerName-desc">Nom Z-A</option>
@@ -612,24 +612,24 @@ const AdminProfileValidation: React.FC = () => {
         {showAdvancedFilters && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4 animate-in slide-in-from-top-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">Filtres avances</h3>
+              <h3 className="text-sm font-semibold text-gray-700">Filtres avancés</h3>
               <button
                 onClick={() => { setAssignedToFilter(''); }}
                 className="text-xs text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
               >
-                <RefreshCw size={12} /> Reinitialiser
+                <RefreshCw size={12} /> Réinitialiser
               </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Assigne a</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Assigné à</label>
                 <select
                   value={assignedToFilter}
                   onChange={(e) => { setAssignedToFilter(e.target.value); setPage(1); }}
                   className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
                 >
                   <option value="">Tous</option>
-                  <option value="unassigned">Non assigne</option>
+                  <option value="unassigned">Non assigné</option>
                   <option value={currentUser?.uid || ''}>Mes dossiers</option>
                 </select>
               </div>
@@ -641,7 +641,7 @@ const AdminProfileValidation: React.FC = () => {
                 <span className="text-xs text-gray-500 mr-1">Actifs :</span>
                 {assignedToFilter && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700">
-                    {assignedToFilter === 'unassigned' ? 'Non assigne' : 'Mes dossiers'}
+                    {assignedToFilter === 'unassigned' ? 'Non assigné' : 'Mes dossiers'}
                     <button onClick={() => setAssignedToFilter('')} className="text-gray-400 hover:text-gray-700"><X size={10} /></button>
                   </span>
                 )}
@@ -662,7 +662,7 @@ const AdminProfileValidation: React.FC = () => {
                     <span className="inline-flex items-center gap-1">Soumis le <SortIcon field="submittedAt" /></span>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Assigne a</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Assigné à</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Documents</th>
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
@@ -728,7 +728,7 @@ const AdminProfileValidation: React.FC = () => {
                       {/* Assigned to */}
                       <td className="px-4 py-3 hidden md:table-cell">
                         <span className="text-sm text-gray-600">
-                          {item.assignedToName || <span className="italic text-gray-400">Non assigne</span>}
+                          {item.assignedToName || <span className="italic text-gray-400">Non assigné</span>}
                         </span>
                       </td>
 
@@ -884,7 +884,7 @@ const AdminProfileValidation: React.FC = () => {
                       <div className="flex items-center gap-2.5">
                         <MapPin size={15} className="text-gray-400 flex-shrink-0" />
                         <span className="text-sm text-gray-900">
-                          {selectedItem.city && selectedItem.country ? `${selectedItem.city}, ${selectedItem.country}` : selectedItem.country || 'Non renseigne'}
+                          {selectedItem.city && selectedItem.country ? `${selectedItem.city}, ${selectedItem.country}` : selectedItem.country || 'Non renseigné'}
                         </span>
                       </div>
                       {selectedItem.languages && selectedItem.languages.length > 0 && (
@@ -915,7 +915,7 @@ const AdminProfileValidation: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
                             <Award size={15} className="text-gray-400" />
-                            <span className="text-sm text-gray-600">Experience</span>
+                            <span className="text-sm text-gray-600">Expérience</span>
                           </div>
                           <span className="text-sm font-medium text-gray-900">{selectedItem.yearsExperience} ans</span>
                         </div>
@@ -933,7 +933,7 @@ const AdminProfileValidation: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
                             <UserCheck size={15} className="text-gray-400" />
-                            <span className="text-sm text-gray-600">Assigne a</span>
+                            <span className="text-sm text-gray-600">Assigné à</span>
                           </div>
                           <span className="text-sm font-medium text-gray-900">{selectedItem.assignedToName}</span>
                         </div>
@@ -952,7 +952,7 @@ const AdminProfileValidation: React.FC = () => {
                   {/* Specializations */}
                   {selectedItem.specializations && selectedItem.specializations.length > 0 && (
                     <div className="md:col-span-2 bg-gray-50 rounded-xl p-4 space-y-3">
-                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Specialisations</h4>
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Spécialisations</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedItem.specializations.map((spec, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-xs text-gray-700">{spec}</span>
@@ -964,7 +964,7 @@ const AdminProfileValidation: React.FC = () => {
                   {/* Requested changes */}
                   {selectedItem.requestedChanges && selectedItem.requestedChanges.length > 0 && (
                     <div className="md:col-span-2 bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-3">
-                      <h4 className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Modifications demandees</h4>
+                      <h4 className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Modifications demandées</h4>
                       <div className="space-y-2">
                         {selectedItem.requestedChanges.map((change, idx) => (
                           <div key={idx} className="flex items-start gap-2 bg-white rounded-lg p-2.5 border border-orange-100">
@@ -988,7 +988,7 @@ const AdminProfileValidation: React.FC = () => {
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Documents KYC</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {([
-                        { key: 'idDocument' as const, label: 'Piece d\'identite' },
+                        { key: 'idDocument' as const, label: 'Pièce d\'identité' },
                         { key: 'proofOfAddress' as const, label: 'Justificatif de domicile' },
                         { key: 'professionalLicense' as const, label: 'Licence professionnelle' },
                       ]).map(({ key, label }) => (
@@ -1111,7 +1111,7 @@ const AdminProfileValidation: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-semibold text-emerald-800">Approbation du profil</h3>
                   <p className="mt-1 text-sm text-emerald-700">
-                    <strong>{selectedItem.providerName}</strong> ({PROVIDER_TYPE_CONFIG[selectedItem.providerType]?.label}) sera approuve et visible sur la plateforme.
+                    <strong>{selectedItem.providerName}</strong> ({PROVIDER_TYPE_CONFIG[selectedItem.providerType]?.label}) sera approuvé et visible sur la plateforme.
                   </p>
                 </div>
               </div>
@@ -1144,7 +1144,7 @@ const AdminProfileValidation: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-semibold text-red-800">Rejet du profil</h3>
                   <p className="mt-1 text-sm text-red-700">
-                    Le profil de <strong>{selectedItem.providerName}</strong> ({PROVIDER_TYPE_CONFIG[selectedItem.providerType]?.label}) sera rejete.
+                    Le profil de <strong>{selectedItem.providerName}</strong> ({PROVIDER_TYPE_CONFIG[selectedItem.providerType]?.label}) sera rejeté.
                   </p>
                 </div>
               </div>
@@ -1206,7 +1206,7 @@ const AdminProfileValidation: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-500 mb-1">Champ a modifier</label>
                 <select value={newChangeField} onChange={(e) => setNewChangeField(e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
-                  <option value="">Selectionnez un champ</option>
+                  <option value="">Sélectionnez un champ</option>
                   {FIELD_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
@@ -1216,7 +1216,7 @@ const AdminProfileValidation: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-500 mb-1">Description du changement</label>
                 <textarea value={newChangeMessage} onChange={(e) => setNewChangeMessage(e.target.value)} rows={2}
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 resize-none"
-                  placeholder="Decrivez les modifications demandees..." />
+                  placeholder="Décrivez les modifications demandées..." />
               </div>
               <button onClick={handleAddChange} disabled={!newChangeField || !newChangeMessage.trim()}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-orange-100 text-orange-800 rounded-xl hover:bg-orange-200 disabled:opacity-50 transition-colors">
