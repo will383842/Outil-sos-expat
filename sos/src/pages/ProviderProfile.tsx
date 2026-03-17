@@ -1144,6 +1144,7 @@ const ProviderProfile: React.FC = () => {
                 uid: normalized.uid || docSnap.id,
                 type: safeType,
                 description: pickDescription(safeProvider as any, preferredLangKey, intl),
+                bio: data?.bio,
                 specialties: toArrayFromAny(data?.specialties, preferredLangKey),
                 helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
                 operatingCountries: (() => {
@@ -1193,6 +1194,7 @@ const ProviderProfile: React.FC = () => {
                 uid: normalized.uid || restResult.id,
                 type: safeType,
                 description: pickDescription(safeProvider as any, preferredLangKey, intl),
+                bio: data?.bio,
                 specialties: toArrayFromAny(data?.specialties, preferredLangKey),
                 helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
                 // Pays d'intervention: prendre operatingCountries, practiceCountries OU interventionCountries
@@ -1250,6 +1252,7 @@ const ProviderProfile: React.FC = () => {
               uid: normalized.uid || snap.id,
               type: safeType,
               description: pickDescription(safeProvider as any, preferredLangKey, intl),
+              bio: data?.bio,
               specialties: toArrayFromAny(data?.specialties, preferredLangKey),
               helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
               // Pays d'intervention: prendre operatingCountries, practiceCountries OU interventionCountries
@@ -1304,6 +1307,7 @@ const ProviderProfile: React.FC = () => {
               uid: normalized.uid || m.id,
               type: safeType,
               description: pickDescription(safeProvider as any, preferredLangKey, intl),
+              bio: data?.bio,
               specialties: toArrayFromAny(data?.specialties, preferredLangKey),
               helpTypes: toArrayFromAny(data?.helpTypes, preferredLangKey),
               // Pays d'intervention: prendre operatingCountries, practiceCountries OU interventionCountries
