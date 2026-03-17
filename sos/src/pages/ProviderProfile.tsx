@@ -794,7 +794,11 @@ const ProviderProfile: React.FC = () => {
 
   useEffect(() => {
     providerLoadedRef.current = false;
-  }, [id, params.slug, params.profileId]);
+    setProvider(null);
+    setReviews([]);
+    setNotFound(false);
+    setIsLoading(true);
+  }, [id, params.slug, params.profileId, params.nameSlug, params.nameId]);
 
   useEffect(() => {
     try {
@@ -994,6 +998,8 @@ const ProviderProfile: React.FC = () => {
                 || getFirstString((navData as any).professionalDescription, preferredLangKey)
                 || getFirstString((navData as any).experienceDescription, preferredLangKey)
                 || "",
+              bio: (navData as any).bio,
+              motivation: (navData as any).motivation,
               profilePhoto: navData.profilePhoto || navData.avatar,
               rating: Number(navData.rating) || 0,
               reviewCount: Number(navData.reviewCount) || 0,
