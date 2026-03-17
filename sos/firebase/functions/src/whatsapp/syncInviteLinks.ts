@@ -77,18 +77,84 @@ interface FirestoreGroup {
  * This is the same data as in the frontend's seedWhatsAppGroups.ts.
  * Used ONLY when the Firestore document doesn't exist yet.
  */
+/**
+ * Build seed config with actual invite links (synced with frontend seedWhatsAppGroups.ts).
+ * All 68 groups are enabled with valid links so auto-create produces a working config.
+ */
 function buildSeedConfig(): {
   groups: FirestoreGroup[];
   defaultGroupIds: Record<string, string>;
 } {
-  const ROLES = {
-    chatter: "Chatter",
-    influencer: "Influencer",
-    blogger: "Blogger",
-    groupAdmin: "Group Admin",
-    client: "Client",
-    lawyer: "Avocat",
-    expat: "Expatrié Aidant",
+  // Invite links — single source of truth (must match frontend seed)
+  const LINKS: Record<string, string> = {
+    chatter_af_fr: "https://chat.whatsapp.com/BYgasir1XX8F07kCDU4qC8",
+    chatter_af_en: "https://chat.whatsapp.com/DuSCD7rwPtvIINnA7dzg7x",
+    chatter_as_fr: "https://chat.whatsapp.com/Ct8UZyO5bSR10uhvDkihNV",
+    chatter_as_en: "https://chat.whatsapp.com/DeRfOv1caxJKbw8kz0CkBP",
+    chatter_eu_fr: "https://chat.whatsapp.com/DbN8nrqfEQH01qRHlsCLXF",
+    chatter_eu_en: "https://chat.whatsapp.com/IDPOwu6UD5F4BQvjXOvixT",
+    chatter_na_fr: "https://chat.whatsapp.com/Jxs5Eci7anEAxCaiHpAdU0",
+    chatter_na_en: "https://chat.whatsapp.com/CTbLbaEEFiw4I4jldIJRl8",
+    chatter_sa_fr: "https://chat.whatsapp.com/LokkAcMRDPd4FzdqbRG19C",
+    chatter_sa_en: "https://chat.whatsapp.com/GkQSaGhyV6BCekMyvtEFZ6",
+    chatter_oc_fr: "https://chat.whatsapp.com/LOYOOhxOk63LkOQGlWM5nO",
+    chatter_oc_en: "https://chat.whatsapp.com/JOHS0H7eHsk9m1DrrXcOtS",
+    chatter_me_fr: "https://chat.whatsapp.com/LsWB4KtEvuT6jRG8z0lxHK",
+    chatter_me_en: "https://chat.whatsapp.com/DLq6Dqfni1qB3ow3z264n7",
+    influencer_lang_fr: "https://chat.whatsapp.com/HDklfyXDxnlBbytRhlOFr7",
+    influencer_lang_en: "https://chat.whatsapp.com/EADHIewYh2UAIt5dl1VNm3",
+    influencer_lang_es: "https://chat.whatsapp.com/IPnhUIprj4OIMebCRUkgNn",
+    influencer_lang_pt: "https://chat.whatsapp.com/Eg5ZmcjYLbiBiCs9iedWta",
+    influencer_lang_de: "https://chat.whatsapp.com/CieFk5FMULhCedwc5eE6WM",
+    influencer_lang_ru: "https://chat.whatsapp.com/GnoruhuaQvd2ZUHC3KyRE2",
+    influencer_lang_ar: "https://chat.whatsapp.com/IPDcxDXEHma7pPERfEGXgb",
+    influencer_lang_zh: "https://chat.whatsapp.com/D1VKYOvX5FoI79hpAsaRuA",
+    influencer_lang_hi: "https://chat.whatsapp.com/DHCUBSd6fkZ4NTOMn9WuDP",
+    blogger_lang_fr: "https://chat.whatsapp.com/GqLo6X9OBNQ173rIggOznO",
+    blogger_lang_en: "https://chat.whatsapp.com/Ex3h1uCAB36HWbQyEiK3RK",
+    blogger_lang_es: "https://chat.whatsapp.com/EETaTdkvkuqEj3mI1QqftP",
+    blogger_lang_pt: "https://chat.whatsapp.com/G1RMkDtmGRcJeeXyAZqCmD",
+    blogger_lang_de: "https://chat.whatsapp.com/LjPgMUiwVzUC7LIobVKbiR",
+    blogger_lang_ru: "https://chat.whatsapp.com/H6cIpeLF7Vm2MGp2fXI3Yk",
+    blogger_lang_ar: "https://chat.whatsapp.com/JJZGZGcSPXIFVpPP7rrMes",
+    blogger_lang_zh: "https://chat.whatsapp.com/HgFNzqjYLWqH5jBZhCAmEb",
+    blogger_lang_hi: "https://chat.whatsapp.com/BrbIZ71SuJ0HdsZmZHTda0",
+    groupAdmin_lang_fr: "https://chat.whatsapp.com/DnrWMG0vvozLEr3lKSXcgX",
+    groupAdmin_lang_en: "https://chat.whatsapp.com/BpaFoRN2JWeE7PFEZCC15n",
+    groupAdmin_lang_es: "https://chat.whatsapp.com/DD9qehOncPz3cCf2xPFH4P",
+    groupAdmin_lang_pt: "https://chat.whatsapp.com/Gvo57KayELA1xhdqgdVWqA",
+    groupAdmin_lang_de: "https://chat.whatsapp.com/Hu8FYSscMtzFI5tluhLGUn",
+    groupAdmin_lang_ru: "https://chat.whatsapp.com/KhZZcsmROSpG0liiRb1vIg",
+    groupAdmin_lang_ar: "https://chat.whatsapp.com/FMzUAzGtSh7LTvXxluRyzy",
+    groupAdmin_lang_zh: "https://chat.whatsapp.com/H8axTEUiGWo9yyKQnw7dah",
+    groupAdmin_lang_hi: "https://chat.whatsapp.com/BmCPXwQrVEmEXp4AhAeJE2",
+    client_lang_fr: "https://chat.whatsapp.com/LGqbyYqDKBo5oKuVL7VyPv",
+    client_lang_en: "https://chat.whatsapp.com/LPn67ly7GaKCmkGTslfzbS",
+    client_lang_es: "https://chat.whatsapp.com/LnoZHwVLtq2Dn8vDCY1lUS",
+    client_lang_pt: "https://chat.whatsapp.com/J77OETpgVp8IWc9IuhscqX",
+    client_lang_de: "https://chat.whatsapp.com/HO6IO5wANuQ2BzDg5e8jJs",
+    client_lang_ru: "https://chat.whatsapp.com/EqEyTtQN9lm1OzD2cxhB0g",
+    client_lang_ar: "https://chat.whatsapp.com/Egwdyu1Pw4gFIIZ31gXEkJ",
+    client_lang_zh: "https://chat.whatsapp.com/Cj6StuEbg1lCIn5uiEK9wM",
+    client_lang_hi: "https://chat.whatsapp.com/Jk5m17BCxJREaYOqWyKMvr",
+    lawyer_lang_fr: "https://chat.whatsapp.com/KwKVJILGvIY7FYutvJYlVc",
+    lawyer_lang_en: "https://chat.whatsapp.com/KPVBNRJU9RSBhLwoFnHOYj",
+    lawyer_lang_es: "https://chat.whatsapp.com/BjjDAw1lkbbEB7T0w8Okbp",
+    lawyer_lang_pt: "https://chat.whatsapp.com/EbOouSl6OIELTPIIvdivvx",
+    lawyer_lang_de: "https://chat.whatsapp.com/DoK1HV7IgPw1wRY0PugiGX",
+    lawyer_lang_ru: "https://chat.whatsapp.com/GfXMxwQ9IreANeL9L6PvlQ",
+    lawyer_lang_ar: "https://chat.whatsapp.com/LefbhJ3PtZLHFgMt2WJgob",
+    lawyer_lang_zh: "https://chat.whatsapp.com/DSyOW8ULYJy1mNGdLp6YyW",
+    lawyer_lang_hi: "https://chat.whatsapp.com/IwOY12dm4KQ8ATZNXULLCC",
+    expat_lang_fr: "https://chat.whatsapp.com/CxspzVb4HRBGNTzzNu9giT",
+    expat_lang_en: "https://chat.whatsapp.com/KcuVqyIx2Mg9HOeOmVaKEc",
+    expat_lang_es: "https://chat.whatsapp.com/EhGJL62Ie7J6xK1AbDXEGb",
+    expat_lang_pt: "https://chat.whatsapp.com/DIRSNWNTIeg9syWxa2LH6L",
+    expat_lang_de: "https://chat.whatsapp.com/Hn2o0nBap2cFirFClbmKtF",
+    expat_lang_ru: "https://chat.whatsapp.com/KuDbakUqANNJ8OtoOIdLP1",
+    expat_lang_ar: "https://chat.whatsapp.com/Ke3O0Kqc29JG2kEpFhQU5t",
+    expat_lang_zh: "https://chat.whatsapp.com/BhIxBmI17yWH6bLrFC1yzJ",
+    expat_lang_hi: "https://chat.whatsapp.com/L6QT0JKJM0sKr4RcqWngFi",
   };
 
   const CONTINENTS = [
@@ -113,25 +179,34 @@ function buildSeedConfig(): {
     { code: "hi", name: "Hindi", flag: "🇮🇳" },
   ];
 
+  const ROLES: Record<string, string> = {
+    chatter: "Chatter",
+    influencer: "Influencer",
+    blogger: "Blogger",
+    groupAdmin: "Group Admin",
+    client: "Client",
+    lawyer: "Avocat",
+    expat: "Expatrié Aidant",
+  };
+
   const groups: FirestoreGroup[] = [];
   const defaultGroupIds: Record<string, string> = {};
 
   // Chatters: 14 continent groups (7 continents × FR/EN)
   for (const c of CONTINENTS) {
     for (const lang of [LANGUAGES[0], LANGUAGES[1]]) {
-      // FR + EN only
       const id = `chatter_${c.code.toLowerCase()}_${lang.code}`;
+      const link = LINKS[id] || "";
       groups.push({
         id,
         name: `Chatter ${c.emoji} ${c.name} ${lang.flag}`,
-        link: "",
+        link,
         language: lang.code,
         role: "chatter",
         type: "continent",
         continentCode: c.code,
-        enabled: false,
+        enabled: !!link,
       });
-      // Default: chatter_eu_en
       if (c.code === "EU" && lang.code === "en") {
         defaultGroupIds["chatter"] = id;
       }
@@ -144,16 +219,16 @@ function buildSeedConfig(): {
     const roleLabel = ROLES[roleCode];
     for (const lang of LANGUAGES) {
       const id = `${roleCode}_lang_${lang.code}`;
+      const link = LINKS[id] || "";
       groups.push({
         id,
         name: `${roleLabel} ${lang.name} ${lang.flag}`,
-        link: "",
+        link,
         language: lang.code,
         role: roleCode,
         type: "language",
-        enabled: false,
+        enabled: !!link,
       });
-      // Default: the EN group for each role
       if (lang.code === "en") {
         defaultGroupIds[roleCode] = id;
       }

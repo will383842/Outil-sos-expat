@@ -38,20 +38,50 @@ const ROLE_COLLECTION: Record<WhatsAppRole, string> = {
 // ============================================================================
 
 /** Récupère la config des groupes WhatsApp depuis Firestore.
- *  Fallback automatique sur les données seed hardcodées si le document
- *  Firestore n'existe pas encore (évite le skip silencieux post-inscription).
+ *  Auto-seed: si le document est absent ou incomplet (< 68 groupes),
+ *  écrit automatiquement les 68 groupes seed dans Firestore puis les retourne.
+ *  Cela garantit que le système est toujours opérationnel en production.
  */
 export async function getWhatsAppGroupsConfig(): Promise<WhatsAppGroupsConfig | null> {
   try {
     const snap = await getDoc(doc(db, CONFIG_DOC_PATH));
+    const seedConfig = buildConfigFromSeedData();
+
     if (!snap.exists()) {
-      console.warn('[WhatsApp Groups] Firestore doc missing — using hardcoded seed data as fallback');
-      return buildConfigFromSeedData();
+      console.warn('[WhatsApp Groups] Firestore doc missing — auto-seeding 68 groups');
+      await autoSeedIfNeeded(seedConfig);
+      return seedConfig;
     }
-    return snap.data() as WhatsAppGroupsConfig;
+
+    const firestoreConfig = snap.data() as WhatsAppGroupsConfig;
+
+    // Auto-heal: if Firestore has fewer groups than seed (partial config), re-seed
+    const enabledCount = firestoreConfig.groups?.filter((g) => g.enabled && g.link).length || 0;
+    const seedEnabledCount = seedConfig.groups.filter((g) => g.enabled && g.link).length;
+    if (enabledCount < seedEnabledCount * 0.5) {
+      console.warn(`[WhatsApp Groups] Firestore has only ${enabledCount} active groups vs ${seedEnabledCount} in seed — auto-healing`);
+      await autoSeedIfNeeded(seedConfig);
+      return seedConfig;
+    }
+
+    return firestoreConfig;
   } catch (err) {
     console.error('[WhatsApp Groups] Error fetching config, falling back to seed data:', err);
     return buildConfigFromSeedData();
+  }
+}
+
+/** Auto-seed Firestore with hardcoded data (fire-and-forget, non-blocking) */
+async function autoSeedIfNeeded(config: WhatsAppGroupsConfig): Promise<void> {
+  try {
+    await setDoc(doc(db, CONFIG_DOC_PATH), {
+      ...config,
+      updatedAt: serverTimestamp(),
+      updatedBy: 'auto_seed',
+    });
+    console.info(`[WhatsApp Groups] Auto-seeded ${config.groups.length} groups into Firestore`);
+  } catch (err) {
+    console.error('[WhatsApp Groups] Auto-seed failed (will use in-memory fallback):', err);
   }
 }
 

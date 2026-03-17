@@ -165,7 +165,9 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
     if (!group || !group.link) return;
     setClicked(true);
     // Fire-and-forget — ne pas await pour ne pas bloquer le contexte de clic
-    trackWhatsAppGroupClick(role, userId, group.id, country).catch(() => {});
+    trackWhatsAppGroupClick(role, userId, group.id, country).catch((err) => {
+      console.error('[WhatsApp Groups] Tracking click failed:', err);
+    });
   };
 
   // Inject animation styles
