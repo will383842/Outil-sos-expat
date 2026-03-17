@@ -39,7 +39,6 @@ import {
   generateContinentGroups,
   createContinentGroup,
 } from './whatsappGroupsService';
-import { seedWhatsAppGroups } from './seedWhatsAppGroups';
 import type { WhatsAppGroupsConfig, WhatsAppGroup, WhatsAppRole } from './types';
 import { SUPPORTED_LANGUAGES, ROLE_LABELS, ALL_CONTINENTS } from './types';
 
@@ -241,7 +240,6 @@ const AdminWhatsAppGroups: React.FC = () => {
   const [config, setConfig] = useState<WhatsAppGroupsConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeRole, setActiveRole] = useState<WhatsAppRole>('chatter');
   const [collapsedContinents, setCollapsedContinents] = useState<Set<string>>(new Set());
@@ -320,24 +318,6 @@ const AdminWhatsAppGroups: React.FC = () => {
     setNewContinentLang('');
   };
 
-  const handleSeedAll = async () => {
-    if (config.groups.length > 0) {
-      const confirmed = window.confirm(`Cela va REMPLACER les ${config.groups.length} groupes existants par les 68 groupes pre-configures. Continuer ?`);
-      if (!confirmed) return;
-    }
-    setSeeding(true);
-    try {
-      const result = await seedWhatsAppGroups(user?.uid || '');
-      toast.success(`${result.total} groupes importes (${result.enabled} actifs, ${result.disabled} inactifs)`);
-      await fetchConfig();
-    } catch (err) {
-      console.error('[Admin WhatsApp] Seed error:', err);
-      toast.error('Erreur lors du seed');
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   const handleSave = async () => {
     const enabledGroups = config.groups.filter((g) => g.enabled);
     for (const group of enabledGroups) {
@@ -406,14 +386,6 @@ const AdminWhatsAppGroups: React.FC = () => {
 
           {/* Action buttons */}
           <div className="flex items-center gap-3 mb-8">
-            <button
-              onClick={handleSeedAll}
-              disabled={seeding || saving}
-              className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 disabled:opacity-50"
-            >
-              {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowDown className="w-4 h-4" />}
-              Seed 68 groupes
-            </button>
             <button
               onClick={fetchConfig}
               disabled={loading}
