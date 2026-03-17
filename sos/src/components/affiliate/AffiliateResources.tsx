@@ -191,11 +191,41 @@ const AffiliateResources: React.FC<AffiliateResourcesProps> = ({ role }) => {
 
   const handleDownload = async (resource: MarketingResource) => {
     setDownloadingId(resource.id);
-    const result = await download(resource.id);
-    if (result.success && result.fileUrl) {
-      window.open(result.fileUrl, '_blank');
+    try {
+      const result = await download(resource.id);
+      const url = result.fileUrl || resource.file_url;
+      if (!url) return;
+
+      // Fetch as blob to force download (avoids popup blocker + opens-in-tab issue)
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = resource.name || 'download';
+      if (resource.file_format) {
+        a.download += `.${resource.file_format}`;
+      }
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      // Fallback: try direct link if blob fetch fails (e.g. CORS)
+      const url = resource.file_url;
+      if (url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = resource.name || 'download';
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    } finally {
+      setDownloadingId(null);
     }
-    setDownloadingId(null);
   };
 
   const handleCopy = async (resource: MarketingResource) => {
