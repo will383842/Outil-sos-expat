@@ -1449,7 +1449,8 @@ interface AaaProfile {
   lawSchool?: string; certifications?: string[]; motivation?: string | Record<string, string>; responseTime?: string;
   previousCountries?: string[]; mapLocation?: { lat: number; lng: number }; slug?: string;
   bio?: string | Record<string, string>; barNumber?: string;
-  // AAA Payout fields
+  // AAA fields
+  gender?: Gender;
   isAAA?: boolean;
   aaaPayoutMode?: 'internal' | string; // 'internal' or external account ID
 }
@@ -3350,6 +3351,7 @@ const AdminAaaProfiles: React.FC = () => {
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays d'origine</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays d'intervention</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
@@ -3366,7 +3368,7 @@ const AdminAaaProfiles: React.FC = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {isLoadingProfiles ? (
                       <tr>
-                        <td colSpan={13} className="px-6 py-4 text-center">
+                        <td colSpan={14} className="px-6 py-4 text-center">
                           <LoadingSpinner text="Chargement..." />
                         </td>
                       </tr>
@@ -3446,6 +3448,34 @@ const AdminAaaProfiles: React.FC = () => {
                             </span>
                           </td>
                           
+                          {/* Genre - Toggle rapide */}
+                          <td className="px-3 py-4 whitespace-nowrap">
+                            <button
+                              onClick={async () => {
+                                const newGender: Gender = profile.gender === 'female' ? 'male' : 'female';
+                                try {
+                                  await updateDoc(doc(db, 'sos_profiles', profile.id), { gender: newGender });
+                                  await updateDoc(doc(db, 'users', profile.id), { gender: newGender });
+                                  setExistingProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, gender: newGender } : p));
+                                  toast.success(`Genre mis à jour: ${newGender === 'male' ? 'Homme' : 'Femme'}`);
+                                } catch (e) {
+                                  console.error('Error updating gender:', e);
+                                  toast.error('Erreur lors de la mise à jour du genre');
+                                }
+                              }}
+                              className={`px-2 py-1 text-xs rounded-full cursor-pointer transition-colors ${
+                                profile.gender === 'female'
+                                  ? 'bg-pink-100 text-pink-800 hover:bg-pink-200'
+                                  : profile.gender === 'male'
+                                    ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                              }`}
+                              title="Cliquer pour changer le genre"
+                            >
+                              {profile.gender === 'female' ? 'Femme' : profile.gender === 'male' ? 'Homme' : 'Non défini'}
+                            </button>
+                          </td>
+
                           {/* Téléphone */}
                           <td className="px-3 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500">
@@ -3567,7 +3597,7 @@ const AdminAaaProfiles: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={13} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={14} className="px-6 py-4 text-center text-gray-500">
                           Aucun profil trouvé
                         </td>
                       </tr>
