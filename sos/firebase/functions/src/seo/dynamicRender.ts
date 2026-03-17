@@ -315,8 +315,8 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
 export const renderForBotsV2 = onRequest(
   {
     region: 'europe-west1',
-    memory: '1GiB',  // FIX: Puppeteer uses 525-590 MiB at runtime, 512MiB causes recurrent OOM
-    cpu: 0.5,  // memory > 256MiB requires cpu >= 0.5
+    memory: '2GiB',  // FIX: 1GiB caused OOM (1056 MiB used). Puppeteer + Chromium peaks at ~1.0-1.1 GiB
+    cpu: 1,  // memory > 1GiB requires cpu >= 1
     timeoutSeconds: 120,
     minInstances: 0,
     maxInstances: 10,
