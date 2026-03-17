@@ -1185,7 +1185,7 @@ async function getUniqueBio(
   
   // Fallback si les templates ne sont pas chargés
   if (templates.length === 0) {
-    console.warn(`⚠️ Aucun template trouvé pour ${bioKey} en ${langCode}`);
+    console.warn(`⚠️ Aucun template trouvé pour ${genderedKey} en ${langCode}`);
     const fallbackKey = role === 'lawyer' 
       ? 'admin.aaa.bio.lawyer.1' 
       : 'admin.aaa.bio.expat.1';
