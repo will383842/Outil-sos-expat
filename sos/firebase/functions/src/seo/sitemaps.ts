@@ -150,7 +150,9 @@ export const sitemapProfiles = onRequest(
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
 
-        // AAA profiles are real providers — include them in sitemap
+        // Skip profiles without a valid name (frontend will show 404 for these)
+        const name = profile.fullName || profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+        if (!name) return;
 
         // Utilise les slugs multilingues si disponibles
         const slugs = profile.slugs as Record<string, string> | undefined;

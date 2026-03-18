@@ -429,7 +429,7 @@ const ChatterLanding: React.FC = () => {
         twitterSite="@sosexpat"
         lastReviewed={new Date().toISOString().split('T')[0]}
       />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       {/* FAQ Schema for rich snippets / Position 0 */}
       <FAQPageSchema faqs={faqs.map(f => ({ question: f.question, answer: f.answer }))} pageTitle={seoTitle} />

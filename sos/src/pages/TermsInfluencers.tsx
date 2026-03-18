@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import { useLocalePath } from "../multilingual-system";
 import {
@@ -1291,6 +1292,7 @@ For any questions about the Influencer program, contact us via the contact form 
 
   return (
     <Layout>
+      <SEOHead title={`${t.title || "Influencer Terms"} - SOS Expat`} description={t.subtitle || "Terms and conditions for SOS Expat influencers."} ogType="website" contentType="WebPage" />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-orange-900 to-amber-900 text-white py-16 sm:py-24">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />

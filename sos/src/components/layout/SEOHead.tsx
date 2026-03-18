@@ -98,6 +98,21 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         return `${baseUrl}/${defaultLocale}${normalizedPathWithoutLocale}`;
       }
 
+      // Fallback: detect short language code (e.g., /fr/pricing, /en/contact)
+      // These are legacy URLs that should normalize to full locale (fr-fr, en-us)
+      const shortLangPattern = /^\/([a-z]{2})(\/.*)?$/;
+      const shortMatch = cleanPath.match(shortLangPattern);
+      if (shortMatch) {
+        const supportedLangs = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'zh', 'hi', 'ar'];
+        const shortLang = shortMatch[1];
+        if (supportedLangs.includes(shortLang)) {
+          const normalizedLang = shortLang === 'zh' ? 'ch' : shortLang;
+          const defaultLocale = getLocaleString(normalizedLang as any);
+          const restPath = removeTrailingSlash(shortMatch[2] || '/');
+          return `${baseUrl}/${defaultLocale}${restPath}`;
+        }
+      }
+
       return `${baseUrl}${cleanPath}`;
     }
 
@@ -109,7 +124,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   
   // Validation et nettoyage des données
   const cleanTitle = title?.trim() || '';
-  const cleanDescription = description?.trim().substring(0, 160) || '';
+  const cleanDescription = (description?.trim().replace(/<[^>]*>/g, '') || '').substring(0, 160);
   const fullOgImage = ogImage?.startsWith('http') ? ogImage : `https://sos-expat.com${ogImage}`;
   
   // Génération automatique de données structurées enrichies pour les IA

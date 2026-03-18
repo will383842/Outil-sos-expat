@@ -1160,18 +1160,10 @@ const OptimizedHomePage: React.FC = () => {
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
         
-        {/* Canonical managed by SEOHead — removed manual duplicate */}
+        {/* Canonical URL — normalizes to default locale (fr-fr, en-us, etc.) */}
+        <link rel="canonical" href={canonicalUrl} />
 
-        {/* Hreflang - URLs avec locale complète (fr-fr, en-us, etc.) */}
-        {SUPPORTED_LANGS.map((lang) => (
-          <link
-            key={lang}
-            rel="alternate"
-            hrefLang={getHreflangCode(lang)}
-            href={`${SEO_CONSTANTS.BASE_URL}/${getLocaleString(lang as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar")}`}
-          />
-        ))}
-        <link rel="alternate" hrefLang="x-default" href={`${SEO_CONSTANTS.BASE_URL}/fr-fr`} />
+        {/* Hreflang handled globally in App.tsx L1086 — removed duplicates */}
 
         {/* Open Graph - URLs CONSTANTES */}
         <meta property="og:type" content="website" />

@@ -413,7 +413,7 @@ const Pricing: React.FC = () => {
         trustworthiness="transparent_pricing, no_hidden_fees, secure_payment"
         contentQuality="high"
       />
-      <HreflangLinks />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <BreadcrumbSchema
         items={[
           { name: intl.formatMessage({ id: "nav.home" }), url: `/${language}` },

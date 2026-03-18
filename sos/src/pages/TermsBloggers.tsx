@@ -12,6 +12,7 @@ import {
   Layout as LayoutIcon,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import { useLocalePath } from "../multilingual-system";
 import {
@@ -1262,6 +1263,7 @@ For any questions about the Blogger program, contact us via the contact form or 
 
   return (
     <Layout>
+      <SEOHead title={`${t.title || "Blogger Terms"} - SOS Expat`} description={t.subtitle || "Terms and conditions for SOS Expat bloggers."} ogType="website" contentType="WebPage" />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white py-16 sm:py-24">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />

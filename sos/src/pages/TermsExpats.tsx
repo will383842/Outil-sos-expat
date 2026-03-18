@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import { useLocalePath } from "../multilingual-system";
 import {
@@ -2849,6 +2850,7 @@ Para perguntas ou questões legais, entre em contato conosco:
 
   return (
     <Layout>
+      <SEOHead title={`${t.title || "Expat Terms"} - SOS Expat`} description={t.subtitle || "Terms and conditions for SOS Expat helpers."} ogType="website" contentType="WebPage" />
       <main className="min-h-screen bg-gray-950">
         {/* HERO */}
         <section className="relative pt-20 pb-16 overflow-hidden">

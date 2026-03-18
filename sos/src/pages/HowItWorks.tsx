@@ -59,7 +59,7 @@ const HowItWorksPage: React.FC = () => {
         trustworthiness="verified_lawyers, 197_countries, 24_7_availability"
         contentQuality="high"
       />
-      <HreflangLinks />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <div className="min-h-screen bg-gray-950">
         {/* Header avec style moderne comme la home */}
         <section className="relative pt-20 pb-32 overflow-hidden">

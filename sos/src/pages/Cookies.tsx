@@ -11,6 +11,7 @@ import {
   Languages,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import {
   collection,
@@ -1311,6 +1312,12 @@ const anchorMap = useMemo(
 
   return (
     <Layout>
+      <SEOHead
+        title={`${t.title || "Cookie Policy"} - SOS Expat`}
+        description={`${t.subtitle || "How we use cookies on our site"} - SOS Expat`}
+        ogType="website"
+        contentType="WebPage"
+      />
       <main className="min-h-screen bg-gray-950">
         {/* HERO */}
         <section className="relative pt-20 pb-16 overflow-hidden">

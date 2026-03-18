@@ -1105,7 +1105,7 @@ const Contact: React.FC = () => {
         trustworthiness="gdpr_compliant, responsive_support"
         contentQuality="high"
       />
-      <HreflangLinks />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <BreadcrumbSchema
         items={[
           { name: t.home || "Accueil", url: `/${language}` },

@@ -302,7 +302,7 @@ const InfluencerLanding: React.FC = () => {
   return (
     <Layout showFooter={false}>
       <SEOHead title={seoTitle} description={seoDescription} ogImage="/og-influencer-2026.jpg" ogType="website" contentType="LandingPage" />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />
       <style>{globalStyles}</style>
 

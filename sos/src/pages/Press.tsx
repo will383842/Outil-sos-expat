@@ -296,7 +296,7 @@ const Press: React.FC = () => {
       <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t("press.hero.badge") }]} />
       <OrganizationSchema aggregateRating={{ ratingValue: 4.9, ratingCount: 127, reviewCount: 127 }} />
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} pageUrl={`https://sos-expat.com/${lang}/presse`} />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({

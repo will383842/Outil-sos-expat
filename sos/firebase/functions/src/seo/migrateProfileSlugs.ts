@@ -15,8 +15,9 @@ import * as admin from 'firebase-admin';
 
 const REGION = 'europe-west1';
 
-// Characters for short ID generation (URL-safe, lowercase)
-const SHORT_ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+// Characters for short ID generation — MUST match frontend slugGenerator.ts (31 chars)
+// Excludes ambiguous chars: 0, 1, o, l, i to avoid user confusion
+const SHORT_ID_CHARS = '23456789abcdefghjkmnpqrstuvwxyz';
 const SHORT_ID_LENGTH = 6;
 
 // Supported languages

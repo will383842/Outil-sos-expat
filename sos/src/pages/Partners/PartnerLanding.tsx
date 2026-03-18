@@ -1153,7 +1153,7 @@ const PartnerLanding: React.FC = () => {
           {JSON.stringify(jsonLdHowTo)}
         </script>
       </Helmet>
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <style>{globalStyles}</style>
 

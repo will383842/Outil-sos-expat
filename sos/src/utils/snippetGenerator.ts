@@ -581,7 +581,9 @@ const PROVIDER_TYPE_LABELS: Record<string, { lawyer: string; expat: string }> = 
  * Obtient le label du type de prestataire traduit
  */
 function getProviderTypeLabel(type: 'lawyer' | 'expat', locale: string): string {
-  const labels = PROVIDER_TYPE_LABELS[locale] || PROVIDER_TYPE_LABELS['en'];
+  // Normalize: 'zh' or 'zh-cn' → 'ch' (internal code)
+  const normalizedLocale = locale === 'zh' || locale.startsWith('zh-') ? 'ch' : locale.split('-')[0];
+  const labels = PROVIDER_TYPE_LABELS[normalizedLocale] || PROVIDER_TYPE_LABELS[locale] || PROVIDER_TYPE_LABELS['en'];
   return labels[type];
 }
 
@@ -605,7 +607,9 @@ function getPronouns(locale: string): {
     ar: { pronounHe: 'هو', pronounHis: 'له', pronounIs: 'يكون', eAgreement: '' },
     hi: { pronounHe: 'वे', pronounHis: 'उनके', pronounIs: 'हैं', eAgreement: '' },
   };
-  return pronouns[locale] || pronouns['en'];
+  // Normalize: 'zh' or 'zh-cn' → 'ch' (internal code)
+  const normalizedLocale = locale === 'zh' || locale.startsWith('zh-') ? 'ch' : locale.split('-')[0];
+  return pronouns[normalizedLocale] || pronouns[locale] || pronouns['en'];
 }
 
 /**
@@ -681,7 +685,9 @@ export function generateSnippets(
 ): GeneratedSnippet {
   const { locale, includePrice = true, includeFAQ = true } = config;
   
-  const baseLang = locale.split('-')[0];
+  const rawLang = locale.split('-')[0];
+  // Normalize: 'zh' (ISO standard in URLs) → 'ch' (internal code used in FAQ_TEMPLATES)
+  const baseLang = rawLang === 'zh' ? 'ch' : rawLang;
   const templates = FAQ_TEMPLATES[baseLang] || FAQ_TEMPLATES['en'];
   const providerTemplates = provider.type === 'lawyer' ? templates.lawyer : templates.expat;
   

@@ -2376,7 +2376,7 @@ const ProviderProfile: React.FC = () => {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link rel="preconnect" href="https://firestore.googleapis.com" />
 
-      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8" data-provider-loaded={(!isLoadingStats && !isLoadingReviews) ? "true" : undefined}>
+      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8" data-provider-loaded={provider ? "true" : undefined}>
 
         {/* ========================================== */}
         {/* HERO SECTION - DARK DESIGN                */}

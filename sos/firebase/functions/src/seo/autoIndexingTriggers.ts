@@ -635,9 +635,9 @@ export const scheduledBulkIndexing = onSchedule(
         urlsToSubmit.push(`${SITE_URL}/${profile.slug}`);
       }
 
-      // Si on a encore du quota, ajouter les autres langues clés
+      // Si on a encore du quota, ajouter TOUTES les langues (9 au total)
       if (urlsToSubmit.length < DAILY_QUOTA && slugs) {
-        for (const lang of ['en', 'es', 'de'] as const) {
+        for (const lang of ['en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'] as const) {
           if (slugs[lang] && urlsToSubmit.length < DAILY_QUOTA) {
             const url = `${SITE_URL}/${slugs[lang]}`;
             if (!urlsToSubmit.includes(url)) {

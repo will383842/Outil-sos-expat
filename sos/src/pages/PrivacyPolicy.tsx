@@ -11,6 +11,7 @@ import {
   Languages,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import {
   collection,
@@ -916,6 +917,12 @@ https://sos-expat.com/contact
 
   return (
     <Layout>
+      <SEOHead
+        title={`${texts[selectedLanguage]?.title || "Privacy Policy"} - SOS Expat`}
+        description={`${texts[selectedLanguage]?.subtitle || "Your privacy is our priority"} - SOS Expat`}
+        ogType="website"
+        contentType="WebPage"
+      />
       <main className="min-h-screen bg-gray-950">
         {/* HERO */}
         <section className="relative pt-20 pb-16 overflow-hidden">

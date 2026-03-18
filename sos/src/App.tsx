@@ -1083,7 +1083,10 @@ const App: React.FC = () => {
             <DefaultHelmet pathname={location.pathname} />
 
             {/* Dynamically generate hreflang links for all locales */}
-            <HreflangLinks pathname={location.pathname} />
+            {/* Skip on provider profile pages — they have custom slug-based hreflang */}
+            {!location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|ekspatriado|auswanderer|expatriados)/) && (
+              <HreflangLinks pathname={location.pathname} />
+            )}
             {/* P0 FIX: ErrorBoundary pour capturer les erreurs de lazy loading */}
             <ErrorBoundary>
             {/* ✅ FIX: ProviderOnlineManager monté au niveau global pour tracking sur toutes les pages */}

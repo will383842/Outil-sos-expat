@@ -508,7 +508,7 @@ const CaptainLanding: React.FC = () => {
         trustworthiness="high"
         contentQuality="high"
       />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <FAQPageSchema
         faqs={faqItems.map(item => ({ question: item.q, answer: item.a }))}
         pageTitle={seoTitle}

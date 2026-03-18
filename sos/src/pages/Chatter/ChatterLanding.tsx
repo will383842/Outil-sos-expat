@@ -349,7 +349,7 @@ const ChatterLanding: React.FC = () => {
         ogType="website"
         contentType="LandingPage"
       />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       {/* Custom styles */}
       <style>{globalStyles}</style>

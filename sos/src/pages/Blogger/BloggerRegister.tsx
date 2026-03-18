@@ -653,7 +653,7 @@ const BloggerRegister: React.FC = () => {
   return (
     <Layout>
       <SEOHead title={seoTitle} description={seoDescription} ogImage="/og-blogger-register.jpg" ogType="website" />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <div className="min-h-screen bg-gradient-to-b from-purple-950 via-gray-950 to-black py-12 px-4">
         {/* Radial glow */}

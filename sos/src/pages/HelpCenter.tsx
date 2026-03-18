@@ -366,7 +366,7 @@ const HelpCenter: React.FC = () => {
         trustworthiness="verified_content, regularly_updated"
         contentQuality="high"
       />
-      <HreflangLinks />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <BreadcrumbSchema items={breadcrumbs} />
       <div className="min-h-screen bg-gray-50">
         {/* HERO */}

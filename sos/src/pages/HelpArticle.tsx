@@ -229,7 +229,7 @@ const HelpArticle: React.FC = () => {
   if (notFound || !article) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center" data-page-not-found="true">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-white mb-4">404</h1>
             <p className="text-white/80 mb-6">
@@ -315,7 +315,7 @@ const HelpArticle: React.FC = () => {
       />
       <BreadcrumbSchema items={breadcrumbs} />
 
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" data-article-loaded="true">
         {/* Hero compact */}
         <div className="relative pt-16 pb-10">
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />

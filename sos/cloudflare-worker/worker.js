@@ -1080,6 +1080,36 @@ async function handleRequest(request, env, ctx) {
   }
 
   // ==========================================================================
+  // LEGACY SHORT LOCALE REDIRECT: /fr/* → /fr-fr/*, /en/* → /en-us/*, etc.
+  // Must be BEFORE SSR routing so bots get proper 301 (not SSR-rendered 200)
+  // Also applies to humans for consistent URLs
+  // ==========================================================================
+  const LEGACY_LOCALE_MAP = {
+    'fr': 'fr-fr', 'en': 'en-us', 'es': 'es-es', 'de': 'de-de',
+    'ru': 'ru-ru', 'pt': 'pt-pt', 'ch': 'zh-cn', 'zh': 'zh-cn',
+    'hi': 'hi-in', 'ar': 'ar-sa',
+  };
+  const legacyLocaleMatch = pathname.match(/^\/([a-z]{2})(\/.*)?$/);
+  if (legacyLocaleMatch) {
+    const shortLang = legacyLocaleMatch[1];
+    const newLocale = LEGACY_LOCALE_MAP[shortLang];
+    if (newLocale) {
+      const restPath = legacyLocaleMatch[2] || '';
+      const redirectUrl = `${url.origin}/${newLocale}${restPath}${url.search}`;
+      console.log(`[WORKER] Legacy locale 301: ${pathname} -> /${newLocale}${restPath}`);
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': redirectUrl,
+          'X-Worker-Active': 'true',
+          'X-Worker-Redirect': 'legacy-locale',
+          'Cache-Control': 'public, max-age=31536000',
+        },
+      });
+    }
+  }
+
+  // ==========================================================================
   // Affiliate link OG rendering (lightweight — no Puppeteer)
   // Routes /ref/, /rec/, /prov/ paths to affiliateOgRender for social bots
   // ==========================================================================

@@ -291,7 +291,7 @@ const BloggerLanding: React.FC = () => {
         ogType="website"
         contentType="LandingPage"
       />
-      <HreflangLinks pathname={location.pathname} />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />
 
       <style>{globalStyles}</style>

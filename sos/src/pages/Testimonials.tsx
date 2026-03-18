@@ -691,7 +691,7 @@ const Testimonials: React.FC = () => {
           {JSON.stringify(jsonLdBreadcrumb)}
         </script>
       </Helmet>
-      <HreflangLinks />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <div
         className="min-h-screen bg-gray-50"

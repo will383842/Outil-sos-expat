@@ -288,7 +288,7 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
           page.waitForSelector('[data-provider-loaded="true"]', { timeout: PHASE2_TIMEOUT }),
           page.waitForSelector('[data-provider-not-found="true"]', { timeout: PHASE2_TIMEOUT }),
           page.waitForSelector('[data-page-not-found="true"]', { timeout: PHASE2_TIMEOUT }),
-          page.waitForSelector('.provider-profile-name', { timeout: PHASE2_TIMEOUT }),
+          page.waitForSelector('[data-article-loaded="true"]', { timeout: PHASE2_TIMEOUT }),
         ]);
       } catch {
         // No provider marker found within 15s — this is a static page or slow-loading profile

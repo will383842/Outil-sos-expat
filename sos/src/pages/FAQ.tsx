@@ -162,7 +162,7 @@ const FAQ: React.FC = () => {
         contentQuality="high"
         lastReviewed={new Date().toISOString().split('T')[0]}
       />
-      <HreflangLinks />
+      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       {/* FAQPage JSON-LD (dedicated, clean schema for Google Rich Results) */}
       {faqData.length > 0 && (
