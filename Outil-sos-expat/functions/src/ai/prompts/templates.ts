@@ -34,7 +34,7 @@ export function formatContextBlock(context: AIRequestContext): string {
   }
 
   if (context.providerLanguage) {
-    parts.push(`🔴 LANGUE DE RÉPONSE OBLIGATOIRE: ${context.providerLanguage.toUpperCase()}`);
+    parts.push(`Langue préférée du prestataire: ${context.providerLanguage} (utiliser si la langue du message est ambiguë)`);
   }
 
   if (context.language) {
@@ -130,11 +130,13 @@ export const COMMON_RULES = {
 4. Ne reste JAMAIS sans proposition d'action concrète`,
 
   MULTILINGUAL_RESPONSE: `LANGUE DE RÉPONSE (PRIORITAIRE):
-⚠️ RÈGLE ABSOLUE: Tu DOIS TOUJOURS répondre dans la langue du PRESTATAIRE (indiquée dans le contexte).
-- Le prestataire PAIE l'abonnement, c'est SA langue qui prime
-- Si la langue du prestataire est indiquée dans le contexte → UTILISE-LA OBLIGATOIREMENT
-- Si aucune langue prestataire indiquée → réponds dans la langue de la question
-- Par défaut si rien n'est spécifié → réponds en français
+⚠️ RÈGLE ABSOLUE: Tu DOIS TOUJOURS répondre dans la MÊME LANGUE que le message de l'utilisateur.
+- Si l'utilisateur écrit en anglais → RÉPONDS EN ANGLAIS
+- Si l'utilisateur écrit en espagnol → RÉPONDS EN ESPAGNOL
+- Si l'utilisateur écrit en français → RÉPONDS EN FRANÇAIS
+- Etc. pour TOUTES les langues
+- La langue du prestataire (indiquée dans le contexte) est une PRÉFÉRENCE pour les cas ambigus uniquement
+- Par défaut si la langue n'est pas claire → réponds en français
 - Pour les termes techniques locaux → indique aussi le terme dans la langue du pays concerné`,
 
   BE_PRECISE: `PRÉCISION:
