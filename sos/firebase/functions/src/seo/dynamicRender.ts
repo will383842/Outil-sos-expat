@@ -29,7 +29,7 @@ const SITE_URL = 'https://sos-expat.com';
 // and avoid the Worker→CF→Worker round-trip. Domain is replaced back to SITE_URL in the HTML.
 const PAGES_ORIGIN = 'https://sos-expat.pages.dev';
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-const RENDER_TIMEOUT_MS = 30000; // 30 seconds for page load
+const RENDER_TIMEOUT_MS = 45000; // 45 seconds for page load (Firestore SDK cold start can be slow)
 const WAIT_FOR_READY_TIMEOUT_MS = 10000; // 10 seconds to wait for React
 
 // Firestore collection for persistent SSR cache (survives cold starts)
@@ -247,7 +247,7 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
     logger.info('Navigating Puppeteer to Pages origin', { original: url, renderUrl });
 
     await page.goto(renderUrl, {
-      waitUntil: 'networkidle2',
+      waitUntil: 'networkidle2', // 2 connections allowed (Firebase WebSocket stays open)
       timeout: RENDER_TIMEOUT_MS,
     });
 
@@ -261,7 +261,7 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
       // Phase 2: Wait for actual page content to load
       // Provider profiles need up to 15s for Firestore data (shortId query + profile data)
       // Static pages have no async data, so we check for provider markers first
-      const PHASE2_TIMEOUT = 15000; // 15 seconds for provider data
+      const PHASE2_TIMEOUT = 20000; // 20 seconds for provider data (Firestore SDK cold start)
       try {
         await Promise.race([
           page.waitForSelector('[data-provider-loaded="true"]', { timeout: PHASE2_TIMEOUT }),
