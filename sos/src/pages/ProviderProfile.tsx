@@ -1151,10 +1151,13 @@ const ProviderProfile: React.FC = () => {
           console.log(`🔍 [ProviderProfile] PHASE 0: Searching by shortId: ${detectedShortId}`);
           try {
             // Chercher dans sos_profiles un document dont le shortId correspond
+            // isVisible is REQUIRED in the query to satisfy Firestore Security Rules
+            // (rule: allow read if resource.data.isVisible == true)
             const shortIdQuery = query(
               collection(db, 'sos_profiles'),
               where('shortId', '==', detectedShortId),
               where('isActive', '==', true),
+              where('isVisible', '==', true),
               limit(1)
             );
             const shortIdSnapshot = await getDocs(shortIdQuery);
@@ -1317,9 +1320,11 @@ const ProviderProfile: React.FC = () => {
           const slugNoUid = possibleIds[0].replace(/-[a-zA-Z0-9]{8,}$/, "");
           
           try {
+            // isVisible required by Firestore Security Rules
             const qSlug = query(
               collection(db, "sos_profiles"),
               where("slug", "==", slugNoUid),
+              where("isVisible", "==", true),
               limit(1)
             );
             const qsSlug = await getDocs(qSlug);
