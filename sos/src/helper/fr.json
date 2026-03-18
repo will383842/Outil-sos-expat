@@ -4723,7 +4723,7 @@
   "admin.toolbox.iaTool.description": "Assistant IA pour les prestataires : aide à la gestion des appels, suggestions et optimisation du service.",
   "admin.toolbox.mailwizzBackend": "MailWizz - Administration",
   "admin.toolbox.mailwizzBackend.description": "Configuration serveur MailWizz : serveurs d'envoi, domaines, clés API, paramètres système et gestion des utilisateurs.",
-  "admin.toolbox.mailwizzFrontend": "MailWizz - Emailing",
+  "admin.toolbox.mailwizzFrontend": "Mailwizz - Email transactionnels SOS Expat",
   "admin.toolbox.mailwizzFrontend.description": "Interface d'envoi d'emails : campagnes, listes de contacts, templates, statistiques de délivrabilité et autorépondeurs.",
   "admin.toolbox.motivationEngine": "Motivation Engine",
   "admin.toolbox.motivationEngine.description": "Plateforme de gamification et motivation des chatters : séquences automatisées, badges, missions, leaderboards, streaks, envoi Telegram/WhatsApp multi-langue.",

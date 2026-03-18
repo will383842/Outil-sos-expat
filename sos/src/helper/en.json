@@ -4721,7 +4721,7 @@
   "admin.toolbox.iaTool.description": "AI assistant for providers: call management support, suggestions and service optimization.",
   "admin.toolbox.mailwizzBackend": "MailWizz - Administration",
   "admin.toolbox.mailwizzBackend.description": "MailWizz server configuration: delivery servers, domains, API keys, system settings and user management.",
-  "admin.toolbox.mailwizzFrontend": "MailWizz - Emailing",
+  "admin.toolbox.mailwizzFrontend": "Mailwizz - Email transactionnels SOS Expat",
   "admin.toolbox.mailwizzFrontend.description": "Email sending interface: campaigns, contact lists, templates, deliverability stats and autoresponders.",
   "admin.toolbox.motivationEngine": "Motivation Engine",
   "admin.toolbox.motivationEngine.description": "Chatter gamification and motivation platform: automated sequences, badges, missions, leaderboards, streaks, multi-language Telegram/WhatsApp messaging.",
