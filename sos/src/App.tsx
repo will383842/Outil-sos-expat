@@ -647,7 +647,7 @@ const MetaPixelUserTracker: React.FC = () => {
 
     if (user) {
       // GA4: Set user ID and role properties
-      setUserId(user.uid);
+      if (user.uid) setUserId(user.uid);
       const role = (user as any).role || (user as any).userRole || 'client';
       setUserProperties({
         user_role: role,
