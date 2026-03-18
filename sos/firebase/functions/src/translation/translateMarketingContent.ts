@@ -248,10 +248,10 @@ Target languages: ${targetLangs.map((l) => `${l} (${langNames[l] || l})`).join("
       }
 
       // Verify all placeholders are preserved
-      const sourcePlaceholders = text.match(/\{\{[A-Z_]+\}\}/g) || [];
+      const sourcePlaceholders: string[] = text.match(/\{\{[A-Z_]+\}\}/g) || [];
       if (sourcePlaceholders.length > 0) {
         for (const lang of Object.keys(translations)) {
-          const translatedPlaceholders =
+          const translatedPlaceholders: string[] =
             translations[lang].match(/\{\{[A-Z_]+\}\}/g) || [];
           const missing = sourcePlaceholders.filter(
             (p) => !translatedPlaceholders.includes(p)

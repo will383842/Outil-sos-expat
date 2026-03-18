@@ -9,7 +9,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../lib/secrets";
-import { forwardEventToEngine } from "../telegram/forwardToEngine";
+// forwardEventToEngine ready for future Telegram notification on payout retry
 
 export const onPayoutRetryQueued = onDocumentCreated(
   {
