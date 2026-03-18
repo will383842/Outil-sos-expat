@@ -10,6 +10,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  addDoc,
   Timestamp,
   QueryDocumentSnapshot,
   DocumentData,
@@ -43,7 +44,13 @@ import {
   Languages,
   Link as LinkIcon,
   RefreshCw,
+  Edit3,
+  Save,
+  ExternalLink,
+  ClipboardCopy,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { useAdminTranslations } from '../../utils/adminTranslations';
 import AdminLayout from '../../components/admin/AdminLayout';
 import AdminErrorState from '../../components/admin/AdminErrorState';
@@ -52,6 +59,7 @@ import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import AdminMapVisibilityToggle from '../../components/admin/AdminMapVisibilityToggle';
 import { getCountryName, getCountryFlag, getLanguageName } from '../../utils/formatters';
+import { copyToClipboard } from '@/utils/clipboard';
 import TranslationModal from '../../components/admin/TranslationModal';
 import { logError } from '../../utils/logging';
 
@@ -61,6 +69,8 @@ import { logError } from '../../utils/logging';
 
 type ExpatStatus = 'active' | 'suspended' | 'pending' | 'banned';
 type ValidationStatus = 'pending' | 'approved' | 'rejected';
+type KycStatus = 'pending' | 'verified' | 'rejected' | 'requested';
+type MinimalCurrentUser = { id: string; role: string };
 
 interface Expat {
   id: string;
@@ -94,6 +104,8 @@ interface Expat {
   hourlyRate?: number;
   profilePhoto?: string;
   photoURL?: string;
+  kycStatus: KycStatus;
+  kycProvider?: 'stripe' | 'manual';
   isBanned: boolean;
   banReason?: string;
 }
@@ -136,6 +148,8 @@ type FirestoreExpatDoc = {
   isFeatured?: boolean;
   isBanned?: boolean;
   banReason?: string;
+  kycStatus?: string;
+  kycProvider?: 'stripe' | 'manual';
   helpDomains?: string[];
   expertiseDomains?: string[];
   servicesOffered?: string[];
@@ -206,7 +220,10 @@ const fmtMoney = (n: number) => `${(n / 100).toLocaleString('fr-FR', { minimumFr
 // ============================================================================
 
 const AdminExpats: React.FC = () => {
+  const navigate = useNavigate();
   const adminT = useAdminTranslations();
+  const { user: rawCurrentUser } = useAuth() as { user?: MinimalCurrentUser | null };
+  const currentUser: MinimalCurrentUser | null | undefined = rawCurrentUser;
 
   // --- State ---
   const [expats, setExpats] = useState<Expat[]>([]);
@@ -250,6 +267,23 @@ const AdminExpats: React.FC = () => {
   // Translation modal
   const [translationModalOpen, setTranslationModalOpen] = useState(false);
   const [translationProviderId, setTranslationProviderId] = useState<string | null>(null);
+
+  // Edit profile
+  interface EditProfileFields {
+    firstName: string; lastName: string; email: string; phone: string;
+    country: string; city: string; originCountry: string;
+    languages: string; helpDomains: string;
+    adminNotes: string;
+  }
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFields, setEditFields] = useState<EditProfileFields>({
+    firstName: '', lastName: '', email: '', phone: '',
+    country: '', city: '', originCountry: '',
+    languages: '', helpDomains: '',
+    adminNotes: '',
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editTargetExpat, setEditTargetExpat] = useState<Expat | null>(null);
 
   // --- Close action menu on outside click ---
   useEffect(() => {
@@ -313,6 +347,8 @@ const AdminExpats: React.FC = () => {
       isVisibleOnMap: data.isVisibleOnMap ?? true,
       isOnline: data.isOnline ?? false,
       isFeatured: data.isFeatured ?? false,
+      kycStatus: (data.kycStatus as KycStatus) ?? 'pending',
+      kycProvider: data.kycProvider,
       isBanned: !!data.isBanned,
       banReason: data.banReason || '',
       profileComplete: calculateProfileCompleteness(data),
@@ -384,7 +420,9 @@ const AdminExpats: React.FC = () => {
     setIsActionLoading(true);
     setOpenActionMenuId(null);
     try {
-      await updateDoc(doc(db, 'sos_profiles', id), { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() });
+      const visUpdate = { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() };
+      await updateDoc(doc(db, 'users', id), visUpdate);
+      await updateDoc(doc(db, 'sos_profiles', id), visUpdate);
       setExpats((prev) => prev.map((e) => e.id === id ? { ...e, isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible } : e));
       toast.success(!isCurrentlyVisible ? 'Rendu visible' : 'Masqu\u00E9');
     } catch (err) {
@@ -432,6 +470,72 @@ const AdminExpats: React.FC = () => {
       toast.success('Statut mis \u00E0 jour');
     } catch (err) {
       toast.error('Erreur changement statut');
+    }
+  };
+
+  const handleEditExpat = (expat: Expat) => {
+    setEditTargetExpat(expat);
+    setEditFields({
+      firstName: expat.firstName || '', lastName: expat.lastName || '',
+      email: expat.email || '', phone: expat.phone || '',
+      country: expat.country || '', city: expat.city || '',
+      originCountry: expat.originCountry || '',
+      languages: (expat.languages || []).join(', '),
+      helpDomains: (expat.helpDomains || []).join(', '),
+      adminNotes: (expat as any).adminNotes || '',
+    });
+    setShowEditModal(true);
+    setOpenActionMenuId(null);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editTargetExpat) return;
+    setEditLoading(true);
+    try {
+      const fn = httpsCallable(functions, 'adminUpdateUserProfile');
+      const updates: Record<string, any> = { userId: editTargetExpat.id, role: 'expat' };
+      if (editFields.firstName !== (editTargetExpat.firstName || '')) updates.firstName = editFields.firstName;
+      if (editFields.lastName !== (editTargetExpat.lastName || '')) updates.lastName = editFields.lastName;
+      if (editFields.email !== (editTargetExpat.email || '')) updates.email = editFields.email;
+      if (editFields.phone !== (editTargetExpat.phone || '')) updates.phone = editFields.phone;
+      if (editFields.country !== (editTargetExpat.country || '')) updates.country = editFields.country;
+      if (editFields.city !== (editTargetExpat.city || '')) updates.city = editFields.city;
+      if (editFields.originCountry !== (editTargetExpat.originCountry || '')) updates.originCountry = editFields.originCountry;
+      const newLangs = editFields.languages.split(',').map(s => s.trim()).filter(Boolean);
+      const oldLangs = editTargetExpat.languages || [];
+      if (JSON.stringify(newLangs) !== JSON.stringify(oldLangs)) updates.languages = newLangs;
+      const newDomains = editFields.helpDomains.split(',').map(s => s.trim()).filter(Boolean);
+      const oldDomains = editTargetExpat.helpDomains || [];
+      if (JSON.stringify(newDomains) !== JSON.stringify(oldDomains)) updates.helpDomains = newDomains;
+      if (editFields.adminNotes !== ((editTargetExpat as any).adminNotes || '')) updates.adminNotes = editFields.adminNotes;
+      if (Object.keys(updates).length <= 2) { toast.error('Aucune modification'); setEditLoading(false); return; }
+      await fn(updates);
+      toast.success('Profil mis \u00E0 jour');
+      setShowEditModal(false);
+      setPage(1);
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      toast.error(err.message || 'Erreur lors de la mise \u00E0 jour');
+    } finally { setEditLoading(false); }
+  };
+
+  const handleViewDashboard = (expat: Expat) => {
+    window.open(`/dashboard?adminView=${expat.id}`, '_blank');
+    setOpenActionMenuId(null);
+  };
+
+  const setKyc = async (id: string, next: KycStatus) => {
+    setOpenActionMenuId(null);
+    try {
+      const row = expats.find((r) => r.id === id);
+      if (row?.kycProvider === 'stripe') return;
+      const payload: Record<string, unknown> = { kycStatus: next, updatedAt: serverTimestamp() };
+      await updateDoc(doc(db, 'users', id), payload);
+      setExpats((prev) => prev.map((e) => e.id === id ? { ...e, kycStatus: next } : e));
+      toast.success('KYC mise \u00E0 jour');
+    } catch (err) {
+      console.error('setKyc error', err);
+      toast.error('Erreur lors de la mise \u00E0 jour');
     }
   };
 
@@ -874,12 +978,13 @@ const AdminExpats: React.FC = () => {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Validation</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">KYC</th>
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr><td colSpan={9} className="py-16 text-center"><LoadingSpinner text={adminT.loading} /></td></tr>
+                  <tr><td colSpan={10} className="py-16 text-center"><LoadingSpinner text={adminT.loading} /></td></tr>
                 ) : filteredExpats.length > 0 ? (
                   filteredExpats.map((e) => (
                     <tr key={e.id} className={`group transition-colors hover:bg-gray-50/80 ${selectedUserIds.has(e.id) ? 'bg-red-50/50' : ''}`}>
@@ -960,6 +1065,9 @@ const AdminExpats: React.FC = () => {
                           {e.isFeatured && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">VEDETTE</span>
                           )}
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${e.isVisible ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                            {e.isVisible ? 'Visible' : 'Masqu\u00E9'}
+                          </span>
                         </div>
                       </td>
 
@@ -969,6 +1077,19 @@ const AdminExpats: React.FC = () => {
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700">Refus\u00E9</span>
                         ) : e.validationStatus === 'approved' ? (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700">Approuv\u00E9</span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">En attente</span>
+                        )}
+                      </td>
+
+                      {/* KYC */}
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        {e.kycStatus === 'verified' ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700">V\u00E9rifi\u00E9</span>
+                        ) : e.kycStatus === 'rejected' ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700">Rejet\u00E9</span>
+                        ) : e.kycStatus === 'requested' ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">Demand\u00E9</span>
                         ) : (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">En attente</span>
                         )}
@@ -985,15 +1106,24 @@ const AdminExpats: React.FC = () => {
                           </button>
 
                           {openActionMenuId === e.id && (
-                            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 animate-in fade-in slide-in-from-top-1">
+                            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 animate-in fade-in slide-in-from-top-1 max-h-[70vh] overflow-y-auto">
+                              <button onClick={() => handleViewDashboard(e)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
+                              </button>
                               <button onClick={() => { setSelectedExpat(e); setShowUserModal(true); setOpenActionMenuId(null); }}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                 <Eye size={14} className="text-cyan-600" /> Voir le profil
+                              </button>
+                              <button onClick={() => handleEditExpat(e)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <Edit3 size={14} className="text-gray-500" /> Modifier le profil
                               </button>
                               <button onClick={() => { setTranslationProviderId(e.id); setTranslationModalOpen(true); setOpenActionMenuId(null); }}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                 <Languages size={14} className="text-blue-500" /> Traductions
                               </button>
+                              <div className="border-t border-gray-100 my-1" />
                               <button onClick={() => void handleToggleOnlineStatus(e.id, e.isOnline)}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                 {e.isOnline ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-emerald-600" />}
@@ -1010,6 +1140,7 @@ const AdminExpats: React.FC = () => {
                                 <Shield size={14} className="text-amber-500" />
                                 {e.isFeatured ? 'Retirer vedette' : 'Mettre en vedette'}
                               </button>
+                              <div className="border-t border-gray-100 my-1" />
                               {/* Validation quick actions */}
                               {e.validationStatus !== 'approved' && (
                                 <button onClick={() => void handleValidationChange(e.id, 'approved')}
@@ -1021,6 +1152,29 @@ const AdminExpats: React.FC = () => {
                                 <button onClick={() => void handleValidationChange(e.id, 'rejected')}
                                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
                                   <X size={14} /> Rejeter
+                                </button>
+                              )}
+                              {/* KYC actions */}
+                              <button onClick={() => void setKyc(e.id, 'verified')}
+                                disabled={e.kycProvider === 'stripe'}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50">
+                                <Shield size={14} className="text-emerald-500" /> KYC V\u00E9rifi\u00E9
+                              </button>
+                              <button onClick={() => void setKyc(e.id, 'requested')}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <Shield size={14} className="text-blue-500" /> Demander KYC
+                              </button>
+                              {/* Status */}
+                              {e.status !== 'active' && !e.isBanned && (
+                                <button onClick={() => void handleStatusChange(e.id, 'active')}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                                  <UserPlus size={14} /> Activer
+                                </button>
+                              )}
+                              {e.status === 'active' && !e.isBanned && (
+                                <button onClick={() => void handleStatusChange(e.id, 'suspended')}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors">
+                                  <Ban size={14} /> Suspendre
                                 </button>
                               )}
                               <div className="border-t border-gray-100 my-1" />
@@ -1039,6 +1193,15 @@ const AdminExpats: React.FC = () => {
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
                                 <Trash2 size={14} /> Supprimer
                               </button>
+                              <div className="border-t border-gray-100 my-1" />
+                              <button onClick={async () => { await copyToClipboard(e.email); toast.success('Email copi\u00E9'); setOpenActionMenuId(null); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <ClipboardCopy size={14} className="text-gray-400" /> Copier email
+                              </button>
+                              <button onClick={async () => { await copyToClipboard(e.id); toast.success('ID copi\u00E9'); setOpenActionMenuId(null); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <ClipboardCopy size={14} className="text-gray-400" /> Copier ID
+                              </button>
                             </div>
                           )}
                         </div>
@@ -1046,7 +1209,7 @@ const AdminExpats: React.FC = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={9} className="py-16 text-center text-gray-400 text-sm">Aucun expatri\u00E9 trouv\u00E9</td></tr>
+                  <tr><td colSpan={10} className="py-16 text-center text-gray-400 text-sm">Aucun expatri\u00E9 trouv\u00E9</td></tr>
                 )}
               </tbody>
             </table>
@@ -1343,6 +1506,74 @@ const AdminExpats: React.FC = () => {
               <Button onClick={() => setShowBanModal(false)} variant="outline" size="small" disabled={isActionLoading}>Annuler</Button>
               <Button onClick={confirmBanExpat} size="small" loading={isActionLoading} className="bg-orange-600 hover:bg-orange-700">
                 <Ban size={14} className="mr-1.5" /> Bannir
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ================================================================== */}
+      {/* MODAL: EDIT PROFILE                                                */}
+      {/* ================================================================== */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Modifier le profil" size="large">
+        {editTargetExpat && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pr\u00E9nom</label>
+                <input type="text" value={editFields.firstName} onChange={(ev) => setEditFields((p) => ({ ...p, firstName: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                <input type="text" value={editFields.lastName} onChange={(ev) => setEditFields((p) => ({ ...p, lastName: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" value={editFields.email} onChange={(ev) => setEditFields((p) => ({ ...p, email: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">T\u00E9l\u00E9phone</label>
+                <input type="text" value={editFields.phone} onChange={(ev) => setEditFields((p) => ({ ...p, phone: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
+                <input type="text" value={editFields.country} onChange={(ev) => setEditFields((p) => ({ ...p, country: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+                <input type="text" value={editFields.city} onChange={(ev) => setEditFields((p) => ({ ...p, city: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pays d'origine</label>
+                <input type="text" value={editFields.originCountry} onChange={(ev) => setEditFields((p) => ({ ...p, originCountry: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Langues <span className="text-gray-400 font-normal">(s\u00E9par\u00E9es par des virgules)</span></label>
+                <input type="text" value={editFields.languages} onChange={(ev) => setEditFields((p) => ({ ...p, languages: ev.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Domaines d'aide <span className="text-gray-400 font-normal">(s\u00E9par\u00E9s par des virgules)</span></label>
+              <input type="text" value={editFields.helpDomains} onChange={(ev) => setEditFields((p) => ({ ...p, helpDomains: ev.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes admin</label>
+              <textarea value={editFields.adminNotes} onChange={(ev) => setEditFields((p) => ({ ...p, adminNotes: ev.target.value }))} rows={2}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none" />
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <Button onClick={() => setShowEditModal(false)} variant="outline" size="small" disabled={editLoading}>Annuler</Button>
+              <Button onClick={handleSaveProfile} size="small" loading={editLoading}>
+                <Save size={14} className="mr-1.5" /> Enregistrer
               </Button>
             </div>
           </div>

@@ -520,7 +520,9 @@ const AdminLawyers: React.FC = () => {
   const handleToggleVisibility = async (lawyerId: string, isCurrentlyVisible: boolean) => {
     setIsActionLoading(true); setOpenActionMenuId(null);
     try {
-      await updateDoc(doc(db, 'sos_profiles', lawyerId), { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() });
+      const visUpdate = { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() };
+      await updateDoc(doc(db, 'users', lawyerId), visUpdate);
+      await updateDoc(doc(db, 'sos_profiles', lawyerId), visUpdate);
       setLawyers((prev) => prev.map((l) => l.id === lawyerId ? { ...l, isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible } : l));
       await addDoc(collection(db, 'logs'), { type: !isCurrentlyVisible ? 'user_set_visible' : 'user_set_invisible', userId: lawyerId, changedBy: currentUser?.id ?? null, timestamp: serverTimestamp() });
     } catch (err) {
@@ -1031,6 +1033,9 @@ const AdminLawyers: React.FC = () => {
                               {l.isOnline ? 'En ligne' : 'Hors ligne'}
                             </span>
                           )}
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${l.isVisible ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                            {l.isVisible ? 'Visible' : 'Masqu\u00E9'}
+                          </span>
                         </div>
                       </td>
 
