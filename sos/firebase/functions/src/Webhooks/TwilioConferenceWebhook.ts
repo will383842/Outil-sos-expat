@@ -451,8 +451,12 @@ async function handleConferenceEnd(sessionId: string, body: TwilioConferenceWebh
 
       // firstDisconnectedAt = when the FIRST participant left (the earlier of the two)
       // If disconnectedAt is not set, use conferenceEndTime as fallback
-      const clientDisconnectTime = clientDisconnectedAt?.toDate?.()?.getTime() || conferenceEndTime.getTime();
-      const providerDisconnectTime = providerDisconnectedAt?.toDate?.()?.getTime() || conferenceEndTime.getTime();
+      // P0 FIX 2026-03-18: disconnectedAt from a PREVIOUS attempt (retry) can be BEFORE connectedAt
+      // In that case, ignore it and use conferenceEndTime (participant was still connected)
+      const rawClientDisconnect = clientDisconnectedAt?.toDate?.()?.getTime() || conferenceEndTime.getTime();
+      const rawProviderDisconnect = providerDisconnectedAt?.toDate?.()?.getTime() || conferenceEndTime.getTime();
+      const clientDisconnectTime = rawClientDisconnect > clientConnectedTime ? rawClientDisconnect : conferenceEndTime.getTime();
+      const providerDisconnectTime = rawProviderDisconnect > providerConnectedTime ? rawProviderDisconnect : conferenceEndTime.getTime();
       const firstDisconnectedAt = Math.min(clientDisconnectTime, providerDisconnectTime);
 
       // billingDuration = time when BOTH were connected simultaneously
