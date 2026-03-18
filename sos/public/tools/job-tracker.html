@@ -793,7 +793,7 @@ select option{background:var(--surface2)}
       </div>
       <div class="form-group" style="margin-top:.5rem">
         <label>Fichier (CSV ou ZIP)</label>
-        <input type="file" id="ci-file-input" accept=".csv,.zip" onchange="handleContactImportFile(event)">
+        <input type="file" id="ci-file-input" accept=".csv,.xlsx,.xls,.zip" onchange="handleContactImportFile(event)">
       </div>
       <div id="ci-preview-area"></div>
       <div id="ci-progress-area"></div>
@@ -2818,8 +2818,13 @@ function handleContactImportFile(e){
       "<p style='font-size:.8rem;color:var(--muted);margin-top:.3rem'>Les fichiers (PDF, DOCX, images, CSV) seront extraits et analysés par IA.</p></div>";
     document.getElementById("ci-import-btn").style.display="inline-flex";
     ciParsedContacts="zip";
+  }else if(ext==="xlsx"||ext==="xls"){
+    preview.innerHTML="<div style='margin-top:1rem'><p style='color:var(--accent);font-size:.85rem'>Fichier Excel: <b>"+esc(file.name)+"</b> ("+Math.round(file.size/1024)+" Ko)</p>"+
+      "<p style='font-size:.8rem;color:var(--muted);margin-top:.3rem'>Le fichier sera envoyé au serveur pour extraction des contacts.</p></div>";
+    document.getElementById("ci-import-btn").style.display="inline-flex";
+    ciParsedContacts="excel";
   }else{
-    preview.innerHTML="<p style='color:var(--danger)'>Format non supporté. Utilisez .csv ou .zip</p>";
+    preview.innerHTML="<p style='color:var(--danger)'>Format non supporté. Utilisez .csv, .xlsx, .xls ou .zip</p>";
   }
 }
 
@@ -2847,7 +2852,29 @@ async function executeContactImport(){
   var importBtn=document.getElementById("ci-import-btn");
   importBtn.disabled=true;importBtn.textContent="Import en cours...";
 
-  if(ciParsedContacts==="zip"&&ciFile){
+  if(ciParsedContacts==="excel"&&ciFile){
+    // Upload Excel to server for parsing
+    progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem;font-weight:500'>Envoi du fichier Excel...</div>"+
+      "<div class='import-progress-bar'><div class='import-progress-fill' style='width:30%'></div></div></div>";
+    var formData=new FormData();
+    formData.append("file",ciFile);
+    if(categoryId) formData.append("category_id",categoryId);
+    if(sourceAdId) formData.append("source_ad_id",sourceAdId);
+    formData.append("operator",currentOperator);
+    try{
+      var r=await fetch(API_BASE+"/contacts/analyze-file",{method:"POST",headers:{"X-Engine-Secret":API_SECRET},body:formData});
+      var res=await r.json();
+      if(res.success&&res.contacts){
+        // Server parsed Excel into contacts array, now import them
+        progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem'>Import de "+res.contacts.length+" contacts...</div><div class='import-progress-bar'><div class='import-progress-fill' style='width:60%'></div></div></div>";
+        var importRes=await apiPost("/contacts/import-csv",{contacts:res.contacts,category_id:categoryId,source_ad_id:sourceAdId,operator:currentOperator});
+        if(importRes&&importRes.success){
+          progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem;color:var(--accent)'>Import Excel terminé ! "+importRes.created+" contacts créés"+(importRes.duplicates?" ("+importRes.duplicates+" doublons)":"")+"</div><div class='import-progress-bar'><div class='import-progress-fill' style='width:100%'></div></div></div>";
+          contacts=await loadContactsFromAPI();renderContacts();
+        }else{progress.innerHTML="<div style='color:var(--danger)'>Erreur import</div>";}
+      }else{progress.innerHTML="<div style='color:var(--danger)'>Erreur: "+esc(res.error||"Impossible de lire le fichier Excel")+"</div>";}
+    }catch(e){progress.innerHTML="<div style='color:var(--danger)'>Erreur réseau: "+esc(e.message)+"</div>";}
+  }else if(ciParsedContacts==="zip"&&ciFile){
     // Upload ZIP to server for AI processing
     progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem;font-weight:500'>Envoi du ZIP au serveur...</div>"+
       "<div class='import-progress-bar'><div class='import-progress-fill' style='width:10%'></div></div>"+
