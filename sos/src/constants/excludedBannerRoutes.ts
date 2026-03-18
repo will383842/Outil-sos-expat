@@ -15,80 +15,10 @@
  * IMPORTANT: Each route includes ALL translations (fr, en, es, de, ru, pt, ch, hi, ar)
  */
 export const EXCLUDED_BANNER_ROUTE_PATTERNS: string[] = [
-  // === HOME PAGE (root) ===
-  '/',                      // Root home page
-  '/accueil',               // fr
-  '/home',                  // en
-  '/inicio',                // es
-  '/startseite',            // de
-  '/glavnaya',              // ru
-  '/pagina-inicial',        // pt
-  '/shouye',                // ch
-  '/mukhya-prishth',        // hi
-  '/الرئيسية',              // ar
-
-  // === SOS CALL / EMERGENCY CALL PAGES (all translations) ===
-  '/sos-appel',           // fr
-  '/emergency-call',      // en
-  '/llamada-emergencia',  // es
-  '/notruf',              // de
-  '/ekstrenniy-zvonok',   // ru
-  '/chamada-emergencia',  // pt
-  '/jinji-dianhua',       // ch
-  '/aapatkaalin-call',    // hi
-  '/مكالمة-طوارئ',        // ar
-
-  // === EXPAT CALL PAGES (all translations) ===
-  '/appel-expatrie',      // fr
-  '/expat-call',          // en
-  '/llamada-expatriado',  // es
-  '/expatriate-anruf',    // de
-  '/zvonok-expatriantu',  // ru
-  '/chamada-expatriado',  // pt
-  '/waipai-dianhua',      // ch
-  '/pravasi-call',        // hi
-  '/مكالمة-المغترب',      // ar
-
-  // === PROVIDER PROFILES (all translations + wildcard patterns) ===
-  // French
-  '/provider/',
-  '/avocat/',
-  '/expatrie/',
-  // English
-  '/lawyers/',
-  '/expats/',
-  // Spanish
-  '/abogados/',
-  '/expatriados/',
-  // German
-  '/anwaelte/',
-  '/expatriates/',
-  // Russian
-  '/advokaty/',
-  '/expatrianty/',
-  // Portuguese
-  '/advogados/',
-  // Chinese
-  '/lushi/',
-  '/waipai/',
-  // Hindi
-  '/vakil/',
-  '/pravasi/',
-  // Arabic
-  '/محامون/',
-  '/مغتربون/',
-
-  // === PROVIDERS LIST (all translations) ===
-  '/providers',           // en
-  '/prestataires',        // fr
-  '/nos-experts',         // fr alias
-  '/proveedores',         // es
-  '/anbieter',            // de
-  '/postavshchiki',       // ru
-  '/prestadores',         // pt
-  '/fuwu-tigongzhe',      // ch
-  '/seva-pradaata',       // hi
-  '/مقدمي-الخدمات',       // ar
+  // ⚠️ 2026-03-18: REMOVED homepage, SOS call, expat call, provider profiles, providers list
+  // The Cookie Banner MUST appear on ALL public pages for GDPR consent + GA4 tracking.
+  // Without it, analytics_storage stays 'denied' and GA4 collects ZERO data.
+  // Only hide on checkout/payment/booking workflow pages (user is mid-transaction).
 
   // === CALL CHECKOUT / PAYMENT PAGES (all translations) ===
   '/call-checkout',       // en
@@ -163,18 +93,8 @@ export function shouldHideBannersOnRoute(pathname: string): boolean {
   // Normalize pathname (remove trailing slash except for root)
   const normalizedPath = pathname.replace(/\/$/, '') || '/';
 
-  // Check if this is the home page (root or just locale prefix)
-  // Matches: /, /fr-fr, /en-us, /es-es, etc.
-  const isHomePage = normalizedPath === '/' || /^\/[a-z]{2}(-[a-z]{2})?$/i.test(normalizedPath);
-  if (isHomePage) {
-    return true;
-  }
-
-  // Check for provider profile routes with lang-locale prefix
-  // e.g., /fr-fr/avocat-thailande/julien-visa-k7m2p9
-  if (PROVIDER_PROFILE_LANG_LOCALE_PATTERN.test(normalizedPath)) {
-    return true;
-  }
+  // 2026-03-18: Homepage and provider profiles NO LONGER excluded.
+  // Cookie banner must appear everywhere for GDPR consent + GA4 tracking.
 
   // Remove locale prefix if present to check against patterns
   // e.g., /fr-fr/sos-appel -> /sos-appel
@@ -212,31 +132,8 @@ export function shouldHideBannersOnRoute(pathname: string): boolean {
     }
   }
 
-  // Additional check for any 3-segment provider profile URL
-  // Format: /:langLocale/:roleCountry/:nameSlug
-  // e.g., /fr-fr/avocat-thailande/julien-visa-k7m2p9
-  const threeSegmentPattern = /^\/[a-z]{2}-[a-z]{2}\/[^/]+\/[^/]+$/i;
-  if (threeSegmentPattern.test(normalizedPath)) {
-    // Check if the second segment looks like a provider type
-    const segments = normalizedPath.split('/').filter(Boolean);
-    if (segments.length >= 2) {
-      const roleCountry = segments[1].toLowerCase();
-      const providerTypes = [
-        'avocat', 'lawyer', 'lawyers', 'expatrie', 'expat', 'expats',
-        'abogado', 'abogados', 'expatriado', 'expatriados',
-        'anwalt', 'anwaelte', 'expatriate', 'expatriates',
-        'advokat', 'advokaty', 'expatriant', 'expatrianty',
-        'advogado', 'advogados',
-        'lushi', 'waipai', 'vakil', 'pravasi'
-      ];
-
-      for (const type of providerTypes) {
-        if (roleCountry.startsWith(type + '-') || roleCountry === type) {
-          return true;
-        }
-      }
-    }
-  }
+  // 2026-03-18: Removed 3-segment provider profile check.
+  // Banner must appear on provider profiles for consent.
 
   return false;
 }
