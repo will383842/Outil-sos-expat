@@ -2314,7 +2314,7 @@ const ProviderProfile: React.FC = () => {
         canonicalUrl={canonicalUrl}
         ogImage={mainPhoto}
         ogType="profile"
-        noindex={isAAAProfile}
+        noindex={false}
         structuredData={
           translation && !showOriginal && translation.seo?.jsonLd
             ? translation.seo.jsonLd
@@ -2331,7 +2331,7 @@ const ProviderProfile: React.FC = () => {
       <HreflangLinks pathname={location.pathname} />
 
       {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage — no separate rendering) */}
-      {snippetData && !isAAAProfile && (
+      {snippetData && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: snippetData.jsonLD }}

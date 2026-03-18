@@ -44,11 +44,7 @@ export const onProfileCreated = onDocumentCreated(
     console.log(`   Visible: ${profile.isVisible}`);
     console.log(`   Approuvé: ${profile.isApproved}`);
 
-    // Skip AAA test/demo profiles
-    if (profile.isAAA === true || profileId.startsWith('aaa_')) {
-      console.log('⏭️ Profil AAA (test), indexation ignorée');
-      return;
-    }
+    // AAA profiles are real providers — index them normally
 
     // Vérifier que le profil est visible et approuvé
     if (!profile.isVisible || !profile.isApproved) {
@@ -116,11 +112,7 @@ export const onProfileUpdated = onDocumentUpdated(
       console.log(`🗑️ Cache SSR invalidé pour profil ${profileId} (legacy slug)`);
     }
 
-    // Skip AAA test/demo profiles
-    if (after.isAAA === true || profileId.startsWith('aaa_')) {
-      console.log('⏭️ Profil AAA (test), indexation ignorée');
-      return;
-    }
+    // AAA profiles are real providers — index them normally
 
     // Vérifier si le profil vient d'être publié
     const wasHidden = !before.isVisible || !before.isApproved;
@@ -631,8 +623,7 @@ export const scheduledBulkIndexing = onSchedule(
       const profile = doc.data();
       lastId = doc.id;
 
-      // Skip AAA test/demo profiles
-      if (profile.isAAA === true || doc.id.startsWith('aaa_')) continue;
+      // AAA profiles are real providers — include in bulk indexing
 
       // Prioriser l'URL française (la plus importante pour SEO)
       const slugs = profile.slugs as Record<string, string> | undefined;

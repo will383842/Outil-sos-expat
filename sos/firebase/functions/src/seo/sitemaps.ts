@@ -150,8 +150,7 @@ export const sitemapProfiles = onRequest(
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
 
-        // Skip AAA test/demo profiles from sitemap
-        if (profile.isAAA === true || doc.id.startsWith('aaa_')) return;
+        // AAA profiles are real providers — include them in sitemap
 
         // Utilise les slugs multilingues si disponibles
         const slugs = profile.slugs as Record<string, string> | undefined;
