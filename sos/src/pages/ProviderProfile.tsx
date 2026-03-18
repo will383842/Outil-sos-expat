@@ -2287,28 +2287,28 @@ const ProviderProfile: React.FC = () => {
     : `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()} ${intl.formatMessage({ id: "providerProfile.frenchSpeaking" })} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)}. ${descriptionText.slice(0, 120)}...`;
 
   const canonicalUrl = (() => {
-    // IMPORTANT: Canonical URLs must be deterministic (no geolocation dependency).
-    // Use static default locale mapping instead of getLocaleString() which varies by user timezone.
+    // BEST: Use multilingual slugs from Firestore (already contain full path with locale)
+    const providerSlugs = (provider as any).slugs as Record<string, string> | undefined;
+    if (providerSlugs && typeof providerSlugs === 'object') {
+      // Use current language slug, fallback to French (canonical default)
+      const langSlug = providerSlugs[currentLang || 'fr'] || providerSlugs['fr'];
+      if (langSlug) {
+        return `https://sos-expat.com/${langSlug}`;
+      }
+    }
+
+    // FALLBACK: Build from URL params for legacy profiles without multilingual slugs
     const CANONICAL_LOCALES: Record<string, string> = {
       fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
       pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
     };
     const defaultLocale = CANONICAL_LOCALES[currentLang || 'fr'] || 'fr-fr';
-
-    // Use roleCountry from URL params (e.g., "anwalt-thaïlande") to match the actual URL structure.
-    // Only fall back to translated route slug for legacy URLs without roleCountry.
     const displayType = roleCountry || (currentLang
       ? getTranslatedRouteSlug(isLawyer ? "lawyer" : "expat", currentLang)
       : (isLawyer ? "avocat" : "expatrie"));
-
-    // Use translated slug if available, otherwise generate from name
-    const nameSlug = translation && !showOriginal && translation.slug
-      ? translation.slug
-      : (provider.slug || safeNormalize(provider.fullName || `${provider.firstName}-${provider.lastName}`));
-
-    const finalSlug = nameSlug.includes(provider.id || '') ? nameSlug : `${nameSlug}-${provider.id}`;
-    // Full absolute URL bypasses SEOHead's locale re-processing (no double normalization)
-    return `https://sos-expat.com/${defaultLocale}/${displayType}/${finalSlug}`;
+    const nameSlug = safeNormalize(provider.fullName || `${provider.firstName}-${provider.lastName}`);
+    const shortId = (provider as any).shortId || provider.id?.substring(0, 6) || '';
+    return `https://sos-expat.com/${defaultLocale}/${displayType}/${nameSlug}-${shortId}`;
   })();
 
   return (
@@ -2358,7 +2358,7 @@ const ProviderProfile: React.FC = () => {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link rel="preconnect" href="https://firestore.googleapis.com" />
 
-      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8" data-provider-loaded="true">
+      <div className="min-h-screen bg-gray-950 pb-24 lg:pb-8" data-provider-loaded={(!isLoadingStats && !isLoadingReviews) ? "true" : undefined}>
 
         {/* ========================================== */}
         {/* HERO SECTION - DARK DESIGN                */}
