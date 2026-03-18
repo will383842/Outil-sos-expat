@@ -1,5 +1,6 @@
 // src/pages/ProviderProfile.tsx - VERSION FUSIONNÉE COMPLÈTE
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
+import { Helmet } from "react-helmet-async";
 import toast from "react-hot-toast";
 import { useParams, useLocation } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
@@ -2332,8 +2333,25 @@ const ProviderProfile: React.FC = () => {
         lastReviewed={new Date().toISOString().split('T')[0]}
       />
 
-      {/* Hreflang links for international SEO */}
-      <HreflangLinks pathname={location.pathname} />
+      {/* Hreflang links for provider profiles — uses multilingual slugs from Firestore */}
+      {(() => {
+        const providerSlugs = (provider as any).slugs as Record<string, string> | undefined;
+        const HREFLANG_MAP: Record<string, string> = {
+          fr: 'fr', en: 'en', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'zh-Hans', ar: 'ar', hi: 'hi'
+        };
+        if (providerSlugs && typeof providerSlugs === 'object') {
+          return (
+            <Helmet>
+              {Object.entries(providerSlugs).map(([lang, slug]) => (
+                slug ? <link key={lang} rel="alternate" hrefLang={HREFLANG_MAP[lang] || lang} href={`https://sos-expat.com/${slug}`} /> : null
+              ))}
+              <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/${providerSlugs['fr'] || providerSlugs['en'] || ''}`} />
+            </Helmet>
+          );
+        }
+        // Fallback to generic HreflangLinks for profiles without multilingual slugs
+        return <HreflangLinks pathname={location.pathname} />;
+      })()}
 
       {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage — no separate rendering) */}
       {snippetData && (
