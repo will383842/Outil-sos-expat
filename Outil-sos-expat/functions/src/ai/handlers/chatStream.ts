@@ -35,6 +35,7 @@ import {
 } from "../services/utils";
 
 import { AI_SECRETS } from "./shared";
+import { buildPromptForProvider, getSystemPrompt } from "../prompts";
 import { checkRateLimit } from "../../rateLimiter";
 import { moderateInput, moderateOutput, MODERATION_OPENAI_KEY } from "../../moderation";
 
@@ -737,33 +738,25 @@ function buildSystemPrompt(
   convoData: ConversationData | null,
   providerLanguage?: string
 ): string {
-  // 🆕 Instruction de langue PRIORITAIRE (le prestataire paie l'abonnement)
-  const languageInstruction = providerLanguage
-    ? `🔴 LANGUE DE RÉPONSE OBLIGATOIRE: Tu DOIS répondre UNIQUEMENT en ${providerLanguage.toUpperCase()}.
-Le prestataire qui paie l'abonnement a choisi cette langue. C'est une exigence absolue.
+  // AUDIT-FIX: Use the real prompts (lawyer.ts/expert.ts) instead of a simplified local version
+  // This ensures streaming responses have the same quality as non-streaming ones
+  const ctx = convoData?.bookingContext;
 
-`
-    : "";
-
-  const basePrompt =
-    providerType === "lawyer"
-      ? `Tu es un assistant juridique expert en droit de l'immigration et de l'expatriation.
-Tu aides les avocats à analyser des dossiers et fournir des conseils juridiques.
-Sois précis, cite les textes de loi pertinents, et reste professionnel.`
-      : `Tu es un assistant bienveillant spécialisé dans l'aide aux expatriés.
-Tu aides les particuliers avec leurs démarches administratives et leur installation.
-Sois clair, pratique et encourageant dans tes réponses.`;
-
-  if (convoData?.bookingContext) {
-    const ctx = convoData.bookingContext;
-    return `${languageInstruction}${basePrompt}
-
-Contexte du dossier:
-- Client: ${ctx.clientName || "Non spécifié"}
-- Pays: ${ctx.country || "Non spécifié"}
-- Catégorie: ${ctx.category || "Non spécifiée"}
-- Urgence: ${ctx.urgency || "Normal"}`;
+  if (ctx) {
+    // Use buildPromptForProvider which injects full booking context + all quality rules
+    return buildPromptForProvider(providerType, {
+      providerType,
+      country: ctx.country,
+      clientName: ctx.clientName,
+      nationality: ctx.nationality,
+      category: ctx.category,
+      urgency: ctx.urgency,
+      bookingTitle: ctx.title,
+      specialties: ctx.specialties,
+      providerLanguage,
+    });
   }
 
-  return `${languageInstruction}${basePrompt}`;
+  // Fallback: no booking context, use base prompt
+  return getSystemPrompt(providerType);
 }

@@ -113,6 +113,7 @@ async function verifyAuth(req: Request): Promise<AuthResult> {
 }
 import {
   getProviderType,
+  getProviderLanguage,
   checkUserSubscription,
   sanitizeUserInput,
   buildConversationHistory,
@@ -358,15 +359,23 @@ export const aiChat = onRequest(
         processed: true,
       });
 
-      // Call AI with enriched context
+      // AUDIT-FIX: Get provider language for proper response localization
+      const providerLanguage = providerId
+        ? await getProviderLanguage(providerId)
+        : "fr";
+
+      // Call AI with enriched context (including language + nationality)
       const service = createService();
       const response = await service.chat(history, providerType, {
         providerType,
         country: convoData?.bookingContext?.country,
         clientName: convoData?.bookingContext?.clientName,
+        nationality: convoData?.bookingContext?.nationality,
         category: convoData?.bookingContext?.category,
         urgency: convoData?.bookingContext?.urgency,
         specialties: convoData?.bookingContext?.specialties,
+        bookingTitle: convoData?.bookingContext?.title,
+        providerLanguage,
       });
 
       // P0 FIX: Modération de l'output IA
