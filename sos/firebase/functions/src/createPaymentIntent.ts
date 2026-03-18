@@ -358,13 +358,15 @@ async function validateBusinessLogic(
         logger.warn('[validateBusinessLogic] Provider is offline', { providerId: data.providerId });
         return { valid: false, error: 'Le prestataire n\'est pas disponible actuellement. Veuillez réessayer plus tard.' };
       }
-      if (profileData?.availability === 'offline' || profileData?.availability === 'busy') {
-        logger.warn('[validateBusinessLogic] Provider is not available', {
+      if (profileData?.availability === 'offline') {
+        logger.warn('[validateBusinessLogic] Provider is offline', {
           providerId: data.providerId,
           availability: profileData?.availability,
         });
-        return { valid: false, error: 'Le prestataire est actuellement occupé ou hors ligne.' };
+        return { valid: false, error: 'Le prestataire est actuellement hors ligne.' };
       }
+      // Note: "busy" is NOT blocked — provider may be reserved for THIS client's pending call
+      // Double-booking prevention is handled atomically in createAndScheduleCallHTTPS
     }
 
     if (!isProduction) return { valid: true, stripeAccountId };

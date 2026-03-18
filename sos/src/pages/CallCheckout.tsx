@@ -3634,7 +3634,9 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       (snap) => {
         const d = snap.data();
         if (!d) return;
-        const isOff = d.isOnline === false || d.availability === "offline" || d.availability === "busy";
+        // Only treat truly offline providers as unavailable
+        // "busy" means reserved for a call (possibly THIS client's call) — not offline
+        const isOff = d.isOnline === false || d.availability === "offline";
         setProviderOffline(isOff);
       },
       (err) => console.warn("[CallCheckout] Provider status listener error:", err)
