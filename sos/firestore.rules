@@ -3210,10 +3210,18 @@ service cloud.firestore {
     }
 
     // ================= PARTNER APPLICATIONS =================
-    // Candidatures Partenaires - lecture/update/delete admin only
+    // Candidatures Partenaires - formulaire public (pas de connexion requise)
+    // Anti-spam: rate limit par email dans le document (max 3 candidatures par email, vérifié côté backend)
     match /partner_applications/{applicationId} {
       allow read, update, delete: if isAdmin();
-      allow create: if isAuthenticated();
+      allow create: if true
+        && request.resource.data.keys().hasAll(['email', 'name', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 5
+        && request.resource.data.email.size() < 255
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1
+        && request.resource.data.name.size() < 200;
     }
 
     match /ssr_cache/{docId} {
