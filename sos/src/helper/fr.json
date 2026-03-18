@@ -2924,7 +2924,7 @@
   "admin.menu.influencersUsers.description": "Gestion des influenceurs",
   "admin.menu.invoices": "Facturation",
   "admin.menu.invoices.description": "Génération et envoi des factures",
-  "admin.menu.kycProviders": "KYC prestataires",
+  "admin.menu.kycProviders": "Statut paiement prestataires",
   "admin.menu.kycProviders.description": "Vérification d'identité des prestataires",
   "admin.menu.landingPages": "Landing Pages Pays",
   "admin.menu.landingPages.description": "Gérer les landing pages par pays (paiements, devises, témoignages, SEO)",

@@ -2075,7 +2075,7 @@
   "admin.menu.iaManagement.description": "Gestion des accès IA, quotas, tarification et logs",
   "admin.menu.invoices": "Facturation",
   "admin.menu.invoices.description": "Génération et envoi des factures",
-  "admin.menu.kycProviders": "KYC prestataires",
+  "admin.menu.kycProviders": "Statut paiement prestataires",
   "admin.menu.kycProviders.description": "Vérification d'identité des prestataires",
   "admin.menu.lawyers": "Avocat",
   "admin.menu.lawyers.description": "Avocats partenaires",
