@@ -1733,6 +1733,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             window.location.href = '/dashboard' + (window.location.search || '');
           }
         }
+        // No savedRedirect = inline auth (e.g., BookingRequest) — don't force redirect,
+        // let React re-render with the authenticated user via onAuthStateChanged
         return;
       } catch (popupError) {
         // If popup was blocked or closed, try redirect as fallback

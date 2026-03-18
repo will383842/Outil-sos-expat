@@ -1559,12 +1559,10 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
     try {
       await loginWithGoogle(true);
-      // P2-2 FIX: Ne pas appeler onAuthSuccess() ici.
-      // En mode redirect (iOS/Safari), loginWithGoogle résout la promesse AVANT
-      // le retour de Google. L'auth réelle arrive via getRedirectResult dans AuthContext,
-      // qui gère la redirection via sessionStorage('loginRedirect').
-      // En mode popup (desktop), onAuthStateChanged dans AuthContext détectera le user
-      // et le composant parent re-rendera avec user !== null.
+      // Google popup succeeded — signal auth success so BookingRequest shows the booking form
+      // On mobile (redirect mode), the page reloads and onAuthStateChanged handles it.
+      // On desktop (popup mode), we need to explicitly signal success here.
+      onAuthSuccess();
     } catch (err: any) {
       console.error("[EmailFirstAuth] Google login error:", err);
       // FIX: Reset authPending si le login échoue
