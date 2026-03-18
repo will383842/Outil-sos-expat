@@ -129,7 +129,7 @@ export const stripeReconciliation = onSchedule(
           continue;
         }
 
-        // Check amount mismatch
+        // Check amount mismatch (both stored in cents of their respective currency — fixed pricing, no conversion needed)
         if (Math.abs(stripeData.amount - fsData.amount) > 1) {
           mismatches.push({
             type: "amount_mismatch",
@@ -137,6 +137,23 @@ export const stripeReconciliation = onSchedule(
             stripeAmount: stripeData.amount,
             firestoreAmount: fsData.amount,
             details: `Amount mismatch: Stripe=${stripeData.amount}, Firestore=${fsData.amount}`,
+          });
+        }
+
+        // Check status mismatch (Stripe says one thing, Firestore says another)
+        const stripeToFsStatusMap: Record<string, string[]> = {
+          succeeded: ["succeeded", "captured", "completed"],
+          requires_capture: ["authorized", "requires_capture", "pending"],
+          canceled: ["cancelled", "canceled", "voided", "refunded"],
+        };
+        const expectedFsStatuses = stripeToFsStatusMap[stripeData.status] || [];
+        if (expectedFsStatuses.length > 0 && !expectedFsStatuses.includes(fsData.status)) {
+          mismatches.push({
+            type: "status_mismatch",
+            paymentIntentId: piId,
+            stripeStatus: stripeData.status,
+            firestoreStatus: fsData.status,
+            details: `Status mismatch: Stripe=${stripeData.status}, Firestore=${fsData.status}`,
           });
         }
       }
@@ -189,6 +206,7 @@ export const stripeReconciliation = onSchedule(
               missingInFirestore: mismatches.filter(m => m.type === "missing_in_firestore").length,
               missingInStripe: mismatches.filter(m => m.type === "missing_in_stripe").length,
               amountMismatch: mismatches.filter(m => m.type === "amount_mismatch").length,
+              statusMismatch: mismatches.filter(m => m.type === "status_mismatch").length,
             },
           },
           read: false,

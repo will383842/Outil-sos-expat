@@ -627,8 +627,11 @@ export function generateRefundEntry(data: RefundData): JournalEntry {
     refundDate,
   } = data;
 
-  // Estimer les montants si pas d'info TVA originale
-  const vatRate = originalVatInfo?.rate || 0.20;
+  // Use original VAT info if available, fallback to 20% (France default) with warning
+  const vatRate = originalVatInfo?.rate ?? 0.20;
+  if (!originalVatInfo?.rate) {
+    console.warn(`[generateRefundEntry] ⚠️ No original VAT info for refund ${refundId} (payment ${originalPaymentId}). Using fallback 20% FR rate. This may be inaccurate for non-FR clients.`);
+  }
   const commissionRate = DEFAULT_ACCOUNTING_CONFIG.standardCommissionRate;
 
   // Calculer les montants a extourner

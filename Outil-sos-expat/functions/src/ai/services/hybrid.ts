@@ -946,16 +946,23 @@ CRITICAL RULES:
     // ==========================================================
     // CIRCUIT BREAKER: Essayer le provider principal
     // ==========================================================
+    const PROVIDER_TIMEOUT_MS = 45_000; // 45s max per provider call (includes retries)
+
     if (primaryProvider.isAvailable() && !primaryCircuit.isOpen()) {
       try {
         logger.info(`[HybridAI] Tentative avec ${primaryProvider.name} (circuit: ${primaryCircuit.getState()})`);
-        const result = await withExponentialBackoff(
-          () => primaryProvider.chat({
-            messages,
-            systemPrompt: enrichedPrompt
-          }),
-          { logContext: `[${primaryProvider.name}] Primary` }
-        );
+        const result = await Promise.race([
+          withExponentialBackoff(
+            () => primaryProvider.chat({
+              messages,
+              systemPrompt: enrichedPrompt
+            }),
+            { logContext: `[${primaryProvider.name}] Primary` }
+          ),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`${primaryProvider.name} timeout after ${PROVIDER_TIMEOUT_MS}ms`)), PROVIDER_TIMEOUT_MS)
+          ),
+        ]);
         // SUCCÈS: Fermer le circuit
         primaryCircuit.recordSuccess();
         return {
@@ -979,13 +986,18 @@ CRITICAL RULES:
     if (fallbackProvider.isAvailable() && !fallbackCircuit.isOpen()) {
       try {
         logger.info(`[HybridAI] Fallback vers ${fallbackProvider.name} (circuit: ${fallbackCircuit.getState()})`);
-        const result = await withExponentialBackoff(
-          () => fallbackProvider.chat({
-            messages,
-            systemPrompt: enrichedPrompt
-          }),
-          { logContext: `[${fallbackProvider.name}] Fallback` }
-        );
+        const result = await Promise.race([
+          withExponentialBackoff(
+            () => fallbackProvider.chat({
+              messages,
+              systemPrompt: enrichedPrompt
+            }),
+            { logContext: `[${fallbackProvider.name}] Fallback` }
+          ),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`${fallbackProvider.name} timeout after ${PROVIDER_TIMEOUT_MS}ms`)), PROVIDER_TIMEOUT_MS)
+          ),
+        ]);
         // SUCCÈS: Fermer le circuit
         fallbackCircuit.recordSuccess();
         return {

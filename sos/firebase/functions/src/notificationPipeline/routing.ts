@@ -67,15 +67,17 @@ export async function getRouting(eventId: string): Promise<RoutingPerEvent> {
 
 export async function isRateLimited(uid: string, eventId: string, hours: number): Promise<boolean> {
   if (!hours || hours <= 0) return false;
-  
+
   const since = Timestamp.fromMillis(Date.now() - hours * 3600 * 1000);
-  const snap = await db.collection('message_deliveries')
+  const countResult = await db.collection('message_deliveries')
     .where('uid', '==', uid)
     .where('eventId', '==', eventId)
     .where('createdAt', '>=', since)
     .where('status', 'in', ['queued', 'sent', 'delivered'])
-    .limit(1)
+    .count()
     .get();
-    
-  return !snap.empty;
+
+  // Rate limit = max 1 message per event per user per N hours
+  // hours acts as the window, limit is always 1 (one notification per event per window)
+  return countResult.data().count >= 1;
 }

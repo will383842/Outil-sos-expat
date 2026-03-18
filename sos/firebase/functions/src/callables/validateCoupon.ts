@@ -233,7 +233,7 @@ export const validateCouponCallable = onCall(
         }
       }
 
-      // Usage limits — per user
+      // Usage limits — per user (transaction to prevent race condition)
       if (
         typeof cpn.max_uses_per_user === "number" &&
         cpn.max_uses_per_user > 0
@@ -253,6 +253,41 @@ export const validateCouponCallable = onCall(
             discountValue: 0,
           };
         }
+      }
+
+      // Reserve usage atomically to prevent race condition
+      // (two simultaneous validations could both pass the count check above)
+      const usageRef = db.collection("coupon_usages").doc(`${doc.id}_${userId}_${Date.now()}`);
+      const reserved = await db.runTransaction(async (tx) => {
+        // Re-check total usage inside transaction
+        if (typeof cpn.max_uses_total === "number" && cpn.max_uses_total > 0) {
+          const freshTotal = await db
+            .collection("coupon_usages")
+            .where("couponId", "==", doc.id)
+            .count()
+            .get();
+          if (freshTotal.data().count >= cpn.max_uses_total) return false;
+        }
+        // Reserve this usage (will be confirmed by createPaymentIntent)
+        tx.set(usageRef, {
+          couponId: doc.id,
+          userId,
+          code,
+          status: "reserved",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min TTL
+        });
+        return true;
+      });
+
+      if (!reserved) {
+        return {
+          isValid: false,
+          message: "Ce code promo a atteint sa limite d'utilisation",
+          discountAmount: 0,
+          discountType: "fixed",
+          discountValue: 0,
+        };
       }
 
       // Calculate discount
