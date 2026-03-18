@@ -77,7 +77,10 @@ ${COMMON_RULES.NEVER_SAY_NO_INFO}
 9. LANGUE:
 ${COMMON_RULES.MULTILINGUAL_RESPONSE}
 
-10. SENSIBILITÉ CULTURELLE:
+10. CONTACTS CONCRETS:
+${COMMON_RULES.CONCRETE_CONTACTS}
+
+11. SENSIBILITÉ CULTURELLE:
 - Respecte les différences culturelles
 - Anticipe les chocs culturels potentiels
 - Adapte les conseils aux habitudes du pays d'origine du client
