@@ -258,16 +258,23 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
       // Phase 1: Wait for React app to mount
       await page.waitForSelector('[data-react-snap-ready="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS });
 
-      // Phase 2: Wait for actual page content (provider profile, 404, or static page content)
-      // This is critical because data-react-snap-ready fires BEFORE async data loads
-      await Promise.race([
-        page.waitForSelector('[data-provider-loaded="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
-        page.waitForSelector('[data-provider-not-found="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
-        page.waitForSelector('[data-page-not-found="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
-        page.waitForSelector('.provider-profile-name', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
-        // For static pages (no async data), resolve after 1.5s
-        new Promise(resolve => setTimeout(resolve, 1500)),
-      ]);
+      // Phase 2: Wait for actual page content to load
+      // Provider profiles need up to 15s for Firestore data (shortId query + profile data)
+      // Static pages have no async data, so we check for provider markers first
+      const PHASE2_TIMEOUT = 15000; // 15 seconds for provider data
+      try {
+        await Promise.race([
+          page.waitForSelector('[data-provider-loaded="true"]', { timeout: PHASE2_TIMEOUT }),
+          page.waitForSelector('[data-provider-not-found="true"]', { timeout: PHASE2_TIMEOUT }),
+          page.waitForSelector('[data-page-not-found="true"]', { timeout: PHASE2_TIMEOUT }),
+          page.waitForSelector('.provider-profile-name', { timeout: PHASE2_TIMEOUT }),
+        ]);
+      } catch {
+        // No provider marker found within 15s — this is a static page or slow-loading profile
+        // Wait 1 more second for any remaining React renders
+        logger.info('Phase 2: No provider marker found, assuming static page');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     } catch {
       // If no selector appears, wait longer for dynamic content
       logger.info('No ready selector found, waiting for dynamic content...');
