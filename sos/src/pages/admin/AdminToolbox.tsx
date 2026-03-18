@@ -20,7 +20,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bot, Briefcase, Database, ExternalLink, Flame, GripVertical, Link2, Mail, MessageSquare, Send, Server, Settings, Users, UserSearch, Wrench } from "lucide-react";
+import { Bot, Briefcase, Database, ExternalLink, Flame, GripVertical, Link2, Mail, MessageSquare, Send, Server, Settings, Target, Users, UserSearch, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -33,6 +33,7 @@ const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
 const JOB_ADS_TRACKER_URL = "https://sos-expat.com/tools/job-tracker.html";
 const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
+const CONVERSION_ENGINE_URL = "https://conversion.life-expat.com";
 
 const STORAGE_KEY = "admin-toolbox-order";
 
@@ -155,6 +156,15 @@ const defaultTools: ToolCard[] = [
     url: WHATSAPP_CAMPAIGNS_URL,
     icon: <MessageSquare className="h-8 w-8" />,
     color: "bg-green-700",
+    status: "live",
+  },
+  {
+    id: "conversion-engine",
+    titleKey: "Conversion Prospects",
+    descriptionKey: "Import prospects emploi, séquences email automatisées, conversion en chatters SOS-Expat",
+    url: CONVERSION_ENGINE_URL,
+    icon: <Target className="h-8 w-8" />,
+    color: "bg-violet-600",
     status: "live",
   },
 ];
