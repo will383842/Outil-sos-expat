@@ -226,6 +226,40 @@ const AdminKYCProviders: React.FC = () => {
     }
   };
 
+  // ============ FORCE VERIFY PAYPAL ============
+
+  const handleForceVerifyPayPal = async (provider: ProviderProfile) => {
+    if (!provider.paypalEmail) {
+      toast.error('Ce prestataire n\'a pas d\'email PayPal configure');
+      return;
+    }
+    setCheckingStatus(provider.id);
+    try {
+      const forceVerify = httpsCallable(functions, 'admin_verify_paypal_provider');
+      const result = await forceVerify({ providerId: provider.id });
+      const data = result.data as {
+        alreadyVerified?: boolean;
+        paypalEmail?: string;
+        blockedPayoutsReleased?: number;
+        message?: string;
+      };
+
+      if (data.blockedPayoutsReleased && data.blockedPayoutsReleased > 0) {
+        toast.success(`${data.message}`);
+      } else if (data.alreadyVerified) {
+        toast.success(`PayPal deja verifie (${data.paypalEmail})`);
+      } else {
+        toast.success(`PayPal verifie: ${data.paypalEmail}`);
+      }
+      await fetchData();
+    } catch (error) {
+      console.error('Error verifying PayPal:', error);
+      toast.error('Erreur lors de la verification PayPal');
+    } finally {
+      setCheckingStatus(null);
+    }
+  };
+
   // ============ COMPUTED STATS ============
 
   const stats = useMemo(() => {
@@ -542,21 +576,42 @@ const AdminKYCProviders: React.FC = () => {
 
                         {/* Actions */}
                         <td className="px-4 py-3">
-                          {gw === 'stripe' && provider.stripeAccountId && (
-                            <button
-                              onClick={() => handleCheckStripeStatus(provider)}
-                              disabled={checkingStatus === provider.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors"
-                              title="Verifier le statut Stripe"
-                            >
-                              {checkingStatus === provider.id ? (
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <ExternalLink className="w-3 h-3" />
-                              )}
-                              Verifier statut
-                            </button>
-                          )}
+                          <div className="flex flex-col gap-1">
+                            {gw === 'stripe' && provider.stripeAccountId && (
+                              <button
+                                onClick={() => handleCheckStripeStatus(provider)}
+                                disabled={checkingStatus === provider.id}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors"
+                                title="Verifier le statut Stripe"
+                              >
+                                {checkingStatus === provider.id ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <ExternalLink className="w-3 h-3" />
+                                )}
+                                Verifier statut
+                              </button>
+                            )}
+                            {gw === 'paypal' && provider.paypalEmail && (
+                              <button
+                                onClick={() => handleForceVerifyPayPal(provider)}
+                                disabled={checkingStatus === provider.id}
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors ${
+                                  provider.paypalEmailVerified
+                                    ? 'text-green-700 bg-green-50 hover:bg-green-100'
+                                    : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                                }`}
+                                title={provider.paypalEmailVerified ? 'Relancer les payouts bloques' : 'Forcer la verification PayPal'}
+                              >
+                                {checkingStatus === provider.id ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <DollarSign className="w-3 h-3" />
+                                )}
+                                {provider.paypalEmailVerified ? 'Relancer payouts' : 'Forcer verification'}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

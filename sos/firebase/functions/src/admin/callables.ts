@@ -656,3 +656,179 @@ export const admin_check_provider_stripe_status = onCall({
     throw new HttpsError("internal", `Erreur Stripe: ${errorMessage}`);
   }
 });
+
+// ========== ADMIN FORCE VERIFY PAYPAL PROVIDER ==========
+
+/**
+ * Admin callable to force-verify a provider's PayPal email
+ * and release all blocked payouts (payoutPendingVerification=true).
+ *
+ * Use case: provider can't verify email themselves (email issues, etc.)
+ * Admin confirms their PayPal email is correct and forces verification.
+ */
+export const admin_verify_paypal_provider = onCall({
+  region: "europe-west1",
+  memory: "256MiB",
+  cpu: 0.083,
+  timeoutSeconds: 120,
+}, async (req) => {
+  assertAdmin(req);
+
+  const { providerId } = req.data || {};
+  if (!providerId || typeof providerId !== "string") {
+    throw new HttpsError("invalid-argument", "providerId is required");
+  }
+
+  const db = getDb();
+
+  // Get provider profile
+  const profileDoc = await db.collection("sos_profiles").doc(providerId).get();
+  if (!profileDoc.exists) {
+    throw new HttpsError("not-found", `Provider ${providerId} not found`);
+  }
+
+  const profileData = profileDoc.data()!;
+  const paypalEmail = profileData.paypalEmail as string | undefined;
+
+  if (!paypalEmail) {
+    throw new HttpsError("failed-precondition", "Ce prestataire n'a pas d'email PayPal configuré");
+  }
+
+  if (profileData.paypalEmailVerified === true) {
+    // Already verified — just check for stuck blocked payouts
+    const blockedSnap = await db
+      .collection("paypal_orders")
+      .where("providerId", "==", providerId)
+      .where("payoutPendingVerification", "==", true)
+      .limit(50)
+      .get();
+
+    if (blockedSnap.empty) {
+      return {
+        success: true,
+        alreadyVerified: true,
+        paypalEmail,
+        blockedPayoutsReleased: 0,
+        message: "Email déjà vérifié, aucun payout bloqué.",
+      };
+    }
+
+    // Release stuck payouts even though email is already verified
+    const retryBatch = db.batch();
+    for (const doc of blockedSnap.docs) {
+      const orderData = doc.data();
+      const retryRef = db.collection("payout_retry_queue").doc();
+      retryBatch.set(retryRef, {
+        orderId: doc.id,
+        providerId,
+        providerEmail: paypalEmail,
+        amount: orderData.providerAmount || orderData.amount,
+        currency: orderData.currency || "EUR",
+        callSessionId: orderData.callSessionId || null,
+        reason: "admin_force_release",
+        status: "pending",
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      retryBatch.update(doc.ref, {
+        payoutPendingVerification: false,
+        payoutRetryQueued: true,
+        payoutRetryReason: "admin_force_release",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    await retryBatch.commit();
+
+    return {
+      success: true,
+      alreadyVerified: true,
+      paypalEmail,
+      blockedPayoutsReleased: blockedSnap.size,
+      message: `Email déjà vérifié. ${blockedSnap.size} payout(s) bloqué(s) relancé(s).`,
+    };
+  }
+
+  // Force verify the PayPal email
+  const now = FieldValue.serverTimestamp();
+  const updateData = {
+    paypalEmailVerified: true,
+    paypalEmailVerifiedAt: now,
+    paypalEmailVerifiedBy: "admin",
+    paypalAccountStatus: "active",
+    paypalOnboardingComplete: true,
+    paypalPaymentsReceivable: true,
+    updatedAt: now,
+  };
+
+  const batch = db.batch();
+  batch.update(db.collection("sos_profiles").doc(providerId), updateData);
+  batch.update(db.collection("users").doc(providerId), {
+    paypalEmail,
+    paypalEmailVerified: true,
+    paypalAccountStatus: "active",
+    paypalOnboardingComplete: true,
+    updatedAt: now,
+  });
+
+  // Also update lawyers/expats collection
+  const providerType = profileData.type as string;
+  if (providerType === "lawyer" || providerType === "expat") {
+    const collectionName = providerType === "lawyer" ? "lawyers" : "expats";
+    batch.update(db.collection(collectionName).doc(providerId), updateData);
+  }
+
+  await batch.commit();
+
+  // Release blocked payouts
+  const blockedSnap = await db
+    .collection("paypal_orders")
+    .where("providerId", "==", providerId)
+    .where("payoutPendingVerification", "==", true)
+    .limit(50)
+    .get();
+
+  let blockedPayoutsReleased = 0;
+  if (!blockedSnap.empty) {
+    const retryBatch = db.batch();
+    for (const doc of blockedSnap.docs) {
+      const orderData = doc.data();
+      const retryRef = db.collection("payout_retry_queue").doc();
+      retryBatch.set(retryRef, {
+        orderId: doc.id,
+        providerId,
+        providerEmail: paypalEmail,
+        amount: orderData.providerAmount || orderData.amount,
+        currency: orderData.currency || "EUR",
+        callSessionId: orderData.callSessionId || null,
+        reason: "admin_force_verify",
+        status: "pending",
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      retryBatch.update(doc.ref, {
+        payoutPendingVerification: false,
+        payoutRetryQueued: true,
+        payoutRetryReason: "admin_force_verify",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    await retryBatch.commit();
+    blockedPayoutsReleased = blockedSnap.size;
+  }
+
+  // Audit log
+  await db.collection("admin_action_logs").add({
+    action: "force_verify_paypal",
+    adminUid: req.auth!.uid,
+    targetProviderId: providerId,
+    paypalEmail,
+    blockedPayoutsReleased,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+
+  return {
+    success: true,
+    alreadyVerified: false,
+    paypalEmail,
+    blockedPayoutsReleased,
+    message: `Email PayPal vérifié manuellement. ${blockedPayoutsReleased} payout(s) relancé(s).`,
+  };
+});
