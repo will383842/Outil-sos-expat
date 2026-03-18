@@ -1178,18 +1178,18 @@ const AdminLawyers: React.FC = () => {
                   <Shield size={14} className="text-blue-500" /> Demander KYC
                 </button>
                 <div className="border-t border-gray-100 my-1" />
-                {t.status !== 'active' && !t.isBanned && (
-                  <button onClick={() => { void setStatus(t.id, 'active'); setMenuPosition(null); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                    <UserPlus size={14} /> Activer
-                  </button>
-                )}
-                {t.status === 'active' && !t.isBanned && (
-                  <button onClick={() => { setReasonOpen({ type: 'suspend', ids: [t.id] }); setReasonText(''); setOpenActionMenuId(null); setMenuPosition(null); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors">
-                    <Ban size={14} /> Suspendre
-                  </button>
-                )}
+                <button
+                  onClick={() => { void setStatus(t.id, 'active'); setMenuPosition(null); }}
+                  disabled={t.status === 'active' || t.isBanned}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                  <UserPlus size={14} /> Activer {t.status === 'active' ? '(d\u00E9j\u00E0 actif)' : ''}
+                </button>
+                <button
+                  onClick={() => { setReasonOpen({ type: 'suspend', ids: [t.id] }); setReasonText(''); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  disabled={t.status === 'suspended' || t.isBanned}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                  <Ban size={14} /> Suspendre {t.status === 'suspended' ? '(d\u00E9j\u00E0 suspendu)' : ''}
+                </button>
                 <div className="border-t border-gray-100 my-1" />
                 {t.isBanned ? (
                   <button onClick={() => { void handleUnbanLawyer(t.id); setMenuPosition(null); }}
