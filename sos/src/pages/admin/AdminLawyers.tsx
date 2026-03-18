@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useAdminTranslations } from '../../utils/adminTranslations';
@@ -25,13 +26,11 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowUpDown,
-  Link as LinkIcon,
   Clock,
   Calendar,
   Shield,
   UserPlus,
   Star,
-  Scale,
   ClipboardCopy,
 } from 'lucide-react';
 
@@ -236,7 +235,6 @@ const AdminLawyers: React.FC = () => {
   const [selectedLawyerIds, setSelectedLawyerIds] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
-  const actionMenuRef = useRef<HTMLDivElement>(null);
 
   // Edit profile
   interface EditProfileFields {
@@ -273,18 +271,6 @@ const AdminLawyers: React.FC = () => {
 
   // Featured loading
   const [featuredLoading, setFeaturedLoading] = useState<string | null>(null);
-
-  // --- Close action menu on outside click ---
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
-        setOpenActionMenuId(null);
-        setMenuPosition(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   // --- Fetch lawyers ---
   useEffect(() => {
@@ -381,6 +367,7 @@ const AdminLawyers: React.FC = () => {
     });
     setShowEditModal(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
   };
 
   const handleSaveProfile = async () => {
@@ -419,14 +406,15 @@ const AdminLawyers: React.FC = () => {
   const handleViewDashboard = (lawyer: Lawyer) => {
     window.open(`/dashboard?adminView=${lawyer.id}`, '_blank');
     setOpenActionMenuId(null);
+    setMenuPosition(null);
   };
 
   const handleDeleteLawyer = (lawyer: Lawyer) => {
-    setSelectedLawyer(lawyer); setDeleteReason(''); setDeleteConfirmText(''); setShowDeleteModal(true); setOpenActionMenuId(null);
+    setSelectedLawyer(lawyer); setDeleteReason(''); setDeleteConfirmText(''); setShowDeleteModal(true); setOpenActionMenuId(null); setMenuPosition(null);
   };
 
   const handleBanLawyer = (lawyer: Lawyer) => {
-    setSelectedLawyer(lawyer); setBanReason(''); setShowBanModal(true); setOpenActionMenuId(null);
+    setSelectedLawyer(lawyer); setBanReason(''); setShowBanModal(true); setOpenActionMenuId(null); setMenuPosition(null);
   };
 
   const confirmDeleteLawyer = async () => {
@@ -492,7 +480,7 @@ const AdminLawyers: React.FC = () => {
   };
 
   const handleUnbanLawyer = async (lawyerId: string) => {
-    setIsActionLoading(true); setOpenActionMenuId(null);
+    setIsActionLoading(true); setOpenActionMenuId(null); setMenuPosition(null);
     try {
       await updateDoc(doc(db, 'users', lawyerId), { isBanned: false, banReason: '', updatedAt: serverTimestamp() });
       await updateDoc(doc(db, 'sos_profiles', lawyerId), { isBanned: false, isVisible: true, isVisibleOnMap: true, updatedAt: serverTimestamp() });
@@ -506,7 +494,7 @@ const AdminLawyers: React.FC = () => {
   };
 
   const handleToggleOnlineStatus = async (lawyerId: string, isCurrentlyOnline: boolean) => {
-    setIsActionLoading(true); setOpenActionMenuId(null);
+    setIsActionLoading(true); setOpenActionMenuId(null); setMenuPosition(null);
     try {
       const newAvail = !isCurrentlyOnline ? 'available' : 'offline';
       await updateDoc(doc(db, 'users', lawyerId), { isOnline: !isCurrentlyOnline, availability: newAvail, updatedAt: serverTimestamp() });
@@ -520,7 +508,7 @@ const AdminLawyers: React.FC = () => {
   };
 
   const handleToggleVisibility = async (lawyerId: string, isCurrentlyVisible: boolean) => {
-    setIsActionLoading(true); setOpenActionMenuId(null);
+    setIsActionLoading(true); setOpenActionMenuId(null); setMenuPosition(null);
     try {
       const visUpdate = { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() };
       await updateDoc(doc(db, 'users', lawyerId), visUpdate);
@@ -534,7 +522,7 @@ const AdminLawyers: React.FC = () => {
   };
 
   const handleToggleFeatured = async (lawyerId: string, isCurrentlyFeatured: boolean) => {
-    setFeaturedLoading(lawyerId); setOpenActionMenuId(null);
+    setFeaturedLoading(lawyerId); setOpenActionMenuId(null); setMenuPosition(null);
     try {
       const fn = httpsCallable(functions, 'setProviderBadge');
       await fn({ providerId: lawyerId, isFeatured: !isCurrentlyFeatured });
@@ -548,6 +536,7 @@ const AdminLawyers: React.FC = () => {
 
   const setValidation = async (id: string, status: ValidationStatus, reason?: string) => {
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const payload: Record<string, unknown> = {
         validationStatus: status,
@@ -567,6 +556,7 @@ const AdminLawyers: React.FC = () => {
 
   const setKyc = async (id: string, next: KycStatus, message?: string) => {
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const row = lawyers.find((r) => r.id === id);
       if (row?.kycProvider === 'stripe') return;
@@ -583,6 +573,7 @@ const AdminLawyers: React.FC = () => {
 
   const setStatus = async (id: string, status: UserStatus, reason?: string) => {
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const payload: Record<string, unknown> = { status, updatedAt: serverTimestamp() };
       if (status === 'suspended' && reason) {
@@ -1073,136 +1064,23 @@ const AdminLawyers: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Actions dropdown */}
+                      {/* Actions */}
                       <td className="px-3 py-3">
-                        <div className="relative" ref={openActionMenuId === l.id ? actionMenuRef : undefined}>
-                          <button
-                            onClick={(ev) => {
-                              if (openActionMenuId === l.id) {
-                                setOpenActionMenuId(null);
-                                setMenuPosition(null);
-                              } else {
-                                const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
-                                const openUp = rect.bottom + 400 > window.innerHeight;
-                                setMenuPosition({
-                                  top: openUp ? rect.top : rect.bottom + 4,
-                                  left: Math.max(8, rect.right - 208),
-                                  openUp,
-                                });
-                                setOpenActionMenuId(l.id);
-                              }
-                            }}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                          >
-                            <MoreHorizontal size={16} />
-                          </button>
-
-                          {openActionMenuId === l.id && menuPosition && (
-                            <div
-                              className="fixed w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[9999] max-h-[70vh] overflow-y-auto"
-                              style={{
-                                top: menuPosition.openUp ? undefined : menuPosition.top,
-                                bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : undefined,
-                                left: menuPosition.left,
-                              }}
-                            >
-                              <button onClick={() => handleViewDashboard(l)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
-                              </button>
-                              <button onClick={() => handleEditLawyer(l)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Edit3 size={14} className="text-gray-500" /> Modifier le profil
-                              </button>
-                              <button onClick={() => { setTranslationOpen({ open: true, lawyerId: l.id }); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Languages size={14} className="text-purple-500" /> Traductions
-                              </button>
-                              <div className="border-t border-gray-100 my-1" />
-                              <button onClick={() => void handleToggleOnlineStatus(l.id, l.isOnline)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                {l.isOnline ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-emerald-600" />}
-                                {l.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
-                              </button>
-                              <button onClick={() => void handleToggleVisibility(l.id, l.isVisible)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <MapPin size={14} className="text-gray-500" />
-                                {l.isVisible ? 'Masquer carte' : 'Montrer carte'}
-                              </button>
-                              <button onClick={() => void handleToggleFeatured(l.id, l.isFeatured)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Shield size={14} className="text-amber-500" />
-                                {l.isFeatured ? 'Retirer vedette' : 'Mettre en vedette'}
-                              </button>
-                              <div className="border-t border-gray-100 my-1" />
-                              {/* Validation actions */}
-                              {!l.isValidated && (
-                                <button onClick={() => setValidation(l.id, 'validated')}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <Scale size={14} /> Valider
-                                </button>
-                              )}
-                              {l.validationStatus !== 'rejected' && (
-                                <button onClick={() => { setReasonOpen({ type: 'reject', ids: [l.id] }); setReasonText(''); setOpenActionMenuId(null); }}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
-                                  <Scale size={14} /> Rejeter validation
-                                </button>
-                              )}
-                              {/* KYC actions */}
-                              <button onClick={() => setKyc(l.id, 'verified')}
-                                disabled={l.kycProvider === 'stripe'}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50">
-                                <Shield size={14} className="text-emerald-500" /> KYC Valide
-                              </button>
-                              <button onClick={() => { setReasonOpen({ type: 'kycRequest', ids: [l.id] }); setReasonText(''); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Shield size={14} className="text-blue-500" /> Demander KYC
-                              </button>
-                              {/* Status */}
-                              {l.status !== 'active' && (
-                                <button onClick={() => setStatus(l.id, 'active')}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <UserPlus size={14} /> Activer
-                                </button>
-                              )}
-                              {l.status === 'active' && (
-                                <button onClick={() => { setReasonOpen({ type: 'suspend', ids: [l.id] }); setReasonText(''); setOpenActionMenuId(null); }}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors">
-                                  <Ban size={14} /> Suspendre
-                                </button>
-                              )}
-                              <div className="border-t border-gray-100 my-1" />
-                              {l.isBanned ? (
-                                <button onClick={() => void handleUnbanLawyer(l.id)}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <UserPlus size={14} /> Reactiver le compte
-                                </button>
-                              ) : (
-                                <button onClick={() => handleBanLawyer(l)}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
-                                  <Ban size={14} /> Bannir
-                                </button>
-                              )}
-                              <button onClick={() => handleDeleteLawyer(l)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
-                                <Trash2 size={14} /> Supprimer
-                              </button>
-                              <div className="border-t border-gray-100 my-1" />
-                              <button onClick={async () => { await copyToClipboard(l.email); toast.success('Email copie'); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <ClipboardCopy size={14} className="text-gray-400" /> Copier email
-                              </button>
-                              <button onClick={async () => { await copyToClipboard(l.id); toast.success('ID copie'); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <ClipboardCopy size={14} className="text-gray-400" /> Copier ID
-                              </button>
-                              <a href={`/admin/validation-avocats?lawyerId=${l.id}`} onClick={() => setOpenActionMenuId(null)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <LinkIcon size={14} className="text-gray-400" /> Page validation
-                              </a>
-                            </div>
-                          )}
-                        </div>
+                        <button
+                          onClick={(ev) => {
+                            const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+                            const openUp = rect.bottom + 400 > window.innerHeight;
+                            setMenuPosition({
+                              top: openUp ? rect.top : rect.bottom + 4,
+                              left: Math.max(8, rect.right - 208),
+                              openUp,
+                            });
+                            setOpenActionMenuId(l.id);
+                          }}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <MoreHorizontal size={16} />
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -1225,6 +1103,124 @@ const AdminLawyers: React.FC = () => {
         </div>
 
       </div>
+
+      {/* ================================================================== */}
+      {/* DROPDOWN PORTAL                                                     */}
+      {/* ================================================================== */}
+      {openActionMenuId && menuPosition && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => { setOpenActionMenuId(null); setMenuPosition(null); }} />
+          {(() => {
+            const t = lawyers.find(x => x.id === openActionMenuId);
+            if (!t) return null;
+            return (
+              <div
+                className="fixed w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-[9999] max-h-[60vh] overflow-y-auto"
+                style={{
+                  top: menuPosition.openUp ? undefined : menuPosition.top,
+                  bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : undefined,
+                  left: menuPosition.left,
+                }}
+              >
+                <button onClick={() => { window.open(`/dashboard?adminView=${t.id}`, '_blank'); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
+                </button>
+                <button onClick={() => { setSelectedLawyer(t); setShowLawyerModal(true); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Eye size={14} className="text-cyan-600" /> Voir le profil
+                </button>
+                <button onClick={() => { handleEditLawyer(t); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Edit3 size={14} className="text-gray-500" /> Modifier le profil
+                </button>
+                <button onClick={() => { setTranslationOpen({ open: true, lawyerId: t.id }); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Languages size={14} className="text-blue-500" /> Traductions
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button onClick={() => { void handleToggleOnlineStatus(t.id, t.isOnline); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  {t.isOnline ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-emerald-600" />}
+                  {t.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
+                </button>
+                <button onClick={() => { void handleToggleVisibility(t.id, t.isVisible); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <MapPin size={14} className="text-gray-500" />
+                  {t.isVisible ? 'Masquer' : 'Rendre visible'}
+                </button>
+                <button onClick={() => { void handleToggleFeatured(t.id, t.isFeatured); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  disabled={featuredLoading === t.id}>
+                  <Shield size={14} className="text-amber-500" />
+                  {t.isFeatured ? 'Retirer vedette' : 'Mettre en vedette'}
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                {t.validationStatus !== 'validated' && (
+                  <button onClick={() => { void setValidation(t.id, 'validated'); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <Star size={14} /> Valider
+                  </button>
+                )}
+                {t.validationStatus !== 'rejected' && (
+                  <button onClick={() => { setReasonOpen({ type: 'reject', ids: [t.id] }); setReasonText(''); setOpenActionMenuId(null); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
+                    <X size={14} /> Rejeter
+                  </button>
+                )}
+                <button onClick={() => { void setKyc(t.id, 'verified'); setMenuPosition(null); }}
+                  disabled={t.kycProvider === 'stripe'}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50">
+                  <Shield size={14} className="text-emerald-500" /> KYC V\u00E9rifi\u00E9
+                </button>
+                <button onClick={() => { setReasonOpen({ type: 'kycRequest', ids: [t.id] }); setReasonText(''); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Shield size={14} className="text-blue-500" /> Demander KYC
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                {t.status !== 'active' && !t.isBanned && (
+                  <button onClick={() => { void setStatus(t.id, 'active'); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <UserPlus size={14} /> Activer
+                  </button>
+                )}
+                {t.status === 'active' && !t.isBanned && (
+                  <button onClick={() => { setReasonOpen({ type: 'suspend', ids: [t.id] }); setReasonText(''); setOpenActionMenuId(null); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors">
+                    <Ban size={14} /> Suspendre
+                  </button>
+                )}
+                <div className="border-t border-gray-100 my-1" />
+                {t.isBanned ? (
+                  <button onClick={() => { void handleUnbanLawyer(t.id); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <UserPlus size={14} /> R\u00E9activer le compte
+                  </button>
+                ) : (
+                  <button onClick={() => { handleBanLawyer(t); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
+                    <Ban size={14} /> Bannir
+                  </button>
+                )}
+                <button onClick={() => { handleDeleteLawyer(t); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
+                  <Trash2 size={14} /> Supprimer
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button onClick={async () => { await copyToClipboard(t.email); toast.success('Email copi\u00E9'); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <ClipboardCopy size={14} className="text-gray-400" /> Copier email
+                </button>
+                <button onClick={async () => { await copyToClipboard(t.id); toast.success('ID copi\u00E9'); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <ClipboardCopy size={14} className="text-gray-400" /> Copier ID
+                </button>
+              </div>
+            );
+          })()}
+        </>,
+        document.body
+      )}
 
       {/* ================================================================== */}
       {/* MODAL: LAWYER DETAIL                                               */}

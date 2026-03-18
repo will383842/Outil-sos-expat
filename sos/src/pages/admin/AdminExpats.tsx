@@ -1,5 +1,6 @@
 // src/pages/admin/AdminExpats.tsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import {
   collection,
@@ -246,7 +247,6 @@ const AdminExpats: React.FC = () => {
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
-  const actionMenuRef = useRef<HTMLDivElement>(null);
 
   // Selected expat for modals
   const [selectedExpat, setSelectedExpat] = useState<Expat | null>(null);
@@ -285,18 +285,6 @@ const AdminExpats: React.FC = () => {
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editTargetExpat, setEditTargetExpat] = useState<Expat | null>(null);
-
-  // --- Close action menu on outside click ---
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
-        setOpenActionMenuId(null);
-        setMenuPosition(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   // --- Helpers ---
   const calculateYearsInCountry = (expatSince: Date): number => {
@@ -406,6 +394,7 @@ const AdminExpats: React.FC = () => {
   const handleToggleOnlineStatus = async (id: string, isCurrentlyOnline: boolean) => {
     setIsActionLoading(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const newAvail = !isCurrentlyOnline ? 'available' : 'offline';
       await updateDoc(doc(db, 'users', id), { isOnline: !isCurrentlyOnline, availability: newAvail, updatedAt: serverTimestamp() });
@@ -421,6 +410,7 @@ const AdminExpats: React.FC = () => {
   const handleToggleVisibility = async (id: string, isCurrentlyVisible: boolean) => {
     setIsActionLoading(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const visUpdate = { isVisible: !isCurrentlyVisible, isVisibleOnMap: !isCurrentlyVisible, updatedAt: serverTimestamp() };
       await updateDoc(doc(db, 'users', id), visUpdate);
@@ -436,6 +426,7 @@ const AdminExpats: React.FC = () => {
   const handleToggleFeatured = async (id: string, isCurrentlyFeatured: boolean) => {
     setFeaturedLoading(id);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const fn = httpsCallable(functions, 'setProviderBadge');
       await fn({ providerId: id, isFeatured: !isCurrentlyFeatured });
@@ -449,6 +440,7 @@ const AdminExpats: React.FC = () => {
 
   const handleValidationChange = async (id: string, validationStatus: ValidationStatus) => {
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const updates: any = { validationStatus, updatedAt: serverTimestamp() };
       if (validationStatus === 'approved') {
@@ -466,6 +458,7 @@ const AdminExpats: React.FC = () => {
 
   const handleStatusChange = async (id: string, status: ExpatStatus) => {
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       await updateDoc(doc(db, 'users', id), { status, updatedAt: serverTimestamp() });
       if (status === 'suspended') {
@@ -497,6 +490,7 @@ const AdminExpats: React.FC = () => {
     });
     setShowEditModal(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
   };
 
   const handleSaveProfile = async () => {
@@ -533,10 +527,12 @@ const AdminExpats: React.FC = () => {
   const handleViewDashboard = (expat: Expat) => {
     window.open(`/dashboard?adminView=${expat.id}`, '_blank');
     setOpenActionMenuId(null);
+    setMenuPosition(null);
   };
 
   const setKyc = async (id: string, next: KycStatus) => {
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       const row = expats.find((r) => r.id === id);
       if (row?.kycProvider === 'stripe') return;
@@ -556,6 +552,7 @@ const AdminExpats: React.FC = () => {
     setDeleteConfirmText('');
     setShowDeleteModal(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
   };
 
   const handleBanExpat = (expat: Expat) => {
@@ -563,6 +560,7 @@ const AdminExpats: React.FC = () => {
     setBanReason('');
     setShowBanModal(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
   };
 
   const confirmDeleteExpat = async () => {
@@ -601,6 +599,7 @@ const AdminExpats: React.FC = () => {
   const handleUnbanExpat = async (id: string) => {
     setIsActionLoading(true);
     setOpenActionMenuId(null);
+    setMenuPosition(null);
     try {
       await updateDoc(doc(db, 'users', id), { isBanned: false, banReason: '', status: 'active', updatedAt: serverTimestamp() });
       await updateDoc(doc(db, 'sos_profiles', id), { isBanned: false, isVisible: true, isVisibleOnMap: true, updatedAt: serverTimestamp() });
@@ -1106,137 +1105,23 @@ const AdminExpats: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Actions dropdown */}
+                      {/* Actions */}
                       <td className="px-3 py-3">
-                        <div className="relative" ref={openActionMenuId === e.id ? actionMenuRef : undefined}>
-                          <button
-                            onClick={(ev) => {
-                              if (openActionMenuId === e.id) {
-                                setOpenActionMenuId(null);
-                                setMenuPosition(null);
-                              } else {
-                                const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
-                                const openUp = rect.bottom + 400 > window.innerHeight;
-                                setMenuPosition({
-                                  top: openUp ? rect.top : rect.bottom + 4,
-                                  left: Math.max(8, rect.right - 208),
-                                  openUp,
-                                });
-                                setOpenActionMenuId(e.id);
-                              }
-                            }}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                          >
-                            <MoreHorizontal size={16} />
-                          </button>
-
-                          {openActionMenuId === e.id && menuPosition && (
-                            <div
-                              className="fixed w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[9999] max-h-[70vh] overflow-y-auto"
-                              style={{
-                                top: menuPosition.openUp ? undefined : menuPosition.top,
-                                bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : undefined,
-                                left: menuPosition.left,
-                              }}
-                            >
-                              <button onClick={() => handleViewDashboard(e)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
-                              </button>
-                              <button onClick={() => { setSelectedExpat(e); setShowUserModal(true); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Eye size={14} className="text-cyan-600" /> Voir le profil
-                              </button>
-                              <button onClick={() => handleEditExpat(e)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Edit3 size={14} className="text-gray-500" /> Modifier le profil
-                              </button>
-                              <button onClick={() => { setTranslationProviderId(e.id); setTranslationModalOpen(true); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Languages size={14} className="text-blue-500" /> Traductions
-                              </button>
-                              <div className="border-t border-gray-100 my-1" />
-                              <button onClick={() => void handleToggleOnlineStatus(e.id, e.isOnline)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                {e.isOnline ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-emerald-600" />}
-                                {e.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
-                              </button>
-                              <button onClick={() => void handleToggleVisibility(e.id, e.isVisible)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <MapPin size={14} className="text-gray-500" />
-                                {e.isVisible ? 'Masquer' : 'Rendre visible'}
-                              </button>
-                              <button onClick={() => void handleToggleFeatured(e.id, e.isFeatured)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                disabled={featuredLoading === e.id}>
-                                <Shield size={14} className="text-amber-500" />
-                                {e.isFeatured ? 'Retirer vedette' : 'Mettre en vedette'}
-                              </button>
-                              <div className="border-t border-gray-100 my-1" />
-                              {/* Validation quick actions */}
-                              {e.validationStatus !== 'approved' && (
-                                <button onClick={() => void handleValidationChange(e.id, 'approved')}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <Star size={14} /> Approuver
-                                </button>
-                              )}
-                              {e.validationStatus !== 'rejected' && (
-                                <button onClick={() => void handleValidationChange(e.id, 'rejected')}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
-                                  <X size={14} /> Rejeter
-                                </button>
-                              )}
-                              {/* KYC actions */}
-                              <button onClick={() => void setKyc(e.id, 'verified')}
-                                disabled={e.kycProvider === 'stripe'}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50">
-                                <Shield size={14} className="text-emerald-500" /> KYC V\u00E9rifi\u00E9
-                              </button>
-                              <button onClick={() => void setKyc(e.id, 'requested')}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Shield size={14} className="text-blue-500" /> Demander KYC
-                              </button>
-                              {/* Status */}
-                              {e.status !== 'active' && !e.isBanned && (
-                                <button onClick={() => void handleStatusChange(e.id, 'active')}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <UserPlus size={14} /> Activer
-                                </button>
-                              )}
-                              {e.status === 'active' && !e.isBanned && (
-                                <button onClick={() => void handleStatusChange(e.id, 'suspended')}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors">
-                                  <Ban size={14} /> Suspendre
-                                </button>
-                              )}
-                              <div className="border-t border-gray-100 my-1" />
-                              {e.isBanned ? (
-                                <button onClick={() => void handleUnbanExpat(e.id)}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
-                                  <UserPlus size={14} /> R\u00E9activer le compte
-                                </button>
-                              ) : (
-                                <button onClick={() => handleBanExpat(e)}
-                                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
-                                  <Ban size={14} /> Bannir
-                                </button>
-                              )}
-                              <button onClick={() => handleDeleteExpat(e)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
-                                <Trash2 size={14} /> Supprimer
-                              </button>
-                              <div className="border-t border-gray-100 my-1" />
-                              <button onClick={async () => { await copyToClipboard(e.email); toast.success('Email copi\u00E9'); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <ClipboardCopy size={14} className="text-gray-400" /> Copier email
-                              </button>
-                              <button onClick={async () => { await copyToClipboard(e.id); toast.success('ID copi\u00E9'); setOpenActionMenuId(null); }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                <ClipboardCopy size={14} className="text-gray-400" /> Copier ID
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        <button
+                          onClick={(ev) => {
+                            const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+                            const openUp = rect.bottom + 400 > window.innerHeight;
+                            setMenuPosition({
+                              top: openUp ? rect.top : rect.bottom + 4,
+                              left: Math.max(8, rect.right - 208),
+                              openUp,
+                            });
+                            setOpenActionMenuId(e.id);
+                          }}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <MoreHorizontal size={16} />
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -1259,6 +1144,124 @@ const AdminExpats: React.FC = () => {
         </div>
 
       </div>
+
+      {/* ================================================================== */}
+      {/* DROPDOWN PORTAL                                                     */}
+      {/* ================================================================== */}
+      {openActionMenuId && menuPosition && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => { setOpenActionMenuId(null); setMenuPosition(null); }} />
+          {(() => {
+            const t = expats.find(x => x.id === openActionMenuId);
+            if (!t) return null;
+            return (
+              <div
+                className="fixed w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-[9999] max-h-[60vh] overflow-y-auto"
+                style={{
+                  top: menuPosition.openUp ? undefined : menuPosition.top,
+                  bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : undefined,
+                  left: menuPosition.left,
+                }}
+              >
+                <button onClick={() => { window.open(`/dashboard?adminView=${t.id}`, '_blank'); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
+                </button>
+                <button onClick={() => { setSelectedExpat(t); setShowUserModal(true); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Eye size={14} className="text-cyan-600" /> Voir le profil
+                </button>
+                <button onClick={() => { handleEditExpat(t); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Edit3 size={14} className="text-gray-500" /> Modifier le profil
+                </button>
+                <button onClick={() => { setTranslationProviderId(t.id); setTranslationModalOpen(true); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Languages size={14} className="text-blue-500" /> Traductions
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button onClick={() => { void handleToggleOnlineStatus(t.id, t.isOnline); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  {t.isOnline ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-emerald-600" />}
+                  {t.isOnline ? 'Mettre hors ligne' : 'Mettre en ligne'}
+                </button>
+                <button onClick={() => { void handleToggleVisibility(t.id, t.isVisible); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <MapPin size={14} className="text-gray-500" />
+                  {t.isVisible ? 'Masquer' : 'Rendre visible'}
+                </button>
+                <button onClick={() => { void handleToggleFeatured(t.id, t.isFeatured); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  disabled={featuredLoading === t.id}>
+                  <Shield size={14} className="text-amber-500" />
+                  {t.isFeatured ? 'Retirer vedette' : 'Mettre en vedette'}
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                {t.validationStatus !== 'approved' && (
+                  <button onClick={() => { void handleValidationChange(t.id, 'approved'); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <Star size={14} /> Approuver
+                  </button>
+                )}
+                {t.validationStatus !== 'rejected' && (
+                  <button onClick={() => { void handleValidationChange(t.id, 'rejected'); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
+                    <X size={14} /> Rejeter
+                  </button>
+                )}
+                <button onClick={() => { void setKyc(t.id, 'verified'); setMenuPosition(null); }}
+                  disabled={t.kycProvider === 'stripe'}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50">
+                  <Shield size={14} className="text-emerald-500" /> KYC V\u00E9rifi\u00E9
+                </button>
+                <button onClick={() => { void setKyc(t.id, 'requested'); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Shield size={14} className="text-blue-500" /> Demander KYC
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                {t.status !== 'active' && !t.isBanned && (
+                  <button onClick={() => { void handleStatusChange(t.id, 'active'); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <UserPlus size={14} /> Activer
+                  </button>
+                )}
+                {t.status === 'active' && !t.isBanned && (
+                  <button onClick={() => { void handleStatusChange(t.id, 'suspended'); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors">
+                    <Ban size={14} /> Suspendre
+                  </button>
+                )}
+                <div className="border-t border-gray-100 my-1" />
+                {t.isBanned ? (
+                  <button onClick={() => { void handleUnbanExpat(t.id); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <UserPlus size={14} /> R\u00E9activer le compte
+                  </button>
+                ) : (
+                  <button onClick={() => { handleBanExpat(t); setMenuPosition(null); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors">
+                    <Ban size={14} /> Bannir
+                  </button>
+                )}
+                <button onClick={() => { handleDeleteExpat(t); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
+                  <Trash2 size={14} /> Supprimer
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button onClick={async () => { await copyToClipboard(t.email); toast.success('Email copi\u00E9'); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <ClipboardCopy size={14} className="text-gray-400" /> Copier email
+                </button>
+                <button onClick={async () => { await copyToClipboard(t.id); toast.success('ID copi\u00E9'); setOpenActionMenuId(null); setMenuPosition(null); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <ClipboardCopy size={14} className="text-gray-400" /> Copier ID
+                </button>
+              </div>
+            );
+          })()}
+        </>,
+        document.body
+      )}
 
       {/* ================================================================== */}
       {/* MODAL: EXPAT DETAIL                                                */}
