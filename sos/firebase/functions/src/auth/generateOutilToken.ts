@@ -495,6 +495,12 @@ export const generateOutilToken = onCall(
       // Auto-initialiser l'essai gratuit pour les prestataires sans abonnement
       // (cas des prestataires inscrits avant que le trigger onProviderCreated initialise l'essai)
       if (!hasActiveSubscription && !subscription) {
+        // Idempotence: check if subscription doc already exists (may have been created by onProviderCreated trigger)
+        const existingSubDoc = await db.collection("subscriptions").doc(uid).get();
+        if (existingSubDoc.exists) {
+          console.log(`[generateOutilToken] Subscription doc already exists for ${uid} (created by trigger), skipping auto-init`);
+          hasActiveSubscription = true;
+        } else {
         console.log(`[generateOutilToken] Aucun abonnement trouvé pour ${uid}, auto-initialisation de l'essai gratuit...`);
         try {
           const firestoreNow = admin.firestore.Timestamp.now();
@@ -559,6 +565,7 @@ export const generateOutilToken = onCall(
         } catch (trialInitError) {
           console.error(`[generateOutilToken] ❌ Auto-init essai échoué pour ${uid}:`, trialInitError);
         }
+        } // end else (subscription doc didn't exist)
       }
 
       if (!hasActiveSubscription) {

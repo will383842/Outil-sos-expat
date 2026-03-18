@@ -419,9 +419,10 @@ export async function handleCallCompleted(
                 ?? recruiter.lockedRates?.commissionActivationBonusAmount
                 ?? 500; // $5
 
-              // Create activation bonus commission (pending — goes through validation/release cycle)
+              // Create activation bonus commission + update balance atomically
+              const actBatch = db.batch();
               const actRef = db.collection("affiliate_commissions").doc();
-              await actRef.set({
+              actBatch.set(actRef, {
                 id: actRef.id,
                 referrerId: recruiterId,
                 type: "activation_bonus",
@@ -438,15 +439,13 @@ export async function handleCallCompleted(
                 description: `Bonus activation: filleul activé`,
                 createdAt: Timestamp.now(),
               });
-
-              // Increment pending balance (will be validated/released by scheduled function)
-              await db.collection("users").doc(recruiterId).update({
+              actBatch.update(db.collection("users").doc(recruiterId), {
                 pendingBalance: FieldValue.increment(activationAmount),
                 totalEarned: FieldValue.increment(activationAmount),
                 totalCommissions: FieldValue.increment(1),
               });
-
-              await db.collection("users").doc(referredByUserId).update({ activationBonusPaid: true });
+              actBatch.update(db.collection("users").doc(referredByUserId), { activationBonusPaid: true });
+              await actBatch.commit();
 
               logger.info("[affiliateOnCallCompleted] Activation bonus paid", {
                 recruiterId,
@@ -469,8 +468,10 @@ export async function handleCallCompleted(
               ?? n1.lockedRates?.commissionN1CallAmount
               ?? 100;
 
+            // Atomic: commission + balance update in single batch
+            const n1Batch = db.batch();
             const n1Ref = db.collection("affiliate_commissions").doc();
-            await n1Ref.set({
+            n1Batch.set(n1Ref, {
               id: n1Ref.id,
               referrerId: freshUser.referredByUserId,
               type: "n1_call",
@@ -484,12 +485,12 @@ export async function handleCallCompleted(
               description: `Commission N1: appel client référé`,
               createdAt: Timestamp.now(),
             });
-
-            await db.collection("users").doc(freshUser.referredByUserId).update({
+            n1Batch.update(db.collection("users").doc(freshUser.referredByUserId), {
               pendingBalance: FieldValue.increment(n1Amt),
               totalEarned: FieldValue.increment(n1Amt),
               totalCommissions: FieldValue.increment(1),
             });
+            await n1Batch.commit();
           }
         }
 
@@ -502,8 +503,10 @@ export async function handleCallCompleted(
               ?? n2.lockedRates?.commissionN2CallAmount
               ?? 50;
 
+            // Atomic: commission + balance update in single batch
+            const n2Batch = db.batch();
             const n2Ref = db.collection("affiliate_commissions").doc();
-            await n2Ref.set({
+            n2Batch.set(n2Ref, {
               id: n2Ref.id,
               referrerId: freshUser.parrainNiveau2Id,
               type: "n2_call",
@@ -517,12 +520,12 @@ export async function handleCallCompleted(
               description: `Commission N2: appel client référé`,
               createdAt: Timestamp.now(),
             });
-
-            await db.collection("users").doc(freshUser.parrainNiveau2Id).update({
+            n2Batch.update(db.collection("users").doc(freshUser.parrainNiveau2Id), {
               pendingBalance: FieldValue.increment(n2Amt),
               totalEarned: FieldValue.increment(n2Amt),
               totalCommissions: FieldValue.increment(1),
             });
+            await n2Batch.commit();
           }
         }
 

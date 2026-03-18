@@ -42,11 +42,7 @@ const CONFIG = {
     FORM_ERROR_RATE_PERCENT: 5,         // Alerter si >5% erreurs formulaires
 
     // Tracking
-    TRACKING_GAP_HOURS: 24,             // Alerter si aucun event tracking en 24h
     META_CAPI_QUALITY_MIN: 50,          // Score qualité CAPI minimum
-
-    // Temps de réponse
-    RESPONSE_TIME_MS: 5000,             // Alerter si page > 5s
   },
 
   ALERTS_COLLECTION: 'functional_alerts',

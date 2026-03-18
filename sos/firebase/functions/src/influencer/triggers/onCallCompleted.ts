@@ -70,9 +70,20 @@ export async function handleCallCompleted(
   const sessionId = event.params.sessionId;
   const db = getFirestore();
 
-    // Check if influencer commission already created
-    if (afterData.influencerCommissionCreated) {
-      logger.info("[influencerOnCallCompleted] Commission already created", {
+    // Atomic idempotence check: use transaction to prevent double commission
+    // (fixes race condition if trigger fires twice simultaneously)
+    const sessionRef = db.collection("call_sessions").doc(sessionId);
+    const shouldProceed = await db.runTransaction(async (tx) => {
+      const freshSession = await tx.get(sessionRef);
+      if (freshSession.data()?.influencerCommissionCreated) {
+        return false;
+      }
+      tx.update(sessionRef, { influencerCommissionCreated: true });
+      return true;
+    });
+
+    if (!shouldProceed) {
+      logger.info("[influencerOnCallCompleted] Commission already created (transaction guard)", {
         sessionId,
       });
       return;
@@ -176,9 +187,8 @@ export async function handleCallCompleted(
       });
 
       if (result.success) {
-        // Mark commission as created on session
+        // Update commission details on session (flag already set by transaction guard above)
         await db.collection("call_sessions").doc(sessionId).update({
-          influencerCommissionCreated: true,
           influencerCommissionId: result.commissionId,
           influencerCommissionAmount: result.amount,
           updatedAt: Timestamp.now(),
