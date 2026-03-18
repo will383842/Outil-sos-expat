@@ -366,8 +366,8 @@ export const onMessageEventCreate = onDocumentCreated(
   {
     region: "europe-west3",
     document: "message_events/{id}",
-    memory: "256MiB",
-    cpu: 0.083,
+    memory: "512MiB",
+    cpu: 0.167,
     timeoutSeconds: 120,
     secrets: [
       EMAIL_USER,
