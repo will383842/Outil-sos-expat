@@ -244,6 +244,39 @@ select option{background:var(--surface2)}
 .csv-preview table{width:100%;border-collapse:collapse;font-size:.75rem}
 .csv-preview th{background:var(--surface2);padding:6px 8px;border:1px solid var(--border);font-family:"DM Mono",monospace;color:var(--muted);font-size:.63rem;text-transform:uppercase}
 .csv-preview td{padding:5px 8px;border:1px solid var(--border);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* CONTACTS */
+.contacts-category-tabs{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:9px;border:1px solid var(--border);margin-bottom:1rem;flex-wrap:wrap;width:fit-content}
+.contacts-category-tab{padding:7px 14px;border:none;background:transparent;color:var(--muted);font-size:.78rem;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.contacts-category-tab.active{background:var(--surface);color:var(--text)}
+.contacts-category-tab .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.contacts-category-tab .cat-count{font-family:"DM Mono",monospace;font-size:.65rem;background:var(--surface2);padding:1px 5px;border-radius:4px}
+.contacts-category-tab.active .cat-count{background:rgba(0,200,150,.15);color:var(--accent)}
+.contact-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:6px}
+.contact-card:hover{border-color:var(--accent2)}
+.contact-card.duplicate{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.03)}
+.contact-name{font-weight:600;font-size:.9rem}
+.contact-meta{font-size:.75rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px}
+.contact-skills{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.contact-skill{font-size:.62rem;padding:2px 7px;border-radius:99px;background:rgba(14,165,233,.1);color:var(--accent2);border:1px solid rgba(14,165,233,.2);font-family:"DM Mono",monospace}
+.badge-new{background:rgba(14,165,233,.15);color:var(--active);border:1px solid rgba(14,165,233,.3)}
+.badge-contacted{background:rgba(139,92,246,.15);color:var(--pending);border:1px solid rgba(139,92,246,.3)}
+.badge-interested{background:rgba(0,200,150,.15);color:var(--approved);border:1px solid rgba(0,200,150,.3)}
+.badge-rejected{background:rgba(239,68,68,.15);color:var(--expired);border:1px solid rgba(239,68,68,.3)}
+.badge-hired{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.import-progress{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem}
+.import-progress-bar{width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:.5rem}
+.import-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .3s}
+.import-file-list{max-height:200px;overflow-y:auto;margin-top:.5rem}
+.import-file-item{font-size:.75rem;padding:4px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.import-file-item .file-status{width:6px;height:6px;border-radius:50%}
+.import-file-item .file-status.ok{background:var(--accent)}
+.import-file-item .file-status.error{background:var(--danger)}
+.import-file-item .file-status.pending{background:var(--muted)}
+.category-color-input{width:32px;height:32px;border:1px solid var(--border);border-radius:6px;padding:0;cursor:pointer;background:var(--surface2)}
+.sos-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:.6rem;font-family:"DM Mono",monospace;white-space:nowrap;cursor:help}
+.sos-badge.registered{background:rgba(0,200,150,.15);color:var(--accent);border:1px solid rgba(0,200,150,.3)}
+.sos-badge.not-registered{background:rgba(107,114,128,.1);color:var(--muted);border:1px solid rgba(107,114,128,.2)}
+.sos-badge .sos-roles{font-size:.55rem;opacity:.8}
 @media(max-width:900px){.main{grid-template-columns:1fr}.sidebar{display:none}.stats-bar{grid-template-columns:repeat(3,1fr)}.analytics-grid{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -298,8 +331,9 @@ select option{background:var(--surface2)}
     <div class="dropdown-wrap">
       <button class="btn btn-outline btn-sm" onclick="toggleImportMenu()">Import</button>
       <div class="dropdown-menu" id="import-dropdown">
-        <button class="dropdown-item" onclick="importData()">Import JSON</button>
-        <button class="dropdown-item" onclick="importCSVPrompt()">Import CSV</button>
+        <button class="dropdown-item" onclick="importData()">Import JSON (Annonces)</button>
+        <button class="dropdown-item" onclick="importCSVPrompt()">Import CSV (Annonces)</button>
+        <button class="dropdown-item" onclick="openContactImportModal()">Import Contacts (CSV/ZIP)</button>
       </div>
     </div>
     <button class="btn btn-primary" onclick="openModal()">+ Nouvelle Annonce</button>
@@ -332,6 +366,7 @@ select option{background:var(--surface2)}
       <button class="filter-btn" onclick="switchView('analytics',this)">Statistiques</button>
       <button class="filter-btn" onclick="switchView('gaps',this)">Couverture</button>
       <button class="filter-btn" onclick="switchView('sites',this)">Sites</button>
+      <button class="filter-btn" onclick="switchView('contacts',this)">Contacts</button>
     </div>
     <div>
       <div class="sidebar-section-title sidebar-section-toggle" onclick="toggleSidebarSection(this)">Statut</div>
@@ -486,6 +521,69 @@ select option{background:var(--surface2)}
       </div>
       <!-- COVERAGE BY COUNTRY / LANGUAGE -->
       <div id="sites-coverage-detail" style="margin-top:1.5rem"></div>
+    </div>
+
+    <!-- CONTACTS VIEW -->
+    <div class="view" id="view-contacts">
+      <div class="content-header" style="margin-bottom:.5rem">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">Contacts <span id="contacts-total-badge" style="font-size:.8rem;color:var(--muted)"></span></div>
+        <div class="btn-group">
+          <input type="text" id="contacts-search" placeholder="Rechercher contacts..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;outline:none;width:200px" oninput="renderContacts()">
+          <select id="contacts-status-filter" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;outline:none" onchange="renderContacts()">
+            <option value="">Tous statuts</option>
+            <option value="new">Nouveau</option>
+            <option value="contacted">Contacté</option>
+            <option value="interested">Intéressé</option>
+            <option value="rejected">Rejeté</option>
+            <option value="hired">Embauché</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="openCategoryModal()">Catégories</button>
+          <button class="btn btn-warn btn-sm" id="duplicates-btn" style="display:none" onclick="toggleDuplicatesView()">Doublons (<span id="dup-count">0</span>)</button>
+          <button class="btn btn-outline btn-sm" onclick="checkAllSosStatus()" id="sos-check-btn" title="Vérifier si les contacts sont inscrits sur SOS-Expat">Vérifier SOS</button>
+          <button class="btn btn-outline btn-sm" onclick="exportContactsCSV()">Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openContactImportModal()">+ Importer</button>
+          <button class="btn btn-primary btn-sm" onclick="openContactModal()">+ Ajouter</button>
+        </div>
+      </div>
+      <!-- CONTACTS STATS -->
+      <div id="contacts-stats-bar" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:1rem"></div>
+      <!-- CATEGORY TABS -->
+      <div class="contacts-category-tabs" id="contacts-category-tabs"></div>
+      <!-- BULK BAR -->
+      <div class="bulk-bar bulk-bar-hidden" id="contacts-bulk-bar">
+        <span class="bulk-count" id="contacts-bulk-count">0</span>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-outline" onclick="contactsBulkStatus('contacted')">Contacté</button>
+          <button class="btn btn-sm btn-outline" onclick="contactsBulkStatus('interested')">Intéressé</button>
+          <button class="btn btn-sm btn-outline" onclick="contactsBulkStatus('rejected')">Rejeté</button>
+          <button class="btn btn-sm btn-outline" onclick="contactsBulkStatus('hired')">Embauché</button>
+          <div class="dropdown-wrap">
+            <button class="btn btn-sm btn-outline" onclick="showBulkCategoryPicker()">Catégorie</button>
+            <div class="dropdown-menu" id="contacts-bulk-cat-picker">
+              <button class="dropdown-item" onclick="contactsBulkCategory(null)">Non classé</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="checkSelectedSosStatus()">Vérifier SOS</button>
+          <button class="btn btn-sm btn-danger" onclick="contactsBulkDelete()">Supprimer</button>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="clearContactSelection()" style="margin-left:auto">X</button>
+      </div>
+      <!-- TABLE -->
+      <div class="table-wrapper">
+        <table class="table">
+          <thead><tr>
+            <th><input type="checkbox" id="contacts-select-all" onchange="toggleContactSelectAll(this.checked)"></th>
+            <th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville/Pays</th>
+            <th>Poste</th><th>Compétences</th><th>SOS Expat</th><th>Source</th><th>Statut</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+        <div id="contacts-empty" class="empty-state" style="display:none">
+          <div class="empty-state-icon">&#x1f4c7;</div>
+          <h3>Aucun contact</h3><p>Importez des CV ou ajoutez des contacts manuellement</p>
+        </div>
+      </div>
+      <div class="pagination" id="contacts-pagination"></div>
     </div>
 
     <!-- TRASH VIEW -->
@@ -666,6 +764,128 @@ select option{background:var(--surface2)}
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeCSVModal()">Annuler</button>
       <button class="btn btn-primary" onclick="confirmCSVImport()" id="csv-confirm-btn" style="display:none">Importer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONTACT IMPORT -->
+<div class="modal-overlay" id="contact-import-modal">
+  <div class="modal" style="max-width:650px">
+    <div class="modal-header">
+      <span class="modal-title">Importer des Contacts</span>
+      <button class="close-btn" onclick="closeContactImportModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:.8rem">Importez des fichiers CSV (liste de contacts) ou ZIP (contenant des CV en PDF, DOCX, images). Les CV seront analysés par IA.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Catégorie</label>
+          <select id="ci-category" style="width:100%">
+            <option value="">-- Aucune --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Annonce liée</label>
+          <select id="ci-source-ad" style="width:100%">
+            <option value="">-- Aucune --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:.5rem">
+        <label>Fichier (CSV ou ZIP)</label>
+        <input type="file" id="ci-file-input" accept=".csv,.zip" onchange="handleContactImportFile(event)">
+      </div>
+      <div id="ci-preview-area"></div>
+      <div id="ci-progress-area"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeContactImportModal()">Fermer</button>
+      <button class="btn btn-primary" id="ci-import-btn" style="display:none" onclick="executeContactImport()">Importer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD/EDIT CONTACT -->
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal" style="max-width:650px">
+    <div class="modal-header">
+      <span class="modal-title" id="contact-modal-title">Ajouter un Contact</span>
+      <button class="close-btn" onclick="closeContactModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Prénom</label><input type="text" id="cf-first-name" placeholder="Jean"></div>
+        <div class="form-group"><label>Nom</label><input type="text" id="cf-last-name" placeholder="Dupont"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="cf-email" placeholder="jean@example.com"></div>
+        <div class="form-group"><label>Téléphone</label><input type="text" id="cf-phone" placeholder="+33 6 12 34 56 78"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Ville</label><input type="text" id="cf-city" placeholder="Paris"></div>
+        <div class="form-group"><label>Pays</label><input type="text" id="cf-country" placeholder="France" list="countries-datalist"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Poste actuel</label><input type="text" id="cf-position" placeholder="Développeur Senior"></div>
+        <div class="form-group"><label>Années expérience</label><input type="number" id="cf-experience" placeholder="5" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>LinkedIn</label><input type="url" id="cf-linkedin" placeholder="https://linkedin.com/in/..."></div>
+        <div class="form-group"><label>Catégorie</label>
+          <select id="cf-category">
+            <option value="">-- Aucune --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Compétences (séparées par ;)</label>
+        <input type="text" id="cf-skills" placeholder="PHP; Laravel; React; PostgreSQL...">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Annonce liée</label>
+          <select id="cf-source-ad">
+            <option value="">-- Aucune --</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select id="cf-status">
+            <option value="new">Nouveau</option>
+            <option value="contacted">Contacté</option>
+            <option value="interested">Intéressé</option>
+            <option value="rejected">Rejeté</option>
+            <option value="hired">Embauché</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group full"><label>Notes</label><textarea id="cf-notes" placeholder="Remarques..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeContactModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveContact()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATEGORIES -->
+<div class="modal-overlay" id="category-modal">
+  <div class="modal" style="max-width:550px">
+    <div class="modal-header">
+      <span class="modal-title">Gérer les Catégories</span>
+      <button class="close-btn" onclick="closeCategoryModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <div id="category-list"></div>
+      <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+        <div style="font-size:.75rem;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px">Nouvelle catégorie</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="new-cat-name" placeholder="Nom de la catégorie" style="flex:1">
+          <input type="color" id="new-cat-color" value="#00c896" class="category-color-input">
+          <button class="btn btn-primary btn-sm" onclick="addCategory()">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCategoryModal()">Fermer</button>
     </div>
   </div>
 </div>
@@ -1005,6 +1225,7 @@ sites.forEach(function(s){if(!s.audit)s.audit=[];});
 // ================================================================
 // UTILS
 // ================================================================
+function esc(s){return String(s||"").replace(/[&<>"']/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m];});}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function formatDate(d){return d?new Date(d).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}):"—";}
 function daysUntil(d){return d?Math.ceil((new Date(d)-new Date())/86400000):null;}
@@ -1420,7 +1641,13 @@ function updateSidebarFilters(){
   var pdl=document.getElementById("posters-datalist");
   if(pdl) pdl.innerHTML=posters.map(function(p){return "<option value=\""+p+"\">";}).join("");
   var cdl=document.getElementById("categories-datalist");
-  if(cdl){var cats=ads.map(function(a){return a.category;}).filter(Boolean).filter(function(v,i,a){return a.indexOf(v)===i;});cdl.innerHTML=cats.map(function(c){return "<option value=\""+c+"\">";}).join("");}
+  if(cdl){
+    // Merge categories from ads + persisted categories
+    var adCats=ads.map(function(a){return a.category;}).filter(Boolean);
+    var persistedCats=categories.map(function(c){return c.name;});
+    var allCats=adCats.concat(persistedCats).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+    cdl.innerHTML=allCats.map(function(c){return "<option value=\""+c+"\">";}).join("");
+  }
 }
 
 function setTagFilter(t){tagFilter=tagFilter===t?null:t;currentPage=1;renderTable();updateSidebarFilters();}
@@ -1822,6 +2049,9 @@ async function saveAd(){
       saveSitesData(sites);
     }
   }
+  // Auto-save category if new
+  if(data.category) await ensureCategoryExists(data.category);
+
   if(editingId){
     var idx=ads.findIndex(function(a){return a.id===editingId;});
     if(idx!==-1){
@@ -1993,6 +2223,7 @@ function switchView(view,btn){
   if(view==="gaps") renderGaps();
   if(view==="sites") renderSites();
   if(view==="trash") renderTrash();
+  if(view==="contacts") renderContacts();
 }
 function setFilter(s,btn){currentFilter=s;currentPage=1;document.querySelectorAll("[data-f]").forEach(function(b){b.classList.remove("active");});if(btn)btn.classList.add("active");renderTable();}
 function setLangFilter(l){langFilter=langFilter===l?null:l;currentPage=1;renderTable();updateSidebarFilters();}
@@ -2139,8 +2370,8 @@ function handleCSVFile(e){
     var headers=csvParsedData[0];
     var rows=csvParsedData.slice(1,6); // first 5 rows
     var html="<p style=\"color:var(--accent);font-size:.85rem;margin-top:1rem\">"+(csvParsedData.length-1)+" lignes d\u00e9tect\u00e9es</p>";
-    html+="<div class=\"csv-preview\"><table><thead><tr>"+headers.map(function(h){return "<th>"+h+"</th>";}).join("")+"</tr></thead><tbody>";
-    rows.forEach(function(row){html+="<tr>"+row.map(function(c){return "<td>"+c+"</td>";}).join("")+"</tr>";});
+    html+="<div class=\"csv-preview\"><table><thead><tr>"+headers.map(function(h){return "<th>"+esc(h)+"</th>";}).join("")+"</tr></thead><tbody>";
+    rows.forEach(function(row){html+="<tr>"+row.map(function(c){return "<td>"+esc(c)+"</td>";}).join("")+"</tr>";});
     html+="</tbody></table></div>";
     document.getElementById("csv-preview-area").innerHTML=html;
     document.getElementById("csv-confirm-btn").style.display="inline-flex";
@@ -2186,6 +2417,621 @@ async function confirmCSVImport(){
 }
 
 // ================================================================
+// CONTACTS STATE & DATA
+// ================================================================
+var contacts=[];
+var categories=[];
+var contactSelectedIds=new Set();
+var contactCurrentPage=1;
+var contactPageSize=25;
+var editingContactId=null;
+var contactCategoryFilter=null;
+var ciParsedContacts=null;
+var ciFile=null;
+
+async function loadContactsFromAPI(){
+  var res=await apiGet("/contacts");
+  if(res&&res.data){contacts=res.data.map(toCamel);return contacts;}
+  return [];
+}
+async function loadCategoriesFromAPI(){
+  var res=await apiGet("/categories");
+  if(res&&res.data){categories=res.data.map(toCamel);return categories;}
+  return [];
+}
+
+// ================================================================
+// CATEGORIES CRUD
+// ================================================================
+function openCategoryModal(){
+  renderCategoryList();
+  document.getElementById("category-modal").classList.add("open");
+}
+function closeCategoryModal(){document.getElementById("category-modal").classList.remove("open");}
+
+function renderCategoryList(){
+  var el=document.getElementById("category-list");
+  if(!categories.length){el.innerHTML="<div style='color:var(--muted);font-size:.82rem'>Aucune catégorie. Créez-en une ci-dessous.</div>";return;}
+  el.innerHTML=categories.map(function(c){
+    var count=c.contactsCount||0;
+    return "<div style='display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border)'>"+
+      "<span style='width:12px;height:12px;border-radius:50%;background:"+esc(c.color||"#00c896")+";flex-shrink:0'></span>"+
+      "<span style='flex:1;font-size:.85rem;font-weight:500'>"+esc(c.name)+"</span>"+
+      "<span style='font-family:\"DM Mono\",monospace;font-size:.72rem;color:var(--muted)'>"+count+" contacts</span>"+
+      "<button class='icon-btn danger' style='width:24px;height:24px' onclick='deleteCategory(\""+c.id+"\")'>X</button></div>";
+  }).join("");
+}
+
+async function addCategory(){
+  var name=document.getElementById("new-cat-name").value.trim();
+  if(!name){notify("Nom requis",true);return;}
+  var color=document.getElementById("new-cat-color").value;
+  var res=await apiPost("/categories",{name:name,color:color});
+  if(res&&res.data){
+    var cat=toCamel(res.data);
+    if(!res.existed){categories.push(cat);notify("Catégorie créée: "+name);}
+    else{notify("Catégorie existante: "+name);}
+    document.getElementById("new-cat-name").value="";
+    renderCategoryList();
+    populateCategorySelects();
+  }else{notify("Erreur création catégorie",true);}
+}
+
+async function deleteCategory(id){
+  if(!confirm("Supprimer cette catégorie ? Les contacts ne seront pas supprimés.")) return;
+  var res=await apiDelete("/categories/"+id);
+  if(res&&res.success){
+    categories=categories.filter(function(c){return c.id!==id;});
+    renderCategoryList();populateCategorySelects();renderContacts();notify("Catégorie supprimée");
+  }else{notify("Erreur suppression",true);}
+}
+
+function populateCategorySelects(){
+  var options="<option value=''>-- Aucune --</option>"+categories.map(function(c){
+    return "<option value='"+c.id+"'>"+esc(c.name)+"</option>";
+  }).join("");
+  ["cf-category","ci-category"].forEach(function(id){
+    var el=document.getElementById(id);if(el) el.innerHTML=options;
+  });
+  // Also populate ads select
+  var adOptions="<option value=''>-- Aucune --</option>"+ads.map(function(a){
+    return "<option value='"+a.id+"'>"+esc(a.title)+" ("+esc(a.site||"?")+")</option>";
+  }).join("");
+  ["cf-source-ad","ci-source-ad"].forEach(function(id){
+    var el=document.getElementById(id);if(el) el.innerHTML=adOptions;
+  });
+  // Bulk category picker dropdown
+  var bulkPicker=document.getElementById("contacts-bulk-cat-picker");
+  if(bulkPicker){
+    bulkPicker.innerHTML="<button class='dropdown-item' onclick='contactsBulkCategory(null)'>Non classé</button>"+
+      categories.map(function(c){
+        return "<button class='dropdown-item' onclick='contactsBulkCategory(\""+c.id+"\")'>"+
+          "<span style='display:inline-block;width:8px;height:8px;border-radius:50%;background:"+esc(c.color||"#00c896")+";margin-right:6px'></span>"+esc(c.name)+"</button>";
+      }).join("");
+  }
+}
+
+// Auto-create category when saving an ad with a new category
+async function ensureCategoryExists(categoryName){
+  if(!categoryName) return;
+  var existing=categories.find(function(c){return c.name.toLowerCase()===categoryName.toLowerCase();});
+  if(!existing){
+    var res=await apiPost("/categories",{name:categoryName,color:"#"+Math.floor(Math.random()*16777215).toString(16).padStart(6,"0")});
+    if(res&&res.data&&!res.existed){
+      categories.push(toCamel(res.data));
+      populateCategorySelects();
+    }
+  }
+}
+
+// ================================================================
+// CONTACTS RENDER
+// ================================================================
+function contactStatusLabel(s){return{new:"Nouveau",contacted:"Contacté",interested:"Intéressé",rejected:"Rejeté",hired:"Embauché"}[s]||s;}
+
+function renderContactsStats(){
+  var el=document.getElementById("contacts-stats-bar");
+  var total=contacts.length;
+  var newC=contacts.filter(function(c){return c.status==="new";}).length;
+  var contacted=contacts.filter(function(c){return c.status==="contacted";}).length;
+  var interested=contacts.filter(function(c){return c.status==="interested";}).length;
+  var hired=contacts.filter(function(c){return c.status==="hired";}).length;
+  el.innerHTML=
+    "<div class='stat-cell'><span class='stat-label'>Total</span><span class='stat-value blue'>"+total+"</span></div>"+
+    "<div class='stat-cell'><span class='stat-label'>Nouveaux</span><span class='stat-value green'>"+newC+"</span></div>"+
+    "<div class='stat-cell'><span class='stat-label'>Contactés</span><span class='stat-value purple'>"+contacted+"</span></div>"+
+    "<div class='stat-cell'><span class='stat-label'>Intéressés</span><span class='stat-value yellow'>"+interested+"</span></div>"+
+    "<div class='stat-cell'><span class='stat-label'>Embauchés</span><span class='stat-value orange'>"+hired+"</span></div>";
+  document.getElementById("contacts-total-badge").textContent="("+total+")";
+}
+
+function renderContactsCategoryTabs(){
+  var el=document.getElementById("contacts-category-tabs");
+  var allCount=contacts.length;
+  var html="<button class='contacts-category-tab "+(contactCategoryFilter===null?"active":"")+"' onclick='setContactCategoryFilter(null)'>Tous <span class='cat-count'>"+allCount+"</span></button>";
+  // Uncategorized
+  var uncatCount=contacts.filter(function(c){return !c.categoryId;}).length;
+  html+="<button class='contacts-category-tab "+(contactCategoryFilter==="none"?"active":"")+"' onclick='setContactCategoryFilter(\"none\")'>"+
+    "<span class='cat-dot' style='background:var(--muted)'></span>Non classé <span class='cat-count'>"+uncatCount+"</span></button>";
+  categories.forEach(function(cat){
+    var count=contacts.filter(function(c){return c.categoryId===cat.id;}).length;
+    html+="<button class='contacts-category-tab "+(contactCategoryFilter===cat.id?"active":"")+"' onclick='setContactCategoryFilter(\""+cat.id+"\")'>"+
+      "<span class='cat-dot' style='background:"+esc(cat.color||"#00c896")+"'></span>"+esc(cat.name)+" <span class='cat-count'>"+count+"</span></button>";
+  });
+  el.innerHTML=html;
+}
+
+function setContactCategoryFilter(catId){contactCategoryFilter=catId;contactCurrentPage=1;renderContacts();}
+
+function getFilteredContacts(){
+  var list=contacts.slice();
+  var q=(document.getElementById("contacts-search")?document.getElementById("contacts-search").value:"").toLowerCase();
+  var statusF=document.getElementById("contacts-status-filter")?document.getElementById("contacts-status-filter").value:"";
+  if(showingDuplicatesOnly) list=list.filter(function(c){return c.isDuplicate;});
+  if(contactCategoryFilter==="none") list=list.filter(function(c){return !c.categoryId;});
+  else if(contactCategoryFilter) list=list.filter(function(c){return c.categoryId===contactCategoryFilter;});
+  if(statusF) list=list.filter(function(c){return c.status===statusF;});
+  if(q) list=list.filter(function(c){
+    return ((c.firstName||"")+(c.lastName||"")+(c.email||"")+(c.phone||"")+(c.currentPosition||"")+(c.city||"")+(c.country||"")+((c.skills||[]).join(" "))).toLowerCase().indexOf(q)!==-1;
+  });
+  return list;
+}
+
+function renderContacts(){
+  renderContactsStats();
+  renderContactsCategoryTabs();
+  updateDuplicatesBadge();
+  var allFiltered=getFilteredContacts();
+  var totalItems=allFiltered.length;
+  var totalPages=Math.max(1,Math.ceil(totalItems/contactPageSize));
+  if(contactCurrentPage>totalPages) contactCurrentPage=totalPages;
+  var start=(contactCurrentPage-1)*contactPageSize;
+  var list=allFiltered.slice(start,start+contactPageSize);
+  var tbody=document.getElementById("contacts-tbody");
+  var empty=document.getElementById("contacts-empty");
+  if(!totalItems){tbody.innerHTML="";empty.style.display="block";renderContactsPagination(0,0);return;}
+  empty.style.display="none";
+  tbody.innerHTML=list.map(function(c){
+    var catObj=categories.find(function(cat){return cat.id===c.categoryId;});
+    var catName=catObj?esc(catObj.name):"";
+    var catColor=catObj?esc(catObj.color||"#00c896"):"var(--muted)";
+    var isSelected=contactSelectedIds.has(c.id);
+    var fullName=esc(((c.firstName||"")+" "+(c.lastName||"")).trim())||"\u2014";
+    var skillsHtml=(c.skills||[]).slice(0,4).map(function(s){return "<span class='contact-skill'>"+esc(s)+"</span>";}).join("");
+    var extra=(c.skills||[]).length>4?"<span class='contact-skill'>+"+(c.skills.length-4)+"</span>":"";
+    var sourceLabel=esc(c.sourceFile||({csv:"CSV",cv_pdf:"PDF",cv_docx:"DOCX",cv_image:"Image",manual:"Manuel"}[c.sourceType]||""));
+    return "<tr class='"+(isSelected?"selected":"")+(c.isDuplicate?" duplicate":"")+"'>"+
+      "<td><input type='checkbox' "+(isSelected?"checked":"")+" onchange='toggleContactSelect(\""+c.id+"\",this.checked)'></td>"+
+      "<td><div style='font-weight:500'>"+fullName+"</div>"+
+      (catName?"<div style='display:flex;align-items:center;gap:4px;margin-top:2px'><span style='width:6px;height:6px;border-radius:50%;background:"+catColor+"'></span><span style='font-size:.7rem;color:var(--muted)'>"+catName+"</span></div>":"")+"</td>"+
+      "<td style='font-family:\"DM Mono\",monospace;font-size:.75rem'>"+esc(c.email||"\u2014")+"</td>"+
+      "<td style='font-family:\"DM Mono\",monospace;font-size:.75rem'>"+esc(c.phone||"\u2014")+"</td>"+
+      "<td style='font-size:.8rem'>"+esc(c.city?c.city+(c.country?", "+c.country:""):(c.country||"\u2014"))+"</td>"+
+      "<td style='font-size:.8rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+esc(c.currentPosition||"\u2014")+"</td>"+
+      "<td><div style='display:flex;flex-wrap:wrap;gap:2px;max-width:160px'>"+skillsHtml+extra+"</div></td>"+
+      "<td>"+renderSosBadge(c.sosRegistered)+"</td>"+
+      "<td style='font-size:.72rem;color:var(--muted)'>"+sourceLabel+"</td>"+
+      "<td><span class='badge badge-"+esc(c.status)+"'>"+esc(contactStatusLabel(c.status))+"</span>"+
+      (c.isDuplicate?"<span class='badge badge-rejected' style='font-size:.58rem;margin-left:3px'>DUP</span>":"")+"</td>"+
+      "<td><div class='actions-cell'>"+
+      "<button class='icon-btn' title='Modifier' onclick='editContact(\""+c.id+"\")'>\u270f</button>"+
+      "<button class='icon-btn' title='Cycle statut' onclick='cycleContactStatus(\""+c.id+"\")'>\u{1f504}</button>"+
+      (c.isDuplicate&&c.duplicateOf?"<button class='icon-btn' title='Fusionner avec original' onclick='mergeContacts(\""+c.duplicateOf+"\",\""+c.id+"\")' style='color:var(--warn);border-color:var(--warn)'>\u{1f500}</button>"+
+      "<button class='icon-btn' title='Pas un doublon' onclick='dismissDuplicate(\""+c.id+"\")' style='color:var(--accent);border-color:var(--accent)'>\u2713</button>":"")+
+      "<button class='icon-btn danger' title='Supprimer' onclick='deleteContact(\""+c.id+"\")'>\u{1f5d1}</button>"+
+      "</div></td></tr>";
+  }).join("");
+  renderContactsPagination(totalItems,totalPages);
+  updateContactsBulkBar();
+}
+
+function renderContactsPagination(totalItems,totalPages){
+  var bar=document.getElementById("contacts-pagination");
+  if(totalItems<=contactPageSize){bar.innerHTML="";return;}
+  var html="<button class='pagination-btn' onclick='goContactPage(1)' "+(contactCurrentPage===1?"disabled":"")+">\u00ab</button>";
+  html+="<button class='pagination-btn' onclick='goContactPage("+(contactCurrentPage-1)+")' "+(contactCurrentPage===1?"disabled":"")+">\u2039</button>";
+  var range=2,startP=Math.max(1,contactCurrentPage-range),endP=Math.min(totalPages,contactCurrentPage+range);
+  for(var p=startP;p<=endP;p++) html+="<button class='pagination-btn "+(p===contactCurrentPage?"active":"")+"' onclick='goContactPage("+p+")'>"+p+"</button>";
+  html+="<button class='pagination-btn' onclick='goContactPage("+(contactCurrentPage+1)+")' "+(contactCurrentPage===totalPages?"disabled":"")+">\u203a</button>";
+  html+="<button class='pagination-btn' onclick='goContactPage("+totalPages+")' "+(contactCurrentPage===totalPages?"disabled":"")+">\u00bb</button>";
+  html+="<span class='pagination-info'>"+totalItems+" contacts</span>";
+  bar.innerHTML=html;
+}
+function goContactPage(p){contactCurrentPage=Math.max(1,p);renderContacts();}
+
+// ================================================================
+// CONTACTS SELECTION & BULK
+// ================================================================
+function toggleContactSelect(id,checked){if(checked)contactSelectedIds.add(id);else contactSelectedIds.delete(id);updateContactsBulkBar();renderContacts();}
+function toggleContactSelectAll(checked){var list=getFilteredContacts().slice((contactCurrentPage-1)*contactPageSize,contactCurrentPage*contactPageSize);list.forEach(function(c){if(checked)contactSelectedIds.add(c.id);else contactSelectedIds.delete(c.id);});updateContactsBulkBar();renderContacts();}
+function clearContactSelection(){contactSelectedIds.clear();var cb=document.getElementById("contacts-select-all");if(cb)cb.checked=false;updateContactsBulkBar();renderContacts();}
+function updateContactsBulkBar(){
+  var bar=document.getElementById("contacts-bulk-bar");var count=document.getElementById("contacts-bulk-count");
+  if(contactSelectedIds.size>0){bar.classList.remove("bulk-bar-hidden");count.textContent=contactSelectedIds.size+" sélectionné(s)";}
+  else{bar.classList.add("bulk-bar-hidden");}
+}
+async function contactsBulkStatus(status){
+  if(!contactSelectedIds.size)return;
+  var ids=Array.from(contactSelectedIds);
+  var res=await apiPost("/contacts/bulk-status",{ids:ids,status:status});
+  if(res&&res.success){
+    contacts.forEach(function(c){if(contactSelectedIds.has(c.id))c.status=status;});
+    clearContactSelection();renderContacts();notify(ids.length+" contact(s) -> "+contactStatusLabel(status));
+  }else{notify("Erreur bulk status",true);}
+}
+async function contactsBulkDelete(){
+  if(!contactSelectedIds.size)return;
+  if(!confirm("Supprimer "+contactSelectedIds.size+" contact(s) ?"))return;
+  var ids=Array.from(contactSelectedIds);
+  var res=await apiPost("/contacts/bulk-delete",{ids:ids});
+  if(res&&res.success){
+    contacts=contacts.filter(function(c){return !contactSelectedIds.has(c.id);});
+    clearContactSelection();renderContacts();notify(ids.length+" contact(s) supprimé(s)");
+  }else{notify("Erreur suppression",true);}
+}
+async function contactsBulkCategory(categoryId){
+  if(!contactSelectedIds.size)return;
+  var ids=Array.from(contactSelectedIds);
+  var res=await apiPost("/contacts/bulk-category",{ids:ids,category_id:categoryId||null});
+  if(res&&res.success){
+    contacts.forEach(function(c){if(contactSelectedIds.has(c.id))c.categoryId=categoryId||null;});
+    clearContactSelection();renderContacts();
+    var catName=categoryId?categories.find(function(cat){return cat.id===categoryId;}):null;
+    notify(ids.length+" contact(s) -> "+(catName?catName.name:"Non classé"));
+  }else{notify("Erreur mise à jour catégorie",true);}
+}
+function showBulkCategoryPicker(){
+  var el=document.getElementById("contacts-bulk-cat-picker");
+  if(el) el.classList.toggle("open");
+}
+
+// ================================================================
+// CONTACTS CRUD
+// ================================================================
+function openContactModal(id){
+  editingContactId=id||null;
+  document.getElementById("contact-modal-title").textContent=id?"Modifier le contact":"Ajouter un Contact";
+  populateCategorySelects();
+  if(id){
+    var c=contacts.find(function(x){return x.id===id;});
+    if(c){
+      document.getElementById("cf-first-name").value=c.firstName||"";
+      document.getElementById("cf-last-name").value=c.lastName||"";
+      document.getElementById("cf-email").value=c.email||"";
+      document.getElementById("cf-phone").value=c.phone||"";
+      document.getElementById("cf-city").value=c.city||"";
+      document.getElementById("cf-country").value=c.country||"";
+      document.getElementById("cf-position").value=c.currentPosition||"";
+      document.getElementById("cf-experience").value=c.experienceYears||"";
+      document.getElementById("cf-linkedin").value=c.linkedinUrl||"";
+      document.getElementById("cf-category").value=c.categoryId||"";
+      document.getElementById("cf-skills").value=(c.skills||[]).join("; ");
+      document.getElementById("cf-source-ad").value=c.sourceAdId||"";
+      document.getElementById("cf-status").value=c.status||"new";
+      document.getElementById("cf-notes").value=c.notes||"";
+    }
+  }else{
+    ["cf-first-name","cf-last-name","cf-email","cf-phone","cf-city","cf-country","cf-position","cf-experience","cf-linkedin","cf-skills","cf-notes"].forEach(function(f){document.getElementById(f).value="";});
+    document.getElementById("cf-category").value="";
+    document.getElementById("cf-source-ad").value="";
+    document.getElementById("cf-status").value="new";
+  }
+  document.getElementById("contact-modal").classList.add("open");
+}
+function closeContactModal(){document.getElementById("contact-modal").classList.remove("open");editingContactId=null;}
+function editContact(id){openContactModal(id);}
+
+async function saveContact(){
+  var data={
+    firstName:document.getElementById("cf-first-name").value.trim(),
+    lastName:document.getElementById("cf-last-name").value.trim(),
+    email:document.getElementById("cf-email").value.trim(),
+    phone:document.getElementById("cf-phone").value.trim(),
+    city:document.getElementById("cf-city").value.trim(),
+    country:document.getElementById("cf-country").value.trim(),
+    currentPosition:document.getElementById("cf-position").value.trim(),
+    experienceYears:parseInt(document.getElementById("cf-experience").value)||null,
+    linkedinUrl:document.getElementById("cf-linkedin").value.trim(),
+    categoryId:document.getElementById("cf-category").value||null,
+    sourceAdId:document.getElementById("cf-source-ad").value||null,
+    skills:document.getElementById("cf-skills").value.split(";").map(function(s){return s.trim();}).filter(Boolean),
+    status:document.getElementById("cf-status").value,
+    notes:document.getElementById("cf-notes").value.trim()
+  };
+  if(!data.firstName&&!data.lastName&&!data.email){notify("Au moins un nom ou email requis",true);return;}
+  if(editingContactId){
+    var res=await apiPut("/contacts/"+editingContactId,toSnake(data));
+    if(res&&res.success){
+      var idx=contacts.findIndex(function(c){return c.id===editingContactId;});
+      if(idx!==-1) contacts[idx]=toCamel(res.data);
+      closeContactModal();renderContacts();notify("Contact mis à jour");
+    }else{notify("Erreur mise à jour",true);}
+  }else{
+    data.sourceType="manual";
+    data.audit=[{date:new Date().toISOString(),who:currentOperator,action:"Créé manuellement"}];
+    var res=await apiPost("/contacts",toSnake(data));
+    if(res&&res.success){
+      contacts.unshift(toCamel(res.data));
+      closeContactModal();renderContacts();notify("Contact ajouté"+(res.data.is_duplicate?" (doublon détecté)":""));
+    }else{notify("Erreur création",true);}
+  }
+}
+
+async function deleteContact(id){
+  if(!confirm("Supprimer ce contact ?")) return;
+  var res=await apiDelete("/contacts/"+id);
+  if(res&&res.success){
+    contacts=contacts.filter(function(c){return c.id!==id;});
+    renderContacts();notify("Contact supprimé");
+  }else{notify("Erreur suppression",true);}
+}
+
+async function cycleContactStatus(id){
+  var cycle=["new","contacted","interested","rejected","hired"];
+  var c=contacts.find(function(x){return x.id===id;});if(!c)return;
+  c.status=cycle[(cycle.indexOf(c.status)+1)%cycle.length];
+  await apiPut("/contacts/"+id,toSnake({status:c.status}));
+  renderContacts();notify("Statut -> "+contactStatusLabel(c.status));
+}
+
+// ================================================================
+// CONTACTS IMPORT (CSV / ZIP)
+// ================================================================
+function openContactImportModal(){
+  populateCategorySelects();
+  document.getElementById("ci-preview-area").innerHTML="";
+  document.getElementById("ci-progress-area").innerHTML="";
+  document.getElementById("ci-import-btn").style.display="none";
+  document.getElementById("ci-file-input").value="";
+  ciParsedContacts=null;ciFile=null;
+  document.getElementById("contact-import-modal").classList.add("open");
+}
+function closeContactImportModal(){document.getElementById("contact-import-modal").classList.remove("open");ciParsedContacts=null;ciFile=null;}
+
+function handleContactImportFile(e){
+  var file=e.target.files[0];if(!file)return;
+  ciFile=file;
+  var ext=file.name.split(".").pop().toLowerCase();
+  var preview=document.getElementById("ci-preview-area");
+  document.getElementById("ci-progress-area").innerHTML="";
+
+  if(ext==="csv"){
+    // Parse CSV client-side for preview
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      ciParsedContacts=[];
+      var lines=parseCSVToArray(ev.target.result);
+      if(lines.length<2){preview.innerHTML="<p style='color:var(--danger)'>Fichier CSV vide.</p>";return;}
+      var headers=lines[0];
+      ciParsedContacts={headers:headers,rows:lines.slice(1)};
+      var sampleRows=lines.slice(1,6);
+      var html="<p style='color:var(--accent);font-size:.85rem;margin-top:1rem'>"+(lines.length-1)+" contacts détectés</p>";
+      html+="<div class='csv-preview'><table><thead><tr>"+headers.map(function(h){return "<th>"+esc(h)+"</th>";}).join("")+"</tr></thead><tbody>";
+      sampleRows.forEach(function(row){html+="<tr>"+row.map(function(c){return "<td>"+esc(c||"")+"</td>";}).join("")+"</tr>";});
+      html+="</tbody></table></div>";
+      preview.innerHTML=html;
+      document.getElementById("ci-import-btn").style.display="inline-flex";
+    };
+    reader.readAsText(file);
+  }else if(ext==="zip"){
+    preview.innerHTML="<div style='margin-top:1rem'><p style='color:var(--accent);font-size:.85rem'>Fichier ZIP: <b>"+file.name+"</b> ("+Math.round(file.size/1024)+" Ko)</p>"+
+      "<p style='font-size:.8rem;color:var(--muted);margin-top:.3rem'>Les fichiers (PDF, DOCX, images, CSV) seront extraits et analysés par IA.</p></div>";
+    document.getElementById("ci-import-btn").style.display="inline-flex";
+    ciParsedContacts="zip";
+  }else{
+    preview.innerHTML="<p style='color:var(--danger)'>Format non supporté. Utilisez .csv ou .zip</p>";
+  }
+}
+
+function parseCSVToArray(text){
+  var lines=[];var current=[];var cell="";var inQuote=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i];
+    if(ch==='"'){if(inQuote&&i+1<text.length&&text[i+1]==='"'){cell+='"';i++;}else{inQuote=!inQuote;}}
+    else if(ch===","&&!inQuote){current.push(cell);cell="";}
+    else if((ch==="\n"||ch==="\r")&&!inQuote){
+      if(cell||current.length){current.push(cell);cell="";}
+      if(current.length) lines.push(current);
+      current=[];
+      if(ch==="\r"&&i+1<text.length&&text[i+1]==="\n") i++;
+    }else{cell+=ch;}
+  }
+  if(cell||current.length){current.push(cell);lines.push(current);}
+  return lines;
+}
+
+async function executeContactImport(){
+  var categoryId=document.getElementById("ci-category").value||null;
+  var sourceAdId=document.getElementById("ci-source-ad").value||null;
+  var progress=document.getElementById("ci-progress-area");
+  var importBtn=document.getElementById("ci-import-btn");
+  importBtn.disabled=true;importBtn.textContent="Import en cours...";
+
+  if(ciParsedContacts==="zip"&&ciFile){
+    // Upload ZIP to server for AI processing
+    progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem;font-weight:500'>Envoi du ZIP au serveur...</div>"+
+      "<div class='import-progress-bar'><div class='import-progress-fill' style='width:10%'></div></div>"+
+      "<div style='font-size:.75rem;color:var(--muted);margin-top:.3rem'>Analyse IA en cours (peut prendre plusieurs minutes)...</div></div>";
+    var formData=new FormData();
+    formData.append("file",ciFile);
+    if(categoryId) formData.append("category_id",categoryId);
+    if(sourceAdId) formData.append("source_ad_id",sourceAdId);
+    formData.append("operator",currentOperator);
+    try{
+      var r=await fetch(API_BASE+"/contacts/import-zip",{method:"POST",headers:{"X-Engine-Secret":API_SECRET},body:formData});
+      var res=await r.json();
+      if(res.success){
+        progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem;font-weight:500;color:var(--accent)'>Import terminé !</div>"+
+          "<div class='import-progress-bar'><div class='import-progress-fill' style='width:100%'></div></div>"+
+          "<div style='font-size:.82rem;margin-top:.5rem'>"+res.created+" contacts créés, "+res.duplicates+" doublons, "+res.errors+" erreurs, "+res.files_processed+" fichiers traités</div>"+
+          (res.details&&res.details.length?"<div class='import-file-list'>"+res.details.map(function(d){
+            return "<div class='import-file-item'><span class='file-status "+(d.status==="ok"?"ok":"error")+"'></span>"+esc(d.file)+(d.reason?" <span style='color:var(--danger);font-size:.7rem'>("+esc(d.reason)+")</span>":"")+(d.contacts?" <span style='color:var(--accent);font-size:.7rem'>"+d.contacts+" contacts</span>":"")+"</div>";
+          }).join("")+"</div>":"")+"</div>";
+        contacts=await loadContactsFromAPI();
+        renderContacts();
+      }else{
+        progress.innerHTML="<div style='color:var(--danger);font-size:.85rem;margin-top:.5rem'>Erreur: "+esc(res.error||"inconnue")+"</div>";
+      }
+    }catch(e){
+      progress.innerHTML="<div style='color:var(--danger);font-size:.85rem;margin-top:.5rem'>Erreur réseau: "+esc(e.message)+"</div>";
+    }
+  }else if(ciParsedContacts&&ciParsedContacts.headers){
+    // CSV import — map columns and send to API
+    var headers=ciParsedContacts.headers;
+    var rows=ciParsedContacts.rows;
+    var mappings={"prenom":"first_name","prénom":"first_name","first_name":"first_name","firstname":"first_name","first name":"first_name",
+      "nom":"last_name","last_name":"last_name","lastname":"last_name","last name":"last_name","nom de famille":"last_name","name":"last_name",
+      "email":"email","e-mail":"email","mail":"email","courriel":"email","adresse email":"email","email address":"email",
+      "telephone":"phone","téléphone":"phone","phone":"phone","tel":"phone","mobile":"phone","phone number":"phone",
+      "ville":"city","city":"city","pays":"country","country":"country",
+      "poste":"current_position","position":"current_position","poste actuel":"current_position","job title":"current_position","titre":"current_position",
+      "experience":"experience_years","expérience":"experience_years",
+      "competences":"skills","compétences":"skills","skills":"skills",
+      "linkedin":"linkedin_url","notes":"notes","commentaire":"notes"};
+    var fieldMap={};
+    headers.forEach(function(h,i){
+      var normalized=h.toLowerCase().replace(/[^a-zà-ÿ\s]/g,"").trim();
+      fieldMap[i]=mappings[normalized]||mappings[h.toLowerCase().trim()]||null;
+    });
+    var contactsToImport=[];
+    rows.forEach(function(row){
+      var c={};
+      Object.keys(fieldMap).forEach(function(i){
+        var field=fieldMap[i];if(!field) return;
+        var val=(row[i]||"").trim();
+        if(field==="experience_years") c[field]=parseInt(val)||null;
+        else if(field==="skills") c[field]=val.split(/[;,|]/).map(function(s){return s.trim();}).filter(Boolean);
+        else c[field]=val;
+      });
+      if(c.first_name||c.last_name||c.email||c.phone) contactsToImport.push(c);
+    });
+    if(!contactsToImport.length){progress.innerHTML="<div style='color:var(--danger)'>Aucun contact valide trouvé.</div>";importBtn.disabled=false;importBtn.textContent="Importer";return;}
+    progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem'>Import de "+contactsToImport.length+" contacts...</div><div class='import-progress-bar'><div class='import-progress-fill' style='width:50%'></div></div></div>";
+    var res=await apiPost("/contacts/import-csv",{contacts:contactsToImport,category_id:categoryId,source_ad_id:sourceAdId,operator:currentOperator});
+    if(res&&res.success){
+      progress.innerHTML="<div class='import-progress'><div style='font-size:.85rem;color:var(--accent)'>Import terminé ! "+res.created+" contacts créés"+(res.duplicates?" ("+res.duplicates+" doublons)":"")+"</div><div class='import-progress-bar'><div class='import-progress-fill' style='width:100%'></div></div></div>";
+      contacts=await loadContactsFromAPI();
+      renderContacts();
+    }else{progress.innerHTML="<div style='color:var(--danger)'>Erreur import CSV</div>";}
+  }
+  importBtn.disabled=false;importBtn.textContent="Importer";
+}
+
+// ================================================================
+// CONTACTS EXPORT CSV
+// ================================================================
+function exportContactsCSV(){
+  var list=getFilteredContacts();
+  if(!list.length){notify("Aucun contact à exporter",true);return;}
+  var headers=["Prénom","Nom","Email","Téléphone","Ville","Pays","Poste","Expérience (ans)","Compétences","LinkedIn","Catégorie","Statut","Source","Notes","Créé le"];
+  var esc=function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';};
+  var rows=list.map(function(c){
+    var catObj=categories.find(function(cat){return cat.id===c.categoryId;});
+    return [c.firstName,c.lastName,c.email,c.phone,c.city,c.country,c.currentPosition,c.experienceYears,(c.skills||[]).join("; "),c.linkedinUrl,catObj?catObj.name:"",contactStatusLabel(c.status),c.sourceFile||c.sourceType,c.notes,c.createdAt].map(esc);
+  });
+  var csv=[headers.map(esc).join(",")].concat(rows.map(function(r){return r.join(",");})).join("\n");
+  downloadFile(csv,"contacts-"+new Date().toISOString().split("T")[0]+".csv","text/csv");
+  notify("Export "+list.length+" contacts");
+}
+
+// ================================================================
+// CONTACTS — SOS EXPAT CROSS-CHECK
+// ================================================================
+var ROLE_LABELS={client:"Client",lawyer:"Avocat",expat:"Expert",admin:"Admin",chatter:"Chatter",influencer:"Influenceur",blogger:"Blogueur",group_admin:"GroupAdmin",partner:"Partenaire",captain:"Capitaine",unknown:"?"};
+
+function renderSosBadge(sos){
+  if(!sos) return "<span style='font-size:.65rem;color:var(--muted)'>—</span>";
+  if(sos.found){
+    var rolesStr=(sos.roles||[sos.role]).map(function(r){return ROLE_LABELS[r]||r;}).join(", ");
+    return "<span class='sos-badge registered' title='Inscrit: "+esc(rolesStr)+(sos.name?" — "+esc(sos.name):"")+"'>\u2705 "+esc(rolesStr)+"</span>";
+  }
+  return "<span class='sos-badge not-registered' title='Non inscrit sur SOS-Expat'>Non inscrit</span>";
+}
+
+async function checkAllSosStatus(){
+  var btn=document.getElementById("sos-check-btn");
+  btn.disabled=true;btn.textContent="Vérification...";
+  var res=await apiPost("/contacts/check-sos-all",{});
+  if(res&&res.success){
+    notify("Vérification SOS: "+res.checked+" vérifiés, "+res.found+" inscrits"+(res.remaining?" ("+res.remaining+" restants)":""));
+    // Update local contacts with results
+    contacts=await loadContactsFromAPI();
+    renderContacts();
+    // If there are remaining, check again
+    if(res.remaining&&res.remaining>0){
+      btn.textContent="Vérifier SOS ("+res.remaining+" restants)";
+      btn.disabled=false;
+    }else{
+      btn.textContent="Vérifier SOS";btn.disabled=false;
+    }
+  }else{
+    notify("Erreur vérification SOS",true);
+    btn.textContent="Vérifier SOS";btn.disabled=false;
+  }
+}
+
+async function checkSelectedSosStatus(){
+  if(!contactSelectedIds.size) return;
+  var ids=Array.from(contactSelectedIds);
+  var res=await apiPost("/contacts/check-sos",{contact_ids:ids});
+  if(res&&res.success){
+    // Update local data
+    Object.keys(res.results).forEach(function(cid){
+      var c=contacts.find(function(x){return x.id===cid;});
+      if(c) c.sosRegistered=res.results[cid];
+    });
+    renderContacts();
+    notify(res.checked+" contacts vérifiés, "+res.found+" inscrits SOS");
+  }else{notify("Erreur vérification",true);}
+}
+
+// ================================================================
+// CONTACTS DUPLICATES
+// ================================================================
+var showingDuplicatesOnly=false;
+
+function updateDuplicatesBadge(){
+  var dupCount=contacts.filter(function(c){return c.isDuplicate;}).length;
+  var btn=document.getElementById("duplicates-btn");
+  var countEl=document.getElementById("dup-count");
+  if(btn){btn.style.display=dupCount>0?"inline-flex":"none";}
+  if(countEl){countEl.textContent=dupCount;}
+}
+
+function toggleDuplicatesView(){
+  showingDuplicatesOnly=!showingDuplicatesOnly;
+  var btn=document.getElementById("duplicates-btn");
+  if(showingDuplicatesOnly){
+    btn.classList.add("active");btn.style.background="rgba(245,158,11,.2)";
+  }else{
+    btn.classList.remove("active");btn.style.background="";
+  }
+  contactCurrentPage=1;
+  renderContacts();
+}
+
+async function mergeContacts(keepId,mergeId){
+  if(!confirm("Fusionner ces deux contacts ? Le second sera supprimé et ses données seront ajoutées au premier.")) return;
+  var res=await apiPost("/contacts/merge",{keep_id:keepId,merge_id:mergeId});
+  if(res&&res.success){
+    // Update local data
+    var keepIdx=contacts.findIndex(function(c){return c.id===keepId;});
+    if(keepIdx!==-1) contacts[keepIdx]=toCamel(res.data);
+    contacts=contacts.filter(function(c){return c.id!==mergeId;});
+    renderContacts();notify("Contacts fusionnés");
+  }else{notify("Erreur fusion",true);}
+}
+
+async function dismissDuplicate(id){
+  var res=await apiPut("/contacts/"+id,toSnake({isDuplicate:false,duplicateOf:null}));
+  if(res&&res.success){
+    var c=contacts.find(function(x){return x.id===id;});
+    if(c){c.isDuplicate=false;c.duplicateOf=null;}
+    renderContacts();notify("Doublon ignoré");
+  }
+}
+
+// ================================================================
 // MISC
 // ================================================================
 function togglePwd(id){var i=document.getElementById(id);i.type=i.type==="password"?"text":"password";}
@@ -2204,6 +3050,7 @@ function refresh(){
   if(currentView==="gaps") renderGaps();
   if(currentView==="sites") renderSites();
   if(currentView==="trash") renderTrash();
+  if(currentView==="contacts") renderContacts();
 }
 
 // Modals: only close via X button or Annuler — NOT by clicking outside
@@ -2215,10 +3062,12 @@ async function initApp(){
   // Load data from PostgreSQL API
   updateSyncUI("syncing");
   try{
-    var results=await Promise.all([loadDataFromAPI(),loadSitesFromAPI(),loadTrashFromAPI()]);
+    var results=await Promise.all([loadDataFromAPI(),loadSitesFromAPI(),loadTrashFromAPI(),loadCategoriesFromAPI(),loadContactsFromAPI()]);
     ads=results[0]||[];
     sites=results[1]||[];
     trash=results[2]||[];
+    categories=results[3]||[];
+    contacts=results[4]||[];
     // Ensure arrays
     ads.forEach(function(a){if(!a.tags)a.tags=[];if(!a.responseHistory)a.responseHistory=[];if(!a.audit)a.audit=[];});
     sites.forEach(function(s){if(!s.audit)s.audit=[];});
@@ -2228,6 +3077,7 @@ async function initApp(){
     updateSyncUI("error");
   }
   requestNotifPermission();
+  populateCategorySelects();
   refresh();
   // Check notifications every 60s
   setInterval(function(){refresh();checkExpiryNotifications();},60000);
