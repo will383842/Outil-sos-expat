@@ -33,7 +33,7 @@ const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
 const JOB_ADS_TRACKER_URL = "https://sos-expat.com/tools/job-tracker.html";
 const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
-const CONVERSION_ENGINE_URL = "https://conversion.life-expat.com";
+const CONVERSION_ENGINE_URL = "https://conversion.life-expat.com/admin/login";
 
 const STORAGE_KEY = "admin-toolbox-order";
 
