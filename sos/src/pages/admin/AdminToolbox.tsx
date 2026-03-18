@@ -160,7 +160,7 @@ const defaultTools: ToolCard[] = [
   },
   {
     id: "conversion-engine",
-    titleKey: "Conversion Prospects",
+    titleKey: "Motivation Prospects Conversion",
     descriptionKey: "Import prospects emploi, séquences email automatisées, conversion en chatters SOS-Expat",
     url: CONVERSION_ENGINE_URL,
     icon: <Target className="h-8 w-8" />,
