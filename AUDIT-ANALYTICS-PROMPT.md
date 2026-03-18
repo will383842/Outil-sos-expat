@@ -1,8 +1,9 @@
 # AUDIT GOOGLE ANALYTICS & TAG MANAGER — sos-expat.com — Objectif : 100% Remontee de Donnees
 
-> **Version** : 2.0 — 2026-03-17
-> **Probleme** : Remontee de donnees partielle/absente dans Google Analytics et Tag Manager
+> **Version** : 3.0 — 2026-03-18
+> **Probleme** : Donnees partielles + donnees ERRONEES (98% Belgique, beaucoup de "not set"/"non assigned")
 > **Corrections deja appliquees** : Measurement ID unifie, Geo-Consent, send_page_view:false, GTM noscript, ga4.ts simplifie
+> **Nouveaux problemes** : Geolocalisation faussee (98% Belgique), dimension "non assigned", données manquantes par pays
 > **Site** : https://sos-expat.com — SPA React 18 + Vite + Cloudflare Pages
 > **Stack Analytics** : GA4 + GTM + Google Ads + Meta Pixel + Firebase Analytics
 
@@ -36,7 +37,9 @@
 24. [Phase 19 — Monitoring Analytics Continu](#phase-19--audit-tracking-temps-reel--monitoring)
 25. [Phase 20 — Implementation Tracking Manquant](#phase-20--implementation-tracking-manquant)
 26. [Phase 21 — Correction Zero Temps Reel (PRIORITE ABSOLUE)](#phase-21--correction-zero-temps-reel-priorite-absolue)
-27. [Regles Absolues](#regles-absolues)
+27. [Phase 22 — Audit Donnees Erronees (98% Belgique, Non Assigned)](#phase-22--audit-donnees-erronees-98-belgique-non-assigned)
+28. [Phase 23 — Tests E2E Analytics Bout en Bout](#phase-23--tests-e2e-analytics-bout-en-bout)
+29. [Regles Absolues](#regles-absolues)
 
 ---
 
@@ -2006,6 +2009,758 @@ Si ca fonctionne → tester un scenario hors EU :
 
   console.log('====== FIN DIAGNOSTIC ======');
 })();
+```
+
+---
+
+## PHASE 22 — Audit Donnees Erronees (98% Belgique, Non Assigned)
+
+> **PROBLEME CONSTATE EN PRODUCTION** : GA4 montre 98% du trafic depuis la Belgique.
+> C'est IMPOSSIBLE pour un site international 197 pays.
+> De plus, beaucoup de dimensions affichent "not set" ou "(non assigned)".
+
+### 22A — Pourquoi 98% Belgique ? (INVESTIGATION CRITIQUE)
+
+**Causes possibles (par ordre de probabilite)** :
+
+| # | Cause | Explication | Verification |
+|---|-------|-------------|-------------|
+| 1 | **Puppeteer rend depuis la Belgique** | `renderForBotsV2` tourne en `europe-west1` (Belgique). Si GA4 s'execute DANS Puppeteer, les hits viennent de l'IP du serveur Cloud Functions → Belgique | Verifier si le rendu Puppeteer execute les scripts GA4 |
+| 2 | **Bots/crawlers comptabilises** | Googlebot, BingBot, etc. passent par le CDN EU → geolocalises en Belgique | Verifier si les bots sont filtres dans GA4 |
+| 3 | **Cloudflare Workers** | Si un Worker intercepte les requetes et les re-envoie, l'IP source = IP Cloudflare (EU) | Verifier le Worker worker.js |
+| 4 | **Warm cache SSR** | `warm-ssr-cache.js` est execute depuis un serveur → les hits de prechauffage comptent comme Belgique | Verifier si le warm cache declenche GA4 |
+| 5 | **GA4 Consent Mode denied** | Sans cookies (_ga), GA4 ne peut PAS determiner le pays → fallback sur l'IP du premier hit (serveur) | Verifier le pourcentage d'utilisateurs avec analytics_storage granted vs denied |
+| 6 | **Google Signals pas active** | Sans Google Signals, la geolocalisation est basee UNIQUEMENT sur l'IP → moins precise | Activer Google Signals |
+
+**VERIFICATION IMMEDIATE** :
+- [ ] Ouvrir GA4 → Rapports → Temps Reel → cliquer sur "Par pays" dans la carte
+- [ ] Les 8 utilisateurs actuels : sont-ils tous en Belgique ? Ou certains sont ailleurs ?
+- [ ] Si temps reel montre 8 pays differents mais les rapports montrent 98% Belgique → les rapports incluent les hits Puppeteer/bots
+
+**ACTION #1 : Verifier si Puppeteer execute GA4**
+```
+Le dynamic renderer (renderForBotsV2) utilise Puppeteer pour rendre les pages.
+Si Puppeteer execute le JavaScript GA4 → chaque rendu = un faux "visiteur" depuis la Belgique.
+
+POUR VERIFIER :
+  1. Regarder les logs de renderForBotsV2 des dernieres 24h
+  2. Compter le nombre de rendus
+  3. Comparer avec le nombre de "visiteurs belges" dans GA4
+  4. Si les deux chiffres sont proches → Puppeteer EST la cause
+
+FIX : Empecher GA4 de s'executer dans Puppeteer
+  Option A : Ajouter ?bot=true dans l'URL Puppeteer → GA4 detecte et skip
+  Option B : Puppeteer bloque les requetes vers google-analytics.com (page.setRequestInterception)
+  Option C : Ajouter window.__IS_PUPPETEER = true dans Puppeteer → GA4 verifie avant d'envoyer
+```
+
+- [ ] Verifier dans `dynamicRender.ts` : Puppeteer bloque-t-il les requetes analytics ?
+- [ ] Si NON → CHAQUE rendu Puppeteer genere un faux hit GA4 depuis la Belgique → c'est la cause des 98%
+- [ ] **FIX PROPOSE** : dans renderForBotsV2, ajouter `page.setRequestInterception(true)` et bloquer les requetes vers `google-analytics.com`, `googletagmanager.com/gtag`, `facebook.com/tr`
+
+**ACTION #2 : Filtrer le trafic interne/bots dans GA4**
+- [ ] GA4 → Admin → Data Streams → Web → Configure tag settings → "Define internal traffic"
+- [ ] Ajouter une regle : IP = IP du serveur Cloud Functions europe-west1 → marquer comme "internal"
+- [ ] GA4 → Admin → Data Settings → Data Filters → Creer un filtre "Exclude internal traffic"
+- [ ] Verifier que le filtre est en mode "Active" (pas "Testing")
+
+**ACTION #3 : Verifier le warm-ssr-cache.js**
+- [ ] Le script `warm-ssr-cache.js` pre-chauffe le cache en appelant renderForBotsV2
+- [ ] Si Puppeteer execute GA4 pendant le warm → des dizaines de faux hits belges a chaque warm
+- [ ] Solution : meme fix que Action #1 (bloquer analytics dans Puppeteer)
+
+### 22B — Pourquoi "Non Assigned" / "Not Set" ?
+
+**"(not set)" et "(not assigned)" dans GA4 signifient que la dimension n'a pas de valeur.**
+
+| Dimension | "not set" signifie | Cause probable | Fix |
+|-----------|-------------------|---------------|-----|
+| **Pays** | GA4 ne connait pas le pays | Consent denied (pas de cookie) OU IP serveur | Activer Google Signals + Consent Modeling |
+| **Source/Medium** | Trafic sans referrer ni UTM | Acces direct OU redirect qui perd le referrer | Verifier les redirections (perdent-elles le referrer ?) |
+| **Landing page** | Page d'entree inconnue | Page view pas envoye OU SPA routing | Verifier PageViewTracker envoie page_location |
+| **Content group** | Pas de content group defini | Non implemente | Implementer (Phase 18, composant InternationalTracker) |
+| **Session source** | Source de la session inconnue | Premier hit en mode denied (pas de session) | Activer url_passthrough (deja fait) |
+| **Campaign** | Pas d'UTM | Trafic organique/direct | Normal — ajouter UTM aux liens marketing |
+| **User properties** | Pas de proprietes definies | Non envoyes | Implementer setUserProperties (Phase 18) |
+
+**VERIFICATION** :
+- [ ] Dans GA4 → Rapports → Acquisition → Vue d'ensemble : quel % est "Direct / (none)" ?
+- [ ] Si > 80% est Direct → les redirections perdent le referrer OU pas d'UTM
+- [ ] Dans GA4 → Explorer → Libre → Dimension "Pays" → combien de "(not set)" ?
+- [ ] Si > 50% est "(not set)" → les hits sont en mode denied (pas de geolocalisation)
+
+**FIX ANTI "NOT SET"** :
+1. **Activer Google Signals** (console GA4) → meilleure geolocalisation
+2. **Activer Consent Mode Modeling** (console GA4) → modelise les hits denied
+3. **Envoyer des user properties** avec chaque hit (locale, langue, pays du site)
+4. **Conserver les UTM** dans les redirections (verifier que `_redirects` preserve les query params)
+5. **Verifier que le PageViewTracker envoie** `page_location` et `page_referrer`
+
+### 22C — Comprendre Temps Reel GA4 (pour l'utilisateur)
+
+```
+GA4 Temps Reel affiche :
+  "8 utilisateurs actifs au cours des 30 dernieres minutes"
+  "9 vues au cours des 30 dernieres minutes"
+
+SIGNIFICATION :
+  - 8 utilisateurs = 8 personnes DISTINCTES (basees sur le client_id du cookie _ga)
+  - 9 vues = 9 pages vues au total par ces 8 personnes
+  - Donc 1 personne a vu 2 pages, les 7 autres ont vu 1 page chacune
+
+COMMENT VOIR D'OU VIENNENT LES VISITEURS EN TEMPS REEL :
+  1. GA4 → Rapports → Temps Reel
+  2. Section "Utilisateurs par pays" (carte ou liste)
+  3. Cliquer sur un pays pour voir les details
+  4. OU : ajouter une dimension "Pays" dans le widget temps reel
+
+ATTENTION : Si 98% temps reel = Belgique → probablement des hits Puppeteer
+  Les VRAIS visiteurs devraient etre repartis dans plusieurs pays
+```
+
+### 22D — Audit des Redirections et Perte de Referrer
+
+**PROBLEME** : Les redirections 301 dans `_redirects` peuvent perdre le `referrer` HTTP.
+
+```
+Scenario :
+  1. Google montre sos-expat.com/fr/tarifs dans les resultats
+  2. L'utilisateur clique → arrive sur /fr/tarifs
+  3. _redirects : /fr/* → /fr-fr/:splat 301
+  4. Le navigateur redirige vers /fr-fr/tarifs
+  5. Le referrer original (google.com) est PERDU ou CONSERVE ?
+     → Depend du navigateur et de la politique Referrer-Policy
+  6. Si perdu → GA4 voit "Direct / (none)" au lieu de "google / organic"
+
+VERIFICATION :
+  - Verifier le header Referrer-Policy dans _headers
+  - Actuel : strict-origin-when-cross-origin → OK (conserve le referrer pour same-origin)
+  - MAIS : les redirections cross-origin perdent le path referrer
+```
+
+- [ ] Verifier que `_headers` a `Referrer-Policy: strict-origin-when-cross-origin` (pas `no-referrer`)
+- [ ] Tester : cliquer un lien Google vers /fr/tarifs → verifier dans GA4 que la source = google/organic (pas direct)
+- [ ] Si la source est perdue → changer la politique referrer ou utiliser des UTM
+
+### 22E — Audit Puppeteer & GA4 (CAUSE RACINE PROBABLE du 98% Belgique)
+
+**Fichier** : `sos/firebase/functions/src/seo/dynamicRender.ts`
+
+**QUESTION CRITIQUE** : Puppeteer execute-t-il les scripts GA4 quand il rend une page ?
+
+```
+renderForBotsV2 :
+  1. Lance Puppeteer (Chromium headless)
+  2. Navigue vers l'URL via Cloudflare Pages origin
+  3. Attend que React monte (data-provider-loaded, h1, etc.)
+  4. Snapshote le HTML
+  5. Retourne le HTML au bot (Googlebot, etc.)
+
+PENDANT L'ETAPE 2-3 :
+  - Le navigateur Puppeteer charge index.html
+  - index.html contient le script GA4 inline
+  - SI Puppeteer ne bloque PAS ce script → GA4 s'execute
+  - GA4 envoie un hit page_view depuis l'IP du serveur (europe-west1 = Belgique)
+  - Ce hit est comptabilise dans GA4 comme un "visiteur belge"
+
+CONSEQUENCE :
+  - Chaque rendu Puppeteer = 1 faux visiteur belge
+  - 100 rendus/jour = 100 faux visiteurs belges/jour
+  - Les vrais visiteurs (20-30/jour ?) sont noyes dans les faux → 98% Belgique
+```
+
+- [ ] Verifier dans dynamicRender.ts : y a-t-il un `page.setRequestInterception(true)` ?
+- [ ] Si NON → c'est la cause confirmee
+- [ ] **FIX** : Ajouter dans renderForBotsV2, AVANT la navigation :
+
+```typescript
+// Block analytics scripts in Puppeteer (prevent false hits from server IP)
+await page.setRequestInterception(true);
+page.on('request', (req) => {
+  const url = req.url();
+  if (
+    url.includes('google-analytics.com') ||
+    url.includes('googletagmanager.com/gtag') ||
+    url.includes('facebook.com/tr') ||
+    url.includes('connect.facebook.net') ||
+    url.includes('sentry.io')
+  ) {
+    req.abort();
+  } else {
+    req.continue();
+  }
+});
+```
+
+- [ ] Apres le fix : deployer et attendre 48h
+- [ ] Verifier que le pourcentage "Belgique" chute drastiquement
+- [ ] Les vrais visiteurs devraient apparaitre (repartis dans plusieurs pays)
+
+---
+
+## PHASE 23 — Tests E2E Analytics Bout en Bout
+
+> **Verification REELLE que chaque element analytics fonctionne en production.**
+
+### 23A — Test E2E : GA4 Page Views
+
+```
+POUR 10 pages (homepage FR, EN, ES + tarifs FR + profil × 3 + FAQ + landing) :
+  1. Ouvrir la page dans Chrome SANS ad-blocker, SANS extensions
+  2. Accepter le Cookie Banner (analytics = granted)
+  3. Ouvrir Network tab → filtrer "collect"
+  4. Verifier qu'un hit page_view est envoye vers google-analytics.com/g/collect
+
+  POUR CHAQUE HIT, verifier les parametres :
+    - tid = G-CTVDEL29CP (measurement ID correct)
+    - en = page_view (event name)
+    - dl = URL complete de la page (page_location)
+    - dt = titre de la page (page_title)
+    - gcs = G111 (consent granted) — PAS G100 (denied)
+    - _ga cookie present (client_id)
+
+  SI UN CHECK ECHOUE → documenter URL + parametre manquant
+```
+
+- [ ] Minimum : 5 pages testees
+- [ ] Objectif : 100% de hits avec tous les parametres
+
+### 23B — Test E2E : GA4 Navigation SPA
+
+```
+1. Ouvrir /fr-fr/ (homepage)
+2. Verifier 1 hit page_view dans Network
+3. Cliquer "Tarifs" → /fr-fr/tarifs
+4. Verifier 1 NOUVEAU hit page_view (dl = /fr-fr/tarifs)
+5. Cliquer "FAQ" → /fr-fr/faq
+6. Verifier 1 NOUVEAU hit page_view (dl = /fr-fr/faq)
+7. Cliquer retour (browser back) → /fr-fr/tarifs
+8. Verifier 1 NOUVEAU hit page_view
+
+TOTAL : 4 page_view pour 4 navigations
+SI < 4 → PageViewTracker ne fonctionne pas sur toutes les navigations
+SI > 4 → Double page_view (bug)
+```
+
+### 23C — Test E2E : Consent Mode
+
+```
+TEST 1 — Premier visit sans consentement :
+  1. Ouvrir en navigation privee (pas de localStorage)
+  2. NE PAS cliquer sur le Cookie Banner
+  3. Network → chercher /g/collect
+  4. Si un hit existe : verifier gcs=G100 (denied) — donnee restreinte
+  5. Verifier que le cookie _ga N'EXISTE PAS
+
+TEST 2 — Apres acceptation :
+  1. Cliquer "Accepter tout" sur le Cookie Banner
+  2. Network → un nouveau hit /g/collect ? gcs=G111 (granted) ?
+  3. Le cookie _ga est-il cree ?
+  4. localStorage cookie_preferences → analytics: true ?
+
+TEST 3 — Reload apres acceptation :
+  1. Recharger la page (F5)
+  2. Le Cookie Banner NE reapparait PAS ?
+  3. Le premier hit a gcs=G111 (consent restaure depuis localStorage) ?
+  4. Le cookie _ga est toujours present ?
+
+TEST 4 — Geo-Consent (hors EU) :
+  1. Utiliser un VPN vers les USA ou l'Asie
+  2. Ouvrir en navigation privee
+  3. NE PAS cliquer sur le banner
+  4. Verifier : gcs=G111 ? (consent granted par defaut hors EU)
+  5. Le cookie _ga est-il cree SANS clic banner ?
+```
+
+### 23D — Test E2E : Geolocalisation
+
+```
+POUR 5 pays differents (France, USA, Thailande, Senegal, Bresil) :
+  1. Utiliser un VPN vers ce pays
+  2. Ouvrir sos-expat.com en navigation privee
+  3. Accepter le consentement
+  4. Naviguer sur 2-3 pages
+  5. Verifier dans GA4 Temps Reel → "Par pays"
+  6. Le pays du VPN apparait-il ? (pas Belgique)
+
+SI Belgique apparait malgre VPN USA → Puppeteer pollue les donnees
+SI le bon pays apparait → le fix Puppeteer a fonctionne
+```
+
+### 23E — Test E2E : Events & Conversions
+
+```
+POUR chaque event business :
+  1. sign_up : creer un compte test → event sign_up dans GA4 ?
+  2. begin_checkout : commencer un booking → event dans GA4 ?
+  3. purchase : simuler un paiement test → event dans GA4 + Google Ads + Meta ?
+  4. view_provider : visiter un profil → event dans GA4 ?
+  5. generate_lead : soumettre un booking → event dans GA4 + Google Ads ?
+
+POUR CHAQUE EVENT, verifier dans Network :
+  - en = nom_event
+  - Les parametres sont presents (value, currency, items, etc.)
+  - L'event apparait dans GA4 → Temps Reel → "Nombre d'evenements par nom"
+```
+
+### 23F — Test E2E : GTM
+
+```
+1. Se connecter a tagmanager.google.com
+2. Cliquer "Preview" → entrer https://sos-expat.com
+3. Tag Assistant s'ouvre
+
+VERIFIER :
+  a. Container GTM-P53H3RLF charge ? ("Container Loaded")
+  b. Balises qui FIRE :
+     - GA4 Configuration ? Avec G-CTVDEL29CP ?
+     - Google Ads Conversion ?
+     - Custom HTML (Meta Pixel ?) ?
+  c. Balises qui NE FIRE PAS ? Pourquoi ?
+  d. Consent Mode detecte ? (onglet "Consent")
+  e. Naviguer vers une autre page → trigger "History Change" fire ?
+  f. Pas de DOUBLON avec GA4 inline de index.html
+```
+
+### 23G — Test E2E : Meta Pixel
+
+```
+1. Installer l'extension Chrome "Meta Pixel Helper"
+2. Ouvrir sos-expat.com
+3. L'extension montre-t-elle le Pixel actif ?
+4. PageView fire au chargement ?
+5. Naviguer → nouveau PageView ?
+6. Verifier dans Meta Events Manager (business.facebook.com) :
+   a. Les events arrivent ?
+   b. Le Pixel ID est correct ?
+   c. Advanced Matching fonctionne ? (donnees hashees)
+   d. Server Events (CAPI) arrivent aussi ?
+```
+
+### 23H — Test E2E : User Properties Internationales
+
+```
+APRES implementation du composant InternationalTracker (Phase 18) :
+
+1. Ouvrir /fr-fr/tarifs
+2. Console : gtag('get', 'G-CTVDEL29CP', 'user_properties', callback)
+3. Verifier :
+   - user_locale = "fr-fr"
+   - user_language = "fr"
+   - user_country_site = "fr"
+4. Naviguer vers /en-us/pricing
+5. Verifier :
+   - user_locale = "en-us"
+   - user_language = "en"
+   - user_country_site = "us"
+```
+
+### 23I — Test E2E : Donnees dans GA4 Rapports (48h apres corrections)
+
+```
+APRES 48h de donnees post-correction :
+
+1. GA4 → Rapports → Acquisition → Vue d'ensemble :
+   - Source/Medium : Google / organic present ? (pas 100% Direct)
+   - Sessions > 0 ?
+   - % "not set" < 20% ?
+
+2. GA4 → Rapports → Engagement → Pages et ecrans :
+   - Les pages apparaissent-elles avec les bonnes URLs ?
+   - Pas de doublons (meme page avec 2 URLs differentes) ?
+
+3. GA4 → Rapports → Demographie → Vue d'ensemble :
+   - Pays : repartition credible ? (PAS 98% Belgique)
+   - Si Google Signals actif : age, genre visibles ?
+
+4. GA4 → Rapports → Engagement → Evenements :
+   - page_view present (le plus frequent) ?
+   - sign_up, begin_checkout, purchase presents ?
+   - Pas de doublons (deux page_view par navigation ?)
+
+5. GA4 → Rapports → Temps Reel :
+   - Utilisateurs actifs corresponds au trafic reel ?
+   - Pays diversifie (pas 98% Belgique) ?
+```
+
+### 23J — Test E2E : Script de Diagnostic Complet (Console)
+
+```javascript
+// COLLER DANS LA CONSOLE SUR sos-expat.com
+(function() {
+  console.log('====== DIAGNOSTIC ANALYTICS COMPLET V3 ======');
+
+  // 1. GA4
+  console.log('--- GA4 ---');
+  console.log('gtag:', typeof window.gtag === 'function' ? 'OK' : 'ABSENT');
+  console.log('Measurement ID attendu: G-CTVDEL29CP');
+
+  // 2. Consent
+  console.log('--- Consent ---');
+  var prefs = localStorage.getItem('cookie_preferences');
+  if (prefs) {
+    var p = JSON.parse(prefs);
+    console.log('analytics:', p.analytics ? 'GRANTED' : 'DENIED');
+    console.log('marketing:', p.marketing ? 'GRANTED' : 'DENIED');
+  } else {
+    console.log('PAS DE CONSENT (banner jamais clique)');
+  }
+
+  // 3. Geo-Consent
+  console.log('--- Geo-Consent ---');
+  console.log('Requires consent (EU/BR):', window.__requiresConsent);
+  console.log('Is local dev:', window.__isLocalDev);
+
+  // 4. Cookies
+  console.log('--- Cookies ---');
+  var ga = document.cookie.match(/_ga=([^;]+)/);
+  console.log('_ga:', ga ? ga[1] : 'ABSENT (consent denied ou ad-blocker)');
+
+  // 5. Network (derniers hits)
+  var requests = performance.getEntriesByType('resource');
+  var gaHits = requests.filter(r => r.name.includes('google-analytics.com/g/collect'));
+  console.log('--- Network ---');
+  console.log('GA4 hits envoyes:', gaHits.length);
+  gaHits.forEach(function(h, i) {
+    // Extract gcs parameter
+    var gcsMatch = h.name.match(/gcs=([^&]+)/);
+    var gcs = gcsMatch ? gcsMatch[1] : 'N/A';
+    console.log('  Hit ' + (i+1) + ': gcs=' + gcs + ' (' +
+      (gcs === 'G111' ? 'GRANTED' : gcs === 'G100' ? 'DENIED' : 'PARTIEL') + ')');
+  });
+
+  // 6. GTM
+  console.log('--- GTM ---');
+  var gtmScript = document.querySelector('script[src*="gtm.js"]');
+  console.log('GTM script:', gtmScript ? 'CHARGE' : 'NON CHARGE');
+  console.log('dataLayer entries:', window.dataLayer?.length || 0);
+
+  // 7. Meta Pixel
+  console.log('--- Meta Pixel ---');
+  console.log('fbq:', typeof window.fbq === 'function' ? 'OK' : 'ABSENT');
+
+  // 8. PageViewTracker
+  var pageViewHits = gaHits.filter(function(h) { return h.name.includes('en=page_view'); });
+  console.log('--- Page Views ---');
+  console.log('page_view hits:', pageViewHits.length, '(attendu: 1 par page)');
+
+  // 9. Diagnostic embarque
+  if (window.ga4Diagnostic) {
+    console.log('--- ga4Diagnostic() ---');
+    window.ga4Diagnostic();
+  }
+
+  console.log('====== FIN DIAGNOSTIC V3 ======');
+})();
+```
+
+---
+
+## PHASE 24 — Cross-Checks Donnees (Croisements Multi-Systemes)
+
+> **Ces croisements verifient que les donnees GA4 correspondent a la REALITE.**
+> Si GA4 dit 10 purchases mais Stripe dit 15 → il y a un probleme.
+
+### Cross-Check A : GA4 purchase ↔ Stripe paiements reels
+
+```
+Pour les 30 derniers jours :
+  1. GA4 → Rapports → Engagement → Evenements → purchase → compter
+  2. Stripe Dashboard → Payments → compter les paiements reussis
+  3. Comparer :
+     GA4 purchases = Stripe payments ?
+     SI GA4 < Stripe → des purchases ne sont PAS trackees (event manquant)
+     SI GA4 > Stripe → des faux events (doublons ou tests)
+  4. Verifier les montants :
+     GA4 total value (purchase) = Stripe total revenue ?
+```
+
+### Cross-Check B : GA4 sign_up ↔ Firestore inscriptions
+
+```
+Pour les 30 derniers jours :
+  1. GA4 → Evenements → sign_up → compter
+  2. Firestore → users WHERE createdAt > 30 jours → compter
+  3. Comparer :
+     GA4 sign_ups = Firestore new users ?
+     SI GA4 < Firestore → sign_up event pas envoye dans certains cas
+     SI GA4 > Firestore → doublons (signup fire 2x ?)
+```
+
+### Cross-Check C : GA4 ↔ Meta Events Manager
+
+```
+Pour les 7 derniers jours :
+  1. GA4 → purchase count, lead count, page_view count
+  2. Meta Events Manager → Purchase count, Lead count, PageView count
+  3. Les chiffres doivent etre PROCHES (pas identiques a cause des ad-blockers)
+  4. SI GA4 << Meta → GA4 est bloque (consent ou ad-blocker)
+  5. SI Meta << GA4 → Meta Pixel est bloque ou mal configure
+  6. Ratio attendu : GA4 ≈ 70-80% de Meta (car GA4 respecte le consent, Meta non en dehors EU)
+```
+
+### Cross-Check D : Puppeteer rendus ↔ faux visiteurs Belgique
+
+```
+AVANT le fix Puppeteer (baseline) :
+  1. Cloud Functions logs → compter les invocations renderForBotsV2 des 24h
+  2. GA4 → Rapports → Demographie → Pays → Belgique → users 24h
+  3. SI rendus ≈ visiteurs Belgique → CONFIRME que Puppeteer = cause du 98%
+
+APRES le fix Puppeteer (48h plus tard) :
+  4. Meme comparaison → visiteurs Belgique devrait chuter de ~90%
+  5. Les vrais visiteurs (autres pays) deviennent visibles
+```
+
+### Cross-Check E : Referral Exclusions
+
+```
+GA4 → Rapports → Acquisition → Vue d'ensemble → Source/Medium :
+  Verifier que ces sources n'apparaissent PAS :
+  - stripe.com / referral (redirect retour paiement)
+  - paypal.com / referral
+  - checkout.stripe.com / referral
+  - accounts.google.com / referral (OAuth redirect)
+
+  SI elles apparaissent → Ajouter en "Referral Exclusions" :
+    GA4 → Admin → Data Streams → Web → Configure tag → List unwanted referrals
+    Ajouter : stripe.com, paypal.com, checkout.stripe.com, accounts.google.com
+```
+
+### Cross-Check F : UTM survie aux redirections 301
+
+```
+1. Construire un lien UTM : https://sos-expat.com/fr/tarifs?utm_source=test&utm_medium=audit&utm_campaign=check
+2. Ce lien sera redirige par _redirects : /fr/* → /fr-fr/:splat 301
+3. Ouvrir le lien dans un navigateur
+4. Verifier :
+   a. L'URL finale contient-elle les UTM ? /fr-fr/tarifs?utm_source=test&utm_medium=audit&utm_campaign=check
+   b. Dans GA4 Temps Reel → Source = "test", Medium = "audit" ?
+   c. Si les UTM sont PERDUS → les redirections _redirects ne preservent pas les query params
+
+FIX si perdu :
+  Cloudflare Pages _redirects avec :splat preserve les query params par defaut
+  MAIS : le script de redirect locale dans index.html les preserve-t-il ? (verifier le code JS)
+```
+
+### Cross-Check G : User ID apres login
+
+```
+1. Se connecter avec un compte test
+2. Console : localStorage.getItem('cookie_preferences') → analytics: true ?
+3. Network → chercher un hit /g/collect avec uid= ou user_id=
+4. GA4 → Explorer → User Explorer → le user_id apparait-il ?
+
+SI user_id absent :
+  Verifier que setUserId() est appele apres login (dans quel composant ?)
+  Verifier que le uid Firebase est envoye a GA4
+```
+
+### Cross-Check H : Cookie _ga durée de vie et cross-domain
+
+```
+1. Apres avoir accepte le consentement :
+   Console : document.cookie → chercher _ga
+   Verifier l'expiration : doit etre ~2 ans
+   Verifier le domaine : .sos-expat.com (avec le point = inclut les sous-domaines)
+
+2. Cross-domain :
+   Ouvrir ia.sos-expat.com → le meme _ga cookie est-il present ?
+   Ouvrir multi.sos-expat.com → le meme _ga cookie est-il present ?
+   SI NON → les utilisateurs sont comptes comme NOUVEAUX sur chaque sous-domaine
+   FIX : configurer le cross-domain tracking dans GA4 ou utiliser cookie_domain: 'sos-expat.com'
+```
+
+### Cross-Check I : Revenue GA4 = CA reel
+
+```
+Pour les 30 derniers jours :
+  1. GA4 → Rapports → Monetisation → Vue d'ensemble → Total revenue
+  2. Stripe Dashboard → total des paiements captures
+  3. Les montants doivent etre IDENTIQUES (meme devise EUR)
+  4. SI GA4 revenue = 0 → l'event purchase n'envoie pas la value/currency
+  5. SI GA4 revenue < Stripe → certains purchases ne sont pas trackes
+  6. Verifier que currency est TOUJOURS 'EUR' (pas un mix EUR/USD qui fausse les totaux)
+```
+
+### Cross-Check J : Funnel e-commerce complet
+
+```
+GA4 → Explorer → Funnel exploration :
+  Etape 1 : page_view (page profil prestataire) → combien ?
+  Etape 2 : begin_checkout (page CallCheckout) → combien ?
+  Etape 3 : add_payment_info (saisie carte) → combien ?
+  Etape 4 : purchase (paiement reussi) → combien ?
+
+  Taux de conversion par etape :
+    Etape 1→2 : X% (taux de clic "Reserver")
+    Etape 2→3 : X% (taux de saisie carte)
+    Etape 3→4 : X% (taux de paiement reussi)
+
+  SI une etape = 0 → l'event correspondant n'est PAS envoye → CORRIGER
+  SI le taux 3→4 < 50% → probleme de paiement (echecs Stripe ?)
+```
+
+### Cross-Check K : Mobile vs Desktop
+
+```
+Tester sur :
+  1. Chrome Desktop (sans extensions) → hits envoyes ?
+  2. Chrome Mobile (Android) → hits envoyes ?
+  3. Safari Mobile (iPhone) → hits envoyes ?
+  4. Samsung Internet → hits envoyes ?
+
+Pour CHAQUE :
+  - Cookie Banner s'affiche ?
+  - Consent fonctionne ?
+  - Page views trackes ?
+  - Events fires ?
+
+ATTENTION Safari :
+  - ITP (Intelligent Tracking Prevention) limite les cookies 1st-party a 7 jours
+  - Le cookie _ga est-il renouvele a chaque visite ?
+  - GA4 fonctionne-t-il correctement malgre ITP ?
+```
+
+### Cross-Check L : GA4 ↔ Google Search Console
+
+```
+1. GA4 → Admin → Product Links → Search Console
+2. Est-il lie ? → SI NON : le lier maintenant
+3. Si lie :
+   GA4 → Rapports → Acquisition → Search Console → Queries
+   Les requetes de recherche apparaissent-elles ?
+   Le CTR et les impressions sont-ils coherents avec GSC direct ?
+```
+
+### Cross-Check M : GA4 ↔ Google Ads
+
+```
+1. GA4 → Admin → Product Links → Google Ads
+2. Est-il lie ? → SI NON : le lier maintenant (avec AW-10842996788)
+3. Si lie :
+   Les conversions GA4 remontent-elles dans Google Ads ?
+   Le ROAS est-il calcule correctement ?
+   Les audiences GA4 sont-elles exploitables dans Google Ads ?
+```
+
+### Cross-Check N : Data Sampling GA4
+
+```
+GA4 → Explorer → Libre → creer un rapport avec 90 jours :
+  Verifier le badge en haut :
+  - "Unsampled" ✅ → donnees completes
+  - "Sampled (based on X%)" ⚠️ → donnees echantillonnees (peut fausser les metriques)
+
+SI echantillonne :
+  - Reduire la plage de dates
+  - Utiliser BigQuery export pour les donnees brutes (pas d'echantillonnage)
+```
+
+---
+
+## PHASE 25 — Verification Analytics 197 Pays
+
+> **Le site est present dans 197 pays. L'analytics doit PROUVER que le trafic est mondial.**
+
+### 25A — Geolocalisation Exacte par Pays
+
+```
+APRES correction du bug Puppeteer (Phase 22E) + 7 jours de donnees :
+
+1. GA4 → Rapports → Demographie → Pays :
+   - Combien de pays differents apparaissent ?
+   - Top 10 pays par sessions
+   - Belgique est-elle encore en #1 ? Si oui → fix Puppeteer n'a pas fonctionne
+
+2. Verifier la coherence :
+   - Les pays du trafic correspondent-ils aux pays des prestataires ?
+   - Les pays des inscriptions correspondent-ils aux pays du trafic ?
+   - Si le site a des prestataires en Thailande mais 0 trafic Thailande → probleme de SEO local
+```
+
+### 25B — Geo-Consent par Zone
+
+```
+Verifier que le Geo-Consent fonctionne correctement par zone :
+
+Zone EU/BR (consent requis) :
+  1. VPN → France : analytics_storage = denied par defaut ? Banner affiché ?
+  2. VPN → Allemagne : idem
+  3. VPN → Bresil : idem
+
+Zone hors EU/BR (consent granted) :
+  4. VPN → USA : analytics_storage = granted par defaut ? Pas de banner necessaire ?
+  5. VPN → Thailande : idem
+  6. VPN → Senegal : idem
+  7. VPN → Japon : idem
+
+POUR CHAQUE TEST :
+  - Verifier le parametre gcs dans le hit GA4 (G100=denied, G111=granted)
+  - Verifier que le cookie _ga est cree (granted) ou absent (denied)
+  - Le pays apparait-il correctement dans GA4 Temps Reel ?
+```
+
+### 25C — Timezones et Detection Pays
+
+```
+Le Geo-Consent utilise Intl.DateTimeFormat().resolvedOptions().timeZone pour detecter le pays.
+
+PROBLEME POTENTIEL : certains timezones couvrent plusieurs pays.
+  - "America/New_York" = USA OU Canada OU Bahamas
+  - "Asia/Kolkata" = Inde uniquement ✅
+  - "Africa/Lagos" = Nigeria OU Benin OU Cameroun
+
+VERIFIER :
+  - La detection timezone → pays est-elle assez precise ?
+  - Les pays mal detectes recoivent-ils le bon consent default ?
+  - Un utilisateur a Dubai (Asia/Dubai, PAS EU) a-t-il consent=granted ? ✅
+  - Un utilisateur a Londres (Europe/London, EU) a-t-il consent=denied ? ✅
+```
+
+### 25D — Langues RTL (Arabe, Hebrew)
+
+```
+Pour les visiteurs arabes (ar-sa) :
+  1. Les events GA4 sont-ils envoyes correctement ?
+  2. Les user properties (user_locale=ar-sa) sont-elles correctes ?
+  3. Le PageViewTracker fonctionne-t-il en RTL ?
+  4. Le Cookie Banner s'affiche-t-il correctement en RTL ?
+```
+
+### 25E — Pays avec Restrictions Internet
+
+```
+Certains pays bloquent Google Analytics (Chine, Iran, etc.) :
+
+  1. Chine : Google est bloque par le Great Firewall
+     - Les utilisateurs chinois (zh-cn) n'envoient PAS de hits GA4
+     - Firebase Analytics fonctionne-t-il ? (Firebase n'est pas bloque partout)
+     - Proposer : un analytics alternatif pour la Chine (Baidu Analytics ?)
+
+  2. Iran : certains services Google bloques
+     - Meme probleme que la Chine
+
+  3. Russie : Google Analytics partiellement restreint
+     - Verifier si les hits arrivent depuis la Russie (ru-ru)
+
+IMPACT : Si 10% du trafic vient de pays qui bloquent GA4 → 10% du trafic est INVISIBLE
+SOLUTION : Firebase Analytics comme fallback (non bloque dans la plupart des pays)
+```
+
+### 25F — Multi-Devise et Revenue par Pays
+
+```
+Le site facture en EUR et USD :
+  - Verifier que GA4 recoit la bonne devise avec chaque purchase event
+  - currency = 'EUR' pour les clients en zone euro
+  - currency = 'USD' pour les clients hors zone euro
+  - GA4 convertit automatiquement si la devise GA4 property = EUR
+
+ATTENTION :
+  - Si un purchase envoie value=49 currency=EUR et un autre value=55 currency=USD
+  - GA4 property est en EUR → le USD est converti automatiquement
+  - Verifier que la conversion est correcte (pas de double comptage)
 ```
 
 ---

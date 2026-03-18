@@ -241,6 +241,27 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
+    // Block analytics/tracking scripts to prevent false hits from server IP (europe-west1 = Belgium)
+    // Without this, every Puppeteer render creates a fake "Belgian visitor" in GA4/Meta
+    await page.setRequestInterception(true);
+    page.on('request', (req: { url: () => string; abort: () => void; continue: () => void }) => {
+      const reqUrl = req.url();
+      if (
+        reqUrl.includes('google-analytics.com') ||
+        reqUrl.includes('googletagmanager.com/gtag') ||
+        reqUrl.includes('googletagmanager.com/gtm.js') ||
+        reqUrl.includes('facebook.com/tr') ||
+        reqUrl.includes('connect.facebook.net') ||
+        reqUrl.includes('sentry.io') ||
+        reqUrl.includes('googleadservices.com') ||
+        reqUrl.includes('doubleclick.net')
+      ) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
     // Navigate via Pages origin to bypass the Cloudflare Worker.
     // Replace the public domain with the Pages origin domain.
     const renderUrl = url.replace(SITE_URL, PAGES_ORIGIN);

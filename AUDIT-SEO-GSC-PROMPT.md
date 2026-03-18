@@ -32,7 +32,9 @@
 20. [Phase 17 — Audit Systeme Multilingue SEO Complet](#phase-17--audit-systeme-multilingue-seo-complet)
 21. [Phase 18 — Cross-Checks & Tests de Validation](#phase-18--cross-checks--tests-de-validation)
 22. [Phase 19 — Plan d'Action & Deploiement](#phase-19--plan-daction--deploiement)
-23. [Regles Absolues](#regles-absolues-ne-jamais-violer)
+23. [Phase 20 — Tests E2E Bout en Bout (URL par URL)](#phase-20--tests-e2e-bout-en-bout-url-par-url-element-par-element)
+24. [Phase 21 — Audit ProviderProfile SEO Bugs Confirmes](#phase-21--audit-providerprofile-seo-bugs-bugs-confirmes--2026-03-18)
+25. [Regles Absolues](#regles-absolues-ne-jamais-violer)
 
 ---
 
@@ -1961,3 +1963,532 @@ Le **Validateur Final (A50)** produit :
 | **useSnippetGenerator** | `sos/src/hooks/useSnippetGenerator.ts` | Hook React pour snippets memoises |
 | **IndexNow Key File** | `sos/public/sosexpat2025indexnowkey.txt` | Cle d'authentification IndexNow |
 | **SEO Module Index** | `sos/firebase/functions/src/seo/index.ts` | Exports de tous les modules SEO |
+
+---
+
+## PHASE 20 — Tests E2E Bout en Bout (URL par URL, Element par Element)
+
+> **C'est LA phase qui garantit que TOUT fonctionne reellement en production.**
+> Pas de theorie — on teste CHAQUE type de page, CHAQUE element SEO, dans CHAQUE langue.
+
+### 20A — Test E2E : Pages Statiques (9 langues × 10 pages = 90 tests)
+
+Pour CHAQUE page statique (homepage, tarifs, FAQ, contact, centre-aide, inscription avocat, inscription expat, CGU, politique confidentialite, comment ca marche) × CHAQUE langue (fr, en, es, de, ru, pt, zh, ar, hi) :
+
+```
+POUR chaque URL :
+  1. Rendre avec Puppeteer (curl User-Agent Googlebot via renderForBotsV2)
+  2. Verifier HTTP status = 200 (pas 301, pas 404, pas 500)
+  3. Verifier <title> present, non vide, dans la bonne LANGUE
+  4. Verifier <meta description> present, 80-160 chars, dans la bonne LANGUE
+  5. Verifier <link rel="canonical"> present, HTTPS, absolu, sans trailing slash
+  6. Verifier 10 <link rel="alternate" hreflang> (9 langues + x-default)
+  7. Verifier que x-default pointe vers fr-fr
+  8. Verifier <meta name="robots" content="index, follow">
+  9. Verifier au moins 1 <script type="application/ld+json"> present et parseable
+  10. Verifier OG tags : og:title, og:description, og:url, og:image
+  11. Verifier body > 2000 chars (pas soft 404)
+  12. Verifier que le canonical = URL canonique (locale par defaut de la langue)
+
+  SI UN CHECK ECHOUE → documenter : URL, check #, valeur trouvee, valeur attendue
+```
+
+- [ ] **Minimum** : tester les 10 pages en FR, EN, ES (30 URLs)
+- [ ] **Ideal** : tester les 10 pages × 9 langues (90 URLs)
+- [ ] Resultat attendu : 0 echec
+
+### 20B — Test E2E : Profils Prestataires (20 profils × 3 langues = 60 tests)
+
+**Selectionner 20 profils reels** : 10 avocats + 10 expats, avec et sans avis, differents pays.
+
+```
+POUR chaque profil × chaque langue (FR, EN, ES minimum) :
+  1. Rendre avec Puppeteer
+  2. HTTP status = 200
+  3. <title> contient le NOM du prestataire + role traduit + pays traduit
+  4. <meta description> unique (pas generique), dans la bonne LANGUE
+  5. <link rel="canonical"> = URL correcte avec role-pays traduit et slug
+  6. 10 hreflang presents (9 langues + x-default) ← VERIFIE BUG #5
+  7. Hreflang FR pointe vers le bon slug FR, EN vers le bon slug EN, etc.
+  8. Hreflang reciprocite : page FR declare EN, page EN declare FR
+  9. JSON-LD :
+     a. Format @graph (pas tableau) ← VERIFIE BUG #2
+     b. FAQPage avec mainEntity (6 Q&A dans la bonne langue)
+     c. BreadcrumbList avec 4 items, dernier item a "item" URL ← VERIFIE BUG #3
+     d. ProfessionalServiceSchema ou LegalService ← VERIFIE BUG #6
+     e. AggregateRating si reviewCount > 0 ← VERIFIE BUG #4
+     f. Review individuels si avis existent ← VERIFIE BUG #6
+  10. <h1> contient le nom dans la bonne langue
+  11. Body > 3000 chars (contenu substantiel)
+  12. Image profil accessible (pas 404)
+  13. data-provider-loaded = "true" (pour Puppeteer)
+  14. Pas de noindex
+  15. Profils AAA exclus (noindex ou 404)
+
+  POUR chaque paire de langues (FR↔EN, FR↔ES, EN↔ES) :
+  16. Le texte visible est DIFFERENT entre les langues (pas la meme bio FR partout)
+  17. Les FAQ sont dans des langues DIFFERENTES
+  18. Les breadcrumbs sont traduits
+```
+
+- [ ] **Minimum** : 10 profils × FR + EN (20 URLs)
+- [ ] **Ideal** : 20 profils × FR + EN + ES (60 URLs)
+- [ ] Verifier specifiquement 3 profils avec 5+ avis → extraits d'avis doivent apparaitre
+- [ ] Verifier 2 profils SANS avis → PAS d'AggregateRating dans le schema
+- [ ] Verifier 1 profil AAA → doit etre noindex ou 404
+
+### 20C — Test E2E : Articles Centre d'Aide (5 articles × 3 langues = 15 tests)
+
+```
+POUR chaque article :
+  1. HTTP 200
+  2. Title + description dans la bonne langue
+  3. Canonical correct
+  4. 10 hreflang
+  5. ArticleSchema JSON-LD (headline, author, publisher, datePublished, image)
+  6. BreadcrumbSchema
+  7. Body > 1000 chars
+```
+
+### 20D — Test E2E : Pages FAQ (3 langues = 3 tests)
+
+```
+POUR chaque langue :
+  1. HTTP 200
+  2. FAQPageSchema JSON-LD avec mainEntity
+  3. Chaque Question a un acceptedAnswer
+  4. Canonical + hreflang corrects
+```
+
+### 20E — Test E2E : Landing Pages Affilies (4 × 3 langues = 12 tests)
+
+```
+POUR devenir-chatter, devenir-blogueur, devenir-influenceur, devenir-admin-groupe × FR, EN, ES :
+  1. HTTP 200
+  2. Title + description dans la bonne langue
+  3. Canonical + hreflang
+  4. JSON-LD
+  5. Body > 2000 chars
+```
+
+### 20F — Test E2E : Sitemaps ↔ Rendu (250 URLs aleatoires)
+
+```
+1. Telecharger les 5 sitemaps (index + 4 dynamiques)
+2. Extraire 50 URLs aleatoires de CHAQUE sitemap (250 total)
+3. Pour CHAQUE URL :
+   a. GET via Puppeteer (User-Agent Googlebot)
+   b. HTTP 200 ? (pas 301, pas 404, pas 500)
+   c. Content-Length > 1000 ?
+   d. <title> present ?
+   e. <link canonical> present et = URL du sitemap ?
+   f. Si la reponse est non a b/c/d/e → c'est un bug a documenter
+
+RESULTATS :
+  - X URLs testees
+  - X reussis (200 + contenu)
+  - X echecs (documenter chaque)
+```
+
+### 20G — Test E2E : Redirections (50 regles)
+
+```
+1. Prendre 50 regles de _redirects (aleatoires + critiques)
+2. Pour CHAQUE regle :
+   a. GET l'URL source → verifie 301
+   b. Suivre la redirection → verifie que la destination est 200
+   c. Verifier que l'URL source n'est PAS dans un sitemap
+   d. Verifier pas de chaine (destination ne redirige pas elle-meme)
+```
+
+### 20H — Test E2E : Pages 404
+
+```
+1. Tester 10 URLs inexistantes :
+   /fr-fr/page-qui-nexiste-pas
+   /en-us/nonexistent-page
+   /fr-fr/avocat-france/prestataire-supprime
+   (etc.)
+2. Pour CHAQUE :
+   a. HTTP 404 retourne par Puppeteer (PAS 200)
+   b. <meta name="robots" content="noindex">
+   c. Composant NotFound.tsx rendu
+   d. Liens de navigation fonctionnels
+```
+
+### 20I — Test E2E : Temps de Rendu Puppeteer
+
+```
+Pour 20 URLs variees (statiques + profils + articles) :
+  1. Mesurer le temps de rendu total (request → response)
+  2. Objectif : < 5s pour 95% des pages
+  3. Si > 10s → probleme de performance a investiguer
+  4. Si > 30s → timeout Puppeteer, la page ne sera PAS rendue
+  5. Pages lourdes (profils avec 50+ avis) : sont-elles dans le budget temps ?
+```
+
+### 20J — Test E2E : Google Rich Results (10 pages)
+
+```
+Pour 5 profils avec avis + 3 pages FAQ + 2 articles :
+  1. Tester avec Google Rich Results Test (https://search.google.com/test/rich-results)
+  2. Entrer l'URL OU coller le HTML rendu par Puppeteer
+  3. Resultats attendus :
+     - Profils : ✅ Review snippet, ✅ FAQ, ✅ Breadcrumb, ✅ Professional Service
+     - FAQ : ✅ FAQ
+     - Articles : ✅ Article, ✅ Breadcrumb
+  4. Documenter chaque erreur ou warning
+```
+
+### 20K — Test E2E : Coherence Multilingue Complete (5 profils × 9 langues = 45 tests)
+
+```
+Pour 5 profils selectionnes (avec avis, differents pays) :
+  POUR chaque langue (9 total) :
+    1. Rendre la page
+    2. Extraire : title, meta desc, canonical, hreflang, H1, breadcrumb, FAQ
+    3. Stocker dans un tableau 5×9
+
+  VERIFIER :
+    a. Chaque title est dans la BONNE langue
+    b. Chaque meta desc est UNIQUE (pas copie-colle)
+    c. Les 9 canonicals sont DIFFERENTS (un par langue)
+    d. Les hreflang de chaque page declarent les 8 autres + x-default
+    e. La reciprocite est parfaite (A→B et B→A pour chaque paire)
+    f. Les FAQ sont dans des langues DIFFERENTES
+    g. Les breadcrumbs sont traduits (Avocats/Lawyers/Abogados/Anwalte)
+    h. Le slug dans l'URL correspond au slug en base pour cette langue
+```
+
+### SCRIPT DE TEST AUTOMATISE (Bash)
+
+```bash
+#!/bin/bash
+# test-seo-e2e.sh — Script de test bout en bout
+# Usage: ./test-seo-e2e.sh [--full]
+
+RENDER_URL="https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2"
+SITE="https://sos-expat.com"
+PASS=0
+FAIL=0
+ERRORS=""
+
+check_url() {
+  local path="$1"
+  local label="$2"
+  local url="${SITE}${path}"
+
+  # Render via Puppeteer
+  local response=$(curl -s -w "\n%{http_code}" \
+    -H "User-Agent: Googlebot" \
+    "${RENDER_URL}?path=${path}&url=${url}&bot=Googlebot" 2>/dev/null)
+
+  local http_code=$(echo "$response" | tail -1)
+  local html=$(echo "$response" | sed '$d')
+  local html_len=${#html}
+
+  # Check HTTP status
+  if [ "$http_code" != "200" ]; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n❌ ${label} : HTTP ${http_code} (attendu 200)"
+    return
+  fi
+
+  # Check content length
+  if [ $html_len -lt 1000 ]; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n❌ ${label} : Contenu trop court (${html_len} chars)"
+    return
+  fi
+
+  # Check title
+  if ! echo "$html" | grep -q '<title>'; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n❌ ${label} : <title> manquant"
+    return
+  fi
+
+  # Check canonical
+  if ! echo "$html" | grep -q 'rel="canonical"'; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n❌ ${label} : canonical manquant"
+    return
+  fi
+
+  # Check hreflang count
+  local hreflang_count=$(echo "$html" | grep -c 'hreflang=')
+  if [ $hreflang_count -lt 5 ]; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n⚠️  ${label} : seulement ${hreflang_count} hreflang (attendu 10)"
+    return
+  fi
+
+  # Check noindex (should NOT be present on public pages)
+  if echo "$html" | grep -q 'noindex'; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n❌ ${label} : noindex detecte sur page publique"
+    return
+  fi
+
+  # Check JSON-LD
+  local jsonld_count=$(echo "$html" | grep -c 'application/ld+json')
+  if [ $jsonld_count -lt 1 ]; then
+    FAIL=$((FAIL+1))
+    ERRORS="${ERRORS}\n⚠️  ${label} : pas de JSON-LD"
+    return
+  fi
+
+  PASS=$((PASS+1))
+}
+
+echo "========================================="
+echo " TEST SEO E2E — sos-expat.com"
+echo "========================================="
+echo ""
+
+# Pages statiques FR
+echo "--- Pages statiques FR ---"
+check_url "/fr-fr/" "Homepage FR"
+check_url "/fr-fr/tarifs" "Tarifs FR"
+check_url "/fr-fr/faq" "FAQ FR"
+check_url "/fr-fr/contact" "Contact FR"
+check_url "/fr-fr/centre-aide" "Centre Aide FR"
+
+# Pages statiques EN
+echo "--- Pages statiques EN ---"
+check_url "/en-us/" "Homepage EN"
+check_url "/en-us/pricing" "Pricing EN"
+check_url "/en-us/faq" "FAQ EN"
+
+# Pages statiques ES
+echo "--- Pages statiques ES ---"
+check_url "/es-es/" "Homepage ES"
+check_url "/es-es/precios" "Precios ES"
+
+# Ajouter des profils reels ici (remplacer par de vrais slugs)
+# echo "--- Profils prestataires ---"
+# check_url "/fr-fr/avocat-thailande/julien-visa-k7m2p9" "Profil Julien FR"
+# check_url "/en-us/lawyer-thailand/julien-visa-k7m2p9" "Profil Julien EN"
+
+# Test 404
+echo "--- Pages 404 ---"
+response_404=$(curl -s -o /dev/null -w "%{http_code}" \
+  -H "User-Agent: Googlebot" \
+  "${RENDER_URL}?path=/fr-fr/page-inexistante-xyz&url=${SITE}/fr-fr/page-inexistante-xyz&bot=Googlebot")
+if [ "$response_404" = "404" ]; then
+  PASS=$((PASS+1))
+else
+  FAIL=$((FAIL+1))
+  ERRORS="${ERRORS}\n❌ 404 test : HTTP ${response_404} (attendu 404)"
+fi
+
+echo ""
+echo "========================================="
+echo " RESULTATS"
+echo "========================================="
+echo " ✅ Reussis : ${PASS}"
+echo " ❌ Echecs  : ${FAIL}"
+
+if [ -n "$ERRORS" ]; then
+  echo ""
+  echo " DETAILS ERREURS :"
+  echo -e "$ERRORS"
+fi
+
+echo ""
+echo "========================================="
+```
+
+- [ ] Executer ce script en prod
+- [ ] Ajouter les URLs de profils reels (remplacer les exemples)
+- [ ] Objectif : 100% de reussite
+- [ ] Relancer apres chaque correction pour verifier la regression
+
+---
+
+## PHASE 21 — Audit ProviderProfile SEO Bugs (BUGS CONFIRMES — 2026-03-18)
+
+> **8 bugs confirmes dans le composant ProviderProfile.tsx et les fichiers associes.**
+> Ces bugs causent directement les erreurs GSC : "Page en double", "Exploree non indexee", pas d'extraits d'avis.
+
+### BUG #1 — Canonical URL Incorrect (CRITIQUE)
+
+**Fichier** : `sos/src/pages/ProviderProfile.tsx` lignes 2289-2312
+
+**Probleme** : Le canonical est construit avec un mapping statique `CANONICAL_LOCALES` qui ignore l'URL reelle.
+
+```
+Exemple :
+  URL reelle : /fr-be/avocat-belgique/jean-dupont-xyz123
+  Canonical genere : /fr-fr/avocat/jean-dupont-xyz123
+  → Le segment pays "belgique" est perdu
+  → "avocat" au lieu de "avocat-belgique" (roleCountry non extrait)
+```
+
+- [ ] Verifier que `roleCountry` est correctement extrait du path URL (ex: "avocat-belgique" depuis `/fr-fr/avocat-belgique/slug`)
+- [ ] Verifier que le canonical contient le segment role-pays complet (pas juste "avocat")
+- [ ] Verifier la coherence : canonical dans `<link>` = canonical dans JSON-LD = URL dans sitemap = URL dans hreflang
+- [ ] **FIX** : construire le canonical a partir de l'URL reelle (window.location.pathname) avec normalisation du locale seulement
+
+### BUG #2 — JSON-LD Format Invalide (CRITIQUE)
+
+**Fichier** : `sos/src/utils/snippetGenerator.ts` lignes 792-801
+
+**Probleme** : `generateJSONLD()` retourne un tableau JSON `[{FAQPage}, {BreadcrumbList}]` avec `@context` duplique dans chaque objet.
+
+```json
+// INVALIDE (actuel) :
+[
+  { "@context": "https://schema.org", "@type": "FAQPage", ... },
+  { "@context": "https://schema.org", "@type": "BreadcrumbList", ... }
+]
+
+// VALIDE (attendu) :
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "FAQPage", ... },
+    { "@type": "BreadcrumbList", ... }
+  ]
+}
+```
+
+- [ ] Verifier que le JSON-LD rendu par Puppeteer est valide (tester avec https://validator.schema.org)
+- [ ] **FIX** : utiliser `@graph` OU rendre des `<script>` separes pour chaque schema
+
+### BUG #3 — Breadcrumb : Dernier Item Sans URL (HAUTE)
+
+**Fichier** : `sos/src/utils/snippetGenerator.ts` lignes 739-743
+
+**Probleme** : Le dernier `ListItem` du breadcrumb n'a pas de propriete `"item"` (URL).
+
+```json
+{ "@type": "ListItem", "position": 4, "name": "Jean Dupont" }
+// MANQUE : "item": "https://sos-expat.com/fr-fr/avocat-france/jean-dupont-xyz123"
+```
+
+- [ ] Ajouter l'URL du profil comme `item` sur le dernier breadcrumb
+- [ ] Verifier avec Google Rich Results Test
+
+### BUG #4 — AggregateRating Absente du HTML (HAUTE)
+
+**Fichier** : `sos/src/pages/ProviderProfile.tsx` lignes 2085-2093
+
+**Probleme** : `providerStats.realReviewsCount` peut etre 0 au premier rendu (donnees pas encore chargees), meme si le profil a 14 avis.
+
+```typescript
+// Le schema est conditionne a :
+...(providerStats.realReviewsCount > 0 && { aggregateRating: { ... } })
+// Si providerStats n'est pas encore charge → condition false → pas de schema
+// Puppeteer snapshot AVANT le chargement des stats → pas d'AggregateRating
+```
+
+- [ ] Verifier que Puppeteer attend assez longtemps pour que les stats soient chargees
+- [ ] Verifier que `ratingValue` n'est jamais 0 (invalide pour Google)
+- [ ] **FIX** : utiliser les stats du profil directement (`provider.rating`, `provider.reviewCount`) au lieu d'attendre `providerStats`
+- [ ] Exclure les profils AAA du schema AggregateRating
+
+### BUG #5 — Seulement 1 Hreflang au Lieu de 10 (CRITIQUE)
+
+**Fichier** : `sos/src/multilingual-system/components/HrefLang/HreflangLinks.tsx`
+
+**Probleme** : Le composant HreflangLinks utilise `getRouteKeyFromSlug()` pour detecter la route. Pour les profils prestataires, le slug est dynamique (nom + shortId), donc la detection de route key ECHOUE → le composant ne genere qu'un seul hreflang (x-default) au lieu de 10.
+
+- [ ] Verifier combien de hreflang sont generes pour un profil reel (rendre avec Puppeteer et compter)
+- [ ] Verifier que `getRouteKeyFromSlug()` fonctionne pour les URLs de profils (pas seulement les routes statiques)
+- [ ] **FIX** : pour les profils, generer les hreflang directement a partir des `slugs` multilingues du profil Firestore (pas via la detection de route key)
+- [ ] Verifier la reciprocite : si /fr-fr/ declare un hreflang vers /en-us/, alors /en-us/ doit declarer vers /fr-fr/
+
+### BUG #6 — ProfessionalServiceSchema et ReviewSchema Non Rendus (HAUTE)
+
+**Fichiers** : `sos/src/components/seo/ProfessionalServiceSchema.tsx`, `ReviewSchema.tsx`
+
+**Probleme** : Ces composants existent mais ne sont PAS rendus dans ProviderProfile.tsx. Seul le snippet generator est utilise (FAQ + Breadcrumb), mais PAS le schema de service professionnel ni les reviews individuelles.
+
+```
+Schemas MANQUANTS dans le HTML rendu :
+  - LegalService / ProfessionalService (type du prestataire)
+  - Review (avis individuels)
+  - AggregateRating (lie au ProfessionalService, pas au WebPage)
+```
+
+- [ ] Ajouter `<ProfessionalServiceSchema>` dans le rendu de ProviderProfile
+- [ ] Ajouter `<ReviewSchema>` pour les profils avec des avis
+- [ ] Verifier que Google Rich Results Test montre les extraits d'avis apres correction
+- [ ] Verifier que `@type` est `LegalService` pour les avocats et `ProfessionalService` pour les expats
+
+### BUG #7 — SEOHead Re-Normalise le Canonical (MOYENNE)
+
+**Fichier** : `sos/src/components/layout/SEOHead.tsx` lignes 69-108
+
+**Probleme** : Quand ProviderProfile envoie un canonical absolu (`https://...`), SEOHead le retourne tel quel. MAIS si le canonical est relatif, SEOHead re-parse et re-construit avec `getLocaleString()` → potentiel conflit avec le canonical du JSON-LD.
+
+- [ ] Verifier que ProviderProfile envoie TOUJOURS un canonical absolu (commence par `https://`)
+- [ ] Verifier la coherence : `<link rel="canonical">` = `@id` dans JSON-LD = URL dans sitemap
+
+### BUG #8 — data-provider-loaded Toujours True (BASSE)
+
+**Fichier** : `sos/src/pages/ProviderProfile.tsx` ligne 2361
+
+**Probleme** : `data-provider-loaded="true"` est en dur dans le JSX. L'attribut est toujours "true" quand le div est rendu. Pas un vrai bug SEO mais Puppeteer pourrait snapshot trop tot si le selecteur est atteint avant que les donnees soient reellement pretes.
+
+- [ ] Verifier que Puppeteer ne snapshote PAS quand `data-provider-loaded="true"` est present mais les stats/reviews pas encore chargees
+- [ ] Proposer : `data-provider-loaded={!isLoading && providerStats ? "true" : "false"}`
+
+---
+
+### VERIFICATION EXTRAITS D'AVIS (Rich Snippets Reviews)
+
+**Objectif** : Les profils prestataires avec des avis doivent afficher des etoiles dans les resultats Google.
+
+**Prerequis pour les extraits d'avis** :
+1. ✅ JSON-LD valide avec `@type: LegalService` ou `ProfessionalService`
+2. ❌ `aggregateRating` present avec `ratingValue` (1-5), `reviewCount` (>0) → **BUG #4 et #6**
+3. ❌ Reviews individuelles avec `@type: Review`, `author`, `datePublished`, `reviewBody` → **BUG #6**
+4. ✅ La page est indexable (pas noindex)
+5. ❌ JSON-LD format valide (`@graph`, pas un tableau) → **BUG #2**
+
+**Apres correction des bugs #2, #4 et #6, tester avec** :
+- [ ] Google Rich Results Test (https://search.google.com/test/rich-results)
+- [ ] Schema Markup Validator (https://validator.schema.org)
+- [ ] 5 profils avec avis × 3 langues
+
+### VERIFICATION FAQ EXTRAITS
+
+**Objectif** : Les pages de profils avec FAQ generees doivent afficher des FAQ dans les SERP.
+
+**Prerequis** :
+1. ❌ JSON-LD `FAQPage` format valide (`@graph`) → **BUG #2**
+2. ✅ `mainEntity` avec des paires `Question`/`Answer`
+3. ✅ Contenu des FAQ substantiel (pas generique)
+4. ✅ Page indexable
+
+### VERIFICATION FIL D'ARIANE (Breadcrumbs)
+
+**Objectif** : Les profils doivent afficher un fil d'ariane dans les SERP.
+
+**Prerequis** :
+1. ❌ JSON-LD `BreadcrumbList` valide (`@graph`) → **BUG #2**
+2. ❌ Dernier item avec URL → **BUG #3**
+3. ✅ Hierarchie correcte (Home > Type > Pays > Nom)
+
+### VERIFICATION PROFILS AAA vs REELS
+
+- [ ] Les profils AAA (`uid.startsWith('aaa_')` ou `isAAA: true`) doivent-ils etre indexes ? → **NON**
+- [ ] Les profils AAA sont-ils exclus du sitemap ? → Verifier `sitemapProfiles` query
+- [ ] Les profils AAA ont-ils `noindex` ? → Verifier dans ProviderProfile.tsx
+- [ ] Les profils AAA generent-ils des schemas AggregateRating ? → **NE DOIVENT PAS**
+- [ ] Combien de profils AAA existent en base ? → Verifier Firestore
+
+### PLAN DE CORRECTION PRIORITISE
+
+| # | Bug | Severite | Effort | Impact GSC |
+|---|-----|----------|--------|------------|
+| 1 | Canonical incorrect | 🔴 CRITIQUE | 30 min | "Page en double sans canonical" |
+| 5 | 1 hreflang au lieu de 10 | 🔴 CRITIQUE | 1h | Hreflang non reciproques |
+| 2 | JSON-LD format invalide | 🔴 CRITIQUE | 30 min | "JSON-LD invalide" |
+| 6 | ProfessionalService/Review non rendus | 🟡 HAUTE | 1h | Pas d'extraits d'avis/etoiles |
+| 4 | AggregateRating absente | 🟡 HAUTE | 30 min | Pas d'etoiles dans SERP |
+| 3 | Breadcrumb sans URL finale | 🟡 HAUTE | 15 min | Breadcrumb invalide |
+| 7 | SEOHead re-normalise | 🟠 MOYENNE | 15 min | Conflit canonical potentiel |
+| 8 | data-provider-loaded | 🟢 BASSE | 5 min | Snapshot premature |
