@@ -1071,9 +1071,19 @@ export default function ConversationDetail() {
             bookingId: id,
             aiProcessed: booking.aiProcessed,
           });
-          // Don't create empty conversation - wait for AI trigger
-          // The booking useEffect (onSnapshot) will update booking when AI completes
-          // This useEffect will then re-run with the new conversationId
+          // AUDIT-FIX: Listen to booking changes in real-time so we detect when aiProcessed becomes true
+          // Previously this was a dead return — the user had to send a message to trigger re-render
+          const bookingRef = doc(db, "bookings", id);
+          unsubMessages = onSnapshot(bookingRef, (bookingSnap) => {
+            if (bookingSnap.exists()) {
+              const updatedBooking = bookingSnap.data();
+              if (updatedBooking.aiProcessed && updatedBooking.conversationId) {
+                console.log("[ConversationDetail] ✅ AI processed! Conversation ready:", updatedBooking.conversationId);
+                // Update booking state — this will re-trigger this useEffect with aiProcessed=true
+                setBooking({ id: bookingSnap.id, ...updatedBooking } as Booking);
+              }
+            }
+          });
           return;
         } else {
           // AI processed but no conversation found - create one as fallback
