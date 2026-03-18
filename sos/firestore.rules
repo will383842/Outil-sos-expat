@@ -3213,7 +3213,7 @@ service cloud.firestore {
     // Candidatures Partenaires - lecture/update/delete admin only
     match /partner_applications/{applicationId} {
       allow read, update, delete: if isAdmin();
-      allow create: if true;
+      allow create: if isAuthenticated();
     }
 
     match /ssr_cache/{docId} {
