@@ -2045,23 +2045,6 @@ export const twilioGatherResponse = onRequest(
             );
             logger.info(`🎤 [${gatherId}]   ✅ ${participantType} status set to "connected"`);
 
-            // If provider confirmed, mark them as BUSY
-            if (participantType === 'provider') {
-              try {
-                const session = await twilioCallManager.getCallSession(sessionId);
-                // ✅ BUG FIX: providerId is at ROOT level, fallback to metadata for backward compatibility
-                const providerId = session?.providerId || session?.metadata?.providerId;
-                if (providerId) {
-                  logger.info(`🎤 [${gatherId}]   🔶 Setting provider ${providerId} to BUSY...`);
-                  await setProviderBusy(providerId, sessionId, 'in_call');
-                  logger.info(`🎤 [${gatherId}]   ✅ Provider ${providerId} marked as BUSY`);
-                } else {
-                  logger.warn(`🎤 [${gatherId}]   ⚠️ Cannot set provider busy - providerId not found in session`);
-                }
-              } catch (busyError) {
-                logger.error(`🎤 [${gatherId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
-              }
-            }
           } catch (statusError) {
             logger.error(`🎤 [${gatherId}]   ⚠️ Failed to update status:`, statusError);
           }
@@ -2075,9 +2058,6 @@ export const twilioGatherResponse = onRequest(
         // Client starts conference, provider joins existing conference
         const startConferenceOnEnter = participantType === 'client' ? 'true' : 'false';
         // P0 FIX 2026-01-18: BOTH participants ending should end conference!
-        // BUG FIXED: Previously provider had endConferenceOnExit=false, so when provider hung up,
-        // the client stayed connected on hold music and CONTINUED TO PAY!
-        // Now BOTH participants end the conference when they exit.
         const endConferenceOnExit = 'true'; // Always true for both client and provider
 
         logger.info(`🎤 [${gatherId}]   startConferenceOnEnter: ${startConferenceOnEnter}`);
@@ -2099,9 +2079,30 @@ export const twilioGatherResponse = onRequest(
   </Dial>
 </Response>`;
 
+        // P0 FIX 2026-03-18: Send TwiML FIRST, then set provider busy in background
+        // setProviderBusy() was taking 15+ seconds (Cloud Task scheduling + Firestore transaction)
+        // which blocked the HTTP response to Twilio. Twilio would timeout/disconnect the provider
+        // because the conference TwiML arrived too late.
         res.type('text/xml');
         res.send(conferenceTwiml);
         logger.info(`🎤 [${gatherId}] END - ${participantType} joining conference\n`);
+
+        // Fire-and-forget: Set provider busy AFTER TwiML is sent
+        if (participantType === 'provider' && sessionId) {
+          (async () => {
+            try {
+              const session = await twilioCallManager.getCallSession(sessionId);
+              const providerId = session?.providerId || session?.metadata?.providerId;
+              if (providerId) {
+                logger.info(`🎤 [${gatherId}]   🔶 Setting provider ${providerId} to BUSY (async, after TwiML sent)...`);
+                await setProviderBusy(providerId, sessionId, 'in_call');
+                logger.info(`🎤 [${gatherId}]   ✅ Provider ${providerId} marked as BUSY`);
+              }
+            } catch (busyError) {
+              logger.error(`🎤 [${gatherId}]   ⚠️ Failed to set provider busy (non-blocking):`, busyError);
+            }
+          })();
+        }
 
       } else {
         // No confirmation received - treat as no_answer for retry
