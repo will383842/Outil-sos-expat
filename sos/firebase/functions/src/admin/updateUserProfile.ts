@@ -35,8 +35,16 @@ interface AdminUpdateUserProfileInput {
   phoneCountryCode?: string;
   country?: string;
   currentCountry?: string;
+  city?: string;
   languages?: string[];
   adminNotes?: string;
+  // Lawyer-specific
+  barId?: string;
+  barCountry?: string;
+  specialties?: string[];
+  // Expat-specific
+  originCountry?: string;
+  helpDomains?: string[];
 }
 
 export const adminUpdateUserProfile = onCall(
@@ -62,7 +70,11 @@ export const adminUpdateUserProfile = onCall(
 
       const allowedFields: (keyof AdminUpdateUserProfileInput)[] = [
         "firstName", "lastName", "email", "phone", "phoneCountryCode",
-        "country", "currentCountry", "languages", "adminNotes",
+        "country", "currentCountry", "city", "languages", "adminNotes",
+        // Lawyer-specific
+        "barId", "barCountry", "specialties",
+        // Expat-specific
+        "originCountry", "helpDomains",
       ];
 
       const updates: Record<string, unknown> = {};
@@ -98,7 +110,15 @@ export const adminUpdateUserProfile = onCall(
           if (updates.phone) profileUpdates.phone = updates.phone;
           if (updates.phoneCountryCode) profileUpdates.phoneCountryCode = updates.phoneCountryCode;
           if (updates.country) profileUpdates.country = updates.country;
+          if (updates.city) profileUpdates.city = updates.city;
           if (updates.languages) profileUpdates.languages = updates.languages;
+          // Lawyer-specific
+          if (updates.barId) profileUpdates.barId = updates.barId;
+          if (updates.barCountry) profileUpdates.barCountry = updates.barCountry;
+          if (updates.specialties) profileUpdates.specialties = updates.specialties;
+          // Expat-specific
+          if (updates.originCountry) profileUpdates.originCountry = updates.originCountry;
+          if (updates.helpDomains) profileUpdates.helpDomains = updates.helpDomains;
           if (Object.keys(profileUpdates).length > 0) {
             profileUpdates.updatedAt = Timestamp.now();
             await profileRef.update(profileUpdates);
