@@ -348,11 +348,14 @@ export const aiChat = onRequest(
 
       // Save user message
       // FIX: Use 'createdAt' instead of 'timestamp' - frontend queries by createdAt
+      // FIX 2026-03-18: Mark as processed=true immediately to prevent aiOnProviderMessage
+      // trigger from generating a DUPLICATE response. aiChat handles the AI call itself.
       await convoRef.collection("messages").add({
         role: "user",
         source: "user",
         content: safeMessage,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        processed: true,
       });
 
       // Call AI with enriched context
