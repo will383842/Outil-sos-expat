@@ -8,7 +8,8 @@
  */
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } from "../lib/secrets";
+import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET } from "../lib/secrets";
+import { forwardEventToEngine } from "../telegram/forwardToEngine";
 
 export const onPayoutRetryQueued = onDocumentCreated(
   {
@@ -16,7 +17,7 @@ export const onPayoutRetryQueued = onDocumentCreated(
     region: "europe-west3",
     memory: "512MiB",
     timeoutSeconds: 120,
-    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET],
+    secrets: [PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, TELEGRAM_ENGINE_URL_SECRET, TELEGRAM_ENGINE_API_KEY_SECRET],
   },
   async (event) => {
     const data = event.data?.data();
@@ -80,6 +81,19 @@ export const onPayoutRetryQueued = onDocumentCreated(
         amount,
         currency,
         error: errorMessage,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Also log to paypal_payouts_failed to trigger Telegram notification
+      await admin.firestore().collection("paypal_payouts_failed").add({
+        providerId,
+        providerPayPalEmail: providerEmail,
+        amount: typeof amount === "number" ? amount : parseInt(amount, 10),
+        currency: currency || "EUR",
+        sessionId: callSessionId || orderId,
+        error: `[RETRY FAILED] ${errorMessage}`,
+        source: "payout_retry_queue",
+        originalOrderId: orderId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     }

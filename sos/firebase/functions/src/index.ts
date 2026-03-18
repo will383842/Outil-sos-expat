@@ -3219,6 +3219,7 @@ export { telegramOnSecurityAlert } from './telegram/triggers/onSecurityAlert';
 export { telegramOnNegativeReview } from './telegram/triggers/onNegativeReview';
 export { telegramOnWithdrawalRequest } from './telegram/triggers/onWithdrawalRequest';
 export { telegramOnNewCaptainApplication } from './telegram/triggers/onNewCaptainApplication';
+export { telegramOnPayoutFailed } from './telegram/triggers/onPayoutFailed';
 export { telegramDailyReport } from './telegram/scheduled/dailyReport';
 
 // Admin Inbox Telegram notifications (via Engine — user_feedback & partner_applications)
