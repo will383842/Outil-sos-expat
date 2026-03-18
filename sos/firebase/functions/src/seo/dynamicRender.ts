@@ -251,20 +251,23 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
       timeout: RENDER_TIMEOUT_MS,
     });
 
-    // Wait for React to finish rendering - try multiple selectors
+    // Wait for React to finish rendering - two-phase approach:
+    // Phase 1: Wait for app mount (fast, confirms React is running)
+    // Phase 2: Wait for page-specific content (provider data, 404 state, or static page)
     try {
-      // Wait for either the profile content, not-found state, or a ready marker
+      // Phase 1: Wait for React app to mount
+      await page.waitForSelector('[data-react-snap-ready="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS });
+
+      // Phase 2: Wait for actual page content (provider profile, 404, or static page content)
+      // This is critical because data-react-snap-ready fires BEFORE async data loads
       await Promise.race([
-        page.waitForSelector('[data-react-snap-ready="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
         page.waitForSelector('[data-provider-loaded="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
         page.waitForSelector('[data-provider-not-found="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+        page.waitForSelector('[data-page-not-found="true"]', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
         page.waitForSelector('.provider-profile-name', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
-        page.waitForSelector('h1', { timeout: WAIT_FOR_READY_TIMEOUT_MS }),
+        // For static pages (no async data), resolve after 1.5s
+        new Promise(resolve => setTimeout(resolve, 1500)),
       ]);
-
-      // After initial selector resolves, give React Router 500ms to settle
-      // (data-react-snap-ready fires before route-level components like NotFound mount)
-      await new Promise(resolve => setTimeout(resolve, 500));
     } catch {
       // If no selector appears, wait longer for dynamic content
       logger.info('No ready selector found, waiting for dynamic content...');
