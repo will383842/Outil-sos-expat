@@ -160,7 +160,7 @@ export const aiChat = onRequest(
     cors: [/sos-expat.*$/i, /localhost(:\d+)?$/i, /ulixai.*$/i],
     // Note: MODERATION_OPENAI_KEY est déjà inclus dans AI_SECRETS (même secret)
     secrets: [...AI_SECRETS, SOS_PLATFORM_API_KEY],
-    timeoutSeconds: 60,
+    timeoutSeconds: 90, // AUDIT-FIX P1: 60s was too short for worst-case AI retries (25s*2 + backoff = ~76s)
     // NOTE: minInstances désactivé pour respecter quota CPU région (cold start ~3-10s)
     minInstances: 0,
     maxInstances: 20,

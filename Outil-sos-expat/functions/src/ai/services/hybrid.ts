@@ -15,7 +15,7 @@ import type { HybridResponse, LLMMessage, ProviderType, AIRequestContext, Confid
 import { ClaudeProvider } from "../providers/claude";
 import { OpenAIProvider } from "../providers/openai";
 import { PerplexityProvider, isFactualQuestion } from "../providers/perplexity";
-import { getSystemPrompt } from "../prompts";
+import { getSystemPrompt, buildPromptForProvider } from "../prompts";
 import { withExponentialBackoff } from "./utils";
 
 // =============================================================================
@@ -546,7 +546,8 @@ class CircuitBreaker {
   private failures = 0;
   private lastFailureTime = 0;
   private state: CircuitState = "CLOSED";
-  private readonly failureThreshold = 5;
+  // AUDIT-FIX P1-d: Aligned threshold with retry.ts (was 5, retry.ts uses 3)
+  private readonly failureThreshold = 3;
   private readonly resetTimeoutMs = 60000; // 1 minute
 
   constructor(private readonly name: string) {}
@@ -622,7 +623,11 @@ export class HybridAIService {
     onThinking?: ThinkingCallback
   ): Promise<HybridResponse> {
     const userMessage = this.getLastUserMessage(messages);
-    const systemPrompt = getSystemPrompt(providerType);
+    // AUDIT-FIX P1: Use buildPromptForProvider when context is available
+    // to inject booking context (client name, country, subject) into the system prompt
+    const systemPrompt = context
+      ? buildPromptForProvider(providerType, context)
+      : getSystemPrompt(providerType);
     let stepOrder = 0;
 
     // Helper pour envoyer un log de réflexion
@@ -751,7 +756,8 @@ export class HybridAIService {
         searchPerformed,
         llmUsed,
         fallbackUsed: response.fallbackUsed || false,
-        confidence  // 🆕 Ajout du score de confiance
+        confidence,  // 🆕 Ajout du score de confiance
+        usage: response.usage, // AUDIT-FIX P1: Propagate token usage for cost tracking
       };
     } catch (error) {
       logger.error("[HybridAI] Tous les LLMs ont échoué", { error });
@@ -917,7 +923,7 @@ CRITICAL RULES:
     searchContext: string,
     citations: string[] | undefined,
     preferClaude: boolean
-  ): Promise<{ content: string; model: string; provider: "claude" | "gpt"; fallbackUsed: boolean }> {
+  ): Promise<{ content: string; model: string; provider: "claude" | "gpt"; fallbackUsed: boolean; usage?: { inputTokens: number; outputTokens: number } }> {
     // Enrichir le prompt avec le contexte de recherche ET les citations
     let enrichedPrompt = systemPrompt;
     if (searchContext) {
@@ -969,7 +975,8 @@ CRITICAL RULES:
           content: result.content,
           model: result.model,
           provider: result.provider as "claude" | "gpt",
-          fallbackUsed: false
+          fallbackUsed: false,
+          usage: result.usage, // AUDIT-FIX P1: Propagate token usage for cost tracking
         };
       } catch (error) {
         // ÉCHEC: Enregistrer dans le circuit breaker
@@ -1004,7 +1011,8 @@ CRITICAL RULES:
           content: result.content,
           model: result.model,
           provider: result.provider as "claude" | "gpt",
-          fallbackUsed: true
+          fallbackUsed: true,
+          usage: result.usage, // AUDIT-FIX P1: Propagate token usage for cost tracking
         };
       } catch (error) {
         // ÉCHEC: Enregistrer dans le circuit breaker

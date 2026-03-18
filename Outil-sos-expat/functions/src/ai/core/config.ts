@@ -24,7 +24,7 @@ export const AI_CONFIG = {
   // Limites conversation (conversations de 30+ minutes)
   MAX_HISTORY_MESSAGES: 100,  // 100 messages récents pour conversations longues
   ALWAYS_KEEP_FIRST_MESSAGES: 3,  // Toujours garder les 3 premiers messages (contexte booking)
-  SUMMARY_THRESHOLD: 80,  // Créer un résumé après 80 messages
+  SUMMARY_THRESHOLD: 80,  // AUDIT-NOTE: Summary is consumed if it exists in Firestore, but no auto-generation is implemented yet. Manual summaries can be written by admin.
 
   // Quota par défaut (appels IA par mois par provider)
   DEFAULT_QUOTA_LIMIT: 100,

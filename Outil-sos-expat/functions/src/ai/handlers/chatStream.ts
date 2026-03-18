@@ -521,8 +521,32 @@ export const aiChatStream = onRequest(
       let provider = "";
 
       try {
-        // Try OpenAI first (faster for streaming)
-        if (openaiKey) {
+        // AUDIT-FIX P1-f: Respect provider routing (lawyer→Claude, expat→GPT)
+        // instead of always trying OpenAI first
+        const preferClaude = providerType === "lawyer" && claudeKey;
+        const primaryKey = preferClaude ? claudeKey : openaiKey;
+        const fallbackKey = preferClaude ? openaiKey : claudeKey;
+
+        if (preferClaude && claudeKey) {
+          // Lawyer → Claude first
+          model = AI_CONFIG.CLAUDE.MODEL;
+          provider = "claude";
+
+          for await (const chunk of streamClaude(
+            formattedMessages,
+            systemPrompt,
+            claudeKey
+          )) {
+            if (clientDisconnected) break;
+
+            fullResponse += chunk;
+            sendSSE(res, {
+              event: "chunk",
+              data: { text: chunk },
+            });
+          }
+        } else if (openaiKey) {
+          // Expat → GPT first (or fallback if Claude key missing)
           model = AI_CONFIG.OPENAI.MODEL;
           provider = "gpt";
 
@@ -536,7 +560,7 @@ export const aiChatStream = onRequest(
             });
           }
         } else if (claudeKey) {
-          // Fallback to Claude
+          // Fallback to Claude (if GPT key missing)
           model = AI_CONFIG.CLAUDE.MODEL;
           provider = "claude";
 

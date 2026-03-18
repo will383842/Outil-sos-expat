@@ -189,6 +189,11 @@ export interface HybridResponse {
   llmUsed?: "claude" | "gpt" | "claude+perplexity" | "gpt+perplexity";
   // 🆕 Informations de confiance
   confidence?: ConfidenceInfo;
+  // AUDIT-FIX P1: Token usage for cost tracking
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+  };
 }
 
 // =============================================================================

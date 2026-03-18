@@ -7,14 +7,34 @@ import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./multiDashboard/sosFirest
 // CLEANUP: Anciennes conversations (180 jours)
 // =============================================================================
 
-export const cleanupOldConversations = onSchedule("every 24 hours", async () => {
-  const db = admin.firestore();
-  const cutoff = Date.now() - 1000 * 60 * 60 * 24 * 180; // 180 days
-  const snap = await db.collection("conversations").where("updatedAt", "<", cutoff).get();
-  const batch = db.batch();
-  snap.forEach(doc => batch.delete(doc.ref));
-  await batch.commit();
-});
+export const cleanupOldConversations = onSchedule(
+  {
+    schedule: "every 24 hours",
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 300,
+  },
+  async () => {
+    const db = admin.firestore();
+    // AUDIT-FIX P1: Use Firestore Timestamp instead of raw number for comparison
+    const cutoffDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 180); // 180 days
+    const cutoff = admin.firestore.Timestamp.fromDate(cutoffDate);
+    const snap = await db.collection("conversations")
+      .where("updatedAt", "<", cutoff)
+      .limit(450) // AUDIT-FIX P2: Stay under Firestore batch limit of 500
+      .get();
+
+    if (snap.empty) {
+      logger.info("[cleanupOldConversations] No old conversations to clean up");
+      return;
+    }
+
+    const batch = db.batch();
+    snap.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    logger.info("[cleanupOldConversations] Cleaned up conversations", { count: snap.size });
+  }
+);
 
 // =============================================================================
 // AUDIT HEBDOMADAIRE: Flags forcedAIAccess (P0.3)

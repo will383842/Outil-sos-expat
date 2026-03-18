@@ -23,12 +23,10 @@ export class ClaudeProvider extends BaseLLMProvider {
   constructor(apiKey: string) {
     super();
     this.apiKey = apiKey;
-    // DEBUG: Log API key info at construction
+    // AUDIT-FIX: Log only validity, never key prefix (P1 security)
     logger.info("[Claude] Provider initialisé", {
       apiKeyLength: apiKey?.length || 0,
-      apiKeyPrefix: apiKey?.substring(0, 15) || "EMPTY",
-      apiKeyHasWhitespace: apiKey !== apiKey?.trim(),
-      apiKeyEndsWithCRLF: apiKey?.endsWith("\r\n") || apiKey?.endsWith("\n"),
+      apiKeyValid: apiKey?.startsWith("sk-ant-") || false,
     });
   }
 

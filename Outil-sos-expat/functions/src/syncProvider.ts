@@ -121,10 +121,34 @@ export const syncProvider = onRequest(
       return;
     }
 
+    // AUDIT-FIX P1: Validate payload with basic checks (SyncProviderSchema in validation.ts
+    // is too strict for the flexible payload SOS sends, so we validate critical fields manually)
     const data = req.body as SyncProviderPayload;
 
     if (!data.id) {
       res.status(400).json({ ok: false, error: "Missing provider id" });
+      return;
+    }
+
+    // Validate types of critical fields to prevent injection
+    if (typeof data.id !== "string" && typeof data.id !== "number") {
+      res.status(400).json({ ok: false, error: "Invalid provider id type" });
+      return;
+    }
+    if (data.email && typeof data.email !== "string") {
+      res.status(400).json({ ok: false, error: "Invalid email type" });
+      return;
+    }
+    if (data.name && typeof data.name !== "string") {
+      res.status(400).json({ ok: false, error: "Invalid name type" });
+      return;
+    }
+    if (data.type && !["lawyer", "expat", "expert"].includes(data.type)) {
+      res.status(400).json({ ok: false, error: "Invalid provider type" });
+      return;
+    }
+    if (data.forcedAIAccess !== undefined && typeof data.forcedAIAccess !== "boolean") {
+      res.status(400).json({ ok: false, error: "Invalid forcedAIAccess type" });
       return;
     }
 
@@ -316,6 +340,12 @@ export const syncProvidersBulk = onRequest(
 
     for (const provider of providers) {
       if (!provider.id) continue;
+
+      // AUDIT-FIX P1-a: Validate critical field types in bulk sync
+      if (typeof provider.id !== "string" && typeof provider.id !== "number") continue;
+      if (provider.email && typeof provider.email !== "string") continue;
+      if (provider.name && typeof provider.name !== "string") continue;
+      if (provider.type && !["lawyer", "expat", "expert"].includes(provider.type)) continue;
 
       const providerRef = db.collection("providers").doc(String(provider.id));
       const providerData: ProviderData = {

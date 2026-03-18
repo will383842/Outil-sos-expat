@@ -59,6 +59,11 @@ export const createBookingFromRequest = onCall<
   async (request) => {
     logger.info("[createBookingFromRequest] Function invoked");
 
+    // AUDIT-FIX P1-g: Require Firebase Auth (onCall provides auth automatically)
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+
     const { bookingRequestId, providerId } = request.data || {};
 
     if (!bookingRequestId || !providerId) {

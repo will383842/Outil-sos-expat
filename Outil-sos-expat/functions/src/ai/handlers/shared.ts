@@ -34,26 +34,11 @@ export function createService(): ReturnType<typeof createHybridService> {
   const claudeKey = ANTHROPIC_API_KEY.value().trim();
   const perplexityKey = PERPLEXITY_API_KEY.value().trim();
 
-  // DEBUG: Log API key loading info
-  console.log("[createService] DEBUG: Chargement des clés API", {
-    openai: {
-      rawLength: OPENAI_API_KEY.value().length,
-      trimmedLength: openaiKey.length,
-      prefix: openaiKey.substring(0, 10),
-      valid: openaiKey.startsWith("sk-"),
-    },
-    claude: {
-      rawLength: ANTHROPIC_API_KEY.value().length,
-      trimmedLength: claudeKey.length,
-      prefix: claudeKey.substring(0, 15),
-      valid: claudeKey.startsWith("sk-ant-"),
-    },
-    perplexity: {
-      rawLength: PERPLEXITY_API_KEY.value().length,
-      trimmedLength: perplexityKey.length,
-      prefix: perplexityKey.substring(0, 10),
-      valid: perplexityKey.startsWith("pplx-"),
-    },
+  // AUDIT-FIX: Log only validity status, never key prefixes (P1 security)
+  console.log("[createService] API keys loaded", {
+    openai: { valid: openaiKey.startsWith("sk-"), length: openaiKey.length },
+    claude: { valid: claudeKey.startsWith("sk-ant-"), length: claudeKey.length },
+    perplexity: { valid: perplexityKey.startsWith("pplx-"), length: perplexityKey.length },
   });
 
   const config: HybridServiceConfig = {

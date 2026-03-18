@@ -309,7 +309,11 @@ export const ingestBooking = onRequest(
           // Infos de base
           if (payload.providerName) providerData.name = payload.providerName;
           if (payload.providerEmail) providerData.email = payload.providerEmail;
-          if (payload.providerType) providerData.type = payload.providerType;
+          if (payload.providerType) {
+            providerData.type = payload.providerType;
+            // AUDIT-FIX P1-e: Also write providerType for getProviderType() compatibility
+            (providerData as Record<string, unknown>).providerType = payload.providerType;
+          }
           if (payload.providerCountry) providerData.country = payload.providerCountry;
 
           // P0 FIX: Infos d'accès IA - ces champs sont critiques pour aiOnBookingCreated

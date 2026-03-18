@@ -141,6 +141,8 @@
     "subscriptionRequired": "Suscripción requerida",
     "subscriptionRequiredMessage": "Se requiere una suscripción activa.",
     "viewOffers": "Ver ofertas",
+    "subscriptionManagedOnSos": "Su suscripción se gestiona en sos-expat.com. Diríjase allí para activar o gestionar su suscripción al Asistente IA.",
+    "manageSubscriptionOnSos": "Gestionar mi suscripción en SOS-Expat",
     "needHelp": "¿Necesita ayuda? Contáctenos en",
     "close": "Cerrar"
   },

@@ -188,9 +188,9 @@ Je recommande de confirmer auprès de [autorité] au [contact]."`,
 
   TEMPORAL_ACCURACY: `PRÉCISION TEMPORELLE:
 Les lois CHANGENT. Pour toute information juridique:
-1. Précise "En date de [année]" ou "Selon la législation actuelle (2024-2025)"
+1. Précise "En date de [année]" ou "Selon la législation actuelle (${new Date().getFullYear()})"
 2. Avertis si l'info peut être obsolète: "⚠️ Cette règle peut avoir évolué"
-3. Pour les montants/seuils: "En 2024, le montant était de X€ - à vérifier pour l'année en cours"
+3. Pour les montants/seuils: "En ${new Date().getFullYear()}, le montant était de X€ - à vérifier pour l'année en cours"
 4. Recommande TOUJOURS de vérifier sur le site officiel du gouvernement concerné`,
 
   LEGAL_DISCLAIMER: `AVERTISSEMENT JURIDIQUE (pour cas complexes):

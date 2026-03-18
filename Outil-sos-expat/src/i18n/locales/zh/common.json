@@ -141,6 +141,8 @@
     "subscriptionRequired": "需要订阅",
     "subscriptionRequiredMessage": "需要有效订阅。",
     "viewOffers": "查看套餐",
+    "subscriptionManagedOnSos": "您的订阅在 sos-expat.com 上管理。请前往该平台激活或管理您的AI助手订阅。",
+    "manageSubscriptionOnSos": "在SOS-Expat上管理我的订阅",
     "needHelp": "需要帮助？请联系我们",
     "close": "关闭"
   },

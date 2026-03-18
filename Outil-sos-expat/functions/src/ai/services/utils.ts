@@ -105,6 +105,17 @@ export async function checkUserSubscription(userId: string): Promise<boolean> {
     if (userData?.role === "admin") return true;
     if (userData?.role === "superadmin") return true;
 
+    // AUDIT-FIX P1-b: Also check forcedAIAccess and freeTrialUntil
+    // These were only checked in checkProviderAIStatus (providers collection)
+    // but not here (users collection), causing false denials for trial/forced users
+    if (userData?.forcedAIAccess === true) return true;
+    if (userData?.freeTrialUntil) {
+      const trialEnd = userData.freeTrialUntil.toDate
+        ? userData.freeTrialUntil.toDate()
+        : new Date(userData.freeTrialUntil);
+      if (trialEnd > new Date()) return true;
+    }
+
     return false;
   } catch {
     return false;
@@ -882,7 +893,10 @@ export async function getProviderType(providerId: string): Promise<ProviderType>
     }
 
     const data = providerDoc.data();
-    return data?.providerType === "lawyer" ? "lawyer" : "expat";
+    // AUDIT-FIX P1-e: ingestBooking writes "type" field, but this function read "providerType"
+    // Check both fields to handle both formats
+    const pType = data?.providerType || data?.type;
+    return pType === "lawyer" ? "lawyer" : "expat";
   } catch {
     return "expat";
   }

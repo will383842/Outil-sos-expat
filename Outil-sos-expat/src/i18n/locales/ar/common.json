@@ -141,6 +141,8 @@
     "subscriptionRequired": "الاشتراك مطلوب",
     "subscriptionRequiredMessage": "مطلوب اشتراك فعال.",
     "viewOffers": "عرض العروض",
+    "subscriptionManagedOnSos": "يتم إدارة اشتراكك على sos-expat.com. يرجى التوجه إلى هناك لتفعيل أو إدارة اشتراكك في المساعد الذكي.",
+    "manageSubscriptionOnSos": "إدارة اشتراكي على SOS-Expat",
     "needHelp": "تحتاج مساعدة؟ تواصل معنا على",
     "close": "إغلاق"
   },

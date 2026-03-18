@@ -116,12 +116,13 @@ export const triggerAiFromBookingRequest = onCall<
       hasProviderId: !!providerId,
     });
 
-    // Validate access: either session token OR clientId+providerId for booking creation
+    // AUDIT-FIX P1-h: Require either Firebase Auth OR session token (clientId+providerId alone is too weak)
     const hasAdminAccess = sessionToken && typeof sessionToken === "string" && sessionToken.startsWith("mds_");
-    const hasBookingAccess = clientId && providerId;
+    const hasFirebaseAuth = !!request.auth;
+    const hasBookingAccess = hasFirebaseAuth && clientId && providerId;
 
     if (!hasAdminAccess && !hasBookingAccess) {
-      throw new HttpsError("unauthenticated", "Invalid authentication: provide session token or clientId+providerId");
+      throw new HttpsError("unauthenticated", "Invalid authentication: provide session token or Firebase auth with clientId+providerId");
     }
 
     if (!bookingRequestId) {

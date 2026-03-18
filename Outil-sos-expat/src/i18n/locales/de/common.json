@@ -141,6 +141,8 @@
     "subscriptionRequired": "Abonnement erforderlich",
     "subscriptionRequiredMessage": "Ein aktives Abonnement ist erforderlich.",
     "viewOffers": "Angebote ansehen",
+    "subscriptionManagedOnSos": "Ihr Abonnement wird auf sos-expat.com verwaltet. Bitte gehen Sie dorthin, um Ihr KI-Assistenten-Abonnement zu aktivieren oder zu verwalten.",
+    "manageSubscriptionOnSos": "Mein Abonnement auf SOS-Expat verwalten",
     "needHelp": "Brauchen Sie Hilfe? Kontaktieren Sie uns unter",
     "close": "Schließen"
   },

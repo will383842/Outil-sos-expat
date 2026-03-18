@@ -141,6 +141,8 @@
     "subscriptionRequired": "Требуется подписка",
     "subscriptionRequiredMessage": "Требуется активная подписка.",
     "viewOffers": "Посмотреть предложения",
+    "subscriptionManagedOnSos": "Ваша подписка управляется на sos-expat.com. Перейдите туда, чтобы активировать или управлять подпиской на ИИ-ассистент.",
+    "manageSubscriptionOnSos": "Управлять подпиской на SOS-Expat",
     "needHelp": "Нужна помощь? Свяжитесь с нами по адресу",
     "close": "Закрыть"
   },

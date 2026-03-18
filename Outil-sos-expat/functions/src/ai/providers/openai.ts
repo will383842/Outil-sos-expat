@@ -23,11 +23,10 @@ export class OpenAIProvider extends BaseLLMProvider {
   constructor(apiKey: string) {
     super();
     this.apiKey = apiKey;
-    // DEBUG: Log API key info at construction
+    // AUDIT-FIX: Log only validity, never key prefix (P1 security)
     logger.info("[OpenAI] Provider initialisé", {
       apiKeyLength: apiKey?.length || 0,
-      apiKeyPrefix: apiKey?.substring(0, 10) || "EMPTY",
-      apiKeyHasWhitespace: apiKey !== apiKey?.trim(),
+      apiKeyValid: apiKey?.startsWith("sk-") || false,
     });
   }
 
