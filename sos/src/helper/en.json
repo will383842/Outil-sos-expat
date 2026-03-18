@@ -4719,7 +4719,7 @@
   "admin.toolbox.emailEngineCold.description": "Cold email infrastructure: IP warmup management, PowerMTA orchestration, bounce processing, blacklist monitoring and deliverability alerts.",
   "admin.toolbox.iaTool": "Provider AI Tool",
   "admin.toolbox.iaTool.description": "AI assistant for providers: call management support, suggestions and service optimization.",
-  "admin.toolbox.mailwizzBackend": "MailWizz - Administration",
+  "admin.toolbox.mailwizzBackend": "Administration Email transactionnels SOS Expat",
   "admin.toolbox.mailwizzBackend.description": "MailWizz server configuration: delivery servers, domains, API keys, system settings and user management.",
   "admin.toolbox.mailwizzFrontend": "Mailwizz - Email transactionnels SOS Expat",
   "admin.toolbox.mailwizzFrontend.description": "Email sending interface: campaigns, contact lists, templates, deliverability stats and autoresponders.",
