@@ -74,7 +74,7 @@ export const testCAPIConnection = onRequest(
           details: {
             eventId: '',
             tokenConfigured: false,
-            pixelId: '2204016713738311',
+            pixelId: '1494539620587456',
             error: 'Le secret META_CAPI_TOKEN n\'est pas configure dans Firebase',
           },
         };
@@ -120,7 +120,7 @@ export const testCAPIConnection = onRequest(
             eventsReceived: result.eventsReceived,
             fbtraceId: result.fbtraceId,
             tokenConfigured: true,
-            pixelId: '2204016713738311',
+            pixelId: '1494539620587456',
           },
         };
 
@@ -135,7 +135,7 @@ export const testCAPIConnection = onRequest(
             error: result.error,
             fbtraceId: result.fbtraceId,
             tokenConfigured: true,
-            pixelId: '2204016713738311',
+            pixelId: '1494539620587456',
           },
         };
 
@@ -153,7 +153,7 @@ export const testCAPIConnection = onRequest(
           eventId: '',
           error: errorMessage,
           tokenConfigured: false,
-          pixelId: '2204016713738311',
+          pixelId: '1494539620587456',
         },
       };
 

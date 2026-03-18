@@ -462,7 +462,7 @@ const AdminMetaAnalytics: React.FC = () => {
 
               {/* Link to Events Manager */}
               <a
-                href="https://business.facebook.com/events_manager2/pixel/2204016713738311/overview"
+                href="https://business.facebook.com/events_manager2/pixel/1494539620587456/overview"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"

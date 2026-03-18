@@ -24,7 +24,7 @@ import { META_CAPI_TOKEN } from "./lib/secrets";
 // ============================================================================
 
 /** Meta Pixel ID */
-const META_PIXEL_ID = "2204016713738311";
+const META_PIXEL_ID = "1494539620587456";
 
 /** Meta Conversions API endpoint */
 const META_CAPI_ENDPOINT = `https://graph.facebook.com/v18.0/${META_PIXEL_ID}/events`;

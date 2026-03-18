@@ -1,6 +1,6 @@
 // src/utils/metaPixel.ts
 // Utilitaire Meta Pixel complet pour SPA React
-// Pixel ID: 2204016713738311
+// Pixel ID: 1494539620587456
 // Respects GDPR: uses fbq consent grant/revoke + geo-consent from index.html
 
 import { generateSharedEventId } from './sharedEventId';
@@ -26,7 +26,7 @@ declare global {
   }
 }
 
-export const PIXEL_ID = '2204016713738311';
+export const PIXEL_ID = '1494539620587456';
 
 // ============================================================================
 // Utilitaires de validation et normalisation
