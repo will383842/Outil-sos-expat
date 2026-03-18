@@ -676,9 +676,9 @@ const ProviderProfile: React.FC = () => {
         value = value?.[k];
       }
       
-      return typeof value === 'string' ? value : key;
+      return typeof value === 'string' ? value : '';
     } catch {
-      return key;
+      return '';
     }
   }, [preferredLangKey]);
 
