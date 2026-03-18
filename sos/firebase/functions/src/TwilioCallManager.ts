@@ -27,6 +27,7 @@ import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from "
 import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from "./blogger/services/bloggerCommissionService";
 import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from "./groupAdmin/services/groupAdminCommissionService";
 import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from "./affiliate/services/commissionService";
+import { cancelUnifiedCommissionsForCallSession } from "./unified/handlers/handleCallRefunded";
 
 // =============================
 // Typage fort du JSON de prompts
@@ -2342,9 +2343,10 @@ export class TwilioCallManager {
             cancelBloggerCommissions(sessionId, cancelReason, "system_refund"),
             cancelGroupAdminCommissions(sessionId, cancelReason),
             cancelAffiliateCommissions(sessionId, cancelReason, "system_refund"),
+            cancelUnifiedCommissionsForCallSession(sessionId, cancelReason),
           ]);
 
-          const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+          const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate', 'unified'] as const;
           let totalCancelled = 0;
           for (let i = 0; i < commissionResults.length; i++) {
             const r = commissionResults[i];

@@ -293,6 +293,7 @@ export class DisputeManager {
           const { cancelBloggerCommissionsForCallSession: cancelBlogger } = await import("./blogger/services/bloggerCommissionService");
           const { cancelCommissionsForCallSession: cancelGroupAdmin } = await import("./groupAdmin/services/groupAdminCommissionService");
           const { cancelCommissionsForCallSession: cancelAffiliate } = await import("./affiliate/services/commissionService");
+          const { cancelUnifiedCommissionsForCallSession } = await import("./unified/handlers/handleCallRefunded");
 
           const cancelReason = `Chargeback lost: dispute ${dispute.id}`;
           const results = await Promise.allSettled([
@@ -301,9 +302,10 @@ export class DisputeManager {
             cancelBlogger(existingData.callSessionId, cancelReason, "chargeback"),
             cancelGroupAdmin(existingData.callSessionId, cancelReason),
             cancelAffiliate(existingData.callSessionId, cancelReason, "chargeback"),
+            cancelUnifiedCommissionsForCallSession(existingData.callSessionId, cancelReason),
           ]);
 
-          const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate"];
+          const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate", "unified"];
           let totalCancelled = 0;
           for (let i = 0; i < results.length; i++) {
             const r = results[i];

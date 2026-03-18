@@ -13,12 +13,13 @@ import { PayPalManager } from './PayPalManager';
 import { stripeCircuitBreaker, CircuitBreakerError } from './lib/circuitBreaker';
 // FEE CALCULATION: Frais de traitement déduits du prestataire
 import { calculateEstimatedFees, roundAmount } from './services/feeCalculationService';
-// P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems)
+// P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (6 systems)
 import { cancelCommissionsForCallSession as cancelChatterCommissions } from './chatter/services/chatterCommissionService';
 import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from './influencer/services/influencerCommissionService';
 import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from './blogger/services/bloggerCommissionService';
 import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from './groupAdmin/services/groupAdminCommissionService';
 import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from './affiliate/services/commissionService';
+import { cancelUnifiedCommissionsForCallSession } from './unified/handlers/handleCallRefunded';
 
 /* ===================================================================
  * Utils
@@ -1893,9 +1894,10 @@ export class StripeManager {
           cancelBloggerCommissions(callSessionId, cancelReason, 'system_refund'),
           cancelGroupAdminCommissions(callSessionId, cancelReason),
           cancelAffiliateCommissions(callSessionId, cancelReason, 'system_refund'),
+          cancelUnifiedCommissionsForCallSession(callSessionId, cancelReason),
         ]);
 
-        const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+        const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate', 'unified'] as const;
         let totalCancelled = 0;
         const summary: Record<string, number | string> = { callSessionId };
 

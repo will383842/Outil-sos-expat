@@ -106,6 +106,9 @@ export const paymentOnPaymentStatusChanged = onDocumentUpdated(
       const { cancelCommissionsForCallSession: cancelAffiliate } = await import(
         "../../affiliate/services/commissionService"
       );
+      const { cancelUnifiedCommissionsForCallSession } = await import(
+        "../../unified/handlers/handleCallRefunded"
+      );
 
       const cancelReason = `Payment ${newStatus}: ${paymentId}`;
       const results = await Promise.allSettled([
@@ -114,9 +117,10 @@ export const paymentOnPaymentStatusChanged = onDocumentUpdated(
         cancelBlogger(callSessionId, cancelReason, "system_payment_trigger"),
         cancelGroupAdmin(callSessionId, cancelReason), // No cancelledBy param
         cancelAffiliate(callSessionId, cancelReason, "system_payment_trigger"),
+        cancelUnifiedCommissionsForCallSession(callSessionId, cancelReason),
       ]);
 
-      const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate"] as const;
+      const labels = ["chatter", "influencer", "blogger", "groupAdmin", "affiliate", "unified"] as const;
       let totalCancelled = 0;
       const errors: string[] = [];
 
@@ -124,8 +128,9 @@ export const paymentOnPaymentStatusChanged = onDocumentUpdated(
         const r = results[i];
         if (r.status === "fulfilled") {
           totalCancelled += r.value.cancelledCount;
-          if (r.value.errors?.length) {
-            errors.push(...r.value.errors.map((e: string) => `${labels[i]}: ${e}`));
+          const valueErrors = (r.value as { errors?: string[] }).errors;
+          if (valueErrors?.length) {
+            errors.push(...valueErrors.map((e: string) => `${labels[i]}: ${e}`));
           }
         } else {
           const errorMsg = `${labels[i]}: ${r.reason?.message || r.reason}`;

@@ -31,12 +31,13 @@ import { META_CAPI_TOKEN, trackCAPIPurchase, UserData } from "./metaConversionsA
 import { sendPaymentNotifications, ENCRYPTION_KEY, OUTIL_SYNC_API_KEY } from "./notifications/paymentNotifications";
 // P0 FIX: Import encryptPhoneNumber for Twilio call compatibility (phones must be encrypted in call_sessions)
 import { encryptPhoneNumber } from "./utils/encryption";
-// P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (5 systems)
+// P0 FIX 2026-02-12: Cancel ALL affiliate commissions on refund (6 systems)
 import { cancelCommissionsForCallSession as cancelChatterCommissions } from "./chatter/services/chatterCommissionService";
 import { cancelCommissionsForCallSession as cancelInfluencerCommissions } from "./influencer/services/influencerCommissionService";
 import { cancelBloggerCommissionsForCallSession as cancelBloggerCommissions } from "./blogger/services/bloggerCommissionService";
 import { cancelCommissionsForCallSession as cancelGroupAdminCommissions } from "./groupAdmin/services/groupAdminCommissionService";
 import { cancelCommissionsForCallSession as cancelAffiliateCommissions } from "./affiliate/services/commissionService";
+import { cancelUnifiedCommissionsForCallSession } from "./unified/handlers/handleCallRefunded";
 // FEE CALCULATION: Frais de traitement déduits du prestataire
 import { calculateEstimatedFees } from "./services/feeCalculationService";
 // P1-4 FIX 2026-02-27: Circuit breaker for PayPal API resilience (parity with Stripe)
@@ -2071,9 +2072,10 @@ export class PayPalManager {
             cancelBloggerCommissions(callSessionId, cancelReason, "system_refund"),
             cancelGroupAdminCommissions(callSessionId, cancelReason),
             cancelAffiliateCommissions(callSessionId, cancelReason, "system_refund"),
+            cancelUnifiedCommissionsForCallSession(callSessionId, cancelReason),
           ]);
 
-          const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+          const labels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate', 'unified'] as const;
           let totalCancelled = 0;
           const summary: Record<string, number | string> = { callSessionId };
 
@@ -4148,9 +4150,10 @@ export const paypalWebhook = onRequest(
                         cancelBloggerCommissions(reversedCallSessionId, cancelReason, "system_refund"),
                         cancelGroupAdminCommissions(reversedCallSessionId, cancelReason),
                         cancelAffiliateCommissions(reversedCallSessionId, cancelReason, "system_refund"),
+                        cancelUnifiedCommissionsForCallSession(reversedCallSessionId, cancelReason),
                       ]);
 
-                      const commLabels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate'] as const;
+                      const commLabels = ['chatter', 'influencer', 'blogger', 'groupAdmin', 'affiliate', 'unified'] as const;
                       let commTotalCancelled = 0;
                       for (let i = 0; i < commissionResults.length; i++) {
                         const r = commissionResults[i];

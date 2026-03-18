@@ -284,6 +284,24 @@ async function checkSignupFunnel(): Promise<void> {
       );
     }
 
+    // Vérifier si conversion très basse (sous le seuil min)
+    if (conversionRate > 0 && conversionRate < CONFIG.THRESHOLDS.SIGNUP_CONVERSION_MIN && counts.page_view_signup >= 20) {
+      await createFunctionalAlert(
+        'warning',
+        'signup_funnel',
+        'Taux de conversion inscription dangereusement bas',
+        `Seulement ${conversionRate.toFixed(1)}% de conversion (seuil: ${CONFIG.THRESHOLDS.SIGNUP_CONVERSION_MIN}%). ${actualSignups} inscriptions pour ${counts.page_view_signup} visiteurs.`,
+        'Le funnel d\'inscription fuit. Perte potentielle de la majorité des visiteurs intéressés.',
+        'Analyser le parcours d\'inscription : temps de chargement, erreurs JS console, UX mobile, validation formulaires.',
+        {
+          conversionRate,
+          actualSignups,
+          pageViews: counts.page_view_signup,
+          threshold: CONFIG.THRESHOLDS.SIGNUP_CONVERSION_MIN
+        }
+      );
+    }
+
     // Vérifier si 0 inscriptions en 24h (si normalement il y en a)
     if (actualSignups === 0 && counts.page_view_signup > 10) {
       await createFunctionalAlert(
@@ -368,7 +386,7 @@ async function checkBookingFunnel(): Promise<void> {
         .count()
         .get();
 
-      if (searchViews.data().count > 20) {
+      if (searchViews.data().count > 20) { // Min traffic threshold: 20 searches before alerting
         await createFunctionalAlert(
           'emergency',
           'booking_funnel',
@@ -467,7 +485,8 @@ async function checkFormErrors(): Promise<void> {
     // Alerter pour les formulaires avec taux d'erreur élevé
     for (const [formName, data] of Object.entries(errorsByForm)) {
       const submissions = submissionsByForm[formName] || data.errors; // Si pas de tracking, utiliser errors comme base
-      const errorRate = (data.errors / (submissions + data.errors)) * 100;
+      const denominator = submissions + data.errors;
+      const errorRate = denominator > 0 ? (data.errors / denominator) * 100 : 0;
 
       if (errorRate > CONFIG.THRESHOLDS.FORM_ERROR_RATE_PERCENT && data.errors >= 5) {
         const topErrors = Object.entries(data.errorTypes)

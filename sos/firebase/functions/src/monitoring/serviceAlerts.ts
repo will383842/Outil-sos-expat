@@ -269,14 +269,21 @@ async function fetchStripeBalance(): Promise<BalanceResult> {
 
     const balance = await stripe.balance.retrieve();
 
-    // Get EUR available balance (primary currency)
+    // Sum ALL available currencies, converting to EUR equivalent
+    // Primary: EUR. Fallback: sum all currencies at face value (conservative)
+    let availableBalance = 0;
+    for (const b of balance.available) {
+      availableBalance += b.amount / 100;
+    }
+
+    // If EUR exists, prefer reporting in EUR; otherwise report total
     const eurBalance = balance.available.find((b) => b.currency === 'eur');
-    const availableBalance = eurBalance ? eurBalance.amount / 100 : 0;
+    const reportedBalance = eurBalance ? eurBalance.amount / 100 : availableBalance;
 
     return {
       service: 'stripe',
-      balance: availableBalance,
-      currency: 'EUR',
+      balance: reportedBalance,
+      currency: eurBalance ? 'EUR' : (balance.available[0]?.currency?.toUpperCase() || 'EUR'),
       success: true,
     };
   } catch (error) {
@@ -318,8 +325,8 @@ async function fetchOpenAIBalance(): Promise<BalanceResult> {
     });
 
     if (!response.ok) {
-      // Some accounts may not have access to this endpoint
-      // Fall back to subscription endpoint
+      // Some accounts may not have access to credit_grants endpoint
+      // Fall back to subscription + usage endpoints to calculate remaining balance
       const subResponse = await fetch('https://api.openai.com/v1/dashboard/billing/subscription', {
         method: 'GET',
         headers: {
@@ -333,10 +340,34 @@ async function fetchOpenAIBalance(): Promise<BalanceResult> {
       }
 
       const subData = await subResponse.json() as { hard_limit_usd: number; soft_limit_usd: number };
-      // Return soft limit as a proxy for available balance
+      const monthlyLimit = subData.hard_limit_usd || subData.soft_limit_usd || 0;
+
+      // Fetch actual usage for current month to calculate remaining balance
+      const now = new Date();
+      const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate() + 1).padStart(2, '0')}`;
+
+      const usageResponse = await fetch(
+        `https://api.openai.com/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      let usedAmount = 0;
+      if (usageResponse.ok) {
+        const usageData = await usageResponse.json() as { total_usage: number };
+        usedAmount = (usageData.total_usage || 0) / 100; // Convert cents to dollars
+      }
+
+      // Return actual remaining balance (limit - used), not just the limit
       return {
         service: 'openai',
-        balance: subData.soft_limit_usd || 0,
+        balance: Math.max(0, monthlyLimit - usedAmount),
         currency: 'USD',
         success: true,
       };
