@@ -28,10 +28,13 @@ import {
   STRIPE_SECRET_KEY_LIVE,
   STRIPE_SECRET_KEY_TEST,
   OPENAI_API_KEY,
+  TELEGRAM_ENGINE_URL_SECRET,
+  TELEGRAM_ENGINE_API_KEY_SECRET,
 } from '../lib/secrets';
 import { getTwilioAccountSid, getTwilioAuthToken } from '../lib/twilio';
 import { getStripeSecretKey } from '../lib/stripe';
 import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
+import { forwardEventToEngine } from '../telegram/forwardToEngine';
 
 // ============================================================================
 // TYPES
@@ -734,6 +737,17 @@ async function checkServiceAndAlert(service: ServiceType): Promise<CheckResult> 
         await sendAlertEmail(alert, emails);
         await createAdminNotification(alert);
 
+        // Forward to Telegram Engine for instant admin notification
+        const emoji = alertLevel === 'critical' ? '🔴' : '🟠';
+        await forwardEventToEngine('service-balance-alert', undefined, {
+          service,
+          balance: balanceResult.balance,
+          threshold: result.threshold,
+          currency: result.currency,
+          alertLevel,
+          message: `${emoji} *${alertLevel.toUpperCase()}* — ${service.toUpperCase()} balance low!\n\nBalance: ${result.currency} ${balanceResult.balance.toFixed(2)}\nThreshold: ${result.currency} ${result.threshold}\n\n${service === 'twilio' && balanceResult.balance < 20 ? '💀 ACTION IMMEDIATE: Recharger Twilio sinon ZERO appels!' : service === 'stripe' && balanceResult.balance < 100 ? '💰 ACTION: Verifier le solde Stripe pour les payouts' : `⚠️ ACTION: Recharger ${service}`}`,
+        });
+
         logger.info(`[ServiceAlerts] Alert created for ${service}`, {
           balance: balanceResult.balance,
           threshold: result.threshold,
@@ -774,12 +788,13 @@ async function checkServiceAndAlert(service: ServiceType): Promise<CheckResult> 
 // ============================================================================
 
 /**
- * Scheduled function that checks all service balances 1×/jour à 8h
- * 2025-01-16: Réduit à quotidien pour économies maximales (low traffic)
+ * Scheduled function that checks all service balances every 4 hours
+ * 2026-03-18: Increased from 1×/day to 6×/day — critical for business continuity
+ * If Twilio balance hits $0 = zero revenue. Cannot afford 23h detection delay.
  */
 export const checkServiceBalances = onSchedule(
   {
-    schedule: '0 8 * * *', // 8h Paris tous les jours
+    schedule: '0 2,6,10,14,18,22 * * *', // Every 4h (2h,6h,10h,14h,18h,22h Paris)
     timeZone: 'Europe/Paris',
     region: 'europe-west3',
     memory: '256MiB',
@@ -791,6 +806,8 @@ export const checkServiceBalances = onSchedule(
       STRIPE_SECRET_KEY_LIVE,
       STRIPE_SECRET_KEY_TEST,
       OPENAI_API_KEY,
+      TELEGRAM_ENGINE_URL_SECRET,
+      TELEGRAM_ENGINE_API_KEY_SECRET,
     ],
   },
   async () => {

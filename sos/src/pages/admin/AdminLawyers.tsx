@@ -235,6 +235,7 @@ const AdminLawyers: React.FC = () => {
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
   const [selectedLawyerIds, setSelectedLawyerIds] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
   const actionMenuRef = useRef<HTMLDivElement>(null);
 
   // Edit profile
@@ -278,6 +279,7 @@ const AdminLawyers: React.FC = () => {
     const handler = (e: MouseEvent) => {
       if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
         setOpenActionMenuId(null);
+        setMenuPosition(null);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -588,8 +590,16 @@ const AdminLawyers: React.FC = () => {
         payload.suspendedAt = serverTimestamp();
       }
       await updateDoc(doc(db, 'users', id), payload);
-      setLawyers((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
-      toast.success('Statut mis a jour');
+      if (status === 'suspended') {
+        await updateDoc(doc(db, 'sos_profiles', id), { isVisible: false, isVisibleOnMap: false, isOnline: false, updatedAt: serverTimestamp() });
+        setLawyers((prev) => prev.map((l) => l.id === id ? { ...l, status, isVisible: false, isVisibleOnMap: false, isOnline: false } : l));
+      } else if (status === 'active') {
+        await updateDoc(doc(db, 'sos_profiles', id), { isVisible: true, isVisibleOnMap: true, updatedAt: serverTimestamp() });
+        setLawyers((prev) => prev.map((l) => l.id === id ? { ...l, status, isVisible: true, isVisibleOnMap: true } : l));
+      } else {
+        setLawyers((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
+      }
+      toast.success(status === 'suspended' ? 'Avocat suspendu et masque' : 'Statut mis a jour');
     } catch (e) {
       console.error('setStatus error', e);
       toast.error('Erreur lors de la mise a jour');
@@ -1067,14 +1077,35 @@ const AdminLawyers: React.FC = () => {
                       <td className="px-3 py-3">
                         <div className="relative" ref={openActionMenuId === l.id ? actionMenuRef : undefined}>
                           <button
-                            onClick={() => setOpenActionMenuId(openActionMenuId === l.id ? null : l.id)}
+                            onClick={(ev) => {
+                              if (openActionMenuId === l.id) {
+                                setOpenActionMenuId(null);
+                                setMenuPosition(null);
+                              } else {
+                                const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+                                const openUp = rect.bottom + 400 > window.innerHeight;
+                                setMenuPosition({
+                                  top: openUp ? rect.top : rect.bottom + 4,
+                                  left: Math.max(8, rect.right - 208),
+                                  openUp,
+                                });
+                                setOpenActionMenuId(l.id);
+                              }
+                            }}
                             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                           >
                             <MoreHorizontal size={16} />
                           </button>
 
-                          {openActionMenuId === l.id && (
-                            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 animate-in fade-in slide-in-from-top-1">
+                          {openActionMenuId === l.id && menuPosition && (
+                            <div
+                              className="fixed w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[9999] max-h-[70vh] overflow-y-auto"
+                              style={{
+                                top: menuPosition.openUp ? undefined : menuPosition.top,
+                                bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : undefined,
+                                left: menuPosition.left,
+                              }}
+                            >
                               <button onClick={() => handleViewDashboard(l)}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                 <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
@@ -1542,6 +1573,10 @@ const AdminLawyers: React.FC = () => {
                         status: 'suspended', suspendedReason: msg,
                         suspendedAt: serverTimestamp(), updatedAt: serverTimestamp(),
                       });
+                      batch.update(doc(db, 'sos_profiles', id), {
+                        isVisible: false, isVisibleOnMap: false, isOnline: false,
+                        updatedAt: serverTimestamp(),
+                      });
                     });
                   } else if (reasonOpen?.type === 'delete') {
                     ids.forEach((id) => { batch.delete(doc(db, 'users', id)); });
@@ -1566,7 +1601,7 @@ const AdminLawyers: React.FC = () => {
                   if (reasonOpen?.type === 'delete') {
                     setLawyers((prev) => prev.filter((l) => !ids.includes(l.id)));
                   } else if (reasonOpen?.type === 'suspend') {
-                    setLawyers((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, status: 'suspended' as UserStatus } : l));
+                    setLawyers((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, status: 'suspended' as UserStatus, isVisible: false, isVisibleOnMap: false, isOnline: false } : l));
                   } else if (reasonOpen?.type === 'reject') {
                     setLawyers((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, validationStatus: 'rejected' as ValidationStatus, isValidated: false } : l));
                   } else if (reasonOpen?.type === 'kycRequest') {

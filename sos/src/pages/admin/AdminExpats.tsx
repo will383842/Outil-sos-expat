@@ -245,6 +245,7 @@ const AdminExpats: React.FC = () => {
   const [originCountries, setOriginCountries] = useState<string[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
   const actionMenuRef = useRef<HTMLDivElement>(null);
 
   // Selected expat for modals
@@ -290,6 +291,7 @@ const AdminExpats: React.FC = () => {
     const handler = (e: MouseEvent) => {
       if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
         setOpenActionMenuId(null);
+        setMenuPosition(null);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -466,10 +468,19 @@ const AdminExpats: React.FC = () => {
     setOpenActionMenuId(null);
     try {
       await updateDoc(doc(db, 'users', id), { status, updatedAt: serverTimestamp() });
-      setExpats((prev) => prev.map((e) => e.id === id ? { ...e, status } : e));
-      toast.success('Statut mis \u00E0 jour');
+      if (status === 'suspended') {
+        await updateDoc(doc(db, 'sos_profiles', id), { isVisible: false, isVisibleOnMap: false, isOnline: false, updatedAt: serverTimestamp() });
+        setExpats((prev) => prev.map((e) => e.id === id ? { ...e, status, isVisible: false, isVisibleOnMap: false, isOnline: false } : e));
+      } else if (status === 'active') {
+        await updateDoc(doc(db, 'sos_profiles', id), { isVisible: true, isVisibleOnMap: true, updatedAt: serverTimestamp() });
+        setExpats((prev) => prev.map((e) => e.id === id ? { ...e, status, isVisible: true, isVisibleOnMap: true } : e));
+      } else {
+        setExpats((prev) => prev.map((e) => e.id === id ? { ...e, status } : e));
+      }
+      toast.success(status === 'suspended' ? 'Prestataire suspendu et masqu\u00E9' : 'Statut mis \u00E0 jour');
     } catch (err) {
       toast.error('Erreur changement statut');
+      logError({ origin: 'frontend', error: `Error changing status: ${err instanceof Error ? err.message : String(err)}`, context: { userId: id } });
     }
   };
 
@@ -1099,14 +1110,35 @@ const AdminExpats: React.FC = () => {
                       <td className="px-3 py-3">
                         <div className="relative" ref={openActionMenuId === e.id ? actionMenuRef : undefined}>
                           <button
-                            onClick={() => setOpenActionMenuId(openActionMenuId === e.id ? null : e.id)}
+                            onClick={(ev) => {
+                              if (openActionMenuId === e.id) {
+                                setOpenActionMenuId(null);
+                                setMenuPosition(null);
+                              } else {
+                                const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+                                const openUp = rect.bottom + 400 > window.innerHeight;
+                                setMenuPosition({
+                                  top: openUp ? rect.top : rect.bottom + 4,
+                                  left: Math.max(8, rect.right - 208),
+                                  openUp,
+                                });
+                                setOpenActionMenuId(e.id);
+                              }
+                            }}
                             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                           >
                             <MoreHorizontal size={16} />
                           </button>
 
-                          {openActionMenuId === e.id && (
-                            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 animate-in fade-in slide-in-from-top-1 max-h-[70vh] overflow-y-auto">
+                          {openActionMenuId === e.id && menuPosition && (
+                            <div
+                              className="fixed w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[9999] max-h-[70vh] overflow-y-auto"
+                              style={{
+                                top: menuPosition.openUp ? undefined : menuPosition.top,
+                                bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : undefined,
+                                left: menuPosition.left,
+                              }}
+                            >
                               <button onClick={() => handleViewDashboard(e)}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                 <ExternalLink size={14} className="text-cyan-600" /> Voir le dashboard
