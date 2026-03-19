@@ -921,6 +921,111 @@ async function handleRequest(request, env, ctx) {
     });
   }
 
+  // =========================================================================
+  // SOS HOLIDAYS DOMAIN HANDLING
+  // sos-holidays.com serves ONLY the home page (vacationer landing page).
+  // All other paths redirect to sos-expat.com. Bots get proper SEO content.
+  // =========================================================================
+  const isHolidaysDomain = url.hostname.includes('sos-holidays');
+
+  if (isHolidaysDomain) {
+    // Serve holidays-specific robots.txt
+    if (pathname === '/robots.txt') {
+      return new Response(
+        [
+          '# Robots.txt for SOS-Holidays.com',
+          '# https://sos-holidays.com',
+          '',
+          'User-agent: *',
+          'Allow: /',
+          'Allow: /fr-fr',
+          'Allow: /en-us',
+          'Allow: /es-es',
+          'Allow: /de-de',
+          'Allow: /pt-pt',
+          'Allow: /ru-ru',
+          'Allow: /zh-cn',
+          'Allow: /ar-sa',
+          'Allow: /hi-in',
+          'Disallow: /dashboard',
+          'Disallow: /admin',
+          'Disallow: /api/',
+          'Disallow: /profile/edit',
+          'Disallow: /call-checkout',
+          '',
+          'Sitemap: https://sos-holidays.com/sitemap.xml',
+        ].join('\n'),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600',
+            'X-Worker-Active': 'true',
+          },
+        }
+      );
+    }
+
+    // Serve holidays-specific sitemap (home page in 9 locales only)
+    if (pathname === '/sitemap.xml') {
+      const locales = ['fr-fr', 'en-us', 'es-es', 'de-de', 'pt-pt', 'ru-ru', 'zh-cn', 'ar-sa', 'hi-in'];
+      const today = new Date().toISOString().split('T')[0];
+      const urls = locales.map(locale => {
+        const hreflangs = locales.map(alt => {
+          // Use language-only codes (fr, en, zh) — consistent with HreflangLinks.tsx
+          // Google recommends language-only for language targeting (not country-specific content)
+          const lang = alt.split('-')[0];
+          const hreflangCode = lang === 'zh' ? 'zh-Hans' : lang;
+          return `      <xhtml:link rel="alternate" hreflang="${hreflangCode}" href="https://sos-holidays.com/${alt}" />`;
+        }).join('\n');
+        return [
+          '  <url>',
+          `    <loc>https://sos-holidays.com/${locale}</loc>`,
+          `    <lastmod>${today}</lastmod>`,
+          '    <changefreq>weekly</changefreq>',
+          '    <priority>1.0</priority>',
+          hreflangs,
+          `      <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-holidays.com/fr-fr" />`,
+          '  </url>',
+        ].join('\n');
+      }).join('\n');
+
+      return new Response(
+        [
+          '<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+          urls,
+          '</urlset>',
+        ].join('\n'),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600',
+            'X-Worker-Active': 'true',
+          },
+        }
+      );
+    }
+
+    // Only the home page lives on sos-holidays.com
+    // All other paths → 301 redirect to sos-expat.com (prevents duplicate content)
+    const isHomePage = /^(\/?|\/[a-z]{2}(-[a-z]{2})?\/?)?$/i.test(pathname);
+    if (!isHomePage) {
+      const redirectUrl = `https://sos-expat.com${pathname}${url.search}`;
+      console.log(`[WORKER] Holidays non-home redirect: ${pathname} -> ${redirectUrl}`);
+      return new Response(null, {
+        status: 301,
+        headers: {
+          'Location': redirectUrl,
+          'X-Worker-Active': 'true',
+          'X-Worker-Redirect': 'holidays-to-expat',
+          'Cache-Control': 'public, max-age=31536000',
+        },
+      });
+    }
+  }
+
   // Handle multi-dashboard specially - fetch index.html without following redirects
   // This is needed because the origin server redirects /multi-dashboard to /
   // but we want the SPA to handle routing client-side

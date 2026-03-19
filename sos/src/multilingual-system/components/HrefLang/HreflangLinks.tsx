@@ -35,8 +35,13 @@ const HreflangLinks: React.FC<Props> = ({ pathname }) => {
   const normalizedPath = pathname && pathname.startsWith("/") ? pathname : `/${pathname || ""}`;
 
   // Prefer window.location.origin when available; fallback to canonical domain without trailing slash
+  // SSR: detect holidays variant via ?_holidays=1 param (injected by Puppeteer)
   const windowBaseDomain = typeof window !== "undefined" && window.location ? window.location.origin : undefined;
-  const baseDomain = windowBaseDomain || "https://sos-expat.com";
+  const isHolidaysSSR = typeof window !== "undefined" && window.location
+    ? new URLSearchParams(window.location.search).get("_holidays") === "1"
+    : false;
+  const baseDomain = windowBaseDomain
+    || (isHolidaysSSR ? "https://sos-holidays.com" : "https://sos-expat.com");
 
   // Split into segments to detect a leading locale segment like 'fr-fr' or 'fr'
   const segments = normalizedPath.split("/").filter(Boolean);

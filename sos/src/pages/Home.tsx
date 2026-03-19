@@ -47,11 +47,12 @@ import { formatCurrency } from "../utils/localeFormatters";
 import { getTranslatedRouteSlug, getLocaleString } from "../multilingual-system/core/routing/localeRoutes";
 import { useLocalePath } from "../multilingual-system";
 import { getHreflangCode } from "../multilingual-system/components/HrefLang/HrefLangConstants";
+import { isHolidaysDomain, SOS_EXPAT_BASE_URL } from "../utils/holidaysDetection";
 
 /* ================================
    CONSTANTES SEO (NE PAS TRADUIRE)
    ================================ */
-const SEO_CONSTANTS = {
+const SEO_EXPAT = {
   SITE_NAME: "SOS Expat",
   BASE_URL: "https://sos-expat.com",
   LOGO_URL: "https://sos-expat.com/sos-logo.webp",
@@ -63,6 +64,22 @@ const SEO_CONSTANTS = {
     twitter: "https://twitter.com/sosexpat",
   },
 } as const;
+
+const SEO_HOLIDAYS = {
+  SITE_NAME: "SOS Holidays",
+  BASE_URL: "https://sos-holidays.com",
+  LOGO_URL: "https://sos-holidays.com/sos-logo.webp",
+  OG_IMAGE_URL: "https://sos-holidays.com/og-image.png",
+  TWITTER_HANDLE: "@sosexpat",
+  SOCIAL: {
+    facebook: "https://facebook.com/sosexpat",
+    linkedin: "https://linkedin.com/company/sosexpat",
+    twitter: "https://twitter.com/sosexpat",
+  },
+} as const;
+
+const getSEOConstants = () => isHolidaysDomain() ? SEO_HOLIDAYS : SEO_EXPAT;
+
 
 const OG_LOCALES: Record<string, string> = {
   fr: "fr_FR",
@@ -212,11 +229,17 @@ function CarouselSkeleton() {
 /* ================================
    Slider d'avis - Version horizontale avec scroll
    ================================ */
-function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
+function ReviewsSlider({ theme = "dark", holidaysMode = false, resolveFn }: { theme?: "dark" | "light"; holidaysMode?: boolean; resolveFn?: (path: string) => string }) {
   const intl = useIntl();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === "dark";
+
+  /** Wrapper: <a> for holidays (with locale prefix via resolveFn), <Link> for expat */
+  const RLink: React.FC<{ to: string; children: React.ReactNode; className?: string; "aria-label"?: string }> = ({ to, children, ...props }) =>
+    holidaysMode
+      ? <a href={resolveFn ? resolveFn(to) : `${SOS_EXPAT_BASE_URL}${to}`} {...props}>{children}</a>
+      : <Link to={to} {...props}>{children}</Link>;
 
   const labelType = (t: TypeEchange): string => {
     return t === "lawyer"
@@ -290,7 +313,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
                 WebkitTouchCallout: 'none',
               }}
             >
-              <Link
+              <RLink
                 to="/testimonials"
                 className={
                   isDark
@@ -376,7 +399,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
                     "{reviewComment}"
                   </blockquote>
                 </div>
-              </Link>
+              </RLink>
             </article>
           );
         })}
@@ -417,7 +440,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
       </div>
 
       <div className="text-center mt-6 sm:mt-8">
-        <Link
+        <RLink
           to="/testimonials"
           className={`inline-flex items-center gap-2 ${isDark ? "text-blue-300 hover:text-blue-200" : "text-blue-600 hover:text-blue-700"} font-semibold transition-colors`}
         >
@@ -425,7 +448,7 @@ function ReviewsSlider({ theme = "dark" }: { theme?: "dark" | "light" }) {
             <FormattedMessage id="reviews.viewAll" />
           </span>
           <ChevronRightIcon className="w-5 h-5" aria-hidden="true" />
-        </Link>
+        </RLink>
       </div>
 
       <style>{`
@@ -449,6 +472,55 @@ const OptimizedHomePage: React.FC = () => {
   const { language } = useApp();
   const getLocalePath = useLocalePath();
 
+  // ======= Holidays variant detection =======
+  const isHolidays = useMemo(() => isHolidaysDomain(), []);
+  const seoConst = useMemo(() => getSEOConstants(), []);
+
+  /** Translation key helper — resolves holidays.X if it exists, otherwise X */
+  const tk = useCallback(
+    (key: string): string => {
+      if (isHolidays) {
+        const hKey = `holidays.${key}`;
+        if (intl.messages[hKey]) return hKey;
+      }
+      return key;
+    },
+    [isHolidays, intl.messages]
+  );
+
+  /** Link helper — returns absolute URL to sos-expat.com for holidays, internal for expat */
+  const resolveLink = useCallback(
+    (path: string): string => {
+      const localePath = getLocalePath(path);
+      if (isHolidays) return `${SOS_EXPAT_BASE_URL}${localePath}`;
+      return localePath;
+    },
+    [isHolidays, getLocalePath]
+  );
+
+  /** Renders either a react-router Link or an <a> tag depending on variant */
+  const ActionLink: React.FC<
+    Omit<React.ComponentProps<typeof Link>, "to"> & { to: string }
+  > = useMemo(
+    () =>
+      // eslint-disable-next-line react/display-name
+      ({ to, children, ...props }) => {
+        if (isHolidays) {
+          return (
+            <a href={to} {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}>
+              {children}
+            </a>
+          );
+        }
+        return (
+          <Link to={to} {...props}>
+            {children}
+          </Link>
+        );
+      },
+    [isHolidays]
+  );
+
   // ======= Aggregate Rating for Google Stars =======
   const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
 
@@ -456,12 +528,12 @@ const OptimizedHomePage: React.FC = () => {
   // Use default locale (fr-fr, en-us, etc.) for canonical to avoid duplicate content issues
   const defaultLocale = getLocaleString(language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
   const currentPath = "/";
-  const canonicalUrl = `${SEO_CONSTANTS.BASE_URL}/${defaultLocale}${currentPath === "/" ? "" : currentPath}`;
+  const canonicalUrl = `${seoConst.BASE_URL}/${defaultLocale}${currentPath === "/" ? "" : currentPath}`;
 
   const stats: Stat[] = useMemo(() => [
     {
-      valueKey: "stats.value.expatriates",
-      labelKey: "stats.label.expatriates",
+      valueKey: isHolidays ? "holidays.stats.value.travelers" : "stats.value.expatriates",
+      labelKey: isHolidays ? "holidays.stats.label.travelers" : "stats.label.expatriates",
       icon: <Users className="w-8 h-8" aria-hidden="true" />,
       color: "from-blue-500 to-cyan-500",
     },
@@ -477,78 +549,77 @@ const OptimizedHomePage: React.FC = () => {
       icon: <Clock className="w-8 h-8" aria-hidden="true" />,
       color: "from-orange-500 to-red-500",
     },
-  ], []);
+  ], [isHolidays]);
 
   // ======= SEO Meta Data - Clés de traduction UNIQUEMENT pour le contenu =======
   const seoData = useMemo(() => ({
-    title: intl.formatMessage({ id: "seo.home.title" }),
-    description: intl.formatMessage({ id: "seo.home.description" }),
-    keywords: intl.formatMessage({ id: "seo.home.keywords" }),
-    ogTitle: intl.formatMessage({ id: "seo.home.ogTitle" }),
-    ogDescription: intl.formatMessage({ id: "seo.home.ogDescription" }),
-    twitterTitle: intl.formatMessage({ id: "seo.home.twitterTitle" }),
-    twitterDescription: intl.formatMessage({ id: "seo.home.twitterDescription" }),
-  }), [intl]);
+    title: intl.formatMessage({ id: tk("seo.home.title") }),
+    description: intl.formatMessage({ id: tk("seo.home.description") }),
+    keywords: intl.formatMessage({ id: tk("seo.home.keywords") }),
+    ogTitle: intl.formatMessage({ id: tk("seo.home.ogTitle") }),
+    ogDescription: intl.formatMessage({ id: tk("seo.home.ogDescription") }),
+    twitterTitle: intl.formatMessage({ id: tk("seo.home.twitterTitle") }),
+    twitterDescription: intl.formatMessage({ id: tk("seo.home.twitterDescription") }),
+  }), [intl, tk]);
 
   // ======= JSON-LD Schema.org - URLs CONSTANTES =======
   const jsonLdOrganization = useMemo(() => ({
     "@context": "https://schema.org",
     "@type": "Organization",
-    "@id": `${SEO_CONSTANTS.BASE_URL}/#organization`,
-    "name": SEO_CONSTANTS.SITE_NAME,
-    "url": SEO_CONSTANTS.BASE_URL,
+    "@id": `${seoConst.BASE_URL}/#organization`,
+    "name": seoConst.SITE_NAME,
+    "url": seoConst.BASE_URL,
     "logo": {
       "@type": "ImageObject",
-      "url": SEO_CONSTANTS.LOGO_URL,
+      "url": seoConst.LOGO_URL,
       "width": 512,
       "height": 512,
     },
-    "description": intl.formatMessage({ id: "seo.home.description" }),
-    "sameAs": Object.values(SEO_CONSTANTS.SOCIAL),
+    "description": intl.formatMessage({ id: tk("seo.home.description") }),
+    "sameAs": Object.values(seoConst.SOCIAL),
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": intl.formatMessage({ id: "schema.contactType" }),
       "availableLanguage": ["French", "English", "Spanish", "German", "Portuguese", "Russian", "Chinese", "Arabic", "Hindi"],
       "areaServed": "Worldwide",
     },
-    "knowsAbout": [
-      "Expatriation",
-      "Legal assistance",
-      "Immigration",
-      "Relocation",
-      "International law",
-    ],
+    "knowsAbout": isHolidays
+      ? ["Travel assistance", "Legal assistance", "Holiday emergencies", "Travel insurance", "International law"]
+      : ["Expatriation", "Legal assistance", "Immigration", "Relocation", "International law"],
     // NOTE: aggregateRating removed - Google doesn't support it on Organization type
     // Only LocalBusiness subtypes support aggregateRating for Rich Results
-  }), [intl]);
+  }), [intl, isHolidays, seoConst, tk]);
 
   const jsonLdWebSite = useMemo(() => ({
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "@id": `${SEO_CONSTANTS.BASE_URL}/#website`,
-    "name": SEO_CONSTANTS.SITE_NAME,
-    "url": SEO_CONSTANTS.BASE_URL,
+    "@id": `${seoConst.BASE_URL}/#website`,
+    "name": seoConst.SITE_NAME,
+    "url": seoConst.BASE_URL,
     "inLanguage": language,
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": `${SEO_CONSTANTS.BASE_URL}/recherche?q={search_term_string}`,
+    // SearchAction only for expat (holidays has no search page — all non-home pages redirect)
+    ...(!isHolidays && {
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${seoConst.BASE_URL}/recherche?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
       },
-      "query-input": "required name=search_term_string",
-    },
-  }), [language]);
+    }),
+  }), [language, seoConst, isHolidays]);
 
   // ProfessionalService (subtype of LocalBusiness) supports aggregateRating for Rich Results
   const jsonLdService = useMemo(() => ({
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    "@id": `${SEO_CONSTANTS.BASE_URL}/#service`,
-    "name": intl.formatMessage({ id: "schema.serviceType" }),
-    "url": SEO_CONSTANTS.BASE_URL,
+    "@id": `${seoConst.BASE_URL}/#service`,
+    "name": isHolidays ? seoConst.SITE_NAME : intl.formatMessage({ id: "schema.serviceType" }),
+    "url": seoConst.BASE_URL,
     "provider": {
       "@type": "Organization",
-      "@id": `${SEO_CONSTANTS.BASE_URL}/#organization`,
+      "@id": `${seoConst.BASE_URL}/#organization`,
     },
     "areaServed": {
       "@type": "Place",
@@ -607,7 +678,7 @@ const OptimizedHomePage: React.FC = () => {
           : new Date().toISOString().split('T')[0]
       }))
     }),
-  }), [intl, aggregateRating]);
+  }), [intl, aggregateRating, seoConst]);
 
   const jsonLdFAQ = useMemo(() => ({
     "@context": "https://schema.org",
@@ -615,30 +686,30 @@ const OptimizedHomePage: React.FC = () => {
     "mainEntity": [
       {
         "@type": "Question",
-        "name": intl.formatMessage({ id: "faq.question1" }),
+        "name": intl.formatMessage({ id: tk("faq.question1") }),
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": intl.formatMessage({ id: "faq.answer1" }),
+          "text": intl.formatMessage({ id: tk("faq.answer1") }),
         },
       },
       {
         "@type": "Question",
-        "name": intl.formatMessage({ id: "faq.question2" }),
+        "name": intl.formatMessage({ id: tk("faq.question2") }),
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": intl.formatMessage({ id: "faq.answer2" }),
+          "text": intl.formatMessage({ id: tk("faq.answer2") }),
         },
       },
       {
         "@type": "Question",
-        "name": intl.formatMessage({ id: "faq.question3" }),
+        "name": intl.formatMessage({ id: tk("faq.question3") }),
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": intl.formatMessage({ id: "faq.answer3" }),
+          "text": intl.formatMessage({ id: tk("faq.answer3") }),
         },
       },
     ],
-  }), [intl]);
+  }), [intl, tk]);
 
   const jsonLdBreadcrumb = useMemo(() => ({
     "@context": "https://schema.org",
@@ -662,22 +733,22 @@ const OptimizedHomePage: React.FC = () => {
     "name": seoData.title,
     "description": seoData.description,
     "isPartOf": {
-      "@id": `${SEO_CONSTANTS.BASE_URL}/#website`,
+      "@id": `${seoConst.BASE_URL}/#website`,
     },
     "about": {
-      "@id": `${SEO_CONSTANTS.BASE_URL}/#organization`,
+      "@id": `${seoConst.BASE_URL}/#organization`,
     },
     "speakable": {
       "@type": "SpeakableSpecification",
       "cssSelector": ["#main-heading", "#experts-heading", "#pricing-heading"],
     },
-  }), [canonicalUrl, seoData]);
+  }), [canonicalUrl, seoData, seoConst]);
 
   const jsonLdHowTo = useMemo(() => ({
     "@context": "https://schema.org",
     "@type": "HowTo",
-    "name": intl.formatMessage({ id: "howto.name" }),
-    "description": intl.formatMessage({ id: "howto.description" }),
+    "name": intl.formatMessage({ id: tk("howto.name") }),
+    "description": intl.formatMessage({ id: tk("howto.description") }),
     "totalTime": "PT5M",
     "step": [
       {
@@ -699,7 +770,7 @@ const OptimizedHomePage: React.FC = () => {
         "text": intl.formatMessage({ id: "howto.step3.text" }),
       },
     ],
-  }), [intl]);
+  }), [intl, tk]);
 
   // ======= Pricing dynamique =======
   const {
@@ -753,22 +824,22 @@ const OptimizedHomePage: React.FC = () => {
   ], [intl]);
 
   const expatExamples = useMemo(() => [
-    intl.formatMessage({ id: "examples.expat.housing" }),
-    intl.formatMessage({ id: "examples.expat.schooling" }),
-    intl.formatMessage({ id: "examples.expat.immigration" }),
-  ], [intl]);
+    intl.formatMessage({ id: tk("examples.expat.housing") }),
+    intl.formatMessage({ id: tk("examples.expat.schooling") }),
+    intl.formatMessage({ id: tk("examples.expat.immigration") }),
+  ], [intl, tk]);
 
   const lawyerExamples = useMemo(() => [
-    intl.formatMessage({ id: "examples.lawyer.contract" }),
-    intl.formatMessage({ id: "examples.lawyer.dispute" }),
-    intl.formatMessage({ id: "examples.lawyer.accident" }),
-  ], [intl]);
+    intl.formatMessage({ id: tk("examples.lawyer.contract") }),
+    intl.formatMessage({ id: tk("examples.lawyer.dispute") }),
+    intl.formatMessage({ id: tk("examples.lawyer.accident") }),
+  ], [intl, tk]);
 
   const additionalExamples = useMemo(() => [
-    intl.formatMessage({ id: "examples.additional.justice" }),
-    intl.formatMessage({ id: "examples.additional.job" }),
-    intl.formatMessage({ id: "examples.additional.network" }),
-  ], [intl]);
+    intl.formatMessage({ id: tk("examples.additional.justice") }),
+    intl.formatMessage({ id: tk("examples.additional.job") }),
+    intl.formatMessage({ id: tk("examples.additional.network") }),
+  ], [intl, tk]);
 
   const combinedExamples = useMemo(() => 
     Array.from(new Set([...expatExamples, ...lawyerExamples, ...additionalExamples])),
@@ -816,10 +887,10 @@ const OptimizedHomePage: React.FC = () => {
       intl.formatMessage({ id: "join.lawyer.benefit6" }),
     ],
     ctaLabel: intl.formatMessage({ id: "join.lawyer.cta" }),
-    ctaHref: `/${getTranslatedRouteSlug("register-lawyer", language)}`,
+    ctaHref: resolveLink(`/${getTranslatedRouteSlug("register-lawyer", language)}`),
     icon: <Briefcase className="w-3.5 h-3.5" aria-hidden="true" />,
     gradient: "from-red-600 to-orange-600",
-  }), [intl, language]);
+  }), [intl, language, resolveLink]);
 
   const expatCard = useMemo(() => ({
     label: intl.formatMessage({ id: "join.expat.label" }),
@@ -835,10 +906,10 @@ const OptimizedHomePage: React.FC = () => {
       intl.formatMessage({ id: "join.expat.benefit8" }),
     ],
     ctaLabel: intl.formatMessage({ id: "join.expat.cta" }),
-    ctaHref: `/${getTranslatedRouteSlug("register-expat", language)}`,
+    ctaHref: resolveLink(`/${getTranslatedRouteSlug("register-expat", language)}`),
     icon: <User className="w-3.5 h-3.5" aria-hidden="true" />,
     gradient: "from-blue-600 to-indigo-600",
-  }), [intl, language]);
+  }), [intl, language, resolveLink]);
 
   // ======= Helpers pour le pricing =======
   const DEFAULT_USD_RATE = 1.08;
@@ -976,13 +1047,13 @@ const OptimizedHomePage: React.FC = () => {
           </ul>
 
           <div className="mt-8 md:mt-auto">
-            <Link
-              to={getLocalePath("/sos-appel")}
+            <ActionLink
+              to={resolveLink("/sos-appel")}
               className={`inline-flex items-center justify-center w-full px-6 py-4 rounded-2xl font-bold text-lg text-white transition-colors duration-150 md:transition-all md:duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] md:hover:scale-105 touch-manipulation ${`bg-gradient-to-r ${accentGradient}`}`}
               aria-label={intl.formatMessage({ id: "aria.bookConsultation" })}
             >
               <FormattedMessage id="cta.bookConsultation" />
-            </Link>
+            </ActionLink>
           </div>
         </div>
       </article>
@@ -1053,14 +1124,14 @@ const OptimizedHomePage: React.FC = () => {
           </ul>
 
           <div className="mt-8 md:mt-auto">
-            <Link
+            <ActionLink
               to={ctaHref}
               className={`group/cta inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 font-bold text-white transition-colors duration-150 md:transition-all md:duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white active:scale-[0.98] md:hover:scale-105 touch-manipulation bg-gradient-to-r ${gradient}`}
               aria-label={ctaLabel}
             >
               {ctaLabel}
               <ArrowRight className="w-5 h-5" aria-hidden="true" />
-            </Link>
+            </ActionLink>
             <p className="mt-3 text-sm text-gray-500">
               <FormattedMessage
                 id="join.appTip"
@@ -1144,7 +1215,7 @@ const OptimizedHomePage: React.FC = () => {
         <meta name="title" content={seoData.title} />
         <meta name="description" content={seoData.description} />
         <meta name="keywords" content={seoData.keywords} />
-        <meta name="author" content={SEO_CONSTANTS.SITE_NAME} />
+        <meta name="author" content={seoConst.SITE_NAME} />
         
         {/* Robots */}
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -1168,10 +1239,10 @@ const OptimizedHomePage: React.FC = () => {
         {/* Open Graph - URLs CONSTANTES */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:site_name" content={SEO_CONSTANTS.SITE_NAME} />
+        <meta property="og:site_name" content={seoConst.SITE_NAME} />
         <meta property="og:title" content={seoData.ogTitle} />
         <meta property="og:description" content={seoData.ogDescription} />
-        <meta property="og:image" content={SEO_CONSTANTS.OG_IMAGE_URL} />
+        <meta property="og:image" content={seoConst.OG_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={seoData.ogTitle} />
@@ -1186,9 +1257,9 @@ const OptimizedHomePage: React.FC = () => {
         <meta name="twitter:url" content={canonicalUrl} />
         <meta name="twitter:title" content={seoData.twitterTitle} />
         <meta name="twitter:description" content={seoData.twitterDescription} />
-        <meta name="twitter:image" content={SEO_CONSTANTS.OG_IMAGE_URL} />
-        <meta name="twitter:site" content={SEO_CONSTANTS.TWITTER_HANDLE} />
-        <meta name="twitter:creator" content={SEO_CONSTANTS.TWITTER_HANDLE} />
+        <meta name="twitter:image" content={seoConst.OG_IMAGE_URL} />
+        <meta name="twitter:site" content={seoConst.TWITTER_HANDLE} />
+        <meta name="twitter:creator" content={seoConst.TWITTER_HANDLE} />
 
         {/* Security - Note: X-Frame-Options is set via HTTP headers in firebase.json */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
@@ -1254,16 +1325,16 @@ const OptimizedHomePage: React.FC = () => {
                 </span>
                 <br />
                 <span className="text-4xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
-                  <FormattedMessage id="hero.title.line2" />
+                  <FormattedMessage id={tk("hero.title.line2")} />
                 </span>
               </h1>
 
               <h2 className="text-xl sm:text-xl md:text-2xl lg:text-3xl text-white font-semibold max-w-4xl mx-auto mb-2 leading-snug">
-                <FormattedMessage id="hero.subtitle" />
+                <FormattedMessage id={tk("hero.subtitle")} />
               </h2>
 
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                <FormattedMessage id="hero.description" />
+                <FormattedMessage id={tk("hero.description")} />
               </p>
             </div>
 
@@ -1288,8 +1359,8 @@ const OptimizedHomePage: React.FC = () => {
             >
               {/* Bouton principal d'appel - "Appeler maintenant" avec icône téléphone */}
               {/* Mobile: texte plus gros (text-xl), padding plus grand (py-5 px-8) */}
-              <Link
-                to={getLocalePath("/sos-appel")}
+              <ActionLink
+                to={resolveLink("/sos-appel")}
                 className="group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-orange-500 active:from-red-700 active:via-red-600 active:to-orange-600 active:scale-[0.98] text-white px-8 sm:px-10 md:px-12 py-5 sm:py-5 md:py-6 rounded-2xl sm:rounded-3xl transition-colors duration-150 md:transition-all md:duration-200 md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-red-500/50 flex items-center justify-center space-x-3 sm:space-x-3 md:space-x-4 border-2 border-red-400/50 touch-manipulation select-none cursor-pointer [-webkit-tap-highlight-color:transparent] w-full sm:w-auto max-w-sm sm:max-w-none"
                 aria-label={intl.formatMessage({ id: "aria.urgentCall" })}
                 style={{ WebkitTapHighlightColor: 'transparent', WebkitTouchCallout: 'none' } as React.CSSProperties}
@@ -1299,11 +1370,11 @@ const OptimizedHomePage: React.FC = () => {
                   <FormattedMessage id="cta.callNow" />
                 </span>
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-500/30 to-red-600/30 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" aria-hidden="true" />
-              </Link>
+              </ActionLink>
 
               {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
-              <Link
-                to={getLocalePath("/sos-appel")}
+              <ActionLink
+                to={resolveLink("/sos-appel")}
                 className="group hidden md:flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.viewExperts" })}
               >
@@ -1311,7 +1382,7 @@ const OptimizedHomePage: React.FC = () => {
                 <span>
                   <FormattedMessage id="cta.seeExperts" />
                 </span>
-              </Link>
+              </ActionLink>
             </nav>
 
             {/* Stats - Masqués sur mobile pour garder le bouton en bas */}
@@ -1374,7 +1445,7 @@ const OptimizedHomePage: React.FC = () => {
               </h2>
 
               <p className="text-base sm:text-lg text-gray-700 max-w-3xl mx-auto px-2">
-                <FormattedMessage id="experts.description" />
+                <FormattedMessage id={tk("experts.description")} />
               </p>
             </div>
 
@@ -1419,7 +1490,7 @@ const OptimizedHomePage: React.FC = () => {
               
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
                 <FormattedMessage
-                  id="pricing.subtitle"
+                  id={tk("pricing.subtitle")}
                   values={{
                     strong: (chunks) => <strong>{chunks}</strong>,
                   }}
@@ -1609,7 +1680,7 @@ const OptimizedHomePage: React.FC = () => {
                   <FormattedMessage id="examples.title" />
                 </h3>
                 <p className="text-gray-300 text-sm md:text-base">
-                  <FormattedMessage id="examples.subtitle" />
+                  <FormattedMessage id={tk("examples.subtitle")} />
                 </p>
               </div>
 
@@ -1673,7 +1744,7 @@ const OptimizedHomePage: React.FC = () => {
               <h2 id="why-heading" className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-6">
                 <FormattedMessage id="why.title.prefix" />{" "}
                 <span className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-                  <FormattedMessage id="why.title.highlight" />
+                  <FormattedMessage id={tk("why.title.highlight")} />
                 </span>
                 <FormattedMessage id="why.title.suffix" />
               </h2>
@@ -1744,11 +1815,11 @@ const OptimizedHomePage: React.FC = () => {
               </h2>
               
               <p className="mt-3 sm:mt-4 text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
-                <FormattedMessage id="reviews.subtitle" />
+                <FormattedMessage id={tk("reviews.subtitle")} />
               </p>
             </div>
 
-            <ReviewsSlider theme="light" />
+            <ReviewsSlider theme="light" holidaysMode={isHolidays} resolveFn={resolveLink} />
           </div>
         </section>
 
@@ -1760,12 +1831,12 @@ const OptimizedHomePage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" aria-hidden="true" />
           <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
             <h2 id="cta-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 md:mb-8">
-              <FormattedMessage id="cta.title" />
+              <FormattedMessage id={tk("cta.title")} />
             </h2>
-            
+
             <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-12 leading-relaxed">
               <FormattedMessage
-                id="cta.subtitle"
+                id={tk("cta.subtitle")}
                 values={{
                   strong: (chunks) => <strong>{chunks}</strong>,
                 }}
@@ -1796,8 +1867,8 @@ const OptimizedHomePage: React.FC = () => {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6"
               aria-label={intl.formatMessage({ id: "aria.ctaActions" })}
             >
-              <Link
-                to={getLocalePath("/register")}
+              <ActionLink
+                to={resolveLink("/register")}
                 className="group relative overflow-hidden bg-white text-red-600 md:hover:text-red-700 px-12 py-6 rounded-3xl font-black text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:shadow-2xl flex items-center gap-4 touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.startFreeNow" })}
               >
@@ -1806,10 +1877,10 @@ const OptimizedHomePage: React.FC = () => {
                 </span>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform duration-300" aria-hidden="true" />
                 <span className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-black/5" aria-hidden="true" />
-              </Link>
+              </ActionLink>
 
-              <Link
-                to={getLocalePath("/sos-appel")}
+              <ActionLink
+                to={resolveLink("/sos-appel")}
                 className="group relative overflow-hidden border-2 border-white bg-transparent text-white px-12 py-6 rounded-3xl font-bold text-xl transition-colors duration-150 md:transition-all md:duration-200 active:scale-[0.98] md:hover:scale-105 md:hover:bg-white/10 flex items-center gap-4 touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.urgentCallNow" })}
               >
@@ -1818,7 +1889,7 @@ const OptimizedHomePage: React.FC = () => {
                   <FormattedMessage id="cta.urgentNow" />
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/30" aria-hidden="true" />
-              </Link>
+              </ActionLink>
             </nav>
           </div>
         </section>

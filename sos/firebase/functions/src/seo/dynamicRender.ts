@@ -25,6 +25,7 @@ let chromium: any = null;
 
 // Configuration
 const SITE_URL = 'https://sos-expat.com';
+const HOLIDAYS_SITE_URL = 'https://sos-holidays.com';
 // Cloudflare Pages origin — Puppeteer renders via this to bypass the Cloudflare Worker
 // and avoid the Worker→CF→Worker round-trip. Domain is replaced back to SITE_URL in the HTML.
 const PAGES_ORIGIN = 'https://sos-expat.pages.dev';
@@ -264,8 +265,18 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
 
     // Navigate via Pages origin to bypass the Cloudflare Worker.
     // Replace the public domain with the Pages origin domain.
-    const renderUrl = url.replace(SITE_URL, PAGES_ORIGIN);
-    logger.info('Navigating Puppeteer to Pages origin', { original: url, renderUrl });
+    // For holidays URLs, add ?_holidays=1 so client-side isHolidaysDomain() returns true.
+    const isHolidaysUrl = url.includes('sos-holidays.com');
+    let renderUrl = isHolidaysUrl
+      ? url.replace(HOLIDAYS_SITE_URL, PAGES_ORIGIN)
+      : url.replace(SITE_URL, PAGES_ORIGIN);
+
+    if (isHolidaysUrl) {
+      const renderUrlObj = new URL(renderUrl);
+      renderUrlObj.searchParams.set('_holidays', '1');
+      renderUrl = renderUrlObj.toString();
+    }
+    logger.info('Navigating Puppeteer to Pages origin', { original: url, renderUrl, isHolidaysUrl });
 
     await page.goto(renderUrl, {
       waitUntil: 'networkidle2', // 2 connections allowed (Firebase WebSocket stays open)
@@ -321,10 +332,23 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
       });
     }
 
-    // Replace Pages origin domain with the public domain in ALL rendered output.
+    // Replace Pages origin domain with the correct public domain in ALL rendered output.
     // This ensures canonical, og:url, hreflang, JSON-LD @id, breadcrumbs etc.
-    // all point to the production domain (sos-expat.com) and not pages.dev.
-    html = html.split(PAGES_ORIGIN).join(SITE_URL);
+    // point to the correct production domain and not pages.dev.
+    const targetDomain = isHolidaysUrl ? HOLIDAYS_SITE_URL : SITE_URL;
+    html = html.split(PAGES_ORIGIN).join(targetDomain);
+    // Remove the _holidays query param from rendered HTML (clean URLs)
+    // Handles: ?_holidays=1, ?_holidays=1&foo, ?foo&_holidays=1, ?foo&_holidays=1&bar
+    if (isHolidaysUrl) {
+      html = html.replace(/([?&])_holidays=1(&?)/g,
+        (_match: string, prefix: string, suffix: string) => {
+          if (prefix === '?' && !suffix) return '';       // ?_holidays=1 (only param) → remove all
+          if (prefix === '?' && suffix === '&') return '?'; // ?_holidays=1&foo → ?foo
+          if (prefix === '&') return '';                    // &_holidays=1 or &_holidays=1& → remove
+          return '';
+        }
+      );
+    }
 
     return { html, is404 };
   } finally {
@@ -370,6 +394,7 @@ export const renderForBotsV2 = onRequest(
     const requestPath = getQuery('path') || req.path || '/';
     const fullUrl = getQuery('url') || `${SITE_URL}${requestPath}`;
     const botName = getHeader('x-bot-name') || getQuery('bot');
+    const isHolidays = fullUrl.includes('sos-holidays.com');
 
     // Determine if request is from a bot (via UA or explicit header from Worker)
     const isBotRequest = isBot(userAgent) || !!botName;
@@ -390,9 +415,11 @@ export const renderForBotsV2 = onRequest(
     }
 
     // Check cache first (L1 memory → L2 Firestore)
-    const cachedHtml = await getCachedHtml(requestPath);
+    // Use separate cache keys for holidays vs expat to avoid serving wrong variant
+    const cacheKey = isHolidays ? `holidays:${requestPath}` : requestPath;
+    const cachedHtml = await getCachedHtml(cacheKey);
     if (cachedHtml) {
-      logger.info('Serving cached HTML', { path: requestPath });
+      logger.info('Serving cached HTML', { path: requestPath, isHolidays });
       res.set('Content-Type', 'text/html; charset=utf-8');
       res.set('X-Prerender-Cache', 'HIT');
       res.set('Cache-Control', 'public, max-age=86400'); // 24 hours
@@ -416,7 +443,7 @@ export const renderForBotsV2 = onRequest(
       }
 
       // Cache the result (only for valid pages)
-      cacheHtml(requestPath, html);
+      cacheHtml(cacheKey, html);
 
       // Return the rendered HTML
       res.set('Content-Type', 'text/html; charset=utf-8');
@@ -548,14 +575,18 @@ export const invalidateCacheEndpoint = onRequest(
       totalRemoved = invalidateCache(pattern);
     } else if (paths && Array.isArray(paths)) {
       for (const p of paths) {
-        // L1
-        if (memoryCache.has(p)) {
-          memoryCache.delete(p);
-          totalRemoved++;
+        // Invalidate both expat and holidays cache entries for this path
+        const variants = [p, `holidays:${p}`];
+        for (const key of variants) {
+          // L1
+          if (memoryCache.has(key)) {
+            memoryCache.delete(key);
+            totalRemoved++;
+          }
+          // L2 (fire-and-forget)
+          const docId = pathToDocId(key);
+          admin.firestore().collection(SSR_CACHE_COLLECTION).doc(docId).delete().catch(() => {});
         }
-        // L2 (fire-and-forget)
-        const docId = pathToDocId(p);
-        admin.firestore().collection(SSR_CACHE_COLLECTION).doc(docId).delete().catch(() => {});
       }
     }
 
