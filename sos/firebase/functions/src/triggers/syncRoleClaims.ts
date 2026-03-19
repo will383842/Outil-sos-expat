@@ -87,15 +87,19 @@ export async function handleSyncClaimsCreated(event: any) {
     // Log d'erreur si toutes les tentatives ont échoué
     if (lastClaimsError) {
       console.error(`[syncRoleClaims] ❌ Échec définitif après ${MAX_CLAIMS_RETRIES} tentatives pour ${uid}`);
-      await admin.firestore().collection("auth_claims_logs").add({
-        userId: uid,
-        action: "create_failed",
-        role: role,
-        error: lastClaimsError.message,
-        attempts: MAX_CLAIMS_RETRIES,
-        trigger: "onUserCreatedSyncClaims",
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      try {
+        await admin.firestore().collection("auth_claims_logs").add({
+          userId: uid,
+          action: "create_failed",
+          role: role,
+          error: lastClaimsError.message,
+          attempts: MAX_CLAIMS_RETRIES,
+          trigger: "onUserCreatedSyncClaims",
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (logError) {
+        console.error(`[syncRoleClaims] ❌ Échec écriture log d'erreur pour ${uid}:`, logError);
+      }
     }
 }
 

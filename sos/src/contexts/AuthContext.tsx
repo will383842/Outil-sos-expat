@@ -196,9 +196,10 @@ const isInAppBrowser = (): boolean => {
 /**
  * Détecte si on doit forcer le mode redirect au lieu de popup
  *
- * Avec le custom authDomain (www.sosexpats.com), le redirect OAuth reste sur
- * le même domaine, ce qui élimine les problèmes ITP de Safari.
- * On force donc le redirect pour TOUS les appareils iOS (Safari inclus)
+ * NOTE: authDomain est sos-urgently-ac307.firebaseapp.com (domaine Firebase par défaut).
+ * Un custom authDomain sur un sous-domaine de sos-expat.com résoudrait les problèmes
+ * ITP de Safari (cookies tiers bloqués), mais n'est pas encore configuré.
+ * On force le redirect pour TOUS les appareils iOS (Safari inclus)
  * et les autres navigateurs mobiles problématiques.
  * Les popups sur mobile sont globalement peu fiables (bloqués par Safari,
  * problèmes de focus, etc.), le redirect est la méthode recommandée.
@@ -210,7 +211,7 @@ const shouldForceRedirectAuth = (): boolean => {
   // Tous les appareils iOS → redirect (Safari, Chrome iOS, Firefox iOS, etc.)
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   if (isIOS) {
-    devLog('[Auth] iOS détecté - mode REDIRECT (custom authDomain, pas de problème ITP)');
+    devLog('[Auth] iOS détecté - mode REDIRECT forcé (Safari bloque les popups)');
     return true;
   }
 
@@ -227,49 +228,113 @@ const shouldForceRedirectAuth = (): boolean => {
 };
 
 /**
- * Storage sécurisé avec fallback
- * Certains navigateurs (iOS Safari privé) bloquent sessionStorage/localStorage
+ * Storage sécurisé avec fallback IndexedDB
+ * Certains navigateurs (iOS Safari privé) bloquent sessionStorage/localStorage.
+ * IndexedDB survit au page reload contrairement au fallback mémoire,
+ * ce qui est critique pour le redirect Google Auth sur mobile.
  */
+const idbAuthStore = {
+  DB_NAME: 'sos_auth_store',
+  STORE_NAME: 'auth_kv',
+  _open: (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
+    try {
+      const req = indexedDB.open(idbAuthStore.DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const idb = req.result;
+        if (!idb.objectStoreNames.contains(idbAuthStore.STORE_NAME)) {
+          idb.createObjectStore(idbAuthStore.STORE_NAME);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    } catch (e) { reject(e); }
+  }),
+  set: async (key: string, value: string): Promise<void> => {
+    const idb = await idbAuthStore._open();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(idbAuthStore.STORE_NAME, 'readwrite');
+      tx.objectStore(idbAuthStore.STORE_NAME).put(value, key);
+      tx.oncomplete = () => { idb.close(); resolve(); };
+      tx.onerror = () => { idb.close(); reject(tx.error); };
+    });
+  },
+  get: async (key: string): Promise<string | null> => {
+    const idb = await idbAuthStore._open();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(idbAuthStore.STORE_NAME, 'readonly');
+      const req = tx.objectStore(idbAuthStore.STORE_NAME).get(key);
+      req.onsuccess = () => { idb.close(); resolve(req.result ?? null); };
+      req.onerror = () => { idb.close(); reject(req.error); };
+    });
+  },
+  remove: async (key: string): Promise<void> => {
+    const idb = await idbAuthStore._open();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(idbAuthStore.STORE_NAME, 'readwrite');
+      tx.objectStore(idbAuthStore.STORE_NAME).delete(key);
+      tx.oncomplete = () => { idb.close(); resolve(); };
+      tx.onerror = () => { idb.close(); reject(tx.error); };
+    });
+  },
+};
+
 const safeStorage = {
   _memoryStorage: {} as Record<string, string>,
 
   setItem: (key: string, value: string): void => {
     try {
-      // Essayer sessionStorage d'abord (préféré pour la sécurité)
       sessionStorage.setItem(key, value);
-    } catch {
-      try {
-        // Fallback vers localStorage
-        localStorage.setItem(key, value);
-      } catch {
-        // Dernier recours: mémoire (perdu au refresh mais mieux que rien)
-        safeStorage._memoryStorage[key] = value;
-        devWarn('[Auth] Storage unavailable, using memory fallback for:', key);
-      }
-    }
+      return;
+    } catch { /* ignore */ }
+
+    try {
+      localStorage.setItem(key, value);
+      return;
+    } catch { /* ignore */ }
+
+    // Fallback IndexedDB (survit au page reload) + mémoire (lecture sync immédiate)
+    safeStorage._memoryStorage[key] = value;
+    idbAuthStore.set(key, value).catch(() =>
+      devWarn('[Auth] IndexedDB fallback also failed for:', key)
+    );
+    devWarn('[Auth] Storage unavailable, using IndexedDB + memory fallback for:', key);
   },
 
   getItem: (key: string): string | null => {
     try {
-      // Essayer sessionStorage d'abord
       const sessionValue = sessionStorage.getItem(key);
       if (sessionValue) return sessionValue;
     } catch { /* ignore */ }
 
     try {
-      // Essayer localStorage
       const localValue = localStorage.getItem(key);
       if (localValue) return localValue;
     } catch { /* ignore */ }
 
-    // Dernier recours: mémoire
     return safeStorage._memoryStorage[key] || null;
+  },
+
+  /** Async getItem: essaie aussi IndexedDB (utilisé après redirect quand session/localStorage sont vides) */
+  getItemAsync: async (key: string): Promise<string | null> => {
+    const syncValue = safeStorage.getItem(key);
+    if (syncValue) return syncValue;
+
+    try {
+      const idbValue = await idbAuthStore.get(key);
+      if (idbValue) {
+        devLog('[Auth] Récupéré depuis IndexedDB fallback:', key);
+        return idbValue;
+      }
+    } catch { /* ignore */ }
+
+    return null;
   },
 
   removeItem: (key: string): void => {
     try { sessionStorage.removeItem(key); } catch { /* ignore */ }
     try { localStorage.removeItem(key); } catch { /* ignore */ }
     delete safeStorage._memoryStorage[key];
+    idbAuthStore.remove(key).catch(() => { /* ignore */ });
   }
 };
 
@@ -941,20 +1006,43 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Ref pour tracker si onAuthStateChanged a répondu (évite problème de closure)
   const authStateReceivedRef = useRef(false);
 
+  // P0 FIX: Flag pour indiquer qu'un redirect Google est en attente de résultat.
+  // Empêche le timeout court de onAuthStateChanged (3s) de forcer authInitialized=true
+  // AVANT que getRedirectResult n'ait fini (peut prendre 5-30s sur mobile lent).
+  const googleRedirectPendingRef = useRef(false);
+
   // onAuthStateChanged → ne fait que stocker l'utilisateur auth
   useEffect(() => {
     authStateReceivedRef.current = false;
 
-    // Timeout de sécurité: si onAuthStateChanged ne répond pas en 3s,
-    // on considère l'utilisateur comme déconnecté pour éviter une page blanche infinie
+    // P0 FIX: Détecter si on revient d'un redirect Google (clé en storage)
+    const hasRedirectPending = safeStorage.getItem('googleAuthRedirect') !== null;
+    if (hasRedirectPending) {
+      googleRedirectPendingRef.current = true;
+      devLog('🔐 [AuthContext] Google redirect détecté - timeout étendu à 15s');
+    } else {
+      // Check IndexedDB aussi (Safari privé: session/localStorage bloqués, seul IDB survit)
+      safeStorage.getItemAsync('googleAuthRedirect').then((val) => {
+        if (val && !authStateReceivedRef.current) {
+          googleRedirectPendingRef.current = true;
+          devLog('🔐 [AuthContext] Google redirect détecté via IndexedDB - timeout étendu');
+        }
+      }).catch(() => { /* ignore */ });
+    }
+
+    // P0 FIX: Timeout adaptatif — 15s quand redirect Google en cours, 3s sinon.
+    // Sans ce fix, le timeout à 3s force authInitialized=true AVANT que getRedirectResult
+    // ne retourne le user → Login.tsx affiche le formulaire au lieu de rediriger.
+    const safetyTimeout = googleRedirectPendingRef.current ? 15000 : 3000;
     const safetyTimeoutId = setTimeout(() => {
       if (!authStateReceivedRef.current) {
-        devWarn('🔐 [AuthContext] ⚠️ onAuthStateChanged timeout (3s) - forçant authInitialized=true');
+        devWarn(`🔐 [AuthContext] ⚠️ onAuthStateChanged timeout (${safetyTimeout / 1000}s) - forçant authInitialized=true`);
+        googleRedirectPendingRef.current = false;
         setUser(null);
         setIsLoading(false);
         setAuthInitialized(true);
       }
-    }, 3000);
+    }, safetyTimeout);
 
     const unsubAuth = onAuthStateChanged(auth, (u) => {
       authStateReceivedRef.current = true;
@@ -1869,6 +1957,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           if (timeoutId) clearTimeout(timeoutId);
           if ((raceError as Error).message === 'REDIRECT_TIMEOUT') {
             devWarn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Timeout après " + REDIRECT_TIMEOUT + "ms - abandon");
+            googleRedirectPendingRef.current = false;
             return;
           }
           throw raceError;
@@ -1876,6 +1965,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         if (!result?.user) {
           devLog("[DEBUG] " + "🔵 GOOGLE REDIRECT: Pas de résultat (normal si pas de redirect en cours)");
+          googleRedirectPendingRef.current = false;
           return;
         }
 
@@ -2031,14 +2121,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         // Check for saved redirect URL after Google login
         // SECURITY: Defense-in-depth validation before redirect
-        const savedRedirect = safeStorage.getItem('googleAuthRedirect');
+        // P0 FIX: getItemAsync récupère aussi depuis IndexedDB (Safari privé)
+        const savedRedirect = safeStorage.getItem('googleAuthRedirect')
+          || await safeStorage.getItemAsync('googleAuthRedirect');
         if (savedRedirect) {
           safeStorage.removeItem('googleAuthRedirect');
-          // m1 AUDIT FIX: Clean up loginRedirect to prevent stale redirects on next booking
-          try { sessionStorage.removeItem('loginRedirect'); } catch {}
           if (isAllowedRedirect(savedRedirect)) {
+            // P0 FIX: Ne clear loginRedirect qu'après validation réussie
+            try { sessionStorage.removeItem('loginRedirect'); } catch {}
             devLog('[Auth] Google redirect: navigating to validated URL:', savedRedirect);
-            // Use window.location for navigation to ensure full page reload with auth state
             window.location.href = savedRedirect;
           } else {
             devWarn('[Auth] Google redirect: blocked invalid redirect URL:', savedRedirect);
@@ -2051,6 +2142,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // Ne pas afficher d'erreur à l'utilisateur pour les erreurs de redirect
         // Car getRedirectResult retourne souvent des erreurs sur page normale
       } finally {
+        googleRedirectPendingRef.current = false;
         setIsLoading(false);
       }
     })();
