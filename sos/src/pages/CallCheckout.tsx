@@ -3387,7 +3387,14 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
   // Auto-scroll to error message when it appears
   useEffect(() => {
     if (error && errorRef.current) {
-      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Delay scroll slightly to ensure DOM has updated after React render
+      setTimeout(() => {
+        errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Vibrate on error for mobile feedback
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try { navigator.vibrate([50, 30, 50]); } catch {}
+        }
+      }, 100);
     }
   }, [error]);
 
