@@ -496,9 +496,15 @@ const createUserDocumentViaCloudFunction = async (
       const errorCode = (error as AppError)?.code || 'unknown';
       devWarn(`⚠️ [CloudFunction] Échec tentative ${attempt}/${MAX_RETRIES}:`, errorCode, (error as Error).message);
 
-      // Ne pas retry si c'est une erreur de permission ou d'authentification
-      if (errorCode === 'permission-denied' || errorCode === 'unauthenticated') {
+      // P1 FIX: Retry une fois sur permission-denied car sur mobile le token
+      // peut ne pas être propagé à temps (faux permission-denied).
+      // Seul unauthenticated est vraiment fatal (pas de token du tout).
+      if (errorCode === 'unauthenticated') {
         devError(`❌ [CloudFunction] Erreur fatale (${errorCode}), pas de retry`);
+        throw error;
+      }
+      if (errorCode === 'permission-denied' && attempt >= 2) {
+        devError(`❌ [CloudFunction] permission-denied persistant après ${attempt} tentatives, abandon`);
         throw error;
       }
 
@@ -1683,25 +1689,33 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             devError("[DEBUG] " + "❌ GOOGLE POPUP: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
             devLog("[DEBUG] " + "🔄 GOOGLE POPUP: Tentative fallback création directe Firestore...");
 
-            // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
-            try {
-              const pendingRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
-              await createUserDocumentInFirestore(googleUser, {
-                role: 'client',
-                email: googleUser.email || '',
-                preferredLanguage: 'fr',
-                provider: 'google.com',
-                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
-                ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
-              });
-              devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document créé via fallback Firestore direct");
-            } catch (fallbackError) {
-              devError("[DEBUG] " + "❌ GOOGLE POPUP: Échec fallback Firestore:", fallbackError);
+            // P1 FIX: Fallback avec retry (2 tentatives) vers création directe Firestore
+            const pendingRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
+            const fallbackData = {
+              role: 'client' as const,
+              email: googleUser.email || '',
+              preferredLanguage: 'fr',
+              provider: 'google.com',
+              ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
+            };
+            let fallbackSuccess = false;
+            for (let fbAttempt = 1; fbAttempt <= 2; fbAttempt++) {
+              try {
+                await createUserDocumentInFirestore(googleUser, fallbackData);
+                devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document créé via fallback Firestore direct (tentative " + fbAttempt + ")");
+                fallbackSuccess = true;
+                break;
+              } catch (fallbackError) {
+                devError("[DEBUG] " + "❌ GOOGLE POPUP: Échec fallback Firestore (tentative " + fbAttempt + "/2):", fallbackError);
+                if (fbAttempt < 2) await new Promise(r => setTimeout(r, 2000));
+              }
+            }
+            if (!fallbackSuccess) {
               // Vérifier si le document existe malgré tout (race condition possible)
               const checkRef = doc(db, 'users', googleUser.uid);
               const checkDoc = await getDoc(checkRef);
               if (!checkDoc.exists()) {
-                // Document vraiment absent - afficher erreur mais ne pas bloquer
                 devError("[DEBUG] " + "❌ GOOGLE POPUP: Document utilisateur non créé - orphan user possible");
                 setError("Votre compte a été créé mais le profil prend plus de temps. Veuillez rafraîchir la page.");
               } else {
@@ -1813,10 +1827,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Récupération redirect Google (toujours actif pour éviter erreurs COOP)
   const redirectHandledRef = useRef<boolean>(false);
 
-  // ✅ FIX: Reset redirectHandledRef quand l'utilisateur change (logout/login)
-  // Cela permet de réessayer Google Sign-In après un échec ou logout
+  // P1 FIX: Reset redirectHandledRef uniquement quand l'utilisateur passe de truthy à null (logout)
+  // Avant: reset à CHAQUE changement de uid → double appel getRedirectResult si logout+login rapide
+  // Maintenant: reset seulement au logout pour permettre un nouveau Google Sign-In
+  const prevAuthUserUidForRedirect = useRef<string | null>(null);
   useEffect(() => {
-    redirectHandledRef.current = false;
+    const prevUid = prevAuthUserUidForRedirect.current;
+    const currentUid = authUser?.uid ?? null;
+    prevAuthUserUidForRedirect.current = currentUid;
+    // Reset seulement si on passe de "connecté" à "déconnecté" (logout)
+    if (prevUid && !currentUid) {
+      redirectHandledRef.current = false;
+    }
   }, [authUser?.uid]);
 
   useEffect(() => {
@@ -1956,20 +1978,29 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec Cloud Function après " + MAX_RETRIES + " tentatives");
             devLog("[DEBUG] " + "🔄 GOOGLE REDIRECT: Tentative fallback création directe Firestore...");
 
-            // ✅ FIX ORPHAN USERS: Fallback vers création directe si Cloud Function échoue
-            try {
-              const pendingRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
-              await createUserDocumentInFirestore(googleUser, {
-                role: 'client',
-                email: googleUser.email || '',
-                preferredLanguage: 'fr',
-                provider: 'google.com',
-                ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
-                ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
-              });
-              devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé via fallback Firestore direct");
-            } catch (fallbackError) {
-              devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec fallback Firestore:", fallbackError);
+            // P1 FIX: Fallback avec retry (2 tentatives) vers création directe Firestore
+            const pendingRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
+            const fallbackData = {
+              role: 'client' as const,
+              email: googleUser.email || '',
+              preferredLanguage: 'fr',
+              provider: 'google.com',
+              ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+              ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
+            };
+            let fallbackSuccess = false;
+            for (let fbAttempt = 1; fbAttempt <= 2; fbAttempt++) {
+              try {
+                await createUserDocumentInFirestore(googleUser, fallbackData);
+                devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document créé via fallback Firestore direct (tentative " + fbAttempt + ")");
+                fallbackSuccess = true;
+                break;
+              } catch (fallbackError) {
+                devError("[DEBUG] " + "❌ GOOGLE REDIRECT: Échec fallback Firestore (tentative " + fbAttempt + "/2):", fallbackError);
+                if (fbAttempt < 2) await new Promise(r => setTimeout(r, 2000));
+              }
+            }
+            if (!fallbackSuccess) {
               // Vérifier si le document existe malgré tout (race condition possible)
               const checkRef = doc(db, 'users', googleUser.uid);
               const checkDoc = await getDoc(checkRef);

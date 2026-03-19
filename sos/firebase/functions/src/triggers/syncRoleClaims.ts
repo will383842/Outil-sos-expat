@@ -50,28 +50,49 @@ export async function handleSyncClaimsCreated(event: any) {
       return;
     }
 
-    try {
-      // Définir les custom claims
-      await admin.auth().setCustomUserClaims(uid, { role });
-      console.log(`[syncRoleClaims] ✅ Custom Claims créés: role=${role} pour: ${uid}`);
+    // P1 FIX: Retry avec backoff pour setCustomUserClaims
+    // Si Firebase Auth est momentanément indisponible, l'absence de claims
+    // bloque l'utilisateur (Firestore rules rejettent les requêtes sans token.role)
+    const MAX_CLAIMS_RETRIES = 3;
+    let lastClaimsError: Error | null = null;
 
-      // Log d'audit
-      await admin.firestore().collection("auth_claims_logs").add({
-        userId: uid,
-        action: "created",
-        role: role,
-        trigger: "onUserCreatedSyncClaims",
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    } catch (error) {
-      console.error(`[syncRoleClaims] ❌ Erreur création claims pour ${uid}:`, error);
+    for (let attempt = 1; attempt <= MAX_CLAIMS_RETRIES; attempt++) {
+      try {
+        await admin.auth().setCustomUserClaims(uid, { role });
+        console.log(`[syncRoleClaims] ✅ Custom Claims créés: role=${role} pour: ${uid} (tentative ${attempt})`);
+        lastClaimsError = null;
 
-      // Log d'erreur
+        // Log d'audit
+        await admin.firestore().collection("auth_claims_logs").add({
+          userId: uid,
+          action: "created",
+          role: role,
+          attempt,
+          trigger: "onUserCreatedSyncClaims",
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        break; // Succès, sortir de la boucle
+      } catch (error) {
+        lastClaimsError = error instanceof Error ? error : new Error(String(error));
+        console.error(`[syncRoleClaims] ❌ Erreur création claims pour ${uid} (tentative ${attempt}/${MAX_CLAIMS_RETRIES}):`, error);
+
+        if (attempt < MAX_CLAIMS_RETRIES) {
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s
+          console.log(`[syncRoleClaims] 🔄 Retry dans ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    // Log d'erreur si toutes les tentatives ont échoué
+    if (lastClaimsError) {
+      console.error(`[syncRoleClaims] ❌ Échec définitif après ${MAX_CLAIMS_RETRIES} tentatives pour ${uid}`);
       await admin.firestore().collection("auth_claims_logs").add({
         userId: uid,
         action: "create_failed",
         role: role,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: lastClaimsError.message,
+        attempts: MAX_CLAIMS_RETRIES,
         trigger: "onUserCreatedSyncClaims",
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });

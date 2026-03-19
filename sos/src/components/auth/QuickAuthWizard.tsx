@@ -82,19 +82,31 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const AUTH_ATTEMPTED_KEY = 'sos_quickauth_attempted';
 
   // Helper to check if auth was attempted (survives component remount)
+  // P1 FIX: Utilise un timestamp pour expirer les flags stale (>60s)
+  // Empêche les faux positifs si le composant est remonté longtemps après un ancien attempt
   const getAuthAttempted = useCallback(() => {
     try {
-      return sessionStorage.getItem(AUTH_ATTEMPTED_KEY) === 'true';
+      const value = sessionStorage.getItem(AUTH_ATTEMPTED_KEY);
+      if (!value) return false;
+      const timestamp = parseInt(value, 10);
+      if (isNaN(timestamp)) return false;
+      // Expirer après 60s — un Google popup/redirect devrait finir bien avant
+      const isExpired = Date.now() - timestamp > 60000;
+      if (isExpired) {
+        sessionStorage.removeItem(AUTH_ATTEMPTED_KEY);
+        return false;
+      }
+      return true;
     } catch {
       return false;
     }
   }, []);
 
-  // Helper to set auth attempted flag
+  // Helper to set auth attempted flag with timestamp
   const setAuthAttempted = useCallback((value: boolean) => {
     try {
       if (value) {
-        sessionStorage.setItem(AUTH_ATTEMPTED_KEY, 'true');
+        sessionStorage.setItem(AUTH_ATTEMPTED_KEY, String(Date.now()));
       } else {
         sessionStorage.removeItem(AUTH_ATTEMPTED_KEY);
       }

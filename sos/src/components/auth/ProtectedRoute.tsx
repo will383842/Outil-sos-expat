@@ -60,7 +60,9 @@ const MIN_AUTH_WAIT_MS = 150;
  * P0 FIX: Timeout de sécurité maximum pour éviter page blanche infinie
  * Si l'auth n'est toujours pas prête après ce délai, on redirige vers login
  */
-const MAX_AUTH_WAIT_MS = 10000;
+// P1 FIX: Augmenté de 10s à 20s pour les réseaux mobiles lents
+// AuthContext peut prendre jusqu'à 15-25s (fallbacks Firestore: onSnapshot → getDoc 5s → REST 10s → fatal 30s)
+const MAX_AUTH_WAIT_MS = 20000;
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
