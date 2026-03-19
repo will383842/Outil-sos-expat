@@ -478,26 +478,9 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   const [selectedType, setSelectedType] = useState<"all" | "lawyer" | "expat" | null>(null);
   const wizardRef = useRef<HTMLDivElement>(null);
 
-  // Prevent body scroll bleed-through on iOS:
-  // Only block touchmove on the wizard's own header/footer chrome areas.
-  // The content area (which contains [data-wizard-scroll], search bar, etc.)
-  // uses overflow-hidden + flex layout to contain scrolling, so we only need
-  // to block on the decorative/navigation chrome that sits outside the content.
-  useEffect(() => {
-    const el = wizardRef.current;
-    if (!el || !isOpen) return;
-
-    const handleTouchMove = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      // Allow everything inside the main content area (scrollable lists, search, buttons)
-      if (target.closest('[data-wizard-content]')) return;
-      // Block only on header/footer chrome to prevent body scroll bleed
-      e.preventDefault();
-    };
-
-    el.addEventListener('touchmove', handleTouchMove, { passive: false });
-    return () => el.removeEventListener('touchmove', handleTouchMove);
-  }, [isOpen]);
+  // Body scroll prevention is handled entirely by CSS (wizard-scroll-lock class
+  // with overflow:hidden on body+html). No touchmove preventDefault needed —
+  // that approach caused iOS touch coordinate bugs and interfered with tap events.
 
   // Toggle language selection
   const toggleLanguage = useCallback((code: string) => {
@@ -533,31 +516,17 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     }, 250);
   }, [onComplete, selectedCountry, selectedLanguages]);
 
-  // Prevent body scroll when wizard is open
-  // Uses CSS class (body.wizard-scroll-lock) with !important to beat the mobile
-  // media query rule "body { position: relative !important }" which was overriding
-  // the inline style approach, leaving body scroll completely unlocked on mobile.
+  // Prevent body scroll when wizard is open.
+  // Uses overflow:hidden only — NOT position:fixed+top:-Npx which causes
+  // iOS touch coordinate offset bugs (taps miss targets near top of screen).
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.dataset.wizardScrollY = String(scrollY);
       document.body.classList.add('wizard-scroll-lock');
-      document.body.style.top = `-${scrollY}px`;
-    } else if (document.body.dataset.wizardScrollY !== undefined) {
-      const scrollY = parseInt(document.body.dataset.wizardScrollY || '0', 10);
+    } else {
       document.body.classList.remove('wizard-scroll-lock');
-      document.body.style.top = '';
-      delete document.body.dataset.wizardScrollY;
-      window.scrollTo(0, scrollY);
     }
     return () => {
-      if (document.body.dataset.wizardScrollY !== undefined) {
-        const scrollY = parseInt(document.body.dataset.wizardScrollY || '0', 10);
-        document.body.classList.remove('wizard-scroll-lock');
-        document.body.style.top = '';
-        delete document.body.dataset.wizardScrollY;
-        window.scrollTo(0, scrollY);
-      }
+      document.body.classList.remove('wizard-scroll-lock');
     };
   }, [isOpen]);
 
@@ -579,19 +548,20 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   if (!isOpen) return null;
 
-  // z-[65] puts wizard above the main header (z-60) so touch events reach the wizard content,
-  // but below the mobile header bar (z-70) which visually sits above the wizard.
+  // z-[65] puts wizard above the main header (z-60) so touch events reach the wizard content.
+  // isolation:isolate ensures own stacking context — prevents header compositing layers from
+  // interfering with wizard touch events on mobile.
   // top uses calc() with safe-area-inset-top for PWA standalone mode (iPhone notch, Android cutout)
   return (
     <div
       ref={wizardRef}
       data-wizard
-      className="fixed inset-x-0 bottom-0 z-[65] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col"
-      style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))', touchAction: 'auto' }}
+      className="fixed inset-x-0 bottom-0 z-[65] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col isolate"
+      style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
     >
 
       {/* ===== HEADER FIXE : Progress Bar ===== */}
-      <div className="flex-shrink-0 px-5 pt-8 pb-5 bg-gray-900/90 backdrop-blur-sm border-b border-white/5">
+      <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-gray-900 border-b border-white/5">
         <StepProgressBar currentStep={step} totalSteps={3} />
       </div>
 
@@ -621,7 +591,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
       {/* ===== FOOTER FIXE : Boutons Navigation ===== */}
       <div
-        className="flex-shrink-0 px-5 py-4 pb-8 bg-gray-900/95 backdrop-blur-md border-t border-white/10 max-w-md mx-auto w-full"
+        className="flex-shrink-0 px-5 py-4 pb-8 bg-gray-900 border-t border-white/10 max-w-md mx-auto w-full"
         style={{ paddingBottom: 'max(32px, calc(env(safe-area-inset-bottom, 16px) + 16px))' }}
       >
         {step === 1 && (
