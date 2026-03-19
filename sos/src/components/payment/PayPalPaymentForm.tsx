@@ -669,18 +669,6 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
   return (
     <div className="paypal-payment-container space-y-3 sm:space-y-4">
 
-      {/* Récapitulatif du paiement - Style Stripe compact */}
-      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900 text-sm">
-            <FormattedMessage id="payment.total" defaultMessage="Total à payer" />
-          </span>
-          <span className="text-base font-black bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent">
-            {amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency.toUpperCase()}
-          </span>
-        </div>
-      </div>
-
       {/* Processing state - Enhanced with step indicator */}
       {isProcessing && (
         <div className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100">
@@ -821,34 +809,39 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         </div>
       </div>
 
-      {/* Bouton PayPal - Ne pas griser pour validation, seulement pour disabled/processing */}
-      <div className={`paypal-buttons-container transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
-        <PayPalButtons
-          style={{
-            layout: "horizontal",
-            color: "gold",
-            shape: "rect",
-            label: "paypal",
-            height: 44,
-            tagline: false,
-          }}
-          disabled={disabled || isProcessing}
-          createOrder={createOrder}
-          onApprove={onApprove}
-          onError={handleError}
-          onCancel={handleCancel}
-        />
-      </div>
-
-      {/* Badge de sécurité compact */}
-      <div className="flex items-center justify-center gap-4 pt-1">
-        <div className="flex items-center gap-1 text-xs text-gray-400">
-          <Lock className="w-3 h-3" />
-          <span>SSL 256-bit</span>
+      {/* PayPal buttons + badge — sticky on mobile */}
+      <div
+        className="sticky bottom-0 -mx-4 px-4 py-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 mt-3 z-10 md:relative md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0 md:mt-3 md:z-auto"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div className={`paypal-buttons-container transition-opacity duration-200 ${disabled || isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+          <PayPalButtons
+            style={{
+              layout: "horizontal",
+              color: "gold",
+              shape: "rect",
+              label: "paypal",
+              height: 44,
+              tagline: false,
+            }}
+            disabled={disabled || isProcessing}
+            createOrder={createOrder}
+            onApprove={onApprove}
+            onError={handleError}
+            onCancel={handleCancel}
+          />
         </div>
-        <div className="flex items-center gap-1 text-xs text-gray-400">
-          <ShieldCheck className="w-3 h-3" />
-          <span>PCI DSS</span>
+
+        {/* Badge de sécurité compact */}
+        <div className="flex items-center justify-center gap-4 pt-2">
+          <div className="flex items-center gap-1 text-xs text-gray-400">
+            <Lock className="w-3 h-3" aria-hidden="true" />
+            <span>SSL 256-bit</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-gray-400">
+            <ShieldCheck className="w-3 h-3" aria-hidden="true" />
+            <span>PCI DSS</span>
+          </div>
         </div>
       </div>
     </div>
