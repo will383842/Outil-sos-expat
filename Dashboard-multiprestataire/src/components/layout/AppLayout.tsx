@@ -40,16 +40,17 @@ export default function AppLayout() {
           <div className="flex items-center justify-between lg:hidden px-4 pt-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-3 text-gray-600 hover:bg-gray-100 rounded-lg -ml-2"
+              className="p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation rounded-lg -ml-2"
+              aria-label={t('common.open_menu', 'Ouvrir le menu')}
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6" aria-hidden="true" />
             </button>
 
             {/* Mobile install button */}
             {showMobileInstall && (
               <button
                 onClick={handleMobileInstall}
-                className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 active:bg-primary-800 active:scale-[0.98] transition-all touch-manipulation"
               >
                 <Download className="w-4 h-4" />
                 {t('pwa.install')}
@@ -79,9 +80,10 @@ export default function AppLayout() {
                 </h3>
                 <button
                   onClick={() => setShowIOSModal(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 active:bg-gray-100 transition-colors touch-manipulation rounded-lg"
+                  aria-label={t('common.close', 'Fermer')}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
 

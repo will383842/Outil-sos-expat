@@ -53,9 +53,10 @@ export function ConversationCard({
       to={`/dashboard/conversation/${id}`}
       className={cn(
         "group flex items-center gap-4 p-4 rounded-xl",
-        "bg-white border border-gray-100",
+        "bg-white border border-gray-200/60",
         "hover:border-gray-200 hover:shadow-sm",
-        "transition-all duration-150",
+        "active:scale-[0.98] active:shadow-sm",
+        "transition-all duration-150 touch-manipulation",
         className
       )}
     >
@@ -109,7 +110,7 @@ export function ConversationCard({
       </div>
 
       {/* Arrow */}
-      <ArrowRight className="w-5 h-5 text-gray-300 shrink-0 group-hover:text-red-500 group-hover:translate-x-1 transition-all duration-150" />
+      <ArrowRight className="w-5 h-5 text-gray-300 shrink-0 group-hover:text-red-500 group-hover:translate-x-1 group-active:text-red-500 group-active:translate-x-1 transition-all duration-150" />
     </Link>
   );
 }

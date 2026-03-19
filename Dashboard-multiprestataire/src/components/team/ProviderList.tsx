@@ -4,7 +4,7 @@
  */
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Users } from 'lucide-react';
 import { StatusBadge, OnlineIndicator, LoadingSpinner } from '../ui';
 import type { Provider, AvailabilityStatus } from '../../types';
 
@@ -55,7 +55,7 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={t('provider_list.search_placeholder')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full pl-10 pr-4 py-3 min-h-[44px] text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
         </div>
 
@@ -65,7 +65,7 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
-            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 appearance-none bg-white"
+            className="pl-10 pr-8 py-3 min-h-[44px] text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 appearance-none bg-white"
           >
             <option value="all">{t('provider_list.all_statuses')}</option>
             <option value="available">{t('status_badge.available')}</option>
@@ -81,13 +81,57 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
         {searchTerm || statusFilter !== 'all' ? ` ${t('provider_list.filtered')}` : ''}
       </p>
 
+      {/* Mobile Card View */}
+      {filteredProviders.length > 0 && (
+        <div className="md:hidden space-y-3">
+          {filteredProviders.map((provider) => {
+            const initials = provider.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+            return (
+              <div
+                key={provider.id}
+                onClick={() => onEdit?.(provider)}
+                className="bg-white rounded-xl border border-gray-200/60 shadow-card p-4 active:scale-[0.98] transition-all touch-manipulation cursor-pointer"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="relative">
+                    {provider.photoURL ? (
+                      <img src={provider.photoURL} alt={provider.name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-primary-600">{initials}</span>
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5">
+                      <OnlineIndicator isOnline={provider.isOnline} />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{provider.name}</p>
+                    <p className="text-sm text-gray-500 truncate">{provider.email}</p>
+                  </div>
+                  <StatusBadge status={provider.availability} />
+                </div>
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                  <span>{provider.type === 'lawyer' ? t('team.lawyer') : t('team.expat')}</span>
+                  <div className="flex items-center gap-4">
+                    <span>{provider.totalCalls || 0} {t('team.calls')}</span>
+                    <span>{provider.totalHoursOnline || 0}h</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Table */}
       {filteredProviders.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+          <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">{t('provider_list.no_results')}</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="hidden md:block bg-white rounded-xl shadow-card border border-gray-200/60 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -169,23 +213,23 @@ function ProviderRow({ provider, onEdit }: ProviderRowProps) {
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 text-gray-600">
+      <td className="px-3 sm:px-6 py-4 text-gray-600">
         {provider.type === 'lawyer' ? t('team.lawyer') : t('team.expat')}
       </td>
       <td className="px-3 sm:px-6 py-4">
         <StatusBadge status={provider.availability} />
       </td>
-      <td className="px-6 py-4 text-gray-600">
+      <td className="px-3 sm:px-6 py-4 text-gray-600">
         {provider.totalCalls || 0}
       </td>
-      <td className="px-6 py-4 text-gray-600">
+      <td className="px-3 sm:px-6 py-4 text-gray-600">
         {provider.totalHoursOnline || 0}h
       </td>
       <td className="px-6 py-4 text-right">
         {onEdit && (
           <button
             onClick={() => onEdit(provider)}
-            className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+            className="text-primary-600 hover:text-primary-800 min-h-[44px] px-2 active:text-primary-900 touch-manipulation text-sm font-medium"
           >
             {t('common.view')}
           </button>

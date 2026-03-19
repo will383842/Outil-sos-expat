@@ -2,10 +2,10 @@
  * App Component
  * Main application with routing and providers
  */
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -13,7 +13,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { AppLayout } from './components/layout';
 import { InstallPrompt } from './components/pwa';
 import { Login, Dashboard, Team, Requests, NotFound } from './pages';
-import { LANGUAGES } from './i18n/config';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -27,15 +26,41 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  // Set RTL direction for Arabic
+  // Set RTL direction for Arabic and other RTL languages
   useEffect(() => {
-    const lang = LANGUAGES.find((l) => l.code === i18n.language);
-    const dir = lang && 'dir' in lang ? lang.dir : 'ltr';
-    document.documentElement.dir = dir;
+    const isRTL = ['ar', 'he', 'fa', 'ur'].includes(i18n.language);
+    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
+
+  // PWA update toast — listens for custom event from main.tsx SW registration
+  const showUpdateToast = useCallback(() => {
+    toast(
+      (toastInstance) => (
+        <div className="flex items-center gap-3">
+          <span>{t('pwa.update_available', 'Mise \u00e0 jour disponible')}</span>
+          <button
+            onClick={() => {
+              toast.dismiss(toastInstance.id);
+              // Activate waiting SW then reload
+              window.dispatchEvent(new CustomEvent('pwa:do-update'));
+            }}
+            className="px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors whitespace-nowrap"
+          >
+            {t('pwa.reload', 'Recharger')}
+          </button>
+        </div>
+      ),
+      { duration: Infinity, icon: '\uD83D\uDD04' },
+    );
+  }, [t]);
+
+  useEffect(() => {
+    window.addEventListener('pwa:update-available', showUpdateToast);
+    return () => window.removeEventListener('pwa:update-available', showUpdateToast);
+  }, [showUpdateToast]);
 
   return (
     <ErrorBoundary>

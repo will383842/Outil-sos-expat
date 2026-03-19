@@ -54,6 +54,7 @@ export function QuickActions({
                 className={cn(
                   "group flex items-start gap-3 p-4 rounded-lg border border-gray-200",
                   "bg-white hover:bg-gray-50 hover:border-gray-300",
+                  "active:bg-gray-100 active:scale-[0.98] touch-manipulation",
                   "transition-all duration-200 hover:shadow-sm"
                 )}
               >

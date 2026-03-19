@@ -126,7 +126,7 @@ const ChatInputComponent = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               // Font size 16px minimum pour éviter le zoom sur iOS
-              "text-base sm:text-sm",
+              "text-base",
               "transition-colors",
               "placeholder:text-gray-400",
               // Touch feedback

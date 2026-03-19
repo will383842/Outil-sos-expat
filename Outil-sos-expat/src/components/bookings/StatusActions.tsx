@@ -38,7 +38,7 @@ export function StatusActions({
         <Button
           onClick={() => onUpdateStatus("in_progress")}
           disabled={isUpdating}
-          className="w-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 min-h-[44px] active:scale-[0.98] touch-manipulation"
         >
           <PhoneCall className="w-4 h-4 mr-2" />
           {t("provider:statusActions.startCall")}
@@ -50,7 +50,7 @@ export function StatusActions({
         <Button
           onClick={() => onUpdateStatus("completed")}
           disabled={isUpdating}
-          className="w-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 min-h-[44px] active:scale-[0.98] touch-manipulation"
         >
           <CheckCircle className="w-4 h-4 mr-2" />
           {t("provider:statusActions.finish")}
@@ -63,7 +63,7 @@ export function StatusActions({
           variant="outline"
           onClick={() => onUpdateStatus("cancelled")}
           disabled={isUpdating}
-          className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+          className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 min-h-[44px] active:scale-[0.98] touch-manipulation"
         >
           <PhoneOff className="w-4 h-4 mr-2" />
           {t("provider:statusActions.cancel")}
@@ -75,7 +75,7 @@ export function StatusActions({
         <Button
           onClick={() => onUpdateStatus("in_progress")}
           disabled={isUpdating}
-          className="w-full bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+          className="w-full bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 min-h-[44px] active:scale-[0.98] touch-manipulation"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
           {t("provider:statusActions.reopenConversation")}

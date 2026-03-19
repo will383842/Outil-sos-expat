@@ -5,11 +5,11 @@ import './i18n/config';
 import App from './App';
 import './index.css';
 
-// Register Service Worker with auto-update (silent on iOS)
+// Register Service Worker — show update toast when new version available
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Auto-update silently — confirm() doesn't work on iOS standalone PWA
-    updateSW(true);
+    // Dispatch custom event so App can show a toast (Toaster must be mounted)
+    window.dispatchEvent(new CustomEvent('pwa:update-available'));
   },
   onOfflineReady() {
     console.log('App prête pour utilisation hors ligne');
@@ -25,6 +25,11 @@ const updateSW = registerSW({
   onRegisterError(error) {
     console.error('SW registration error:', error);
   },
+});
+
+// Expose updateSW so the reload toast can activate the waiting SW before reloading
+window.addEventListener('pwa:do-update', () => {
+  updateSW(true);
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -45,10 +45,10 @@ export default function BookingTabs({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center justify-center gap-2 flex-1 py-3 min-h-[48px] text-xs sm:text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center justify-center gap-2 flex-1 py-3 min-h-[48px] text-xs sm:text-sm font-medium border-b-2 touch-manipulation transition-colors ${
               activeTab === tab.id
                 ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50 active:text-gray-700'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -104,7 +104,7 @@ export default function BookingTabs({
 
           {/* Empty state */}
           {pendingCount === 0 && !isLoading && (
-            <div className="text-center py-12">
+            <div className="text-center py-8 sm:py-12">
               <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">{t('requests.empty_pending')}</p>
               <p className="text-sm text-gray-400 mt-1">
@@ -124,7 +124,7 @@ export default function BookingTabs({
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-8 sm:py-12">
               <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">{t('requests.empty_history')}</p>
               <p className="text-sm text-gray-400 mt-1">

@@ -233,7 +233,7 @@ export default function BookingRequestCard({ booking, isNew, onDelete, providerM
         {descriptionTruncated && (
           <button
             onClick={() => setIsDescExpanded(!isDescExpanded)}
-            className="flex items-center gap-1 mt-1 text-xs text-primary-600 hover:text-primary-700 min-h-[44px]"
+            className="flex items-center gap-1 mt-1 text-xs text-primary-600 hover:text-primary-700 active:text-primary-800 active:scale-[0.98] touch-manipulation min-h-[44px]"
           >
             {isDescExpanded ? (
               <>{t('booking.see_less')} <ChevronUp className="w-3 h-3" /></>

@@ -26,10 +26,10 @@ export default function BottomNav() {
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative transition-colors ${
+              `flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative active:scale-95 touch-manipulation transition-colors ${
                 isActive
                   ? 'text-primary-600'
-                  : 'text-gray-400'
+                  : 'text-gray-400 active:text-gray-600'
               }`
             }
           >

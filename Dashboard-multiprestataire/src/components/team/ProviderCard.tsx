@@ -55,7 +55,7 @@ export default function ProviderCard({ provider, onEdit }: ProviderCardProps) {
             {provider.email && (
               <a
                 href={`mailto:${provider.email}`}
-                className="flex items-center gap-1 hover:text-primary-600 truncate"
+                className="flex items-center gap-1 min-h-[44px] hover:text-primary-600 active:text-primary-700 touch-manipulation truncate"
               >
                 <Mail className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className="truncate">{provider.email}</span>
@@ -64,7 +64,7 @@ export default function ProviderCard({ provider, onEdit }: ProviderCardProps) {
             {provider.phone && (
               <a
                 href={`tel:${provider.phone}`}
-                className="flex items-center gap-1 hover:text-primary-600"
+                className="flex items-center gap-1 min-h-[44px] hover:text-primary-600 active:text-primary-700 touch-manipulation"
               >
                 <Phone className="w-3.5 h-3.5" />
                 <span>{provider.phone}</span>
@@ -84,9 +84,10 @@ export default function ProviderCard({ provider, onEdit }: ProviderCardProps) {
         {onEdit && (
           <button
             onClick={() => onEdit(provider)}
-            className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 active:scale-[0.98] rounded-lg transition-all touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label={t('team.provider_actions', 'Actions du prestataire')}
           >
-            <MoreVertical className="w-5 h-5" />
+            <MoreVertical className="w-5 h-5" aria-hidden="true" />
           </button>
         )}
       </div>

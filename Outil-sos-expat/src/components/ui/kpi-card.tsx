@@ -88,7 +88,7 @@ export function KPICard({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-5 shadow-sm",
+        "rounded-2xl border p-5 shadow-card",
         styles.bg,
         styles.border,
         className
@@ -96,7 +96,7 @@ export function KPICard({
     >
       <div className="flex items-start justify-between">
         <div className="space-y-3">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
           <div>
             <p className="text-3xl font-bold text-gray-900 tracking-tight">
               {value}

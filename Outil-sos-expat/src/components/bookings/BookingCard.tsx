@@ -67,7 +67,7 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl border border-gray-200 p-4 hover:border-red-300 hover:shadow-md transition-all cursor-pointer group"
+      className="bg-white rounded-xl border border-gray-200 p-4 hover:border-red-300 hover:shadow-md active:scale-[0.98] active:shadow-sm touch-manipulation transition-all cursor-pointer group"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -75,7 +75,7 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {/* Type badge (avocat/expat) */}
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                 isLawyer
                   ? "bg-blue-100 text-blue-800"
                   : "bg-green-100 text-green-800"
@@ -88,7 +88,7 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
             {/* Priority badge */}
             {priority && (
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${priority.color}`}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium ${priority.color}`}
               >
                 {priority.icon} {priority.label}
               </span>
@@ -96,7 +96,7 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
 
             {/* AI badge */}
             {booking.aiProcessed && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 <Sparkles className="w-3 h-3" />
                 {t("provider:bookingCard.aiProcessed")}
               </span>
@@ -123,7 +123,7 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
       </p>
 
       {/* Meta info */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm sm:text-xs text-gray-500">
         {/* Client */}
         <div className="flex items-center gap-1">
           <User className="w-3.5 h-3.5" />
@@ -177,7 +177,7 @@ export function BookingCard({ booking, onClick }: BookingCardProps) {
             </span>
           )}
         </div>
-        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
+        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:translate-x-1 group-active:text-red-500 group-active:translate-x-1 transition-all" />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
  * Shows recent provider activity
  */
 import { useTranslation } from 'react-i18next';
+import { Activity } from 'lucide-react';
 import type { Provider } from '../../types';
 import { OnlineIndicator } from '../ui';
 
@@ -71,14 +72,15 @@ export default function ActivityFeed({ providers }: ActivityFeedProps) {
 
   if (activities.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+      <div className="bg-white rounded-xl shadow-card border border-gray-200/60 p-4 sm:p-6 text-center">
+        <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p className="text-gray-500">{t('dashboard.no_activity')}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-card border border-gray-200/60 overflow-hidden">
       <div className="divide-y divide-gray-100">
         {activities.map((activity) => (
           <div

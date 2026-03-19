@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { LANGUAGES } from '../../i18n/config';
 import toast from 'react-hot-toast';
+import Breadcrumbs from '../ui/Breadcrumbs';
 
 export default function Header() {
   const { user, signOut } = useAuth();
@@ -65,10 +66,12 @@ export default function Header() {
           <div className="relative" ref={langRef}>
             <button
               onClick={() => setLangOpen(!langOpen)}
-              className="flex items-center gap-1.5 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 p-2 min-h-[44px] min-w-[44px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:bg-gray-200 touch-manipulation rounded-lg transition-colors"
               title={currentLang.label}
+              aria-label={t('header.change_language', 'Changer de langue')}
+              aria-expanded={langOpen}
             >
-              <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Globe className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               <span className="text-xs sm:text-sm font-medium uppercase">{currentLang.code}</span>
             </button>
 
@@ -78,7 +81,7 @@ export default function Header() {
                   <button
                     key={lang.code}
                     onClick={() => handleLanguageChange(lang.code)}
-                    className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                    className={`flex items-center gap-3 w-full px-4 py-3 min-h-[44px] text-sm hover:bg-gray-50 active:bg-gray-100 touch-manipulation transition-colors ${
                       i18n.language === lang.code ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-700'
                     }`}
                   >
@@ -114,13 +117,15 @@ export default function Header() {
           {/* Logout */}
           <button
             onClick={handleSignOut}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 touch-manipulation rounded-lg transition-colors"
             title={t('header.logout')}
+            aria-label={t('header.logout', 'Se déconnecter')}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
       </div>
+      {location.pathname !== '/' && <Breadcrumbs />}
     </header>
   );
 }

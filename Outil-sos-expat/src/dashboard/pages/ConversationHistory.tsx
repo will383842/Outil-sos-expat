@@ -141,7 +141,7 @@ function ConversationCard({ conversation }: { conversation: Conversation }) {
       to={`/dashboard/conversation/${conversation.bookingId || conversation.id}`}
       className="block"
     >
-      <Card className="hover:shadow-md transition-shadow group">
+      <Card className="hover:shadow-md active:scale-[0.98] active:shadow-sm transition-shadow group">
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             {/* Avatar type */}
@@ -157,7 +157,7 @@ function ConversationCard({ conversation }: { conversation: Conversation }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-red-600 group-active:text-red-600 truncate transition-colors">
                     {clientName}
                   </h3>
                   <p className="text-sm text-gray-600 mt-0.5">{subject}</p>
@@ -173,7 +173,7 @@ function ConversationCard({ conversation }: { conversation: Conversation }) {
               </div>
 
               {/* Métadonnées */}
-              <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+              <div className="flex items-center flex-wrap gap-2 sm:gap-4 mt-3 text-xs sm:text-sm text-gray-500">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {formatDate(conversation.createdAt)}
@@ -194,7 +194,7 @@ function ConversationCard({ conversation }: { conversation: Conversation }) {
             </div>
 
             {/* Arrow */}
-            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all flex-shrink-0 mt-2" />
+            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-red-500 group-hover:translate-x-1 group-active:text-red-500 group-active:translate-x-1 transition-all flex-shrink-0 mt-2" />
           </div>
         </CardContent>
       </Card>
@@ -394,7 +394,7 @@ export default function ConversationHistory() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("provider:conversationHistory.title")}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("provider:conversationHistory.title")}</h1>
         <p className="text-gray-500 mt-1">
           {t("provider:conversationHistory.conversationCount", { count: stats.total })}
         </p>
@@ -420,9 +420,9 @@ export default function ConversationHistory() {
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center gap-2"
         >
-          <Filter className="w-4 h-4" />
+          <Filter className="w-4 h-4" aria-hidden="true" />
           {t("provider:conversationHistory.filters")}
-          <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`} aria-hidden="true" />
         </Button>
       </div>
 
@@ -499,7 +499,7 @@ export default function ConversationHistory() {
                   variant="outline"
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="min-w-[200px]"
+                  className="w-full sm:w-auto sm:min-w-[200px]"
                 >
                   {loadingMore ? (
                     <>

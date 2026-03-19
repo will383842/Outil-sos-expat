@@ -240,7 +240,7 @@ export default function GPTChatBox({
                 onCompositionEnd={() => setIsComposing(false)}
                 placeholder={placeholder || t("chat:placeholder")}
                 disabled={isLoading}
-                className="w-full resize-none rounded-sos border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-sos-red focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 bg-white shadow-sm"
+                className="w-full resize-none rounded-sos border border-gray-200 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-sos-red focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 bg-white shadow-sm"
                 rows={1}
                 style={{ minHeight: '48px', maxHeight: '120px' }}
                 aria-label={t("chat:sendMessage")}

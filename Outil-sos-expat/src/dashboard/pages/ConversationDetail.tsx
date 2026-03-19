@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useProvider, useAuth } from "../../contexts/UnifiedUserContext";
 import { useLanguage } from "../../hooks/useLanguage";
 import {
@@ -54,6 +54,7 @@ import {
   FileText,
   Maximize2,
   Minimize2,
+  ChevronRight,
 } from "lucide-react";
 
 // =============================================================================
@@ -303,10 +304,10 @@ function AIChat({
   return (
     <Card className="flex flex-col h-full border-0 shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center justify-between">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center justify-between gap-2">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white rounded-xl shadow-sm">
-            <Bot className="w-6 h-6 text-amber-600" />
+            <Bot className="w-6 h-6 text-amber-600" aria-hidden="true" />
           </div>
           <div>
             <h3 className="font-bold text-gray-900 text-lg">{t("aiChat.title")}</h3>
@@ -316,22 +317,23 @@ function AIChat({
         <div className="flex items-center gap-3">
           {remainingTime && !isExpired && (
             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${getTimerColor()}`}>
-              <Timer className="w-4 h-4" />
+              <Timer className="w-4 h-4" aria-hidden="true" />
               <span>{remainingTime}</span>
             </div>
           )}
           {isExpired && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4" aria-hidden="true" />
               <span>{t("aiChat.timeElapsed")}</span>
             </div>
           )}
           <button
             onClick={onToggleExpand}
-            className="p-2 hover:bg-white rounded-xl transition-colors"
+            className="p-2 hover:bg-white rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:bg-gray-100 touch-manipulation"
             title={isExpanded ? t("common:actions.collapse") : t("common:actions.expand")}
+            aria-label={isExpanded ? t("common:actions.collapse") : t("common:actions.expand")}
           >
-            {isExpanded ? <Minimize2 className="w-5 h-5 text-gray-500" /> : <Maximize2 className="w-5 h-5 text-gray-500" />}
+            {isExpanded ? <Minimize2 className="w-5 h-5 text-gray-500" aria-hidden="true" /> : <Maximize2 className="w-5 h-5 text-gray-500" aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -340,7 +342,7 @@ function AIChat({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50 relative"
+        className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-4 bg-gray-50/50 relative"
       >
         {messages.length === 0 ? (
           <div className="text-center py-16">
@@ -395,8 +397,9 @@ function AIChat({
                     <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
                       <button
                         onClick={() => copyToClipboard(message.content, message.id)}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-xs text-gray-500"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-xs text-gray-500 min-h-[44px] active:bg-gray-200 touch-manipulation"
                         title={t("aiChat.copyResponse")}
+                        aria-label={t("aiChat.copyResponse")}
                       >
                         {copiedId === message.id ? (
                           <>
@@ -513,16 +516,16 @@ function AIChat({
               userScrolledUpRef.current = false;
               setShowScrollButton(false);
             }}
-            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 transition-colors text-sm font-medium z-10"
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 transition-colors text-sm font-medium z-10 min-h-[44px] active:bg-amber-800 touch-manipulation"
           >
-            <ArrowLeft className="w-4 h-4 rotate-[-90deg]" />
+            <ArrowLeft className="w-4 h-4 rotate-[-90deg]" aria-hidden="true" />
             {t("aiChat.scrollToBottom") || "Aller en bas"}
           </button>
         )}
       </div>
 
       {/* Input */}
-      <div className="p-5 border-t border-gray-100 bg-white">
+      <div className="p-3 sm:p-5 border-t border-gray-100 bg-white">
         {disabled ? (
           <div className="bg-gray-50 rounded-2xl p-6 text-center">
             <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
@@ -546,13 +549,14 @@ function AIChat({
               <Button
                 type="submit"
                 disabled={!input.trim() || isLoading}
+                aria-label={t("common:actions.send")}
                 className="px-6 py-4 h-auto min-h-[56px] bg-amber-600 hover:bg-amber-700 text-white rounded-2xl shadow-lg shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
+                    <Send className="w-5 h-5" aria-hidden="true" />
                     <span className="hidden sm:inline ml-2">{t("common:actions.send")}</span>
                   </>
                 )}
@@ -1245,14 +1249,22 @@ export default function ConversationDetail() {
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col px-4 py-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
         <button
           onClick={() => navigate("/dashboard")}
-          className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
+          aria-label={t("page.backToDossiers")}
+          className="p-3 hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:bg-gray-200 touch-manipulation"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <ArrowLeft className="w-5 h-5 text-gray-600" aria-hidden="true" />
         </button>
         <div className="flex-1 min-w-0">
+          <nav aria-label="Fil d'Ariane" className="flex items-center gap-1 text-xs text-gray-400 mb-0.5">
+            <Link to="/dashboard" className="hover:text-gray-600 transition-colors">Dashboard</Link>
+            <ChevronRight className="w-3 h-3" aria-hidden="true" />
+            <Link to="/dashboard/historique" className="hover:text-gray-600 transition-colors">Historique</Link>
+            <ChevronRight className="w-3 h-3" aria-hidden="true" />
+            <span className="text-gray-600 truncate">Dossier</span>
+          </nav>
           <h1 className="text-xl font-bold text-gray-900 truncate">{booking.title || t("dossiers.noTitle")}</h1>
         </div>
         {booking.aiProcessed && (
@@ -1264,7 +1276,7 @@ export default function ConversationDetail() {
       </div>
 
       {/* Layout: Left (info) | Right (chat) */}
-      <div className={`flex-1 grid gap-6 min-h-0 ${chatExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
+      <div className={`flex-1 grid gap-3 sm:gap-4 lg:gap-6 min-h-0 ${chatExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
         {/* Left Panel - Scrollable client info */}
         {!chatExpanded && (
           <div className="lg:col-span-1 overflow-y-auto pr-2">

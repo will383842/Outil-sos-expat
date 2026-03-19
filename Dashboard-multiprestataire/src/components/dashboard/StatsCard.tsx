@@ -26,10 +26,10 @@ export default function StatsCard({
   subtitle,
 }: StatsCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-3 sm:p-5 border border-gray-100">
+    <div className="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-gray-200/60">
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-gray-500 text-xs sm:text-sm truncate">{title}</p>
+          <p className="text-gray-600 font-medium text-xs sm:text-sm truncate">{title}</p>
           <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-0.5">{value}</p>
 
           {trend && (
@@ -50,7 +50,7 @@ export default function StatsCard({
           )}
 
           {subtitle && !trend && (
-            <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 truncate">{subtitle}</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">{subtitle}</p>
           )}
         </div>
         <div className={`w-9 h-9 sm:w-12 sm:h-12 ${iconBg} rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-6 sm:[&>svg]:h-6`}>

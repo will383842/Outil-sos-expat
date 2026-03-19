@@ -109,6 +109,7 @@ export function RecentBookings({
                 <div
                   className={cn(
                     "flex items-center justify-between py-3 border-b border-gray-100 last:border-0",
+                    "min-h-[48px] active:bg-gray-100 touch-manipulation",
                     "hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors cursor-pointer"
                   )}
                   onClick={() => onBookingClick?.(booking.id)}
@@ -116,7 +117,7 @@ export function RecentBookings({
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center",
+                        "w-10 h-10 rounded-full flex items-center justify-center",
                         isLawyer ? "bg-blue-100" : "bg-green-100"
                       )}
                     >

@@ -48,7 +48,7 @@ export default function AiResponsePreview({
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full px-4 py-2 min-h-[44px]"
+        className="flex items-center justify-between w-full px-4 py-2 min-h-[44px] hover:bg-purple-100/50 active:bg-purple-100 active:scale-[0.98] transition-all touch-manipulation rounded-t-lg"
       >
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
@@ -79,7 +79,7 @@ export default function AiResponsePreview({
             </div>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] text-xs font-medium text-purple-600 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] text-xs font-medium text-purple-600 bg-purple-100 rounded-lg hover:bg-purple-200 active:bg-purple-300 active:scale-[0.98] transition-all touch-manipulation"
             >
               {copied ? (
                 <>

@@ -64,7 +64,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('login.email_placeholder')}
-            className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            className="block w-full pl-10 pr-4 py-3 min-h-[44px] text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
             disabled={isLoading}
             autoComplete="email"
           />
@@ -85,7 +85,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t('login.password_placeholder')}
-            className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            className="block w-full pl-10 pr-12 py-3 min-h-[44px] text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
             disabled={isLoading}
             autoComplete="current-password"
           />
@@ -103,7 +103,7 @@ export default function LoginForm({ onSubmit, error, isLoading }: LoginFormProps
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 active:bg-primary-800 active:scale-[0.98] touch-manipulation focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         {isLoading ? (
           <>

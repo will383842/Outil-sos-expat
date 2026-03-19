@@ -100,8 +100,8 @@ function ActiveConversationHero({
   if (loading) {
     return (
       <Card className={`border-0 bg-gradient-to-br from-red-50 to-rose-50 shadow-lg ${cardMinHeight}`}>
-        <CardContent className="p-8">
-          <div className="flex items-start gap-6">
+        <CardContent className="p-5 sm:p-8">
+          <div className="flex items-start gap-4 sm:gap-6">
             <Skeleton className="w-16 h-16 rounded-2xl" />
             <div className="flex-1 space-y-3">
               <Skeleton className="h-6 w-48" />
@@ -146,7 +146,7 @@ function ActiveConversationHero({
 
   return (
     <Card className={`border-0 bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 shadow-lg overflow-hidden ${cardMinHeight}`}>
-      <CardContent className="p-8 relative">
+      <CardContent className="p-5 sm:p-8 relative">
         {/* Subtle decorative element */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-red-100/50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
 
@@ -173,7 +173,7 @@ function ActiveConversationHero({
             <div className="flex-1 min-w-0">
               <h2 className="text-2xl font-bold text-gray-900 mb-1">{clientName}</h2>
               <p className="text-gray-600 text-lg mb-3">{subject}</p>
-              <div className="flex items-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center flex-wrap gap-3 sm:gap-6 text-sm text-gray-500">
                 <span className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   {t("provider:home.startedAgo", { time: elapsedDisplay })}
@@ -194,7 +194,7 @@ function ActiveConversationHero({
             className="block mt-8"
           >
             <Button
-              className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-200"
+              className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 active:bg-red-800 active:scale-[0.98] touch-manipulation text-white rounded-xl shadow-lg shadow-red-200"
             >
               {t("provider:home.continueConversation")}
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -434,7 +434,7 @@ export default function ProviderHome() {
     <div className="space-y-6">
       {/* Header - STABLE: Always rendered with same structure */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           {isEmptyState
             ? t("provider:home.welcome", { name: firstName ? `, ${firstName}` : "" })
             : t("provider:home.hello", { name: firstName ? `, ${firstName}` : "" })}
@@ -534,7 +534,7 @@ export default function ProviderHome() {
           {recentConversations.length > 0 && (
             <Link
               to="/dashboard/historique"
-              className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+              className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 min-h-[44px] px-2 -mr-2 active:text-red-800 touch-manipulation"
             >
               {t("provider:home.viewAll")}
               <ArrowRight className="w-4 h-4" />
