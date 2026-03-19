@@ -14,7 +14,7 @@ const SSR_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions
 const AFFILIATE_OG_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/affiliateOgRender';
 
 // Firebase Auth handler origin (used for /__/auth/* proxy)
-// This allows using a custom authDomain (www.sosexpats.com) instead of firebaseapp.com,
+// This allows using a custom authDomain (sos-expat.com) instead of firebaseapp.com,
 // which fixes Google OAuth on iOS Safari where ITP blocks cross-site cookies/storage.
 const FIREBASE_AUTH_ORIGIN = 'https://sos-urgently-ac307.firebaseapp.com';
 
@@ -908,8 +908,9 @@ async function handleRequest(request, env, ctx) {
     });
 
     const proxyHeaders = new Headers(authResponse.headers);
-    // Remove headers that Cloudflare should not forward
-    proxyHeaders.delete('set-cookie');
+    // IMPORTANT: Do NOT delete set-cookie — Firebase Auth needs cookies for
+    // getRedirectResult to work on iOS Safari (ITP blocks third-party cookies,
+    // but first-party cookies via this same-domain proxy are allowed)
     proxyHeaders.set('X-Worker-Active', 'true');
     proxyHeaders.set('X-Worker-Auth-Proxy', 'true');
 
