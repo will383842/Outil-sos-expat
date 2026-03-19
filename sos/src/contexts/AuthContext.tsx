@@ -46,7 +46,7 @@ import {
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { auth, db, storage, functions } from '../config/firebase';
-import type { User } from './types';
+import type { User, SupportedLanguage } from './types';
 import type { AuthContextType } from './AuthContextBase';
 import { AuthContext as BaseAuthContext } from './AuthContextBase';
 import { devLog, devWarn, devError } from '../utils/devLog';
@@ -1756,7 +1756,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               const result = await createUserDocumentViaCloudFunction(googleUser, {
                 role: 'client',
                 email: googleUser.email || '',
-                preferredLanguage: 'fr',
+                preferredLanguage: 'fr' as SupportedLanguage,
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               });
@@ -1786,7 +1786,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             const fallbackData = {
               role: 'client' as const,
               email: googleUser.email || '',
-              preferredLanguage: 'fr',
+              preferredLanguage: 'fr' as SupportedLanguage,
               provider: 'google.com',
               ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
@@ -2051,7 +2051,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
               const result = await createUserDocumentViaCloudFunction(googleUser, {
                 role: 'client',
                 email: googleUser.email || '',
-                preferredLanguage: 'fr',
+                preferredLanguage: 'fr' as SupportedLanguage,
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               });
@@ -2080,7 +2080,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             const fallbackData = {
               role: 'client' as const,
               email: googleUser.email || '',
-              preferredLanguage: 'fr',
+              preferredLanguage: 'fr' as SupportedLanguage,
               provider: 'google.com',
               ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
               ...(pendingRef && { pendingReferralCode: pendingRef, referralCapturedAt: new Date().toISOString() }),
