@@ -208,7 +208,7 @@ const CardFieldsSubmitButton: React.FC<{
       type="button"
       onClick={handleClick}
       disabled={isButtonDisabled}
-      className={`w-full py-3 rounded-xl font-semibold text-white
+      className={`w-full py-3 rounded-2xl font-semibold text-white
         transition-all duration-200 flex items-center justify-center gap-2
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
         active:scale-[0.98] touch-manipulation
@@ -553,7 +553,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-red-500/30"
+          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-red-500/30"
         >
           <FormattedMessage id="payment.paypal.reload" defaultMessage="Rafraîchir la page" />
         </button>
@@ -628,7 +628,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
           <button
             type="button"
             onClick={resetForm}
-            className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-red-500/30"
+            className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-red-500/30"
           >
             <FormattedMessage id="payment.paypal.retry" defaultMessage="Réessayer" />
           </button>
@@ -658,7 +658,7 @@ export const PayPalPaymentForm: React.FC<PayPalPaymentFormProps> = ({
         <button
           type="button"
           onClick={resetForm}
-          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-red-500/30"
+          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-red-500/30"
         >
           <FormattedMessage id="payment.paypal.retry" defaultMessage="Réessayer" />
         </button>

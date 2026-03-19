@@ -1456,7 +1456,7 @@ const SuccessPayment: React.FC = () => {
                   </p>
                   <button
                     onClick={() => navigate("/sos-appel")}
-                    className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
+                    className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 inline-flex items-center gap-2 shadow-lg shadow-red-500/30"
                   >
                     <RefreshCw className="w-5 h-5" />
                     {/* {t.chooseAnother} */}
@@ -1654,11 +1654,11 @@ const SuccessPayment: React.FC = () => {
         {/* Section Détails du service (ton bloc existant conservé) */}
         <section className="py-16 bg-gradient-to-b from-white to-gray-50">
           <div className="max-w-4xl mx-auto px-6">
-            <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-lg">
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-lg">
               <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
                 {isLawyer ? (
                   <>
-                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 text-white">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white">
                       <Briefcase className="w-5 h-5" />
                     </div>
                     {/* {t.serviceDetails} */}

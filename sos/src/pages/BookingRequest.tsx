@@ -110,15 +110,15 @@ const MultiLanguageSelect = lazy(
 
 /** ===== Theme ===== */
 const THEME = {
-  gradFrom: "from-red-600",
-  gradVia: "via-orange-600",
-  gradTo: "to-rose-600",
-  ring: "focus:border-red-600",
+  gradFrom: "from-red-500",
+  gradVia: "via-orange-500",
+  gradTo: "to-rose-500",
+  ring: "focus:border-red-500",
   border: "border-red-200",
-  icon: "text-red-600",
+  icon: "text-red-500",
   chip: "border-red-200",
   subtle: "bg-rose-50",
-  button: "from-red-600 via-orange-600 to-rose-600",
+  button: "from-red-500 via-orange-500 to-rose-500",
 } as const;
 
 /** ===== Fallbacks (si admin indisponible) ===== */

@@ -599,19 +599,19 @@ const CallCheckoutWrapper: React.FC = () => {
           <div className="space-y-2">
             <button
               onClick={() => navigate('/sos-appel')}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-colors"
+              className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold py-3 rounded-2xl transition-colors shadow-lg shadow-red-500/30"
             >
               {t('cta.select_expert')}
             </button>
             <button
               onClick={() => navigate('/')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors"
+              className="w-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-bold py-3 rounded-2xl transition-colors"
             >
               {t('cta.home')}
             </button>
             <button
               onClick={handleGoBack}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition-colors"
+              className="w-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-bold py-3 rounded-2xl transition-colors"
             >
               {t('cta.back')}
             </button>
@@ -635,7 +635,7 @@ const CallCheckoutWrapper: React.FC = () => {
                 } catch { /* noop */ }
                 finally { window.location.reload(); }
               }}
-              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+              className="w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 font-bold py-2 rounded-2xl text-sm transition-colors"
             >
               {t('cta.clear_cache')}
             </button>

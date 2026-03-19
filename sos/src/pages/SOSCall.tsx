@@ -3925,7 +3925,7 @@ const SOSCall: React.FC = () => {
                   </p>
                   <button
                     onClick={resetFilters}
-                    className="px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-lg sm:rounded-xl transition-colors min-h-[44px] text-sm touch-manipulation"
+                    className="px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-2xl transition-colors min-h-[44px] text-sm touch-manipulation shadow-lg shadow-red-500/30"
                   >
                     <FormattedMessage id="sosCall.noResults.resetButton" />
                   </button>
@@ -3949,7 +3949,7 @@ const SOSCall: React.FC = () => {
                 </p>
                 <button
                   onClick={() => navigate("/sos-appel")}
-                  className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 min-h-[48px] touch-manipulation"
+                  className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 shadow-lg shadow-red-500/30 hover:shadow-2xl hover:-translate-y-0.5 min-h-[48px] touch-manipulation"
                   aria-label={intl.formatMessage({ id: "sosCall.cta.buttonAriaLabel" })}
                 >
                   <Phone className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
@@ -4038,7 +4038,7 @@ const SOSCall: React.FC = () => {
       {!showWizard && (
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="lg:hidden fixed right-4 z-[35] w-14 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-orange-600 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform touch-manipulation"
+          className="lg:hidden fixed right-4 z-[35] w-14 h-14 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-transform touch-manipulation"
           style={{ bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}
           aria-label={intl.formatMessage({ id: "sosCall.filters.open" }, { defaultMessage: "Ouvrir les filtres" })}
         >

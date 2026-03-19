@@ -269,7 +269,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ resetErrorBoundary }) => 
         <p className="text-gray-300 mb-6 text-sm">{intl.formatMessage({ id: "error.description" })}</p>
         <Button 
           onClick={resetErrorBoundary} 
-          className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl"
+          className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-red-500/30"
         >
           {intl.formatMessage({ id: "error.retry" })}
         </Button>
@@ -1176,7 +1176,7 @@ const Login: React.FC = () => {
                       required 
                       value={formData.email} 
                       onChange={(e) => handleFieldChange("email", e.target.value)} 
-                      className="appearance-none block w-full px-3.5 py-3 pr-11 text-sm sm:text-base bg-white/10 border border-white/20 rounded-xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all min-h-[48px]"
+                      className="appearance-none block w-full px-3.5 py-3 pr-11 text-sm sm:text-base bg-white/10 border-2 border-white/20 rounded-2xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all min-h-[48px]"
                       placeholder={intl.formatMessage({ id: "login.email_placeholder" })} 
                       aria-invalid={!!formErrors.email}
                       aria-describedby={formErrors.email ? "email-error" : undefined}
@@ -1221,7 +1221,7 @@ const Login: React.FC = () => {
                       required 
                       value={formData.password} 
                       onChange={(e) => handleFieldChange("password", e.target.value)} 
-                      className="appearance-none block w-full px-3.5 py-3 pr-11 text-sm sm:text-base bg-white/10 border border-white/20 rounded-xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all min-h-[48px]"
+                      className="appearance-none block w-full px-3.5 py-3 pr-11 text-sm sm:text-base bg-white/10 border-2 border-white/20 rounded-2xl placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all min-h-[48px]"
                       placeholder={intl.formatMessage({ id: "login.password_placeholder" })} 
                       aria-invalid={!!formErrors.password}
                       aria-describedby={formErrors.password ? "password-error" : undefined}
@@ -1278,9 +1278,9 @@ const Login: React.FC = () => {
                   loading={effectiveLoading} 
                   fullWidth 
                   size="large" 
-                  className={`py-3.5 text-sm sm:text-base font-bold rounded-xl transition-all duration-200 min-h-[52px] ${
-                    isFormValid && !effectiveLoading 
-                      ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white shadow-lg" 
+                  className={`py-3.5 text-sm sm:text-base font-bold rounded-2xl transition-all duration-200 min-h-[52px] ${
+                    isFormValid && !effectiveLoading
+                      ? "bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg shadow-red-500/30"
                       : "bg-white/10 text-gray-500 cursor-not-allowed border border-white/20"
                   }`} 
                   disabled={!isFormValid || effectiveLoading}
