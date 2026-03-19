@@ -2707,9 +2707,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             </div>
           )}
 
+          {/* Reassurance message */}
+          <p className="text-center text-xs text-gray-500 mt-3 mb-1 px-2">
+            <Shield className="w-3 h-3 inline-block mr-1 -mt-0.5 text-green-600" aria-hidden="true" />
+            {intl.formatMessage({ id: "checkout.reassurance", defaultMessage: "Vous ne serez débité qu'après la mise en relation avec votre expert" })}
+          </p>
+
           {/* Pay button - sticky on mobile */}
           <div
-            className="sticky bottom-0 -mx-4 px-4 py-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 mt-4 z-10 md:relative md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0 md:mt-4 md:z-auto"
+            className="sticky bottom-0 -mx-4 px-4 py-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 mt-1 z-10 md:relative md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0 md:mt-1 md:z-auto"
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             <button
@@ -3879,6 +3885,24 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
               </div>
             </div>
           </section>
+
+          {/* Social proof + availability indicator */}
+          <div className="flex items-center justify-between px-1 mb-3 text-xs">
+            <div className="flex items-center gap-1.5 text-gray-500">
+              <span className="text-yellow-500">⭐</span>
+              <span className="font-medium">4.8</span>
+              <span>— 1 200+ {intl.formatMessage({ id: "checkout.successfulCalls", defaultMessage: "appels réussis" })}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+              <span className="text-green-600 font-medium">
+                {intl.formatMessage({ id: "checkout.availableNow", defaultMessage: "Disponible maintenant" })}
+              </span>
+            </div>
+          </div>
 
           {/* Currency toggle - compact */}
           <div className="flex items-center justify-center gap-2 mb-4 text-sm">
