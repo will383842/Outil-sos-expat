@@ -1660,7 +1660,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-[60] md:select-none"
+        className="fixed top-0 left-0 right-0 z-[70] md:select-none"
         role="banner"
       >
         {/* ============================================================ */}
@@ -1874,7 +1874,7 @@ const Header: React.FC = () => {
           {isMenuOpen && (
             <div
               id="mobile-menu"
-              className="fixed inset-x-0 bottom-0 overflow-hidden bg-gray-900 z-[65]"
+              className="fixed inset-x-0 bottom-0 overflow-hidden bg-gray-900 z-[75]"
               style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
               role="dialog"
               aria-modal="true"
