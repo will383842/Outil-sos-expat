@@ -19,13 +19,13 @@
  */
 
 import { Routes, Route, Navigate, Link, useSearchParams } from "react-router-dom";
-import { lazy, Suspense, memo } from "react";
+import { lazy, Suspense, memo, useState, useCallback } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { useAuth, useSubscription } from "../contexts/UnifiedUserContext";
 import { useLanguage } from "../hooks/useLanguage";
 import AdminSidebar from "./components/AdminSidebar";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, Menu } from "lucide-react";
 
 // =============================================================================
 // LAZY LOADING - Toutes les pages admin
@@ -136,6 +136,28 @@ const LoadingState = memo(function LoadingState({ message }: { message: string }
 });
 
 // =============================================================================
+// ADMIN MOBILE HEADER
+// =============================================================================
+
+const AdminMobileHeader = memo(function AdminMobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
+  return (
+    <header className="lg:hidden sticky top-0 z-30 flex items-center h-14 px-4 bg-slate-900 border-b border-slate-700/50">
+      <button
+        onClick={onMenuClick}
+        className="p-2 -ml-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+        aria-label="Ouvrir le menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+      <div className="flex items-center gap-2 ml-2">
+        <span className="font-bold text-white">SOS-Expat</span>
+        <span className="text-xs text-slate-400">Admin</span>
+      </div>
+    </header>
+  );
+});
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 
@@ -145,39 +167,47 @@ export default function AdminApp() {
   const { t } = useLanguage({ mode: "admin" });
   const [searchParams] = useSearchParams();
 
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const openSidebar = useCallback(() => setSidebarOpen(true), []);
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   // DEV MODE BYPASS - Only in Vite dev server AND localhost (never in production builds)
   const isLocalDev = import.meta.env.DEV && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
   const devBypass = isLocalDev && searchParams.get("dev") === "true";
   if (devBypass && import.meta.env.DEV) {
     console.warn("⚠️ [DEV MODE] Console Admin accessible sans authentification - localhost uniquement");
     return (
-      <div className="flex h-screen bg-gray-100">
-        <AdminSidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-            {/* Dev Mode Banner */}
-            <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-sm">
-              🔧 Mode développement actif - Console Admin
+      <div className="flex h-screen bg-gray-100 overflow-hidden">
+        <AdminSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <AdminMobileHeader onMenuClick={openSidebar} />
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+              {/* Dev Mode Banner */}
+              <div className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-sm">
+                🔧 Mode développement actif - Console Admin
+              </div>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="prestataires" element={<Prestataires />} />
+                  <Route path="multi-prestataires" element={<MultiPrestataires />} />
+                  <Route path="dossiers" element={<Dossiers />} />
+                  <Route path="dossier/:id" element={<DossierDetail />} />
+                  <Route path="utilisateurs" element={<Utilisateurs />} />
+                  <Route path="pays" element={<Pays />} />
+                  <Route path="ia" element={<AIConfig />} />
+                  <Route path="telegram" element={<TelegramConfig />} />
+                  <Route path="parametres" element={<Parametres />} />
+                  <Route path="audit" element={<AuditLogs />} />
+                  <Route path="*" element={<Navigate to="/admin" replace />} />
+                </Routes>
+              </Suspense>
             </div>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route index element={<AdminDashboard />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="prestataires" element={<Prestataires />} />
-                <Route path="multi-prestataires" element={<MultiPrestataires />} />
-                <Route path="dossiers" element={<Dossiers />} />
-                <Route path="dossier/:id" element={<DossierDetail />} />
-                <Route path="utilisateurs" element={<Utilisateurs />} />
-                <Route path="pays" element={<Pays />} />
-                <Route path="ia" element={<AIConfig />} />
-                <Route path="telegram" element={<TelegramConfig />} />
-                <Route path="parametres" element={<Parametres />} />
-                <Route path="audit" element={<AuditLogs />} />
-                <Route path="*" element={<Navigate to="/admin" replace />} />
-              </Routes>
-            </Suspense>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     );
   }
@@ -193,43 +223,49 @@ export default function AdminApp() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <AdminSidebar />
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {/* Sidebar - Drawer on mobile, fixed on desktop */}
+      <AdminSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Dashboard principal */}
-              <Route index element={<AdminDashboard />} />
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Mobile Header with hamburger */}
+        <AdminMobileHeader onMenuClick={openSidebar} />
 
-              {/* Analytics */}
-              <Route path="analytics" element={<Analytics />} />
+        {/* Main Content - Scrollable */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Dashboard principal */}
+                <Route index element={<AdminDashboard />} />
 
-              {/* Gestion */}
-              <Route path="prestataires" element={<Prestataires />} />
-              <Route path="multi-prestataires" element={<MultiPrestataires />} />
-              <Route path="dossiers" element={<Dossiers />} />
-              <Route path="dossier/:id" element={<DossierDetail />} />
-              <Route path="utilisateurs" element={<Utilisateurs />} />
+                {/* Analytics */}
+                <Route path="analytics" element={<Analytics />} />
 
-              {/* Configuration */}
-              <Route path="pays" element={<Pays />} />
-              <Route path="ia" element={<AIConfig />} />
-              <Route path="telegram" element={<TelegramConfig />} />
-              <Route path="parametres" element={<Parametres />} />
+                {/* Gestion */}
+                <Route path="prestataires" element={<Prestataires />} />
+                <Route path="multi-prestataires" element={<MultiPrestataires />} />
+                <Route path="dossiers" element={<Dossiers />} />
+                <Route path="dossier/:id" element={<DossierDetail />} />
+                <Route path="utilisateurs" element={<Utilisateurs />} />
 
-              {/* Sécurité */}
-              <Route path="audit" element={<AuditLogs />} />
+                {/* Configuration */}
+                <Route path="pays" element={<Pays />} />
+                <Route path="ia" element={<AIConfig />} />
+                <Route path="telegram" element={<TelegramConfig />} />
+                <Route path="parametres" element={<Parametres />} />
 
-              {/* Route par défaut */}
-              <Route path="*" element={<Navigate to="/admin" replace />} />
-            </Routes>
-          </Suspense>
-        </div>
-      </main>
+                {/* Sécurité */}
+                <Route path="audit" element={<AuditLogs />} />
+
+                {/* Route par défaut */}
+                <Route path="*" element={<Navigate to="/admin" replace />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

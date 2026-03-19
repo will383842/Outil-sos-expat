@@ -92,7 +92,7 @@ export default function Stats() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-1">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4">
       {/* Action bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         {/* Month selector */}
@@ -196,19 +196,19 @@ export default function Stats() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t('stats.th_provider')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t('stats.th_hours')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t('stats.th_calls')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t('stats.th_missed')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t('stats.th_compliance')}
                     </th>
                   </tr>
@@ -216,7 +216,7 @@ export default function Stats() {
                 <tbody className="divide-y divide-gray-100">
                   {stats.map((s) => (
                     <tr key={s.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">
                             {s.providerName}
@@ -226,7 +226,7 @@ export default function Stats() {
                           </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-4">
                         <span
                           className={
                             s.hoursCompliant
@@ -244,7 +244,7 @@ export default function Stats() {
                       <td className="px-6 py-4 text-gray-600">
                         {s.callsReceived}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-4">
                         <span
                           className={
                             s.missedCallsCompliant
@@ -259,7 +259,7 @@ export default function Stats() {
                           / {s.missedCallsTarget} max
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-4">
                         <StatusBadge
                           status={s.isCompliant ? 'compliant' : 'non-compliant'}
                         />

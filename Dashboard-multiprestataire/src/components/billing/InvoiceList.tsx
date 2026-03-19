@@ -62,19 +62,20 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {t('invoice.th_invoice')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {t('invoice.th_date')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {t('invoice.th_amount')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {t('invoice.th_status')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -89,7 +90,7 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
 
             return (
               <tr key={invoice.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
+                <td className="px-3 sm:px-6 py-4">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-400" />
                     <span className="font-medium text-gray-900">
@@ -101,7 +102,7 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
                 <td className="px-6 py-4 text-gray-900 font-medium">
                   €{invoice.amount.toFixed(2)}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-3 sm:px-6 py-4">
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${status.className}`}
                   >
@@ -129,6 +130,7 @@ export default function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

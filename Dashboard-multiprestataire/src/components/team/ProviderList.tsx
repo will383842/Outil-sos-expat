@@ -92,19 +92,19 @@ export default function ProviderList({ providers, isLoading, onEdit }: ProviderL
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('provider_list.th_provider')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('provider_list.th_type')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('provider_list.th_status')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('provider_list.th_calls')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('provider_list.th_hours')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -145,7 +145,7 @@ function ProviderRow({ provider, onEdit }: ProviderRowProps) {
 
   return (
     <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4">
+      <td className="px-3 sm:px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="relative">
             {provider.photoURL ? (
@@ -172,7 +172,7 @@ function ProviderRow({ provider, onEdit }: ProviderRowProps) {
       <td className="px-6 py-4 text-gray-600">
         {provider.type === 'lawyer' ? t('team.lawyer') : t('team.expat')}
       </td>
-      <td className="px-6 py-4">
+      <td className="px-3 sm:px-6 py-4">
         <StatusBadge status={provider.availability} />
       </td>
       <td className="px-6 py-4 text-gray-600">

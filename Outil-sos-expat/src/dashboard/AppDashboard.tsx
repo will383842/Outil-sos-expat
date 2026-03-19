@@ -113,7 +113,7 @@ const MobileHeader = memo(function MobileHeader({ onMenuClick }: MobileHeaderPro
                 onClick={() => setShowProviderMenu(false)}
               />
               {/* Menu */}
-              <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 z-50 overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-64 max-w-[280px] bg-slate-800 rounded-xl shadow-2xl border border-slate-700 z-50 overflow-hidden">
                 <div className="p-2 border-b border-slate-700">
                   <p className="text-xs font-medium text-slate-400 uppercase tracking-wide px-2">
                     {t("provider:providerSwitcher.switchProvider")}

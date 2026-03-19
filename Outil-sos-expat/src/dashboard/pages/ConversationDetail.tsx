@@ -422,7 +422,7 @@ function AIChat({
         {isLoading && (
           <div className="flex justify-start px-2 sm:px-0">
             <div
-              className="bg-white border border-gray-200 rounded-2xl px-4 py-4 sm:px-5 sm:py-5 shadow-lg w-full max-w-[calc(100vw-2rem)] sm:max-w-md"
+              className="bg-white border border-gray-200 rounded-2xl px-4 py-4 sm:px-5 sm:py-5 shadow-lg w-full max-w-[calc(100vw-2rem-env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px))] sm:max-w-md"
               role="status"
               aria-live="polite"
               aria-label={thinkingLogs.length > 0 ? thinkingLogs[thinkingLogs.length - 1].message : t("aiChat.analyzing")}

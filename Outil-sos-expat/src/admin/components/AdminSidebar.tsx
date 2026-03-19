@@ -30,7 +30,7 @@ import {
   Building2,
   Send,
 } from "lucide-react";
-import { useState, memo } from "react";
+import { useState, useEffect, memo } from "react";
 import LanguageSelector from "./LanguageSelector";
 
 // =============================================================================
@@ -182,9 +182,11 @@ const NavItemComponent = memo(function NavItemComponent({
 
 interface AdminSidebarProps {
   className?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function AdminSidebar({ className }: AdminSidebarProps) {
+export default function AdminSidebar({ className, isOpen = false, onClose }: AdminSidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
   const { t } = useLanguage({ mode: "admin" });
@@ -200,21 +202,41 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
     return location.pathname.startsWith(item.to) && item.to !== "/admin";
   };
 
+  // Close mobile drawer on route change
+  useEffect(() => {
+    if (isOpen && onClose) {
+      onClose();
+    }
+  }, [location.pathname]);
+
   return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-slate-900 text-white transition-all duration-300",
-        collapsed ? "w-[72px]" : "w-64",
-        className
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
       )}
-    >
+
+      <aside
+        className={cn(
+          "flex flex-col h-screen bg-slate-900 text-white transition-all duration-300",
+          collapsed ? "w-[72px]" : "w-64",
+          // Mobile: fixed drawer with slide in/out
+          "fixed inset-y-0 left-0 z-50 lg:relative lg:z-auto",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          className
+        )}
+      >
       {/* Header avec logo */}
       <div className={cn(
         "flex items-center h-16 px-4 border-b border-slate-700/50",
         collapsed ? "justify-center" : "justify-between"
       )}>
         {!collapsed && (
-          <Link to="/admin" className="flex items-center gap-2">
+          <Link to="/admin" className="flex items-center gap-2" onClick={onClose}>
             <Building2 className="w-8 h-8 text-red-500" />
             <div>
               <span className="font-bold text-lg">SOS-Expat</span>
@@ -228,11 +250,20 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
           </Link>
         )}
 
-        {/* Bouton collapse */}
+        {/* Close button - Mobile only */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+          aria-label="Fermer"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        {/* Bouton collapse - Desktop only */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors",
+            "hidden lg:flex p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors",
             collapsed && "absolute -right-3 top-5 bg-slate-900 border border-slate-700 shadow-lg"
           )}
           title={collapsed ? t("admin:sidebar.expand") : t("admin:sidebar.collapse")}
@@ -302,5 +333,6 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

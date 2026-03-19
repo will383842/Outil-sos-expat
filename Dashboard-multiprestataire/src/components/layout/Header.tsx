@@ -73,7 +73,7 @@ export default function Header() {
             </button>
 
             {langOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 max-h-80 overflow-y-auto">
+              <div className="absolute right-0 top-full mt-1 w-[calc(100vw-2rem)] sm:w-48 max-w-[200px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 max-h-80 overflow-y-auto">
                 {LANGUAGES.map((lang) => (
                   <button
                     key={lang.code}
