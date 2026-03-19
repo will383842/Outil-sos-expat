@@ -7,11 +7,9 @@ import { OTHER_COUNTRY } from '@/data/countries';
 // Types
 export interface BookingFormData {
   firstName: string;
-  lastName: string;
   nationality: string;
   currentCountry: string;
   autrePays?: string;
-  title: string;
   description: string;
   clientPhone: string;
   acceptTerms: boolean;
@@ -65,16 +63,15 @@ export interface MobileBookingContextValue {
 
 const MobileBookingContext = createContext<MobileBookingContextValue | null>(null);
 
-export const TOTAL_STEPS = 6;
+export const TOTAL_STEPS = 5;
 
 // Step validation rules
 const STEP_FIELDS: Record<number, (keyof BookingFormData)[]> = {
-  1: ['firstName', 'lastName'],
+  1: ['firstName'],
   2: ['currentCountry'],
-  3: ['title'],
-  4: ['description'],
-  5: ['clientPhone'],
-  6: ['acceptTerms'],
+  3: ['description'],
+  4: ['clientPhone'],
+  5: ['acceptTerms'],
 };
 
 interface MobileBookingProviderProps {
@@ -91,11 +88,9 @@ export const MobileBookingProvider: React.FC<MobileBookingProviderProps> = ({
     mode: 'onChange',
     defaultValues: {
       firstName: '',
-      lastName: '',
       nationality: '',
       currentCountry: '',
       autrePays: '',
-      title: '',
       description: '',
       clientPhone: '',
       acceptTerms: false,
@@ -152,20 +147,17 @@ export const MobileBookingProvider: React.FC<MobileBookingProviderProps> = ({
 
     switch (step) {
       case 1: // Name
-        return Boolean(values.firstName?.trim()) && Boolean(values.lastName?.trim());
+        return Boolean(values.firstName?.trim());
 
       case 2: // Country
         const hasCountry = Boolean(values.currentCountry?.trim());
         const otherOk = values.currentCountry !== OTHER_COUNTRY || Boolean(values.autrePays?.trim());
         return hasCountry && otherOk;
 
-      case 3: // Title
-        return (values.title?.trim().length ?? 0) >= 10;
+      case 3: // Description
+        return (values.description?.trim().length ?? 0) >= 30;
 
-      case 4: // Description
-        return (values.description?.trim().length ?? 0) >= 50;
-
-      case 5: // Phone
+      case 4: // Phone
         if (!values.clientPhone) return false;
         try {
           const parsed = parsePhoneNumberFromString(values.clientPhone);
@@ -174,7 +166,7 @@ export const MobileBookingProvider: React.FC<MobileBookingProviderProps> = ({
           return false;
         }
 
-      case 6: // Terms
+      case 5: // Terms
         return Boolean(values.acceptTerms);
 
       default:

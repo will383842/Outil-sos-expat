@@ -159,6 +159,16 @@ const SuccessPayment: React.FC = () => {
     return null;
   }, [searchParams]);
 
+  // Clean up sessionStorage after 30s — prevents stale data in multi-tab, but survives F5
+  useEffect(() => {
+    if (paymentData?.savedAt) {
+      const cleanup = setTimeout(() => {
+        try { sessionStorage.removeItem('lastPaymentSuccess'); } catch {}
+      }, 30000);
+      return () => clearTimeout(cleanup);
+    }
+  }, [paymentData?.savedAt]);
+
   // Extraire les valeurs individuelles depuis paymentData
   const callStatus = paymentData?.call || searchParams.get("call");
   const providerId = paymentData?.providerId || "1";

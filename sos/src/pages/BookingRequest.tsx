@@ -181,7 +181,7 @@ const I18N = {
       nationality: "Ex : Française, Américaine…",
       title: "Ex : Visa de travail au Canada — quels documents ?",
       description:
-        "Expliquez votre situation : contexte, questions précises, objectifs, délais… (50 caractères min.)",
+        "Expliquez votre situation : contexte, questions précises, objectifs, délais… (30 caractères min.)",
       phone: "612 345 678",
       otherCountry: "Ex : Paraguay",
     },
@@ -189,7 +189,7 @@ const I18N = {
       firstName: "Prénom requis",
       lastName: "Nom requis",
       title: "Le titre doit contenir au moins 10 caractères",
-      description: "La description doit contenir au moins 50 caractères",
+      description: "La description doit contenir au moins 30 caractères",
       nationality: "Nationalité requise",
       currentCountry: "Pays d'intervention requis",
       otherCountry: "Veuillez préciser votre pays",
@@ -250,7 +250,7 @@ const I18N = {
       "lastName": "اسم العائلة",
       "nationality": "مثلاً: فرنسي، أمريكي…",
       "title": "مثلاً: تأشيرة عمل كندا — ما هي الوثائق المطلوبة؟",
-      "description": "اشرح وضعك: السياق، الأسئلة المحددة، الأهداف، الجدول الزمني… (50 حرفًا على الأقل)",
+      "description": "اشرح وضعك: السياق، الأسئلة المحددة، الأهداف، الجدول الزمني… (30 حرفًا على الأقل)",
       "phone": "612 345 678",
       "otherCountry": "مثلاً: باراغواي"
     },
@@ -258,7 +258,7 @@ const I18N = {
       "firstName": "الاسم الأول مطلوب",
       "lastName": "اسم العائلة مطلوب",
       "title": "يجب أن يكون العنوان مكونًا من 10 أحرف على الأقل",
-      "description": "يجب أن يحتوي الوصف على 50 حرفًا على الأقل",
+      "description": "يجب أن يحتوي الوصف على 30 حرفًا على الأقل",
       "nationality": "الجنسية مطلوبة",
       "currentCountry": "بلد التدخل مطلوب",
       "otherCountry": "يرجى تحديد بلدك",
@@ -319,7 +319,7 @@ const I18N = {
       "lastName": "您的姓氏",
       "nationality": "例如：法国人、美国人…",
       "title": "例如：加拿大工作签证 — 需要哪些文件？",
-      "description": "请说明您的情况：背景、具体问题、目标、时间线…（至少 50 个字符）",
+      "description": "请说明您的情况：背景、具体问题、目标、时间线…（至少 30 个字符）",
       "phone": "612 345 678",
       "otherCountry": "例如：巴拉圭"
     },
@@ -327,7 +327,7 @@ const I18N = {
       "firstName": "名字为必填项",
       "lastName": "姓氏为必填项",
       "title": "标题至少需要 10 个字符",
-      "description": "描述至少需要 50 个字符",
+      "description": "描述至少需要 30 个字符",
       "nationality": "国籍为必填项",
       "currentCountry": "服务国家为必填项",
       "otherCountry": "请注明您的国家",
@@ -391,7 +391,7 @@ const I18N = {
       nationality: "e.g., French, American…",
       title: "e.g., Canada work visa — which documents?",
       description:
-        "Explain your situation: context, specific questions, goals, timeline… (min. 50 chars)",
+        "Explain your situation: context, specific questions, goals, timeline… (min. 30 chars)",
       phone: "612 345 678",
       otherCountry: "e.g., Paraguay",
     },
@@ -399,7 +399,7 @@ const I18N = {
       firstName: "First name required",
       lastName: "Last name required",
       title: "Title must be at least 10 characters",
-      description: "Description must be at least 50 characters",
+      description: "Description must be at least 30 characters",
       nationality: "Nationality required",
       currentCountry: "Intervention country required",
       otherCountry: "Please specify your country",
@@ -465,7 +465,7 @@ const I18N = {
       nationality: "Ej: Francesa, Americana…",
       title: "Ej: Visa de trabajo en Canadá — ¿qué documentos?",
       description:
-        "Explica tu situación: contexto, preguntas específicas, objetivos, plazos… (mín. 50 caracteres)",
+        "Explica tu situación: contexto, preguntas específicas, objetivos, plazos… (mín. 30 caracteres)",
       phone: "612 345 678",
       otherCountry: "Ej: Paraguay",
     },
@@ -473,7 +473,7 @@ const I18N = {
       firstName: "Nombre requerido",
       lastName: "Apellido requerido",
       title: "El título debe tener al menos 10 caracteres",
-      description: "La descripción debe tener al menos 50 caracteres",
+      description: "La descripción debe tener al menos 30 caracteres",
       nationality: "Nacionalidad requerida",
       currentCountry: "País de intervención requerido",
       otherCountry: "Por favor especifica tu país",
@@ -537,7 +537,7 @@ const I18N = {
       nationality: "z.B.: Franzosisch, Amerikanisch…",
       title: "z.B.: Arbeitsvisum Kanada — welche Dokumente?",
       description:
-        "Erklaren Sie Ihre Situation: Kontext, spezifische Fragen, Ziele, Fristen… (min. 50 Zeichen)",
+        "Erklaren Sie Ihre Situation: Kontext, spezifische Fragen, Ziele, Fristen… (min. 30 Zeichen)",
       phone: "612 345 678",
       otherCountry: "z.B.: Paraguay",
     },
@@ -545,7 +545,7 @@ const I18N = {
       firstName: "Vorname erforderlich",
       lastName: "Nachname erforderlich",
       title: "Der Titel muss mindestens 10 Zeichen haben",
-      description: "Die Beschreibung muss mindestens 50 Zeichen haben",
+      description: "Die Beschreibung muss mindestens 30 Zeichen haben",
       nationality: "Staatsangehorigkeit erforderlich",
       currentCountry: "Einsatzland erforderlich",
       otherCountry: "Bitte geben Sie Ihr Land an",
@@ -609,7 +609,7 @@ const I18N = {
       nationality: "Ex.: Francesa, Americana…",
       title: "Ex.: Visto de trabalho Canada — quais documentos?",
       description:
-        "Explique sua situacao: contexto, perguntas especificas, objetivos, prazos… (min. 50 caracteres)",
+        "Explique sua situacao: contexto, perguntas especificas, objetivos, prazos… (min. 30 caracteres)",
       phone: "612 345 678",
       otherCountry: "Ex.: Paraguai",
     },
@@ -617,7 +617,7 @@ const I18N = {
       firstName: "Nome obrigatorio",
       lastName: "Sobrenome obrigatorio",
       title: "O titulo deve ter pelo menos 10 caracteres",
-      description: "A descricao deve ter pelo menos 50 caracteres",
+      description: "A descricao deve ter pelo menos 30 caracteres",
       nationality: "Nacionalidade obrigatoria",
       currentCountry: "Pais de intervencao obrigatorio",
       otherCountry: "Por favor, especifique seu pais",
@@ -681,7 +681,7 @@ const I18N = {
       nationality: "Напр.: Французское, Американское…",
       title: "Напр.: Рабочая виза в Канаду — какие документы?",
       description:
-        "Объясните вашу ситуацию: контекст, конкретные вопросы, цели, сроки… (мин. 50 символов)",
+        "Объясните вашу ситуацию: контекст, конкретные вопросы, цели, сроки… (мін. 30 символов)",
       phone: "612 345 678",
       otherCountry: "Напр.: Парагвай",
     },
@@ -689,7 +689,7 @@ const I18N = {
       firstName: "Имя обязательно",
       lastName: "Фамилия обязательна",
       title: "Заголовок должен содержать не менее 10 символов",
-      description: "Описание должно содержать не менее 50 символов",
+      description: "Описание должно содержать не менее 30 символов",
       nationality: "Гражданство обязательно",
       currentCountry: "Страна вмешательства обязательна",
       otherCountry: "Пожалуйста, укажите вашу страну",
@@ -753,7 +753,7 @@ const I18N = {
       nationality: "उदा.: फ्रेंच, अमेरिकी…",
       title: "उदा.: कनाडा वर्क वीजा — कौन से दस्तावेज?",
       description:
-        "अपनी स्थिति बताएं: संदर्भ, विशिष्ट प्रश्न, लक्ष्य, समय-सीमा… (न्यूनतम 50 अक्षर)",
+        "अपनी स्थिति बताएं: संदर्भ, विशिष्ट प्रश्न, लक्ष्य, समय-सीमा… (न्यूनतम 30 अक्षर)",
       phone: "612 345 678",
       otherCountry: "उदा.: पैराग्वे",
     },
@@ -761,7 +761,7 @@ const I18N = {
       firstName: "पहला नाम आवश्यक है",
       lastName: "अंतिम नाम आवश्यक है",
       title: "शीर्षक में कम से कम 10 अक्षर होने चाहिए",
-      description: "विवरण में कम से कम 50 अक्षर होने चाहिए",
+      description: "विवरण में कम से कम 30 अक्षर होने चाहिए",
       nationality: "राष्ट्रीयता आवश्यक है",
       currentCountry: "हस्तक्षेप देश आवश्यक है",
       otherCountry: "कृपया अपना देश निर्दिष्ट करें",
@@ -1021,11 +1021,9 @@ interface BookingRequestData {
 /** --- Types RHF --- */
 type BookingFormData = {
   firstName: string;
-  lastName: string;
   nationality: string;
   currentCountry: string;
   autrePays?: string;
-  title: string;
   description: string;
   clientPhone: string; // géré via PhoneField (E.164)
   acceptTerms: boolean;
@@ -2232,11 +2230,9 @@ const BookingRequest: React.FC = () => {
     mode: "onChange",
     defaultValues: {
       firstName: "",
-      lastName: "",
       nationality: "",
       currentCountry: "",
       autrePays: "",
-      title: "",
       description: "",
       clientPhone: "",
       acceptTerms: false,
@@ -2256,7 +2252,7 @@ const BookingRequest: React.FC = () => {
   const [langMismatchAcknowledged, setLangMismatchAcknowledged] = useState(false);
 
   // ===== MOBILE WIZARD STATE =====
-  const isMobile = useMediaQuery("(max-width: 767px)");
+  const isMobile = useMediaQuery("(max-width: 820px)");
   const [currentStep, setCurrentStep] = useState(1);
   const [animationDirection, setAnimationDirection] = useState<"forward" | "backward">("forward");
   const [providerExpanded, setProviderExpanded] = useState(false);
@@ -2271,9 +2267,7 @@ const BookingRequest: React.FC = () => {
 
   // Refs pour scroll ciblé (en cas d'erreur globale)
   const refFirstName = useRef<HTMLDivElement | null>(null);
-  const refLastName = useRef<HTMLDivElement | null>(null);
   const refCountry = useRef<HTMLDivElement | null>(null);
-  const refTitle = useRef<HTMLDivElement | null>(null);
   const refDesc = useRef<HTMLDivElement | null>(null);
   const refLangs = useRef<HTMLDivElement | null>(null);
   const refPhone = useRef<HTMLDivElement | null>(null);
@@ -2669,10 +2663,8 @@ const BookingRequest: React.FC = () => {
   // Progression (RHF) - P0 FIX: validFlags now depends on watched from useWatch
   const validFlags: Record<string, boolean> = useMemo(() => {
     const values = getValues();
-    const hasTitle = values.title.trim().length >= 10;
-    const hasDesc = values.description.trim().length >= 50;
+    const hasDesc = values.description.trim().length >= 30;
     const hasFirst = values.firstName.trim().length > 0;
-    const hasLast = values.lastName.trim().length > 0;
     const hasCountry = values.currentCountry.trim().length > 0;
     const otherOk =
       values.currentCountry !== OTHER_COUNTRY ? true : !!values.autrePays?.trim();
@@ -2693,8 +2685,6 @@ const BookingRequest: React.FC = () => {
 
     return {
       firstName: hasFirst,
-      lastName: hasLast,
-      title: hasTitle,
       description: hasDesc,
       currentCountry: hasCountry,
       autrePays: otherOk,
@@ -2716,10 +2706,10 @@ const BookingRequest: React.FC = () => {
   const getStepValidationFlags = useCallback((step: number): boolean => {
     const v = validFlags;
     switch (step) {
-      case 1: // Personal Info: firstName, lastName (pays auto-rempli du wizard)
-        return v.firstName && v.lastName;
-      case 2: // Request Details: title, description
-        return v.title && v.description;
+      case 1: // Personal Info: firstName (pays auto-rempli du wizard)
+        return v.firstName;
+      case 2: // Request Details: description
+        return v.description;
       case 3: // Contact + Terms: phone, accept (langues auto-remplies du wizard)
         return v.phone && v.accept;
       default:
@@ -2786,7 +2776,6 @@ const BookingRequest: React.FC = () => {
       id: p.id,
       name: p.name,
       firstName: p.firstName,
-      lastName: p.lastName,
       type: providerType,
       country: p.country,
       avatar: p.avatar,
@@ -2847,10 +2836,9 @@ const BookingRequest: React.FC = () => {
     const bookingRequest: BookingRequestData = {
       clientPhone: finalPhone,
       clientId: currentUser?.uid || "",
-      clientName:
-        `${sanitizeInput(state.firstName)} ${sanitizeInput(state.lastName)}`.trim(),
+      clientName: sanitizeInput(state.firstName),
       clientFirstName: sanitizeInput(state.firstName),
-      clientLastName: sanitizeInput(state.lastName),
+      clientLastName: '',
       clientNationality: sanitizeInput(state.nationality),
       clientCurrentCountry: sanitizeInput(normalizedCountry),
       providerId: selectedProvider.id,
@@ -2863,7 +2851,7 @@ const BookingRequest: React.FC = () => {
       providerLanguages: (selectedProvider.languages ||
         selectedProvider.languagesSpoken) as string[] | undefined,
       providerSpecialties: selectedProvider.specialties as string[] | undefined,
-      title: sanitizeText(state.title, { trim: true }),
+      title: '',
       description: sanitizeText(state.description, { trim: true }),
       clientLanguages: state.clientLanguages,
       clientLanguagesDetails: state.clientLanguages.map((code) => {
@@ -2889,9 +2877,7 @@ const BookingRequest: React.FC = () => {
       [boolean, React.MutableRefObject<HTMLDivElement | null>, string]
     > = [
       [!v.firstName, refFirstName, 'firstName'],
-      [!v.lastName, refLastName, 'lastName'],
       [!v.currentCountry || !v.autrePays, refCountry, 'country'],
-      [!v.title, refTitle, 'title'],
       [!v.description, refDesc, 'description'],
       [!v.langs || !v.sharedLang, refLangs, 'langs'],
       [!v.phone, refPhone, 'phone'],
@@ -2928,7 +2914,7 @@ const BookingRequest: React.FC = () => {
           providerLanguages:
             provider?.languages || provider?.languagesSpoken || [],
           formData: {
-            title: data.title,
+            title: '',
             description: data.description,
             nationality: data.nationality,
             currentCountry:
@@ -2994,7 +2980,6 @@ const BookingRequest: React.FC = () => {
         setMetaPixelUserData({
           email: user.email,
           firstName: user.displayName?.split(' ')[0],
-          lastName: user.displayName?.split(' ').slice(1).join(' '),
         });
       }
 
@@ -3012,7 +2997,6 @@ const BookingRequest: React.FC = () => {
         await setGoogleAdsUserData({
           email: user.email,
           firstName: user.displayName?.split(' ')[0],
-          lastName: user.displayName?.split(' ').slice(1).join(' '),
         });
       }
 
@@ -3332,11 +3316,9 @@ const BookingRequest: React.FC = () => {
 
       const data: BookingFormData = {
         firstName: mobileData.firstName,
-        lastName: mobileData.lastName,
         nationality: mobileData.nationality || '',
         currentCountry: mobileData.currentCountry,
         autrePays: mobileData.autrePays,
-        title: mobileData.title,
         description: mobileData.description,
         clientPhone: mobileData.clientPhone,
         acceptTerms: mobileData.acceptTerms,
@@ -3382,7 +3364,6 @@ const BookingRequest: React.FC = () => {
           setMetaPixelUserData({
             email: user.email,
             firstName: user.displayName?.split(' ')[0],
-            lastName: user.displayName?.split(' ').slice(1).join(' '),
             country: bookingRequest.clientCurrentCountry,
           });
         }
@@ -3401,7 +3382,6 @@ const BookingRequest: React.FC = () => {
           await setGoogleAdsUserData({
             email: user.email,
             firstName: user.displayName?.split(' ')[0],
-            lastName: user.displayName?.split(' ').slice(1).join(' '),
           });
         }
 
@@ -3557,11 +3537,9 @@ const BookingRequest: React.FC = () => {
         <MobileBookingProvider
           defaultValues={{
             firstName: getValues('firstName'),
-            lastName: getValues('lastName'),
             nationality: getValues('nationality'),
             currentCountry: getValues('currentCountry'),
             autrePays: getValues('autrePays'),
-            title: getValues('title'),
             description: getValues('description'),
             clientPhone: getValues('clientPhone'),
             acceptTerms: getValues('acceptTerms'),
@@ -3820,46 +3798,6 @@ const BookingRequest: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Nom */}
-                  <div ref={refLastName}>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1">
-                      {/* {t.fields.lastName}{" "} */}
-                      {intl.formatMessage({
-                        id: "bookingRequest.fields.lastName",
-                      })}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <Controller
-                      control={control}
-                      name="lastName"
-                      // rules={{ required: t.validators.lastName }}
-                      rules={{
-                        required: intl.formatMessage({
-                          id: "bookingRequest.validators.lastName",
-                        }),
-                      }}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          className={inputClass(inputHas("lastName"))}
-                          placeholder={intl.formatMessage({
-                            id: "bookingRequest.placeholders.lastName",
-                          })}
-                          maxLength={50}
-                        />
-                      )}
-                    />
-                    <FieldSuccess
-                      show={!errors.lastName && Boolean(watch("lastName"))}
-                    >
-                      Parfait ! ✨
-                    </FieldSuccess>
-                    {errors.lastName && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {String(errors.lastName.message)}
-                      </p>
-                    )}
-                  </div>
                 </div>
 
                 {/* Nationalité - Supprimée pour simplifier le parcours mobile */}
@@ -3962,54 +3900,6 @@ const BookingRequest: React.FC = () => {
                   title={intl.formatMessage({ id: "bookingRequest.request" })}
                 />
 
-                {/* Titre */}
-                <div ref={refTitle}>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1">
-                    {/* {t.fields.title} */}
-                    {intl.formatMessage({ id: "bookingRequest.fields.title" })}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    control={control}
-                    name="title"
-                    rules={{
-                      required: intl.formatMessage({
-                        id: "bookingRequest.validators.title",
-                      }),
-                      validate: (v) =>
-                        v.trim().length >= 10
-                          ? true
-                          : intl.formatMessage({
-                              id: "bookingRequest.validators.title",
-                            }),
-                    }}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        className={inputClass(Boolean(errors.title))}
-                        placeholder={intl.formatMessage({
-                          id: "bookingRequest.placeholders.title",
-                        })}
-                        maxLength={150}
-                      />
-                    )}
-                  />
-                  <div className="mt-1 text-xs text-gray-500">
-                    💡
-                    {intl.formatMessage({ id: "bookingRequest.hints.title" })}
-                  </div>
-                  <FieldSuccess
-                    show={!errors.title && watch("title").trim().length >= 10}
-                  >
-                    C’est clair 👍
-                  </FieldSuccess>
-                  {errors.title && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {String(errors.title.message)}
-                    </p>
-                  )}
-                </div>
-
                 {/* Description */}
                 <div className="mt-4" ref={refDesc}>
                   <label className="block text-sm font-semibold text-gray-800 mb-1">
@@ -4027,7 +3917,7 @@ const BookingRequest: React.FC = () => {
                         id: "bookingRequest.validators.description",
                       }),
                       validate: (v) =>
-                        v.trim().length >= 50
+                        v.trim().length >= 30
                           ? true
                           : intl.formatMessage({
                               id: "bookingRequest.validators.description",
@@ -4058,7 +3948,7 @@ const BookingRequest: React.FC = () => {
                   <FieldSuccess
                     show={
                       !errors.description &&
-                      watch("description").trim().length >= 50
+                      watch("description").trim().length >= 30
                     }
                   >
                     On y voit clair 👀
@@ -4573,16 +4463,6 @@ const BookingRequest: React.FC = () => {
                       {!validFlags.firstName && (
                         <div>
                           • {intl.formatMessage({ id: "validators.firstName" })}
-                        </div>
-                      )}
-                      {!validFlags.lastName && (
-                        <div>
-                          • {intl.formatMessage({ id: "validators.lastName" })}
-                        </div>
-                      )}
-                      {!validFlags.title && (
-                        <div>
-                          • {intl.formatMessage({ id: "validators.title" })}
                         </div>
                       )}
                       {!validFlags.description && (

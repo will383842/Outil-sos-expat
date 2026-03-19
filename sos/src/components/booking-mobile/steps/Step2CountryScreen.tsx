@@ -46,7 +46,7 @@ export const Step2CountryScreen: React.FC = () => {
             <select
               {...field}
               className={`w-full px-4 py-4 border-2 rounded-xl text-base bg-white appearance-none ${
-                errors.currentCountry ? 'border-red-400' : 'border-gray-200 focus:border-red-500'
+                errors.currentCountry ? 'border-red-400' : 'border-gray-300 focus:border-red-500'
               }`}
               onChange={(e) => {
                 field.onChange(e.target.value);

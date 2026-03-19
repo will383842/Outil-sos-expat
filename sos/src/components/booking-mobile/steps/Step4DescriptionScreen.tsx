@@ -10,7 +10,7 @@ export const Step4DescriptionScreen: React.FC = () => {
 
   const description = watch('description');
   const descLength = description?.trim().length ?? 0;
-  const minLength = 50;
+  const minLength = 30;
 
   return (
     <div className="px-4 py-6">
@@ -47,7 +47,7 @@ export const Step4DescriptionScreen: React.FC = () => {
               {...field}
               placeholder={intl.formatMessage({ id: 'bookingRequest.placeholders.description' })}
               className={`w-full px-4 py-4 border-2 rounded-xl text-base resize-none ${
-                errors.description ? 'border-red-400' : 'border-gray-200 focus:border-red-500'
+                errors.description ? 'border-red-400' : 'border-gray-300 focus:border-red-500'
               }`}
               rows={6}
               autoFocus

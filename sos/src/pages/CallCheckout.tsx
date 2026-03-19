@@ -15,7 +15,6 @@ import {
   CreditCard,
   Lock,
   Calendar,
-  X,
   Info,
 } from "lucide-react";
 import { useLocaleNavigate } from "../multilingual-system";
@@ -52,6 +51,8 @@ import { getDateLocale } from "../utils/formatters";
 import { normalizeCountryToCode } from "../utils/countryUtils";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { PayPalPaymentForm, GatewayIndicator } from "../components/payment";
+import { PaymentFeedback } from "../components/payment/PaymentFeedback";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 // PayPalScriptProvider est fourni par PayPalContext au niveau CallCheckoutWrapper.tsx
 import { paymentLogger, navigationLogger, callLogger } from "../utils/debugLogger";
 import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
@@ -1204,294 +1205,6 @@ function useIsMobile(): boolean {
   return isMobile;
 }
 
-/* =====================================================================
- * 🎨 PaymentFeedback - Friendly, fun & mobile-first error display
- * ===================================================================== */
-type FeedbackType = 'error' | 'warning' | 'info' | 'success';
-
-interface PaymentFeedbackProps {
-  error: string;
-  onDismiss: () => void;
-  onRetry?: () => void;
-  t: (key: string, fallback?: string) => string;
-}
-
-// Detect error type from message
-const detectErrorType = (error: string): {
-  type: 'duplicate' | 'rateLimit' | 'cardDeclined' | 'insufficientFunds' | 'network' | 'expired' | 'cvc' | 'cancelled' | 'generic';
-  feedbackType: FeedbackType;
-} => {
-  const lowerError = error.toLowerCase();
-
-  // PayPal/Payment cancellation detection
-  if (lowerError.includes('annulé') || lowerError.includes('cancelled') || lowerError.includes('canceled')) {
-    return { type: 'cancelled', feedbackType: 'info' };
-  }
-  // Duplicate payment detection
-  if (lowerError.includes('already') || lowerError.includes('doublon') || lowerError.includes('déjà') || lowerError.includes('similaire')) {
-    return { type: 'duplicate', feedbackType: 'warning' };
-  }
-  // Rate limit detection
-  if (lowerError.includes('rate') || lowerError.includes('tentative') || lowerError.includes('trop') || lowerError.includes('too many')) {
-    return { type: 'rateLimit', feedbackType: 'info' };
-  }
-  // CVC/Security code errors
-  if (lowerError.includes('cvc') || lowerError.includes('cvv') || lowerError.includes('security code') || lowerError.includes('code de sécurité')) {
-    return { type: 'cvc', feedbackType: 'warning' };
-  }
-  // Expired card detection
-  if (lowerError.includes('expired') || lowerError.includes('expiré') || lowerError.includes('expiration')) {
-    return { type: 'expired', feedbackType: 'warning' };
-  }
-  // Card declined detection (Stripe messages)
-  if (lowerError.includes('declined') || lowerError.includes('refusé') || lowerError.includes('rejected') ||
-      lowerError.includes('do not honor') || lowerError.includes('card_declined') ||
-      lowerError.includes('your card was declined') || lowerError.includes('payment failed') ||
-      lowerError.includes('transaction not allowed') || lowerError.includes('card not supported')) {
-    return { type: 'cardDeclined', feedbackType: 'warning' };
-  }
-  // Insufficient funds detection
-  if (lowerError.includes('insufficient') || lowerError.includes('insuffisant') || lowerError.includes('funds') || lowerError.includes('balance')) {
-    return { type: 'insufficientFunds', feedbackType: 'warning' };
-  }
-  // Network errors
-  if (lowerError.includes('network') || lowerError.includes('connexion') || lowerError.includes('internet') ||
-      lowerError.includes('timeout') || lowerError.includes('failed to fetch') || lowerError.includes('connection')) {
-    return { type: 'network', feedbackType: 'info' };
-  }
-
-  return { type: 'generic', feedbackType: 'error' };
-};
-
-// Color schemes for different feedback types (soft, non-aggressive)
-const feedbackStyles: Record<FeedbackType, { bg: string; border: string; icon: string; iconBg: string; text: string; button: string }> = {
-  error: {
-    bg: 'bg-rose-50',
-    border: 'border-rose-200',
-    icon: 'text-rose-500',
-    iconBg: 'bg-rose-100',
-    text: 'text-rose-800',
-    button: 'bg-rose-500 hover:bg-rose-600 text-white'
-  },
-  warning: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    icon: 'text-amber-500',
-    iconBg: 'bg-amber-100',
-    text: 'text-amber-800',
-    button: 'bg-amber-500 hover:bg-amber-600 text-white'
-  },
-  info: {
-    bg: 'bg-sky-50',
-    border: 'border-sky-200',
-    icon: 'text-sky-500',
-    iconBg: 'bg-sky-100',
-    text: 'text-sky-800',
-    button: 'bg-sky-500 hover:bg-sky-600 text-white'
-  },
-  success: {
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    icon: 'text-emerald-500',
-    iconBg: 'bg-emerald-100',
-    text: 'text-emerald-800',
-    button: 'bg-emerald-500 hover:bg-emerald-600 text-white'
-  }
-};
-
-const PaymentFeedback: React.FC<PaymentFeedbackProps> = ({ error, onDismiss, onRetry, t }) => {
-  const { type, feedbackType } = detectErrorType(error);
-  const styles = feedbackStyles[feedbackType];
-
-  // Get translated title and message based on error type
-  const getContent = () => {
-    switch (type) {
-      case 'duplicate':
-        return {
-          title: t('err.duplicate.title', 'Oups, déjà en cours ! 🔄'),
-          message: t('err.duplicate.message', 'Un paiement similaire est déjà en cours. Patientez quelques secondes avant de réessayer.')
-        };
-      case 'rateLimit':
-        return {
-          title: t('err.rateLimit.title', 'Tout doux ! ☕'),
-          message: t('err.rateLimit.message', 'Trop de tentatives. Patientez une minute avant de réessayer.')
-        };
-      case 'cancelled':
-        return {
-          title: t('err.paypalCanceled.title', 'Paiement annulé'),
-          message: t('err.paypalCanceled.message', 'Vous avez annulé le paiement. Vous pouvez réessayer quand vous le souhaitez.')
-        };
-      case 'cvc':
-        return {
-          title: t('err.cvc.title', 'Code de sécurité incorrect 🔐'),
-          message: t('err.cvc.message', 'Le code CVC/CVV de votre carte est incorrect. Vérifiez les 3 chiffres au dos de votre carte.')
-        };
-      case 'expired':
-        return {
-          title: t('err.expired.title', 'Carte expirée 📅'),
-          message: t('err.expired.message', 'Votre carte a expiré. Veuillez utiliser une autre carte de paiement.')
-        };
-      case 'cardDeclined':
-        return {
-          title: t('err.cardDeclined.title', 'Carte refusée 💳'),
-          message: t('err.cardDeclined.message', 'Votre banque a refusé le paiement. Vérifiez vos informations ou utilisez une autre carte.')
-        };
-      case 'insufficientFunds':
-        return {
-          title: t('err.insufficientFunds.title', 'Solde insuffisant 💰'),
-          message: t('err.insufficientFunds.message', 'Le solde de votre carte est insuffisant. Utilisez une autre carte ou approvisionnez votre compte.')
-        };
-      case 'network':
-        return {
-          title: t('err.network.title', 'Connexion instable 📶'),
-          message: t('err.network.message', 'Problème de connexion internet. Vérifiez votre connexion et réessayez.')
-        };
-      default:
-        return {
-          title: t('err.paymentFailed', 'Le paiement a échoué'),
-          message: t('err.generic.message', 'Une erreur est survenue lors du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.')
-        };
-    }
-  };
-
-  const { title, message } = getContent();
-
-  return (
-    <div
-      className={`
-        mb-4 p-4 rounded-2xl border-2 ${styles.bg} ${styles.border}
-        animate-in slide-in-from-top-2 fade-in duration-300
-        shadow-sm
-      `}
-      role="alert"
-      aria-live="polite"
-    >
-      {/* Mobile-first: Stack layout */}
-      <div className="flex flex-col gap-3">
-        {/* Header with icon and title */}
-        <div className="flex items-start gap-3">
-          {/* Animated icon container */}
-          <div className={`
-            flex-shrink-0 w-10 h-10 rounded-xl ${styles.iconBg}
-            flex items-center justify-center
-            animate-in zoom-in duration-200
-          `}>
-            {type === 'cancelled' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            {type === 'duplicate' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            )}
-            {type === 'rateLimit' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            )}
-            {type === 'cardDeclined' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-            )}
-            {type === 'cvc' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            )}
-            {type === 'expired' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            )}
-            {type === 'insufficientFunds' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            )}
-            {type === 'network' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-              </svg>
-            )}
-            {type === 'generic' && (
-              <svg className={`w-5 h-5 ${styles.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            )}
-          </div>
-
-          {/* Title and dismiss button */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className={`font-semibold text-base ${styles.text}`}>
-                {title}
-              </h4>
-              <button
-                onClick={onDismiss}
-                className={`
-                  flex-shrink-0 p-1.5 rounded-lg
-                  hover:bg-black/5 active:bg-black/10
-                  transition-colors duration-150
-                `}
-                aria-label="Fermer"
-              >
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Message */}
-            <p className={`mt-1 text-sm ${styles.text} opacity-80 leading-relaxed`}>
-              {message}
-            </p>
-          </div>
-        </div>
-
-        {/* Action buttons - Mobile optimized */}
-        {(onRetry || type === 'generic') && (
-          <div className="flex gap-2 pt-1">
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                className={`
-                  flex-1 py-2.5 px-4 rounded-xl font-medium text-sm
-                  ${styles.button}
-                  transition-all duration-150
-                  active:scale-[0.98]
-                  flex items-center justify-center gap-2
-                `}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {t('err.tryAgain', 'Réessayer')}
-              </button>
-            )}
-            {type === 'generic' && (
-              <a
-                href="mailto:support@sos-expat.com"
-                className="flex-1 py-2.5 px-4 rounded-xl font-medium text-sm
-                  bg-gray-100 hover:bg-gray-200 text-gray-700
-                  transition-all duration-150 active:scale-[0.98]
-                  flex items-center justify-center gap-2 no-underline"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                {t('err.contactSupport', 'Contacter le support')}
-              </a>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 /* --------------------- Price tracing: hook & helpers --------------------- */
 interface PricingEntryTrace {
   totalAmount: number;
@@ -1580,72 +1293,7 @@ const singleCardElementOptions = {
   hidePostalCode: true,
 } as const;
 
-/* --------------------------- Confirm Modal UI ---------------------------- */
-const ConfirmModal: React.FC<{
-  open: boolean;
-  title: string;
-  message: string;
-  cancelLabel?: string;
-  confirmLabel?: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-}> = ({ open, title, message, cancelLabel = "Annuler", confirmLabel = "Confirmer", onCancel, onConfirm }) => {
-  if (!open) return null;
-  return (
-    <div
-      className="fixed inset-x-0 top-20 bottom-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-modal-title"
-    >
-      {/* Backdrop - clickable to close - starts below header to not block header interactions */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm touch-manipulation"
-        onClick={onCancel}
-        onTouchEnd={(e) => { e.stopPropagation(); onCancel(); }}
-        role="button"
-        aria-label="Close dialog"
-        tabIndex={-1}
-      />
-      {/* Modal content */}
-      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border mx-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700 flex-shrink-0">
-            <Shield className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 id="confirm-modal-title" className="font-semibold text-gray-900 mb-1 text-base">{title}</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
-          </div>
-          <button
-            onClick={onCancel}
-            onTouchEnd={(e) => { e.preventDefault(); onCancel(); }}
-            className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0 -mr-1 -mt-1"
-            aria-label="Close dialog"
-          >
-            <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <button
-            onClick={onCancel}
-            onTouchEnd={(e) => { e.preventDefault(); onCancel(); }}
-            className="px-4 py-3 min-h-[48px] rounded-xl border-2 border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 active:bg-gray-100 touch-manipulation transition-colors"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            onClick={onConfirm}
-            onTouchEnd={(e) => { e.preventDefault(); onConfirm(); }}
-            className="px-4 py-3 min-h-[48px] rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 active:bg-blue-800 touch-manipulation transition-colors"
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+/* ConfirmModal extracted to ../components/ui/ConfirmModal.tsx */
 
 /* ------------------------------ Payment Form ----------------------------- */
 interface PaymentFormSuccessPayload {
@@ -2524,7 +2172,8 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
         console.log("[DEBUG] " + "🔵 actuallySubmitPayment: Appel confirmCardPayment...");
 
-        const result = await stripe!.confirmCardPayment(
+        // Timeout 60s to prevent UI from freezing indefinitely on network issues
+        const confirmPromise = stripe!.confirmCardPayment(
           clientSecret,
           {
             payment_method: {
@@ -2536,6 +2185,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             },
           }
         );
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Payment confirmation timed out. Please check your connection and try again.")), 60000)
+        );
+        const result = await Promise.race([confirmPromise, timeoutPromise]);
 
         if (result.error) {
           console.log("[DEBUG] " + "❌ Erreur Stripe: " + result.error.message);
@@ -2719,31 +2372,25 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           });
         }
 
-        // P0 FIX: Réduit de 3000ms à 500ms - le délai de 3s était inutile
-        // car toutes les opérations async sont déjà terminées à ce stade
-        setTimeout(() => {
-          console.log("🚀 [STRIPE_DEBUG] 500ms timeout complete, calling onSuccess now...");
-          try {
-            // P0 FIX: Toujours passer un callId valide (fallback sur callSessionId)
-            // pour éviter que PaymentSuccess.tsx ne reçoive undefined
-            const finalCallId = callId || callSessionId;
-            console.log("🔵 [STRIPE_DEBUG] callId resolution:", { callId, callSessionId, finalCallId });
+        // All async operations complete — call onSuccess immediately (no artificial delay)
+        try {
+          const finalCallId = callId || callSessionId;
+          console.log("🔵 [STRIPE_DEBUG] callId resolution:", { callId, callSessionId, finalCallId });
 
-            onSuccess({
-              paymentIntentId: paymentIntent.id,
-              call: callStatus,
-              callId: finalCallId,
-              orderId: orderId,
-            });
-            console.log("✅ [STRIPE_DEBUG] onSuccess called successfully");
-          } catch (successError) {
-            console.error("❌ [STRIPE_DEBUG] onSuccess threw error:", successError);
-            paymentLogger.paymentError(successError instanceof Error ? successError : String(successError), {
-              step: 'onSuccess callback',
-              paymentIntentId: paymentIntent.id
-            });
-          }
-        }, 500);
+          onSuccess({
+            paymentIntentId: paymentIntent.id,
+            call: callStatus,
+            callId: finalCallId,
+            orderId: orderId,
+          });
+          console.log("✅ [STRIPE_DEBUG] onSuccess called successfully");
+        } catch (successError) {
+          console.error("❌ [STRIPE_DEBUG] onSuccess threw error:", successError);
+          paymentLogger.paymentError(successError instanceof Error ? successError : String(successError), {
+            step: 'onSuccess callback',
+            paymentIntentId: paymentIntent.id
+          });
+        }
       } catch (err: unknown) {
         console.error("Payment error:", err);
 
@@ -4130,11 +3777,15 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         console.warn("⚠️ [NAVIGATION_DEBUG] Failed to save to sessionStorage:", storageErr);
       }
 
-      // P0 FIX CRITIQUE: Utiliser window.location.href au lieu de navigate()
-      // React Router navigate() ne fonctionne pas correctement dans ce contexte
-      // (appelé depuis un callback setTimeout après confirmPayment)
-      console.log("🚀 [NAVIGATION] Redirecting with window.location.href to:", targetUrl);
-      window.location.href = targetUrl;
+      // Navigate with React Router (no full page reload — setTimeout removed so navigate works)
+      // Fallback to window.location.href if navigate() fails
+      console.log("🚀 [NAVIGATION] Navigating to:", targetUrl);
+      try {
+        navigate(targetUrl, { replace: true });
+      } catch (navErr) {
+        console.warn("⚠️ [NAVIGATION] navigate() failed, falling back to window.location.href:", navErr);
+        window.location.href = targetUrl;
+      }
     },
     [navigate, provider?.id, provider?.role, provider?.type, language, service?.serviceType, adminPricing?.totalAmount, adminPricing?.duration]
   );

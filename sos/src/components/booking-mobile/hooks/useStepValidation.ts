@@ -25,16 +25,12 @@ export const useStepValidation = ({ watch, currentStep }: UseStepValidationProps
     switch (currentStep) {
       case 1: // Name screen
         const hasFirst = Boolean(values.firstName?.trim());
-        const hasLast = Boolean(values.lastName?.trim());
 
         if (!hasFirst) errors.push('firstName');
-        if (!hasLast) errors.push('lastName');
-
-        if (hasFirst && hasLast) progress = 100;
-        else if (hasFirst || hasLast) progress = 50;
+        progress = hasFirst ? 100 : 0;
 
         return {
-          isValid: hasFirst && hasLast,
+          isValid: hasFirst,
           errors,
           progress,
         };
@@ -56,23 +52,9 @@ export const useStepValidation = ({ watch, currentStep }: UseStepValidationProps
           progress,
         };
 
-      case 3: // Title screen
-        const titleLength = values.title?.trim().length ?? 0;
-        const titleMin = 10;
-
-        if (titleLength < titleMin) errors.push('title');
-
-        progress = Math.min(100, (titleLength / titleMin) * 100);
-
-        return {
-          isValid: titleLength >= titleMin,
-          errors,
-          progress,
-        };
-
-      case 4: // Description screen
+      case 3: // Description screen
         const descLength = values.description?.trim().length ?? 0;
-        const descMin = 50;
+        const descMin = 30;
 
         if (descLength < descMin) errors.push('description');
 
@@ -84,7 +66,7 @@ export const useStepValidation = ({ watch, currentStep }: UseStepValidationProps
           progress,
         };
 
-      case 5: // Phone screen
+      case 4: // Phone screen
         const phone = values.clientPhone;
         let phoneValid = false;
 
@@ -106,7 +88,7 @@ export const useStepValidation = ({ watch, currentStep }: UseStepValidationProps
           progress,
         };
 
-      case 6: // Confirm screen
+      case 5: // Confirm screen
         const hasAccepted = Boolean(values.acceptTerms);
 
         if (!hasAccepted) errors.push('acceptTerms');

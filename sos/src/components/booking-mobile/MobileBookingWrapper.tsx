@@ -52,7 +52,7 @@ export const MobileBookingWrapper: React.FC<MobileBookingWrapperProps> = ({
   initialValues = {},
   desktopContent,
 }) => {
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobile = useMediaQuery('(max-width: 820px)');
 
   // Read wizard data from sessionStorage
   const wizardDefaultValues = useMemo(() => {

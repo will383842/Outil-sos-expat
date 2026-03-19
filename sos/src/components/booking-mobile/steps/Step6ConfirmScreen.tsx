@@ -12,10 +12,8 @@ export const Step6ConfirmScreen: React.FC = () => {
   const { control, watch, formState: { errors } } = form;
 
   const firstName = watch('firstName');
-  const lastName = watch('lastName');
   const currentCountryCode = watch('currentCountry');
   const autrePays = watch('autrePays');
-  const title = watch('title');
   const clientPhone = watch('clientPhone');
 
   // Resolve country code to display name in user's language
@@ -44,15 +42,11 @@ export const Step6ConfirmScreen: React.FC = () => {
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-500">Nom</span>
-            <span className="font-medium">{firstName} {lastName}</span>
+            <span className="font-medium">{firstName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Pays</span>
             <span className="font-medium">{countryDisplay}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Demande</span>
-            <span className="font-medium truncate max-w-[200px]">{title}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Téléphone</span>

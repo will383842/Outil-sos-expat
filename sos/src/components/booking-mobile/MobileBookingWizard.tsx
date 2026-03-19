@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import { useMobileBooking, BookingFormData } from './context/MobileBookingContext';
@@ -8,7 +8,6 @@ import { StickyCTA } from './ui/StickyCTA';
 // Step screens
 import { Step1NameScreen } from './steps/Step1NameScreen';
 import { Step2CountryScreen } from './steps/Step2CountryScreen';
-import { Step3TitleScreen } from './steps/Step3TitleScreen';
 import { Step4DescriptionScreen } from './steps/Step4DescriptionScreen';
 import { Step5PhoneScreen } from './steps/Step5PhoneScreen';
 import { Step6ConfirmScreen } from './steps/Step6ConfirmScreen';
@@ -21,10 +20,9 @@ interface MobileBookingWizardProps {
 const stepComponents: Record<number, React.FC> = {
   1: Step1NameScreen,
   2: Step2CountryScreen,
-  3: Step3TitleScreen,
-  4: Step4DescriptionScreen,
-  5: Step5PhoneScreen,
-  6: Step6ConfirmScreen,
+  3: Step4DescriptionScreen,
+  4: Step5PhoneScreen,
+  5: Step6ConfirmScreen,
 };
 
 export const MobileBookingWizard: React.FC<MobileBookingWizardProps> = ({
@@ -39,6 +37,14 @@ export const MobileBookingWizard: React.FC<MobileBookingWizardProps> = ({
     setIsSubmitting,
     triggerHaptic,
   } = useMobileBooking();
+
+  // Preload the checkout page chunk when user reaches phone step (step 4)
+  // so Stripe SDK starts loading before they finish the form
+  useEffect(() => {
+    if (currentStep >= 4) {
+      import('../../pages/CallCheckoutWrapper').catch(() => {});
+    }
+  }, [currentStep]);
 
   // Handle form submission
   const handleFormSubmit = useCallback(async () => {

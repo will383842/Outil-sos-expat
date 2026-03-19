@@ -77,9 +77,10 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ onSubmit }) => {
           <button
             type="button"
             onClick={handleBack}
-            className="px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium flex items-center justify-center touch-manipulation active:bg-gray-100"
+            aria-label={intl.formatMessage({ id: 'common.back', defaultMessage: 'Retour' })}
+            className="px-4 py-3 rounded-2xl border border-gray-300 text-gray-700 font-medium flex items-center justify-center touch-manipulation active:bg-gray-100"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft aria-hidden="true" size={20} />
           </button>
         )}
 

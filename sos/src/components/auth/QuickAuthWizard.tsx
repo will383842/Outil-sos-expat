@@ -275,11 +275,8 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }
 
     let attempts = 0;
-    // FIX: Augmenter le timeout à 60 secondes (120 attempts * 500ms)
-    // AuthContext peut prendre jusqu'à 30s pour charger le document Firestore
-    // (fallbacks: 5s getDoc, 10s REST API, 30s timeout max)
-    // On double pour avoir une marge de sécurité
-    const maxAttempts = 120;
+    // Timeout 30s (60 attempts * 500ms) — aligned with AuthContext's 30s max
+    const maxAttempts = 60;
 
     const pollInterval = setInterval(() => {
       // Check if success was already called by another effect

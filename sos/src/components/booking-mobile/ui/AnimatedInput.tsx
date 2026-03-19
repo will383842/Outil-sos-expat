@@ -101,7 +101,7 @@ export const AnimatedInput: React.FC<AnimatedInputProps> = ({
         ? 'border-green-400 bg-green-50/30'
         : isFocused
         ? 'border-red-500 ring-4 ring-red-500/10 shadow-lg shadow-red-500/5'
-        : 'border-gray-200 hover:border-gray-300'
+        : 'border-gray-300 hover:border-gray-400'
     }
     ${className}
   `;

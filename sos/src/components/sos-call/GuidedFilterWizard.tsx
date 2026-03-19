@@ -216,6 +216,8 @@ const CountryStep: React.FC<{
               key={country.code}
               type="button"
               onClick={() => handleSelect(country.code)}
+              aria-label={country.label}
+              aria-pressed={selectedCountry === country.code}
               className={`
                 flex items-center gap-2.5 p-3 rounded-xl border-2
                 text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -350,6 +352,8 @@ const LanguageStep: React.FC<{
                 key={lang.code}
                 type="button"
                 onClick={() => handleToggle(lang.code)}
+                aria-label={lang.label}
+                aria-pressed={isSelected}
                 className={`
                   flex items-center gap-2.5 p-3 rounded-xl border-2
                   text-left min-h-[52px] select-none cursor-pointer touch-manipulation
@@ -426,7 +430,9 @@ const TypeStep: React.FC<{
           return (
             <button
               key={option.value}
+              type="button"
               onClick={() => onSelect(option.value)}
+              aria-pressed={isSelected}
               className={`
                 w-full p-4 rounded-2xl border-2
                 text-left flex items-center gap-4 touch-manipulation
@@ -504,16 +510,13 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
   // Auto-advance: Type selection → Complete wizard
   const handleTypeSelect = useCallback((type: "all" | "lawyer" | "expat") => {
     setSelectedType(type);
-    // Auto-complete après un court délai pour feedback visuel
-    setTimeout(() => {
-      const data = {
-        country: selectedCountry,
-        languages: selectedLanguages,
-        type: type,
-      };
-      console.log('🟡 [GuidedFilterWizard] handleTypeSelect - auto-complete with data:', data);
-      onComplete(data);
-    }, 250);
+    const data = {
+      country: selectedCountry,
+      languages: selectedLanguages,
+      type: type,
+    };
+    console.log('🟡 [GuidedFilterWizard] handleTypeSelect - auto-complete with data:', data);
+    onComplete(data);
   }, [onComplete, selectedCountry, selectedLanguages]);
 
   // Prevent body scroll when wizard is open.

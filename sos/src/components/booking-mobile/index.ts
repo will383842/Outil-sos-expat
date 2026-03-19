@@ -16,7 +16,6 @@ export { CelebrationOverlay } from './ui/CelebrationOverlay';
 // Step Screens
 export { Step1NameScreen } from './steps/Step1NameScreen';
 export { Step2CountryScreen } from './steps/Step2CountryScreen';
-export { Step3TitleScreen } from './steps/Step3TitleScreen';
 export { Step4DescriptionScreen } from './steps/Step4DescriptionScreen';
 export { Step5PhoneScreen } from './steps/Step5PhoneScreen';
 export { Step6ConfirmScreen } from './steps/Step6ConfirmScreen';
