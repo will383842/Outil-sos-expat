@@ -32,7 +32,7 @@ import { ALLOWED_ORIGINS } from './lib/functionConfigs';
    (A) LIMITS — placé tout en haut, avant toute utilisation
    ──────────────────────────────────────────────────────────────────────────── */
 const LIMITS = {
-  RATE_LIMIT: { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 6 },
+  RATE_LIMIT: { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 10 },
   AMOUNT_LIMITS: {
     MIN_EUR: 0.50,   // Stripe minimum (était 5€)
     MAX_EUR: 500,
@@ -54,7 +54,7 @@ const LIMITS = {
 function getLimits() {
   return (
     LIMITS ?? {
-      RATE_LIMIT: { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 6 },
+      RATE_LIMIT: { WINDOW_MS: 10 * 60 * 1000, MAX_REQUESTS: 10 },
       AMOUNT_LIMITS: {
         MIN_EUR: 0.50,
         MAX_EUR: 500,

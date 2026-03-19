@@ -2492,7 +2492,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           await actuallySubmitPayment();
           console.log("[DEBUG] " + "✅ ÉTAPE FINALE: actuallySubmitPayment terminée");
         } catch (err) {
-          console.log("[DEBUG] " + "❌ ERREUR dans actuallySubmitPayment: " + (err instanceof Error ? err.message : String(err)));
+          console.error("[DEBUG] " + "❌ ERREUR dans actuallySubmitPayment: " + (err instanceof Error ? err.message : String(err)));
+          // CRITICAL FIX: Show error to user (was silently swallowed before)
+          const msg = err instanceof Error ? err.message : String(err);
+          onError(msg || "Une erreur est survenue. Veuillez réessayer.");
         }
       },
       [isProcessing, adminPricing.totalAmount, actuallySubmitPayment, stripe, elements, onError]
