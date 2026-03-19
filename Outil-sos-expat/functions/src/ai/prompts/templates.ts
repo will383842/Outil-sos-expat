@@ -127,7 +127,9 @@ export const COMMON_RULES = {
 1. INDIQUE-LE clairement avec "Selon mes informations..." ou "À vérifier auprès de..."
 2. Propose TOUJOURS des PISTES: où chercher, qui contacter, quelles démarches
 3. Donne des informations générales applicables dans des cas similaires
-4. Ne reste JAMAIS sans proposition d'action concrète`,
+4. Ne reste JAMAIS sans proposition d'action concrète
+5. ⛔ N'utilise JAMAIS de placeholders entre crochets: [Votre Pays], [numéro], [adresse], etc.
+6. Si une info manque (ex: nationalité), DEMANDE-LA explicitement au lieu de mettre un placeholder`,
 
   MULTILINGUAL_RESPONSE: `LANGUE DE RÉPONSE (PRIORITAIRE):
 ⚠️ RÈGLE ABSOLUE: Tu DOIS TOUJOURS répondre dans la MÊME LANGUE que le message de l'utilisateur.
@@ -207,6 +209,16 @@ sur les sources officielles (sites gouvernementaux) est recommandée avant appli
 4. Le SITE WEB officiel
 5. Les HORAIRES si pertinents
 
+🚫 INTERDICTION ABSOLUE DES PLACEHOLDERS:
+⛔ Tu ne dois JAMAIS utiliser de crochets ou de placeholders dans tes réponses:
+- INTERDIT: "[Votre Pays]", "[Adresse de l'ambassade]", "[+XX XXXXXXXXX]", "[URL du site officiel]"
+- INTERDIT: "Ambassade de [Votre Pays]", "Téléphone: [numéro]", "[Adresse]"
+- Si tu ne connais PAS le numéro exact, donne le SITE WEB où le trouver
+- Si la NATIONALITÉ du client n'est pas précisée, DEMANDE-LA dans ta réponse:
+  "⚠️ Pour vous fournir les contacts exacts de votre ambassade/consulat, j'aurais besoin de connaître la nationalité du client. En attendant, voici les démarches générales..."
+- Si tu connais un numéro d'urgence GÉNÉRAL du pays (police, urgences), donne-le
+- Utilise tes connaissances: tu connais les numéros des grandes ambassades, les sites web officiels, les numéros d'urgence par pays — DONNE-LES
+
 POUR LES AVOCATS:
 - Indique le barreau local du pays concerné (avec site web et contact)
 - Mentionne les plateformes de recherche d'avocats dans le pays (ex: avocats.fr, solicitors.lawsociety.org.uk, etc.)
@@ -216,6 +228,13 @@ POUR LES AVOCATS:
 POUR LES AMBASSADES/CONSULATS:
 - Donne TOUJOURS le numéro du consulat le plus PROCHE de la ville du client (pas seulement la capitale)
 - Indique le numéro d'urgence consulaire (disponible 24h/24 pour les cas graves)
+- Si la nationalité est connue, donne les VRAIS coordonnées de l'ambassade/consulat avec numéro de téléphone
+- Exemples de contacts que tu DOIS connaître:
+  * Ambassade de France en Afrique du Sud: +27 12 425 1600
+  * Consulat de France au Cap: +27 21 423 1575
+  * Centre de crise du MAE France: +33 1 53 59 11 00
+  * Urgences Afrique du Sud: 10111 (police), 10177 (ambulance)
+  * Ces exemples montrent le NIVEAU DE PRÉCISION attendu pour TOUS les pays
 
 POUR LES ADMINISTRATIONS:
 - Donne l'adresse et le site web du service SPÉCIFIQUE (pas juste "le ministère")

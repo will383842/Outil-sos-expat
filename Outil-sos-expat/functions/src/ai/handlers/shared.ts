@@ -116,6 +116,12 @@ export function buildBookingMessage(
   parts.push("");
   parts.push("Merci de fournir une analyse juridique complète avec les textes de loi applicables, les procédures officielles et les contacts utiles (ambassade, consulat, administrations).");
 
+  // If nationality is missing, add a note so the AI asks for it
+  if (!safeNationality) {
+    parts.push("");
+    parts.push("⚠️ Note: La nationalité du client n'a pas été renseignée. Si elle est nécessaire pour fournir les contacts consulaires, demande-la dans ta réponse.");
+  }
+
   return parts.join("\n");
 }
 
