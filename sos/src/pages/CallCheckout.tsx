@@ -2660,267 +2660,39 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             {/* ========== FIN PROGRESSIVE DISCLOSURE ========== */}
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3 text-sm">
-              {(() => {
-                switch (language) {
-                  case "es":
-                    return "Resumen";
-                  case "de":
-                    return "Zusammenfassung";
-                  case "ru":
-                    return "Сводка";
-                  case "en":
-                    return "Summary";
-                  case "hi":
-                    return "सारांश";
-                  case "ch":
-                    return "概括";
-                  case "ar":
-                    return "ملخص";
-                  case "fr":
-                  default:
-                    return "Récapitulatif";
-                }
-              })()}
-            </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">
-                  {(() => {
-                    switch (language) {
-                      case "es":
-                        return "Experto";
-                      case "de":
-                        return "Experte";
-                      case "ru":
-                        return "Эксперт";
-                      case "en":
-                        return "Expert";
-                      case "hi":
-                        return "विशेषज्ञ";
-                      case "ch":
-                        return "专家";
-                      case "ar":
-                        return "خبير";
-                      case "fr":
-                      default:
-                        return "Expert";
-                    }
-                  })()}
-                </span>
-                <div className="flex items-center space-x-2">
-                  <img
-                    src={
-                      provider.avatar ||
-                      provider.profilePhoto ||
-                      "/default-avatar.webp"
-                    }
-                    className="w-5 h-5 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      const name = providerDisplayName;
-                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=40`;
-                    }}
-                    alt={`Photo de profil de ${providerDisplayName}`}
-                    loading="lazy"
-                  />
-                  <span className="font-medium text-gray-900 text-xs">
-                    {providerDisplayName}
+          {/* Compact fee breakdown link */}
+          <div className="mt-3 mb-3">
+            <button
+              type="button"
+              onClick={() => setShowFeeBreakdown(!showFeeBreakdown)}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              aria-expanded={showFeeBreakdown}
+            >
+              <Info className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="underline underline-offset-2">
+                {intl.formatMessage({ id: "checkout.feeBreakdown", defaultMessage: "Détail des frais" })}
+              </span>
+            </button>
+            {showFeeBreakdown && (
+              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {intl.formatMessage({ id: "checkout.platformFees", defaultMessage: "Frais de plateforme" })}
+                  </span>
+                  <span className="font-medium text-gray-800">
+                    {adminPricing.connectionFeeAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    {intl.formatMessage({ id: "checkout.expertFee", defaultMessage: "Rémunération expert" })}
+                  </span>
+                  <span className="font-medium text-gray-800">
+                    {adminPricing.providerAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
                   </span>
                 </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">
-                {(() => {
-                  switch (language) {
-                    case "es":
-                      return "Servicio";
-                    case "de":
-                      return "Dienstleistung";
-                    case "ru":
-                      return "Услуга";
-                    case "en":
-                      return "Service";
-                    case "hi":
-                      return "सेवा";
-                    case "ch":
-                      return "服务";
-                    case "pt":
-                      return "Serviço";
-                    case "ar":
-                      return "خدمة";
-                    case "fr":
-                    default:
-                      return "Service";
-                  }
-                })()}
-
-                </span>
-                <span className="font-medium text-gray-800 text-xs">
-                  {serviceTypeDisplay}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">
-                {(() => {
-                  switch (language) {
-                    case "es":
-                      return "Duración";
-                    case "de":
-                      return "Dauer";
-                    case "ru":
-                      return "Продолжительность";
-                    case "en":
-                      return "Duration";
-                    case "hi":
-                      return "अवधि";
-                    case "ch":
-                      return "期间";
-                    case "pt":
-                      return "Duração";
-                    case "ar": 
-                      return "مدة";
-                    case "fr":
-                    default:
-                      return "Durée";
-                  }
-                })()}
-                </span>
-                <span className="font-medium text-gray-800 text-xs">
-                  {adminPricing.duration} min
-                </span>
-              </div>
-
-              {/* Bouton info pour détail des frais */}
-              <button
-                type="button"
-                onClick={() => setShowFeeBreakdown(!showFeeBreakdown)}
-                className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 transition-colors mt-1"
-                aria-expanded={showFeeBreakdown}
-                aria-label={t("summary.feeBreakdown")}
-              >
-                <Info className="w-3.5 h-3.5" />
-                <span className="underline underline-offset-2">
-                  {(() => {
-                    switch (language) {
-                      case "es": return "Desglose de tarifas";
-                      case "de": return "Gebührenaufschlüsselung";
-                      case "ru": return "Разбивка сборов";
-                      case "hi": return "शुल्क विवरण";
-                      case "en": return "Fee breakdown";
-                      case "ch": return "费用明细";
-                      case "pt": return "Detalhamento das taxas";
-                      case "ar": return "تفاصيل الرسوم";
-                      case "fr":
-                      default: return "Détail des frais";
-                    }
-                  })()}
-                </span>
-              </button>
-
-              {/* Bulle de détail des frais - visible si showFeeBreakdown */}
-              {showFeeBreakdown && (
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-gray-700 font-medium">
-                        {(() => {
-                          switch (language) {
-                            case "es": return "Tarifas de plataforma";
-                            case "de": return "Plattformgebühren";
-                            case "ru": return "Сборы платформы";
-                            case "hi": return "प्लेटफ़ॉर्म शुल्क";
-                            case "en": return "Platform fees";
-                            case "ch": return "平台费用";
-                            case "pt": return "Taxas de plataforma";
-                            case "ar": return "رسوم المنصة";
-                            case "fr":
-                            default: return "Frais de plateforme";
-                          }
-                        })()}
-                      </span>
-                      <p className="text-gray-500 text-[10px] mt-0.5">
-                        {(() => {
-                          switch (language) {
-                            case "es": return "(comunicación Twilio, plataforma SOS Expat, tarifas de divisa)";
-                            case "de": return "(Twilio-Kommunikation, SOS Expat-Plattform, Währungsgebühren)";
-                            case "ru": return "(связь Twilio, платформа SOS Expat, валютные сборы)";
-                            case "hi": return "(ट्विलियो संचार, SOS एक्सपैट प्लेटफ़ॉर्म, मुद्रा शुल्क)";
-                            case "en": return "(Twilio communication, SOS Expat platform, currency fees)";
-                            case "ch": return "(Twilio通讯、SOS Expat平台、货币费用)";
-                            case "pt": return "(comunicação Twilio, plataforma SOS Expat, taxas de câmbio)";
-                            case "ar": return "(اتصالات Twilio، منصة SOS Expat، رسوم العملة)";
-                            case "fr":
-                            default: return "(communication Twilio, plateforme SOS Expat, frais devise)";
-                          }
-                        })()}
-                      </p>
-                    </div>
-                    <span className="font-semibold text-gray-800">
-                      {adminPricing.connectionFeeAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700 font-medium">
-                      {(() => {
-                        switch (language) {
-                          case "es": return "Honorarios del experto";
-                          case "de": return "Expertenhonorar";
-                          case "ru": return "Гонорар эксперта";
-                          case "hi": return "विशेषज्ञ शुल्क";
-                          case "en": return "Expert fee";
-                          case "ch": return "专家费用";
-                          case "pt": return "Honorário do especialista";
-                          case "ar": return "أتعاب الخبير";
-                          case "fr":
-                          default: return "Rémunération expert";
-                        }
-                      })()}
-                    </span>
-                    <span className="font-semibold text-gray-800">
-                      {adminPricing.providerAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="border-t-2 border-gray-400 pt-2 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-gray-900">
-                 {(() => {
-                    switch (language) {
-                      case "es":
-                        return "Total";
-                      case "de":
-                        return "Gesamt";
-                      case "ru":
-                        return "Итого";
-                      case "hi":
-                        return "कुल";
-                      case "en":
-                        return "Total";
-                      case "ch":
-                        return "全部的";
-                      case "pt":
-                        return "Total";
-                      case "ar":
-                        return "المجموع";
-                      case "fr":
-                      default:
-                        return "Total";
-                    }
-                  })()}
-                  </span>
-                  <span
-                    className="text-lg font-black bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent"
-                    {...priceInfo}
-                  >
-                    {adminPricing.totalAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencySymbol}
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* m2 AUDIT FIX: Show warning when provider went offline during checkout */}
@@ -2935,78 +2707,84 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={!stripe || !elements || isProcessing || providerOffline}
-            onClick={(e) => {
-              // VERSION 7 - Alerte à CHAQUE clic
-              console.log("[DEBUG] " + "🟡 BOUTON CLIQUÉ!\n\nStripe: " + (stripe ? "✅" : "❌") + "\nElements: " + (elements ? "✅" : "❌") + "\nisProcessing: " + isProcessing);
-
-              e.preventDefault();
-              e.stopPropagation();
-
-              if (!stripe || !elements) {
-                console.log("[DEBUG] " + "⚠️ Stripe pas prêt. Attendez...");
-                return;
-              }
-
-              console.log("[DEBUG] " + "🚀 Lancement du paiement...");
-
-              try {
-                handlePaymentSubmit(e as unknown as React.FormEvent);
-              } catch (err) {
-                console.log("[DEBUG] " + "❌ ERREUR: " + (err instanceof Error ? err.message : String(err)));
-              }
-            }}
-            className={
-              "w-full py-4 rounded-2xl font-bold text-lg text-white transition-all " +
-              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 " +
-              "active:scale-[0.98] touch-manipulation relative overflow-hidden min-h-[60px] " +
-              (!stripe || !elements || isProcessing || providerOffline
-                ? "bg-gray-400 cursor-not-allowed opacity-60"
-                : "bg-gradient-to-r from-red-500 to-orange-500 shadow-lg shadow-red-500/30")
-            }
-            aria-label={`${intl.formatMessage({ id: "checkout.btn.pay" })} ${formatCurrency(adminPricing.totalAmount, serviceCurrency.toUpperCase(), {
-              language,
-              minimumFractionDigits: 2,
-            })}`}
+          {/* Pay button - sticky on mobile */}
+          <div
+            className="sticky bottom-0 -mx-4 px-4 py-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 mt-4 z-10 md:relative md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0 md:mt-4 md:z-auto"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
-            {!stripe || !elements ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full border-2 border-white border-t-transparent w-5 h-5" />
-                <span>
-                  {language === "fr" ? "Chargement..." : "Loading..."}
-                </span>
-              </div>
-            ) : isProcessing ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full border-2 border-white border-t-transparent w-5 h-5" />
-                <span>
-                  {language === "fr" ? "Traitement..." : "Processing..."}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <Lock className="w-5 h-5" aria-hidden="true" />
-                <span>
-                  {intl.formatMessage({ id: "checkout.btn.pay" })}{" "}
-                  {formatCurrency(adminPricing.totalAmount, serviceCurrency.toUpperCase(), {
-                    language,
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-            )}
-          </button>
+            <button
+              type="button"
+              disabled={!stripe || !elements || isProcessing || providerOffline}
+              onClick={(e) => {
+                // VERSION 7 - Alerte à CHAQUE clic
+                console.log("[DEBUG] " + "🟡 BOUTON CLIQUÉ!\n\nStripe: " + (stripe ? "✅" : "❌") + "\nElements: " + (elements ? "✅" : "❌") + "\nisProcessing: " + isProcessing);
 
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
-              <Shield className="w-3 h-3 text-green-600" aria-hidden={true} />
-              <span className="text-xs font-medium text-gray-700">Stripe</span>
-              <div
-                className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"
-                aria-hidden={true}
-              />
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!stripe || !elements) {
+                  console.log("[DEBUG] " + "⚠️ Stripe pas prêt. Attendez...");
+                  return;
+                }
+
+                console.log("[DEBUG] " + "🚀 Lancement du paiement...");
+
+                try {
+                  handlePaymentSubmit(e as unknown as React.FormEvent);
+                } catch (err) {
+                  console.log("[DEBUG] " + "❌ ERREUR: " + (err instanceof Error ? err.message : String(err)));
+                }
+              }}
+              className={
+                "w-full py-4 rounded-2xl font-bold text-lg text-white transition-all " +
+                "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 " +
+                "active:scale-[0.98] touch-manipulation relative overflow-hidden min-h-[60px] " +
+                (!stripe || !elements || isProcessing || providerOffline
+                  ? "bg-gray-400 cursor-not-allowed opacity-60"
+                  : "bg-gradient-to-r from-red-500 to-orange-500 shadow-lg shadow-red-500/30")
+              }
+              aria-label={`${intl.formatMessage({ id: "checkout.btn.pay" })} ${formatCurrency(adminPricing.totalAmount, serviceCurrency.toUpperCase(), {
+                language,
+                minimumFractionDigits: 2,
+              })}`}
+            >
+              {!stripe || !elements ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full border-2 border-white border-t-transparent w-5 h-5" />
+                  <span>
+                    {language === "fr" ? "Chargement..." : "Loading..."}
+                  </span>
+                </div>
+              ) : isProcessing ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full border-2 border-white border-t-transparent w-5 h-5" />
+                  <span>
+                    {language === "fr" ? "Traitement..." : "Processing..."}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center space-x-2">
+                  <Lock className="w-5 h-5" aria-hidden="true" />
+                  <span>
+                    {intl.formatMessage({ id: "checkout.btn.pay" })}{" "}
+                    {formatCurrency(adminPricing.totalAmount, serviceCurrency.toUpperCase(), {
+                      language,
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+              )}
+            </button>
+
+            <div className="flex items-center justify-center mt-2">
+              <div className="flex items-center space-x-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                <Shield className="w-3 h-3 text-green-600" aria-hidden={true} />
+                <span className="text-xs font-medium text-gray-700">Stripe</span>
+                <div
+                  className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"
+                  aria-hidden={true}
+                />
+              </div>
             </div>
           </div>
         </form>
@@ -4045,29 +3823,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                   <span>{adminPricing.duration} min</span>
                   <span>•</span>
                   <span className="text-green-600 font-medium">
-                  {(() => {
-                    switch (language) {
-                      case "es":
-                        return "Disponible";
-                      case "de":
-                        return "Verfügbar";
-                      case "ru":
-                        return "Доступно";
-                      case "en":
-                        return "Available";
-                      case "hi":
-                        return "उपलब्ध";
-                      case "ch":
-                        return "可用";
-                      case "pt":
-                        return "Disponível";
-                      case "ar":
-                        return "متاح";
-                      case "fr":
-                      default:
-                        return "Disponible";
-                    }
-                  })()}
+                    {intl.formatMessage({ id: "checkout.available", defaultMessage: "Disponible" })}
                   </span>
                 </div>
               </div>
@@ -4120,39 +3876,33 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
                     minimumFractionDigits: 2,
                   })}
                 </div>
-                <div className="text-xs text-gray-500">
-                  {adminPricing.duration} min
-                </div>
               </div>
             </div>
           </section>
 
-          <section className="bg-white rounded-xl shadow-md border p-4 mb-4">
-            <div className="flex items-center justify-center space-x-4">
-              <button
-                onClick={() => setSelectedCurrency("eur")}
-                className={
-                  "px-4 py-2 rounded-lg font-medium transition-all " +
-                  (selectedCurrency === "eur"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200")
-                }
-              >
-                EUR (€)
-              </button>
-              <button
-                onClick={() => setSelectedCurrency("usd")}
-                className={
-                  "px-4 py-2 rounded-lg font-medium transition-all " +
-                  (selectedCurrency === "usd"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200")
-                }
-              >
-                USD ($)
-              </button>
-            </div>
-          </section>
+          {/* Currency toggle - compact */}
+          <div className="flex items-center justify-center gap-2 mb-4 text-sm">
+            <button
+              onClick={() => setSelectedCurrency("eur")}
+              className={`px-3 py-1.5 rounded-full font-medium transition-all ${
+                selectedCurrency === "eur"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              EUR €
+            </button>
+            <button
+              onClick={() => setSelectedCurrency("usd")}
+              className={`px-3 py-1.5 rounded-full font-medium transition-all ${
+                selectedCurrency === "usd"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              USD $
+            </button>
+          </div>
 
           <section className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="p-4">
@@ -4254,25 +4004,6 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
             </div>
           </section>
 
-          <aside className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <Shield
-                className="w-4 h-4 text-blue-600 mt-0.5"
-                aria-hidden={true}
-              />
-              <div>
-                <h4 className="font-semibold text-blue-900 text-sm">
-                  {/* Paiement sécurisé */}
-                  <FormattedMessage id="payment.secure.title" />
-                </h4>
-                <p className="text-xs text-blue-800 mt-1">
-                  <FormattedMessage id="payment.secure.description" />
-                  {/* Données protégées par SSL. Appel lancé automatiquement après
-                  paiement. */}
-                </p>
-              </div>
-            </div>
-          </aside>
         </div>
       </main>
     </Layout>
