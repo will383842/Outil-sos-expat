@@ -212,24 +212,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }, [user?.id]);
 
   // =========================================================================
-  // PENDING KYC BADGE
-  // =========================================================================
-  const [pendingKycCount, setPendingKycCount] = useState(0);
-
-  useEffect(() => {
-    if (!user || user.role !== 'admin') return;
-    const q = query(
-      collection(db, 'sos_profiles'),
-      where('serviceType', 'in', ['lawyer_call', 'expat_call']),
-      where('kycStatus', '==', 'pending')
-    );
-    getCountFromServer(q)
-      .then((snap) => setPendingKycCount(snap.data().count))
-      .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  // =========================================================================
   // INBOX BADGE (all pending messages across collections)
   // =========================================================================
   const [inboxCount, setInboxCount] = useState(0);
@@ -270,16 +252,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         if (item.id === 'validation-prestataires' && pendingValidationCount > 0) {
           return { ...item, badge: `${pendingValidationCount}`, children: item.children ? injectBadge(item.children) : undefined };
         }
-        if (item.id === 'kyc-prestataires' && pendingKycCount > 0) {
-          return { ...item, badge: `${pendingKycCount}`, children: item.children ? injectBadge(item.children) : undefined };
-        }
         if (item.children) {
           return { ...item, children: injectBadge(item.children) };
         }
         return item;
       });
     return injectBadge(menu);
-  }, [user?.role, pendingWithdrawalCount, inboxCount, pendingValidationCount, pendingKycCount]);
+  }, [user?.role, pendingWithdrawalCount, inboxCount, pendingValidationCount]);
 
   // =========================================================================
   // EFFECTS
