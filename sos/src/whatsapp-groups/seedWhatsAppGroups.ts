@@ -108,7 +108,7 @@ export async function seedWhatsAppGroupsFromJson(
 export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
   groups: {
     // ========== CHATTERS (14 groupes continent × FR/EN) ==========
-    chatter_af_fr: { id: "chatter_af_fr", role: "Chatter", type: "continent", name: "Chatter 🌍 Afrique 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/BYgasir1XX8F07kCDU4qC8", active: true, isDefault: false, continent: "AF" },
+    chatter_af_fr: { id: "chatter_af_fr", role: "Chatter", type: "continent", name: "Chatter 🌍 Afrique 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/FbHCVTrTAmlJUMgozSyqq3", active: true, isDefault: false, continent: "AF" },
     chatter_af_en: { id: "chatter_af_en", role: "Chatter", type: "continent", name: "Chatter 🌍 Afrique 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/DuSCD7rwPtvIINnA7dzg7x", active: true, isDefault: false, continent: "AF" },
     chatter_as_fr: { id: "chatter_as_fr", role: "Chatter", type: "continent", name: "Chatter 🌏 Asie 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/Ct8UZyO5bSR10uhvDkihNV", active: true, isDefault: false, continent: "AS" },
     chatter_as_en: { id: "chatter_as_en", role: "Chatter", type: "continent", name: "Chatter 🌏 Asie 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/DeRfOv1caxJKbw8kz0CkBP", active: true, isDefault: false, continent: "AS" },
@@ -116,10 +116,10 @@ export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
     chatter_eu_en: { id: "chatter_eu_en", role: "Chatter", type: "continent", name: "Chatter 🇪🇺 Europe 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/IDPOwu6UD5F4BQvjXOvixT", active: true, isDefault: true, continent: "EU" },
     chatter_na_fr: { id: "chatter_na_fr", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Nord 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/Jxs5Eci7anEAxCaiHpAdU0", active: true, isDefault: false, continent: "NA" },
     chatter_na_en: { id: "chatter_na_en", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Nord 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/CTbLbaEEFiw4I4jldIJRl8", active: true, isDefault: false, continent: "NA" },
-    chatter_sa_fr: { id: "chatter_sa_fr", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Sud 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/LokkAcMRDPd4FzdqbRG19C", active: true, isDefault: false, continent: "SA" },
+    chatter_sa_fr: { id: "chatter_sa_fr", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Sud 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/Kr8FS9ETif7DARSg0YXzkz", active: true, isDefault: false, continent: "SA" },
     chatter_sa_en: { id: "chatter_sa_en", role: "Chatter", type: "continent", name: "Chatter 🌎 Amérique du Sud 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/GkQSaGhyV6BCekMyvtEFZ6", active: true, isDefault: false, continent: "SA" },
     chatter_oc_fr: { id: "chatter_oc_fr", role: "Chatter", type: "continent", name: "Chatter 🌏 Océanie 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/LOYOOhxOk63LkOQGlWM5nO", active: true, isDefault: false, continent: "OC" },
-    chatter_oc_en: { id: "chatter_oc_en", role: "Chatter", type: "continent", name: "Chatter 🌏 Océanie 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/JOHS0H7eHsk9m1DrrXcOtS", active: true, isDefault: false, continent: "OC" },
+    chatter_oc_en: { id: "chatter_oc_en", role: "Chatter", type: "continent", name: "Chatter 🌏 Océanie 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/BN7MdIum7oVKY4Nr6uC6pK", active: true, isDefault: false, continent: "OC" },
     chatter_me_fr: { id: "chatter_me_fr", role: "Chatter", type: "continent", name: "Chatter 🕌 Moyen-Orient 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/LsWB4KtEvuT6jRG8z0lxHK", active: true, isDefault: false, continent: "ME" },
     chatter_me_en: { id: "chatter_me_en", role: "Chatter", type: "continent", name: "Chatter 🕌 Moyen-Orient 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/DLq6Dqfni1qB3ow3z264n7", active: true, isDefault: false, continent: "ME" },
 
@@ -147,13 +147,13 @@ export const WHATSAPP_GROUPS_SEED_DATA: RawConfig = {
 
     // ========== GROUP ADMINS (9 groupes par langue) ==========
     groupAdmin_lang_fr: { id: "groupAdmin_lang_fr", role: "Group Admin", type: "langue", name: "Group Admin Français 🇫🇷", lang: "fr", inviteLink: "https://chat.whatsapp.com/DnrWMG0vvozLEr3lKSXcgX", active: true, isDefault: false },
-    groupAdmin_lang_en: { id: "groupAdmin_lang_en", role: "Group Admin", type: "langue", name: "Group Admin English 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/BpaFoRN2JWeE7PFEZCC15n", active: true, isDefault: true },
-    groupAdmin_lang_es: { id: "groupAdmin_lang_es", role: "Group Admin", type: "langue", name: "Group Admin Español 🇪🇸", lang: "es", inviteLink: "https://chat.whatsapp.com/DD9qehOncPz3cCf2xPFH4P", active: true, isDefault: false },
-    groupAdmin_lang_pt: { id: "groupAdmin_lang_pt", role: "Group Admin", type: "langue", name: "Group Admin Português 🇧🇷", lang: "pt", inviteLink: "https://chat.whatsapp.com/Gvo57KayELA1xhdqgdVWqA", active: true, isDefault: false },
+    groupAdmin_lang_en: { id: "groupAdmin_lang_en", role: "Group Admin", type: "langue", name: "Group Admin English 🇬🇧", lang: "en", inviteLink: "https://chat.whatsapp.com/Co5e6aY71yJ1UXVZJUzkEJ", active: true, isDefault: true },
+    groupAdmin_lang_es: { id: "groupAdmin_lang_es", role: "Group Admin", type: "langue", name: "Group Admin Español 🇪🇸", lang: "es", inviteLink: "https://chat.whatsapp.com/I1Ht9SS6Jg52B3Hu6u8NnH", active: true, isDefault: false },
+    groupAdmin_lang_pt: { id: "groupAdmin_lang_pt", role: "Group Admin", type: "langue", name: "Group Admin Português 🇧🇷", lang: "pt", inviteLink: "https://chat.whatsapp.com/CDI707vc0E953nuKARPJxK", active: true, isDefault: false },
     groupAdmin_lang_de: { id: "groupAdmin_lang_de", role: "Group Admin", type: "langue", name: "Group Admin Deutsch 🇩🇪", lang: "de", inviteLink: "https://chat.whatsapp.com/Hu8FYSscMtzFI5tluhLGUn", active: true, isDefault: false },
-    groupAdmin_lang_ru: { id: "groupAdmin_lang_ru", role: "Group Admin", type: "langue", name: "Group Admin Russkiy 🇷🇺", lang: "ru", inviteLink: "https://chat.whatsapp.com/KhZZcsmROSpG0liiRb1vIg", active: true, isDefault: false },
+    groupAdmin_lang_ru: { id: "groupAdmin_lang_ru", role: "Group Admin", type: "langue", name: "Group Admin Russkiy 🇷🇺", lang: "ru", inviteLink: "https://chat.whatsapp.com/IU39SS1ftJaHzNo3cxwtL2", active: true, isDefault: false },
     groupAdmin_lang_ar: { id: "groupAdmin_lang_ar", role: "Group Admin", type: "langue", name: "Group Admin Al-Arabiyya 🇸🇦", lang: "ar", inviteLink: "https://chat.whatsapp.com/FMzUAzGtSh7LTvXxluRyzy", active: true, isDefault: false },
-    groupAdmin_lang_zh: { id: "groupAdmin_lang_zh", role: "Group Admin", type: "langue", name: "Group Admin Zhongwen 🇨🇳", lang: "zh", inviteLink: "https://chat.whatsapp.com/H8axTEUiGWo9yyKQnw7dah", active: true, isDefault: false },
+    groupAdmin_lang_zh: { id: "groupAdmin_lang_zh", role: "Group Admin", type: "langue", name: "Group Admin Zhongwen 🇨🇳", lang: "zh", inviteLink: "https://chat.whatsapp.com/DJiS68wL51k1cHRCYInH1S", active: true, isDefault: false },
     groupAdmin_lang_hi: { id: "groupAdmin_lang_hi", role: "Group Admin", type: "langue", name: "Group Admin Hindi 🇮🇳", lang: "hi", inviteLink: "https://chat.whatsapp.com/BmCPXwQrVEmEXp4AhAeJE2", active: true, isDefault: false },
 
     // ========== CLIENTS (9 groupes par langue) ==========

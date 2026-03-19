@@ -90,6 +90,8 @@ const GroupCard: React.FC<{
 }> = ({ group, isDefault, onUpdate, onRemove, onCopy }) => {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(group.name);
+  const [editingLink, setEditingLink] = useState(false);
+  const [editLink, setEditLink] = useState(group.link || '');
   const [copied, setCopied] = useState(false);
 
   const langInfo = SUPPORTED_LANGUAGES.find((l) => l.code === group.language);
@@ -118,6 +120,21 @@ const GroupCard: React.FC<{
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') commitName();
     if (e.key === 'Escape') { setEditName(group.name); setEditing(false); }
+  };
+
+  const commitLink = () => {
+    const trimmed = editLink.trim();
+    if (trimmed && trimmed !== group.link) {
+      onUpdate({ link: trimmed });
+    } else {
+      setEditLink(group.link || '');
+    }
+    setEditingLink(false);
+  };
+
+  const handleLinkKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') commitLink();
+    if (e.key === 'Escape') { setEditLink(group.link || ''); setEditingLink(false); }
   };
 
   return (
@@ -175,24 +192,51 @@ const GroupCard: React.FC<{
         )}
       </div>
 
-      {/* WhatsApp link pill */}
+      {/* WhatsApp link — editable */}
       <div className="mb-3">
-        {group.link ? (
-          <button
-            onClick={handleCopy}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium max-w-full ${
-              linkValid
-                ? 'bg-[#25D366]/10 text-[#25D366] dark:bg-[#25D366]/20'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+        {editingLink ? (
+          <input
+            autoFocus
+            value={editLink}
+            onChange={(e) => setEditLink(e.target.value)}
+            onBlur={commitLink}
+            onKeyDown={handleLinkKeyDown}
+            placeholder="https://chat.whatsapp.com/..."
+            className={`w-full text-xs font-mono bg-zinc-50 dark:bg-zinc-800 rounded-md px-2.5 py-1.5 border focus:outline-none focus:ring-1 ${
+              editLink && !editLink.startsWith('https://chat.whatsapp.com/')
+                ? 'border-red-400 focus:ring-red-400'
+                : 'border-[#25D366] focus:ring-[#25D366]'
             }`}
-          >
-            {copied ? <Check className="w-3 h-3 shrink-0" /> : <Copy className="w-3 h-3 shrink-0" />}
-            <span className="truncate">{group.link.replace('https://chat.whatsapp.com/', '.../')}</span>
-          </button>
+          />
+        ) : group.link ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => { setEditLink(group.link || ''); setEditingLink(true); }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium max-w-full group/link ${
+                linkValid
+                  ? 'bg-[#25D366]/10 text-[#25D366] dark:bg-[#25D366]/20'
+                  : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+              }`}
+            >
+              <Pencil className="w-2.5 h-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
+              <span className="truncate">{group.link.replace('https://chat.whatsapp.com/', '.../')}</span>
+            </button>
+            <button
+              onClick={handleCopy}
+              className="p-1 rounded text-zinc-400 hover:text-[#25D366] transition-colors"
+              title="Copier le lien"
+            >
+              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            </button>
+          </div>
         ) : (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800">
-            Aucun lien
-          </span>
+          <button
+            onClick={() => { setEditLink('https://chat.whatsapp.com/'); setEditingLink(true); }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+          >
+            <Plus className="w-3 h-3" />
+            Ajouter un lien
+          </button>
         )}
       </div>
 
