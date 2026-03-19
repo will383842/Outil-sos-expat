@@ -1075,13 +1075,57 @@ async function handleCallFailed(
               title: 'تم قطع الاتصال بك',
               message: 'تم قطع الاتصال بك تلقائيًا لأنك لم ترد على مكالمة بعد عدة محاولات. يمكنك إعادة الاتصال عندما تكون متاحًا.'
             },
-            ch: {
+            zh: {
+              title: '您已断开连接',
+              message: '由于您在多次尝试后未接听电话，您已被自动断开连接。当您有空时可以重新连接。'
+            },
+            bn: {
+              title: 'আপনাকে সংযোগ বিচ্ছিন্ন করা হয়েছে',
+              message: 'একাধিক চেষ্টার পর কলের উত্তর না দেওয়ায় আপনাকে স্বয়ংক্রিয়ভাবে সংযোগ বিচ্ছিন্ন করা হয়েছে। আপনি উপলব্ধ হলে পুনরায় সংযোগ করতে পারেন।'
+            },
+            ur: {
+              title: 'آپ کا رابطہ منقطع ہو گیا ہے',
+              message: 'کئی کوششوں کے بعد کال کا جواب نہ دینے کی وجہ سے آپ کو خودکار طور پر منقطع کر دیا گیا ہے۔ دستیاب ہونے پر آپ دوبارہ جڑ سکتے ہیں۔'
+            },
+            id: {
+              title: 'Anda telah terputus',
+              message: 'Anda telah terputus secara otomatis karena tidak menjawab panggilan setelah beberapa percobaan. Anda dapat terhubung kembali saat tersedia.'
+            },
+            ja: {
+              title: '切断されました',
+              message: '複数回の試行後に応答がなかったため、自動的に切断されました。対応可能になりましたら再接続できます。'
+            },
+            tr: {
+              title: 'Bağlantınız kesildi',
+              message: 'Birden fazla denemeden sonra aramaya cevap vermediğiniz için otomatik olarak bağlantınız kesildi. Müsait olduğunuzda tekrar bağlanabilirsiniz.'
+            },
+            it: {
+              title: 'Sei stato disconnesso',
+              message: 'Sei stato disconnesso automaticamente perché non hai risposto a una chiamata dopo diversi tentativi. Puoi riconnetterti quando sei disponibile.'
+            },
+            ko: {
+              title: '연결이 해제되었습니다',
+              message: '여러 번 시도 후 전화에 응답하지 않아 자동으로 연결이 해제되었습니다. 가능할 때 다시 연결할 수 있습니다.'
+            },
+            vi: {
+              title: 'Bạn đã bị ngắt kết nối',
+              message: 'Bạn đã bị ngắt kết nối tự động vì không trả lời cuộc gọi sau nhiều lần thử. Bạn có thể kết nối lại khi có thể.'
+            },
+            fa: {
+              title: 'ارتباط شما قطع شد',
+              message: 'به دلیل عدم پاسخ به تماس پس از چندین تلاش، ارتباط شما به صورت خودکار قطع شد. هر زمان که در دسترس بودید می‌توانید دوباره متصل شوید.'
+            },
+            pl: {
+              title: 'Zostałeś rozłączony',
+              message: 'Zostałeś automatycznie rozłączony, ponieważ nie odpowiedziałeś na połączenie po kilku próbach. Możesz ponownie się połączyć, gdy będziesz dostępny.'
+            },
+            ch: { // alias for zh (internal convention uses 'ch' for Chinese)
               title: '您已断开连接',
               message: '由于您在多次尝试后未接听电话，您已被自动断开连接。当您有空时可以重新连接。'
             }
           };
-          
-          const notification = notificationMessages[preferredLanguage] || notificationMessages.fr;
+
+          const notification = notificationMessages[preferredLanguage] || notificationMessages.en;
           
           // Créer la notification
           await db.collection('notifications').add({
@@ -1251,8 +1295,10 @@ export const twilioAmdTwiml = onRequest(
       // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
       const guardCallSid = req.body?.CallSid || req.query.CallSid;
       if (!guardCallSid || typeof guardCallSid !== 'string' || !guardCallSid.startsWith('CA')) {
-        logger.error(`[twilioAmdTwiml] Missing or invalid CallSid: ${guardCallSid}`);
-        res.status(400).send('Missing or invalid CallSid');
+        logger.error(`[twilioAmdTwiml] Missing or invalid CallSid: ${guardCallSid} — returning TwiML hangup`);
+        // Return TwiML instead of HTTP error so Twilio doesn't play default English "Good bye"
+        res.type('text/xml');
+        res.send('<?xml version="1.0" encoding="UTF-8"?>\n<Response><Hangup/></Response>');
         return;
       }
 
@@ -1969,8 +2015,10 @@ export const twilioGatherResponse = onRequest(
       // P1 SECURITY: CallSid guard - reject requests without a valid CallSid
       const callSidCheck = req.body?.CallSid;
       if (!callSidCheck || typeof callSidCheck !== 'string' || !callSidCheck.startsWith('CA')) {
-        logger.error(`[twilioGatherResponse] Missing or invalid CallSid: ${callSidCheck}`);
-        res.status(400).send('Missing or invalid CallSid');
+        logger.error(`[twilioGatherResponse] Missing or invalid CallSid: ${callSidCheck} — returning TwiML hangup`);
+        // Return TwiML instead of HTTP error so Twilio doesn't play default English "Good bye"
+        res.type('text/xml');
+        res.send('<?xml version="1.0" encoding="UTF-8"?>\n<Response><Hangup/></Response>');
         return;
       }
 

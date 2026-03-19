@@ -33,25 +33,12 @@ import { cancelUnifiedCommissionsForCallSession } from "./unified/handlers/handl
 // Typage fort du JSON de prompts
 // =============================
 type LangCode =
-  | "fr"
-  | "en"
-  | "pt"
-  | "es"
-  | "de"
-  | "ru"
-  | "zh"
-  | "ar"
-  | "hi"
-  | "bn"
-  | "ur"
-  | "id"
-  | "ja"
-  | "tr"
-  | "it"
-  | "ko"
-  | "vi"
-  | "fa"
-  | "pl";
+  | "fr" | "en" | "pt" | "es" | "de" | "ru" | "zh" | "ar" | "hi"
+  | "bn" | "ur" | "id" | "ja" | "tr" | "it" | "ko" | "vi" | "fa" | "pl"
+  | "nl" | "sv" | "da" | "nb" | "fi" | "el" | "he" | "th" | "ms"
+  | "cs" | "hu" | "ro" | "uk" | "sk" | "bg" | "hr" | "sr" | "sl"
+  | "lt" | "lv" | "et" | "ca" | "tl" | "sw" | "af" | "ta" | "ka"
+  | "sq" | "ne" | "gu" | "mk";
 
 interface VoicePrompts {
   provider_intro: Record<LangCode, string>;
@@ -198,48 +185,38 @@ const CALL_CONFIG = {
 // =============================
 
 const VOICE_LOCALES: Record<string, string> = {
-  fr: "fr-FR",
-  en: "en-US",
-  pt: "pt-BR",
-  es: "es-ES",
-  de: "de-DE",
-  ru: "ru-RU",
-  zh: "zh-CN",
-  ar: "ar-SA",
-  hi: "hi-IN",
-  bn: "bn-IN",
-  ur: "ur-PK",
-  id: "id-ID",
-  ja: "ja-JP",
-  tr: "tr-TR",
-  it: "it-IT",
-  ko: "ko-KR",
-  vi: "vi-VN",
-  fa: "fa-IR",
-  pl: "pl-PL",
+  fr: "fr-FR", en: "en-US", pt: "pt-BR", es: "es-ES", de: "de-DE",
+  ru: "ru-RU", zh: "zh-CN", ar: "ar-SA", hi: "hi-IN", bn: "bn-IN",
+  ur: "hi-IN", id: "id-ID", ja: "ja-JP", tr: "tr-TR", it: "it-IT",
+  ko: "ko-KR", vi: "vi-VN", fa: "ar-XA", pl: "pl-PL",
+  // 31 new languages (50 total)
+  nl: "nl-NL", sv: "sv-SE", da: "da-DK", nb: "nb-NO", fi: "fi-FI",
+  el: "el-GR", he: "he-IL", th: "th-TH", ms: "ms-MY", cs: "cs-CZ",
+  hu: "hu-HU", ro: "ro-RO", uk: "uk-UA", sk: "sk-SK", bg: "bg-BG",
+  hr: "hr-HR", sr: "sr-RS", sl: "sl-SI", lt: "lt-LT", lv: "lv-LV",
+  et: "et-EE", ca: "ca-ES", tl: "fil-PH", sw: "sw-KE", af: "af-ZA",
+  ta: "ta-IN", gu: "gu-IN",
+  // Unsupported TTS locales → closest supported alternative
+  ka: "ru-RU",    // Georgian → Russian (regional lingua franca)
+  sq: "it-IT",    // Albanian → Italian (regional lingua franca)
+  ne: "hi-IN",    // Nepali → Hindi (mutually intelligible)
+  mk: "bg-BG",    // Macedonian → Bulgarian (very close languages)
 };
 
 // Full language names for logging and display
 const LANGUAGE_NAMES: Record<string, string> = {
-  fr: "Français",
-  en: "English",
-  pt: "Português",
-  es: "Español",
-  de: "Deutsch",
-  ru: "Русский",
-  zh: "中文",
-  ar: "العربية",
-  hi: "हिन्दी",
-  bn: "বাংলা",
-  ur: "اردو",
-  id: "Bahasa Indonesia",
-  ja: "日本語",
-  tr: "Türkçe",
-  it: "Italiano",
-  ko: "한국어",
-  vi: "Tiếng Việt",
-  fa: "فارسی",
-  pl: "Polski",
+  fr: "Français", en: "English", pt: "Português", es: "Español", de: "Deutsch",
+  ru: "Русский", zh: "中文", ar: "العربية", hi: "हिन्दी", bn: "বাংলা",
+  ur: "اردو", id: "Bahasa Indonesia", ja: "日本語", tr: "Türkçe", it: "Italiano",
+  ko: "한국어", vi: "Tiếng Việt", fa: "فارسی", pl: "Polski",
+  // 31 new languages (50 total)
+  nl: "Nederlands", sv: "Svenska", da: "Dansk", nb: "Norsk", fi: "Suomi",
+  el: "Ελληνικά", he: "עברית", th: "ไทย", ms: "Bahasa Melayu", cs: "Čeština",
+  hu: "Magyar", ro: "Română", uk: "Українська", sk: "Slovenčina", bg: "Български",
+  hr: "Hrvatski", sr: "Српски", sl: "Slovenščina", lt: "Lietuvių", lv: "Latviešu",
+  et: "Eesti", ca: "Català", tl: "Filipino", sw: "Kiswahili", af: "Afrikaans",
+  ta: "தமிழ்", ka: "ქართული", sq: "Shqip", ne: "नेपाली", gu: "ગુજરાતી",
+  mk: "Македонски",
 };
 
 function getLanguageName(langKey: string): string {
@@ -321,6 +298,112 @@ const LANG_CODE_ALIASES: Record<string, string> = {
   // Polish variants
   'polish': 'pl',
   'polonais': 'pl',
+  // Dutch variants
+  'dutch': 'nl',
+  'néerlandais': 'nl',
+  'neerlandais': 'nl',
+  'nederlands': 'nl',
+  // Swedish variants
+  'swedish': 'sv',
+  'suédois': 'sv',
+  'suedois': 'sv',
+  'svenska': 'sv',
+  // Danish variants
+  'danish': 'da',
+  'danois': 'da',
+  'dansk': 'da',
+  // Norwegian variants
+  'norwegian': 'nb',
+  'norvégien': 'nb',
+  'norvegien': 'nb',
+  'norsk': 'nb',
+  'no': 'nb',
+  // Finnish variants
+  'finnish': 'fi',
+  'finnois': 'fi',
+  'suomi': 'fi',
+  // Greek variants
+  'greek': 'el',
+  'grec': 'el',
+  // Hebrew variants
+  'hebrew': 'he',
+  'hébreu': 'he',
+  'hebreu': 'he',
+  // Thai variants
+  'thai': 'th',
+  'thaï': 'th',
+  // Malay variants
+  'malay': 'ms',
+  'malais': 'ms',
+  // Czech variants
+  'czech': 'cs',
+  'tchèque': 'cs',
+  'tcheque': 'cs',
+  // Hungarian variants
+  'hungarian': 'hu',
+  'hongrois': 'hu',
+  'magyar': 'hu',
+  // Romanian variants
+  'romanian': 'ro',
+  'roumain': 'ro',
+  // Ukrainian variants
+  'ukrainian': 'uk',
+  'ukrainien': 'uk',
+  // Slovak variants
+  'slovak': 'sk',
+  'slovaque': 'sk',
+  // Bulgarian variants
+  'bulgarian': 'bg',
+  'bulgare': 'bg',
+  // Croatian variants
+  'croatian': 'hr',
+  'croate': 'hr',
+  // Serbian variants
+  'serbian': 'sr',
+  'serbe': 'sr',
+  // Slovenian variants
+  'slovenian': 'sl',
+  'slovène': 'sl',
+  'slovene': 'sl',
+  // Lithuanian variants
+  'lithuanian': 'lt',
+  'lituanien': 'lt',
+  // Latvian variants
+  'latvian': 'lv',
+  'letton': 'lv',
+  // Estonian variants
+  'estonian': 'et',
+  'estonien': 'et',
+  // Catalan variants
+  'catalan': 'ca',
+  'català': 'ca',
+  // Filipino variants
+  'filipino': 'tl',
+  'tagalog': 'tl',
+  // Swahili variants
+  'swahili': 'sw',
+  // Afrikaans variants
+  'afrikaans': 'af',
+  // Tamil variants
+  'tamil': 'ta',
+  'tamoul': 'ta',
+  // Georgian variants
+  'georgian': 'ka',
+  'géorgien': 'ka',
+  'georgien': 'ka',
+  // Albanian variants
+  'albanian': 'sq',
+  'albanais': 'sq',
+  // Nepali variants
+  'nepali': 'ne',
+  'népalais': 'ne',
+  'nepalais': 'ne',
+  // Gujarati variants
+  'gujarati': 'gu',
+  // Macedonian variants
+  'macedonian': 'mk',
+  'macédonien': 'mk',
+  'macedonien': 'mk',
 };
 
 function normalizeLangList(langs?: string[]): string[] {
@@ -668,18 +751,18 @@ export class TwilioCallManager {
           `No metadata found for session ${sessionId}, creating minimal metadata`
         );
         callSession.metadata = {
-          clientLanguages: ["en"],
-          providerLanguages: ["en"],
+          clientLanguages: ["fr"],
+          providerLanguages: ["fr"],
         } as typeof callSession.metadata;
         metadataUpdated = true;
       } else {
         // Just update the existing metadata with language defaults
         if (!callSession.metadata.clientLanguages) {
-          callSession.metadata.clientLanguages = ["en"];
+          callSession.metadata.clientLanguages = ["fr"];
           metadataUpdated = true;
         }
         if (!callSession.metadata.providerLanguages) {
-          callSession.metadata.providerLanguages = ["en"];
+          callSession.metadata.providerLanguages = ["fr"];
           metadataUpdated = true;
         }
       }
@@ -807,13 +890,13 @@ export class TwilioCallManager {
         .collection("call_sessions")
         .doc(sessionId)
         .update({
-          "metadata.clientLanguages": ["en"],
+          "metadata.clientLanguages": ["fr"],
           "metadata.providerLanguages": callSession.metadata
-            .providerLanguages || ["en"],
+            .providerLanguages || ["fr"],
           "metadata.updatedAt": admin.firestore.Timestamp.now(),
         });
       // Update local session object
-      callSession.metadata.clientLanguages = ["en"];
+      callSession.metadata.clientLanguages = ["fr"];
     }
 
     if (!callSession.metadata.providerLanguages) {
@@ -1879,8 +1962,8 @@ export class TwilioCallManager {
       await this.updateCallSessionStatus(sessionId, "failed");
       logger.info(`🔥 [${failureId}] ✅ Session marked as failed`);
 
-      // 🛠️ FIX: Always fallback to 'en' if missing
-      const clientLanguage = callSession.metadata?.clientLanguages?.[0] || "en";
+      // 🛠️ FIX: Fallback to 'fr' — most users are French-speaking
+      const clientLanguage = callSession.metadata?.clientLanguages?.[0] || "fr";
 
       // 🆕 NEW: If provider doesn't answer and client is already connected, redirect their call to play voice message
       if (reason === "provider_no_answer" &&
