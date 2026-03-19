@@ -2271,13 +2271,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
         let callStatus: "scheduled" | "skipped" = "skipped";
         let callId: string | undefined;
+        let orderId: string | undefined;
 
-        // Planifier l'appel si les numéros sont valides
-        // Note: clientPhoneE164 est TOUJOURS valide ici grâce à la validation P0-3
-        if (
+        // Run call scheduling + payment docs persistence IN PARALLEL
+        // They write to different Firestore collections and don't depend on each other
+        const canScheduleCall =
           /^\+[1-9]\d{8,14}$/.test(clientPhoneE164) &&
-          /^\+[1-9]\d{8,14}$/.test(providerPhoneE164)
-        ) {
+          /^\+[1-9]\d{8,14}$/.test(providerPhoneE164);
+
+        if (canScheduleCall) {
           const createAndScheduleCall: HttpsCallable<
             CreateAndScheduleCallData,
             { success: boolean; callId?: string }
@@ -2301,7 +2303,6 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             providerLanguages: provider.languagesSpoken ||
               provider.languages || ["fr"],
             callSessionId: callSessionId,
-            // P0 FIX: Pass booking form data for SMS notifications to provider
             bookingTitle: bookingMeta?.title || "",
             bookingDescription: bookingMeta?.description || "",
             clientCurrentCountry: bookingMeta?.country || "",
@@ -2309,22 +2310,36 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             clientNationality: bookingMeta?.clientNationality || "",
           };
 
-          console.log("[createAndScheduleCall] data", callData);
+          console.log("[PARALLEL] Starting call scheduling + payment docs in parallel...");
 
-          try {
-            const callResult = await createAndScheduleCall(callData);
-            console.log(callResult, " == this is the call result");
-            if (callResult && callResult.data && callResult.data.success) {
-              console.log("[createAndScheduleCall] success");
-              callStatus = "scheduled";
-              callId = callResult.data.callId || callSessionId;
-            }
-          } catch (cfErr: unknown) {
-            logCallableError("createAndScheduleCall:error", cfErr);
-            // P1-2 FIX: Ne pas continuer silencieusement — informer le client
-            // Le paiement est en mode manual capture, il ne sera PAS débité
-            // tant que l'appel n'a pas lieu (capture après 2 min de conversation)
-            // NOTE: `return` (pas `throw`) pour éviter que le catch externe n'appelle onError une 2e fois
+          // Run both in parallel — they don't depend on each other
+          const [callResult, orderResult] = await Promise.all([
+            // ③ Schedule call
+            createAndScheduleCall(callData)
+              .then(result => {
+                if (result?.data?.success) {
+                  callStatus = "scheduled";
+                  callId = result.data.callId || callSessionId;
+                  console.log("[createAndScheduleCall] success, callId:", callId);
+                }
+                return result;
+              })
+              .catch((cfErr: unknown) => {
+                logCallableError("createAndScheduleCall:error", cfErr);
+                // Don't throw — let persistPaymentDocs complete
+                return null;
+              }),
+            // ④ Persist payment docs
+            persistPaymentDocs(paymentIntent.id)
+              .then(id => {
+                console.log("🔵 [persistPaymentDocs] orderId:", id);
+                orderId = id;
+                return id;
+              }),
+          ]);
+
+          // If call scheduling failed, inform the client
+          if (!callResult) {
             onError(
               t("checkout.err.callSchedulingFailed") ||
               "Une erreur est survenue lors de la planification de l'appel. Votre carte n'a pas été débitée. Veuillez réessayer."
@@ -2333,15 +2348,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           }
         } else {
           console.warn("Missing/invalid phone(s). Skipping call scheduling.");
+          // Still persist payment docs even without call
+          orderId = await persistPaymentDocs(paymentIntent.id);
         }
-
-        console.log("🔵 [STRIPE_DEBUG] Persisting payment documents...");
-        const orderId = await persistPaymentDocs(paymentIntent.id);
-        console.log("🔵 [STRIPE_DEBUG] persistPaymentDocs result:", { orderId });
-
-        // P2-3 FIX: Supprimé sendProviderNotifications() ici — les notifications
-        // sont déjà envoyées par createAndScheduleCallHTTPS côté backend
-        // (message_events créés dans la Cloud Function). L'appel ici causait un double SMS.
 
         const gtag = getGtag();
         gtag?.("event", "checkout_success", {
@@ -2353,17 +2362,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           call_status: callStatus,
         });
 
-        // DEBUG: Log avant le setTimeout pour la redirection
-        console.log("🔵 [STRIPE_DEBUG] Payment complete, scheduling navigation in 3s...", {
+        console.log("🔵 [STRIPE_DEBUG] Payment complete, navigating...", {
           paymentIntentId: paymentIntent.id,
           callStatus,
           callId,
           orderId,
-          currentPath: window.location.pathname,
-          timestamp: new Date().toISOString()
         });
 
-        // Log pour la call session si créée
         if (callId) {
           callLogger.sessionCreated({
             callSessionId: callId,
@@ -2381,7 +2386,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
             paymentIntentId: paymentIntent.id,
             call: callStatus,
             callId: finalCallId,
-            orderId: orderId,
+            orderId: orderId || '',
           });
           console.log("✅ [STRIPE_DEBUG] onSuccess called successfully");
         } catch (successError) {
