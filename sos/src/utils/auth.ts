@@ -5,8 +5,6 @@
   updateProfile,
   signOut,
   User as FirebaseUser,
-  GoogleAuthProvider,
-  signInWithRedirect,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   type ConfirmationResult,
@@ -256,33 +254,6 @@ const loginUser = async (
       origin: "frontend",
       error: `Login error: ${msg}`,
       context: { email },
-    });
-    throw err;
-  }
-};
-
-/* -------------------------------------------------------------------------- */
-/*                              Login with Google                             */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Initiates Google login via redirect (not popup) to avoid COOP errors.
- * The result will be handled by getRedirectResult in AuthContext.
- * @deprecated Use loginWithGoogle from AuthContext instead
- */
-const loginWithGoogle = async (): Promise<void> => {
-  try {
-    const provider = new GoogleAuthProvider();
-    // Use redirect to avoid COOP (Cross-Origin-Opener-Policy) errors
-    await signInWithRedirect(auth, provider);
-    // Note: User will be redirected to Google, result handled by getRedirectResult
-  } catch (err: unknown) {
-    const msg = getErrorMessage(err);
-    console.error("Error initiating Google login:", err);
-    logError({
-      origin: "frontend",
-      error: `Google login error: ${msg}`,
-      context: {},
     });
     throw err;
   }
@@ -564,7 +535,6 @@ const refreshAdminClaims = async (): Promise<boolean> => {
 export {
   registerUser,
   loginUser,
-  loginWithGoogle,
   logoutUser,
   resetPassword,
   initRecaptcha,

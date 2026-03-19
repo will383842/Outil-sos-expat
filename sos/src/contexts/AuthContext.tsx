@@ -186,8 +186,12 @@ const isInAppBrowser = (): boolean => {
     /LinkedIn/i,             // LinkedIn
     /Pinterest/i,            // Pinterest
     /Telegram/i,             // Telegram
-    /WhatsApp/i,             // WhatsApp (rare mais possible)
+    /WhatsApp/i,             // WhatsApp
     /WeChat|MicroMessenger/i, // WeChat
+    /Reddit|RVMob/i,         // Reddit
+    /Discord/i,              // Discord
+    /Viber/i,                // Viber
+    /Slack/i,                // Slack
   ];
 
   return inAppPatterns.some(pattern => pattern.test(ua));
@@ -221,8 +225,8 @@ const shouldForceRedirectAuth = (): boolean => {
   // Samsung Internet a parfois des problèmes
   const isSamsungBrowser = /SamsungBrowser/i.test(ua);
 
-  // UC Browser et autres navigateurs alternatifs
-  const isAlternativeBrowser = /UCBrowser|Opera Mini|OPR/i.test(ua);
+  // UC Browser, Brave, Firefox Focus et autres navigateurs alternatifs mobiles
+  const isAlternativeBrowser = /UCBrowser|Opera Mini|OPR|Brave|Focus/i.test(ua);
 
   return isInAppBrowser() || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
 };
@@ -1929,7 +1933,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   }, [authUser?.uid]);
 
+  // P2 FIX: Ref pour cleanup du timeout si le composant unmount pendant getRedirectResult
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         if (redirectHandledRef.current) return;
@@ -1940,11 +1948,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // ⏱️ Timeout pour éviter blocage infini sur certains navigateurs
         // ✅ Augmenté à 60s pour les réseaux lents (3G, pays émergents, Afrique, Asie)
         const REDIRECT_TIMEOUT = 60000; // 60 secondes
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
         const resultPromise = getRedirectResult(auth);
         const timeoutPromise = new Promise<null>((_, reject) => {
-          timeoutId = setTimeout(() => {
+          redirectTimeoutRef.current = setTimeout(() => {
             reject(new Error('REDIRECT_TIMEOUT'));
           }, REDIRECT_TIMEOUT);
         });
@@ -1952,9 +1959,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         let result;
         try {
           result = await Promise.race([resultPromise, timeoutPromise]);
-          if (timeoutId) clearTimeout(timeoutId);
+          if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
         } catch (raceError) {
-          if (timeoutId) clearTimeout(timeoutId);
+          if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
           if ((raceError as Error).message === 'REDIRECT_TIMEOUT') {
             devWarn("[DEBUG] " + "⚠️ GOOGLE REDIRECT: Timeout après " + REDIRECT_TIMEOUT + "ms - abandon");
             googleRedirectPendingRef.current = false;
@@ -2143,9 +2150,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         // Car getRedirectResult retourne souvent des erreurs sur page normale
       } finally {
         googleRedirectPendingRef.current = false;
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     })();
+    // P2 FIX: Cleanup timeout si le composant est démonté pendant getRedirectResult
+    return () => {
+      cancelled = true;
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
   }, [deviceInfo]);
 
   // ✅ FIX P1-2: Écouter les événements de login/logout des autres onglets
