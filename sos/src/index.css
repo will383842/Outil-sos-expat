@@ -68,10 +68,11 @@
 /* Wizard overlay scroll lock
  * Uses overflow:hidden instead of position:fixed+top:-Npx to avoid
  * iOS touch coordinate offset bug (touches miss targets at top of screen).
- * Higher specificity (0,1,1) beats mobile media query body rule (0,0,1) */
+ * Higher specificity (0,1,1) beats mobile media query body rule (0,0,1)
+ * NOTE: Do NOT add touch-action:none here — it blocks tap-to-focus on inputs
+ * and tap-to-select on country buttons. overflow:hidden is sufficient. */
 body.wizard-scroll-lock {
   overflow: hidden !important;
-  touch-action: none !important;
 }
 html:has(body.wizard-scroll-lock) {
   overflow: hidden !important;
