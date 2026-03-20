@@ -68,14 +68,19 @@ class ErrorBoundary extends Component<Props, State> {
       clearTimeout(this.resetTimeoutId);
     }
 
+    // ALWAYS log to console (production included) for debugging
+    console.error('[ErrorBoundary] CAUGHT ERROR:', error.message);
+    console.error('[ErrorBoundary] STACK:', error.stack);
+    console.error('[ErrorBoundary] COMPONENT:', errorInfo.componentStack);
+
     this.setState({
       error,
       errorInfo
     });
-    
+
     // Log error securely (no sensitive data)
     this.logErrorSafely(error, errorInfo);
-    
+
     // Call onError prop if provided
     this.props.onError?.(error, errorInfo);
   }
