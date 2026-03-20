@@ -234,7 +234,7 @@ const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
 
 // -------------------------------------------
 // Language config — chargement dynamique des traductions
-// FR est statique (langue par défaut), les autres sont chargées à la demande
+// EN est statique (fallback universel), les 8 autres langues sont chargées à la demande
 // -------------------------------------------
 const translationLoaders: Record<string, () => Promise<{ default: Record<string, string> }>> = {
   fr: () => import("./helper/fr.json"),
@@ -255,7 +255,7 @@ export const loadedMessages: Record<string, Record<string, string>> = {
 
 /**
  * Pré-charge les traductions pour une langue donnée.
- * Appelé par main.tsx AVANT hydrateRoot/createRoot pour éviter le flash de FR.
+ * Appelé par main.tsx AVANT hydrateRoot/createRoot pour éviter le flash de EN.
  */
 export async function preloadTranslations(locale: string): Promise<void> {
   if (locale === 'en' || loadedMessages[locale]) return;
@@ -265,7 +265,7 @@ export async function preloadTranslations(locale: string): Promise<void> {
       const mod = await loader();
       loadedMessages[locale] = mod.default as unknown as Record<string, string>;
     } catch {
-      // Fallback silencieux vers FR
+      // Fallback silencieux vers EN (statique)
     }
   }
 }
@@ -869,7 +869,7 @@ const App: React.FC = () => {
   const { isMobile } = useDeviceDetection();
   const [locale, setLocale] = useState<Locale>("fr"); // Default to French since your site is French
 
-  // ✅ PERF: Chargement dynamique des traductions (seul FR est statique)
+  // ✅ PERF: Chargement dynamique des traductions (seul EN est statique, fallback universel)
   const currentMessages = useDynamicMessages(locale);
 
   // P0-1 FIX: Activate FCM push notifications for all authenticated users

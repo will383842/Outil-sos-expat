@@ -73,13 +73,23 @@ const RootApp = (
 const container = document.getElementById('root')!;
 
 // Pré-charger les traductions puis monter React
-// Pour FR: résolution immédiate (statique). Pour les autres: charge le chunk puis monte.
+// Timeout de sécurité : si le chunk ne charge pas en 3s, monter quand même (avec EN en fallback)
 const detectedLang = detectLanguageFromURL();
-preloadTranslations(detectedLang).then(() => {
-  // Si la page a été pre-rendue par react-snap, hydrater au lieu de render
+
+function mountApp() {
   if (container.hasChildNodes()) {
     hydrateRoot(container, RootApp);
   } else {
     createRoot(container).render(RootApp);
   }
-});
+}
+
+// Pour EN: résolution immédiate (statique). Pour les autres: charge le chunk puis monte.
+// Promise.race garantit que l'app se monte même si le chunk échoue.
+let mounted = false;
+const safeMount = () => { if (!mounted) { mounted = true; mountApp(); } };
+
+Promise.race([
+  preloadTranslations(detectedLang),
+  new Promise<void>(resolve => setTimeout(resolve, 3000)), // Timeout 3s
+]).then(safeMount).catch(safeMount);
