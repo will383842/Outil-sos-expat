@@ -1094,7 +1094,7 @@ const App: React.FC = () => {
       >
       {/* Render multi-dashboard (standalone, no layout) */}
       {showMultiDashboard ? (
-        <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
+        <Suspense fallback={<LoadingSpinner size="large" color="red" fullPage />}>
           <Routes>
             {/* Strip locale prefix if present */}
             <Route path="/:locale/multi-dashboard" element={<Navigate to="/multi-dashboard" replace />} />
@@ -1154,7 +1154,7 @@ const App: React.FC = () => {
             <ErrorBoundary>
             {/* ✅ FIX: ProviderOnlineManager monté au niveau global pour tracking sur toutes les pages */}
             <ProviderOnlineManager>
-            <Suspense fallback={<LoadingSpinner size="large" color="red" />}>
+            <Suspense fallback={<LoadingSpinner size="large" color="red" fullPage />}>
               {/* Routes de l'app */}
               <Routes>
                 {/* Root redirect to locale */}

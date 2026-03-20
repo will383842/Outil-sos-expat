@@ -50,7 +50,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   if (fullPage) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center min-h-[60vh]">
         {content}
       </div>
     );
