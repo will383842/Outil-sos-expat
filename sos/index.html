@@ -269,14 +269,31 @@
   <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="prefetch" href="/icons/icon-512x512.png" />
 
-  <!-- 🌐 MULTILINGUAL FONTS (Google Fonts - async load) -->
+  <!-- 🌐 MULTILINGUAL FONTS (chargées uniquement pour les langues qui en ont besoin) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
-
-  <!-- 🚀 PREFETCH - Pages fréquemment visitées (améliore navigation) -->
-  <link rel="prefetch" href="/fr-fr/" />
-  <link rel="prefetch" href="/fr-fr/tarifs" />
-  <link rel="prefetch" href="/fr-fr/inscription/avocat" />
+  <script>
+    // Charger les fonts spéciales uniquement pour ar/hi/ch (évite ~150KB inutile pour 90%+ des visiteurs)
+    (function() {
+      try {
+        var lang = (localStorage.getItem('sos_language') || localStorage.getItem('app:lang') || navigator.language || '').substring(0, 2).toLowerCase();
+        var fontMap = {
+          'ar': 'family=Noto+Sans+Arabic:wght@400;500;600;700',
+          'hi': 'family=Noto+Sans+Devanagari:wght@400;500;600;700',
+          'zh': 'family=Noto+Sans+SC:wght@400;500;700',
+          'ch': 'family=Noto+Sans+SC:wght@400;500;700'
+        };
+        var font = fontMap[lang];
+        if (font) {
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://fonts.googleapis.com/css2?' + font + '&display=swap';
+          link.media = 'print';
+          link.onload = function() { this.media = 'all'; };
+          document.head.appendChild(link);
+        }
+      } catch(e) {}
+    })();
+  </script>
 
   <!-- 🎨 ICONS & FAVICONS -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)" />
@@ -532,28 +549,6 @@
 
   <!-- 🎯 App -->
   <div id="root"></div>
-
-  <!-- 🧹 Service Worker Cleanup - Unregister ALL service workers -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        registrations.forEach(function(registration) {
-          registration.unregister().then(function() {
-            console.log('[Cleanup] Service Worker unregistered');
-          });
-        });
-      });
-      // Clear all caches
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          names.forEach(function(name) {
-            caches.delete(name);
-            console.log('[Cleanup] Cache deleted:', name);
-          });
-        });
-      }
-    }
-  </script>
 
   <!-- App entry - DOIT ÊTRE LE SEUL SCRIPT type="module" -->
   <script type="module" src="/src/main.tsx"></script>

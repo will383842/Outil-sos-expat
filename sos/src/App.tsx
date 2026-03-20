@@ -34,15 +34,9 @@ import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
 import { captureAffiliateRef, setAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
+// ✅ PERF: Seul EN est importé statiquement (fallback universel pour site international)
+// Les 8 autres langues (fr, es, de, ru, pt, ch, hi, ar) sont chargées dynamiquement à la demande
 import enMessages from "./helper/en.json";
-import esMessages from "./helper/es.json";
-import frMessages from "./helper/fr.json";
-import ruMessages from "./helper/ru.json";
-import deMessages from "./helper/de.json";
-import hiMessages from "./helper/hi.json";
-import ptMessages from "./helper/pt.json";
-import chMessages from "./helper/ch.json";
-import arMessages from './helper/ar.json';
 import { useApp } from "./contexts/AppContext";
 import {
   LocaleRouter,
@@ -239,18 +233,84 @@ const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
 
 // -------------------------------------------
-// Laguage config
+// Language config — chargement dynamique des traductions
+// FR est statique (langue par défaut), les autres sont chargées à la demande
 // -------------------------------------------
-const messages = {
-  en: enMessages,
-  es: esMessages,
-  fr: frMessages,
-  ru: ruMessages,
-  de: deMessages,
-  hi: hiMessages,
-  pt: ptMessages,
-  ch: chMessages,
-  ar: arMessages,
+const translationLoaders: Record<string, () => Promise<{ default: Record<string, string> }>> = {
+  fr: () => import("./helper/fr.json"),
+  es: () => import("./helper/es.json"),
+  ru: () => import("./helper/ru.json"),
+  de: () => import("./helper/de.json"),
+  hi: () => import("./helper/hi.json"),
+  pt: () => import("./helper/pt.json"),
+  ch: () => import("./helper/ch.json"),
+  ar: () => import("./helper/ar.json"),
+};
+
+// Cache en mémoire pour éviter de re-charger les traductions déjà téléchargées
+// Exporté pour que main.tsx puisse pré-charger les traductions AVANT le rendu React
+export const loadedMessages: Record<string, Record<string, string>> = {
+  en: enMessages as unknown as Record<string, string>,
+};
+
+/**
+ * Pré-charge les traductions pour une langue donnée.
+ * Appelé par main.tsx AVANT hydrateRoot/createRoot pour éviter le flash de FR.
+ */
+export async function preloadTranslations(locale: string): Promise<void> {
+  if (locale === 'en' || loadedMessages[locale]) return;
+  const loader = translationLoaders[locale];
+  if (loader) {
+    try {
+      const mod = await loader();
+      loadedMessages[locale] = mod.default as unknown as Record<string, string>;
+    } catch {
+      // Fallback silencieux vers FR
+    }
+  }
+}
+
+/**
+ * Hook pour charger les traductions dynamiquement.
+ * Retourne les messages EN en fallback pendant le chargement (langue universelle).
+ */
+function useDynamicMessages(locale: Locale): Record<string, string> {
+  const [messages, setMessages] = useState<Record<string, string>>(
+    loadedMessages[locale] || loadedMessages.en
+  );
+
+  useEffect(() => {
+    // EN est déjà chargé statiquement
+    if (locale === 'en') {
+      setMessages(loadedMessages.en);
+      return;
+    }
+
+    // Déjà en cache mémoire
+    if (loadedMessages[locale]) {
+      setMessages(loadedMessages[locale]);
+      return;
+    }
+
+    // Charger dynamiquement
+    const loader = translationLoaders[locale];
+    if (loader) {
+      loader()
+        .then((mod) => {
+          const msgs = mod.default as unknown as Record<string, string>;
+          loadedMessages[locale] = msgs; // Cache pour les futures navigations
+          setMessages(msgs);
+        })
+        .catch((err) => {
+          console.error(`[i18n] Failed to load ${locale} translations, falling back to EN:`, err);
+          setMessages(loadedMessages.en);
+        });
+    } else {
+      setMessages(loadedMessages.en);
+    }
+  }, [locale]);
+
+  return messages;
 }
 
 // --------------------------------------------
@@ -809,6 +869,9 @@ const App: React.FC = () => {
   const { isMobile } = useDeviceDetection();
   const [locale, setLocale] = useState<Locale>("fr"); // Default to French since your site is French
 
+  // ✅ PERF: Chargement dynamique des traductions (seul FR est statique)
+  const currentMessages = useDynamicMessages(locale);
+
   // P0-1 FIX: Activate FCM push notifications for all authenticated users
   useFCM();
 
@@ -1021,7 +1084,7 @@ const App: React.FC = () => {
   
 
   return (
-    <IntlProvider locale={locale} messages={messages[locale] as unknown as Record<string, string>} defaultLocale="fr" >
+    <IntlProvider locale={locale} messages={currentMessages} defaultLocale="en" >
       <OfflineBanner />
       <AdminViewBanner />
       <WizardProvider>
