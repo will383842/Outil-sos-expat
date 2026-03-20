@@ -236,7 +236,8 @@ const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
 // Language config — chargement dynamique des traductions
 // EN est statique (fallback universel), les 8 autres langues sont chargées à la demande
 // -------------------------------------------
-const translationLoaders: Record<string, () => Promise<{ default: Record<string, string> }>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const translationLoaders: Record<string, () => Promise<any>> = {
   fr: () => import("./helper/fr.json"),
   es: () => import("./helper/es.json"),
   ru: () => import("./helper/ru.json"),
