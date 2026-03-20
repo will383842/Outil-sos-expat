@@ -92,21 +92,30 @@ export const storage: FirebaseStorage = getStorage(app);
 //
 // 🔧 FIX: Si le cache est corrompu, on initialise SANS cache persistant
 // Voir GitHub issues: firebase/firebase-js-sdk#8593, #9056
-export const db: Firestore = initializeFirestore(app, {
-  experimentalForceLongPolling: true, // Force HTTP au lieu de WebSocket
-  experimentalAutoDetectLongPolling: false, // Désactiver l'auto-détection
-  // ⚠️ CRITICAL: Désactive les Fetch Streams qui peuvent être bloqués par extensions/antivirus
-  // @ts-expect-error - Option non documentée mais critique pour la stabilité
-  useFetchStreams: false,
-  // ✅ Cache persistant IndexedDB - économie ~15-20% de lectures
-  // ⚠️ DÉSACTIVÉ si corruption détectée (fallback mode)
-  ...(isCacheDisabled ? {} : {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(), // Support multi-onglets
-      cacheSizeBytes: 50 * 1024 * 1024, // 50 MB max
+// Try initializeFirestore with custom options; fallback to getFirestore if already initialized
+// This can happen when the service worker or another module already called initializeFirestore
+let _db: Firestore;
+try {
+  _db = initializeFirestore(app, {
+    experimentalForceLongPolling: true, // Force HTTP au lieu de WebSocket
+    experimentalAutoDetectLongPolling: false, // Désactiver l'auto-détection
+    // ⚠️ CRITICAL: Désactive les Fetch Streams qui peuvent être bloqués par extensions/antivirus
+    // @ts-expect-error - Option non documentée mais critique pour la stabilité
+    useFetchStreams: false,
+    // ✅ Cache persistant IndexedDB - économie ~15-20% de lectures
+    // ⚠️ DÉSACTIVÉ si corruption détectée (fallback mode)
+    ...(isCacheDisabled ? {} : {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(), // Support multi-onglets
+        cacheSizeBytes: 50 * 1024 * 1024, // 50 MB max
+      }),
     }),
-  }),
-});
+  });
+} catch {
+  // Firestore already initialized (e.g., by service worker or HMR) — reuse existing instance
+  _db = getFirestore(app);
+}
+export const db: Firestore = _db;
 console.log(isCacheDisabled
   ? "🔧 [Firebase] Firestore initialisé SANS CACHE (mode fallback après corruption)"
   : "🔧 [Firebase] Firestore initialisé avec LONG POLLING + CACHE PERSISTANT IndexedDB (50MB)"
