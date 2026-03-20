@@ -292,7 +292,9 @@ function buildReleaseData(now: admin.firestore.Timestamp, previousAvailability?:
   return {
     availability: wasOffline ? 'offline' : 'available',
     isOnline: !wasOffline,
-    isActive: !wasOffline,
+    // BUG FIX: isActive doit TOUJOURS être true pour les profils AAA
+    // offline ≠ inactif — isActive=false empêche l'affichage de la fiche profil
+    isActive: true,
     busySince: admin.firestore.FieldValue.delete(),
     busyReason: admin.firestore.FieldValue.delete(),
     busyBySibling: admin.firestore.FieldValue.delete(),

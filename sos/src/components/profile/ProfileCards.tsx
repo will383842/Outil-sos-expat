@@ -57,6 +57,7 @@ interface Provider {
   readonly currentCallSessionId?: string | null;
   readonly busySince?: number | null; // Timestamp when provider became busy
   readonly busyBySibling?: boolean; // True if busy because a sibling provider is on a call
+  readonly busyReason?: string | null; // Reason for busy status (e.g. 'in_call')
   // Pays d'intervention (intervention countries)
   readonly practiceCountries?: readonly string[];
   readonly operatingCountries?: readonly string[];
@@ -447,6 +448,7 @@ const provider: Provider = {
         currentCallSessionId: typeof data.currentCallSessionId === 'string' ? data.currentCallSessionId : null,
         busySince: data.busySince?.toMillis?.() || (typeof data.busySince === 'number' ? data.busySince : null),
         busyBySibling: data.busyBySibling === true,
+        busyReason: typeof data.busyReason === 'string' ? data.busyReason : null,
         isApproved: data.isApproved === true,
         isVisible: data.isVisible !== false,
         isActive: data.isActive !== false,
