@@ -1151,6 +1151,7 @@
   "card.aria.starsDescription": "{rating} Sterne von 5, {count} Bewertungen",
   "card.aria.viewProfileAction": "Profil von {name} ansehen",
   "card.busy": "Beschäftigt",
+  "card.inCall": "Im Gespräch",
   "card.busy.availableIn": "Verfügbar in ~{minutes} Min",
   "card.busy.message": "Dieser Anbieter ist in einem Gespräch",
   "card.busy.siblingAvailableIn": "Verfügbar in weniger als {minutes} Min",

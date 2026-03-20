@@ -1148,6 +1148,7 @@
   "card.aria.starsDescription": "5 में से {rating} तारे, {count} समीक्षाएं",
   "card.aria.viewProfileAction": "{name} की प्रोफाइल देखें",
   "card.busy": "व्यस्त",
+  "card.inCall": "कॉल पर",
   "card.busy.availableIn": "~{minutes} मिनट में उपलब्ध",
   "card.busy.message": "यह प्रदाता कॉल पर है",
   "card.busy.siblingAvailableIn": "{minutes} मिनट से कम में उपलब्ध",

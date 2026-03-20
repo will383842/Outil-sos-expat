@@ -1152,6 +1152,7 @@
   "card.aria.starsDescription": "{rating} estrelas de 5, {count} avaliações",
   "card.aria.viewProfileAction": "Ver perfil de {name}",
   "card.busy": "Ocupado",
+  "card.inCall": "Em ligação",
   "card.busy.availableIn": "Disponível em ~{minutes} min",
   "card.busy.message": "Este prestador está em uma ligação",
   "card.busy.siblingAvailableIn": "Disponível em menos de {minutes} min",

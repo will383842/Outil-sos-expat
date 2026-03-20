@@ -5973,6 +5973,7 @@
   "card.aria.starsDescription": "{rating} étoiles sur 5, {count} avis",
   "card.aria.viewProfileAction": "Voir le profil de {name}",
   "card.busy": "Occupé",
+  "card.inCall": "En appel",
   "card.busy.availableIn": "Disponible dans ~{minutes} min",
   "card.busy.message": "Ce prestataire est en appel",
   "card.busy.siblingAvailableIn": "Disponible dans moins de {minutes} min",

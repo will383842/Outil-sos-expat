@@ -12,6 +12,7 @@ import {
   WifiOff,
   MapPin,
   Clock,
+  Phone,
 } from "lucide-react";
 
 // Import des utilitaires d'internationalisation
@@ -367,12 +368,15 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
         case 'available':
           return intl.formatMessage({ id: "card.online" });
         case 'busy':
+          if (provider.busyReason === 'in_call') {
+            return intl.formatMessage({ id: "card.inCall", defaultMessage: "En appel" });
+          }
           return intl.formatMessage({ id: "card.busy", defaultMessage: "Occupé" });
         case 'offline':
         default:
           return intl.formatMessage({ id: "card.offline" });
       }
-    }, [availability, intl]);
+    }, [availability, intl, provider.busyReason]);
 
     const ariaLabels = useMemo(
       () => ({
@@ -469,7 +473,11 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
                 {availability === 'available' ? (
                   <Wifi className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                 ) : availability === 'busy' ? (
-                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                  provider.busyReason === 'in_call' ? (
+                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                  ) : (
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                  )
                 ) : (
                   <WifiOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                 )}

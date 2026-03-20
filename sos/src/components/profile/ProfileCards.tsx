@@ -1211,8 +1211,8 @@ filtered = filtered.filter(p => {
                   ? 'bg-green-500 text-white'
                   : 'bg-red-500 text-white'
             }`}>
-              {provider.availability === 'busy' && <Clock size={12} />}
-              {provider.availability === 'busy' ? intl.formatMessage({ id: 'card.busy' }) : provider.isOnline ? intl.formatMessage({ id: 'status.online' }) : intl.formatMessage({ id: 'status.offline' })}
+              {provider.availability === 'busy' && (provider.busyReason === 'in_call' ? <Phone size={12} /> : <Clock size={12} />)}
+              {provider.availability === 'busy' ? (provider.busyReason === 'in_call' ? intl.formatMessage({ id: 'card.inCall' }) : intl.formatMessage({ id: 'card.busy' })) : provider.isOnline ? intl.formatMessage({ id: 'status.online' }) : intl.formatMessage({ id: 'status.offline' })}
             </div>
           </div>
           

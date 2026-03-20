@@ -1148,6 +1148,7 @@
   "card.aria.starsDescription": "{rating} звёзд из 5, {count} отзывов",
   "card.aria.viewProfileAction": "Посмотреть профиль {name}",
   "card.busy": "Занят",
+  "card.inCall": "На звонке",
   "card.busy.availableIn": "Доступен через ~{minutes} мин",
   "card.busy.message": "Этот специалист на звонке",
   "card.busy.siblingAvailableIn": "Доступен менее чем через {minutes} мин",

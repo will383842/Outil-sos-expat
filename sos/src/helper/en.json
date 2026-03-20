@@ -5971,6 +5971,7 @@
   "card.aria.starsDescription": "{rating} stars out of 5, {count} reviews",
   "card.aria.viewProfileAction": "View profile of {name}",
   "card.busy": "Busy",
+  "card.inCall": "On a call",
   "card.busy.availableIn": "Available in ~{minutes} min",
   "card.busy.message": "This provider is on a call",
   "card.busy.siblingAvailableIn": "Available in less than {minutes} min",

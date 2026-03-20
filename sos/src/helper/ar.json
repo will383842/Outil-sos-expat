@@ -1149,6 +1149,7 @@
   "card.aria.starsDescription": "{rating} نجوم من 5، {count} تقييم",
   "card.aria.viewProfileAction": "عرض ملف {name}",
   "card.busy": "مشغول",
+  "card.inCall": "في مكالمة",
   "card.busy.availableIn": "متاح خلال ~{minutes} دقيقة",
   "card.busy.message": "هذا المزود في مكالمة",
   "card.busy.siblingAvailableIn": "متاح خلال أقل من {minutes} دقيقة",
