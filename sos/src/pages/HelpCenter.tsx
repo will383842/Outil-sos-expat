@@ -121,7 +121,7 @@ const HelpCenter: React.FC = () => {
   // Get current locale from URL (preserves language + country, e.g., "fr-ar", "en-de")
   const { locale: urlLocale, lang: urlLang, country: urlCountry } = parseLocaleFromPath(location.pathname);
   const currentLocale = urlLocale || getLocaleString(language as any);
-  const langCode = urlLang || language || 'fr';
+  const langCode = urlLang || language || 'en';
 
   // Load categories and articles from Firestore
   useEffect(() => {

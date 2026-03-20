@@ -109,7 +109,7 @@ const HelpArticle: React.FC = () => {
 
   // Parse locale from URL to get language and country
   const { lang: urlLang, country: currentCountry } = parseLocaleFromPath(location.pathname);
-  const langCode = urlLang || language || 'fr';
+  const langCode = urlLang || language || 'en';
 
   // Handle language change from header - redirect to translated slug
   useEffect(() => {
@@ -127,7 +127,7 @@ const HelpArticle: React.FC = () => {
     if (typeof currentArticle.slug === 'string') {
       newSlug = currentArticle.slug;
     } else if (currentArticle.slug && typeof currentArticle.slug === 'object') {
-      newSlug = currentArticle.slug[newLangCode] || currentArticle.slug['fr'] || currentArticle.slug['en'] || Object.values(currentArticle.slug)[0] || slug || '';
+      newSlug = currentArticle.slug[newLangCode] || currentArticle.slug['en'] || currentArticle.slug['fr'] || Object.values(currentArticle.slug)[0] || slug || '';
     } else {
       newSlug = slug || '';
     }

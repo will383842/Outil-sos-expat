@@ -64,6 +64,10 @@ const getFirstAvailableTranslation = (
 ): string => {
   if (typeof translations === "string") return translations;
   if (!translations || typeof translations !== "object") return fallback;
+  // Try English first as primary fallback
+  if (translations["en"] && translations["en"].trim().length > 0) {
+    return translations["en"];
+  }
   for (const lang of SUPPORTED_LANGUAGES) {
     if (translations[lang.code] && translations[lang.code].trim().length > 0) {
       return translations[lang.code];
@@ -91,7 +95,7 @@ const getTranslationForLocale = (
 // Helper to get first available language code
 const getFirstAvailableLanguageCode = (
   translations: string | Record<string, string> | undefined,
-  fallback: string = "fr"
+  fallback: string = "en"
 ): string => {
   if (typeof translations === "string") return fallback;
   if (!translations || typeof translations !== "object") return fallback;
@@ -110,6 +114,10 @@ const getFirstAvailableTags = (
 ): string[] => {
   if (Array.isArray(tags)) return tags;
   if (!tags || typeof tags !== "object") return fallback;
+  // Try English first as primary fallback
+  if (tags["en"] && Array.isArray(tags["en"]) && tags["en"].length > 0) {
+    return tags["en"];
+  }
   // Try to find first available language with tags
   for (const lang of SUPPORTED_LANGUAGES) {
     const langTags = tags[lang.code];
