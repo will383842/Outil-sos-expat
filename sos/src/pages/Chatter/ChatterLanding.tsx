@@ -16,8 +16,10 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
+import { Helmet } from 'react-helmet-async';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
+import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import { trackMetaViewContent } from '@/utils/metaPixel';
 import { logAnalyticsEvent } from '@/config/firebase';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
@@ -154,7 +156,7 @@ const FAQItem: React.FC<{
   onToggle: () => void;
   index: number;
 }> = ({ question, answer, isOpen, onToggle, index }) => (
-  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
     <button
       type="button"
       onClick={onToggle}
@@ -163,7 +165,7 @@ const FAQItem: React.FC<{
       aria-controls={`faq-answer-${index}`}
       id={`faq-question-${index}`}
     >
-      <span className="text-base sm:text-lg font-semibold pr-2" itemProp="name">{question}</span>
+      <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
       <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
@@ -173,9 +175,8 @@ const FAQItem: React.FC<{
       role="region"
       aria-labelledby={`faq-question-${index}`}
       className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
-      itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"
     >
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed" itemProp="text">
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed">
         {answer}
       </div>
     </div>
@@ -241,20 +242,6 @@ const ChatterLanding: React.FC = () => {
     { q: 'chatter.faq.q6', a: 'chatter.faq.a6' },
     { q: 'chatter.faq.q7', a: 'chatter.faq.a7' },
   ];
-
-  // Schema.org FAQPage JSON-LD (Google Snippet 0)
-  const faqJsonLd = useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqItems.map(item => ({
-      '@type': 'Question',
-      name: intl.formatMessage({ id: item.q }),
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: intl.formatMessage({ id: item.a }),
-      },
-    })),
-  }), [intl]);
 
   // Schema.org WebApplication JSON-LD (AIO referencing + E-E-A-T)
   const webAppJsonLd = useMemo(() => ({
@@ -354,11 +341,21 @@ const ChatterLanding: React.FC = () => {
       {/* Custom styles */}
       <style>{globalStyles}</style>
 
-      {/* Structured Data (4 JSON-LD blocks) */}
-      <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-      <script type="application/ld+json">{JSON.stringify(webAppJsonLd)}</script>
-      <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
-      <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      {/* FAQPage schema — composant dédié, rendu dans <head> via Helmet */}
+      <FAQPageSchema
+        faqs={faqItems.map(item => ({
+          question: intl.formatMessage({ id: item.q }),
+          answer: intl.formatMessage({ id: item.a }),
+        }))}
+        pageUrl={canonicalUrl}
+      />
+
+      {/* Autres schemas structurés — dans <head> via Helmet */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(webAppJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
+      </Helmet>
 
       <div className="chatter-landing bg-black text-white">
 
@@ -1096,7 +1093,7 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 7 - FAQ (Google Snippet 0 + Microdata)
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq" itemScope itemType="https://schema.org/FAQPage">
+        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq">
           <div className="max-w-3xl mx-auto">
             <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="chatter.faq.title" defaultMessage="Questions ?" />

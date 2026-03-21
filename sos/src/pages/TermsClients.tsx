@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useApp } from "../contexts/AppContext";
 import {
   collection,
@@ -3107,6 +3108,7 @@ const anchorMap = useMemo(
   return (
     <Layout>
       <SEOHead title={`${t.title || "Client Terms"} - SOS Expat`} description={t.subtitle || "Terms and conditions for SOS Expat clients."} ogType="website" contentType="WebPage" />
+      <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: t.title || 'Client Terms' }]} />
       <main className="min-h-screen bg-gray-950">
         {/* HERO */}
         <section className="relative pt-20 pb-16 overflow-hidden">

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useApp } from "../contexts/AppContext";
 import { useLocalePath } from "../multilingual-system";
 import {
@@ -1228,6 +1229,7 @@ For any questions about the Group Administrator program, contact us via the cont
   return (
     <Layout>
       <SEOHead title={`${t.title || "Group Admin Terms"} - SOS Expat`} description={t.subtitle || "Terms and conditions for SOS Expat group administrators."} ogType="website" contentType="WebPage" />
+      <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: t.title || 'Group Admin Terms' }]} />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-emerald-900 to-teal-900 text-white py-16 sm:py-24">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />

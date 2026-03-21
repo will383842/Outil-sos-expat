@@ -131,23 +131,13 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   const generateEnrichedStructuredData = () => {
     const baseData = structuredData || {};
 
-    // FAQPage a un format mainEntity strict (Question[]) — géré par FAQPageSchema séparément.
-    // On évite de générer un @type FAQPage invalide ici.
-    const schemaType = (contentType === 'FAQPage') ? 'WebPage' : (contentType || 'WebPage');
-
-    // mainEntity: Thing uniquement si ce n'est pas FAQPage (dont mainEntity doit être Question[])
-    const mainEntityData = (contentType !== 'FAQPage') ? {
-      'mainEntity': {
-        '@type': 'Thing',
-        'name': cleanTitle,
-        'description': cleanDescription
-      }
-    } : {};
-
-    // Enrichissement automatique pour les IA
+    // IMPORTANT: On utilise toujours @type: WebPage ici.
+    // Les types spécialisés (FAQPage, etc.) sont gérés par leurs propres composants dédiés.
+    // Ne JAMAIS générer mainEntity ici — ça crée des conflits avec les schemas FAQPage
+    // qui ont leur propre mainEntity (Question[]) et Google les confond.
     const enrichedData = {
       '@context': 'https://schema.org',
-      '@type': schemaType,
+      '@type': 'WebPage',
       name: cleanTitle,
       description: cleanDescription,
       url: fullCanonicalUrl,
@@ -166,16 +156,13 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       ...(contentQuality && { 'contentQuality': contentQuality }),
       ...(lastReviewed && { 'dateReviewed': lastReviewed }),
       ...(citations.length > 0 && { 'citation': citations }),
-      // Signaux E-A-T pour Google et IA
-      ...mainEntityData,
-      // Métadonnées pour crawling IA
       'potentialAction': {
         '@type': 'ReadAction',
         'target': fullCanonicalUrl
       },
       ...baseData
     };
-    
+
     // Nettoyage des valeurs undefined
     return JSON.parse(JSON.stringify(enrichedData));
   };

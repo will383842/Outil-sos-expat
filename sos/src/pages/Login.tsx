@@ -21,6 +21,7 @@ import {
 } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
 import { useIntl } from "react-intl";
+import { Helmet } from "react-helmet-async";
 import {
   Eye,
   EyeOff,
@@ -38,6 +39,8 @@ import LoadingSpinner from "../components/common/LoadingSpinner";
 import Layout from "../components/layout/Layout";
 import Button from "../components/common/Button";
 import ExtensionBlockedAlert from "../components/common/ExtensionBlockedAlert";
+import FAQPageSchema from "../components/seo/FAQPageSchema";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useAuth } from "../contexts/AuthContext";
 import { isExtensionBlockedError } from "../utils/networkResilience";
 import { useApp } from "../contexts/AppContext";
@@ -130,11 +133,9 @@ const FAQSection: React.FC = React.memo(() => {
   }, []);
 
   return (
-    <section 
-      className="w-full max-w-2xl mx-auto mt-16 mb-8 px-4" 
+    <section
+      className="w-full max-w-2xl mx-auto mt-16 mb-8 px-4"
       aria-labelledby="faq-section-title"
-      itemScope 
-      itemType="https://schema.org/FAQPage"
     >
       <article className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 sm:p-8">
         <h2 
@@ -156,13 +157,10 @@ const FAQSection: React.FC = React.memo(() => {
             return (
               <div 
                 key={index} 
-                className="bg-white/5 rounded-xl border border-white/10 overflow-hidden transition-all hover:bg-white/10" 
+                className="bg-white/5 rounded-xl border border-white/10 overflow-hidden transition-all hover:bg-white/10"
                 role="listitem"
-                itemScope 
-                itemProp="mainEntity" 
-                itemType="https://schema.org/Question"
               >
-                <h4 itemProp="name">
+                <h4>
                   <button
                     onClick={() => toggleFAQ(index)}
                     className="w-full px-5 py-4 flex items-center justify-between text-left transition-colors"
@@ -187,14 +185,10 @@ const FAQSection: React.FC = React.memo(() => {
                     id={`faq-answer-${index}`} 
                     role="region" 
                     aria-labelledby={`faq-question-${index}`}
-                    itemScope 
-                    itemProp="acceptedAnswer" 
-                    itemType="https://schema.org/Answer"
                   >
                     <h5 className="sr-only">{intl.formatMessage({ id: "faq.login.answer_label" })}</h5>
-                    <p 
+                    <p
                       className="text-gray-300 text-sm sm:text-base leading-relaxed"
-                      itemProp="text"
                     >
                       {answerText}
                     </p>
@@ -442,118 +436,19 @@ const Login: React.FC = () => {
             datePublished: "2024-01-01T00:00:00+00:00",
             dateModified: new Date().toISOString(),
           },
-          {
-            "@type": "FAQPage",
-            "@id": `${canonicalUrl}#faqpage`,
-            name: intl.formatMessage({ id: "faq.login.section_title" }),
-            description: intl.formatMessage({ id: "faq.login.section_description" }),
-            mainEntity: FAQ_DATA.map((faq) => ({
-              "@type": "Question",
-              name: intl.formatMessage({ id: faq.questionKey }),
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: intl.formatMessage({ id: faq.answerKey }),
-              },
-            })),
-          },
+          // FAQPage schema is handled by FAQPageSchema component (separate clean JSON-LD)
         ],
       },
     };
   }, [currentLang, intl]);
 
-  // ==================== META TAGS UPDATE ====================
-  useEffect(() => {
-    document.title = metaData.title;
-
-    const updateMetaTag = (selector: string, content: string, attribute = 'name') => {
-      let meta = document.querySelector(`meta[${attribute}="${selector}"]`) as HTMLMetaElement | null;
-      if (!meta) {
-        meta = document.createElement("meta");
-        meta.setAttribute(attribute, selector);
-        document.head.appendChild(meta);
-      }
-      meta.content = content;
-    };
-
-    // Basic SEO
-    updateMetaTag("description", metaData.description);
-    updateMetaTag("keywords", metaData.keywords);
-    updateMetaTag("robots", "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1");
-    updateMetaTag("author", "SOS Expats");
-    
-    // Mobile
-    updateMetaTag("viewport", "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes");
-    updateMetaTag("mobile-web-app-capable", "yes");
-    updateMetaTag("apple-mobile-web-app-capable", "yes");
-    updateMetaTag("apple-mobile-web-app-status-bar-style", "black-translucent");
-    updateMetaTag("theme-color", "#1f2937");
-    
-    // OpenGraph
-    updateMetaTag("og:type", "website", "property");
-    updateMetaTag("og:site_name", "SOS Expats", "property");
-    updateMetaTag("og:title", metaData.ogTitle, "property");
-    updateMetaTag("og:description", metaData.ogDescription, "property");
-    updateMetaTag("og:url", metaData.canonicalUrl, "property");
-    updateMetaTag("og:image", metaData.ogImage, "property");
-    updateMetaTag("og:image:secure_url", metaData.ogImage, "property");
-    updateMetaTag("og:image:width", "1200", "property");
-    updateMetaTag("og:image:height", "630", "property");
-    updateMetaTag("og:image:alt", metaData.ogImageAlt, "property");
-    updateMetaTag("og:locale", currentLang === 'fr' ? 'fr_FR' : currentLang === 'en' ? 'en_US' : `${currentLang}_${currentLang.toUpperCase()}`, "property");
-
-    // Twitter Cards
-    updateMetaTag("twitter:card", "summary_large_image");
-    updateMetaTag("twitter:site", "@sos-expat");
-    updateMetaTag("twitter:creator", "@sos-expat");
-    updateMetaTag("twitter:title", metaData.twitterTitle);
-    updateMetaTag("twitter:description", metaData.twitterDescription);
-    updateMetaTag("twitter:image", metaData.ogImage);
-    updateMetaTag("twitter:image:alt", metaData.ogImageAlt);
-
-    // Canonical
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.rel = "canonical";
-      document.head.appendChild(canonical);
-    }
-    canonical.href = metaData.canonicalUrl;
-
-    // Hreflang
-    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((link) => link.remove());
-    Object.entries(metaData.alternateUrls).forEach(([lang, url]) => {
-      const alternate = document.createElement("link");
-      alternate.rel = "alternate";
-      alternate.hreflang = lang;
-      alternate.href = url;
-      document.head.appendChild(alternate);
-    });
-
-    // Structured Data
-    let structuredDataScript = document.querySelector("#structured-data") as HTMLScriptElement | null;
-    if (!structuredDataScript) {
-      structuredDataScript = document.createElement("script");
-      structuredDataScript.id = "structured-data";
-      structuredDataScript.type = "application/ld+json";
-      document.head.appendChild(structuredDataScript);
-    }
-    structuredDataScript.textContent = JSON.stringify(metaData.structuredData);
-
-    // Preconnect
-    const addPreconnect = (href: string) => {
-      if (!document.querySelector(`link[rel="preconnect"][href="${href}"]`)) {
-        const link = document.createElement("link");
-        link.rel = "preconnect";
-        link.href = href;
-        link.crossOrigin = "anonymous";
-        document.head.appendChild(link);
-      }
-    };
-    
-    addPreconnect("https://accounts.google.com");
-    addPreconnect("https://www.googleapis.com");
-    addPreconnect("https://firebaseapp.com");
-  }, [metaData, currentLang]);
+  // ==================== FAQ DATA FOR SCHEMA ====================
+  const faqSchemaData = useMemo(() =>
+    FAQ_DATA.map((faq) => ({
+      question: intl.formatMessage({ id: faq.questionKey }),
+      answer: intl.formatMessage({ id: faq.answerKey }),
+    })),
+  [intl]);
 
   // ==================== NAVIGATION ====================
   const navigateToRegister = useCallback(() => {
@@ -1038,8 +933,51 @@ const Login: React.FC = () => {
       )}
 
       <Layout>
-        <main 
-          className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex flex-col items-center justify-center px-4 py-4" 
+        {/* SEO: Helmet déclaratif (rendu immédiat dans le <head>, pas useEffect) */}
+        <Helmet>
+          <title>{metaData.title}</title>
+          <meta name="description" content={metaData.description} />
+          <meta name="keywords" content={metaData.keywords} />
+          <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+          <meta name="author" content="SOS Expats" />
+          <meta name="theme-color" content="#1f2937" />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="SOS Expats" />
+          <meta property="og:title" content={metaData.ogTitle} />
+          <meta property="og:description" content={metaData.ogDescription} />
+          <meta property="og:url" content={metaData.canonicalUrl} />
+          <meta property="og:image" content={metaData.ogImage} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={metaData.ogImageAlt} />
+          <meta property="og:locale" content={currentLang === 'fr' ? 'fr_FR' : currentLang === 'en' ? 'en_US' : `${currentLang}_${currentLang.toUpperCase()}`} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:site" content="@sos-expat" />
+          <meta name="twitter:title" content={metaData.twitterTitle} />
+          <meta name="twitter:description" content={metaData.twitterDescription} />
+          <meta name="twitter:image" content={metaData.ogImage} />
+          <link rel="canonical" href={metaData.canonicalUrl} />
+          {Object.entries(metaData.alternateUrls).map(([lang, url]) => (
+            <link key={lang} rel="alternate" hrefLang={lang} href={url} />
+          ))}
+          <link rel="preconnect" href="https://accounts.google.com" />
+          <link rel="preconnect" href="https://www.googleapis.com" />
+          {/* Structured Data @graph (WebSite + Organization + WebPage) — SANS FAQPage */}
+          <script type="application/ld+json">{JSON.stringify(metaData.structuredData)}</script>
+        </Helmet>
+
+        {/* FAQPage schema séparé et propre — via composant dédié (dans <head> via Helmet) */}
+        <FAQPageSchema
+          faqs={faqSchemaData}
+          pageUrl={metaData.canonicalUrl}
+        />
+        <BreadcrumbSchema items={[
+          { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+          { name: intl.formatMessage({ id: 'seo.login.page_heading', defaultMessage: 'Login' }) }
+        ]} />
+
+        <main
+          className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex flex-col items-center justify-center px-4 py-4"
           role="main"
         >
           <article className="w-full max-w-md mb-8">

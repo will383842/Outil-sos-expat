@@ -5,7 +5,7 @@ import { collection, query, where, getDocs, getDoc, doc, updateDoc, increment, o
 import { db } from '../config/firebase';
 import Layout from '../components/layout/Layout';
 import SEOHead from '../components/layout/SEOHead';
-import { BreadcrumbSchema, generateBreadcrumbs } from '../components/seo';
+import { BreadcrumbSchema, generateBreadcrumbs, FAQPageSchema } from '../components/seo';
 import { useApp } from '../contexts/AppContext';
 import { getLocaleString, parseLocaleFromPath } from '../multilingual-system';
 import { ChevronRight, Home, HelpCircle } from 'lucide-react';
@@ -742,23 +742,9 @@ const FAQDetail: React.FC = () => {
           </Link>
         </div>
 
-        {/* Structured Data for SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FAQPage',
-              'mainEntity': {
-                '@type': 'Question',
-                'name': question,
-                'acceptedAnswer': {
-                  '@type': 'Answer',
-                  'text': answer
-                }
-              }
-            })
-          }}
+        {/* FAQPage schema — composant dédié, rendu dans <head> via Helmet */}
+        <FAQPageSchema
+          faqs={[{ question, answer }]}
         />
       </article>
     </Layout>

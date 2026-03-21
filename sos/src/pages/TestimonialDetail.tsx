@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import {
   Star,
   MapPin,
@@ -1790,84 +1792,40 @@ const TestimonialDetail: React.FC = () => {
   };
   const tSeo = textsForSeo[language as keyof typeof textsForSeo] || textsForSeo.en;
 
-  React.useEffect(() => {
-    if (!testimonialData) return;
-
+  // SEO data — préparé en amont, rendu via Helmet (déclaratif, visible immédiatement pour SSR/bots)
+  const seoData = useMemo(() => {
+    if (!testimonialData) return null;
     const currentTitle = testimonialData.title;
     const currentContent = testimonialData.fullcontent;
-    const pageTitle = `${tSeo.testimonialPageTitle} ${testimonialData.clientName} - ${currentTitle}`;
-    const pageDescription = `${tSeo.testimonialPageDescription} ${currentContent.substring(0, 160)}...`;
-
-    document.title = pageTitle;
-
-    // Set meta description
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute("content", pageDescription);
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = pageDescription;
-      document.head.appendChild(meta);
-    }
-
-    // Set Open Graph meta tags
-    const setOrCreateMeta = (property: string, content: string) => {
-      let meta = document.querySelector(`meta[property="${property}"]`);
-      if (meta) {
-        meta.setAttribute("content", content);
-      } else {
-        meta = document.createElement("meta");
-        meta.setAttribute("property", property);
-        meta.setAttribute("content", content);
-        document.head.appendChild(meta);
-      }
-    };
-
-    setOrCreateMeta("og:title", pageTitle);
-    setOrCreateMeta("og:description", pageDescription);
-    setOrCreateMeta("og:type", "article");
-    setOrCreateMeta("og:url", window.location.origin + window.location.pathname);
-    setOrCreateMeta("og:image", testimonialData.clientAvatar || '');
-
-    // Set structured data for better SEO
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "Review",
-      itemReviewed: {
-        "@type": "Service",
-        name: "SOS Expat & Travelers",
-        description: tSeo.helpDescription,
-      },
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: testimonialData.rating,
-        bestRating: 5,
-      },
-      author: {
-        "@type": "Person",
-        name: testimonialData.clientName,
-      },
-      reviewBody: currentContent,
-      datePublished: testimonialData.createdAt,
-      publisher: {
-        "@type": "Organization",
-        name: "SOS Expat & Travelers",
+    return {
+      pageTitle: `${tSeo.testimonialPageTitle} ${testimonialData.clientName} - ${currentTitle}`,
+      pageDescription: `${tSeo.testimonialPageDescription} ${currentContent.substring(0, 160)}...`,
+      structuredData: {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        itemReviewed: {
+          "@type": "Service",
+          name: "SOS Expat & Travelers",
+          description: tSeo.helpDescription,
+        },
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: testimonialData.rating,
+          bestRating: 5,
+        },
+        author: {
+          "@type": "Person",
+          name: testimonialData.clientName,
+        },
+        reviewBody: currentContent,
+        datePublished: testimonialData.createdAt,
+        publisher: {
+          "@type": "Organization",
+          name: "SOS Expat & Travelers",
+        },
       },
     };
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.text = JSON.stringify(structuredData);
-    document.head.appendChild(script);
-
-    // Cleanup function
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, [testimonialData, tSeo, language]);
+  }, [testimonialData, tSeo]);
 
   // Loading state - early return after all hooks
   if (isLoading || !testimonialData) {
@@ -2275,6 +2233,23 @@ const TestimonialDetail: React.FC = () => {
 
   return (
     <Layout>
+      {/* SEO: Helmet déclaratif (rendu immédiat dans <head>, pas useEffect) */}
+      {seoData && (
+        <Helmet>
+          <title>{seoData.pageTitle}</title>
+          <meta name="description" content={seoData.pageDescription} />
+          <meta property="og:title" content={seoData.pageTitle} />
+          <meta property="og:description" content={seoData.pageDescription} />
+          <meta property="og:type" content="article" />
+          <meta property="og:image" content={testimonialData?.clientAvatar || ''} />
+          <script type="application/ld+json">{JSON.stringify(seoData.structuredData)}</script>
+        </Helmet>
+      )}
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: tSeo.testimonialPageTitle || 'Testimonials', url: `/${language}/testimonials` },
+        { name: testimonialData?.clientName || '' }
+      ]} />
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Modern header with gradient and visual effects / Header moderne avec gradient et effets visuels */}
         <section className="relative pt-20 pb-16 overflow-hidden">

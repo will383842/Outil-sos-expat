@@ -26,6 +26,7 @@ import OrganizationSchema from "../components/seo/OrganizationSchema";
 import FAQPageSchema from "../components/seo/FAQPageSchema";
 import HreflangLinks from "@/multilingual-system/components/HrefLang/HreflangLinks";
 import { useApp } from "../contexts/AppContext";
+import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { useIntl } from "react-intl";
 import { useLocation } from "react-router-dom";
 import {
@@ -160,6 +161,7 @@ const Press: React.FC = () => {
   const { language } = useApp();
   const location = useLocation();
   const lang = (language as string) || "fr";
+  const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
 
   const [resourceLang, setResourceLang] = useState(lang);
   const [resources, setResources] = useState<PressResource[]>([]);
@@ -294,7 +296,7 @@ const Press: React.FC = () => {
         keywords={t("press.seo.description")}
       />
       <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t("press.hero.badge") }]} />
-      <OrganizationSchema aggregateRating={{ ratingValue: 4.9, ratingCount: 127, reviewCount: 127 }} />
+      <OrganizationSchema aggregateRating={{ ratingValue: aggregateRating.ratingValue, ratingCount: aggregateRating.ratingCount, reviewCount: aggregateRating.reviewCount }} />
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} pageUrl={`https://sos-expat.com/${lang}/presse`} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 

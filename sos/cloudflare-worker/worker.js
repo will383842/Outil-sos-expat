@@ -1008,10 +1008,13 @@ async function handleRequest(request, env, ctx) {
       );
     }
 
+    // Allow static assets to be served directly (OG images, favicons, logos, etc.)
+    const isStaticAsset = /\.(png|jpg|jpeg|webp|svg|ico|gif|xml|json|txt|woff2?|ttf|css|js)$/i.test(pathname);
+
     // Only the home page lives on sos-holidays.com
     // All other paths → 301 redirect to sos-expat.com (prevents duplicate content)
     const isHomePage = /^(\/?|\/[a-z]{2}(-[a-z]{2})?\/?)?$/i.test(pathname);
-    if (!isHomePage) {
+    if (!isHomePage && !isStaticAsset) {
       const redirectUrl = `https://sos-expat.com${pathname}${url.search}`;
       console.log(`[WORKER] Holidays non-home redirect: ${pathname} -> ${redirectUrl}`);
       return new Response(null, {

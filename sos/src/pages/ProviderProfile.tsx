@@ -2353,12 +2353,11 @@ const ProviderProfile: React.FC = () => {
         return <HreflangLinks pathname={location.pathname} />;
       })()}
 
-      {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage — no separate rendering) */}
+      {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage) — dans <head> via Helmet */}
       {snippetData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: snippetData.jsonLD }}
-        />
+        <Helmet>
+          <script type="application/ld+json">{snippetData.jsonLD}</script>
+        </Helmet>
       )}
 
       {/* SVG defs pour dégradé étoiles */}

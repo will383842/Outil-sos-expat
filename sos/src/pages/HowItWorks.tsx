@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle, Users, MessageSquare } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useApp } from "../contexts/AppContext";
@@ -60,6 +61,10 @@ const HowItWorksPage: React.FC = () => {
         contentQuality="high"
       />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'howItWorks.title1', defaultMessage: 'How it works' }) }
+      ]} />
       <div className="min-h-screen bg-gray-950">
         {/* Header avec style moderne comme la home */}
         <section className="relative pt-20 pb-32 overflow-hidden">

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useApp } from "../contexts/AppContext";
 import { useLocalePath } from "../multilingual-system";
 import {
@@ -812,6 +813,7 @@ For any questions about the affiliate program, contact us via the contact form o
   return (
     <Layout>
       <SEOHead title={`${translations[selectedLanguage]?.title || "Affiliate Terms"} - SOS Expat`} description={translations[selectedLanguage]?.subtitle || "Terms and conditions for the SOS Expat affiliate program."} ogType="website" contentType="WebPage" />
+      <BreadcrumbSchema items={[{ name: 'Home', url: '/' }, { name: t.title || 'Affiliate Terms' }]} />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-emerald-900 to-green-900 text-white py-16 sm:py-24">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />

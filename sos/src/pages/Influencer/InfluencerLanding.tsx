@@ -20,6 +20,7 @@ import SEOHead from '@/components/layout/SEOHead';
 import { trackMetaViewContent } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import {
   ArrowRight,
   Check,
@@ -304,6 +305,10 @@ const InfluencerLanding: React.FC = () => {
       <SEOHead title={seoTitle} description={seoDescription} ogImage="/og-influencer-2026.jpg" ogType="website" contentType="LandingPage" />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'influencer.landing.seo.title', defaultMessage: 'Become an Influencer' }) }
+      ]} />
       <style>{globalStyles}</style>
 
       <div className="influencer-landing bg-black text-white">

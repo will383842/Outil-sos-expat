@@ -20,6 +20,7 @@ import SEOHead from '@/components/layout/SEOHead';
 import { trackMetaViewContent } from '@/utils/metaPixel';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import {
   ArrowRight,
   Check,
@@ -151,7 +152,7 @@ const FAQItem: React.FC<{
   onToggle: () => void;
   index: number;
 }> = ({ question, answer, isOpen, onToggle, index }) => (
-  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+  <div className="border rounded-2xl overflow-hidden transition-colors duration-200 hover:border-white/20">
     <button
       type="button"
       onClick={onToggle}
@@ -160,7 +161,7 @@ const FAQItem: React.FC<{
       aria-controls={`faq-answer-${index}`}
       id={`faq-question-${index}`}
     >
-      <span className="text-base sm:text-lg font-semibold pr-2" itemProp="name">{question}</span>
+      <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
       <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
@@ -170,9 +171,8 @@ const FAQItem: React.FC<{
       role="region"
       aria-labelledby={`faq-question-${index}`}
       className={`overflow-hidden transition-all duration-300 ease-out ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
-      itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"
     >
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed" itemProp="text">
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed">
         {answer}
       </div>
     </div>
@@ -293,6 +293,10 @@ const BloggerLanding: React.FC = () => {
       />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'blogger.landing.seo.title', defaultMessage: 'Become a Blogger' }) }
+      ]} />
 
       <style>{globalStyles}</style>
 
@@ -1178,7 +1182,7 @@ const BloggerLanding: React.FC = () => {
             <h2 id="blogger-faq-title" className="text-2xl sm:text-4xl font-black mb-8 sm:mb-10">
               <FormattedMessage id="blogger.faq.title" defaultMessage="Questions?" />
             </h2>
-            <div className="space-y-3" itemScope itemType="https://schema.org/FAQPage">
+            <div className="space-y-3">
               {faqs.map((faq, idx) => (
                 <FAQItem
                   key={idx}
