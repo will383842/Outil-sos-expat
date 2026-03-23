@@ -3260,30 +3260,59 @@ const SOSCall: React.FC = () => {
           {JSON.stringify(jsonLdSchemas)}
         </script>
       </Helmet>
-      <SEOHead
-        title={isProvidersRoute
-          ? intl.formatMessage({ id: 'providers.seo.title', defaultMessage: 'Our Experts — Lawyers & Expat Helpers | SOS Expat' })
-          : intl.formatMessage(
-              { id: 'sosCall.seo.pageTitle', defaultMessage: '{providerType} available | SOS Expat & Travelers' },
-              { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyers' : selectedType === "expat" ? 'sosCall.seo.type.expats' : 'sosCall.seo.type.experts', defaultMessage: selectedType === "lawyer" ? 'Lawyers' : selectedType === "expat" ? 'Expats' : 'Experts' }) }
-            )
-        }
-        description={isProvidersRoute
-          ? intl.formatMessage({ id: 'providers.seo.description', defaultMessage: 'Browse verified lawyers and expat helpers in 197 countries. Read reviews, compare specialties and book a call in under 5 minutes.' })
-          : intl.formatMessage(
-              { id: 'sosCall.seo.pageDescription', defaultMessage: 'Find a verified {providerType} available now. Online consultation 24/7 in over 150 countries.' },
-              { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyer' : selectedType === "expat" ? 'sosCall.seo.type.expat' : 'sosCall.seo.type.expert', defaultMessage: selectedType === "lawyer" ? 'lawyer' : selectedType === "expat" ? 'expat' : 'expert' }) }
-            )
-        }
-        canonicalUrl={isProvidersRoute ? "/providers" : "/sos-appel"}
-      />
-      <BreadcrumbSchema items={[
-        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
-        { name: isProvidersRoute
-          ? intl.formatMessage({ id: 'breadcrumb.providers', defaultMessage: 'Our Experts' })
-          : intl.formatMessage({ id: 'breadcrumb.sosCall', defaultMessage: 'Emergency Call' })
-        }
-      ]} />
+      {(() => {
+        // Build canonical URLs with correct locale and translated slugs
+        const OG_LOCALE_MAP: Record<string, string> = {
+          fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
+          ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
+        };
+        const CANONICAL_LOCALES: Record<string, string> = {
+          fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+          pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+        };
+        const PROVIDERS_SLUGS: Record<string, string> = {
+          fr: 'prestataires', en: 'providers', es: 'proveedores', de: 'anbieter',
+          ru: 'postavshchiki', pt: 'prestadores', ch: 'fuwu-tigongzhe', hi: 'seva-pradaata', ar: 'مقدمي-الخدمات',
+        };
+        const SOS_CALL_SLUGS: Record<string, string> = {
+          fr: 'sos-appel', en: 'emergency-call', es: 'llamada-emergencia', de: 'notruf',
+          ru: 'ekstrenniy-zvonok', pt: 'chamada-emergencia', ch: 'jinji-dianhua', hi: 'aapatkaleen-call', ar: 'مكالمة-طوارئ',
+        };
+        const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
+        const ogLocale = OG_LOCALE_MAP[langCode] || 'fr_FR';
+        const slug = isProvidersRoute ? (PROVIDERS_SLUGS[langCode] || 'providers') : (SOS_CALL_SLUGS[langCode] || 'sos-appel');
+        const canonicalUrl = `${BASE_URL}/${defaultLocale}/${slug}`;
+
+        return (
+          <>
+            <SEOHead
+              title={isProvidersRoute
+                ? intl.formatMessage({ id: 'providers.seo.title', defaultMessage: 'Our Experts — Lawyers & Expat Helpers | SOS Expat' })
+                : intl.formatMessage(
+                    { id: 'sosCall.seo.pageTitle', defaultMessage: '{providerType} available | SOS Expat & Travelers' },
+                    { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyers' : selectedType === "expat" ? 'sosCall.seo.type.expats' : 'sosCall.seo.type.experts', defaultMessage: selectedType === "lawyer" ? 'Lawyers' : selectedType === "expat" ? 'Expats' : 'Experts' }) }
+                  )
+              }
+              description={isProvidersRoute
+                ? intl.formatMessage({ id: 'providers.seo.description', defaultMessage: 'Browse verified lawyers and expat helpers in 197 countries. Read reviews, compare specialties and book a call in under 5 minutes.' })
+                : intl.formatMessage(
+                    { id: 'sosCall.seo.pageDescription', defaultMessage: 'Find a verified {providerType} available now. Online consultation 24/7 in over 150 countries.' },
+                    { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyer' : selectedType === "expat" ? 'sosCall.seo.type.expat' : 'sosCall.seo.type.expert', defaultMessage: selectedType === "lawyer" ? 'lawyer' : selectedType === "expat" ? 'expat' : 'expert' }) }
+                  )
+              }
+              canonicalUrl={canonicalUrl}
+              locale={ogLocale}
+            />
+            <BreadcrumbSchema items={[
+              { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+              { name: isProvidersRoute
+                ? intl.formatMessage({ id: 'breadcrumb.providers', defaultMessage: 'Our Experts' })
+                : intl.formatMessage({ id: 'breadcrumb.sosCall', defaultMessage: 'Emergency Call' })
+              }
+            ]} />
+          </>
+        );
+      })()}
 
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* 📱 HERO MOBILE COMPACT — supprimé pour gagner de l'espace mobile.
