@@ -2370,18 +2370,27 @@ const ProviderProfile: React.FC = () => {
       }
     }
 
-    // FALLBACK: Build from URL params for legacy profiles without multilingual slugs
+    // FALLBACK: Use current URL path as canonical (preserves full slug including UID)
+    // This is safer than constructing a URL that may not match any route
     const CANONICAL_LOCALES: Record<string, string> = {
       fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
       pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
     };
     const defaultLocale = CANONICAL_LOCALES[currentLang || 'fr'] || 'fr-fr';
+    // Use the actual pathname from the URL — it already has the correct full slug
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (currentPath) {
+      // Replace the current locale in the path with the default locale for canonical consistency
+      const { pathWithoutLocale } = parseLocaleFromPath(currentPath);
+      return `https://sos-expat.com/${defaultLocale}${pathWithoutLocale}`;
+    }
+    // Ultimate fallback: build from provider data (no truncation)
     const displayType = roleCountry || (currentLang
       ? getTranslatedRouteSlug(isLawyer ? "lawyer" : "expat", currentLang)
       : (isLawyer ? "avocat" : "expatrie"));
     const nameSlug = safeNormalize(provider.fullName || `${provider.firstName}-${provider.lastName}`);
-    const shortId = (provider as any).shortId || provider.id?.substring(0, 6) || '';
-    return `https://sos-expat.com/${defaultLocale}/${displayType}/${nameSlug}-${shortId}`;
+    const fullId = (provider as any).shortId || provider.id || provider.uid || '';
+    return `https://sos-expat.com/${defaultLocale}/${displayType}/${nameSlug}-${fullId}`;
   })();
 
   return (

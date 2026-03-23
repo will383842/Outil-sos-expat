@@ -780,6 +780,11 @@ const PROVIDER_PROFILE_PATTERNS = [
   /^\/[a-z]{2}-[a-z]{2}\/provider\/[a-zA-Z0-9_-]+$/i,
   /^\/[a-z]{2}-[a-z]{2}\/prestataire\/[a-zA-Z0-9_-]+$/i,
 
+  // Legacy 4-5 segment patterns: /locale/role/country/[language/]name-slug
+  // Examples: /fr-fr/avocat/au/francais/miguel-l-id, /en-us/lawyer/th/english/john-id
+  /^\/[a-z]{2}-[a-z]{2}\/(?:avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|wafid|videshi|haiwai)\/[a-z]{2}\/[^\/]+\/?$/i,
+  /^\/[a-z]{2}-[a-z]{2}\/(?:avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|wafid|videshi|haiwai)\/[a-z]{2}\/[a-z]+\/[^\/]+\/?$/i,
+
   // Fallback: catch any profile URL with 3-segment structure (locale/role-country/name)
   // Latin scripts
   /^\/[a-z]{2}-[a-z]{2}\/[a-z]+-[a-z]+\/[^\/]+$/i,
