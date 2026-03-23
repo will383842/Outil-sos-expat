@@ -31,6 +31,8 @@ export interface ArticleSchemaProps {
   keywords?: string[];
   /** Word count (optional) */
   wordCount?: number;
+  /** Language code (e.g., 'fr', 'en', 'zh') for inLanguage property */
+  inLanguage?: string;
 }
 
 /**
@@ -48,6 +50,7 @@ export function generateArticleSchema(props: ArticleSchemaProps): object {
     articleSection,
     keywords,
     wordCount,
+    inLanguage,
   } = props;
 
   const schema: Record<string, unknown> = {
@@ -55,6 +58,7 @@ export function generateArticleSchema(props: ArticleSchemaProps): object {
     '@type': 'Article',
     headline: title,
     description: description,
+    ...(inLanguage && { inLanguage }),
     author: {
       '@type': 'Organization',
       name: author,

@@ -49,7 +49,7 @@ export const LandingMeta = memo<LandingMetaProps>(({ data }) => {
   return (
     <Helmet>
       {/* HTML attributes */}
-      <html lang={routing.language} dir={direction} />
+      <html lang={routing.language === 'ch' ? 'zh' : routing.language} dir={direction} />
 
       {/* Primary Meta Tags */}
       <title>{seo.metaTitle}</title>

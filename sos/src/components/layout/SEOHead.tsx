@@ -98,6 +98,13 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         return `${baseUrl}/${defaultLocale}${normalizedPathWithoutLocale}`;
       }
 
+      // Root path: canonical should point to x-default (fr-fr) to avoid
+      // conflicting signals between canonical and hreflang x-default
+      if (cleanPath === '/' || cleanPath === '') {
+        const defaultLocale = getLocaleString('fr' as any);
+        return `${baseUrl}/${defaultLocale}`;
+      }
+
       // Fallback: detect short language code (e.g., /fr/pricing, /en/contact)
       // These are legacy URLs that should normalize to full locale (fr-fr, en-us)
       const shortLangPattern = /^\/([a-z]{2})(\/.*)?$/;

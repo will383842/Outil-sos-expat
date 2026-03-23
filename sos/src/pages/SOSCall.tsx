@@ -3117,7 +3117,7 @@ const SOSCall: React.FC = () => {
       ======================================== */}
       <Helmet>
         {/* ===== BASE HTML ===== */}
-        <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} />
+        <html lang={lang === 'ch' ? 'zh' : lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} />
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
         <meta charSet="utf-8" />

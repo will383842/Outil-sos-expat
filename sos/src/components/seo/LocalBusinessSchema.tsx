@@ -63,6 +63,8 @@ export interface LocalBusinessSchemaProps {
   foundingDate?: string;
   /** Social media profiles */
   sameAs?: string[];
+  /** Language code (e.g., 'fr', 'en', 'zh') for inLanguage property */
+  inLanguage?: string;
 }
 
 /**
@@ -102,7 +104,8 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
     'https://twitter.com/sosexpat',
     'https://linkedin.com/company/sosexpat',
     'https://www.instagram.com/sosexpat'
-  ]
+  ],
+  inLanguage
 }) => {
   const schema = useMemo(() => {
     const baseUrl = url.replace(/\/$/, '');
@@ -124,6 +127,7 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
       priceRange,
       foundingDate,
       sameAs,
+      ...(inLanguage && { inLanguage }),
 
       // Contact information
       ...(telephone && { telephone }),

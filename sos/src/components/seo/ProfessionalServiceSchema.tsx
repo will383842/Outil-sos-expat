@@ -28,6 +28,8 @@ export interface ServiceProvider {
 interface ProfessionalServiceSchemaProps {
   provider: ServiceProvider;
   baseUrl?: string;
+  /** Language code (e.g., 'fr', 'en', 'zh') for inLanguage property */
+  inLanguage?: string;
 }
 
 /**
@@ -48,7 +50,8 @@ interface ProfessionalServiceSchemaProps {
  */
 const ProfessionalServiceSchema: React.FC<ProfessionalServiceSchemaProps> = ({
   provider,
-  baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sos-expat.com'
+  baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sos-expat.com',
+  inLanguage
 }) => {
   const schema = useMemo(() => {
     const isLawyer = provider.role === 'lawyer';
@@ -64,6 +67,7 @@ const ProfessionalServiceSchema: React.FC<ProfessionalServiceSchemaProps> = ({
       name: provider.name,
       description: provider.description,
       url: provider.url || currentUrl,
+      ...(inLanguage && { inLanguage }),
 
       // Location
       address: {

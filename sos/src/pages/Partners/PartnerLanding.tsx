@@ -1059,7 +1059,7 @@ const PartnerLanding: React.FC = () => {
       {/* ================= SEO HEAD — FULL (unified with Home.tsx) ================= */}
       <Helmet>
         {/* Base */}
-        <html lang={language} />
+        <html lang={language === 'ch' ? 'zh' : language} />
         <title>{seoData.title}</title>
         <meta name="title" content={seoData.title} />
         <meta name="description" content={seoData.description} />

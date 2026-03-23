@@ -24,20 +24,24 @@ export interface FAQPageSchemaProps {
   pageTitle?: string;
   /** Page URL (optional) */
   pageUrl?: string;
+  /** Language code (e.g., 'fr', 'en', 'zh') for inLanguage property */
+  inLanguage?: string;
 }
 
 /**
  * Generate FAQPage schema object
  */
 export function generateFAQPageSchema(props: FAQPageSchemaProps): object {
-  const { faqs, pageUrl } = props;
+  const { faqs, pageUrl, inLanguage } = props;
 
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    ...(inLanguage && { inLanguage }),
     mainEntity: faqs.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
+      ...(inLanguage && { inLanguage }),
       acceptedAnswer: {
         '@type': 'Answer',
         text: faq.answer,
