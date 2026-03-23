@@ -1,5 +1,7 @@
 // src/pages/ProvidersByCountry.tsx — Country-specific provider listings (SEO key page)
 import React, { useState, useEffect, useMemo } from "react";
+import { getSpecialtyLabel } from "../utils/specialtyMapper";
+import { getExpatHelpTypeLabel } from "../data/expat-help-types";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { useLocaleNavigate, parseLocaleFromPath, getLocaleString } from "../multilingual-system";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -206,16 +208,23 @@ const ProvidersByCountry: React.FC = () => {
       setIsLoading(true);
 
       try {
-        // Query 1: providers whose country matches
-        const q1 = query(
+        // Build queries — some profiles have ISO code (TH), others have French name (Thaïlande)
+        const countryVariants = [countryCode];
+        if (countryData) {
+          const names = [countryData.nameFr, countryData.nameEn].filter(Boolean);
+          names.forEach(n => { if (n && !countryVariants.includes(n)) countryVariants.push(n); });
+        }
+
+        // Query 1: providers whose country matches (ISO code or name)
+        const queries = countryVariants.map(cv => query(
           collection(db, "sos_profiles"),
           where("isApproved", "==", true),
           where("isVisible", "==", true),
           where("isActive", "==", true),
           where("type", "==", providerType),
-          where("country", "==", countryCode),
+          where("country", "==", cv),
           firestoreLimit(100)
-        );
+        ));
 
         // Query 2: providers whose operatingCountries contain this country
         const q2 = query(
@@ -228,7 +237,9 @@ const ProvidersByCountry: React.FC = () => {
           firestoreLimit(100)
         );
 
-        const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        const allSnaps = await Promise.all([...queries.map(q => getDocs(q)), getDocs(q2)]);
+        const snap1 = { docs: allSnaps.slice(0, -1).flatMap(s => s.docs) };
+        const snap2 = allSnaps[allSnaps.length - 1];
 
         if (isCancelled) return;
 
@@ -621,23 +632,32 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   const isAvailable = provider.availability === "available";
   const photo = getPhoto(provider);
 
-  // Translated specialties
+  // Translated specialties — map codes to localized labels
   const specialties = useMemo(() => {
     const translated = provider.translations?.[lang]?.specialties;
     if (translated && translated.length > 0) return translated;
-    return provider.specialties || [];
+    const raw = provider.specialties || [];
+    const localeForTranslation = mapLanguageToLocale(lang || 'fr');
+    return raw.map((code: string) => {
+      const isLawyer = provider.type === 'lawyer';
+      if (isLawyer) {
+        const label = getSpecialtyLabel(code.trim(), localeForTranslation);
+        return label !== code.trim() ? label : code;
+      }
+      const upper = code.trim().toUpperCase();
+      const label = getExpatHelpTypeLabel(upper, localeForTranslation as any);
+      return label !== upper ? label : code;
+    });
   }, [provider, lang]);
 
   // Provider profile URL
   const profileUrl = useMemo(() => {
-    // Use slug if available
+    // Use slug if available — slugs already contain locale prefix (e.g., "fr-fr/avocat-thailande/julien-penal-fsx3c9")
     if (provider.slugs?.[lang]) {
-      return `/${locale}/${provider.slugs[lang]}`;
+      return `/${provider.slugs[lang]}`;
     }
-    // Fallback: build URL from name
-    const nameSlug = slugify(`${provider.firstName}${provider.lastName ? "-" + provider.lastName : ""}`);
-    const typeSlug = provider.type === "lawyer" ? "avocat" : "expatrie";
-    return `/${locale}/${typeSlug}/${nameSlug}-${provider.id}`;
+    // Fallback: use provider/:id route
+    return `/${locale}/prestataire/${provider.id}`;
   }, [provider, lang, locale]);
 
   // Display languages
