@@ -181,7 +181,118 @@ function getTranslatedCountry(countryCode: string, lang: string): string {
 }
 
 /**
+ * Short specialty slug mappings for SEO-friendly URLs
+ * Each specialty gets a short (5-15 chars) translated slug per language
+ */
+const SPECIALTY_SHORT_SLUGS: Record<string, Record<string, string>> = {
+  // Immigration
+  'IMMI_VISAS_PERMIS_SEJOUR': { fr: 'visa', en: 'visa', es: 'visa', de: 'visum', pt: 'visto', ru: 'viza', zh: 'qianzheng', ar: 'tashira', hi: 'visa' },
+  'IMMI_CONTRATS_TRAVAIL_INTERNATIONAL': { fr: 'travail', en: 'work', es: 'trabajo', de: 'arbeit', pt: 'trabalho', ru: 'rabota', zh: 'gongzuo', ar: 'amal', hi: 'kaam' },
+  'IMMI_NATURALISATION': { fr: 'nationalite', en: 'citizenship', es: 'ciudadania', de: 'einbuergerung', pt: 'cidadania', ru: 'grazhdanstvo', zh: 'ruji', ar: 'tajnis', hi: 'nagrikta' },
+  'IMMI_VISA_ETUDIANT': { fr: 'visa-etudiant', en: 'student-visa', es: 'visa-estudiante', de: 'studentenvisum', pt: 'visto-estudante', ru: 'studviza', zh: 'xuesheng', ar: 'talib', hi: 'chhatra' },
+  'IMMI_VISA_INVESTISSEUR': { fr: 'investisseur', en: 'investor', es: 'inversor', de: 'investor', pt: 'investidor', ru: 'investor', zh: 'touzhe', ar: 'mustathmir', hi: 'niveshak' },
+  'IMMI_VISA_RETRAITE': { fr: 'retraite', en: 'retirement', es: 'jubilacion', de: 'rente', pt: 'aposentadoria', ru: 'pensiya', zh: 'tuixiu', ar: 'taqaud', hi: 'sevanivrutti' },
+  'IMMI_VISA_NOMADE_DIGITAL': { fr: 'nomade', en: 'digital-nomad', es: 'nomada', de: 'nomade', pt: 'nomade', ru: 'nomad', zh: 'youmin', ar: 'rahhal', hi: 'nomad' },
+  'IMMI_REGROUPEMENT_FAMILIAL': { fr: 'famille', en: 'family', es: 'familia', de: 'familie', pt: 'familia', ru: 'semya', zh: 'jiating', ar: 'aila', hi: 'parivar' },
+  // Famille
+  'FAM_MARIAGE_DIVORCE': { fr: 'divorce', en: 'divorce', es: 'divorcio', de: 'scheidung', pt: 'divorcio', ru: 'razvod', zh: 'lihun', ar: 'talaq', hi: 'talak' },
+  'FAM_GARDE_ENFANTS_TRANSFRONTALIERE': { fr: 'garde-enfants', en: 'child-custody', es: 'custodia', de: 'sorgerecht', pt: 'guarda', ru: 'opeka', zh: 'yangguan', ar: 'hidana', hi: 'hirasata' },
+  'FAM_SCOLARITE_INTERNATIONALE': { fr: 'scolarite', en: 'schooling', es: 'escolaridad', de: 'schulbildung', pt: 'escolaridade', ru: 'obuchenie', zh: 'jiaoyu', ar: 'talim', hi: 'shiksha' },
+  // Fiscalité
+  'FISC_DECLARATIONS_INTERNATIONALES': { fr: 'fiscal', en: 'tax', es: 'fiscal', de: 'steuer', pt: 'fiscal', ru: 'nalog', zh: 'shuiwu', ar: 'dariba', hi: 'kar' },
+  'FISC_DOUBLE_IMPOSITION': { fr: 'double-imposition', en: 'double-tax', es: 'doble-imposicion', de: 'doppelbesteuerung', pt: 'dupla-tributacao', ru: 'dvoinoi-nalog', zh: 'shuangchong', ar: 'izdiwaj', hi: 'dahra-kar' },
+  'FISC_OPTIMISATION_EXPATRIES': { fr: 'optimisation', en: 'tax-planning', es: 'optimizacion', de: 'steuerplanung', pt: 'otimizacao', ru: 'optimizatsiya', zh: 'youhua', ar: 'tahsin', hi: 'anukul' },
+  // Immobilier
+  'IMMO_ACHAT_VENTE': { fr: 'immobilier', en: 'real-estate', es: 'inmobiliario', de: 'immobilien', pt: 'imobiliario', ru: 'nedvizhimost', zh: 'fangdichan', ar: 'aqarat', hi: 'sampatti' },
+  'IMMO_LOCATION_BAUX': { fr: 'location', en: 'rental', es: 'alquiler', de: 'miete', pt: 'aluguel', ru: 'arenda', zh: 'zulin', ar: 'ijar', hi: 'kiraya' },
+  'IMMO_LITIGES_IMMOBILIERS': { fr: 'litiges-immo', en: 'property-disputes', es: 'litigios', de: 'immobilienstreit', pt: 'litigios', ru: 'spory', zh: 'jiufen', ar: 'niza', hi: 'vivad' },
+  // Urgences
+  'URG_ASSISTANCE_PENALE_INTERNATIONALE': { fr: 'penal', en: 'criminal', es: 'penal', de: 'strafrecht', pt: 'penal', ru: 'ugolovnoe', zh: 'xingshi', ar: 'jinai', hi: 'aparadh' },
+  'URG_ACCIDENTS_RESPONSABILITE_CIVILE': { fr: 'accidents', en: 'accidents', es: 'accidentes', de: 'unfaelle', pt: 'acidentes', ru: 'dtp', zh: 'shigu', ar: 'hawadith', hi: 'durghatna' },
+  'URG_RAPATRIEMENT_URGENCE': { fr: 'rapatriement', en: 'repatriation', es: 'repatriacion', de: 'rueckfuehrung', pt: 'repatriacao', ru: 'repatriatsiya', zh: 'qianfan', ar: 'iada', hi: 'pratyavartan' },
+  // Travail
+  'TRAV_DROITS_TRAVAILLEURS': { fr: 'droit-travail', en: 'labor-rights', es: 'derechos', de: 'arbeitsrecht', pt: 'direitos', ru: 'trudovoe', zh: 'laodong', ar: 'huquq', hi: 'shramik' },
+  'TRAV_LICENCIEMENT_INTERNATIONAL': { fr: 'licenciement', en: 'dismissal', es: 'despido', de: 'kuendigung', pt: 'demissao', ru: 'uvolnenie', zh: 'jiegu', ar: 'fasl', hi: 'barkhaastagi' },
+  'TRAV_SECURITE_SOCIALE_INTERNATIONALE': { fr: 'secu-sociale', en: 'social-security', es: 'seguridad', de: 'sozialversicherung', pt: 'seguranca', ru: 'sotsstrakh', zh: 'shebao', ar: 'tamin', hi: 'suraksha' },
+  'TRAV_RETRAITE_INTERNATIONALE': { fr: 'retraite', en: 'pension', es: 'jubilacion', de: 'rente', pt: 'aposentadoria', ru: 'pensiya', zh: 'yanglao', ar: 'taqaud', hi: 'pension' },
+  'TRAV_DETACHEMENT_EXPATRIATION': { fr: 'detachement', en: 'secondment', es: 'destacamento', de: 'entsendung', pt: 'destacamento', ru: 'komandirovka', zh: 'waipai', ar: 'intidab', hi: 'pratiniyukti' },
+  'TRAV_DISCRIMINATION_TRAVAIL': { fr: 'discrimination', en: 'discrimination', es: 'discriminacion', de: 'diskriminierung', pt: 'discriminacao', ru: 'diskriminatsiya', zh: 'qishi', ar: 'tamyiz', hi: 'bhedbhav' },
+  // Patrimoine
+  'PATR_SUCCESSIONS_INTERNATIONALES': { fr: 'succession', en: 'inheritance', es: 'sucesion', de: 'erbschaft', pt: 'sucessao', ru: 'nasledstvo', zh: 'jicheng', ar: 'mirath', hi: 'uttaradhikar' },
+  'PATR_GESTION_PATRIMOINE': { fr: 'patrimoine', en: 'wealth', es: 'patrimonio', de: 'vermoegen', pt: 'patrimonio', ru: 'aktivy', zh: 'caifu', ar: 'tharwa', hi: 'sampada' },
+  'PATR_TESTAMENTS': { fr: 'testament', en: 'will', es: 'testamento', de: 'testament', pt: 'testamento', ru: 'zaveshchanie', zh: 'yizhu', ar: 'wasiya', hi: 'vasiyat' },
+  // Entreprise
+  'ENTR_CREATION_ENTREPRISE_ETRANGER': { fr: 'creation-entreprise', en: 'business', es: 'empresa', de: 'unternehmen', pt: 'empresa', ru: 'biznes', zh: 'chuangye', ar: 'sharika', hi: 'vyavsay' },
+  'ENTR_INVESTISSEMENTS': { fr: 'investissement', en: 'investment', es: 'inversion', de: 'investition', pt: 'investimento', ru: 'investitsii', zh: 'touzi', ar: 'istithmar', hi: 'nivesh' },
+  'ENTR_IMPORT_EXPORT': { fr: 'import-export', en: 'trade', es: 'comercio', de: 'handel', pt: 'comercio', ru: 'torgovlya', zh: 'maoyi', ar: 'tijara', hi: 'vyapar' },
+  // Services courants
+  'CUR_TRADUCTIONS_LEGALISATIONS': { fr: 'traductions', en: 'translations', es: 'traducciones', de: 'uebersetzungen', pt: 'traducoes', ru: 'perevody', zh: 'fanyi', ar: 'tarjama', hi: 'anuvad' },
+  'CUR_RECLAMATIONS_LITIGES_MINEURS': { fr: 'litiges', en: 'disputes', es: 'litigios', de: 'streitigkeiten', pt: 'litigios', ru: 'spory', zh: 'jiufen', ar: 'niza', hi: 'vivad' },
+  'CUR_DEMARCHES_ADMINISTRATIVES': { fr: 'administratif', en: 'administrative', es: 'administrativo', de: 'verwaltung', pt: 'administrativo', ru: 'administrativnoe', zh: 'xingzheng', ar: 'idari', hi: 'prashasnik' },
+  // Consommation / Banque / Assurance (fallback slugs)
+  'CONS_ACHATS_DEFECTUEUX_ETRANGER': { fr: 'consommation', en: 'consumer', es: 'consumidor', de: 'verbraucher', pt: 'consumidor', ru: 'potrebitel', zh: 'xiaofei', ar: 'mustahlak', hi: 'upbhokta' },
+  'BANK_PROBLEMES_COMPTES_BANCAIRES': { fr: 'banque', en: 'banking', es: 'banca', de: 'bank', pt: 'banco', ru: 'bank', zh: 'yinhang', ar: 'masrif', hi: 'bank' },
+  'ASSU_ASSURANCES_INTERNATIONALES': { fr: 'assurance', en: 'insurance', es: 'seguro', de: 'versicherung', pt: 'seguro', ru: 'strakhovanie', zh: 'baoxian', ar: 'tamin', hi: 'bima' },
+  // Violence / Numérique
+  'VIO_HARCELEMENT': { fr: 'harcelement', en: 'harassment', es: 'acoso', de: 'belaestigung', pt: 'assedio', ru: 'domogatelstvo', zh: 'saorao', ar: 'taharrush', hi: 'utpidan' },
+  'VIO_VIOLENCES_DOMESTIQUES': { fr: 'violences', en: 'domestic-violence', es: 'violencia', de: 'gewalt', pt: 'violencia', ru: 'nasilie', zh: 'baoli', ar: 'unf', hi: 'hinsa' },
+  'NUM_CYBERCRIMINALITE': { fr: 'cyber', en: 'cybercrime', es: 'ciberdelito', de: 'cyberkriminalitaet', pt: 'cibercrime', ru: 'kiberprestupnost', zh: 'wangluo', ar: 'jarima-iliktruniya', hi: 'cyber' },
+};
+
+/**
+ * Short specialty slug mappings for EXPAT help types
+ */
+const EXPAT_SPECIALTY_SHORT_SLUGS: Record<string, Record<string, string>> = {
+  'INSTALLATION': { fr: 'installation', en: 'settling', es: 'instalacion', de: 'einrichtung', pt: 'instalacao', ru: 'obustroistvo', zh: 'dingju', ar: 'istiqrar', hi: 'sthapna' },
+  'DEMARCHES_ADMINISTRATIVES': { fr: 'administratif', en: 'administrative', es: 'administrativo', de: 'verwaltung', pt: 'administrativo', ru: 'administrativnoe', zh: 'xingzheng', ar: 'idari', hi: 'prashasnik' },
+  'RECHERCHE_LOGEMENT': { fr: 'logement', en: 'housing', es: 'vivienda', de: 'wohnung', pt: 'habitacao', ru: 'zhilye', zh: 'zhufang', ar: 'sakan', hi: 'aawas' },
+  'OUVERTURE_COMPTE_BANCAIRE': { fr: 'banque', en: 'bank', es: 'banco', de: 'bank', pt: 'banco', ru: 'bank', zh: 'yinhang', ar: 'masrif', hi: 'bank' },
+  'SYSTEME_SANTE': { fr: 'sante', en: 'health', es: 'salud', de: 'gesundheit', pt: 'saude', ru: 'zdorovye', zh: 'yiliao', ar: 'sihha', hi: 'swasthya' },
+  'EDUCATION_ECOLES': { fr: 'education', en: 'education', es: 'educacion', de: 'bildung', pt: 'educacao', ru: 'obrazovanie', zh: 'jiaoyu', ar: 'talim', hi: 'shiksha' },
+  'VISA_IMMIGRATION': { fr: 'visa', en: 'visa', es: 'visa', de: 'visum', pt: 'visto', ru: 'viza', zh: 'qianzheng', ar: 'tashira', hi: 'visa' },
+  'CREATION_ENTREPRISE': { fr: 'entreprise', en: 'business', es: 'empresa', de: 'unternehmen', pt: 'empresa', ru: 'biznes', zh: 'chuangye', ar: 'sharika', hi: 'vyavsay' },
+  'FISCALITE_LOCALE': { fr: 'fiscal', en: 'tax', es: 'fiscal', de: 'steuer', pt: 'fiscal', ru: 'nalog', zh: 'shuiwu', ar: 'dariba', hi: 'kar' },
+  'RECHERCHE_EMPLOI': { fr: 'emploi', en: 'jobs', es: 'empleo', de: 'arbeit', pt: 'emprego', ru: 'rabota', zh: 'gongzuo', ar: 'amal', hi: 'naukri' },
+  'ASSURANCES': { fr: 'assurance', en: 'insurance', es: 'seguro', de: 'versicherung', pt: 'seguro', ru: 'strakhovanie', zh: 'baoxian', ar: 'tamin', hi: 'bima' },
+  'TRANSPORT': { fr: 'transport', en: 'transport', es: 'transporte', de: 'transport', pt: 'transporte', ru: 'transport', zh: 'jiaotong', ar: 'naql', hi: 'parivahan' },
+  'CULTURE_INTEGRATION': { fr: 'integration', en: 'integration', es: 'integracion', de: 'integration', pt: 'integracao', ru: 'integratsiya', zh: 'ronghe', ar: 'indimaj', hi: 'ekikaran' },
+  'RETRAITE_ETRANGER': { fr: 'retraite', en: 'retirement', es: 'jubilacion', de: 'rente', pt: 'aposentadoria', ru: 'pensiya', zh: 'tuixiu', ar: 'taqaud', hi: 'sevanivrutti' },
+};
+
+/**
+ * Get short specialty slug for a given code and language
+ * Falls back to: first 2 words slugified, then empty string
+ */
+function getSpecialtyShortSlug(code: string, lang: string, providerType: string): string {
+  const translationLang = lang === 'ch' ? 'zh' : lang;
+
+  // Normalize code: camelCase → SCREAMING_SNAKE_CASE
+  const normalizedCode = code.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase();
+
+  // Try lawyer specialties
+  if (providerType === 'lawyer' && SPECIALTY_SHORT_SLUGS[normalizedCode]?.[translationLang]) {
+    return SPECIALTY_SHORT_SLUGS[normalizedCode][translationLang];
+  }
+
+  // Try expat help types
+  if (EXPAT_SPECIALTY_SHORT_SLUGS[normalizedCode]?.[translationLang]) {
+    return EXPAT_SPECIALTY_SHORT_SLUGS[normalizedCode][translationLang];
+  }
+
+  // Fallback: slugify and take first 2 words, max 15 chars
+  const slugified = slugify(code).substring(0, 15);
+  // Trim at last hyphen if it would cut a word
+  const lastHyphen = slugified.lastIndexOf('-');
+  if (lastHyphen > 5 && lastHyphen < slugified.length - 1) {
+    return slugified.substring(0, lastHyphen);
+  }
+  return slugified;
+}
+
+/**
  * Generate multilingual slugs for a profile
+ * Format: {urlLang}-{locale}/{role}-{country}/{name}-{specialty}-{shortId}
+ * Max 50 chars after locale prefix
  */
 function generateMultilingualSlugs(
   profile: admin.firestore.DocumentData,
@@ -192,6 +303,12 @@ function generateMultilingualSlugs(
   const firstName = profile.firstName || profile.fullName?.split(' ')[0] || 'provider';
   const role = profile.role || profile.type || 'lawyer';
   const countryCode = profile.countryCode || profile.country || 'FR';
+  const providerType = role === 'expat' || role === 'expatrie' ? 'expat' : 'lawyer';
+
+  // Get first specialty code
+  const specialtyCode = providerType === 'lawyer'
+    ? (Array.isArray(profile.specialties) ? profile.specialties[0] : '')
+    : (Array.isArray(profile.helpTypes) ? profile.helpTypes[0] : '');
 
   const nameSlug = slugify(firstName);
 
@@ -199,12 +316,30 @@ function generateMultilingualSlugs(
     const translatedRole = getTranslatedRole(role, lang);
     const translatedCountry = getTranslatedCountry(countryCode, lang);
     const locale = DEFAULT_LOCALES[lang];
-    // Chinese: internal code is 'ch' but URL should use 'zh' (ISO 639-1 standard)
     const urlLang = lang === 'ch' ? 'zh' : lang;
 
-    // Format: {urlLang}-{locale}/{role}-{country}/{name}-{shortId}
-    // Ex: fr-fr/avocat-thailande/julien-abc123, zh-cn/lushi-faguo/julien-abc123
-    slugs[lang] = `${urlLang}-${locale}/${translatedRole}-${translatedCountry}/${nameSlug}-${shortId}`;
+    const langLocale = `${urlLang}-${locale}`;
+    const roleCountry = `${translatedRole}-${translatedCountry}`;
+
+    // Get short specialty slug for this language
+    const specialtySlug = specialtyCode ? getSpecialtyShortSlug(specialtyCode, lang, providerType) : '';
+
+    // Build name part: {name}-{specialty}-{shortId} with max length check
+    let namePart: string;
+    if (specialtySlug) {
+      const fullNamePart = `${nameSlug}-${specialtySlug}-${shortId}`;
+      // Max 50 chars for the full slug (after locale)
+      if (`${roleCountry}/${fullNamePart}`.length > 50) {
+        // Too long: drop specialty
+        namePart = `${nameSlug}-${shortId}`;
+      } else {
+        namePart = fullNamePart;
+      }
+    } else {
+      namePart = `${nameSlug}-${shortId}`;
+    }
+
+    slugs[lang] = `${langLocale}/${roleCountry}/${namePart}`;
   }
 
   return slugs;
@@ -297,7 +432,27 @@ export const migrateProfileSlugs = onRequest(
 
           if (forceRegen || !hasAllLanguages || hasOldChineseFormat) {
             const newSlugs = generateMultilingualSlugs(profile, shortId);
+
+            // CRITICAL: Save old slugs for 301 redirects (never lose old URLs)
+            if (Object.keys(existingSlugs).length > 0) {
+              const previousSlugs = profile.previousSlugs || [];
+              // Only save if slugs actually changed
+              const slugsChanged = Object.keys(existingSlugs).some(
+                lang => existingSlugs[lang] !== newSlugs[lang]
+              );
+              if (slugsChanged) {
+                previousSlugs.push({
+                  slugs: existingSlugs,
+                  migratedAt: new Date().toISOString(),
+                  version: profile.slugVersion || 1,
+                });
+                updates.previousSlugs = previousSlugs;
+                console.log(`  💾 [${profileId}] Saved ${Object.keys(existingSlugs).length} old slugs for 301 redirects`);
+              }
+            }
+
             updates.slugs = newSlugs;
+            updates.slugVersion = (profile.slugVersion || 1) + 1;
             needsUpdate = true;
             const reason = forceRegen ? 'forced regeneration' :
                           (hasOldChineseFormat ? `old Chinese format: ${chineseSlug.substring(0, 20)}` : 'missing languages');
