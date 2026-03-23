@@ -271,6 +271,8 @@ export type RouteKey =
   | "seo"               // /seo -> /referencement, /seo, etc.
   | "providers"          // /providers -> /prestataires, /proveedores, etc.
   | "provider"           // /provider/:id -> /prestataire/:id, /proveedor/:id, etc.
+  | "lawyers-country"    // /lawyers-in/:country -> /avocats-en/:pays, etc.
+  | "expats-country"     // /expats-in/:country -> /expatries-en/:pays, etc.
   | "dashboard"         // /dashboard -> /tableau-de-bord, /panel, etc.
   | "profile-edit"       // /profile/edit -> /profil/modifier, /perfil/editar, etc.
   | "call-checkout"      // /call-checkout -> /paiement-appel, /pago-llamada, etc.
@@ -707,6 +709,28 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "fuwu-tigongzhe",
     hi: "seva-pradaata",
     ar: "مقدم-الخدمة",
+  },
+  "lawyers-country": {
+    fr: "avocats-en",
+    en: "lawyers-in",
+    es: "abogados-en",
+    de: "anwaelte-in",
+    ru: "advokaty-v",
+    pt: "advogados-em",
+    ch: "lushi-zai",
+    hi: "vakil-in",
+    ar: "محامون-في",
+  },
+  "expats-country": {
+    fr: "expatries-en",
+    en: "expats-in",
+    es: "expatriados-en",
+    de: "expats-in",
+    ru: "expaty-v",
+    pt: "expatriados-em",
+    ch: "haiwai-zai",
+    hi: "videshi-in",
+    ar: "مغتربون-في",
   },
   "dashboard": {
     fr: "tableau-de-bord",

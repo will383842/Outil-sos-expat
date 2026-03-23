@@ -114,6 +114,7 @@ const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const HelpArticle = lazy(() => import('./pages/HelpArticle'));
 const FAQ = lazy(() => import('./pages/FAQ'));
 const FAQDetail = lazy(() => import('./pages/FAQDetail'));
+const ProvidersByCountry = lazy(() => import('./pages/ProvidersByCountry'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Press = lazy(() => import('./pages/Press'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
@@ -382,6 +383,10 @@ const routeConfigs: RouteConfig[] = [
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
   { path: "/provider/:id", component: ProviderProfile, translated: "provider" },
+
+  // Pages pays dynamiques — listing des prestataires par pays (SEO)
+  { path: "/lawyers-in/:countrySlug", component: ProvidersByCountry, translated: "lawyers-country" },
+  { path: "/expats-in/:countrySlug", component: ProvidersByCountry, translated: "expats-country" },
 
   // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },

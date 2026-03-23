@@ -472,6 +472,26 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/captain-bane\/?$/i,          // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/كن-قائدا\/?$/i,              // AR (native)
 
+  // ========== COUNTRY LISTING PAGES - Lawyers/Expats by country ==========
+  // Format: /{locale}/{role-prefix}-{countrySlug}/
+  /^\/[a-z]{2}(-[a-z]{2})?\/avocats-en-[a-z-]+\/?$/i,        // FR lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/lawyers-in-[a-z-]+\/?$/i,        // EN lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/abogados-en-[a-z-]+\/?$/i,       // ES lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/anwaelte-in-[a-z-]+\/?$/i,       // DE lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/advogados-em-[a-z-]+\/?$/i,      // PT lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/advokaty-v-[a-z-]+\/?$/i,        // RU lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/lushi-zai-[a-z-]+\/?$/i,         // ZH lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/vakil-in-[a-z-]+\/?$/i,          // HI lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/محامون-في-[^\/]+\/?$/i,           // AR lawyers
+  /^\/[a-z]{2}(-[a-z]{2})?\/expatries-en-[a-z-]+\/?$/i,      // FR expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/expats-in-[a-z-]+\/?$/i,         // EN/DE expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/expatriados-en-[a-z-]+\/?$/i,    // ES expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/expatriados-em-[a-z-]+\/?$/i,    // PT expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/expaty-v-[a-z-]+\/?$/i,          // RU expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/haiwai-zai-[a-z-]+\/?$/i,        // ZH expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/videshi-in-[a-z-]+\/?$/i,        // HI expats
+  /^\/[a-z]{2}(-[a-z]{2})?\/مغتربون-في-[^\/]+\/?$/i,          // AR expats
+
   // ========== CHATTER REGISTER - All 9 languages ==========
   /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/inscription\/?$/i,  // FR
   /^\/[a-z]{2}(-[a-z]{2})?\/chatter\/register\/?$/i,     // EN
