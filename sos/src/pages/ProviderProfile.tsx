@@ -2110,7 +2110,6 @@ const ProviderProfile: React.FC = () => {
             ? intl.formatMessage({ id: "providerProfile.legalServices", defaultMessage: "Services juridiques" })
             : intl.formatMessage({ id: "providerProfile.consultingServices", defaultMessage: "Services de conseil" }),
           itemListElement: provider.specialties.slice(0, 5).map((specialty, index) => {
-            // Translate specialty code to localized label using specialtyMapper
             const cleanCode = specialty.trim();
             const locale = mapLanguageToLocale(preferredLangKey || 'fr');
             const translatedName = isLawyer
@@ -2119,9 +2118,13 @@ const ProviderProfile: React.FC = () => {
             return {
               "@type": "Offer",
               "@id": `https://sos-expat.com${window.location.pathname}#service-${index}`,
+              price: isLawyer ? "49.00" : "19.00",
+              priceCurrency: "EUR",
+              availability: "https://schema.org/InStock",
               itemOffered: {
                 "@type": "Service",
-                name: translatedName
+                name: translatedName,
+                description: `${translatedName} - ${intl.formatMessage({ id: "providerProfile.phoneConsultation", defaultMessage: "Phone consultation" })}`,
               }
             };
           })
