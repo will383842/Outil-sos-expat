@@ -385,8 +385,9 @@ const routeConfigs: RouteConfig[] = [
   { path: "/provider/:id", component: ProviderProfile, translated: "provider" },
 
   // Pages pays dynamiques — listing des prestataires par pays (SEO)
-  { path: "/lawyers-in/:countrySlug", component: ProvidersByCountry, translated: "lawyers-country" },
-  { path: "/expats-in/:countrySlug", component: ProvidersByCountry, translated: "expats-country" },
+  // URLs: /fr-fr/avocats/thailande, /en-us/lawyers/thailand, /ar-sa/محامون/tailanda
+  { path: "/lawyers/:countrySlug", component: ProvidersByCountry, translated: "lawyers-country" },
+  { path: "/expats/:countrySlug", component: ProvidersByCountry, translated: "expats-country" },
 
   // Simplified route patterns - just type and slug (rétrocompatibilité)
   { path: "/avocat/:slug", component: ProviderProfile, translated: "lawyer" },
