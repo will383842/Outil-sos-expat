@@ -2366,15 +2366,12 @@ const ProviderProfile: React.FC = () => {
           reviews={reviews
             .filter(r => r.comment && r.comment.length > 0)
             .slice(0, 10)
-            .map(r => ({
-              ...firestoreToReviewItem({
-                id: r.id,
-                clientName: (r as any).clientName || (r as any).authorName,
-                rating: r.rating,
-                comment: r.comment,
-                createdAt: r.createdAt,
-              }),
-              inLanguage: 'fr',
+            .map(r => firestoreToReviewItem({
+              id: r.id,
+              clientName: (r as any).clientName || (r as any).authorName,
+              rating: r.rating,
+              comment: r.comment,
+              createdAt: r.createdAt,
             }))}
           itemReviewed={{
             type: 'ProfessionalService',
