@@ -21,6 +21,7 @@ import { useLocaleNavigate } from "../multilingual-system";
 import SEOHead from "../components/layout/SEOHead";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
+import FAQPageSchema from "../components/seo/FAQPageSchema";
 import { useApp } from "../contexts/AppContext";
 import { useAuth } from "../contexts/AuthContext";
 import { validateCoupon } from "../utils/coupon";
@@ -419,6 +420,14 @@ const Pricing: React.FC = () => {
           { name: intl.formatMessage({ id: "nav.home" }), url: `/${language}` },
           { name: intl.formatMessage({ id: "nav.pricing" }) }
         ]}
+      />
+      <FAQPageSchema
+        faqs={[
+          { question: intl.formatMessage({ id: "pricing.faq.payment.question" }), answer: intl.formatMessage({ id: "pricing.faq.payment.answer" }) },
+          { question: intl.formatMessage({ id: "pricing.faq.availability.question" }), answer: intl.formatMessage({ id: "pricing.faq.availability.answer" }) },
+          { question: intl.formatMessage({ id: "pricing.faq.invoice.question" }), answer: intl.formatMessage({ id: "pricing.faq.invoice.answer" }) },
+        ]}
+        inLanguage={language === 'ch' ? 'zh' : language}
       />
       <div className="min-h-screen bg-gray-950">
         {/* Banner */}

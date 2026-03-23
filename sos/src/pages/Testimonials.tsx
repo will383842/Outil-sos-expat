@@ -678,6 +678,7 @@ const Testimonials: React.FC = () => {
         <meta property="og:description" content={intl.formatMessage({ id: "testy.hero.subtitle" })} />
         <meta property="og:url" content={`${SEO_BASE_URL}/${getLocaleString(language as any)}/testimonials`} />
         <meta property="og:image" content={`${SEO_BASE_URL}/og-image.png`} />
+        <meta property="og:locale" content={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'} />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />

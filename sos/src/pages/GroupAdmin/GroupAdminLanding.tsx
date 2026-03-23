@@ -264,6 +264,7 @@ const GroupAdminLanding: React.FC = () => {
       <SEOHead
         title={intl.formatMessage({ id: 'groupAdmin.landing.seo.title', defaultMessage: 'Become a Group Admin Partner - Earn ${clientCallRange} per Call + {discount} Discount | SOS-Expat' }, { clientCallRange: rates.clientCallRange, discount: rates.discountLabel })}
         description={intl.formatMessage({ id: 'groupAdmin.landing.seo.description', defaultMessage: 'Monetize your group or community. Earn {clientCallMax}$/call (lawyer) or {clientCallExpat}$/call (expat) via your affiliate link, plus a {discount} discount for your members on every call. Ready-to-use tools in 9 languages.' }, { clientCallMax: rates.clientCallMax, clientCallExpat: Math.round(rates.clientCallExpat / 100), discount: rates.discountLabel })}
+        locale={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'}
       />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },

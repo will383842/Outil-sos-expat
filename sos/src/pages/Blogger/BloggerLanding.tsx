@@ -290,6 +290,7 @@ const BloggerLanding: React.FC = () => {
         ogImage="/og-blogger-2026.jpg"
         ogType="website"
         contentType="LandingPage"
+        locale={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'}
       />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} />

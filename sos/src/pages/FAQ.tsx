@@ -157,6 +157,7 @@ const FAQ: React.FC = () => {
         canonicalUrl="/faq"
         author="Manon"
         contentType="FAQPage"
+        locale={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'}
         expertise="Legal Services, Expat Assistance, International Law"
         trustworthiness="verified_lawyers, gdpr_compliant, 197_countries"
         contentQuality="high"
