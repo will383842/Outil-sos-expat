@@ -7524,5 +7524,8 @@
   "howItWorks.seo.aiSummary": "逐步指南，说明如何使用SOS Expat获得快速法律帮助",
   "breadcrumb.faq": "常见问题",
   "breadcrumb.login": "登录",
-  "reset.user": "SOS Expat 用户"
+  "reset.user": "SOS Expat 用户",
+  "providers.seo.title": "我们的专家 — 197个国家的律师和外籍助手 | SOS Expat",
+  "providers.seo.description": "浏览197个国家的认证律师和外籍助手。阅读评价，比较专业领域，5分钟内预约通话。",
+  "breadcrumb.providers": "我们的专家"
 }

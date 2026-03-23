@@ -7525,5 +7525,8 @@
   "howItWorks.seo.aiSummary": "دليل خطوة بخطوة يشرح كيفية استخدام SOS Expat للحصول على مساعدة قانونية سريعة",
   "breadcrumb.faq": "الأسئلة الشائعة",
   "breadcrumb.login": "تسجيل الدخول",
-  "reset.user": "مستخدم SOS Expat"
+  "reset.user": "مستخدم SOS Expat",
+  "providers.seo.title": "خبراؤنا — محامون ومساعدون في 197 دولة | SOS Expat",
+  "providers.seo.description": "تصفح المحامين والمساعدين المعتمدين في 197 دولة. اقرأ التقييمات وقارن التخصصات واحجز مكالمة في 5 دقائق.",
+  "breadcrumb.providers": "خبراؤنا"
 }

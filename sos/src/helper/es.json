@@ -7532,5 +7532,8 @@
   "howItWorks.seo.aiSummary": "Guía paso a paso que explica cómo usar SOS Expat para obtener ayuda legal rápida",
   "breadcrumb.faq": "Preguntas frecuentes",
   "breadcrumb.login": "Iniciar sesión",
-  "reset.user": "Usuario SOS Expat"
+  "reset.user": "Usuario SOS Expat",
+  "providers.seo.title": "Nuestros Expertos — Abogados y Asistentes en 197 Países | SOS Expat",
+  "providers.seo.description": "Consulte abogados y asistentes para expatriados verificados en 197 países. Lea opiniones, compare especialidades y reserve una llamada en 5 minutos.",
+  "breadcrumb.providers": "Nuestros Expertos"
 }

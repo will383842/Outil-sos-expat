@@ -3261,19 +3261,28 @@ const SOSCall: React.FC = () => {
         </script>
       </Helmet>
       <SEOHead
-        title={intl.formatMessage(
-          { id: 'sosCall.seo.pageTitle', defaultMessage: '{providerType} available | SOS Expat & Travelers' },
-          { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyers' : selectedType === "expat" ? 'sosCall.seo.type.expats' : 'sosCall.seo.type.experts', defaultMessage: selectedType === "lawyer" ? 'Lawyers' : selectedType === "expat" ? 'Expats' : 'Experts' }) }
-        )}
-        description={intl.formatMessage(
-          { id: 'sosCall.seo.pageDescription', defaultMessage: 'Find a verified {providerType} available now. Online consultation 24/7 in over 150 countries.' },
-          { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyer' : selectedType === "expat" ? 'sosCall.seo.type.expat' : 'sosCall.seo.type.expert', defaultMessage: selectedType === "lawyer" ? 'lawyer' : selectedType === "expat" ? 'expat' : 'expert' }) }
-        )}
-        canonicalUrl="/sos-appel"
+        title={isProvidersRoute
+          ? intl.formatMessage({ id: 'providers.seo.title', defaultMessage: 'Our Experts — Lawyers & Expat Helpers | SOS Expat' })
+          : intl.formatMessage(
+              { id: 'sosCall.seo.pageTitle', defaultMessage: '{providerType} available | SOS Expat & Travelers' },
+              { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyers' : selectedType === "expat" ? 'sosCall.seo.type.expats' : 'sosCall.seo.type.experts', defaultMessage: selectedType === "lawyer" ? 'Lawyers' : selectedType === "expat" ? 'Expats' : 'Experts' }) }
+            )
+        }
+        description={isProvidersRoute
+          ? intl.formatMessage({ id: 'providers.seo.description', defaultMessage: 'Browse verified lawyers and expat helpers in 197 countries. Read reviews, compare specialties and book a call in under 5 minutes.' })
+          : intl.formatMessage(
+              { id: 'sosCall.seo.pageDescription', defaultMessage: 'Find a verified {providerType} available now. Online consultation 24/7 in over 150 countries.' },
+              { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyer' : selectedType === "expat" ? 'sosCall.seo.type.expat' : 'sosCall.seo.type.expert', defaultMessage: selectedType === "lawyer" ? 'lawyer' : selectedType === "expat" ? 'expat' : 'expert' }) }
+            )
+        }
+        canonicalUrl={isProvidersRoute ? "/providers" : "/sos-appel"}
       />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
-        { name: intl.formatMessage({ id: 'breadcrumb.sosCall', defaultMessage: 'Emergency Call' }) }
+        { name: isProvidersRoute
+          ? intl.formatMessage({ id: 'breadcrumb.providers', defaultMessage: 'Our Experts' })
+          : intl.formatMessage({ id: 'breadcrumb.sosCall', defaultMessage: 'Emergency Call' })
+        }
       ]} />
 
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
