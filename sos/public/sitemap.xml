@@ -2,22 +2,26 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://sos-expat.com/sitemap-static.xml</loc>
-    <lastmod>2026-03-17</lastmod>
+    <lastmod>2026-03-23</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://sos-expat.com/sitemaps/profiles.xml</loc>
+    <lastmod>2026-03-23</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://sos-expat.com/sitemaps/help.xml</loc>
+    <lastmod>2026-03-23</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://sos-expat.com/sitemaps/faq.xml</loc>
+    <lastmod>2026-03-23</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://sos-expat.com/sitemaps/landing.xml</loc>
+    <lastmod>2026-03-23</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://sos-expat.com/sitemaps/country-listings.xml</loc>
+    <lastmod>2026-03-23</lastmod>
   </sitemap>
 </sitemapindex>
