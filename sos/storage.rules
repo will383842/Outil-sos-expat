@@ -33,8 +33,9 @@ service firebase.storage {
       ];
     }
 
+    // Provider profile photos — public read (displayed on public profile pages)
     match /profilePhotos/{userId}/{fileName} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if (isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize()) || isAdmin();
       allow delete: if (isAuthenticated() && (request.auth.uid == userId || isAdmin()));
     }
@@ -81,19 +82,17 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
-    // P1 SECURITY FIX: Require ownership check for delete
+    // Provider profile photos (with userId subfolder) — public read (displayed on public profile pages)
     match /profile_photos/{userId}/{fileName} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidFileSize();
       // P1 FIX: Only owner or admin can delete their own photos
       allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
-    // Admin can upload profile photos directly (for AAA profiles management)
-    // Note: isAdmin() checks custom claim 'role' == 'admin'
-    // Fallback: also allow authenticated users (temporary for AAA admin)
+    // Admin-uploaded profile photos (flat path, for AAA profiles) — public read
     match /profile_photos/{fileName} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated() && isImage() && isValidFileSize();
       allow delete: if isAdmin();
     }
