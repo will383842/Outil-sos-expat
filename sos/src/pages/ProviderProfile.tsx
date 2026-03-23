@@ -2010,6 +2010,10 @@ const ProviderProfile: React.FC = () => {
     return calls === 0 && reviews === 0;
   }, [providerStats]);
 
+  // AI-generated SEO data (from seo_optimized collection)
+  // MUST be called before any conditional returns to respect React Rules of Hooks
+  const { data: seoAI } = useSEOOptimized(realProviderId, currentLang || 'fr');
+
   // Use viewingLanguage for FAQ if user selected a translation, otherwise use header language
   const snippetLanguage = viewingLanguage || language;
 
@@ -2365,9 +2369,6 @@ const ProviderProfile: React.FC = () => {
     ? intl.formatMessage({ id: "providerProfile.lawyer" })
     : intl.formatMessage({ id: "providerProfile.expat" });
   
-  // AI-generated SEO data (from seo_optimized collection)
-  const { data: seoAI } = useSEOOptimized(realProviderId, currentLang || 'fr');
-
   // SEO Title: Name - Role specialty, languages in Country | Brand
   // Priority: AI SEO > Translation SEO > Template
   const topSpecialty = derivedSpecialties.length > 0 ? derivedSpecialties[0] : '';
