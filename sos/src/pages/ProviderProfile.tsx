@@ -356,17 +356,24 @@ const toArrayFromAny = (val: unknown, preferred?: string): string[] => {
 
 /**
  * Replace raw specialty codes (SCREAMING_SNAKE_CASE like FAM_SCOLARITE_INTERNATIONALE)
- * in description text with their translated labels.
+ * and ISO country codes (2-letter like "en TN") in description text with translated labels.
  * These codes end up in Firestore descriptions from AAA profile generation templates.
  */
-const replaceSpecialtyCodes = (text: string, lang?: string): string => {
+const cleanDescriptionCodes = (text: string, lang?: string): string => {
   const locale = mapLanguageToLocale(lang || 'fr');
-  // Match SCREAMING_SNAKE_CASE patterns (2+ segments like FAM_SCOLARITE or URG_ASSISTANCE_PENALE_INTERNATIONALE)
-  return text.replace(/\b([A-Z]{2,}(?:_[A-Z0-9]+){1,})\b/g, (match) => {
+  // 1. Replace SCREAMING_SNAKE_CASE specialty codes
+  let cleaned = text.replace(/\b([A-Z]{2,}(?:_[A-Z0-9]+){1,})\b/g, (match) => {
     const label = getSpecialtyLabel(match, locale);
-    // Only replace if we got a real label (not the code itself back)
     return label !== match ? label : match;
   });
+  // 2. Replace ISO 2-letter country codes preceded by a preposition (en/in/à/au/de/di/em/в/في)
+  // Pattern: preposition + space + exactly 2 uppercase letters (not part of a longer word)
+  cleaned = cleaned.replace(/((?:en|in|à|au|de|di|em|в|في)\s+)([A-Z]{2})(?=[\s.,;:!?)»\]"]|$)/g, (_match, prep, code) => {
+    const countryName = getCountryName(code.toLowerCase(), lang || 'fr');
+    // Only replace if we got a real name (not the code back)
+    return countryName && countryName.toLowerCase() !== code.toLowerCase() ? `${prep}${countryName}` : _match;
+  });
+  return cleaned;
 };
 
 const pickDescription = (
@@ -384,7 +391,7 @@ const pickDescription = (
       getFirstString(p.experienceDescription, lang),
     ];
     const found = chain.find(Boolean);
-    if (found) return replaceSpecialtyCodes(found, preferredLang);
+    if (found) return cleanDescriptionCodes(found, preferredLang);
   }
   // Last resort: try without language preference (picks first available key)
   const anyChain = [
@@ -394,7 +401,7 @@ const pickDescription = (
     getFirstString(p.experienceDescription, undefined),
   ];
   const fallback = anyChain.find(Boolean);
-  if (fallback) return replaceSpecialtyCodes(fallback, preferredLang);
+  if (fallback) return cleanDescriptionCodes(fallback, preferredLang);
   return intl ? intl.formatMessage({ id: "providerProfile.noDescriptionAvailable" }) : "";
 };
 
