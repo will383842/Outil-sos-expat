@@ -79,6 +79,9 @@ export const onProfileCreated = onDocumentCreated(
     });
 
     console.log(`✅ Indexation lancée pour profil ${profileId} (IndexNow: ${indexNowResult.success}, Google: ${googleResult.successCount}/${urls.slice(0, 10).length})`);
+
+    // 5. Soumettre les URLs de listing pays
+    await submitCountryListingUrls(profile, profileId, 'profile_country');
   }
 );
 
@@ -135,6 +138,9 @@ export const onProfileUpdated = onDocumentUpdated(
           urls,
           googleSuccess: googleResult.successCount,
         });
+
+        // Soumettre les URLs de listing pays
+        await submitCountryListingUrls(after, profileId, 'profile_published_country');
       }
     }
   }
@@ -948,6 +954,154 @@ function generateHelpCenterUrls(slug: string): string[] {
 }
 
 // generateFaqUrls is imported from indexNowService (uses correct locale format)
+
+// ============================================
+// 🌍 HELPERS: Country listing URL generation
+// ============================================
+
+/** Role path translations for country listing pages */
+const ROLE_PATHS: Record<string, Record<string, string>> = {
+  lawyer: { fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte', pt: 'advogados', ru: 'advokaty', zh: 'lushi', ar: 'محامون', hi: 'vakil' },
+  expat: { fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats', pt: 'expatriados', ru: 'expaty', zh: 'haiwai', ar: 'مغتربون', hi: 'videshi' },
+};
+
+/** Default locale suffixes per language */
+const DEFAULT_LOCALES: Record<string, string> = {
+  fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', pt: 'pt-pt', ru: 'ru-ru', zh: 'zh-cn', ar: 'ar-sa', hi: 'hi-in',
+};
+
+/** Top 30 country slug translations (inline to avoid frontend imports in backend) */
+const COUNTRY_SLUGS: Record<string, Record<string, string>> = {
+  AE: { fr: 'emirats-arabes-unis', en: 'united-arab-emirates', es: 'emiratos-arabes', de: 'vae', pt: 'emirados-arabes', ru: 'oae', zh: 'alianqiu', ar: 'al-imarat', hi: 'sanyukt-arab' },
+  AU: { fr: 'australie', en: 'australia', es: 'australia', de: 'australien', pt: 'australia', ru: 'avstraliya', zh: 'aodaliya', ar: 'ustralia', hi: 'australia' },
+  BE: { fr: 'belgique', en: 'belgium', es: 'belgica', de: 'belgien', pt: 'belgica', ru: 'belgiya', zh: 'bilishi', ar: 'beljika', hi: 'beljiyam' },
+  BR: { fr: 'bresil', en: 'brazil', es: 'brasil', de: 'brasilien', pt: 'brasil', ru: 'braziliya', zh: 'baxi', ar: 'al-brazil', hi: 'brazil' },
+  CA: { fr: 'canada', en: 'canada', es: 'canada', de: 'kanada', pt: 'canada', ru: 'kanada', zh: 'jianada', ar: 'kanada', hi: 'kanada' },
+  CH: { fr: 'suisse', en: 'switzerland', es: 'suiza', de: 'schweiz', pt: 'suica', ru: 'shveytsariya', zh: 'ruishi', ar: 'swisra', hi: 'switzerland' },
+  CI: { fr: 'cote-d-ivoire', en: 'ivory-coast', es: 'costa-de-marfil', de: 'elfenbeinkueste', pt: 'costa-do-marfim', ru: 'kot-divuar', zh: 'ketediwa', ar: 'kot-difuar', hi: 'ivory-coast' },
+  CM: { fr: 'cameroun', en: 'cameroon', es: 'camerun', de: 'kamerun', pt: 'camaroes', ru: 'kamerun', zh: 'kamailong', ar: 'al-kamirun', hi: 'kamerun' },
+  DE: { fr: 'allemagne', en: 'germany', es: 'alemania', de: 'deutschland', pt: 'alemanha', ru: 'germaniya', zh: 'deguo', ar: 'almanya', hi: 'jarmani' },
+  EG: { fr: 'egypte', en: 'egypt', es: 'egipto', de: 'aegypten', pt: 'egito', ru: 'yegipet', zh: 'aiji', ar: 'misr', hi: 'misr' },
+  ES: { fr: 'espagne', en: 'spain', es: 'espana', de: 'spanien', pt: 'espanha', ru: 'ispaniya', zh: 'xibanya', ar: 'isbanya', hi: 'spain' },
+  FR: { fr: 'france', en: 'france', es: 'francia', de: 'frankreich', pt: 'franca', ru: 'frantsiya', zh: 'faguo', ar: 'faransa', hi: 'phrans' },
+  GB: { fr: 'royaume-uni', en: 'united-kingdom', es: 'reino-unido', de: 'vereinigtes-koenigreich', pt: 'reino-unido', ru: 'velikobritaniya', zh: 'yingguo', ar: 'britaniya', hi: 'britain' },
+  IL: { fr: 'israel', en: 'israel', es: 'israel', de: 'israel', pt: 'israel', ru: 'izrail', zh: 'yiselie', ar: 'israil', hi: 'israel' },
+  IN: { fr: 'inde', en: 'india', es: 'india', de: 'indien', pt: 'india', ru: 'indiya', zh: 'yindu', ar: 'al-hind', hi: 'bharat' },
+  IT: { fr: 'italie', en: 'italy', es: 'italia', de: 'italien', pt: 'italia', ru: 'italiya', zh: 'yidali', ar: 'italiya', hi: 'italy' },
+  JP: { fr: 'japon', en: 'japan', es: 'japon', de: 'japan', pt: 'japao', ru: 'yaponiya', zh: 'riben', ar: 'al-yaban', hi: 'japan' },
+  KH: { fr: 'cambodge', en: 'cambodia', es: 'camboya', de: 'kambodscha', pt: 'camboja', ru: 'kambodzha', zh: 'jianpuzhai', ar: 'kambodya', hi: 'kambodia' },
+  MA: { fr: 'maroc', en: 'morocco', es: 'marruecos', de: 'marokko', pt: 'marrocos', ru: 'marokko', zh: 'moluoge', ar: 'al-maghrib', hi: 'morocco' },
+  MX: { fr: 'mexique', en: 'mexico', es: 'mexico', de: 'mexiko', pt: 'mexico', ru: 'meksika', zh: 'moxige', ar: 'al-maksik', hi: 'mexico' },
+  NL: { fr: 'pays-bas', en: 'netherlands', es: 'paises-bajos', de: 'niederlande', pt: 'paises-baixos', ru: 'niderlandy', zh: 'helan', ar: 'hulanda', hi: 'netherlands' },
+  PL: { fr: 'pologne', en: 'poland', es: 'polonia', de: 'polen', pt: 'polonia', ru: 'polsha', zh: 'bolan', ar: 'bulanda', hi: 'poland' },
+  PT: { fr: 'portugal', en: 'portugal', es: 'portugal', de: 'portugal', pt: 'portugal', ru: 'portugaliya', zh: 'putaoya', ar: 'al-burtughal', hi: 'portugal' },
+  SA: { fr: 'arabie-saoudite', en: 'saudi-arabia', es: 'arabia-saudita', de: 'saudi-arabien', pt: 'arabia-saudita', ru: 'saud-araviya', zh: 'shate', ar: 'as-saudiya', hi: 'saudi-arab' },
+  SG: { fr: 'singapour', en: 'singapore', es: 'singapur', de: 'singapur', pt: 'singapura', ru: 'singapur', zh: 'xinjiapo', ar: 'singhafura', hi: 'singapore' },
+  SN: { fr: 'senegal', en: 'senegal', es: 'senegal', de: 'senegal', pt: 'senegal', ru: 'senegal', zh: 'saineijiaer', ar: 'as-sinighal', hi: 'senegal' },
+  TH: { fr: 'thailande', en: 'thailand', es: 'tailandia', de: 'thailand', pt: 'tailandia', ru: 'tailand', zh: 'taiguo', ar: 'tailand', hi: 'thailand' },
+  TR: { fr: 'turquie', en: 'turkey', es: 'turquia', de: 'tuerkei', pt: 'turquia', ru: 'turtsiya', zh: 'tuerqi', ar: 'turkiya', hi: 'turkey' },
+  US: { fr: 'etats-unis', en: 'united-states', es: 'estados-unidos', de: 'usa', pt: 'estados-unidos', ru: 'ssha', zh: 'meiguo', ar: 'amrika', hi: 'america' },
+  ZA: { fr: 'afrique-du-sud', en: 'south-africa', es: 'sudafrica', de: 'suedafrika', pt: 'africa-do-sul', ru: 'yuar', zh: 'nanfei', ar: 'janub-ifriqya', hi: 'dakshin-africa' },
+};
+
+/** All supported language codes for URL generation */
+const LANG_CODES = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'] as const;
+
+/**
+ * Get the country slug for a given ISO code and language.
+ * Falls back to lowercase ISO code if not in the top 30 mapping.
+ */
+function getCountrySlug(isoCode: string, lang: string): string {
+  const upper = isoCode.toUpperCase();
+  return COUNTRY_SLUGS[upper]?.[lang] || isoCode.toLowerCase();
+}
+
+/**
+ * Generate country listing URLs for a provider and submit them to IndexNow + Google.
+ * Collects all countries from `country` and `operatingCountries`, generates 9 language URLs
+ * per country per role, and submits up to 20 URLs total.
+ */
+async function submitCountryListingUrls(
+  profile: any,
+  profileId: string,
+  eventType: string,
+): Promise<void> {
+  try {
+    // Determine the provider role
+    const role = (profile.role || profile.type || '').toLowerCase();
+    const normalizedRole = role === 'lawyer' || role === 'avocat' ? 'lawyer' : 'expat';
+    const rolePaths = ROLE_PATHS[normalizedRole];
+    if (!rolePaths) {
+      console.log(`⏭️ Country listing: rôle inconnu "${role}", pas d'URLs pays`);
+      return;
+    }
+
+    // Collect unique country ISO codes from country + operatingCountries
+    const countryCodes = new Set<string>();
+
+    const mainCountry = (profile.country || profile.countryCode || '') as string;
+    if (mainCountry) {
+      countryCodes.add(mainCountry.toUpperCase());
+    }
+
+    const operatingCountries = profile.operatingCountries as string[] | undefined;
+    if (Array.isArray(operatingCountries)) {
+      for (const c of operatingCountries) {
+        if (c) countryCodes.add(c.toUpperCase());
+      }
+    }
+
+    if (countryCodes.size === 0) {
+      console.log(`⏭️ Country listing: aucun pays trouvé pour profil ${profileId}`);
+      return;
+    }
+
+    // Generate URLs: /{locale}/{rolePath}/{countrySlug} for each country × language
+    const MAX_COUNTRY_URLS = 20;
+    const countryUrls: string[] = [];
+    const countryArray = Array.from(countryCodes);
+
+    for (const countryCode of countryArray) {
+      for (const lang of LANG_CODES) {
+        if (countryUrls.length >= MAX_COUNTRY_URLS) break;
+
+        const locale = DEFAULT_LOCALES[lang];
+        const rolePath = rolePaths[lang];
+        const countrySlug = getCountrySlug(countryCode, lang);
+
+        if (locale && rolePath && countrySlug) {
+          countryUrls.push(`${SITE_URL}/${locale}/${rolePath}/${countrySlug}`);
+        }
+      }
+      if (countryUrls.length >= MAX_COUNTRY_URLS) break;
+    }
+
+    if (countryUrls.length === 0) {
+      console.log(`⏭️ Country listing: aucune URL générée pour profil ${profileId}`);
+      return;
+    }
+
+    console.log(`🌍 Country listing URLs à indexer pour ${profileId}: ${countryUrls.length}`);
+    countryUrls.forEach(url => console.log(`   → ${url}`));
+
+    // Submit to IndexNow and Google in parallel
+    const [indexNowResult, googleResult] = await Promise.all([
+      submitToIndexNow(countryUrls),
+      submitBatchToGoogleIndexing(countryUrls.slice(0, 10), 10),
+    ]);
+
+    await logIndexingEvent(eventType, profileId, countryUrls, {
+      success: indexNowResult.success,
+      urls: countryUrls,
+      googleSuccess: googleResult.successCount,
+      googleErrors: googleResult.errorCount,
+    });
+
+    console.log(`✅ Country listing indexé pour ${profileId}: IndexNow=${indexNowResult.success}, Google=${googleResult.successCount}/${countryUrls.slice(0, 10).length}`);
+  } catch (error) {
+    console.error(`❌ Erreur soumission country listing pour ${profileId}:`, error);
+  }
+}
 
 /**
  * Log l'événement d'indexation dans Firestore

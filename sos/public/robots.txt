@@ -230,6 +230,7 @@ Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfi
 Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp
 Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq
 Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding
+Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings
 
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA

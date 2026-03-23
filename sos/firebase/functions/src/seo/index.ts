@@ -26,6 +26,7 @@ export {
   sitemapHelp,    // Centre d'aide / Help Center articles
   sitemapFaq,     // FAQ individuels
   sitemapLanding,
+  sitemapCountryListings, // Country listing pages (avocats/expatriés par pays)
 } from './sitemaps';
 
 // Services (pour usage interne ou API)

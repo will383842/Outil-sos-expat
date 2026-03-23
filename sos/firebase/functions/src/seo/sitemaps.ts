@@ -673,3 +673,280 @@ ${hreflangs}
     }
   }
 );
+
+// ============================================
+// 🌍 SITEMAP: Country Listing Pages (avocats/expatriés par pays)
+// ============================================
+
+/** Normalize country names (French or other) to ISO 2-letter codes */
+const NAME_TO_ISO: Record<string, string> = {
+  // French names
+  'Thaïlande': 'TH', 'Algérie': 'DZ', 'Allemagne': 'DE', 'Angleterre': 'GB',
+  'Arabie Saoudite': 'SA', 'Argentine': 'AR', 'Australie': 'AU', 'Autriche': 'AT',
+  'Belgique': 'BE', 'Brésil': 'BR', 'Bulgarie': 'BG', 'Cambodge': 'KH',
+  'Cameroun': 'CM', 'Canada': 'CA', 'Chili': 'CL', 'Chine': 'CN',
+  'Chypre': 'CY', 'Colombie': 'CO', 'Corée du Sud': 'KR', 'Costa Rica': 'CR',
+  'Croatie': 'HR', 'Côte d\'Ivoire': 'CI', 'Danemark': 'DK', 'Égypte': 'EG',
+  'Émirats Arabes Unis': 'AE', 'Équateur': 'EC', 'Espagne': 'ES', 'Estonie': 'EE',
+  'États-Unis': 'US', 'Finlande': 'FI', 'France': 'FR', 'Grèce': 'GR',
+  'Guatemala': 'GT', 'Hongrie': 'HU', 'Inde': 'IN', 'Indonésie': 'ID',
+  'Irlande': 'IE', 'Israël': 'IL', 'Italie': 'IT', 'Japon': 'JP',
+  'Jordanie': 'JO', 'Kenya': 'KE', 'Liban': 'LB', 'Luxembourg': 'LU',
+  'Madagascar': 'MG', 'Malaisie': 'MY', 'Malte': 'MT', 'Maroc': 'MA',
+  'Maurice': 'MU', 'Mexique': 'MX', 'Monaco': 'MC', 'Norvège': 'NO',
+  'Nouvelle-Zélande': 'NZ', 'Ouganda': 'UG', 'Pakistan': 'PK', 'Panama': 'PA',
+  'Pays-Bas': 'NL', 'Pérou': 'PE', 'Philippines': 'PH', 'Pologne': 'PL',
+  'Portugal': 'PT', 'Qatar': 'QA', 'République Dominicaine': 'DO',
+  'République Tchèque': 'CZ', 'Roumanie': 'RO', 'Royaume-Uni': 'GB',
+  'Russie': 'RU', 'Rwanda': 'RW', 'Sénégal': 'SN', 'Singapour': 'SG',
+  'Slovaquie': 'SK', 'Slovénie': 'SI', 'Sri Lanka': 'LK', 'Suède': 'SE',
+  'Suisse': 'CH', 'Taïwan': 'TW', 'Tanzanie': 'TZ', 'Tunisie': 'TN',
+  'Turquie': 'TR', 'Ukraine': 'UA', 'Uruguay': 'UY', 'Vietnam': 'VN',
+  // English names (only those different from French)
+  'Thailand': 'TH', 'Algeria': 'DZ', 'Germany': 'DE', 'England': 'GB',
+  'Saudi Arabia': 'SA', 'Austria': 'AT', 'Belgium': 'BE', 'Brazil': 'BR',
+  'Bulgaria': 'BG', 'Cambodia': 'KH', 'Cameroon': 'CM', 'Chile': 'CL',
+  'China': 'CN', 'Cyprus': 'CY', 'Colombia': 'CO', 'South Korea': 'KR',
+  'Croatia': 'HR', 'Ivory Coast': 'CI', 'Denmark': 'DK', 'Egypt': 'EG',
+  'United Arab Emirates': 'AE', 'Ecuador': 'EC', 'Spain': 'ES', 'Estonia': 'EE',
+  'United States': 'US', 'Finland': 'FI', 'Greece': 'GR', 'Hungary': 'HU',
+  'India': 'IN', 'Indonesia': 'ID', 'Ireland': 'IE', 'Israel': 'IL',
+  'Italy': 'IT', 'Japan': 'JP', 'Jordan': 'JO', 'Lebanon': 'LB',
+  'Malaysia': 'MY', 'Malta': 'MT', 'Morocco': 'MA', 'Mauritius': 'MU',
+  'Mexico': 'MX', 'Norway': 'NO', 'New Zealand': 'NZ', 'Uganda': 'UG',
+  'Netherlands': 'NL', 'Peru': 'PE', 'Poland': 'PL',
+  'Dominican Republic': 'DO', 'Czech Republic': 'CZ', 'Romania': 'RO',
+  'United Kingdom': 'GB', 'Russia': 'RU', 'Senegal': 'SN', 'Singapore': 'SG',
+  'Slovakia': 'SK', 'Slovenia': 'SI', 'Sweden': 'SE', 'Switzerland': 'CH',
+  'Taiwan': 'TW', 'Tanzania': 'TZ', 'Tunisia': 'TN', 'Turkey': 'TR',
+};
+
+/** Country slug per language for the most common countries */
+const COUNTRY_SLUGS: Record<string, Record<string, string>> = {
+  TH: { fr: 'thailande', en: 'thailand', es: 'tailandia', de: 'thailand', pt: 'tailandia', ru: 'tailand', zh: 'taiguo', ar: 'تايلاند', hi: 'thailand' },
+  FR: { fr: 'france', en: 'france', es: 'francia', de: 'frankreich', pt: 'franca', ru: 'frantsiya', zh: 'faguo', ar: 'فرنسا', hi: 'france' },
+  US: { fr: 'etats-unis', en: 'united-states', es: 'estados-unidos', de: 'vereinigte-staaten', pt: 'estados-unidos', ru: 'ssha', zh: 'meiguo', ar: 'الولايات-المتحدة', hi: 'america' },
+  GB: { fr: 'royaume-uni', en: 'united-kingdom', es: 'reino-unido', de: 'vereinigtes-koenigreich', pt: 'reino-unido', ru: 'velikobritaniya', zh: 'yingguo', ar: 'المملكة-المتحدة', hi: 'britain' },
+  DE: { fr: 'allemagne', en: 'germany', es: 'alemania', de: 'deutschland', pt: 'alemanha', ru: 'germaniya', zh: 'deguo', ar: 'ألمانيا', hi: 'germany' },
+  ES: { fr: 'espagne', en: 'spain', es: 'espana', de: 'spanien', pt: 'espanha', ru: 'ispaniya', zh: 'xibanya', ar: 'إسبانيا', hi: 'spain' },
+  IT: { fr: 'italie', en: 'italy', es: 'italia', de: 'italien', pt: 'italia', ru: 'italiya', zh: 'yidali', ar: 'إيطاليا', hi: 'italy' },
+  PT: { fr: 'portugal', en: 'portugal', es: 'portugal', de: 'portugal', pt: 'portugal', ru: 'portugaliya', zh: 'putaoya', ar: 'البرتغال', hi: 'portugal' },
+  BR: { fr: 'bresil', en: 'brazil', es: 'brasil', de: 'brasilien', pt: 'brasil', ru: 'braziliya', zh: 'baxi', ar: 'البرازيل', hi: 'brazil' },
+  CA: { fr: 'canada', en: 'canada', es: 'canada', de: 'kanada', pt: 'canada', ru: 'kanada', zh: 'jianada', ar: 'كندا', hi: 'canada' },
+  AU: { fr: 'australie', en: 'australia', es: 'australia', de: 'australien', pt: 'australia', ru: 'avstraliya', zh: 'aodaliya', ar: 'أستراليا', hi: 'australia' },
+  JP: { fr: 'japon', en: 'japan', es: 'japon', de: 'japan', pt: 'japao', ru: 'yaponiya', zh: 'riben', ar: 'اليابان', hi: 'japan' },
+  CN: { fr: 'chine', en: 'china', es: 'china', de: 'china', pt: 'china', ru: 'kitay', zh: 'zhongguo', ar: 'الصين', hi: 'china' },
+  IN: { fr: 'inde', en: 'india', es: 'india', de: 'indien', pt: 'india', ru: 'indiya', zh: 'yindu', ar: 'الهند', hi: 'bharat' },
+  MA: { fr: 'maroc', en: 'morocco', es: 'marruecos', de: 'marokko', pt: 'marrocos', ru: 'marokko', zh: 'moluoge', ar: 'المغرب', hi: 'morocco' },
+  DZ: { fr: 'algerie', en: 'algeria', es: 'argelia', de: 'algerien', pt: 'argelia', ru: 'alzhir', zh: 'aerjiliya', ar: 'الجزائر', hi: 'algeria' },
+  TN: { fr: 'tunisie', en: 'tunisia', es: 'tunez', de: 'tunesien', pt: 'tunisia', ru: 'tunis', zh: 'tunisi', ar: 'تونس', hi: 'tunisia' },
+  SN: { fr: 'senegal', en: 'senegal', es: 'senegal', de: 'senegal', pt: 'senegal', ru: 'senegal', zh: 'saineijiaer', ar: 'السنغال', hi: 'senegal' },
+  CI: { fr: 'cote-d-ivoire', en: 'ivory-coast', es: 'costa-de-marfil', de: 'elfenbeinkueste', pt: 'costa-do-marfim', ru: 'kot-divuar', zh: 'ketediwa', ar: 'ساحل-العاج', hi: 'ivory-coast' },
+  CM: { fr: 'cameroun', en: 'cameroon', es: 'camerun', de: 'kamerun', pt: 'camaroes', ru: 'kamerun', zh: 'kamailong', ar: 'الكاميرون', hi: 'cameroon' },
+  BE: { fr: 'belgique', en: 'belgium', es: 'belgica', de: 'belgien', pt: 'belgica', ru: 'belgiya', zh: 'bilishi', ar: 'بلجيكا', hi: 'belgium' },
+  CH: { fr: 'suisse', en: 'switzerland', es: 'suiza', de: 'schweiz', pt: 'suica', ru: 'shveytsariya', zh: 'ruishi', ar: 'سويسرا', hi: 'switzerland' },
+  NL: { fr: 'pays-bas', en: 'netherlands', es: 'paises-bajos', de: 'niederlande', pt: 'paises-baixos', ru: 'niderlandy', zh: 'helan', ar: 'هولندا', hi: 'netherlands' },
+  MX: { fr: 'mexique', en: 'mexico', es: 'mexico', de: 'mexiko', pt: 'mexico', ru: 'meksika', zh: 'moxige', ar: 'المكسيك', hi: 'mexico' },
+  AE: { fr: 'emirats-arabes-unis', en: 'united-arab-emirates', es: 'emiratos-arabes-unidos', de: 'vereinigte-arabische-emirate', pt: 'emirados-arabes-unidos', ru: 'oae', zh: 'alianqiu', ar: 'الإمارات', hi: 'uae' },
+  SA: { fr: 'arabie-saoudite', en: 'saudi-arabia', es: 'arabia-saudita', de: 'saudi-arabien', pt: 'arabia-saudita', ru: 'saudovskaya-araviya', zh: 'shate', ar: 'السعودية', hi: 'saudi-arabia' },
+  EG: { fr: 'egypte', en: 'egypt', es: 'egipto', de: 'aegypten', pt: 'egito', ru: 'yegipet', zh: 'aiji', ar: 'مصر', hi: 'egypt' },
+  RU: { fr: 'russie', en: 'russia', es: 'rusia', de: 'russland', pt: 'russia', ru: 'rossiya', zh: 'eluosi', ar: 'روسيا', hi: 'russia' },
+  TR: { fr: 'turquie', en: 'turkey', es: 'turquia', de: 'tuerkei', pt: 'turquia', ru: 'turtsiya', zh: 'tuerqi', ar: 'تركيا', hi: 'turkey' },
+  PH: { fr: 'philippines', en: 'philippines', es: 'filipinas', de: 'philippinen', pt: 'filipinas', ru: 'filippiny', zh: 'feilvbin', ar: 'الفلبين', hi: 'philippines' },
+  ID: { fr: 'indonesie', en: 'indonesia', es: 'indonesia', de: 'indonesien', pt: 'indonesia', ru: 'indoneziya', zh: 'yindunixiya', ar: 'إندونيسيا', hi: 'indonesia' },
+  VN: { fr: 'vietnam', en: 'vietnam', es: 'vietnam', de: 'vietnam', pt: 'vietna', ru: 'vyetnam', zh: 'yuenan', ar: 'فيتنام', hi: 'vietnam' },
+  KH: { fr: 'cambodge', en: 'cambodia', es: 'camboya', de: 'kambodscha', pt: 'camboja', ru: 'kambodzha', zh: 'jianpuzhai', ar: 'كمبوديا', hi: 'cambodia' },
+  SG: { fr: 'singapour', en: 'singapore', es: 'singapur', de: 'singapur', pt: 'singapura', ru: 'singapur', zh: 'xinjiapo', ar: 'سنغافورة', hi: 'singapore' },
+  MY: { fr: 'malaisie', en: 'malaysia', es: 'malasia', de: 'malaysia', pt: 'malasia', ru: 'malayziya', zh: 'malaixiya', ar: 'ماليزيا', hi: 'malaysia' },
+  KR: { fr: 'coree-du-sud', en: 'south-korea', es: 'corea-del-sur', de: 'suedkorea', pt: 'coreia-do-sul', ru: 'yuzhnaya-koreya', zh: 'hanguo', ar: 'كوريا-الجنوبية', hi: 'south-korea' },
+  SE: { fr: 'suede', en: 'sweden', es: 'suecia', de: 'schweden', pt: 'suecia', ru: 'shvetsiya', zh: 'ruidian', ar: 'السويد', hi: 'sweden' },
+  NO: { fr: 'norvege', en: 'norway', es: 'noruega', de: 'norwegen', pt: 'noruega', ru: 'norvegiya', zh: 'nuowei', ar: 'النرويج', hi: 'norway' },
+  DK: { fr: 'danemark', en: 'denmark', es: 'dinamarca', de: 'daenemark', pt: 'dinamarca', ru: 'daniya', zh: 'danmai', ar: 'الدنمارك', hi: 'denmark' },
+  FI: { fr: 'finlande', en: 'finland', es: 'finlandia', de: 'finnland', pt: 'finlandia', ru: 'finlyandiya', zh: 'fenlan', ar: 'فنلندا', hi: 'finland' },
+  PL: { fr: 'pologne', en: 'poland', es: 'polonia', de: 'polen', pt: 'polonia', ru: 'polsha', zh: 'bolan', ar: 'بولندا', hi: 'poland' },
+  CZ: { fr: 'republique-tcheque', en: 'czech-republic', es: 'republica-checa', de: 'tschechien', pt: 'republica-checa', ru: 'chekhiya', zh: 'jieke', ar: 'التشيك', hi: 'czech-republic' },
+  GR: { fr: 'grece', en: 'greece', es: 'grecia', de: 'griechenland', pt: 'grecia', ru: 'gretsiya', zh: 'xila', ar: 'اليونان', hi: 'greece' },
+  HU: { fr: 'hongrie', en: 'hungary', es: 'hungria', de: 'ungarn', pt: 'hungria', ru: 'vengriya', zh: 'xiongyali', ar: 'المجر', hi: 'hungary' },
+  RO: { fr: 'roumanie', en: 'romania', es: 'rumania', de: 'rumaenien', pt: 'romenia', ru: 'rumyniya', zh: 'luomaniya', ar: 'رومانيا', hi: 'romania' },
+  AT: { fr: 'autriche', en: 'austria', es: 'austria', de: 'oesterreich', pt: 'austria', ru: 'avstriya', zh: 'aodili', ar: 'النمسا', hi: 'austria' },
+  IE: { fr: 'irlande', en: 'ireland', es: 'irlanda', de: 'irland', pt: 'irlanda', ru: 'irlandiya', zh: 'aierlan', ar: 'أيرلندا', hi: 'ireland' },
+  NZ: { fr: 'nouvelle-zelande', en: 'new-zealand', es: 'nueva-zelanda', de: 'neuseeland', pt: 'nova-zelandia', ru: 'novaya-zelandiya', zh: 'xinxilan', ar: 'نيوزيلندا', hi: 'new-zealand' },
+  IL: { fr: 'israel', en: 'israel', es: 'israel', de: 'israel', pt: 'israel', ru: 'izrail', zh: 'yiselie', ar: 'إسرائيل', hi: 'israel' },
+  LB: { fr: 'liban', en: 'lebanon', es: 'libano', de: 'libanon', pt: 'libano', ru: 'livan', zh: 'libanen', ar: 'لبنان', hi: 'lebanon' },
+  QA: { fr: 'qatar', en: 'qatar', es: 'catar', de: 'katar', pt: 'catar', ru: 'katar', zh: 'kataer', ar: 'قطر', hi: 'qatar' },
+  CO: { fr: 'colombie', en: 'colombia', es: 'colombia', de: 'kolumbien', pt: 'colombia', ru: 'kolumbiya', zh: 'gelunbiya', ar: 'كولومبيا', hi: 'colombia' },
+  AR: { fr: 'argentine', en: 'argentina', es: 'argentina', de: 'argentinien', pt: 'argentina', ru: 'argentina', zh: 'agenting', ar: 'الأرجنتين', hi: 'argentina' },
+  CL: { fr: 'chili', en: 'chile', es: 'chile', de: 'chile', pt: 'chile', ru: 'chili', zh: 'zhili', ar: 'تشيلي', hi: 'chile' },
+  PE: { fr: 'perou', en: 'peru', es: 'peru', de: 'peru', pt: 'peru', ru: 'peru', zh: 'bilu', ar: 'بيرو', hi: 'peru' },
+  KE: { fr: 'kenya', en: 'kenya', es: 'kenia', de: 'kenia', pt: 'quenia', ru: 'keniya', zh: 'kenniya', ar: 'كينيا', hi: 'kenya' },
+  MG: { fr: 'madagascar', en: 'madagascar', es: 'madagascar', de: 'madagaskar', pt: 'madagascar', ru: 'madagaskar', zh: 'madajiasijia', ar: 'مدغشقر', hi: 'madagascar' },
+  LU: { fr: 'luxembourg', en: 'luxembourg', es: 'luxemburgo', de: 'luxemburg', pt: 'luxemburgo', ru: 'lyuksemburg', zh: 'lusenbao', ar: 'لوكسمبورغ', hi: 'luxembourg' },
+  HR: { fr: 'croatie', en: 'croatia', es: 'croacia', de: 'kroatien', pt: 'croacia', ru: 'khorvatiya', zh: 'keluodiya', ar: 'كرواتيا', hi: 'croatia' },
+  PA: { fr: 'panama', en: 'panama', es: 'panama', de: 'panama', pt: 'panama', ru: 'panama', zh: 'banama', ar: 'بنما', hi: 'panama' },
+  CR: { fr: 'costa-rica', en: 'costa-rica', es: 'costa-rica', de: 'costa-rica', pt: 'costa-rica', ru: 'kosta-rika', zh: 'gesidalijia', ar: 'كوستاريكا', hi: 'costa-rica' },
+  EC: { fr: 'equateur', en: 'ecuador', es: 'ecuador', de: 'ecuador', pt: 'equador', ru: 'ekvador', zh: 'eguaduoer', ar: 'الإكوادور', hi: 'ecuador' },
+  LK: { fr: 'sri-lanka', en: 'sri-lanka', es: 'sri-lanka', de: 'sri-lanka', pt: 'sri-lanka', ru: 'shri-lanka', zh: 'sililanka', ar: 'سريلانكا', hi: 'sri-lanka' },
+  UA: { fr: 'ukraine', en: 'ukraine', es: 'ucrania', de: 'ukraine', pt: 'ucrania', ru: 'ukraina', zh: 'wukelan', ar: 'أوكرانيا', hi: 'ukraine' },
+};
+
+/** Role paths per language for lawyers */
+const LAWYER_PATHS: Record<string, string> = {
+  fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte',
+  pt: 'advogados', ru: 'advokaty', ch: 'lushi', ar: 'محامون', hi: 'vakil',
+};
+
+/** Role paths per language for expats */
+const EXPAT_PATHS: Record<string, string> = {
+  fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats',
+  pt: 'expatriados', ru: 'expaty', ch: 'haiwai', ar: 'مغتربون', hi: 'videshi',
+};
+
+/**
+ * Normalize a country value to ISO 2-letter code.
+ * Accepts ISO codes directly (2 letters) or full country names.
+ */
+function normalizeCountryToISO(country: string): string | null {
+  if (!country) return null;
+  const trimmed = country.trim();
+  // Already an ISO code (2 uppercase letters)
+  if (/^[A-Z]{2}$/.test(trimmed)) return trimmed;
+  // Try uppercase version
+  if (/^[a-z]{2}$/i.test(trimmed)) return trimmed.toUpperCase();
+  // Lookup in NAME_TO_ISO
+  return NAME_TO_ISO[trimmed] || null;
+}
+
+/**
+ * Get the country slug for a given ISO code and language.
+ * Falls back to lowercase ISO code if no specific slug exists.
+ */
+function getCountrySlug(isoCode: string, lang: string): string {
+  const slugs = COUNTRY_SLUGS[isoCode];
+  if (slugs && slugs[lang]) return slugs[lang];
+  // Fallback: lowercase ISO code
+  return isoCode.toLowerCase();
+}
+
+export const sitemapCountryListings = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    maxInstances: 5,
+    minInstances: 0,
+    invoker: 'public',
+    cors: true,
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
+  },
+  async (_req, res) => {
+    ensureInitialized();
+    try {
+      const db = admin.firestore();
+
+      // Query active, visible, approved providers
+      const snapshot = await db.collection('sos_profiles')
+        .where('isVisible', '==', true)
+        .where('isApproved', '==', true)
+        .where('isActive', '==', true)
+        .get();
+
+      // Build country×type matrix: { "TH_lawyer": true, "FR_expat": true, ... }
+      const countryTypeSet = new Set<string>();
+
+      snapshot.docs.forEach(doc => {
+        const profile = doc.data();
+        const providerType = profile.type as string | undefined; // 'lawyer' or 'expat'
+        if (!providerType || (providerType !== 'lawyer' && providerType !== 'expat')) return;
+
+        // Collect all countries for this provider
+        const countries: string[] = [];
+
+        // Primary country
+        if (profile.country) {
+          const iso = normalizeCountryToISO(profile.country as string);
+          if (iso) countries.push(iso);
+        }
+
+        // Operating countries (array of country names or ISO codes)
+        if (Array.isArray(profile.operatingCountries)) {
+          for (const c of profile.operatingCountries) {
+            const iso = normalizeCountryToISO(c as string);
+            if (iso) countries.push(iso);
+          }
+        }
+
+        // Deduplicate and add to set
+        const uniqueCountries = Array.from(new Set(countries));
+        for (const iso of uniqueCountries) {
+          countryTypeSet.add(`${iso}_${providerType}`);
+        }
+      });
+
+      const today = new Date().toISOString().split('T')[0];
+      const urlBlocks: string[] = [];
+
+      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
+
+      // For each country×type combination, generate URLs for all 9 languages
+      const entries = Array.from(countryTypeSet).sort();
+      let urlCount = 0;
+
+      entries.forEach(entry => {
+        const [isoCode, type] = entry.split('_');
+        const rolePaths = type === 'lawyer' ? LAWYER_PATHS : EXPAT_PATHS;
+
+        LANGUAGES.forEach(lang => {
+          const locale = getLocaleString(lang);
+          const rolePath = rolePaths[lang] || rolePaths['en'];
+          const countrySlug = getCountrySlug(isoCode, lang);
+          const url = `${SITE_URL}/${locale}/${rolePath}/${countrySlug}`;
+
+          // Generate hreflang alternates for all 9 languages
+          const hreflangs = LANGUAGES.map(hrefLang => {
+            const hrefLocale = getLocaleString(hrefLang);
+            const hrefRolePath = rolePaths[hrefLang] || rolePaths['en'];
+            const hrefCountrySlug = getCountrySlug(isoCode, hrefLang);
+            return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/${hrefRolePath}/${hrefCountrySlug}`)}"/>`;
+          }).join('\n');
+
+          // x-default = French
+          const defaultLocale = getLocaleString('fr');
+          const defaultRolePath = rolePaths['fr'] || rolePaths['en'];
+          const defaultCountrySlug = getCountrySlug(isoCode, 'fr');
+          const xDefaultUrl = `${SITE_URL}/${defaultLocale}/${defaultRolePath}/${defaultCountrySlug}`;
+
+          urlBlocks.push(`  <url>
+    <loc>${escapeXml(url)}</loc>
+${hreflangs}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <lastmod>${today}</lastmod>
+  </url>`);
+
+          urlCount++;
+        });
+      });
+
+      urlBlocks.push(`</urlset>`);
+      const xml = urlBlocks.join('\n');
+
+      res.set('Content-Type', 'application/xml; charset=utf-8');
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.status(200).send(xml);
+
+      console.log(`✅ Sitemap country listings: ${entries.length} country×type combos, ${urlCount} URLs generated from ${snapshot.docs.length} providers`);
+
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Erreur sitemap country listings:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
+      });
+      res.status(500).send(`Error generating country listings sitemap: ${err.message}`);
+    }
+  }
+);
