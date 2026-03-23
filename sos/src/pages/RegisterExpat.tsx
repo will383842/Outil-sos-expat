@@ -18,6 +18,7 @@ import { trackAdRegistration } from '../services/adAttributionService';
 import { getStoredReferralTracking } from '../hooks/useAffiliate';
 import { getStoredReferralCode, getBestAvailableReferralCode } from '../utils/referralStorage';
 
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import ExpatRegisterForm from '../components/registration/expat/ExpatRegisterForm';
 import { getTheme } from '../components/registration/shared/theme';
 import { WhatsAppGroupScreen } from '../whatsapp-groups';
@@ -165,6 +166,11 @@ const RegisterExpat: React.FC = () => {
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.register', defaultMessage: 'Register' }), url: '/register' },
+        { name: intl.formatMessage({ id: 'breadcrumb.registerExpat', defaultMessage: 'Expat Registration' }) }
+      ]} />
 
       <div className={`min-h-screen bg-gradient-to-b ${theme.bgGradient}`}>
         {/* Header */}

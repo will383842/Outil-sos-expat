@@ -23,6 +23,7 @@ import { useApp } from "../contexts/AppContext";
 import { logAnalyticsEvent, getAllReviews } from "../utils/firestore";
 import { getDateLocale } from "../utils/formatters";
 import { FormattedMessage, useIntl } from "react-intl";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { createMockReviewsData } from "@/constants/testimonials";
 import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 
@@ -691,6 +692,10 @@ const Testimonials: React.FC = () => {
           {JSON.stringify(jsonLdBreadcrumb)}
         </script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.testimonials', defaultMessage: 'Testimonials' }) }
+      ]} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <div

@@ -28,6 +28,7 @@ import { useApp } from "../contexts/AppContext";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useLocalePath } from "../multilingual-system";
 import { Helmet } from "react-helmet-async";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
 
 /* ============ Safe gtag (no any) ============ */
@@ -436,6 +437,10 @@ const Register: React.FC = () => {
           {JSON.stringify(structuredData)}
         </script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.register', defaultMessage: 'Register' }) }
+      ]} />
 
       <main className="min-h-screen bg-gray-950 py-4 px-3 sm:py-8 sm:px-4 lg:py-12 lg:px-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />

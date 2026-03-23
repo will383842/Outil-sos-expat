@@ -16,6 +16,7 @@ import { httpsCallable } from 'firebase/functions';
 import { db, functionsAffiliate } from '@/config/firebase';
 import Layout from '@/components/layout/Layout';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import { getLocaleString, getTranslatedRouteSlug } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import {
@@ -1153,6 +1154,10 @@ const PartnerLanding: React.FC = () => {
           {JSON.stringify(jsonLdHowTo)}
         </script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.partners', defaultMessage: 'Partners' }) }
+      ]} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <style>{globalStyles}</style>

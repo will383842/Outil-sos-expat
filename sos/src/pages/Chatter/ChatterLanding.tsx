@@ -20,6 +20,7 @@ import { Helmet } from 'react-helmet-async';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import FAQPageSchema from '@/components/seo/FAQPageSchema';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import { trackMetaViewContent } from '@/utils/metaPixel';
 import { logAnalyticsEvent } from '@/config/firebase';
 import HreflangLinks from '@/multilingual-system/components/HrefLang/HreflangLinks';
@@ -366,6 +367,10 @@ const ChatterLanding: React.FC = () => {
         <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.becomeChatter', defaultMessage: 'Become Chatter' }) }
+      ]} />
 
       <div className="chatter-landing bg-black text-white">
 

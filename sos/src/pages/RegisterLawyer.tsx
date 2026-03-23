@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import { useLocaleNavigate } from '../multilingual-system';
 import { Scale, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
@@ -159,6 +160,11 @@ const RegisterLawyer: React.FC = () => {
         <meta name="twitter:site" content="@SOSExpat" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.register', defaultMessage: 'Register' }), url: '/register' },
+        { name: intl.formatMessage({ id: 'breadcrumb.lawyerRegistration', defaultMessage: 'Lawyer Registration' }) }
+      ]} />
       <div className={`min-h-screen bg-gradient-to-b ${theme.bgGradient}`}>
         {/* Header */}
         <header className="pt-8 pb-6 px-4 text-center border-b border-white/10">

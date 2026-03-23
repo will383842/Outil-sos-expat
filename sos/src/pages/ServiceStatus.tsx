@@ -2,6 +2,7 @@ import React, { memo, useMemo } from 'react';
 import { CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import Layout from '../components/layout/Layout';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import { useApp } from '../contexts/AppContext';
 import { getDateLocale } from '../utils/formatters';
 
@@ -135,6 +136,10 @@ const ServiceStatus: React.FC = () => {
 
   return (
     <Layout>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.serviceStatus', defaultMessage: 'Service Status' }) }
+      ]} />
       <div className="min-h-screen bg-gray-950">
         {/* HERO */}
         <section className="relative pt-20 pb-14 overflow-hidden">

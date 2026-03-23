@@ -39,6 +39,7 @@ import { db } from "../config/firebase";
 import { getCollectionRest, runQueryRest } from "../utils/firestoreRestApi";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import { useApp } from "../contexts/AppContext";
 import { useWizard } from "../contexts/WizardContext";
 import GuidedFilterWizard from "../components/sos-call/GuidedFilterWizard";
@@ -3274,6 +3275,10 @@ const SOSCall: React.FC = () => {
           } vérifié disponible immédiatement. Consultation en ligne 24h/24, 7j/7 dans plus de 150 pays.`}
         canonicalUrl="/sos-appel"
       />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.sosCall', defaultMessage: 'Emergency Call' }) }
+      ]} />
 
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
         {/* 📱 HERO MOBILE COMPACT — supprimé pour gagner de l'espace mobile.

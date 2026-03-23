@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocalizedRedirect } from '../hooks/useLocalizedRedirect';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 
 /**
  * Cette page redirige automatiquement vers /sos-appel?type=expat
@@ -17,7 +18,12 @@ const ExpatCall: React.FC = () => {
 
   // Affichage minimal pendant la redirection (quasi invisible)
   return (
-    <div 
+    <>
+    <BreadcrumbSchema items={[
+      { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+      { name: intl.formatMessage({ id: 'breadcrumb.expatCall', defaultMessage: 'Expat Call' }) }
+    ]} />
+    <div
       className="min-h-screen flex items-center justify-center bg-gray-50"
       role="status"
       aria-live="polite"
@@ -33,6 +39,7 @@ const ExpatCall: React.FC = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 

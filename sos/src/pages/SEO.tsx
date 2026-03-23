@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useIntl } from 'react-intl';
 import { useApp } from '../contexts/AppContext';
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import { getDateLocale } from '../utils/formatters';
 import {
   Search,
@@ -132,6 +134,7 @@ const SEOService = {
 
 // Composant principal
 const SEO: React.FC = () => {
+  const intl = useIntl();
   const { language } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('keywords');
   const [metrics, setMetrics] = useState<SEOMetric[]>([]);
@@ -263,6 +266,10 @@ const SEO: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.seo', defaultMessage: 'SEO' }) }
+      ]} />
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

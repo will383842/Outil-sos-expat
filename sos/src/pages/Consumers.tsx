@@ -21,8 +21,11 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { useIntl } from "react-intl";
+import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 
 const Consumers: React.FC = () => {
+  const intl = useIntl();
   const { language } = useApp();
 
   const [content, setContent] = useState<string>("");
@@ -1076,6 +1079,10 @@ const defaultCh = `
 
   return (
     <Layout>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.consumers', defaultMessage: 'Consumers' }) }
+      ]} />
       <main className="min-h-screen bg-gray-950">
         {/* HERO */}
         <section className="relative pt-20 pb-16 overflow-hidden">

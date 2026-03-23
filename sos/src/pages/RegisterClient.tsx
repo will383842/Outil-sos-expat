@@ -22,6 +22,7 @@ import { generateEventIdForType } from '../utils/sharedEventId';
 import { getStoredReferralTracking, clearStoredReferral } from '../hooks/useAffiliate';
 import { getUnifiedReferralCode, clearUnifiedReferral } from '../utils/referralStorage';
 
+import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import ClientRegisterForm from '../components/registration/client/ClientRegisterForm';
 import { WhatsAppGroupScreen } from '../whatsapp-groups';
 
@@ -380,6 +381,11 @@ const RegisterClient: React.FC = () => {
         {/* JSON-LD */}
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: intl.formatMessage({ id: 'breadcrumb.register', defaultMessage: 'Register' }), url: '/register' },
+        { name: intl.formatMessage({ id: 'breadcrumb.registerClient', defaultMessage: 'Client Registration' }) }
+      ]} />
       <main
         className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-950 to-black flex flex-col items-center justify-start px-4 py-8 sm:py-12"
         role="main"
