@@ -27,6 +27,8 @@ import Layout from "../components/layout/Layout";
 import { useApp } from "../contexts/AppContext";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useLocalePath } from "../multilingual-system";
+import { Helmet } from "react-helmet-async";
+import { getLocaleString, getTranslatedRouteSlug } from "../multilingual-system/core/routing/localeRoutes";
 
 /* ============ Safe gtag (no any) ============ */
 type GtagFunction = (...args: unknown[]) => void;
@@ -366,160 +368,75 @@ const Register: React.FC = () => {
     []
   );
 
+  const SEO_BASE_URL = "https://sos-expat.com";
+
+  const canonicalUrl = useMemo(
+    () => `${SEO_BASE_URL}/${getLocaleString(language as any)}/${getTranslatedRouteSlug('register', language as any)}`,
+    [language]
+  );
+
+  const structuredData = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${canonicalUrl}#webpage`,
+    name: intl.formatMessage({ id: "meta.register.title" }),
+    description: intl.formatMessage({ id: "meta.register.description" }),
+    url: canonicalUrl,
+    inLanguage: language,
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": `${SEO_BASE_URL}#website`,
+      name: "SOS Expats",
+      url: SEO_BASE_URL,
+    },
+    mainEntity: {
+      "@type": "Thing",
+      name: intl.formatMessage({ id: "register.title" }),
+      description: intl.formatMessage({ id: "register.description" }),
+    },
+    potentialAction: {
+      "@type": "RegisterAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: canonicalUrl,
+        actionPlatform: ["MobileWebApp", "DesktopWebBrowser"],
+      },
+    },
+  }), [canonicalUrl, intl, language]);
+
   useEffect(() => {
-    const originalTitle = document.title;
-    document.title = intl.formatMessage({ id: "meta.register.title" });
-
-    const setMeta = (name: string, content: string, property = false) => {
-      const attr = property ? "property" : "name";
-      let el = document.querySelector(
-        `meta[${attr}="${name}"]`
-      ) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(attr, name);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-      return el;
-    };
-
-    setMeta(
-      "description",
-      intl.formatMessage({ id: "meta.register.description" })
-    );
-    setMeta(
-      "robots",
-      "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
-    );
-    setMeta("language", language);
-    setMeta("og:type", "website", true);
-    setMeta(
-      "og:title",
-      intl.formatMessage({ id: "meta.register.og.title" }),
-      true
-    );
-    setMeta(
-      "og:description",
-      intl.formatMessage({ id: "meta.register.og.description" }),
-      true
-    );
-    setMeta("og:url", window.location.origin + window.location.pathname, true);
-    setMeta("og:site_name", "SOS Expats", true);
-    setMeta("og:locale", language === "en" ? "en_US" : "fr_FR", true);
-    setMeta("twitter:card", "summary_large_image");
-    setMeta(
-      "twitter:title",
-      intl.formatMessage({ id: "meta.register.og.title" })
-    );
-    setMeta(
-      "twitter:description",
-      intl.formatMessage({ id: "meta.register.og.description" })
-    );
-
-    // Use proper locale format (lang-country) for all URLs
-    // IMPORTANT: Use production URL directly for canonical to ensure consistency
-    const baseUrl = import.meta.env.PROD ? 'https://sos-expat.com' : window.location.origin;
-    const localeMap: Record<string, { locale: string; slug: string }> = {
-      fr: { locale: 'fr-fr', slug: 'inscription' },
-      en: { locale: 'en-us', slug: 'register' },
-      es: { locale: 'es-es', slug: 'registro' },
-      de: { locale: 'de-de', slug: 'registrierung' },
-      ru: { locale: 'ru-ru', slug: 'registratsiya' },
-      pt: { locale: 'pt-pt', slug: 'cadastro' },
-      ch: { locale: 'zh-cn', slug: 'zhuce' },
-      ar: { locale: 'ar-sa', slug: 'التسجيل' },
-      hi: { locale: 'hi-in', slug: 'panjikaran' },
-    };
-
-    const currentLocaleData = localeMap[language] || localeMap.fr;
-    const canonicalUrl = `${baseUrl}/${currentLocaleData.locale}/${currentLocaleData.slug}`;
-
-    let canonical = document.querySelector(
-      'link[rel="canonical"]'
-    ) as HTMLLinkElement | null;
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.rel = "canonical";
-      document.head.appendChild(canonical);
-    }
-    canonical.href = canonicalUrl;
-
-    document
-      .querySelectorAll('link[rel="alternate"][hreflang]')
-      .forEach((n) => n.parentElement?.removeChild(n));
-
-    const alternates: Record<string, string> = {
-      fr: `${baseUrl}/fr-fr/inscription`,
-      en: `${baseUrl}/en-us/register`,
-      es: `${baseUrl}/es-es/registro`,
-      de: `${baseUrl}/de-de/registrierung`,
-      ru: `${baseUrl}/ru-ru/registratsiya`,
-      pt: `${baseUrl}/pt-pt/cadastro`,
-      'zh-Hans': `${baseUrl}/zh-cn/zhuce`,
-      ar: `${baseUrl}/ar-sa/التسجيل`,
-      hi: `${baseUrl}/hi-in/panjikaran`,
-    };
-
-    Object.entries(alternates).forEach(([langKey, url]) => {
-      const link = document.createElement("link");
-      link.rel = "alternate";
-      link.hreflang = langKey;
-      link.href = url;
-      document.head.appendChild(link);
-    });
-    const xDefault = document.createElement("link");
-    xDefault.rel = "alternate";
-    xDefault.hreflang = "x-default";
-    xDefault.href = alternates.fr;
-    document.head.appendChild(xDefault);
-
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "@id": `${canonicalUrl}#webpage`,
-      name: intl.formatMessage({ id: "meta.register.title" }),
-      description: intl.formatMessage({ id: "meta.register.description" }),
-      url: canonicalUrl,
-      inLanguage: language,
-      isPartOf: {
-        "@type": "WebSite",
-        "@id": `${window.location.origin}#website`,
-        name: "SOS Expats",
-        url: window.location.origin,
-      },
-      mainEntity: {
-        "@type": "Thing",
-        name: intl.formatMessage({ id: "register.title" }),
-        description: intl.formatMessage({ id: "register.description" }),
-      },
-      potentialAction: {
-        "@type": "RegisterAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: canonicalUrl,
-          actionPlatform: ["MobileWebApp", "DesktopWebBrowser"],
-        },
-      },
-    };
-
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.id = "structured-data-register";
-    script.textContent = JSON.stringify(structuredData);
-    document.head.appendChild(script);
-
     const gtag = getGtag();
     if (gtag) gtag("event", "register_page_view", { lang: language });
-
-    return () => {
-      document.title = originalTitle;
-      document.getElementById("structured-data-register")?.remove();
-    };
-  }, [intl, language]);
+  }, [language]);
 
   return (
     <Layout>
+      <Helmet>
+        <title>{intl.formatMessage({ id: "meta.register.title" })}</title>
+        <meta name="description" content={intl.formatMessage({ id: "meta.register.description" })} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={intl.formatMessage({ id: "meta.register.og.title" })} />
+        <meta property="og:description" content={intl.formatMessage({ id: "meta.register.og.description" })} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:site_name" content="SOS Expats" />
+        <meta property="og:locale" content={language === "en" ? "en_US" : "fr_FR"} />
+        <meta property="og:image" content={`${SEO_BASE_URL}/og-image.png`} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={intl.formatMessage({ id: "meta.register.og.title" })} />
+        <meta name="twitter:description" content={intl.formatMessage({ id: "meta.register.og.description" })} />
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+
       <main className="min-h-screen bg-gray-950 py-4 px-3 sm:py-8 sm:px-4 lg:py-12 lg:px-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-blue-500/20 pointer-events-none" />

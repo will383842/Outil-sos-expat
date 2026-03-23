@@ -385,9 +385,15 @@ const ChatterRegister: React.FC = () => {
         <html lang={langCode === 'ch' ? 'zh' : langCode} />
         <title>{intl.formatMessage({ id: 'chatter.register.seo.title', defaultMessage: 'Chatter Registration | SOS-Expat' })}</title>
         <meta name="description" content={intl.formatMessage({ id: 'chatter.register.seo.description', defaultMessage: 'Sign up as a Chatter to earn money helping travelers. Free registration.' })} />
-        <meta name="robots" content="noindex, nofollow" />
+        <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#991B1B" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="SOS-Expat" />
+        <meta property="og:title" content={intl.formatMessage({ id: 'chatter.register.seo.title', defaultMessage: 'Chatter Registration | SOS-Expat' })} />
+        <meta property="og:description" content={intl.formatMessage({ id: 'chatter.register.seo.description', defaultMessage: 'Sign up as a Chatter to earn money helping travelers. Free registration.' })} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@SOSExpat" />
       </Helmet>
 
       {success ? (

@@ -1,10 +1,12 @@
 // RegisterClient.tsx - Thin shell: SEO, auth orchestration, booking flow redirect
 // Form UI delegated to ClientRegisterForm
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useLocaleNavigate } from '../multilingual-system';
 import { useIntl } from 'react-intl';
+import { getLocaleString, getTranslatedRouteSlug } from '../multilingual-system/core/routing/localeRoutes';
 import Layout from '../components/layout/Layout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
@@ -93,97 +95,20 @@ const RegisterClient: React.FC = () => {
   }, []);
 
   // ===========================================================================
-  // SEO: Meta tags, JSON-LD, Canonical, Hreflang
+  // SEO: Canonical URL + JSON-LD structured data (rendered via Helmet in JSX)
   // ===========================================================================
-  useEffect(() => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sos-expat.com';
-    const currentUrl = `${baseUrl}${window.location.pathname}`;
+  const baseUrl = 'https://sos-expat.com';
+  const canonicalUrl = `${baseUrl}/${getLocaleString(currentLang as any)}/${getTranslatedRouteSlug('register-client', currentLang as any)}`;
 
-    const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, key);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
-
-    const setLink = (rel: string, href: string, hreflang?: string) => {
-      const selector = hreflang ? `link[rel="${rel}"][hreflang="${hreflang}"]` : `link[rel="${rel}"]`;
-      let el = document.querySelector(selector) as HTMLLinkElement | null;
-      if (!el) {
-        el = document.createElement('link');
-        el.rel = rel;
-        if (hreflang) el.hreflang = hreflang;
-        document.head.appendChild(el);
-      }
-      el.href = href;
-    };
-
-    document.title = intl.formatMessage({ id: 'registerClient.seo.title' });
-
-    // Basic meta
-    setMeta('name', 'description', intl.formatMessage({ id: 'registerClient.seo.description' }));
-    setMeta('name', 'keywords', intl.formatMessage({ id: 'registerClient.seo.keywords' }));
-    setMeta('name', 'robots', intl.formatMessage({ id: 'registerClient.seo.metaRobots' }));
-    setMeta('name', 'author', intl.formatMessage({ id: 'registerClient.seo.author' }));
-    setMeta('name', 'viewport', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
-    setMeta('name', 'language', currentLang);
-
-    // Open Graph
-    setMeta('property', 'og:type', 'website');
-    setMeta('property', 'og:site_name', intl.formatMessage({ id: 'registerClient.seo.siteName' }));
-    setMeta('property', 'og:title', intl.formatMessage({ id: 'registerClient.seo.ogTitle' }));
-    setMeta('property', 'og:description', intl.formatMessage({ id: 'registerClient.seo.ogDescription' }));
-    setMeta('property', 'og:url', currentUrl);
-    setMeta('property', 'og:image', `${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.ogImagePath' }).replace('{lang}', currentLang)}`);
-    setMeta('property', 'og:image:alt', intl.formatMessage({ id: 'registerClient.seo.imageAlt' }));
-    setMeta('property', 'og:image:width', intl.formatMessage({ id: 'registerClient.seo.ogImageWidth' }));
-    setMeta('property', 'og:image:height', intl.formatMessage({ id: 'registerClient.seo.ogImageHeight' }));
-    setMeta('property', 'og:locale', intl.formatMessage({ id: `registerClient.seo.localeCode.${currentLang}` }));
-
-    // Twitter Card
-    setMeta('name', 'twitter:card', 'summary_large_image');
-    setMeta('name', 'twitter:site', intl.formatMessage({ id: 'registerClient.seo.twitterHandle' }));
-    setMeta('name', 'twitter:creator', intl.formatMessage({ id: 'registerClient.seo.twitterHandle' }));
-    setMeta('name', 'twitter:title', intl.formatMessage({ id: 'registerClient.seo.twitterTitle' }));
-    setMeta('name', 'twitter:description', intl.formatMessage({ id: 'registerClient.seo.twitterDescription' }));
-    setMeta('name', 'twitter:image', `${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.twitterImagePath' }).replace('{lang}', currentLang)}`);
-    setMeta('name', 'twitter:image:alt', intl.formatMessage({ id: 'registerClient.seo.twitterImageAlt' }));
-
-    // Mobile app
-    setMeta('name', 'apple-mobile-web-app-capable', 'yes');
-    setMeta('name', 'apple-mobile-web-app-status-bar-style', intl.formatMessage({ id: 'registerClient.seo.appleStatusBar' }));
-    setMeta('name', 'mobile-web-app-capable', 'yes');
-    setMeta('name', 'theme-color', intl.formatMessage({ id: 'registerClient.seo.themeColor' }));
-
-    // AI crawlers
-    setMeta('name', 'googlebot', intl.formatMessage({ id: 'registerClient.seo.metaGooglebot' }));
-    setMeta('name', 'bingbot', intl.formatMessage({ id: 'registerClient.seo.metaBingbot' }));
-
-    // Geo
-    setMeta('name', 'geo.region', intl.formatMessage({ id: 'registerClient.seo.geoRegion' }));
-    setMeta('name', 'geo.placename', intl.formatMessage({ id: 'registerClient.seo.geoPlacename' }));
-
-    // Canonical
-    setLink('canonical', currentUrl);
-
-    // Hreflang
-    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
-    const langs = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ar', 'hi', 'zh'];
-    langs.forEach(lang => setLink('alternate', `${baseUrl}/${lang}/register`, lang));
-    setLink('alternate', `${baseUrl}/fr-fr/inscription`, 'x-default');
-
-    // JSON-LD
+  const structuredData = useMemo(() => {
     const availableLanguages = intl.formatMessage({ id: 'registerClient.seo.availableLanguages' }).split(', ');
-    const structuredData = {
+    return {
       '@context': 'https://schema.org',
       '@graph': [
         {
           '@type': intl.formatMessage({ id: 'registerClient.seo.schemaType.webpage' }),
-          '@id': `${currentUrl}#webpage`,
-          url: currentUrl,
+          '@id': `${canonicalUrl}#webpage`,
+          url: canonicalUrl,
           name: intl.formatMessage({ id: 'registerClient.seo.title' }),
           description: intl.formatMessage({ id: 'registerClient.seo.description' }),
           inLanguage: currentLang,
@@ -198,7 +123,7 @@ const RegisterClient: React.FC = () => {
             '@type': intl.formatMessage({ id: 'registerClient.seo.schemaType.breadcrumb' }),
             itemListElement: [
               { '@type': 'ListItem', position: 1, name: intl.formatMessage({ id: 'registerClient.seo.breadcrumb.home' }), item: baseUrl },
-              { '@type': 'ListItem', position: 2, name: intl.formatMessage({ id: 'registerClient.seo.breadcrumb.register' }), item: currentUrl },
+              { '@type': 'ListItem', position: 2, name: intl.formatMessage({ id: 'registerClient.seo.breadcrumb.register' }), item: canonicalUrl },
             ],
           },
         },
@@ -237,26 +162,13 @@ const RegisterClient: React.FC = () => {
           areaServed: { '@type': 'Country', name: intl.formatMessage({ id: 'registerClient.seo.areaServed' }) },
           availableChannel: {
             '@type': 'ServiceChannel',
-            serviceUrl: currentUrl,
+            serviceUrl: canonicalUrl,
             availableLanguage: { '@type': 'Language', name: currentLang },
           },
         },
       ],
     };
-
-    let scriptTag = document.querySelector('script[type="application/ld+json"]#register-client-jsonld') as HTMLScriptElement | null;
-    if (!scriptTag) {
-      scriptTag = document.createElement('script') as HTMLScriptElement;
-      scriptTag.type = 'application/ld+json';
-      scriptTag.id = 'register-client-jsonld';
-      document.head.appendChild(scriptTag);
-    }
-    scriptTag.textContent = JSON.stringify(structuredData);
-
-    return () => {
-      document.querySelector('#register-client-jsonld')?.remove();
-    };
-  }, [intl, currentLang]);
+  }, [intl, currentLang, canonicalUrl]);
 
   // ===========================================================================
   // EFFECTS
@@ -425,6 +337,49 @@ const RegisterClient: React.FC = () => {
   // ===========================================================================
   return (
     <Layout>
+      <Helmet>
+        <title>{intl.formatMessage({ id: 'registerClient.seo.title' })}</title>
+        <meta name="description" content={intl.formatMessage({ id: 'registerClient.seo.description' })} />
+        <meta name="keywords" content={intl.formatMessage({ id: 'registerClient.seo.keywords' })} />
+        <meta name="robots" content={intl.formatMessage({ id: 'registerClient.seo.metaRobots' })} />
+        <meta name="author" content={intl.formatMessage({ id: 'registerClient.seo.author' })} />
+        <meta name="language" content={currentLang} />
+        <meta name="googlebot" content={intl.formatMessage({ id: 'registerClient.seo.metaGooglebot' })} />
+        <meta name="bingbot" content={intl.formatMessage({ id: 'registerClient.seo.metaBingbot' })} />
+        <meta name="geo.region" content={intl.formatMessage({ id: 'registerClient.seo.geoRegion' })} />
+        <meta name="geo.placename" content={intl.formatMessage({ id: 'registerClient.seo.geoPlacename' })} />
+        <meta name="theme-color" content={intl.formatMessage({ id: 'registerClient.seo.themeColor' })} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content={intl.formatMessage({ id: 'registerClient.seo.appleStatusBar' })} />
+        <meta name="mobile-web-app-capable" content="yes" />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content={intl.formatMessage({ id: 'registerClient.seo.siteName' })} />
+        <meta property="og:title" content={intl.formatMessage({ id: 'registerClient.seo.ogTitle' })} />
+        <meta property="og:description" content={intl.formatMessage({ id: 'registerClient.seo.ogDescription' })} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.ogImagePath' }).replace('{lang}', currentLang)}`} />
+        <meta property="og:image:alt" content={intl.formatMessage({ id: 'registerClient.seo.imageAlt' })} />
+        <meta property="og:image:width" content={intl.formatMessage({ id: 'registerClient.seo.ogImageWidth' })} />
+        <meta property="og:image:height" content={intl.formatMessage({ id: 'registerClient.seo.ogImageHeight' })} />
+        <meta property="og:locale" content={intl.formatMessage({ id: `registerClient.seo.localeCode.${currentLang}` })} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content={intl.formatMessage({ id: 'registerClient.seo.twitterHandle' })} />
+        <meta name="twitter:creator" content={intl.formatMessage({ id: 'registerClient.seo.twitterHandle' })} />
+        <meta name="twitter:title" content={intl.formatMessage({ id: 'registerClient.seo.twitterTitle' })} />
+        <meta name="twitter:description" content={intl.formatMessage({ id: 'registerClient.seo.twitterDescription' })} />
+        <meta name="twitter:image" content={`${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.twitterImagePath' }).replace('{lang}', currentLang)}`} />
+        <meta name="twitter:image:alt" content={intl.formatMessage({ id: 'registerClient.seo.twitterImageAlt' })} />
+
+        {/* Canonical */}
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      </Helmet>
       <main
         className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-950 to-black flex flex-col items-center justify-start px-4 py-8 sm:py-12"
         role="main"

@@ -9,7 +9,7 @@ import { Helmet } from 'react-helmet-async';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocaleNavigate } from '@/multilingual-system';
 import { useSearchParams } from 'react-router-dom';
-import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
+import { getTranslatedRouteSlug, getLocaleString, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
@@ -302,9 +302,23 @@ const GroupAdminRegister: React.FC = () => {
       <Helmet>
         <html lang={langCode === 'ch' ? 'zh' : langCode} />
         <title>{intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Group Admin Registration | SOS-Expat' })}</title>
-        <meta name="description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn commissions per call referred from your group.' })} />
-        <meta name="robots" content="noindex, nofollow" />
+        <meta name="description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn commissions per call referred from your group. Free sign-up, no experience needed.' })} />
+        <meta name="robots" content="index, follow" />
         <meta name="theme-color" content="#312e81" />
+        <link rel="canonical" href={`https://sos-expat.com/${getLocaleString(langCode)}/${getTranslatedRouteSlug('groupadmin-register' as RouteKey, langCode)}`} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="SOS-Expat" />
+        <meta property="og:title" content={intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Group Admin Registration | SOS-Expat' })} />
+        <meta property="og:description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn commissions per call referred from your group. Free sign-up, no experience needed.' })} />
+        <meta property="og:url" content={`https://sos-expat.com/${getLocaleString(langCode)}/${getTranslatedRouteSlug('groupadmin-register' as RouteKey, langCode)}`} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@SOSExpat" />
+        <meta name="twitter:title" content={intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Group Admin Registration | SOS-Expat' })} />
+        <meta name="twitter:description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn commissions per call referred from your group. Free sign-up, no experience needed.' })} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-gray-950 to-black py-12 px-4">

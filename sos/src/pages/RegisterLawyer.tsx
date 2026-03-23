@@ -1,8 +1,9 @@
 // src/pages/RegisterLawyer.tsx
 // Thin shell: SEO (JSON-LD, meta, OG) + orchestration → LawyerRegisterForm wizard
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useLocaleNavigate } from '../multilingual-system';
 import { Scale, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
@@ -10,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { useIntl, FormattedMessage } from 'react-intl';
 import { useLocalePath } from '../multilingual-system';
+import { getLocaleString, getTranslatedRouteSlug } from '../multilingual-system/core/routing/localeRoutes';
 import useAntiBot from '@/hooks/useAntiBot';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration } from '../utils/metaPixel';
 import { trackAdRegistration } from '../services/adAttributionService';
@@ -55,138 +57,69 @@ const RegisterLawyer: React.FC = () => {
     trackMetaStartRegistration({ content_name: 'lawyer_registration' });
   }, []);
 
-  // SEO: meta tags, OG, JSON-LD
-  useEffect(() => {
-    const baseUrl = window.location.origin;
-    const currentUrl = `${baseUrl}${window.location.pathname}`;
+  // SEO: canonical URL + structured data (rendered via Helmet in JSX)
+  const canonicalUrl = useMemo(
+    () => `https://sos-expat.com/${getLocaleString(lang)}/${getTranslatedRouteSlug('register-lawyer', lang)}`,
+    [lang]
+  );
 
-    document.title = intl.formatMessage({ id: 'registerLawyer.seo.title' });
-
-    const ensureMeta = (name: string, content: string, prop = false) => {
-      const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`;
-      let el = document.querySelector(sel) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        if (prop) el.setAttribute('property', name);
-        else el.setAttribute('name', name);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
-
-    const ensureLink = (rel: string, href: string) => {
-      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
-      if (!el) {
-        el = document.createElement('link');
-        el.rel = rel;
-        document.head.appendChild(el);
-      }
-      el.href = href;
-    };
-
-    ensureMeta('description', intl.formatMessage({ id: 'registerLawyer.seo.description' }));
-    ensureMeta('keywords', intl.formatMessage({ id: 'registerLawyer.seo.keywords' }));
-    ensureMeta('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
-    ensureLink('canonical', currentUrl);
-
-    ensureMeta('og:title', intl.formatMessage({ id: 'registerLawyer.seo.ogTitle' }), true);
-    ensureMeta('og:description', intl.formatMessage({ id: 'registerLawyer.seo.ogDescription' }), true);
-    ensureMeta('og:type', 'website', true);
-    ensureMeta('og:url', currentUrl, true);
-    ensureMeta('og:image', `${baseUrl}/images/og-register-lawyer.jpg`, true);
-    ensureMeta('og:image:width', '1200', true);
-    ensureMeta('og:image:height', '630', true);
-    ensureMeta('og:image:alt', intl.formatMessage({ id: 'registerLawyer.seo.ogImageAlt' }), true);
-    ensureMeta('og:site_name', 'SOS-Expat', true);
-    ensureMeta('og:locale', lang === 'fr' ? 'fr_FR' : lang === 'en' ? 'en_US' : `${lang}_${lang.toUpperCase()}`, true);
-
-    ensureMeta('twitter:card', 'summary_large_image');
-    ensureMeta('twitter:title', intl.formatMessage({ id: 'registerLawyer.seo.twitterTitle' }));
-    ensureMeta('twitter:description', intl.formatMessage({ id: 'registerLawyer.seo.twitterDescription' }));
-    ensureMeta('twitter:image', `${baseUrl}/images/twitter-register-lawyer.jpg`);
-    ensureMeta('twitter:image:alt', intl.formatMessage({ id: 'registerLawyer.seo.twitterImageAlt' }));
-    ensureMeta('twitter:site', '@SOSExpat');
-    ensureMeta('twitter:creator', '@SOSExpat');
-
-    ensureMeta('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
-    ensureMeta('googlebot', 'index, follow');
-    ensureMeta('bingbot', 'index, follow');
-    ensureMeta('author', 'SOS-Expat');
-    ensureMeta('language', lang);
-    ensureMeta('geo.region', intl.formatMessage({ id: 'registerLawyer.seo.geoRegion' }));
-    ensureMeta('geo.placename', intl.formatMessage({ id: 'registerLawyer.seo.geoPlacename' }));
-
-    ensureMeta('apple-mobile-web-app-capable', 'yes');
-    ensureMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
-    ensureMeta('mobile-web-app-capable', 'yes');
-    ensureMeta('theme-color', '#4f46e5');
-
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@graph': [
-        {
-          '@type': 'WebPage',
-          '@id': currentUrl,
-          url: currentUrl,
-          name: intl.formatMessage({ id: 'registerLawyer.seo.title' }),
-          description: intl.formatMessage({ id: 'registerLawyer.seo.description' }),
-          inLanguage: lang,
-          isPartOf: {
-            '@type': 'WebSite',
-            '@id': `${baseUrl}/#website`,
-            url: baseUrl,
-            name: 'SOS-Expat',
-            publisher: { '@type': 'Organization', '@id': `${baseUrl}/#organization` },
-          },
-          breadcrumb: {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: intl.formatMessage({ id: 'registerLawyer.seo.breadcrumb.home' }), item: baseUrl },
-              { '@type': 'ListItem', position: 2, name: intl.formatMessage({ id: 'registerLawyer.seo.breadcrumb.register' }), item: currentUrl },
-            ],
-          },
-        },
-        {
-          '@type': 'Organization',
-          '@id': `${baseUrl}/#organization`,
+  const structuredData = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': canonicalUrl,
+        url: canonicalUrl,
+        name: intl.formatMessage({ id: 'registerLawyer.seo.title' }),
+        description: intl.formatMessage({ id: 'registerLawyer.seo.description' }),
+        inLanguage: lang,
+        isPartOf: {
+          '@type': 'WebSite',
+          '@id': 'https://sos-expat.com/#website',
+          url: 'https://sos-expat.com',
           name: 'SOS-Expat',
-          url: baseUrl,
-          logo: { '@type': 'ImageObject', url: `${baseUrl}/logo.png`, width: 512, height: 512 },
-          sameAs: [
-            'https://www.facebook.com/sosexpat',
-            'https://twitter.com/sosexpat',
-            'https://www.linkedin.com/company/sos-expat',
-            'https://www.instagram.com/sosexpat',
+          publisher: { '@type': 'Organization', '@id': 'https://sos-expat.com/#organization' },
+        },
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: intl.formatMessage({ id: 'registerLawyer.seo.breadcrumb.home' }), item: 'https://sos-expat.com' },
+            { '@type': 'ListItem', position: 2, name: intl.formatMessage({ id: 'registerLawyer.seo.breadcrumb.register' }), item: canonicalUrl },
           ],
-          contactPoint: {
-            '@type': 'ContactPoint',
-            contactType: intl.formatMessage({ id: 'registerLawyer.seo.contactType' }),
-            availableLanguage: ['fr', 'en', 'es', 'de', 'ru', 'hi', 'pt', 'zh', 'ar'],
-          },
         },
-        {
-          '@type': 'Service',
-          serviceType: intl.formatMessage({ id: 'registerLawyer.seo.serviceType' }),
-          provider: { '@type': 'Organization', '@id': `${baseUrl}/#organization` },
-          areaServed: { '@type': 'Country', name: intl.formatMessage({ id: 'registerLawyer.seo.areaServed' }) },
-          availableChannel: {
-            '@type': 'ServiceChannel',
-            serviceUrl: currentUrl,
-            servicePhone: intl.formatMessage({ id: 'registerLawyer.seo.servicePhone' }),
-            availableLanguage: { '@type': 'Language', name: lang },
-          },
+      },
+      {
+        '@type': 'Organization',
+        '@id': 'https://sos-expat.com/#organization',
+        name: 'SOS-Expat',
+        url: 'https://sos-expat.com',
+        logo: { '@type': 'ImageObject', url: 'https://sos-expat.com/logo.png', width: 512, height: 512 },
+        sameAs: [
+          'https://www.facebook.com/sosexpat',
+          'https://twitter.com/sosexpat',
+          'https://www.linkedin.com/company/sos-expat',
+          'https://www.instagram.com/sosexpat',
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: intl.formatMessage({ id: 'registerLawyer.seo.contactType' }),
+          availableLanguage: ['fr', 'en', 'es', 'de', 'ru', 'hi', 'pt', 'zh', 'ar'],
         },
-      ],
-    };
-
-    let scriptTag = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement | null;
-    if (!scriptTag) {
-      scriptTag = document.createElement('script') as HTMLScriptElement;
-      scriptTag.type = 'application/ld+json';
-      document.head.appendChild(scriptTag);
-    }
-    scriptTag.textContent = JSON.stringify(jsonLd);
-  }, [intl, lang]);
+      },
+      {
+        '@type': 'Service',
+        serviceType: intl.formatMessage({ id: 'registerLawyer.seo.serviceType' }),
+        provider: { '@type': 'Organization', '@id': 'https://sos-expat.com/#organization' },
+        areaServed: { '@type': 'Country', name: intl.formatMessage({ id: 'registerLawyer.seo.areaServed' }) },
+        availableChannel: {
+          '@type': 'ServiceChannel',
+          serviceUrl: canonicalUrl,
+          servicePhone: intl.formatMessage({ id: 'registerLawyer.seo.servicePhone' }),
+          availableLanguage: { '@type': 'Language', name: lang },
+        },
+      },
+    ],
+  }), [intl, lang, canonicalUrl]);
 
   // WhatsApp screen after registration
   if (showWhatsApp && user && registrationData) {
@@ -203,6 +136,29 @@ const RegisterLawyer: React.FC = () => {
 
   return (
     <Layout>
+      <Helmet>
+        <title>{intl.formatMessage({ id: 'registerLawyer.seo.title' })}</title>
+        <meta name="description" content={intl.formatMessage({ id: 'registerLawyer.seo.description' })} />
+        <meta name="keywords" content={intl.formatMessage({ id: 'registerLawyer.seo.keywords' })} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={intl.formatMessage({ id: 'registerLawyer.seo.ogTitle' })} />
+        <meta property="og:description" content={intl.formatMessage({ id: 'registerLawyer.seo.ogDescription' })} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content="https://sos-expat.com/images/og-register-lawyer.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={intl.formatMessage({ id: 'registerLawyer.seo.ogImageAlt' })} />
+        <meta property="og:site_name" content="SOS-Expat" />
+        <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : lang === 'en' ? 'en_US' : `${lang}_${lang.toUpperCase()}`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={intl.formatMessage({ id: 'registerLawyer.seo.twitterTitle' })} />
+        <meta name="twitter:description" content={intl.formatMessage({ id: 'registerLawyer.seo.twitterDescription' })} />
+        <meta name="twitter:image" content="https://sos-expat.com/images/twitter-register-lawyer.jpg" />
+        <meta name="twitter:site" content="@SOSExpat" />
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      </Helmet>
       <div className={`min-h-screen bg-gradient-to-b ${theme.bgGradient}`}>
         {/* Header */}
         <header className="pt-8 pb-6 px-4 text-center border-b border-white/10">

@@ -1102,17 +1102,24 @@ async function handleRequest(request, env, ctx) {
 
     const locale = `${urlLang}-${urlCountry}`;
 
-    if (VALID_LANGS.has(urlLang) && !VALID_LOCALE_SET.has(locale)) {
-      // Invalid locale combo (e.g., fr-us, de-br, ch-us) -> redirect to default
-      // 'ch' is internal code for Chinese, URL should use 'zh'
+    // Canonical locales — only these should be served directly (matches sitemap + hreflang)
+    // Non-canonical variants (pt-br, en-gb, fr-ca, etc.) must redirect to canonical
+    // to avoid Puppeteer redirect chains that cause SSR timeouts → 5xx
+    const CANONICAL_LOCALES = new Set([
+      'fr-fr', 'en-us', 'es-es', 'de-de', 'ru-ru',
+      'pt-pt', 'zh-cn', 'ar-sa', 'hi-in',
+    ]);
+
+    if (VALID_LANGS.has(urlLang) && !CANONICAL_LOCALES.has(locale)) {
+      // Non-canonical locale (pt-br, en-gb, fr-ca, etc.) or invalid combo -> redirect to canonical
       const canonicalLang = urlLang === 'ch' ? 'zh' : urlLang;
       const defaultCountry = LANG_TO_DEFAULT_COUNTRY[urlLang] || urlLang;
       const correctLocale = `${canonicalLang}-${defaultCountry}`;
       const redirectUrl = `${url.origin}/${correctLocale}${restPath}${url.search}`;
-      console.log(`[WORKER] Invalid locale redirect: ${pathname} -> /${correctLocale}${restPath}`);
+      console.log(`[WORKER] Locale canonicalization: ${pathname} -> /${correctLocale}${restPath}`);
       return new Response(null, {
         status: 301,
-        headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true' },
+        headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
       });
     }
 
@@ -1271,9 +1278,11 @@ async function handleRequest(request, env, ctx) {
       ssrUrl.searchParams.set('url', request.url);
       ssrUrl.searchParams.set('bot', botName);
 
-      // Fetch from the Cloud Function
+      // Fetch from the Cloud Function — redirect: 'manual' prevents following
+      // redirects that loop back to sos-expat.com (SSR error handler does res.redirect(302, fullUrl))
       const ssrResponse = await fetch(ssrUrl.toString(), {
         method: 'GET',
+        redirect: 'manual',
         headers: {
           'User-Agent': userAgent,
           'X-Original-URL': request.url,
@@ -1285,6 +1294,27 @@ async function handleRequest(request, env, ctx) {
           'Accept-Language': request.headers.get('Accept-Language') || 'en',
         },
       });
+
+      // If SSR returns a redirect (302) or 5xx, fall back to SPA
+      // This prevents: 1) redirect loops (SSR error → 302 to same domain → Worker → SSR → loop)
+      //                2) 5xx errors propagated to Google
+      if (ssrResponse.status >= 300) {
+        console.warn(`[WORKER] SSR returned ${ssrResponse.status} for ${pathname}, falling back to SPA`);
+        const fallbackUrl = new URL(pathname, PAGES_ORIGIN);
+        fallbackUrl.search = url.search;
+        const spaResponse = await fetch(fallbackUrl.toString(), {
+          method: request.method,
+          headers: request.headers,
+        });
+        const spaHeaders = new Headers(spaResponse.headers);
+        spaHeaders.set('X-SSR-Fallback', 'true');
+        spaHeaders.set('X-SSR-Original-Status', String(ssrResponse.status));
+        return new Response(spaResponse.body, {
+          status: spaResponse.ok || spaResponse.status === 404 ? 200 : spaResponse.status,
+          statusText: 'OK',
+          headers: spaHeaders,
+        });
+      }
 
       // Clone the response and add custom headers
       const newHeaders = new Headers(ssrResponse.headers);

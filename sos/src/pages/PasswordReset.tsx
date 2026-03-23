@@ -589,7 +589,7 @@ const PasswordReset: React.FC = () => {
     // Basic SEO with i18n
     updateMetaTag('description', metaData.description);
     updateMetaTag('keywords', metaData.keywords);
-    updateMetaTag('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    updateMetaTag('robots', 'noindex, nofollow');
     updateMetaTag('author', 'SOS Expats');
     updateMetaTag('language', currentLang);
     

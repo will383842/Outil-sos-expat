@@ -7,6 +7,8 @@
 # NOTE: Removed server-side 301 for "/" because it strips query params (?ref=CODE).
 # The SPA handles root redirect via RootLocaleRedirect in App.tsx,
 # which preserves query params and hash fragments.
+# Google may consolidate /en-us with /fr-fr (x-default) — this is normal
+# for multilingual sites and does not affect search ranking per language.
 # =============================================
 
 # =============================================
@@ -275,6 +277,31 @@
 /privacy-policy /en-us/privacy-policy 301
 /cookies /fr-fr/cookies 301
 /register-expat /fr-fr/inscription/expatrie 301
+
+# =============================================
+# Legacy help center slug redirects (old format -> current)
+# hilfe-center was old German slug, now hilfezentrum
+# centr-pomoshi was old Russian slug, now tsentr-pomoshchi
+# =============================================
+/de-de/hilfe-center/* /de-de/hilfezentrum/:splat 301
+/de-de/hilfe-center /de-de/hilfezentrum 301
+
+# Cross-locale help center slug fixes (Russian slug under wrong locale)
+/en-us/centr-pomoshi/* /ru-ru/tsentr-pomoshchi/:splat 301
+/en-us/tsentr-pomoshchi/* /ru-ru/tsentr-pomoshchi/:splat 301
+/fr-fr/centr-pomoshi/* /ru-ru/tsentr-pomoshchi/:splat 301
+/ar-sa/centr-pomoshi/* /ru-ru/tsentr-pomoshchi/:splat 301
+/es-es/centr-pomoshi/* /ru-ru/tsentr-pomoshchi/:splat 301
+/de-de/centr-pomoshi/* /ru-ru/tsentr-pomoshchi/:splat 301
+
+# Legacy provider profile formats (lawyer-md, lawyer-np -> providers list)
+/en-us/lawyer-md/* /en-us/providers 301
+/en-us/lawyer-np/* /en-us/providers 301
+/en-us/expat-md/* /en-us/providers 301
+/en-us/expat-np/* /en-us/providers 301
+/es-es/abogado-np/* /es-es/proveedores 301
+/fr-fr/avocat-np/* /fr-fr/prestataires 301
+/de-de/anwalt-np/* /de-de/anbieter 301
 
 # =============================================
 # Static tools — served as-is, NOT through the SPA
