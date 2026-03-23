@@ -1622,23 +1622,49 @@ const ProviderProfile: React.FC = () => {
     });
   }, [realProviderId]); // Only fire once per provider load
 
-  // Fetch related providers in the same country with the same type
+  // Fetch related providers: same country (primary + operatingCountries) and same type
   useEffect(() => {
     if (!provider?.country || !realProviderId) return;
     const fetchRelated = async () => {
       try {
-        const q = query(
-          collection(db, "sos_profiles"),
+        const providerType = provider.type || "lawyer";
+        const baseFilters = [
           where("isApproved", "==", true),
           where("isVisible", "==", true),
           where("isActive", "==", true),
-          where("type", "==", provider.type || "lawyer"),
+          where("type", "==", providerType),
+        ];
+
+        // Query 1: Same primary country
+        const q1 = query(
+          collection(db, "sos_profiles"),
+          ...baseFilters,
           where("country", "==", provider.country),
           limit(7)
         );
-        const snap = await getDocs(q);
-        const results = snap.docs
-          .map(d => ({ ...d.data(), id: d.id } as SosProfile))
+
+        // Query 2: Operating in this country (operatingCountries array-contains)
+        const q2 = query(
+          collection(db, "sos_profiles"),
+          ...baseFilters,
+          where("operatingCountries", "array-contains", provider.country),
+          limit(7)
+        );
+
+        const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+
+        // Merge & deduplicate results
+        const seen = new Set<string>();
+        const merged: SosProfile[] = [];
+        for (const snap of [snap1, snap2]) {
+          for (const d of snap.docs) {
+            if (seen.has(d.id)) continue;
+            seen.add(d.id);
+            merged.push({ ...d.data(), id: d.id } as SosProfile);
+          }
+        }
+
+        const results = merged
           .filter(p => p.id !== realProviderId && p.uid !== realProviderId)
           .slice(0, 6);
         setRelatedProviders(results);
@@ -3561,8 +3587,18 @@ const ProviderProfile: React.FC = () => {
               {relatedProviders.map((rp) => {
                 const rpName = rp.firstName ? `${rp.firstName} ${(rp.lastName || '').charAt(0)}.` : 'Expert';
                 const rpPhoto = rp.profilePhoto || rp.photoURL || rp.avatar || '/icons/default-avatar.png';
-                const rpUrl = `/${getLocaleString(currentLang as any)}/provider/${rp.shortId || rp.id}`;
+                // Use SEO slugs when available, fallback to /provider/{id}
+                const rpSlugs = (rp as any).slugs as Record<string, string> | undefined;
+                const rpSlug = rpSlugs?.[currentLang || 'fr'] || rpSlugs?.['fr'];
+                const rpUrl = rpSlug
+                  ? `/${rpSlug}`
+                  : `/${getLocaleString(currentLang as any)}/provider/${rp.shortId || rp.id}`;
                 const rpRating = typeof rp.rating === 'number' ? rp.rating.toFixed(1) : null;
+                // Translate specialties using locale-aware labels
+                const specLocale = (currentLang === 'ch' ? 'zh' : currentLang || 'fr') as any;
+                const translatedSpecs = (rp.specialties || [])
+                  .slice(0, 2)
+                  .map(s => getSpecialtyLabel(s, specLocale));
                 return (
                   <a
                     key={rp.id}
@@ -3581,7 +3617,7 @@ const ProviderProfile: React.FC = () => {
                         <p className="text-sm text-yellow-400">★ {rpRating}</p>
                       )}
                       <p className="text-xs text-gray-400 truncate">
-                        {(rp.specialties || []).slice(0, 2).join(', ')}
+                        {translatedSpecs.join(', ')}
                       </p>
                     </div>
                   </a>
