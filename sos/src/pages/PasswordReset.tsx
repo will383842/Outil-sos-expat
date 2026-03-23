@@ -485,7 +485,7 @@ const PasswordReset: React.FC = () => {
         "target": canonicalUrl,
         "object": {
           "@type": "Person",
-          "name": "Utilisateur SOS Expats"
+          "name": t('reset.user') || "SOS Expat User"
         }
       },
       "breadcrumb": {
@@ -494,13 +494,13 @@ const PasswordReset: React.FC = () => {
           {
             "@type": "ListItem",
             "position": 1,
-            "name": "Accueil",
+            "name": t('breadcrumb.home') || "Home",
             "item": baseUrl
           },
           {
             "@type": "ListItem",
             "position": 2,
-            "name": "Connexion",
+            "name": t('breadcrumb.login') || "Login",
             "item": `${baseUrl}/${currentData.locale}/connexion`
           },
           {

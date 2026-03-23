@@ -51,11 +51,11 @@ const HowItWorksPage: React.FC = () => {
         description={pageDescription}
         canonicalUrl={`/${language}/how-it-works`}
         ogType="website"
-        keywords="comment ça marche, expatrié, avocat, consultation juridique, aide expatriation"
+        keywords={intl.formatMessage({ id: 'howItWorks.seo.keywords', defaultMessage: 'how it works, expat, lawyer, legal consultation, expatriation help' })}
         locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
         structuredData={structuredData}
         contentType="HowTo"
-        aiSummary="Guide étape par étape expliquant comment utiliser SOS Expat pour obtenir une aide juridique rapide"
+        aiSummary={intl.formatMessage({ id: 'howItWorks.seo.aiSummary', defaultMessage: 'Step-by-step guide explaining how to use SOS Expat to get quick legal help' })}
         expertise="Legal Services, Expat Assistance"
         trustworthiness="verified_lawyers, 197_countries, 24_7_availability"
         contentQuality="high"

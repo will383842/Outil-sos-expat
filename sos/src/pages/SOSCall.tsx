@@ -3261,18 +3261,14 @@ const SOSCall: React.FC = () => {
         </script>
       </Helmet>
       <SEOHead
-        title={`${selectedType === "lawyer"
-            ? "Avocats"
-            : selectedType === "expat"
-              ? "Expatriés"
-              : "Experts"
-          } disponibles | SOS Expat & Travelers`}
-        description={`Trouvez un ${selectedType === "lawyer"
-            ? "avocat"
-            : selectedType === "expat"
-              ? "expatrié"
-              : "expert"
-          } vérifié disponible immédiatement. Consultation en ligne 24h/24, 7j/7 dans plus de 150 pays.`}
+        title={intl.formatMessage(
+          { id: 'sosCall.seo.pageTitle', defaultMessage: '{providerType} available | SOS Expat & Travelers' },
+          { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyers' : selectedType === "expat" ? 'sosCall.seo.type.expats' : 'sosCall.seo.type.experts', defaultMessage: selectedType === "lawyer" ? 'Lawyers' : selectedType === "expat" ? 'Expats' : 'Experts' }) }
+        )}
+        description={intl.formatMessage(
+          { id: 'sosCall.seo.pageDescription', defaultMessage: 'Find a verified {providerType} available now. Online consultation 24/7 in over 150 countries.' },
+          { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyer' : selectedType === "expat" ? 'sosCall.seo.type.expat' : 'sosCall.seo.type.expert', defaultMessage: selectedType === "lawyer" ? 'lawyer' : selectedType === "expat" ? 'expat' : 'expert' }) }
+        )}
         canonicalUrl="/sos-appel"
       />
       <BreadcrumbSchema items={[

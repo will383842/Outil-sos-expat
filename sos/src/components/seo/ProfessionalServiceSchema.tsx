@@ -99,7 +99,7 @@ const ProfessionalServiceSchema: React.FC<ProfessionalServiceSchemaProps> = ({
       ...(provider.specialties && provider.specialties.length > 0 && {
         hasOfferCatalog: {
           '@type': 'OfferCatalog',
-          name: isLawyer ? 'Services juridiques' : 'Services de conseil',
+          name: isLawyer ? 'Legal Services' : 'Consulting Services',
           itemListElement: provider.specialties.map((specialty, index) => ({
             '@type': 'Offer',
             '@id': `${currentUrl}#service-${index}`,
@@ -204,7 +204,7 @@ export const generateProviderSchema = (
         name: provider.name,
         description: provider.description,
         image: provider.image,
-        jobTitle: isLawyer ? 'Avocat' : 'Consultant',
+        jobTitle: isLawyer ? 'Lawyer' : 'Consultant',
         ...(provider.specialties && {
           knowsAbout: provider.specialties
         }),
@@ -219,7 +219,7 @@ export const generateProviderSchema = (
       {
         '@type': isLawyer ? 'LegalService' : 'ProfessionalService',
         '@id': `${currentUrl}#service`,
-        name: `${provider.name} - ${isLawyer ? 'Services juridiques' : 'Services de conseil'}`,
+        name: `${provider.name} - ${isLawyer ? 'Legal Services' : 'Consulting Services'}`,
         provider: {
           '@id': `${currentUrl}#person`
         },

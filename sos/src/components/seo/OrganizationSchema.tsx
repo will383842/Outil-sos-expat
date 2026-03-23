@@ -77,7 +77,7 @@ export interface OrganizationSchemaProps {
  */
 const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
   name = 'SOS Expat & Travelers',
-  description = 'Assistance juridique et expatriation en urgence - Service d\'aide rapide 24/7 pour expatriés et voyageurs dans 197 pays. Avocats et experts expatriés disponibles immédiatement.',
+  description = 'Emergency legal assistance for expats - Fast 24/7 help service for expatriates and travelers in 197 countries. Lawyers and expat experts available immediately.',
   legalName = 'SOS Expat & Travelers',
   logo = 'https://sos-expat.com/sos-logo.webp',
   url = 'https://sos-expat.com',
@@ -198,8 +198,8 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
       graph.push({
         '@type': 'ProfessionalService',
         '@id': `${baseUrl}/#service`,
-        name: 'Services d\'assistance expatriés',
-        description: 'Services d\'assistance juridique et conseil pour expatriés et voyageurs - Consultations en ligne avec avocats et experts',
+        name: 'Expat Assistance Services',
+        description: 'Legal assistance and consulting services for expatriates and travelers - Online consultations with lawyers and experts',
         url: baseUrl,
         priceRange: '€€',
         provider: {

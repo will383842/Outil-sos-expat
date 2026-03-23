@@ -404,11 +404,11 @@ const Pricing: React.FC = () => {
         description={pageDescription}
         canonicalUrl={`/${language}/pricing`}
         ogType="website"
-        keywords="tarifs, prix, consultation avocat expatrié, aide juridique expatriation, consultation en ligne"
+        keywords={intl.formatMessage({ id: 'pricing.seo.keywords', defaultMessage: 'pricing, rates, expat lawyer consultation, legal help expatriation, online consultation' })}
         locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
         structuredData={pricingStructuredData}
         contentType="PriceSpecification"
-        aiSummary="Tarifs transparents pour les consultations avec avocats et expatriés aidants sur SOS Expat"
+        aiSummary={intl.formatMessage({ id: 'pricing.seo.aiSummary', defaultMessage: 'Transparent pricing for consultations with lawyers and expat helpers on SOS Expat' })}
         expertise="Legal Services, International Consultations"
         trustworthiness="transparent_pricing, no_hidden_fees, secure_payment"
         contentQuality="high"

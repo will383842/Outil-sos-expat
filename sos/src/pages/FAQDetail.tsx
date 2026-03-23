@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useIntl } from 'react-intl';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '../multilingual-system';
 import { collection, query, where, getDocs, getDoc, doc, updateDoc, increment, orderBy, limit } from 'firebase/firestore';
@@ -24,6 +25,7 @@ interface FAQ {
 }
 
 const FAQDetail: React.FC = () => {
+  const intl = useIntl();
   const params = useParams<{ slug: string }>();
   const location = useLocation();
   const navigate = useLocaleNavigate();
@@ -654,8 +656,8 @@ const FAQDetail: React.FC = () => {
       {/* BreadcrumbList JSON-LD */}
       <BreadcrumbSchema
         items={generateBreadcrumbs.faqDetail(
-          'Accueil',
-          'FAQ',
+          intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }),
+          intl.formatMessage({ id: 'breadcrumb.faq', defaultMessage: 'FAQ' }),
           question,
           displayFaq.slug[langCode] || displayFaq.slug['fr']
         )}

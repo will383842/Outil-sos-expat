@@ -82,7 +82,7 @@ export interface LocalBusinessSchemaProps {
  */
 const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
   name = 'SOS Expat & Travelers',
-  description = 'Service d\'assistance juridique et conseil pour expatriés et voyageurs - Consultations en ligne avec avocats et experts dans 197 pays. Disponible 24/7.',
+  description = 'Legal assistance and consulting service for expatriates and travelers - Online consultations with lawyers and experts in 197 countries. Available 24/7.',
   businessType = 'ProfessionalService',
   url = 'https://sos-expat.com',
   logo = 'https://sos-expat.com/sos-logo.webp',
