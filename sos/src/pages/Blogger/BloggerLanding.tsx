@@ -214,16 +214,16 @@ const BloggerLanding: React.FC = () => {
     return str ? ` (${str})` : '';
   };
 
-  // Calculator — logarithmique pour les articles (5 → 10 000)
+  // Calculator — logarithmique pour les articles (5 → 500)
   const [sliderArticlesPos, setSliderArticlesPos] = useState(30); // position 0-100
-  const calcArticles = Math.max(5, Math.round(5 * Math.pow(2000, sliderArticlesPos / 100)));
-  const [calcVisitsPerArticle, setCalcVisitsPerArticle] = useState(10);
-  const [calcConversionRate, setCalcConversionRate] = useState(1.0);
+  const calcArticles = Math.max(5, Math.round(5 * Math.pow(100, sliderArticlesPos / 100)));
+  const [calcVisitsPerArticle, setCalcVisitsPerArticle] = useState(5);
+  const [calcConversionRate, setCalcConversionRate] = useState(0.2);
   const monthlyVisits = calcArticles * calcVisitsPerArticle * 30;
   const monthlyClients = Math.floor((monthlyVisits * calcConversionRate) / 100);
   const calcAvgRate = Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200);
   const monthlyEarnings = monthlyClients * calcAvgRate;
-  const formatArticles = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : `${n}`;
+  const formatArticles = (n: number) => `${n}`;
 
   const registerRoute = `/${getTranslatedRouteSlug('blogger-register' as RouteKey, langCode)}`;
   const goToRegister = () => navigate(registerRoute);
@@ -246,7 +246,7 @@ const BloggerLanding: React.FC = () => {
   // FAQ
   const faqs = [
     { question: intl.formatMessage({ id: 'blogger.faq.q1', defaultMessage: "What exactly do I have to do as a Blogger Partner?" }), answer: intl.formatMessage({ id: 'blogger.faq.a1', defaultMessage: "Insert our widget into your existing or new articles. Your readers click it when they need any kind of help abroad (visa, admin, emergencies, practical questions...). Each call made via your link earns you {clientCallMax}$. That's it!" }, { clientCallMax: rates.clientCallMax }) },
-    { question: intl.formatMessage({ id: 'blogger.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'blogger.faq.a2', defaultMessage: "It depends on your blog traffic. 10 clients = {tenClients}$. 50 clients = {fiftyClients}$. Some bloggers earn $1000-3000/month simply by having the widget in hundreds of articles." }, { tenClients: 10 * rates.clientCallMax, fiftyClients: 50 * rates.clientCallMax }) },
+    { question: intl.formatMessage({ id: 'blogger.faq.q2', defaultMessage: "How much can I realistically earn?" }), answer: intl.formatMessage({ id: 'blogger.faq.a2', defaultMessage: "It depends on your blog traffic. 10 clients = {tenClients}$. 50 clients = {fiftyClients}$. Most active bloggers earn $50-300/month with the widget, and more by recruiting providers." }, { tenClients: 10 * rates.clientCallMax, fiftyClients: 50 * rates.clientCallMax }) },
     { question: intl.formatMessage({ id: 'blogger.faq.q3', defaultMessage: "What is an 'expat helper'?" }), answer: intl.formatMessage({ id: 'blogger.faq.a3', defaultMessage: "Expat helpers are experienced expats who provide practical advice and guidance. They're not lawyers, but they know the local system well and can help with everyday questions about visas, administration, housing, etc." }) },
     { question: intl.formatMessage({ id: 'blogger.faq.q4', defaultMessage: "What resources do I get?" }), answer: intl.formatMessage({ id: 'blogger.faq.a4', defaultMessage: "You get ready-to-use widgets (copy-paste HTML), ready-to-copy texts in 9 languages, HD logos, banners in multiple sizes, and a complete integration guide to add the widget to all your articles in minutes." }) },
     { question: intl.formatMessage({ id: 'blogger.faq.q5', defaultMessage: "How and when do I get paid?" }), answer: intl.formatMessage({ id: 'blogger.faq.a5', defaultMessage: "Withdraw anytime. We support Wise, PayPal, Mobile Money, and bank transfers. Payments processed within 48 hours." }) },
@@ -325,7 +325,7 @@ const BloggerLanding: React.FC = () => {
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
               <span><FormattedMessage id="blogger.hero.new.line1" defaultMessage="Gagnez jusqu'à" /></span>{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400">
-                <FormattedMessage id="blogger.hero.new.amount" defaultMessage="5000$+/mois" />
+                <FormattedMessage id="blogger.hero.new.amount" defaultMessage="500$/mois" />
               </span>
               <br />
               <span className="text-gray-200"><FormattedMessage id="blogger.hero.new.line2" defaultMessage="avec votre blog" /></span>
@@ -359,8 +359,8 @@ const BloggerLanding: React.FC = () => {
                   <span className="absolute -top-2 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full">
                     <FormattedMessage id="blogger.hero.hot" defaultMessage="🔥 HOT" />
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.providerCallMax * 30 * 10}</div>
-                  <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source3" defaultMessage="avec 10 partenaires" /></div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.providerCallMax * 10 * 3}</div>
+                  <div className="text-xs sm:text-sm"><FormattedMessage id="blogger.hero.source3" defaultMessage="avec 3 partenaires" /></div>
                 </div>
               </div>
 
@@ -369,8 +369,8 @@ const BloggerLanding: React.FC = () => {
                 <p className="text-xs sm:text-sm">
                   <FormattedMessage
                     id="blogger.hero.partnerExample"
-                    defaultMessage="💡 1 prestataire recruté = 30 appels/mois × ${providerCallMax}$ = {total}/mois passifs à vie !"
-                    values={{ providerCallMax: rates.providerCallMax, total: <span className="text-purple-400 font-bold">${rates.providerCallMax * 30}</span> }}
+                    defaultMessage="💡 1 prestataire recruté = 10 appels/mois × ${providerCallMax}$ = {total}/mois passifs !"
+                    values={{ providerCallMax: rates.providerCallMax, total: <span className="text-purple-400 font-bold">${rates.providerCallMax * 10}</span> }}
                   />
                 </p>
               </div>
@@ -824,7 +824,7 @@ const BloggerLanding: React.FC = () => {
                   </label>
                   <input type="range" min="0" max="100" value={sliderArticlesPos} onChange={(e) => setSliderArticlesPos(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
                   <div className="flex justify-between text-xs mt-1 text-gray-400">
-                    <span>5</span><span>100</span><span>1 000</span><span>10K</span>
+                    <span>5</span><span>50</span><span>200</span><span>500</span>
                   </div>
                 </div>
 
@@ -836,8 +836,8 @@ const BloggerLanding: React.FC = () => {
                     </span>
                     <span className="text-purple-400 font-bold text-base">{calcVisitsPerArticle}</span>
                   </label>
-                  <input type="range" min="1" max="500" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
-                  <div className="flex justify-between text-xs mt-1 text-gray-400"><span>1</span><span>100</span><span>250</span><span>500</span></div>
+                  <input type="range" min="1" max="50" value={calcVisitsPerArticle} onChange={(e) => setCalcVisitsPerArticle(parseInt(e.target.value))} className="w-full appearance-none cursor-pointer" />
+                  <div className="flex justify-between text-xs mt-1 text-gray-400"><span>1</span><span>10</span><span>25</span><span>50</span></div>
                 </div>
 
                 {/* Conversion rate — précision 0.1% */}
@@ -848,8 +848,8 @@ const BloggerLanding: React.FC = () => {
                     </span>
                     <span className="text-purple-400 font-bold text-base">{calcConversionRate.toFixed(1)}%</span>
                   </label>
-                  <input type="range" min="0.1" max="5" step="0.1" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full appearance-none cursor-pointer" />
-                  <div className="flex justify-between text-xs mt-1 text-gray-400"><span>0.1%</span><span>1%</span><span>2.5%</span><span>5%</span></div>
+                  <input type="range" min="0.05" max="0.5" step="0.05" value={calcConversionRate} onChange={(e) => setCalcConversionRate(parseFloat(e.target.value))} className="w-full appearance-none cursor-pointer" />
+                  <div className="flex justify-between text-xs mt-1 text-gray-400"><span>0.05%</span><span>0.1%</span><span>0.25%</span><span>0.5%</span></div>
                 </div>
 
                 {/* Results */}
@@ -1147,10 +1147,10 @@ const BloggerLanding: React.FC = () => {
               {/* Example */}
               <div className="mt-6 bg-white/10 border rounded-2xl p-4 text-center">
                 <p className="font-semibold mb-1 text-sm sm:text-base">
-                  <FormattedMessage id="blogger.passive.example" defaultMessage="Exemple : 3 prestataires recrutés, 20 appels/mois chacun" />
+                  <FormattedMessage id="blogger.passive.example" defaultMessage="Exemple : 3 prestataires recrutés, 10 appels/mois chacun" />
                 </p>
                 <p className="text-xl sm:text-2xl font-black text-green-400">
-                  = ${rates.providerCallMax * 60}/mois <FormattedMessage id="blogger.passive.passive" defaultMessage="de revenus passifs par mois !" />
+                  = ${rates.providerCallMax * 30}/mois <FormattedMessage id="blogger.passive.passive" defaultMessage="de revenus passifs par mois !" />
                 </p>
               </div>
             </div>

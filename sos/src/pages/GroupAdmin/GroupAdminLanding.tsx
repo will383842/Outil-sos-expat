@@ -105,11 +105,11 @@ const globalStyles = `
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #22c55e;
+    background: #3b82f6;
     cursor: pointer;
     margin-top: -7px;
     border: 2px solid rgba(0,0,0,0.15);
-    box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.25);
   }
   .groupadmin-landing input[type="range"]::-moz-range-track {
     height: 8px;
@@ -120,10 +120,10 @@ const globalStyles = `
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #22c55e;
+    background: #3b82f6;
     cursor: pointer;
     border: 2px solid rgba(0,0,0,0.15);
-    box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.25);
   }
 `;
 
@@ -216,8 +216,8 @@ const GroupAdminLanding: React.FC = () => {
   };
 
   // Calculateur
-  const [groupMembers, setGroupMembers] = useState(10000);
-  const [conversionRate, setConversionRate] = useState(2); // % de membres qui appellent par mois
+  const [groupMembers, setGroupMembers] = useState(5000);
+  const [conversionRate, setConversionRate] = useState(0.3); // % de membres qui appellent par mois
 
   const registerRoute = `/${getTranslatedRouteSlug('groupadmin-register' as RouteKey, langCode)}`;
   const handleRegisterClick = () => {
@@ -299,23 +299,24 @@ const GroupAdminLanding: React.FC = () => {
               <FormattedMessage id="groupAdmin.landing.badge" defaultMessage="For Group & Community Admins" />
             </div>
 
-            {/* Headline ULTRA-VENDEUR avec focus COMMUNAUTÉ */}
+            {/* Headline */}
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <span className="text-gray-200"><FormattedMessage id="groupAdmin.landing.hero.new.line1" defaultMessage="Transformez votre communauté en" /></span>
+              <span className="text-gray-200"><FormattedMessage id="groupAdmin.landing.hero.new.line1" defaultMessage="Monétisez votre communauté" /></span>
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 animate-pulse-glow-blue">
-                <FormattedMessage id="groupAdmin.landing.hero.new.amount" defaultMessage="MACHINE À CASH" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400">
+                <FormattedMessage id="groupAdmin.landing.hero.new.amount" defaultMessage="200-500$/mois" />
               </span>
               <br />
-              <span className="text-xl sm:text-3xl lg:text-4xl text-amber-400"><FormattedMessage id="groupAdmin.landing.hero.new.line2" defaultMessage="5000-15000$/mois possible" /></span>
+              <span className="text-xl sm:text-3xl lg:text-4xl text-amber-400"><FormattedMessage id="groupAdmin.landing.hero.new.line2" defaultMessage="en aidant vos membres" /></span>
             </h1>
 
-            {/* Subtitle avec PREUVE SOCIALE RÉALISTE */}
-            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl p-4 sm:p-5 mb-5 sm:mb-8 max-w-3xl mx-auto">
-              <p className="text-base sm:text-lg mb-3 leading-relaxed font-semibold text-green-300">
+            {/* Subtitle */}
+            <div className="bg-white/10 border rounded-2xl p-4 sm:p-5 mb-5 sm:mb-8 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg mb-3 leading-relaxed">
                 <FormattedMessage
                   id="groupAdmin.landing.hero.new.subtitle"
-                  defaultMessage="📱 Votre communauté = votre mine d'or ! Plus elle est active, plus vous gagnez."
+                  defaultMessage="Vos membres ont besoin d'aide à l'étranger. Partagez votre lien, ils économisent {discount} par appel."
+                  values={{ discount: rates.discountLabel }}
                 />
               </p>
               <div className="grid sm:grid-cols-2 gap-3 text-sm sm:text-base">
@@ -324,7 +325,7 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.hero.example.small" defaultMessage="Groupe moyen (5K membres)" />
                   </div>
                   <div className="text-white/90">
-                    <FormattedMessage id="groupAdmin.landing.hero.example.small.calc" defaultMessage="50-100 appels/mois = {low}-{high}$" values={{ low: 50 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200), high: 100 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200) }} />
+                    <FormattedMessage id="groupAdmin.landing.hero.example.small.calc" defaultMessage="5-15 appels/mois = {low}-{high}$" values={{ low: 5 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200), high: 15 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200) }} />
                   </div>
                 </div>
                 <div className="bg-white/10 rounded-lg p-2 sm:p-3">
@@ -332,69 +333,58 @@ const GroupAdminLanding: React.FC = () => {
                     <FormattedMessage id="groupAdmin.landing.hero.example.large" defaultMessage="Gros groupe (20K+ membres)" />
                   </div>
                   <div className="text-white/90">
-                    <FormattedMessage id="groupAdmin.landing.hero.example.large.calc" defaultMessage="200-500 appels/mois = {low}-{high}$" values={{ low: 200 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200), high: 500 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200) }} />
+                    <FormattedMessage id="groupAdmin.landing.hero.example.large.calc" defaultMessage="20-50 appels/mois = {low}-{high}$" values={{ low: 20 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200), high: 50 * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200) }} />
                   </div>
                 </div>
               </div>
-              <p className="text-sm sm:text-base text-white/90 mt-3 text-center">
-                <FormattedMessage
-                  id="groupAdmin.landing.hero.new.subtitle2"
-                  defaultMessage="💡 Vos membres économisent {discount}/appel = Win-win total !"
-                  values={{ discount: rates.discountLabel }}
-                />
-              </p>
             </div>
 
-            {/* 3 sources de revenus ULTRA VENDEUSES */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-2 border-amber-500/30 rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-5xl mx-auto shadow-2xl">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <span className="text-2xl" aria-hidden="true">💰</span>
-                <p className="text-center text-lg sm:text-xl font-black text-amber-400">
-                  <FormattedMessage id="groupAdmin.landing.hero.sources" defaultMessage="3 SOURCES DE REVENUS ILLIMITÉES" />
-                </p>
-                <span className="text-2xl" aria-hidden="true">💰</span>
-              </div>
+            {/* 3 sources de revenus */}
+            <div className="bg-white/10 border rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-5xl mx-auto">
+              <p className="text-center text-lg sm:text-xl font-bold mb-4">
+                <FormattedMessage id="groupAdmin.landing.hero.sources" defaultMessage="3 sources de revenus" />
+              </p>
 
               <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
-                {/* Source 1 : Appels membres - VALORISÉ */}
-                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/15 border-2 border-green-500/30 rounded-xl p-4 sm:p-5 text-center hover:scale-105 transition-transform">
+                {/* Source 1 : Appels membres */}
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border rounded-xl p-4 sm:p-5 text-center">
                   <div className="text-xs uppercase font-bold text-green-400 mb-2">
-                    <FormattedMessage id="groupAdmin.landing.hero.source1.label" defaultMessage="📱 VOS MEMBRES" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source1.label" defaultMessage="Vos membres" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black text-green-400 mb-1">{Math.round(rates.clientCallExpat / 100) * 100}-{rates.clientCallMax * 600}$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.clientCallRange}</div>
                   <div className="text-sm font-semibold mb-2">
-                    <FormattedMessage id="groupAdmin.landing.hero.source1.subtitle" defaultMessage="par mois" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source1.subtitle" defaultMessage="par appel" />
                   </div>
                   <div className="text-xs opacity-80">
                     <FormattedMessage id="groupAdmin.landing.hero.source1.detail" defaultMessage="{clientCallRange}$/appel × votre trafic" values={{ clientCallRange: rates.clientCallRange }} />
                   </div>
                 </div>
 
-                {/* Source 2 : Recruter autres admins - VALORISÉ */}
-                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/15 border-2 border-blue-500/30 rounded-xl p-4 sm:p-5 text-center hover:scale-105 transition-transform">
+                {/* Source 2 : Recruter autres admins */}
+                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border rounded-xl p-4 sm:p-5 text-center">
                   <div className="text-xs uppercase font-bold text-blue-400 mb-2">
-                    <FormattedMessage id="groupAdmin.landing.hero.source2.label" defaultMessage="👥 ÉQUIPE D'ADMINS" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.label" defaultMessage="Recruter des admins" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black text-blue-400 mb-1">500-5000$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.providerCallRange}+{rates.n1}$</div>
                   <div className="text-sm font-semibold mb-2">
-                    <FormattedMessage id="groupAdmin.landing.hero.source2.subtitle" defaultMessage="bonus de recrutement" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source2.subtitle" defaultMessage="activation + par appel" />
                   </div>
                   <div className="text-xs opacity-80">
                     <FormattedMessage id="groupAdmin.landing.hero.source2.detail" defaultMessage="{providerCallRange}$ activation + {n1}$/appel membres" values={{ providerCallRange: rates.providerCallRange, n1: rates.n1 }} />
                   </div>
                 </div>
 
-                {/* Source 3 : Partenaires (Avocats/Aidants) - AVEC TAG HOT */}
-                <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/15 border-2 border-purple-500/30 rounded-xl p-4 sm:p-5 text-center relative hover:scale-105 transition-transform">
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg animate-pulse">
-                    <FormattedMessage id="groupAdmin.landing.hero.hot" defaultMessage="🔥 PASSIF" />
+                {/* Source 3 : Partenaires (Avocats/Aidants) */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border rounded-xl p-4 sm:p-5 text-center relative">
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    <FormattedMessage id="groupAdmin.landing.hero.hot" defaultMessage="Passif" />
                   </span>
                   <div className="text-xs uppercase font-bold text-purple-400 mb-2 mt-1">
-                    <FormattedMessage id="groupAdmin.landing.hero.source3.label" defaultMessage="⚖️ AVOCATS/AIDANTS" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.label" defaultMessage="Avocats/Aidants" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black text-purple-400 mb-1">{rates.providerCallMax * 180}-{rates.providerCallMax * 1800}$</div>
+                  <div className="text-2xl sm:text-3xl font-black mb-1">${rates.providerCallRange}</div>
                   <div className="text-sm font-semibold mb-2">
-                    <FormattedMessage id="groupAdmin.landing.hero.source3.subtitle" defaultMessage="100% passifs" />
+                    <FormattedMessage id="groupAdmin.landing.hero.source3.subtitle" defaultMessage="par appel reçu" />
                   </div>
                   <div className="text-xs opacity-80">
                     <FormattedMessage id="groupAdmin.landing.hero.source3.detail" defaultMessage="{providerCall}$ (avocat) / {providerCallExp}$ (aidant) × partenaires" values={{ providerCall: rates.providerCall, providerCallExp: rates.providerCallExp }} />
@@ -402,51 +392,44 @@ const GroupAdminLanding: React.FC = () => {
                 </div>
               </div>
 
-              {/* EXEMPLES CONCRETS ULTRA VENDEURS */}
-              <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/30 rounded-xl p-4">
+              {/* Exemples concrets */}
+              <div className="bg-white/10 border rounded-xl p-4">
                 <div className="grid sm:grid-cols-2 gap-3">
-                  {/* Exemple 1 : Équipe d'admins */}
-                  <div className="bg-black/30 rounded-lg p-3 border border-blue-500/20">
+                  {/* Exemple 1 : Recruter admins */}
+                  <div className="bg-black/20 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">👥</span>
                       <span className="font-bold text-sm text-blue-400">
-                        <FormattedMessage id="groupAdmin.landing.hero.example1.title" defaultMessage="Équipe de 20 admins" />
+                        <FormattedMessage id="groupAdmin.landing.hero.example1.title" defaultMessage="3 admins recrutés" />
                       </span>
                     </div>
                     <div className="text-xs opacity-90 mb-1">
-                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="20 admins × {providerCallRange}$ activation + {n1}$/appel membres" values={{ providerCallRange: rates.providerCallRange, n1: rates.n1 }} />
+                      <FormattedMessage id="groupAdmin.landing.hero.example1.calc" defaultMessage="3 admins × {providerCallRange}$ activation + {n1}$/appel" values={{ providerCallRange: rates.providerCallRange, n1: rates.n1 }} />
                     </div>
-                    <div className="text-2xl font-black text-green-400">
-                      = {20 * rates.providerCallMax + 200 * rates.n1}$ <span className="text-sm font-normal text-white/80">
-                        <FormattedMessage id="groupAdmin.landing.hero.example1.frequency" defaultMessage="bonus" />
+                    <div className="text-xl font-black text-green-400">
+                      = {3 * rates.providerCallMax + 30 * rates.n1}$ <span className="text-sm font-normal text-white/80">
+                        <FormattedMessage id="groupAdmin.landing.hero.example1.frequency" defaultMessage="bonus + récurrent" />
                       </span>
                     </div>
                   </div>
 
                   {/* Exemple 2 : Partenaires passifs */}
-                  <div className="bg-black/30 rounded-lg p-3 border border-purple-500/20">
+                  <div className="bg-black/20 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">⚖️</span>
                       <span className="font-bold text-sm text-purple-400">
-                        <FormattedMessage id="groupAdmin.landing.hero.example2.title" defaultMessage="10 avocats partenaires" />
+                        <FormattedMessage id="groupAdmin.landing.hero.example2.title" defaultMessage="3 avocats partenaires" />
                       </span>
                     </div>
                     <div className="text-xs opacity-90 mb-1">
-                      <FormattedMessage id="groupAdmin.landing.hero.example2.calc" defaultMessage="300 appels/mois × {providerCall}$" values={{ providerCall: rates.providerCall }} />
+                      <FormattedMessage id="groupAdmin.landing.hero.example2.calc" defaultMessage="30 appels/mois × {providerCallRange}$" values={{ providerCallRange: rates.providerCallRange }} />
                     </div>
-                    <div className="text-2xl font-black text-green-400">
-                      = {300 * rates.providerCall}$ <span className="text-sm font-normal text-white/80">
+                    <div className="text-xl font-black text-green-400">
+                      = ${30 * rates.providerCallMax} <span className="text-sm font-normal text-white/80">
                         <FormattedMessage id="groupAdmin.landing.hero.example2.frequency" defaultMessage="/mois passifs" />
                       </span>
                     </div>
                   </div>
-                </div>
-
-                {/* Message motivant */}
-                <div className="mt-3 text-center">
-                  <p className="text-sm font-bold text-amber-300">
-                    <FormattedMessage id="groupAdmin.landing.hero.motivation" defaultMessage="🎯 Combinez les 3 sources = 5000-15000$/mois possible !" />
-                  </p>
                 </div>
               </div>
             </div>
@@ -688,12 +671,12 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 3 - CALCULATEUR DE REVENUS (ULTRA VENDEUR)
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-black via-green-950/20 to-gray-950" aria-labelledby="section-calculator">
+        <section className="section-content bg-gradient-to-b from-black via-blue-950/20 to-gray-950" aria-labelledby="section-calculator">
           <div className="max-w-7xl mx-auto">
 
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
-              <span className="inline-block bg-green-500/20 text-green-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base lg:text-lg font-bold border mb-4 sm:mb-6">
-                <FormattedMessage id="groupAdmin.landing.calc.badge" defaultMessage="💰 Calculateur de revenus" />
+              <span className="inline-block bg-blue-500/20 text-blue-300 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base lg:text-lg font-bold border border-blue-500/30 mb-4 sm:mb-6">
+                <FormattedMessage id="groupAdmin.landing.calc.badge" defaultMessage="Calculateur de revenus" />
               </span>
               <h2 id="section-calculator" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-white mb-3 sm:mb-4">
                 <FormattedMessage id="groupAdmin.landing.calc.title" defaultMessage="Combien pouvez-vous gagner ?" />
@@ -704,7 +687,7 @@ const GroupAdminLanding: React.FC = () => {
             </div>
 
             <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+              <div className="bg-gradient-to-br from-blue-500/15 to-indigo-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
 
                 {/* Sliders */}
                 <div className="space-y-5 mb-6">
@@ -714,15 +697,15 @@ const GroupAdminLanding: React.FC = () => {
                       <FormattedMessage
                         id="groupAdmin.landing.calc.members"
                         defaultMessage="Membres dans votre groupe : {count}"
-                        values={{ count: <span className="text-green-400 font-bold">{groupMembers.toLocaleString()}</span> }}
+                        values={{ count: <span className="text-blue-400 font-bold">{groupMembers.toLocaleString()}</span> }}
                       />
                     </label>
                     <input
                       id="members-slider"
                       type="range"
-                      min="1000"
-                      max="100000"
-                      step="1000"
+                      min="500"
+                      max="50000"
+                      step="500"
                       value={groupMembers}
                       onChange={(e) => setGroupMembers(Number(e.target.value))}
                       className="w-full appearance-none cursor-pointer"
@@ -742,24 +725,24 @@ const GroupAdminLanding: React.FC = () => {
                       id="conversion-slider"
                       type="range"
                       min="0.1"
-                      max="10"
+                      max="2"
                       step="0.1"
                       value={conversionRate}
                       onChange={(e) => setConversionRate(Number(e.target.value))}
                       className="w-full appearance-none cursor-pointer"
                     />
                     <p className="text-xs mt-1">
-                      <FormattedMessage id="groupAdmin.landing.calc.conversionHelp" defaultMessage="% de membres qui utilisent le service par mois (réaliste : 0.5–3%)" />
+                      <FormattedMessage id="groupAdmin.landing.calc.conversionHelp" defaultMessage="% de membres qui utilisent le service par mois (réaliste : 0.1–0.5%)" />
                     </p>
                   </div>
                 </div>
 
-                {/* Résultat ULTRA VENDEUR */}
-                <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-2 rounded-xl p-5 text-center">
-                  <p className="text-xs sm:text-sm mb-1">
-                    <FormattedMessage id="groupAdmin.landing.calc.monthlyEarnings" defaultMessage="VOS REVENUS MENSUELS ESTIMÉS" />
+                {/* Résultat */}
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-5 text-center">
+                  <p className="text-xs sm:text-sm mb-1 opacity-90">
+                    <FormattedMessage id="groupAdmin.landing.calc.monthlyEarnings" defaultMessage="Revenus mensuels estimés" />
                   </p>
-                  <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 mb-2" aria-live="polite">
+                  <p className="text-4xl sm:text-5xl font-black mb-2" aria-live="polite">
                     +{Math.round((groupMembers * conversionRate / 100) * Math.round((rates.clientCallLawyer + rates.clientCallExpat) / 200))}$
                   </p>
 

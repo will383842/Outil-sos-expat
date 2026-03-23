@@ -265,8 +265,8 @@ const InfluencerLanding: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const seoTitle = intl.formatMessage({ id: 'influencer.landing.seo.title', defaultMessage: `Become a SOS-Expat Influencer | Earn $${rates.clientCallMax}/client helping people find legal help` });
-  const seoDescription = intl.formatMessage({ id: 'influencer.landing.seo.description', defaultMessage: `Promote SOS-Expat on YouTube, Instagram, TikTok. Earn $${rates.clientCallMax} per call, $${rates.providerCallRange} per call to lawyer or expat helper partners. Promo tools included. Withdraw via Wise or PayPal.` });
+  const seoTitle = intl.formatMessage({ id: 'influencer.landing.seo.title', defaultMessage: `Become a SOS-Expat Influencer | Earn $${rates.clientCallMax}/client helping people find legal help` }, { clientCallRange: rates.clientCallRange });
+  const seoDescription = intl.formatMessage({ id: 'influencer.landing.seo.description', defaultMessage: `Promote SOS-Expat on YouTube, Instagram, TikTok. Earn $${rates.clientCallMax} per call, $${rates.providerCallRange} per call to lawyer or expat helper partners. Promo tools included. Withdraw via Wise or PayPal.` }, { clientCallRange: rates.clientCallRange, providerCallRange: rates.providerCallRange });
   const ctaAriaLabel = intl.formatMessage({ id: 'influencer.hero.cta', defaultMessage: 'Become an Influencer - It\'s Free' });
 
   const faqs = [
@@ -342,7 +342,7 @@ const InfluencerLanding: React.FC = () => {
             {/* Simple explanation */}
             <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-2xl mx-auto mb-6 sm:mb-8">
               <p className="text-base sm:text-lg font-semibold">
-                <FormattedMessage id="influencer.hero.simple" defaultMessage={`Your job: Create content → Share your link → Followers call → You earn $${rates.clientCallMax}`} />
+                <FormattedMessage id="influencer.hero.simple" defaultMessage={`Your job: Create content → Share your link → Followers call → You earn $${rates.clientCallMax}`} values={{ clientCallRange: rates.clientCallRange }} />
               </p>
             </div>
 
@@ -423,7 +423,7 @@ const InfluencerLanding: React.FC = () => {
                       <FormattedMessage id="influencer.landing.value.problem2.title" defaultMessage="Nouveau expat perdu" />
                     </h3>
                     <p className="text-sm sm:text-base text-white/80 mb-3">
-                      <FormattedMessage id="influencer.landing.value.problem2.desc" defaultMessage="Follower vient d'arriver dans nouveau pays, tout est flou, ne sait pas par où commencer." />
+                      <FormattedMessage id="influencer.landing.value.problem2.desc" defaultMessage="Follower vient d'arriver dans nouveau pays, tout est flou, ne sait pas par où commencer." values={{ clientCallRange: rates.clientCallRange }} />
                     </p>
                   </div>
                 </div>
@@ -446,10 +446,10 @@ const InfluencerLanding: React.FC = () => {
                   <span className="text-3xl" aria-hidden="true">👥</span>
                   <div className="flex-1">
                     <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
-                      <FormattedMessage id="influencer.landing.value.problem3.title" defaultMessage="Urgence administrative" />
+                      <FormattedMessage id="influencer.landing.value.problem3.title" defaultMessage="Urgence administrative" values={{ providerCallRange: rates.providerCallRange }} />
                     </h3>
                     <p className="text-sm sm:text-base text-white/80 mb-3">
-                      <FormattedMessage id="influencer.landing.value.problem3.desc" defaultMessage="Follower panique : contrôle demain, documents pas en règle, stress maximum." />
+                      <FormattedMessage id="influencer.landing.value.problem3.desc" defaultMessage="Follower panique : contrôle demain, documents pas en règle, stress maximum." values={{ providerCallRange: rates.providerCallRange }} />
                     </p>
                   </div>
                 </div>
@@ -461,7 +461,7 @@ const InfluencerLanding: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm sm:text-base text-white/90">
-                    <FormattedMessage id="influencer.landing.value.problem3.solution" defaultMessage="Vous partagez votre expérience. Communauté + experts accessibles via votre lien. Urgence résolue." />
+                    <FormattedMessage id="influencer.landing.value.problem3.solution" defaultMessage="Vous partagez votre expérience. Communauté + experts accessibles via votre lien. Urgence résolue." values={{ providerCallMax: rates.providerCallMax }} />
                   </p>
                 </div>
               </article>
@@ -499,7 +499,7 @@ const InfluencerLanding: React.FC = () => {
                 <FormattedMessage id="influencer.landing.value.winwin.title" defaultMessage="🎯 Vous créez du contenu utile. Vous aidez ET gagnez." />
               </h3>
               <p className="text-base sm:text-lg text-white/90 mb-4">
-                <FormattedMessage id="influencer.landing.value.winwin.desc" defaultMessage="Chaque follower aidé = problème résolu + tips gratuits + {discount} économisés + {clientCallMax}$ gagnés pour vous. Tout le monde gagne." values={{ discount: rates.discountLabel, clientCallMax: rates.clientCallMax }} />
+                <FormattedMessage id="influencer.landing.value.winwin.desc" defaultMessage="Chaque follower aidé = problème résolu + tips gratuits + {discount} économisés + {clientCallMax}$ gagnés pour vous. Tout le monde gagne." values={{ discount: rates.discountLabel, clientCallMax: rates.clientCallMax, clientCallRange: rates.clientCallRange }} />
               </p>
               <div className="inline-flex items-center gap-2 bg-red-500/30 border border-red-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
                 <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
@@ -566,10 +566,10 @@ const InfluencerLanding: React.FC = () => {
                 </div>
                 <div className="text-sm font-bold mb-2"><FormattedMessage id="influencer.step3.label" defaultMessage="STEP 3" /></div>
                 <h3 className="!text-2xl sm:!text-2xl lg:!text-3xl font-bold text-white mb-3 sm:mb-4">
-                  <FormattedMessage id="influencer.step3.title" defaultMessage={`Get Paid $${rates.clientCallMax}`} />
+                  <FormattedMessage id="influencer.step3.title" defaultMessage={`Get Paid $${rates.clientCallMax}`} values={{ clientCallRange: rates.clientCallRange }} />
                 </h3>
                 <p className="text-base sm:text-lg lg:text-xl mb-4">
-                  <FormattedMessage id="influencer.step3.desc" defaultMessage={`When followers make a call through your link, you earn $${rates.clientCallMax}. Withdraw anytime via Wise, PayPal, Mobile Money, or bank transfer.`} />
+                  <FormattedMessage id="influencer.step3.desc" defaultMessage={`When followers make a call through your link, you earn $${rates.clientCallMax}. Withdraw anytime via Wise, PayPal, Mobile Money, or bank transfer.`} values={{ clientCallRange: rates.clientCallRange }} />
                 </p>
                 <div className="text-lg font-bold"><FormattedMessage id="influencer.step3.note" defaultMessage="No limit on earnings!" /></div>
               </article>
@@ -623,7 +623,7 @@ const InfluencerLanding: React.FC = () => {
                     <FormattedMessage id={`influencer.profiles.${profile.id}.title`} />
                   </h3>
                   <p className="text-xs sm:text-sm">
-                    <FormattedMessage id={`influencer.profiles.${profile.id}.desc`} />
+                    <FormattedMessage id={`influencer.profiles.${profile.id}.desc`} values={{ clientCallRange: rates.clientCallRange }} />
                   </p>
                 </div>
               ))}
@@ -647,7 +647,7 @@ const InfluencerLanding: React.FC = () => {
                       <FormattedMessage id={`influencer.profiles.${item.id}.title`} />
                     </h4>
                     <p className="text-xs sm:text-sm">
-                      <FormattedMessage id={`influencer.profiles.${item.id}.desc`} />
+                      <FormattedMessage id={`influencer.profiles.${item.id}.desc`} values={{ clientCallRange: rates.clientCallRange }} />
                     </p>
                   </div>
                 ))}
@@ -774,7 +774,7 @@ const InfluencerLanding: React.FC = () => {
                     <div className="text-xs sm:text-sm"><FormattedMessage id="influencer.earnings.partner" defaultMessage="Per call to your lawyer or expat helper partners" /></div>
                   </div>
                 </div>
-                <p className="text-xs sm:text-sm"><FormattedMessage id="influencer.earnings.partner.desc" defaultMessage={`Find a lawyer or expat helper to join. Earn $${rates.providerCall}/call (lawyer) or $${rates.providerCallExp}/call (expat helper) passively!`} /></p>
+                <p className="text-xs sm:text-sm"><FormattedMessage id="influencer.earnings.partner.desc" defaultMessage={`Find a lawyer or expat helper to join. Earn $${rates.providerCall}/call (lawyer) or $${rates.providerCallExp}/call (expat helper) passively!`} values={{ providerCallRange: rates.providerCallRange }} /></p>
               </div>
 
               <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border rounded-2xl p-5 sm:p-6">
@@ -942,7 +942,7 @@ const InfluencerLanding: React.FC = () => {
                 aria-label={ctaAriaLabel}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-extrabold py-3.5 sm:py-4 rounded-xl min-h-[48px] sm:min-h-[52px] active:scale-[0.98] sm:text-lg will-change-transform"
               >
-                <FormattedMessage id="influencer.sticky.cta" defaultMessage="Start Earning Now" />
+                <FormattedMessage id="influencer.sticky.cta" defaultMessage="Start Earning Now" values={{ clientCallRange: rates.clientCallRange }} />
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
