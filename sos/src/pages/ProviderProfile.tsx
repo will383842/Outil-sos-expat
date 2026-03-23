@@ -2046,7 +2046,7 @@ const ProviderProfile: React.FC = () => {
       "@context": "https://schema.org",
       "@type": isLawyer ? "LegalService" : "ProfessionalService",
       "@id": `https://sos-expat.com${window.location.pathname}#service`,
-      url: canonicalUrl,
+      url: `https://sos-expat.com${window.location.pathname}`,
       name: displayName,
       image: photoUrl,
       description: descriptionText,
