@@ -589,7 +589,7 @@ const ProvidersByCountry: React.FC = () => {
                         to={`/${localeString}/${rolePath}/${slugify(getCountryName(rc.code, effectiveLang))}`}
                         className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors"
                       >
-                        {rc.flag} {getCountryName(rc.code, effectiveLang)}
+                        {getCountryName(rc.code, effectiveLang)}
                       </Link>
                     ))}
                   </div>
@@ -698,7 +698,7 @@ const ProvidersByCountry: React.FC = () => {
                     to={`/${localeString}/${rolePath}/${slugify(getCountryName(rc.code, effectiveLang))}`}
                     className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors"
                   >
-                    {rc.flag} {getCountryName(rc.code, effectiveLang)}
+                    {getCountryName(rc.code, effectiveLang)}
                   </Link>
                 ))}
               </div>
