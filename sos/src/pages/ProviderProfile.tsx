@@ -1651,13 +1651,15 @@ const ProviderProfile: React.FC = () => {
           limit(7)
         );
 
-        const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        // Run both queries — q2 may fail if composite index is missing, so use allSettled
+        const [res1, res2] = await Promise.allSettled([getDocs(q1), getDocs(q2)]);
 
         // Merge & deduplicate results
         const seen = new Set<string>();
         const merged: SosProfile[] = [];
-        for (const snap of [snap1, snap2]) {
-          for (const d of snap.docs) {
+        for (const res of [res1, res2]) {
+          if (res.status !== 'fulfilled') continue;
+          for (const d of res.value.docs) {
             if (seen.has(d.id)) continue;
             seen.add(d.id);
             merged.push({ ...d.data(), id: d.id } as SosProfile);
