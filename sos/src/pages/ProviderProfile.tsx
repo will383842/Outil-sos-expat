@@ -2499,6 +2499,80 @@ const ProviderProfile: React.FC = () => {
         />
       )}
 
+      {/* HowTo Schema — "How to consult this provider in 3 steps" */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          "name": intl.formatMessage(
+            { id: "providerProfile.howTo.name", defaultMessage: "Comment consulter {name} sur SOS Expat" },
+            { name: formatPublicName(provider) }
+          ),
+          "description": intl.formatMessage(
+            { id: "providerProfile.howTo.description", defaultMessage: "Consultez {name}, {role} en {country}, en 3 étapes simples via SOS Expat." },
+            { name: formatPublicName(provider), role: roleLabel.toLowerCase(), country: countryName }
+          ),
+          "totalTime": "PT5M",
+          "estimatedCost": {
+            "@type": "MonetaryAmount",
+            "currency": "EUR",
+            "value": isLawyer ? "49" : "19"
+          },
+          "step": [
+            {
+              "@type": "HowToStep",
+              "position": 1,
+              "name": intl.formatMessage({ id: "providerProfile.howTo.step1.name", defaultMessage: "Choisissez votre prestataire" }),
+              "text": intl.formatMessage(
+                { id: "providerProfile.howTo.step1.text", defaultMessage: "Sélectionnez {name} en fonction de son pays d'intervention, ses langues parlées, ses avis clients et ses spécialités." },
+                { name: formatPublicName(provider) }
+              ),
+              "url": canonicalUrl
+            },
+            {
+              "@type": "HowToStep",
+              "position": 2,
+              "name": intl.formatMessage(
+                { id: "providerProfile.howTo.step2.name", defaultMessage: "Payez la mise en relation ({price})" },
+                { price: isLawyer ? "49€" : "19€" }
+              ),
+              "text": intl.formatMessage(
+                { id: "providerProfile.howTo.step2.text", defaultMessage: "Une empreinte bancaire de {price} est effectuée. Le paiement n'est capturé qu'après un appel réussi." },
+                { price: isLawyer ? "49€" : "19€" }
+              )
+            },
+            {
+              "@type": "HowToStep",
+              "position": 3,
+              "name": intl.formatMessage({ id: "providerProfile.howTo.step3.name", defaultMessage: "Recevez l'appel en moins de 5 minutes" }),
+              "text": intl.formatMessage(
+                { id: "providerProfile.howTo.step3.text", defaultMessage: "Vous êtes mis en relation par téléphone avec {name} en moins de 5 minutes. Si l'appel n'aboutit pas, vous êtes remboursé instantanément." },
+                { name: formatPublicName(provider) }
+              )
+            }
+          ]
+        })}</script>
+      </Helmet>
+
+      {/* Speakable Schema — voice search optimization targeting key sections */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": seoTitle,
+          "url": canonicalUrl,
+          "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": [
+              "h1",
+              "[data-speakable='specialty']",
+              "[data-speakable='availability']",
+              "[data-speakable='description']"
+            ]
+          }
+        })}</script>
+      </Helmet>
+
       {/* SVG defs pour dégradé étoiles */}
       <svg width="0" height="0" className="hidden" aria-hidden="true">
         <defs>
@@ -2653,6 +2727,7 @@ const ProviderProfile: React.FC = () => {
                               : "bg-red-500/20 text-red-300 border-red-400/30"
                         }`}
                         role="status"
+                        data-speakable="availability"
                         aria-label={isOnCall
                           ? intl.formatMessage({ id: "providerProfile.alreadyOnCall" })
                           : onlineStatus.isOnline
@@ -3012,7 +3087,7 @@ const ProviderProfile: React.FC = () => {
                 )}
                 
                 {/* Section Description complète */}
-                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="about-heading">
+                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="about-heading" data-speakable="description">
                   <h3 id="about-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <User size={20} className="text-red-500" aria-hidden="true" />
                     <FormattedMessage id="providerProfile.about" />
@@ -3051,7 +3126,7 @@ const ProviderProfile: React.FC = () => {
                 </section>
 
                 {/* Section Spécialités */}
-                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="specialties-heading">
+                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="specialties-heading" data-speakable="specialty">
                   <h3 id="specialties-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Briefcase size={20} className={isLawyer ? "text-blue-500" : "text-green-500"} aria-hidden="true" />
                     <FormattedMessage id="providerProfile.specialties" />
