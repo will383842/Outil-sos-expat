@@ -714,6 +714,7 @@ const ProviderProfile: React.FC = () => {
   const [notFoundReason, setNotFoundReason] = useState<'not_found' | 'unavailable'>('not_found');
   const [unavailableProviderType, setUnavailableProviderType] = useState<'lawyer' | 'expat' | null>(null);
   const [suggestedProviders, setSuggestedProviders] = useState<SosProfile[]>([]);
+  const [relatedProviders, setRelatedProviders] = useState<SosProfile[]>([]);
 
   // Translation system
   const { locale: currentLocale, lang: currentLang } = parseLocaleFromPath(location.pathname);
@@ -1619,6 +1620,31 @@ const ProviderProfile: React.FC = () => {
       page_locale: currentLocale,
     });
   }, [realProviderId]); // Only fire once per provider load
+
+  // Fetch related providers in the same country with the same type
+  useEffect(() => {
+    if (!provider?.country || !realProviderId) return;
+    const fetchRelated = async () => {
+      try {
+        const q = query(
+          collection(db, "sos_profiles"),
+          where("isApproved", "==", true),
+          where("isVisible", "==", true),
+          where("isActive", "==", true),
+          where("type", "==", provider.type || "lawyer"),
+          where("country", "==", provider.country),
+          limit(7)
+        );
+        const snap = await getDocs(q);
+        const results = snap.docs
+          .map(d => ({ ...d.data(), id: d.id } as SosProfile))
+          .filter(p => p.id !== realProviderId && p.uid !== realProviderId)
+          .slice(0, 6);
+        setRelatedProviders(results);
+      } catch { /* non-blocking */ }
+    };
+    fetchRelated();
+  }, [provider?.country, provider?.type, realProviderId]);
 
   useEffect(() => {
     if (!realProviderId) return;
@@ -3499,6 +3525,59 @@ const ProviderProfile: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* ========================================== */}
+      {/* RELATED PROVIDERS IN SAME COUNTRY          */}
+      {/* ========================================== */}
+      {relatedProviders.length > 0 && provider && (
+        <section className="mt-8 mb-12 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-xl font-bold text-white mb-6">
+              <FormattedMessage
+                id="providerProfile.otherProviders"
+                defaultMessage="Autres {role} en {country}"
+                values={{
+                  role: isLawyer
+                    ? intl.formatMessage({ id: "providerProfile.lawyers", defaultMessage: "avocats" })
+                    : intl.formatMessage({ id: "providerProfile.expats", defaultMessage: "expatriés" }),
+                  country: getCountryName(provider.country, preferredLangKey),
+                }}
+              />
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {relatedProviders.map((rp) => {
+                const rpName = rp.firstName ? `${rp.firstName} ${(rp.lastName || '').charAt(0)}.` : 'Expert';
+                const rpPhoto = rp.profilePhoto || rp.photoURL || rp.avatar || '/icons/default-avatar.png';
+                const rpUrl = `/${getLocaleString(currentLang as any)}/provider/${rp.shortId || rp.id}`;
+                const rpRating = typeof rp.rating === 'number' ? rp.rating.toFixed(1) : null;
+                return (
+                  <a
+                    key={rp.id}
+                    href={rpUrl}
+                    className="flex items-center gap-4 bg-gray-900/50 rounded-xl p-4 border border-gray-800 hover:border-gray-600 transition-colors"
+                  >
+                    <img
+                      src={rpPhoto}
+                      alt={rpName}
+                      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      loading="lazy"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white truncate">{rpName}</p>
+                      {rpRating && (
+                        <p className="text-sm text-yellow-400">★ {rpRating}</p>
+                      )}
+                      <p className="text-xs text-gray-400 truncate">
+                        {(rp.specialties || []).slice(0, 2).join(', ')}
+                      </p>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* ========================================== */}
