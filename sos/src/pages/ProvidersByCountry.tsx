@@ -425,7 +425,7 @@ const ProvidersByCountry: React.FC = () => {
               {roleLabel} {intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} {countryName}
             </h1>
             {!isLoading && (
-              <p className="text-gray-400 text-lg">
+              <p className="text-gray-300 text-lg">
                 {providers.length}{" "}
                 {providers.length <= 1
                   ? roleLabelSingular.toLowerCase()
@@ -446,14 +446,14 @@ const ProvidersByCountry: React.FC = () => {
           {/* Empty State */}
           {isEmptyState && (
             <div className="text-center py-16">
-              <Globe className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+              <Globe className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h2 className="text-xl font-semibold text-gray-300 mb-2">
                 <FormattedMessage
                   id="providers.empty.title"
                   defaultMessage="Aucun prestataire disponible dans ce pays pour le moment"
                 />
               </h2>
-              <p className="text-gray-500 mb-8 max-w-md mx-auto">
+              <p className="text-gray-300 mb-8 max-w-md mx-auto">
                 <FormattedMessage
                   id="providers.empty.subtitle"
                   defaultMessage="Nous ajoutons regulierement de nouveaux prestataires. Consultez les pays voisins ci-dessous."
@@ -570,9 +570,9 @@ const ProvidersByCountry: React.FC = () => {
                   >
                     <summary className="flex items-center justify-between cursor-pointer p-5 text-left font-medium text-gray-200 hover:text-white transition-colors">
                       {faq.question}
-                      <ChevronRight className="w-5 h-5 text-gray-500 group-open:rotate-90 transition-transform flex-shrink-0 ml-4" />
+                      <ChevronRight className="w-5 h-5 text-gray-300 group-open:rotate-90 transition-transform flex-shrink-0 ml-4" />
                     </summary>
-                    <div className="px-5 pb-5 text-gray-400 leading-relaxed">
+                    <div className="px-5 pb-5 text-gray-200 leading-relaxed">
                       {faq.answer}
                     </div>
                   </details>
@@ -698,7 +698,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           <h3 className="font-semibold text-white truncate">
             {provider.firstName}
             {provider.lastName ? ` ${provider.lastName.charAt(0)}.` : ""}{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-300 font-normal text-sm">
               — {roleLabelSingular}
             </span>
           </h3>
@@ -706,7 +706,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             className={`flex-shrink-0 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
               isAvailable
                 ? "bg-green-900/40 text-green-400 border border-green-800"
-                : "bg-gray-800 text-gray-500 border border-gray-700"
+                : "bg-gray-800 text-gray-300 border border-gray-700"
             }`}
           >
             {isAvailable ? (
@@ -725,18 +725,18 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 
         {/* Specialties */}
         {specialties.length > 0 && (
-          <p className="text-gray-400 text-sm truncate mb-1">
+          <p className="text-gray-300 text-sm truncate mb-1">
             {specialties.slice(0, 3).join(", ")}
           </p>
         )}
 
         {/* Rating + Languages */}
-        <div className="flex items-center gap-3 text-sm text-gray-400 mb-3">
+        <div className="flex items-center gap-3 text-sm text-gray-300 mb-3">
           {provider.reviewCount > 0 && (
             <span className="flex items-center gap-1">
               <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
               <span className="text-yellow-400 font-medium">{provider.rating.toFixed(1)}</span>
-              <span className="text-gray-500">({provider.reviewCount})</span>
+              <span className="text-gray-300">({provider.reviewCount})</span>
             </span>
           )}
           {provider.languages.length > 0 && (
