@@ -19,7 +19,7 @@ import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLi
 import { BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
-import { parseLocaleFromPath, getLocaleString } from "../multilingual-system";
+import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug } from "../multilingual-system";
 import {
   listHelpCategories,
   listHelpArticles,
@@ -122,6 +122,25 @@ const HelpCenter: React.FC = () => {
   const { locale: urlLocale, lang: urlLang, country: urlCountry } = parseLocaleFromPath(location.pathname);
   const currentLocale = urlLocale || getLocaleString(language as any);
   const langCode = urlLang || language || 'en';
+  // ISO lang for html lang attribute (ch → zh)
+  const isoLang = langCode === 'ch' ? 'zh' : langCode;
+
+  // OG locale mapping for SEOHead
+  const OG_LOCALE_MAP: Record<string, string> = {
+    fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
+    ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
+  };
+  const ogLocale = OG_LOCALE_MAP[langCode] || 'fr_FR';
+
+  // Default locale for canonical URLs
+  const CANONICAL_LOCALES: Record<string, string> = {
+    fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+    pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+  };
+  const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
+
+  // Translated help center slug
+  const helpCenterSlug = getTranslatedRouteSlug("help-center" as any, langCode as any) || 'centre-aide';
 
   // Load categories and articles from Firestore
   useEffect(() => {
@@ -347,21 +366,24 @@ const HelpCenter: React.FC = () => {
       <SEOHead
         title={intl.formatMessage({ id: "helpCenter.title" }) + " | SOS Expat"}
         description={intl.formatMessage({ id: "helpCenter.subtitle" })}
-        canonicalUrl="/centre-aide"
+        canonicalUrl={`https://sos-expat.com/${defaultLocale}/${helpCenterSlug}`}
+        locale={ogLocale}
         author="Manon"
         structuredData={{
           "@type": "CollectionPage",
           "@context": "https://schema.org",
           name: intl.formatMessage({ id: "helpCenter.title" }),
           description: intl.formatMessage({ id: "helpCenter.subtitle" }),
-          url: `https://sos-expat.com/${currentLocale}/centre-aide`,
+          url: `https://sos-expat.com/${defaultLocale}/${helpCenterSlug}`,
+          inLanguage: isoLang,
           provider: {
             "@type": "Organization",
             name: "SOS Expat",
+            url: "https://sos-expat.com",
           },
         }}
         contentType="CollectionPage"
-        aiSummary="Centre d'aide SOS Expat : guides, articles et FAQ pour les expatriés et voyageurs"
+        aiSummary={intl.formatMessage({ id: "helpCenter.subtitle" })}
         expertise="Expat Assistance, Legal Documentation, Administrative Help"
         trustworthiness="verified_content, regularly_updated"
         contentQuality="high"

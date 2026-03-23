@@ -204,10 +204,15 @@ const HelpArticle: React.FC = () => {
       };
     });
 
+    const faqLang = language === 'ch' ? 'zh' : language;
     return {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      mainEntity: faqItems,
+      inLanguage: faqLang,
+      mainEntity: faqItems.map(item => ({
+        ...item,
+        inLanguage: faqLang,
+      })),
     };
   };
 
@@ -254,6 +259,15 @@ const HelpArticle: React.FC = () => {
   const tags = getTranslatedTags(article.tags, language);
   const currentSlug = getTranslatedValue(article.slug, language);
   const faqSchema = generateFAQSchema();
+  // ISO lang code for SEO (ch → zh)
+  const isoLang = langCode === 'ch' ? 'zh' : langCode;
+
+  // OG locale mapping for SEOHead
+  const OG_LOCALE_MAP: Record<string, string> = {
+    fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
+    ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
+  };
+  const ogLocale = OG_LOCALE_MAP[langCode] || 'fr_FR';
 
   // Locale-aware canonical and article URL
   // IMPORTANT: Canonical URLs must be deterministic (no geolocation dependency).
@@ -294,6 +308,7 @@ const HelpArticle: React.FC = () => {
         title={`${title} | SOS Expat`}
         description={excerpt}
         canonicalUrl={`https://sos-expat.com/${defaultLocale}/${helpCenterSlug}/${currentSlug}`}
+        locale={ogLocale}
         author="Manon"
         contentType="article"
         ogType="article"
@@ -312,6 +327,7 @@ const HelpArticle: React.FC = () => {
         author="Manon"
         keywords={tags}
         wordCount={content ? content.split(/\s+/).length : undefined}
+        inLanguage={isoLang}
       />
       <BreadcrumbSchema items={breadcrumbs} />
 
