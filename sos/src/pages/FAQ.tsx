@@ -172,6 +172,7 @@ const FAQ: React.FC = () => {
             answer: item.answer,
           }))}
           pageUrl={`https://sos-expat.com/${currentLocale}/faq`}
+          inLanguage={langCode}
         />
       )}
 
