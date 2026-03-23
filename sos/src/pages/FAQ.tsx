@@ -21,7 +21,7 @@ import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLi
 import { BreadcrumbSchema, generateBreadcrumbs, FAQPageSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
-import { getLocaleString, parseLocaleFromPath } from "../multilingual-system";
+import { getLocaleString, parseLocaleFromPath, getTranslatedRouteSlug } from "../multilingual-system";
 import { Link, useLocation } from "react-router-dom";
 import { FAQ_CATEGORIES, getTranslatedValue } from "../services/faq";
 
@@ -154,7 +154,7 @@ const FAQ: React.FC = () => {
       <SEOHead
         title={intl.formatMessage({ id: "faq.heroTitle", defaultMessage: "Frequently Asked Questions" }) + " | SOS Expat & Travelers"}
         description={intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })}
-        canonicalUrl="/faq"
+        canonicalUrl={`https://sos-expat.com/${getLocaleString(language as any)}/${getTranslatedRouteSlug("faq" as any, language as any) || 'faq'}`}
         author="Manon"
         contentType="FAQPage"
         locale={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'}

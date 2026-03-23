@@ -425,8 +425,14 @@ const ProvidersByCountry: React.FC = () => {
     return [faqConsult, faqCost, faqLanguages, faqAvailability, faqAudience];
   }, [intl, roleLabelSingular, roleLabel, countryName]);
 
-  // SEO title & description — optimized for search queries from expats, travelers, digital nomads, students
-  const seoTitle = `${roleLabel} ${intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} ${countryName} - ${intl.formatMessage({ id: "providers.seoConsultation", defaultMessage: "Consultation 24/7" })} | SOS Expat`;
+  // SEO title & description — uses effectiveLang (from URL) instead of intl (from context)
+  // to ensure correct language in SSR where intl may default to French
+  const SEO_IN_WORD: Record<string, string> = { fr: 'en', en: 'in', es: 'en', de: 'in', pt: 'em', ru: 'в', ch: '在', hi: 'में', ar: 'في' };
+  const SEO_CONSULTATION: Record<string, string> = { fr: 'Consultation 24/7', en: '24/7 Consultation', es: 'Consulta 24/7', de: 'Beratung rund um die Uhr', pt: 'Consulta 24/7', ru: 'Консультация 24/7', ch: '全天候咨询', hi: '24/7 परामर्श', ar: 'استشارة على مدار الساعة' };
+  const SEO_LAWYERS: Record<string, string> = { fr: 'Avocats', en: 'Lawyers', es: 'Abogados', de: 'Anwälte', pt: 'Advogados', ru: 'Адвокаты', ch: '律师', hi: 'वकील', ar: 'محامون' };
+  const SEO_EXPATS: Record<string, string> = { fr: 'Expatriés expérimentés', en: 'Experienced Expats', es: 'Expatriados experimentados', de: 'Erfahrene Expats', pt: 'Expatriados experientes', ru: 'Опытные экспаты', ch: '资深外籍专家', hi: 'अनुभवी प्रवासी', ar: 'مغتربون ذوو خبرة' };
+  const seoRoleLabel = providerType === 'lawyer' ? (SEO_LAWYERS[effectiveLang] || 'Lawyers') : (SEO_EXPATS[effectiveLang] || 'Experienced Expats');
+  const seoTitle = `${seoRoleLabel} ${SEO_IN_WORD[effectiveLang] || 'in'} ${countryName} - ${SEO_CONSULTATION[effectiveLang] || '24/7 Consultation'} | SOS Expat`;
   const seoDescription = intl.formatMessage(
     {
       id: "providers.seoDescription",

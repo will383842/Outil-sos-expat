@@ -17,7 +17,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
-import { useLocaleNavigate } from "../multilingual-system";
+import { useLocaleNavigate, getTranslatedRouteSlug, getLocaleString } from "../multilingual-system";
 import SEOHead from "../components/layout/SEOHead";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
@@ -403,7 +403,7 @@ const Pricing: React.FC = () => {
       <SEOHead
         title={pageTitle}
         description={pageDescription}
-        canonicalUrl={`/${language}/pricing`}
+        canonicalUrl={`https://sos-expat.com/${getLocaleString(language as any)}/${getTranslatedRouteSlug("pricing" as any, language as any) || 'pricing'}`}
         ogType="website"
         keywords={intl.formatMessage({ id: 'pricing.seo.keywords', defaultMessage: 'pricing, rates, expat lawyer consultation, legal help expatriation, online consultation' })}
         locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}

@@ -63,18 +63,24 @@ function formatSpecialties(specialties: string[] | undefined, _type: string): st
   );
 }
 
-/** Check daily generation count */
+/** Check daily generation count (tolerant to missing index) */
 async function getDailyCount(): Promise<number> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const snap = await db().collection(AI_LOGS_COLLECTION)
-    .where('callType', '==', 'seo_generation')
-    .where('createdAt', '>=', admin.firestore.Timestamp.fromDate(today))
-    .count()
-    .get();
+    const snap = await db().collection(AI_LOGS_COLLECTION)
+      .where('callType', '==', 'seo_generation')
+      .where('createdAt', '>=', admin.firestore.Timestamp.fromDate(today))
+      .count()
+      .get();
 
-  return snap.data().count;
+    return snap.data().count;
+  } catch (err) {
+    // Index may not exist yet — allow generation to proceed
+    console.warn('[SEO] Daily count check failed (index may be missing):', err);
+    return 0;
+  }
 }
 
 /** Verify admin access */

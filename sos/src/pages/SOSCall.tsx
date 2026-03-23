@@ -3280,20 +3280,24 @@ const SOSCall: React.FC = () => {
         };
         const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
         const ogLocale = OG_LOCALE_MAP[langCode] || 'fr_FR';
-        const slug = isProvidersRoute ? (PROVIDERS_SLUGS[langCode] || 'providers') : (SOS_CALL_SLUGS[langCode] || 'sos-appel');
+        // Detect providers route from window.location (more reliable than React Router in SSR)
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isProvidersFromURL = Object.values(PROVIDERS_SLUGS).some(s => currentPath.includes(`/${s}`));
+        const isProviders = isProvidersRoute || isProvidersFromURL;
+        const slug = isProviders ? (PROVIDERS_SLUGS[langCode] || 'providers') : (SOS_CALL_SLUGS[langCode] || 'sos-appel');
         const canonicalUrl = `${BASE_URL}/${defaultLocale}/${slug}`;
 
         return (
           <>
             <SEOHead
-              title={isProvidersRoute
+              title={isProviders
                 ? intl.formatMessage({ id: 'providers.seo.title', defaultMessage: 'Our Experts — Lawyers & Expat Helpers | SOS Expat' })
                 : intl.formatMessage(
                     { id: 'sosCall.seo.pageTitle', defaultMessage: '{providerType} available | SOS Expat & Travelers' },
                     { providerType: intl.formatMessage({ id: selectedType === "lawyer" ? 'sosCall.seo.type.lawyers' : selectedType === "expat" ? 'sosCall.seo.type.expats' : 'sosCall.seo.type.experts', defaultMessage: selectedType === "lawyer" ? 'Lawyers' : selectedType === "expat" ? 'Expats' : 'Experts' }) }
                   )
               }
-              description={isProvidersRoute
+              description={isProviders
                 ? intl.formatMessage({ id: 'providers.seo.description', defaultMessage: 'Browse verified lawyers and expat helpers in 197 countries. Read reviews, compare specialties and book a call in under 5 minutes.' })
                 : intl.formatMessage(
                     { id: 'sosCall.seo.pageDescription', defaultMessage: 'Find a verified {providerType} available now. Online consultation 24/7 in over 150 countries.' },
@@ -3305,7 +3309,7 @@ const SOSCall: React.FC = () => {
             />
             <BreadcrumbSchema items={[
               { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
-              { name: isProvidersRoute
+              { name: isProviders
                 ? intl.formatMessage({ id: 'breadcrumb.providers', defaultMessage: 'Our Experts' })
                 : intl.formatMessage({ id: 'breadcrumb.sosCall', defaultMessage: 'Emergency Call' })
               }
