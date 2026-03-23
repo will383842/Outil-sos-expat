@@ -226,11 +226,11 @@ Disallow: /
 # ===========================================
 Sitemap: https://sos-expat.com/sitemap.xml
 Sitemap: https://sos-expat.com/sitemap-static.xml
-Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles
-Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp
-Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq
-Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding
-Sitemap: https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings
+Sitemap: https://sos-expat.com/sitemaps/profiles.xml
+Sitemap: https://sos-expat.com/sitemaps/help.xml
+Sitemap: https://sos-expat.com/sitemaps/faq.xml
+Sitemap: https://sos-expat.com/sitemaps/landing.xml
+Sitemap: https://sos-expat.com/sitemaps/country-listings.xml
 
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA
