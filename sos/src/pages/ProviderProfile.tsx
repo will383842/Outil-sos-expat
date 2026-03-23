@@ -354,6 +354,21 @@ const toArrayFromAny = (val: unknown, preferred?: string): string[] => {
   return [];
 };
 
+/**
+ * Replace raw specialty codes (SCREAMING_SNAKE_CASE like FAM_SCOLARITE_INTERNATIONALE)
+ * in description text with their translated labels.
+ * These codes end up in Firestore descriptions from AAA profile generation templates.
+ */
+const replaceSpecialtyCodes = (text: string, lang?: string): string => {
+  const locale = mapLanguageToLocale(lang || 'fr');
+  // Match SCREAMING_SNAKE_CASE patterns (2+ segments like FAM_SCOLARITE or URG_ASSISTANCE_PENALE_INTERNATIONALE)
+  return text.replace(/\b([A-Z]{2,}(?:_[A-Z0-9]+){1,})\b/g, (match) => {
+    const label = getSpecialtyLabel(match, locale);
+    // Only replace if we got a real label (not the code itself back)
+    return label !== match ? label : match;
+  });
+};
+
 const pickDescription = (
   p: Partial<SosProfile>,
   preferredLang?: string,
@@ -369,7 +384,7 @@ const pickDescription = (
       getFirstString(p.experienceDescription, lang),
     ];
     const found = chain.find(Boolean);
-    if (found) return found;
+    if (found) return replaceSpecialtyCodes(found, preferredLang);
   }
   // Last resort: try without language preference (picks first available key)
   const anyChain = [
@@ -378,10 +393,9 @@ const pickDescription = (
     getFirstString(p.professionalDescription, undefined),
     getFirstString(p.experienceDescription, undefined),
   ];
-  return (
-    anyChain.find(Boolean) ||
-    (intl ? intl.formatMessage({ id: "providerProfile.noDescriptionAvailable" }) : "")
-  );
+  const fallback = anyChain.find(Boolean);
+  if (fallback) return replaceSpecialtyCodes(fallback, preferredLang);
+  return intl ? intl.formatMessage({ id: "providerProfile.noDescriptionAvailable" }) : "";
 };
 
 const toStringFromAny = (
