@@ -211,6 +211,7 @@ const ProvidersByCountry: React.FC = () => {
           collection(db, "sos_profiles"),
           where("isApproved", "==", true),
           where("isVisible", "==", true),
+          where("isActive", "==", true),
           where("type", "==", providerType),
           where("country", "==", countryCode),
           firestoreLimit(100)
@@ -221,6 +222,7 @@ const ProvidersByCountry: React.FC = () => {
           collection(db, "sos_profiles"),
           where("isApproved", "==", true),
           where("isVisible", "==", true),
+          where("isActive", "==", true),
           where("type", "==", providerType),
           where("operatingCountries", "array-contains", countryCode),
           firestoreLimit(100)
