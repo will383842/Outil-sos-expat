@@ -309,6 +309,31 @@
 /tools/* /tools/:splat 200
 
 # =============================================
+# Legacy country listing redirects (old format "avocats-en" → new format "avocats")
+# =============================================
+/fr-fr/avocats-en/:country /fr-fr/avocats/:country 301
+/fr-be/avocats-en/:country /fr-be/avocats/:country 301
+/fr-ch/avocats-en/:country /fr-ch/avocats/:country 301
+/fr-ca/avocats-en/:country /fr-ca/avocats/:country 301
+/fr-ma/avocats-en/:country /fr-ma/avocats/:country 301
+/en-us/lawyers-in/:country /en-us/lawyers/:country 301
+/en-gb/lawyers-in/:country /en-gb/lawyers/:country 301
+/en-au/lawyers-in/:country /en-au/lawyers/:country 301
+/en-ca/lawyers-in/:country /en-ca/lawyers/:country 301
+/es-es/abogados-en/:country /es-es/abogados/:country 301
+/es-mx/abogados-en/:country /es-mx/abogados/:country 301
+/de-de/anwaelte-in/:country /de-de/anwaelte/:country 301
+/pt-pt/advogados-em/:country /pt-pt/advogados/:country 301
+/pt-br/advogados-em/:country /pt-br/advogados/:country 301
+/ru-ru/advokaty-v/:country /ru-ru/advokaty/:country 301
+/fr-fr/expatries-en/:country /fr-fr/expatries/:country 301
+/en-us/expats-in/:country /en-us/expats/:country 301
+/es-es/expatriados-en/:country /es-es/expatriados/:country 301
+/de-de/expats-in/:country /de-de/expats/:country 301
+/pt-pt/expatriados-em/:country /pt-pt/expatriados/:country 301
+/ru-ru/expaty-v/:country /ru-ru/expaty/:country 301
+
+# =============================================
 # SPA fallback - MUST be last
 # All routes that don't match above are served by index.html
 # =============================================
