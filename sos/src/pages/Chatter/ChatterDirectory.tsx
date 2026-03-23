@@ -8,6 +8,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useIntl } from "react-intl";
+import { useLocation } from "react-router-dom";
+import { parseLocaleFromPath } from "@/multilingual-system";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
@@ -129,8 +131,13 @@ function getLanguageInfo(langCode: string) {
 // MAIN COMPONENT
 // ============================================================================
 
+const OG_LOCALE_MAP: Record<string, string> = { fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' };
+
 const ChatterDirectory: React.FC = () => {
   const intl = useIntl();
+  const location = useLocation();
+  const { lang: urlLang } = parseLocaleFromPath(location.pathname);
+  const effectiveLang = urlLang || 'en';
   const [chatters, setChatters] = useState<PublicChatter[]>([]);
   const [filtered, setFiltered] = useState<PublicChatter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,6 +213,7 @@ const ChatterDirectory: React.FC = () => {
       <SEOHead
         title={intl.formatMessage({ id: 'directory.chatters.seo.title', defaultMessage: 'Our Chatters | SOS-Expat' })}
         description={intl.formatMessage({ id: 'directory.chatters.seo.description', defaultMessage: 'Discover our network of chatters — experts who recommend SOS-Expat to their expat community.' })}
+        locale={OG_LOCALE_MAP[effectiveLang] || 'en_US'}
       />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },

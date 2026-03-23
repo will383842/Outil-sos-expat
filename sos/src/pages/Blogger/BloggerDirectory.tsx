@@ -8,6 +8,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useIntl } from "react-intl";
+import { useLocation } from "react-router-dom";
+import { parseLocaleFromPath } from "@/multilingual-system";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
@@ -145,8 +147,13 @@ function getLanguageInfo(langCode: string) {
 // MAIN COMPONENT
 // ============================================================================
 
+const OG_LOCALE_MAP: Record<string, string> = { fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' };
+
 const BloggerDirectory: React.FC = () => {
   const intl = useIntl();
+  const location = useLocation();
+  const { lang: urlLang } = parseLocaleFromPath(location.pathname);
+  const effectiveLang = urlLang || 'en';
   const [bloggers, setBloggers] = useState<PublicBlogger[]>([]);
   const [filtered, setFiltered] = useState<PublicBlogger[]>([]);
   const [loading, setLoading] = useState(true);
@@ -227,6 +234,7 @@ const BloggerDirectory: React.FC = () => {
       <SEOHead
         title={intl.formatMessage({ id: 'directory.bloggers.seo.title', defaultMessage: 'Our Partner Bloggers | SOS-Expat' })}
         description={intl.formatMessage({ id: 'directory.bloggers.seo.description', defaultMessage: 'Discover our network of bloggers specialized in expatriation, travel and life abroad.' })}
+        locale={OG_LOCALE_MAP[effectiveLang] || 'en_US'}
       />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },

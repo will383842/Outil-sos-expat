@@ -8,6 +8,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useIntl } from "react-intl";
+import { useLocation } from "react-router-dom";
+import { parseLocaleFromPath } from "@/multilingual-system";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
@@ -407,8 +409,13 @@ const SelectField: React.FC<SelectFieldProps> = ({
 // MAIN PAGE COMPONENT
 // ============================================================================
 
+const OG_LOCALE_MAP: Record<string, string> = { fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' };
+
 const GroupAdminDirectory: React.FC = () => {
   const intl = useIntl();
+  const location = useLocation();
+  const { lang: urlLang } = parseLocaleFromPath(location.pathname);
+  const effectiveLang = urlLang || 'en';
   // Filters
   const [searchTerm,       setSearchTerm]       = useState("");
   const [selectedCountry,  setSelectedCountry]  = useState("");
@@ -543,6 +550,7 @@ const GroupAdminDirectory: React.FC = () => {
         title={intl.formatMessage({ id: 'directory.groups.seo.title', defaultMessage: 'Expat Groups & Communities | SOS Expat' })}
         description={intl.formatMessage({ id: 'directory.groups.seo.description', defaultMessage: 'Discover expat groups and communities worldwide. Find your community by country, language and interests.' })}
         keywords={intl.formatMessage({ id: 'directory.groups.seo.keywords', defaultMessage: 'expat groups, expat community, Facebook expat group, international network' })}
+        locale={OG_LOCALE_MAP[effectiveLang] || 'en_US'}
       />
 
       {/* ================================================================ */}

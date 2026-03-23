@@ -8,6 +8,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useIntl } from "react-intl";
+import { useLocation } from "react-router-dom";
+import { parseLocaleFromPath } from "@/multilingual-system";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
@@ -303,8 +305,13 @@ const InfluencerCard: React.FC<InfluencerCardProps> = ({ influencer }) => {
 
 const PAGE_SIZE = 20;
 
+const OG_LOCALE_MAP: Record<string, string> = { fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' };
+
 const InfluencerDirectory: React.FC = () => {
   const intl = useIntl();
+  const location = useLocation();
+  const { lang: urlLang } = parseLocaleFromPath(location.pathname);
+  const effectiveLang = urlLang || 'en';
   const [influencers, setInfluencers] = useState<PublicInfluencer[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [error, setError]             = useState<string | null>(null);
@@ -392,6 +399,7 @@ const InfluencerDirectory: React.FC = () => {
       <SEOHead
         title={intl.formatMessage({ id: 'directory.influencers.seo.title', defaultMessage: 'Our Expat Influencers | SOS-Expat' })}
         description={intl.formatMessage({ id: 'directory.influencers.seo.description', defaultMessage: 'Discover our partner influencers specialized in the international expat community.' })}
+        locale={OG_LOCALE_MAP[effectiveLang] || 'en_US'}
       />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
