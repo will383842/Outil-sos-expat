@@ -2041,21 +2041,19 @@ const ProviderProfile: React.FC = () => {
     // Use LegalService/ProfessionalService as primary type to support aggregateRating
     // Google only allows aggregateRating on: Organization, LocalBusiness, Product, Service, etc.
     // Person/Attorney types do NOT support aggregateRating
+    const photoUrl = profilePhoto.startsWith('http') ? profilePhoto : `https://sos-expat.com${profilePhoto}`;
     const data: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": isLawyer ? "LegalService" : "ProfessionalService",
-      "@id": `${window.location.origin}${window.location.pathname}`,
+      "@id": `https://sos-expat.com${window.location.pathname}#service`,
+      url: canonicalUrl,
       name: displayName,
-      image: {
-        "@type": "ImageObject",
-        url: profilePhoto.startsWith('http') ? profilePhoto : `${window.location.origin}${profilePhoto}`,
-        width: IMAGE_SIZES.MODAL_MAX_WIDTH,
-        height: IMAGE_SIZES.MODAL_MAX_HEIGHT,
-      },
+      image: photoUrl,
       description: descriptionText,
+      inLanguage: preferredLangKey || 'fr',
       address: {
         "@type": "PostalAddress",
-        addressCountry: getCountryName(provider.country, preferredLangKey),
+        addressCountry: provider.country?.toUpperCase() || '',
         ...(provider.city && { addressLocality: provider.city })
       },
       // Provider information as Person nested inside the Service
@@ -2063,12 +2061,12 @@ const ProviderProfile: React.FC = () => {
         "@type": "Person",
         name: displayName,
         jobTitle: roleLabel,
-        image: profilePhoto.startsWith('http') ? profilePhoto : `${window.location.origin}${profilePhoto}`,
+        image: photoUrl,
         worksFor: {
           "@type": "Organization",
           name: "SOS Expat & Travelers",
-          url: window.location.origin,
-          logo: `${window.location.origin}/logo.png`,
+          url: "https://sos-expat.com",
+          logo: "https://sos-expat.com/logo.png",
         },
         knowsLanguage: languagesList.map((lang) => ({
           "@type": "Language",
@@ -2082,6 +2080,12 @@ const ProviderProfile: React.FC = () => {
           }
         }),
       },
+      // Broker: SOS Expat connects clients with providers
+      broker: {
+        "@type": "Organization",
+        name: "SOS Expat & Travelers",
+        url: "https://sos-expat.com",
+      },
       availableLanguage: languagesList,
       // aggregateRating is valid on LegalService/ProfessionalService
       ...(providerStats.realReviewsCount > 0 && {
@@ -2093,10 +2097,11 @@ const ProviderProfile: React.FC = () => {
           worstRating: 1,
         }
       }),
-      priceRange: "€€-€€€",
+      priceRange: isLawyer ? "€49" : "€19",
+      priceCurrency: "EUR",
       areaServed: {
         "@type": "Country",
-        name: getCountryName(provider.country, preferredLangKey)
+        name: provider.country?.toUpperCase() || '',
       },
       ...(provider.specialties && provider.specialties.length > 0 && {
         hasOfferCatalog: {
@@ -2113,7 +2118,7 @@ const ProviderProfile: React.FC = () => {
               : getExpatHelpTypeLabel(cleanCode.toUpperCase(), locale as any);
             return {
               "@type": "Offer",
-              "@id": `${window.location.origin}${window.location.pathname}#service-${index}`,
+              "@id": `https://sos-expat.com${window.location.pathname}#service-${index}`,
               itemOffered: {
                 "@type": "Service",
                 name: translatedName
@@ -2122,12 +2127,6 @@ const ProviderProfile: React.FC = () => {
           })
         }
       }),
-      openingHoursSpecification: {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-        opens: "00:00",
-        closes: "23:59"
-      },
     };
     return data;
   }, [
@@ -2346,7 +2345,7 @@ const ProviderProfile: React.FC = () => {
               {Object.entries(providerSlugs).map(([lang, slug]) => (
                 slug ? <link key={lang} rel="alternate" hrefLang={HREFLANG_MAP[lang] || lang} href={`https://sos-expat.com/${slug}`} /> : null
               ))}
-              <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/${providerSlugs['fr'] || providerSlugs['en'] || ''}`} />
+              <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/${providerSlugs['fr'] || providerSlugs['en'] || Object.values(providerSlugs).find(s => s) || ''}`} />
             </Helmet>
           );
         }
