@@ -1048,6 +1048,36 @@ async function handleRequest(request, env, ctx) {
     }
   }
 
+  // ==========================================================================
+  // SITEMAP PROXY — Serve dynamic sitemaps from Firebase Cloud Functions
+  // Cloudflare Pages _redirects can't proxy external URLs, so we do it here
+  // ==========================================================================
+  const SITEMAP_PROXY = {
+    '/sitemaps/profiles.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles',
+    '/sitemaps/help.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp',
+    '/sitemaps/faq.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq',
+    '/sitemaps/landing.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding',
+    '/sitemaps/country-listings.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings',
+  };
+  if (SITEMAP_PROXY[pathname]) {
+    try {
+      const sitemapResponse = await fetch(SITEMAP_PROXY[pathname], {
+        headers: { 'Accept': 'application/xml' },
+      });
+      const newHeaders = new Headers(sitemapResponse.headers);
+      newHeaders.set('Content-Type', 'application/xml; charset=utf-8');
+      newHeaders.set('Cache-Control', 'public, max-age=3600');
+      newHeaders.set('X-Worker-Sitemap-Proxy', 'true');
+      return new Response(sitemapResponse.body, {
+        status: sitemapResponse.status,
+        headers: newHeaders,
+      });
+    } catch (error) {
+      console.error(`[WORKER] Sitemap proxy error for ${pathname}: ${error.message}`);
+      return new Response('Sitemap temporarily unavailable', { status: 503 });
+    }
+  }
+
   // Handle multi-dashboard specially - fetch index.html without following redirects
   // This is needed because the origin server redirects /multi-dashboard to /
   // but we want the SPA to handle routing client-side

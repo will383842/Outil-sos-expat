@@ -303,14 +303,7 @@
 /fr-fr/avocat-np/* /fr-fr/prestataires 301
 /de-de/anwalt-np/* /de-de/anbieter 301
 
-# =============================================
-# Sitemap proxies — GSC requires sitemaps on the same domain
-# =============================================
-/sitemaps/profiles.xml https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles 200
-/sitemaps/help.xml https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp 200
-/sitemaps/faq.xml https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq 200
-/sitemaps/landing.xml https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding 200
-/sitemaps/country-listings.xml https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings 200
+# Sitemap proxies handled by Cloudflare Worker (Pages _redirects can't proxy external URLs)
 
 # =============================================
 # Static tools — served as-is, NOT through the SPA
