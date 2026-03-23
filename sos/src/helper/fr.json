@@ -12509,5 +12509,22 @@
   "reset.user": "Utilisateur SOS Expat",
   "providers.seo.title": "Nos Experts — Avocats & Expatriés Aidants dans 197 Pays | SOS Expat",
   "providers.seo.description": "Consultez nos avocats et expatriés aidants vérifiés dans 197 pays. Lisez les avis, comparez les spécialités et réservez un appel en 5 minutes.",
-  "breadcrumb.providers": "Nos Experts"
+  "breadcrumb.providers": "Nos Experts",
+  "providers.lawyers": "Avocats",
+  "providers.lawyer": "Avocat",
+  "providers.expats": "Expatriés expérimentés",
+  "providers.expat": "Expatrié expérimenté",
+  "providers.in": "en",
+  "providers.seoConsultation": "Consultation 24/7",
+  "providers.availableIn": "disponible(s) en",
+  "providers.seo.keywords": "consultation, expatrié, aide juridique, avocat en ligne",
+  "providers.consultation": "Consultation téléphonique",
+  "providers.empty.title": "Aucun prestataire disponible dans ce pays pour le moment",
+  "providers.empty.subtitle": "Nous ajoutons régulièrement de nouveaux prestataires. Consultez les pays voisins ci-dessous.",
+  "providers.empty.cta": "Voir tous les prestataires",
+  "providers.seeAlso": "Voir aussi",
+  "providers.faq.title": "Questions fréquentes",
+  "providers.online": "En ligne",
+  "providers.offline": "Hors ligne",
+  "providers.viewProfile": "Voir le profil"
 }

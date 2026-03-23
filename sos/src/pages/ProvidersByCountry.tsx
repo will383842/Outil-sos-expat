@@ -439,7 +439,7 @@ const ProvidersByCountry: React.FC = () => {
         ogType="website"
         noindex={isEmptyState}
         locale={effectiveLang === "fr" ? "fr_FR" : effectiveLang === "en" ? "en_US" : effectiveLang === "es" ? "es_ES" : effectiveLang === "de" ? "de_DE" : effectiveLang === "pt" ? "pt_PT" : effectiveLang === "ru" ? "ru_RU" : effectiveLang === "ar" ? "ar_SA" : effectiveLang === "hi" ? "hi_IN" : "fr_FR"}
-        keywords={`${roleLabelSingular}, ${countryName}, ${intl.formatMessage({ id: "providers.seo.keywords", defaultMessage: "consultation, expatrie, aide juridique, avocat en ligne" })}`}
+        keywords={`${roleLabelSingular}, ${countryName}, ${intl.formatMessage({ id: "providers.seo.keywords", defaultMessage: "consultation, expatrié, aide juridique, avocat en ligne" })}`}
       />
 
       {/* Breadcrumb Schema */}
@@ -543,7 +543,7 @@ const ProvidersByCountry: React.FC = () => {
               <p className="text-gray-300 mb-8 max-w-md mx-auto">
                 <FormattedMessage
                   id="providers.empty.subtitle"
-                  defaultMessage="Nous ajoutons regulierement de nouveaux prestataires. Consultez les pays voisins ci-dessous."
+                  defaultMessage="Nous ajoutons régulièrement de nouveaux prestataires. Consultez les pays voisins ci-dessous."
                 />
               </p>
 
@@ -646,7 +646,7 @@ const ProvidersByCountry: React.FC = () => {
               <h2 className="text-2xl font-bold mb-6 text-white">
                 <FormattedMessage
                   id="providers.faq.title"
-                  defaultMessage="Questions frequentes"
+                  defaultMessage="Questions fréquentes"
                 />
               </h2>
               <div className="space-y-4">

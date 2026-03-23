@@ -7555,5 +7555,6 @@
   "providers.seeAlso": "انظر أيضاً",
   "providers.empty.title": "لا يوجد مقدمو خدمات متاحون في هذا البلد حالياً",
   "providers.empty.subtitle": "نضيف مقدمي خدمات جدد بانتظام. تحقق من البلدان المجاورة أدناه.",
-  "providers.empty.cta": "عرض جميع مقدمي الخدمات"
+  "providers.empty.cta": "عرض جميع مقدمي الخدمات",
+  "providers.consultation": "استشارة هاتفية"
 }

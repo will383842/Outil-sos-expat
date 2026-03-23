@@ -7558,5 +7558,6 @@
   "providers.seeAlso": "Veja também",
   "providers.empty.title": "Nenhum prestador disponível neste país no momento",
   "providers.empty.subtitle": "Adicionamos novos prestadores regularmente. Confira os países vizinhos abaixo.",
-  "providers.empty.cta": "Ver todos os prestadores"
+  "providers.empty.cta": "Ver todos os prestadores",
+  "providers.consultation": "Consulta telefónica"
 }

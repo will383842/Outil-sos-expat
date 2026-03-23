@@ -7554,5 +7554,6 @@
   "providers.seeAlso": "另请参阅",
   "providers.empty.title": "该国目前暂无可用的服务提供者",
   "providers.empty.subtitle": "我们定期增加新的服务提供者。请查看下方的邻近国家。",
-  "providers.empty.cta": "查看所有服务提供者"
+  "providers.empty.cta": "查看所有服务提供者",
+  "providers.consultation": "电话咨询"
 }

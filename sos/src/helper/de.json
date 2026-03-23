@@ -7562,5 +7562,6 @@
   "providers.seeAlso": "Siehe auch",
   "providers.empty.title": "Derzeit keine Anbieter in diesem Land verfügbar",
   "providers.empty.subtitle": "Wir fügen regelmäßig neue Anbieter hinzu. Schauen Sie sich die Nachbarländer unten an.",
-  "providers.empty.cta": "Alle Anbieter anzeigen"
+  "providers.empty.cta": "Alle Anbieter anzeigen",
+  "providers.consultation": "Telefonberatung"
 }

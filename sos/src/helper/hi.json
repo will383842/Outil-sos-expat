@@ -7554,5 +7554,6 @@
   "providers.seeAlso": "यह भी देखें",
   "providers.empty.title": "इस देश में फ़िलहाल कोई सेवा प्रदाता उपलब्ध नहीं है",
   "providers.empty.subtitle": "हम नियमित रूप से नए सेवा प्रदाता जोड़ते हैं। नीचे पड़ोसी देश देखें।",
-  "providers.empty.cta": "सभी सेवा प्रदाता देखें"
+  "providers.empty.cta": "सभी सेवा प्रदाता देखें",
+  "providers.consultation": "फ़ोन परामर्श"
 }

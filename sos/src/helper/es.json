@@ -7562,5 +7562,6 @@
   "providers.seeAlso": "Ver también",
   "providers.empty.title": "Ningún proveedor disponible en este país por el momento",
   "providers.empty.subtitle": "Añadimos nuevos proveedores regularmente. Consulte los países vecinos a continuación.",
-  "providers.empty.cta": "Ver todos los proveedores"
+  "providers.empty.cta": "Ver todos los proveedores",
+  "providers.consultation": "Consulta telefónica"
 }

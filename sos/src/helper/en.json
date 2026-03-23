@@ -12530,5 +12530,6 @@
   "providers.seeAlso": "See also",
   "providers.empty.title": "No providers available in this country at the moment",
   "providers.empty.subtitle": "We regularly add new providers. Check out neighboring countries below.",
-  "providers.empty.cta": "View all providers"
+  "providers.empty.cta": "View all providers",
+  "providers.consultation": "Phone consultation"
 }
