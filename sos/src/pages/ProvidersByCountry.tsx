@@ -187,6 +187,20 @@ const ProvidersByCountry: React.FC = () => {
     ? getCountryName(countryData.code, effectiveLang)
     : params.countrySlug || "";
 
+  // Redirect to translated URL when language changes from header
+  useEffect(() => {
+    if (!countryData || !language) return;
+    const urlLang = lang; // language detected from URL
+    const appLang = language; // language selected in header
+    if (urlLang && appLang && urlLang !== appLang) {
+      const newLocale = getLocaleString(appLang as any);
+      const newRolePath = getRolePath(providerType, appLang);
+      const newCountrySlug = slugify(getCountryName(countryData.code, appLang));
+      const newUrl = `/${newLocale}/${newRolePath}/${newCountrySlug}`;
+      navigate(newUrl, { replace: true });
+    }
+  }, [language, lang, countryData, providerType, navigate]);
+
   // State
   const [providers, setProviders] = useState<ProviderListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
