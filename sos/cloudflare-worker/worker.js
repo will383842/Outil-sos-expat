@@ -786,8 +786,8 @@ const PROVIDER_PROFILE_PATTERNS = [
   /^\/[a-z]{2}-[a-z]{2}\/(?:avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|wafid|videshi|haiwai)\/[a-z]{2}\/[a-z]+\/[^\/]+\/?$/i,
 
   // Fallback: catch any profile URL with 3-segment structure (locale/role-country/name)
-  // Latin scripts
-  /^\/[a-z]{2}-[a-z]{2}\/[a-z]+-[a-z]+\/[^\/]+$/i,
+  // Latin scripts — [a-z-]+ to support multi-word country slugs (new-zealand, etats-unis, etc.)
+  /^\/[a-z]{2}-[a-z]{2}\/[a-z]+-[a-z][a-z-]*\/[^\/]+$/i,
 
   // Fallback: catch any profile URL with Unicode characters (Arabic, Hindi)
   // Examples: /ar-sa/محامي-السعودية/name, /hi-in/वकील-भारत/name
