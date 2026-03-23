@@ -822,7 +822,9 @@ function normalizeCountryToISO(country: string): string | null {
  */
 function getCountrySlug(isoCode: string, lang: string): string {
   const slugs = COUNTRY_SLUGS[isoCode];
-  if (slugs && slugs[lang]) return slugs[lang];
+  // Chinese: internal code is 'ch' but COUNTRY_SLUGS uses 'zh' key
+  const slugLang = lang === 'ch' ? 'zh' : lang;
+  if (slugs && slugs[slugLang]) return slugs[slugLang];
   // Fallback: lowercase ISO code
   return isoCode.toLowerCase();
 }
@@ -867,11 +869,17 @@ export const sitemapCountryListings = onRequest(
           if (iso) countries.push(iso);
         }
 
-        // Operating countries (array of country names or ISO codes)
-        if (Array.isArray(profile.operatingCountries)) {
-          for (const c of profile.operatingCountries) {
-            const iso = normalizeCountryToISO(c as string);
-            if (iso) countries.push(iso);
+        // All country array fields (different field names used across profiles)
+        const countryArrayFields = ['operatingCountries', 'interventionCountries', 'practiceCountries'];
+        for (const field of countryArrayFields) {
+          const arr = profile[field];
+          if (Array.isArray(arr)) {
+            for (const c of arr) {
+              if (typeof c === 'string' && c.trim()) {
+                const iso = normalizeCountryToISO(c);
+                if (iso) countries.push(iso);
+              }
+            }
           }
         }
 

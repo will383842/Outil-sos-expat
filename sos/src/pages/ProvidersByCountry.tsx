@@ -24,11 +24,13 @@ import {
   limit as firestoreLimit,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import SEOHead from "../components/layout/SEOHead";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import FAQPageSchema, { type FAQItem } from "../components/seo/FAQPageSchema";
+import ReviewSchema from "../components/seo/ReviewSchema";
 import { useApp } from "../contexts/AppContext";
 import {
   countriesData,
@@ -309,6 +311,17 @@ const ProvidersByCountry: React.FC = () => {
     [providers, currentPage]
   );
 
+  // Aggregate rating data for ReviewSchema
+  const aggregateData = useMemo(() => {
+    if (providers.length === 0) return null;
+    const withRating = providers.filter(p => p.rating && p.rating > 0);
+    if (withRating.length === 0) return null;
+    const totalRating = withRating.reduce((sum, p) => sum + (p.rating || 0), 0);
+    const avgRating = totalRating / withRating.length;
+    const totalReviews = withRating.reduce((sum, p) => sum + (p.reviewCount || 0), 0);
+    return { avgRating: Math.round(avgRating * 10) / 10, count: withRating.length, totalReviews };
+  }, [providers]);
+
   // Related countries (same region)
   const relatedCountries = useMemo(() => {
     if (!countryData) return [];
@@ -411,6 +424,51 @@ const ProvidersByCountry: React.FC = () => {
 
       {/* FAQ Schema */}
       <FAQPageSchema faqs={dynamicFaqs} inLanguage={effectiveLang === "ch" ? "zh" : effectiveLang} />
+
+      {/* Review Schema (AggregateRating + Reviews) */}
+      {aggregateData && aggregateData.totalReviews > 0 && (
+        <ReviewSchema
+          reviews={providers
+            .filter(p => p.rating && p.rating > 0)
+            .slice(0, 10)
+            .map(p => ({
+              id: p.id,
+              author: { name: p.firstName || 'Client' },
+              rating: { ratingValue: p.rating || 5 },
+              reviewBody: `${getRoleLabel(providerType, intl, false)} - ${p.firstName}`,
+              datePublished: new Date().toISOString().split('T')[0],
+            }))}
+          itemReviewed={{
+            type: 'ProfessionalService',
+            name: `${roleLabel} ${intl.formatMessage({ id: 'providers.in', defaultMessage: 'en' })} ${countryName}`,
+            url: canonicalUrl,
+            description: `${roleLabel} ${intl.formatMessage({ id: 'providers.in', defaultMessage: 'en' })} ${countryName} - SOS Expat`,
+          }}
+          includeAggregateRating={true}
+        />
+      )}
+
+      {/* Offer Schema (Service + Pricing) */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": `${roleLabel} ${intl.formatMessage({ id: 'providers.in', defaultMessage: 'en' })} ${countryName}`,
+          "url": canonicalUrl,
+          "provider": { "@type": "Organization", "name": "SOS Expat & Travelers", "url": "https://sos-expat.com" },
+          "areaServed": { "@type": "Country", "name": countryCode },
+          "offers": {
+            "@type": "Offer",
+            "price": providerType === "lawyer" ? "49.00" : "19.00",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "itemOffered": {
+              "@type": "Service",
+              "name": `${intl.formatMessage({ id: 'providers.consultation', defaultMessage: 'Consultation téléphonique' })} - ${countryName}`,
+            }
+          }
+        })}</script>
+      </Helmet>
 
       {/* Main Content */}
       <div
