@@ -555,6 +555,463 @@ export const COUNTRY_SLUG_TRANSLATIONS: Record<string, Record<string, string>> =
     fr: 'zimbabwe', en: 'zimbabwe', es: 'zimbabue', de: 'simbabwe',
     pt: 'zimbabue', ru: 'zimbabve', zh: 'jinbabuwei', ar: 'zimbabwi', hi: 'zimbabwe',
   },
+
+  // =============================================
+  // REMAINING COUNTRIES & TERRITORIES (to reach 197+)
+  // =============================================
+
+  AD: {
+    fr: 'andorre', en: 'andorra', es: 'andorra', de: 'andorra',
+    pt: 'andorra', ru: 'andorra', zh: 'andaoer', ar: 'andura', hi: 'andorra',
+  },
+  AG: {
+    fr: 'antigua-et-barbuda', en: 'antigua-and-barbuda', es: 'antigua-y-barbuda', de: 'antigua-barbuda',
+    pt: 'antigua-e-barbuda', ru: 'antigua-barbuda', zh: 'antigua', ar: 'antigua', hi: 'antigua-barbuda',
+  },
+  AI: {
+    fr: 'anguilla', en: 'anguilla', es: 'anguila', de: 'anguilla',
+    pt: 'anguilla', ru: 'angilya', zh: 'anguila', ar: 'anghila', hi: 'anguilla',
+  },
+  AM: {
+    fr: 'armenie', en: 'armenia', es: 'armenia', de: 'armenien',
+    pt: 'armenia', ru: 'armeniya', zh: 'yameinniya', ar: 'arminiya', hi: 'armenia',
+  },
+  AQ: {
+    fr: 'antarctique', en: 'antarctica', es: 'antartida', de: 'antarktis',
+    pt: 'antartida', ru: 'antarktida', zh: 'nanji', ar: 'antartika', hi: 'antarctica',
+  },
+  AS: {
+    fr: 'samoa-americaines', en: 'american-samoa', es: 'samoa-americana', de: 'amerik-samoa',
+    pt: 'samoa-americana', ru: 'amer-samoa', zh: 'mei-samoya', ar: 'samwa-amrik', hi: 'american-samoa',
+  },
+  AW: {
+    fr: 'aruba', en: 'aruba', es: 'aruba', de: 'aruba',
+    pt: 'aruba', ru: 'aruba', zh: 'aluba', ar: 'aruba', hi: 'aruba',
+  },
+  AX: {
+    fr: 'iles-aland', en: 'aland-islands', es: 'islas-aland', de: 'alandinseln',
+    pt: 'ilhas-aland', ru: 'alandy', zh: 'aolan', ar: 'juzur-aland', hi: 'aland',
+  },
+  BB: {
+    fr: 'barbade', en: 'barbados', es: 'barbados', de: 'barbados',
+    pt: 'barbados', ru: 'barbados', zh: 'babaduosi', ar: 'barbadus', hi: 'barbados',
+  },
+  BI: {
+    fr: 'burundi', en: 'burundi', es: 'burundi', de: 'burundi',
+    pt: 'burundi', ru: 'burundi', zh: 'bulongdi', ar: 'burundi', hi: 'burundi',
+  },
+  BJ: {
+    fr: 'benin', en: 'benin', es: 'benin', de: 'benin',
+    pt: 'benim', ru: 'benin', zh: 'beining', ar: 'binin', hi: 'benin',
+  },
+  BL: {
+    fr: 'saint-barthelemy', en: 'saint-barthelemy', es: 'san-bartolome', de: 'saint-barthelemy',
+    pt: 'sao-bartolomeu', ru: 'sen-bartelemi', zh: 'shengbatailemi', ar: 'san-bartilimi', hi: 'saint-barthelemy',
+  },
+  BM: {
+    fr: 'bermudes', en: 'bermuda', es: 'bermudas', de: 'bermuda',
+    pt: 'bermudas', ru: 'bermudskiye', zh: 'baimuda', ar: 'bermuda', hi: 'bermuda',
+  },
+  BN: {
+    fr: 'brunei', en: 'brunei', es: 'brunei', de: 'brunei',
+    pt: 'brunei', ru: 'bruney', zh: 'wenlai', ar: 'brunay', hi: 'brunei',
+  },
+  BQ: {
+    fr: 'bonaire', en: 'bonaire', es: 'bonaire', de: 'bonaire',
+    pt: 'bonaire', ru: 'boner', zh: 'bonaire', ar: 'bunir', hi: 'bonaire',
+  },
+  BS: {
+    fr: 'bahamas', en: 'bahamas', es: 'bahamas', de: 'bahamas',
+    pt: 'bahamas', ru: 'bagamy', zh: 'bahama', ar: 'al-bahama', hi: 'bahamas',
+  },
+  BT: {
+    fr: 'bhoutan', en: 'bhutan', es: 'butan', de: 'bhutan',
+    pt: 'butao', ru: 'butan', zh: 'budan', ar: 'bhutan', hi: 'bhutan',
+  },
+  BV: {
+    fr: 'ile-bouvet', en: 'bouvet-island', es: 'isla-bouvet', de: 'bouvetinsel',
+    pt: 'ilha-bouvet', ru: 'ostrov-buve', zh: 'buwei', ar: 'jazirat-bufi', hi: 'bouvet-island',
+  },
+  BW: {
+    fr: 'botswana', en: 'botswana', es: 'botsuana', de: 'botswana',
+    pt: 'botsuana', ru: 'botsvana', zh: 'bociwana', ar: 'butswana', hi: 'botswana',
+  },
+  BZ: {
+    fr: 'belize', en: 'belize', es: 'belice', de: 'belize',
+    pt: 'belize', ru: 'beliz', zh: 'bolizi', ar: 'biliz', hi: 'belize',
+  },
+  CC: {
+    fr: 'iles-cocos', en: 'cocos-islands', es: 'islas-cocos', de: 'kokosinseln',
+    pt: 'ilhas-cocos', ru: 'kokosovye', zh: 'kekesi', ar: 'juzur-kukus', hi: 'cocos-islands',
+  },
+  CF: {
+    fr: 'centrafrique', en: 'central-african-rep', es: 'rep-centroafricana', de: 'zentralafrika',
+    pt: 'rep-centro-africana', ru: 'tsar', zh: 'zhongfei', ar: 'ifriqya-wusta', hi: 'central-africa',
+  },
+  CK: {
+    fr: 'iles-cook', en: 'cook-islands', es: 'islas-cook', de: 'cookinseln',
+    pt: 'ilhas-cook', ru: 'ostr-kuka', zh: 'kuke', ar: 'juzur-kuk', hi: 'cook-islands',
+  },
+  CV: {
+    fr: 'cap-vert', en: 'cape-verde', es: 'cabo-verde', de: 'kap-verde',
+    pt: 'cabo-verde', ru: 'kabo-verde', zh: 'fode', ar: 'al-ras-akhdar', hi: 'cape-verde',
+  },
+  CW: {
+    fr: 'curacao', en: 'curacao', es: 'curazao', de: 'curacao',
+    pt: 'curacao', ru: 'kyurasao', zh: 'kulasuo', ar: 'kurasao', hi: 'curacao',
+  },
+  CX: {
+    fr: 'ile-christmas', en: 'christmas-island', es: 'isla-navidad', de: 'weihnachtsinsel',
+    pt: 'ilha-christmas', ru: 'ostr-rozhdestva', zh: 'shengdan', ar: 'jazirat-krismus', hi: 'christmas-island',
+  },
+  DM: {
+    fr: 'dominique', en: 'dominica', es: 'dominica', de: 'dominica',
+    pt: 'dominica', ru: 'dominika', zh: 'duominike', ar: 'duminika', hi: 'dominica',
+  },
+  ER: {
+    fr: 'erythree', en: 'eritrea', es: 'eritrea', de: 'eritrea',
+    pt: 'eritreia', ru: 'eritreya', zh: 'eliteliya', ar: 'iritrya', hi: 'eritrea',
+  },
+  FJ: {
+    fr: 'fidji', en: 'fiji', es: 'fiyi', de: 'fidschi',
+    pt: 'fiji', ru: 'fidzhi', zh: 'feiji', ar: 'fiji', hi: 'fiji',
+  },
+  FK: {
+    fr: 'iles-malouines', en: 'falkland-islands', es: 'islas-malvinas', de: 'falklandinseln',
+    pt: 'ilhas-malvinas', ru: 'folklendskie', zh: 'fukelan', ar: 'juzur-fulkland', hi: 'falkland-islands',
+  },
+  FM: {
+    fr: 'micronesie', en: 'micronesia', es: 'micronesia', de: 'mikronesien',
+    pt: 'micronesia', ru: 'mikroneziya', zh: 'mikeluo', ar: 'mikrunizya', hi: 'micronesia',
+  },
+  FO: {
+    fr: 'iles-feroe', en: 'faroe-islands', es: 'islas-feroe', de: 'faeroeer',
+    pt: 'ilhas-faroe', ru: 'farery', zh: 'faluo', ar: 'juzur-faru', hi: 'faroe-islands',
+  },
+  GD: {
+    fr: 'grenade', en: 'grenada', es: 'granada', de: 'grenada',
+    pt: 'granada', ru: 'grenada', zh: 'gelinada', ar: 'ghrinada', hi: 'grenada',
+  },
+  GG: {
+    fr: 'guernesey', en: 'guernsey', es: 'guernsey', de: 'guernsey',
+    pt: 'guernsey', ru: 'gernsi', zh: 'genxi', ar: 'ghirnzi', hi: 'guernsey',
+  },
+  GI: {
+    fr: 'gibraltar', en: 'gibraltar', es: 'gibraltar', de: 'gibraltar',
+    pt: 'gibraltar', ru: 'gibraltar', zh: 'zhibuluotuo', ar: 'jabal-tariq', hi: 'gibraltar',
+  },
+  GL: {
+    fr: 'groenland', en: 'greenland', es: 'groenlandia', de: 'groenland',
+    pt: 'groenlandia', ru: 'grenlandiya', zh: 'gelinlan', ar: 'ghrinland', hi: 'greenland',
+  },
+  GM: {
+    fr: 'gambie', en: 'gambia', es: 'gambia', de: 'gambia',
+    pt: 'gambia', ru: 'gambiya', zh: 'gangbiya', ar: 'ghambiya', hi: 'gambia',
+  },
+  GQ: {
+    fr: 'guinee-equatoriale', en: 'equatorial-guinea', es: 'guinea-ecuatorial', de: 'aequatorialguinea',
+    pt: 'guine-equatorial', ru: 'ekv-gvineya', zh: 'chidao-jineiya', ar: 'ghiniya-ist', hi: 'eq-guinea',
+  },
+  GS: {
+    fr: 'georgie-du-sud', en: 'south-georgia', es: 'georgia-del-sur', de: 'suedgeorgien',
+    pt: 'georgia-do-sul', ru: 'yuzh-georgiya', zh: 'nan-qiaozhiya', ar: 'jurjya-janub', hi: 'south-georgia',
+  },
+  GU: {
+    fr: 'guam', en: 'guam', es: 'guam', de: 'guam',
+    pt: 'guam', ru: 'guam', zh: 'guandao', ar: 'ghwam', hi: 'guam',
+  },
+  GW: {
+    fr: 'guinee-bissau', en: 'guinea-bissau', es: 'guinea-bisau', de: 'guinea-bissau',
+    pt: 'guine-bissau', ru: 'gvineya-bisau', zh: 'jineiya-bisao', ar: 'ghiniya-bisau', hi: 'guinea-bissau',
+  },
+  GY: {
+    fr: 'guyana', en: 'guyana', es: 'guyana', de: 'guyana',
+    pt: 'guiana', ru: 'gayana', zh: 'guiyana', ar: 'ghayana', hi: 'guyana',
+  },
+  HM: {
+    fr: 'iles-heard', en: 'heard-island', es: 'isla-heard', de: 'heard-mcdonald',
+    pt: 'ilha-heard', ru: 'ostr-kherd', zh: 'hede', ar: 'jazirat-hird', hi: 'heard-island',
+  },
+  IM: {
+    fr: 'ile-de-man', en: 'isle-of-man', es: 'isla-de-man', de: 'insel-man',
+    pt: 'ilha-de-man', ru: 'ostr-men', zh: 'mandao', ar: 'jazirat-man', hi: 'isle-of-man',
+  },
+  IO: {
+    fr: 'terr-brit-ocean-ind', en: 'british-indian-ocean', es: 'terr-brit-oceano', de: 'brit-ind-ozean',
+    pt: 'terr-brit-oceano', ru: 'brit-ind-okean', zh: 'yindu-yang', ar: 'muhit-hindi-brit', hi: 'british-indian',
+  },
+  JE: {
+    fr: 'jersey', en: 'jersey', es: 'jersey', de: 'jersey',
+    pt: 'jersey', ru: 'dzhersi', zh: 'zexi', ar: 'jirzi', hi: 'jersey',
+  },
+  KG: {
+    fr: 'kirghizistan', en: 'kyrgyzstan', es: 'kirguistan', de: 'kirgisistan',
+    pt: 'quirguistao', ru: 'kirgiziya', zh: 'jierjisi', ar: 'qirghizstan', hi: 'kyrgyzstan',
+  },
+  KI: {
+    fr: 'kiribati', en: 'kiribati', es: 'kiribati', de: 'kiribati',
+    pt: 'kiribati', ru: 'kiribati', zh: 'jilibasi', ar: 'kiribati', hi: 'kiribati',
+  },
+  KM: {
+    fr: 'comores', en: 'comoros', es: 'comoras', de: 'komoren',
+    pt: 'comores', ru: 'komory', zh: 'kemoluo', ar: 'juzur-qamar', hi: 'comoros',
+  },
+  KN: {
+    fr: 'saint-kitts', en: 'saint-kitts-nevis', es: 'san-cristobal', de: 'st-kitts-nevis',
+    pt: 'sao-cristovao', ru: 'sent-kits', zh: 'shengji', ar: 'sant-kits', hi: 'saint-kitts',
+  },
+  KP: {
+    fr: 'coree-du-nord', en: 'north-korea', es: 'corea-del-norte', de: 'nordkorea',
+    pt: 'coreia-do-norte', ru: 'sev-koreya', zh: 'chaoxian', ar: 'kurya-shamal', hi: 'uttar-koriya',
+  },
+  LA: {
+    fr: 'laos', en: 'laos', es: 'laos', de: 'laos',
+    pt: 'laos', ru: 'laos', zh: 'laowo', ar: 'lawus', hi: 'laos',
+  },
+  LC: {
+    fr: 'sainte-lucie', en: 'saint-lucia', es: 'santa-lucia', de: 'st-lucia',
+    pt: 'santa-lucia', ru: 'sent-lyusiya', zh: 'shengluxiya', ar: 'sant-lusiya', hi: 'saint-lucia',
+  },
+  LI: {
+    fr: 'liechtenstein', en: 'liechtenstein', es: 'liechtenstein', de: 'liechtenstein',
+    pt: 'liechtenstein', ru: 'likhtenshtein', zh: 'liezhidun', ar: 'likhtnshtayn', hi: 'liechtenstein',
+  },
+  LR: {
+    fr: 'liberia', en: 'liberia', es: 'liberia', de: 'liberia',
+    pt: 'liberia', ru: 'liberiya', zh: 'libiliya', ar: 'librya', hi: 'liberia',
+  },
+  LS: {
+    fr: 'lesotho', en: 'lesotho', es: 'lesoto', de: 'lesotho',
+    pt: 'lesoto', ru: 'lesoto', zh: 'laisotuo', ar: 'lisuthu', hi: 'lesotho',
+  },
+  MC: {
+    fr: 'monaco', en: 'monaco', es: 'monaco', de: 'monaco',
+    pt: 'monaco', ru: 'monako', zh: 'monage', ar: 'munaku', hi: 'monaco',
+  },
+  ME: {
+    fr: 'montenegro', en: 'montenegro', es: 'montenegro', de: 'montenegro',
+    pt: 'montenegro', ru: 'chernogoriya', zh: 'heishang', ar: 'al-jabal-aswad', hi: 'montenegro',
+  },
+  MF: {
+    fr: 'saint-martin', en: 'saint-martin', es: 'san-martin', de: 'saint-martin',
+    pt: 'sao-martinho', ru: 'sen-marten', zh: 'shengmading', ar: 'san-martin', hi: 'saint-martin',
+  },
+  MH: {
+    fr: 'iles-marshall', en: 'marshall-islands', es: 'islas-marshall', de: 'marshallinseln',
+    pt: 'ilhas-marshall', ru: 'marshallovy', zh: 'mashaoer', ar: 'juzur-marshal', hi: 'marshall-islands',
+  },
+  MK: {
+    fr: 'macedoine-du-nord', en: 'north-macedonia', es: 'macedonia-norte', de: 'nordmazedonien',
+    pt: 'macedonia-norte', ru: 'sev-makedoniya', zh: 'bei-masidun', ar: 'maqdunya-shamal', hi: 'north-macedonia',
+  },
+  MO: {
+    fr: 'macao', en: 'macao', es: 'macao', de: 'macau',
+    pt: 'macau', ru: 'makao', zh: 'aomen', ar: 'makaw', hi: 'macao',
+  },
+  MP: {
+    fr: 'iles-mariannes', en: 'northern-mariana', es: 'islas-marianas', de: 'nordmariannen',
+    pt: 'ilhas-marianas', ru: 'sev-mariany', zh: 'bei-maliana', ar: 'juzur-maryana', hi: 'north-mariana',
+  },
+  MQ: {
+    fr: 'martinique', en: 'martinique', es: 'martinica', de: 'martinique',
+    pt: 'martinica', ru: 'martinika', zh: 'matinike', ar: 'martinik', hi: 'martinique',
+  },
+  MR: {
+    fr: 'mauritanie', en: 'mauritania', es: 'mauritania', de: 'mauretanien',
+    pt: 'mauritania', ru: 'mavritaniya', zh: 'maolitaniya', ar: 'muritanya', hi: 'mauritania',
+  },
+  MS: {
+    fr: 'montserrat', en: 'montserrat', es: 'montserrat', de: 'montserrat',
+    pt: 'montserrat', ru: 'montserrat', zh: 'mengsailate', ar: 'muntsarat', hi: 'montserrat',
+  },
+  MT: {
+    fr: 'malte', en: 'malta', es: 'malta', de: 'malta',
+    pt: 'malta', ru: 'malta', zh: 'maerta', ar: 'malta', hi: 'malta',
+  },
+  MV: {
+    fr: 'maldives', en: 'maldives', es: 'maldivas', de: 'malediven',
+    pt: 'maldivas', ru: 'maldivy', zh: 'maerdaifu', ar: 'al-maldif', hi: 'maldives',
+  },
+  MW: {
+    fr: 'malawi', en: 'malawi', es: 'malaui', de: 'malawi',
+    pt: 'malawi', ru: 'malavi', zh: 'malawei', ar: 'malawi', hi: 'malawi',
+  },
+  NA: {
+    fr: 'namibie', en: 'namibia', es: 'namibia', de: 'namibia',
+    pt: 'namibia', ru: 'namibiya', zh: 'namibiya', ar: 'namibya', hi: 'namibia',
+  },
+  NC: {
+    fr: 'nouvelle-caledonie', en: 'new-caledonia', es: 'nueva-caledonia', de: 'neukaledonien',
+    pt: 'nova-caledonia', ru: 'novaya-kaledon', zh: 'xin-kaleduo', ar: 'kalidunya-jadid', hi: 'new-caledonia',
+  },
+  NF: {
+    fr: 'ile-norfolk', en: 'norfolk-island', es: 'isla-norfolk', de: 'norfolkinsel',
+    pt: 'ilha-norfolk', ru: 'ostr-norfolk', zh: 'nuofuke', ar: 'jazirat-nurfulk', hi: 'norfolk-island',
+  },
+  NR: {
+    fr: 'nauru', en: 'nauru', es: 'nauru', de: 'nauru',
+    pt: 'nauru', ru: 'nauru', zh: 'naolu', ar: 'nawru', hi: 'nauru',
+  },
+  NU: {
+    fr: 'niue', en: 'niue', es: 'niue', de: 'niue',
+    pt: 'niue', ru: 'niue', zh: 'niuai', ar: 'niyu', hi: 'niue',
+  },
+  PG: {
+    fr: 'papouasie-nv-guinee', en: 'papua-new-guinea', es: 'papua-nueva-guinea', de: 'papua-neuguinea',
+    pt: 'papua-nova-guine', ru: 'papua-n-gvineya', zh: 'baxin-jineiya', ar: 'babwa-ghiniya', hi: 'papua-new-guinea',
+  },
+  PM: {
+    fr: 'saint-pierre', en: 'saint-pierre', es: 'san-pedro', de: 'saint-pierre',
+    pt: 'sao-pedro', ru: 'sen-pyer', zh: 'shengpiyer', ar: 'san-byir', hi: 'saint-pierre',
+  },
+  PN: {
+    fr: 'pitcairn', en: 'pitcairn', es: 'pitcairn', de: 'pitcairninseln',
+    pt: 'pitcairn', ru: 'pitkern', zh: 'pitkaien', ar: 'bitkairn', hi: 'pitcairn',
+  },
+  PR: {
+    fr: 'porto-rico', en: 'puerto-rico', es: 'puerto-rico', de: 'puerto-rico',
+    pt: 'porto-rico', ru: 'puerto-riko', zh: 'boetolige', ar: 'burtu-riku', hi: 'puerto-rico',
+  },
+  PS: {
+    fr: 'palestine', en: 'palestine', es: 'palestina', de: 'palaestina',
+    pt: 'palestina', ru: 'palestina', zh: 'balesitan', ar: 'filastin', hi: 'palestine',
+  },
+  PW: {
+    fr: 'palaos', en: 'palau', es: 'palaos', de: 'palau',
+    pt: 'palau', ru: 'palau', zh: 'belao', ar: 'balaw', hi: 'palau',
+  },
+  RE: {
+    fr: 'la-reunion', en: 'reunion', es: 'reunion', de: 'reunion',
+    pt: 'reuniao', ru: 'reunion', zh: 'liuliwang', ar: 'riyunyun', hi: 'reunion',
+  },
+  SB: {
+    fr: 'iles-salomon', en: 'solomon-islands', es: 'islas-salomon', de: 'salomonen',
+    pt: 'ilhas-salomao', ru: 'solomonovy', zh: 'suoluomen', ar: 'juzur-suliman', hi: 'solomon-islands',
+  },
+  SC: {
+    fr: 'seychelles', en: 'seychelles', es: 'seychelles', de: 'seychellen',
+    pt: 'seicheles', ru: 'seyshely', zh: 'saisheer', ar: 'sayshil', hi: 'seychelles',
+  },
+  SH: {
+    fr: 'sainte-helene', en: 'saint-helena', es: 'santa-elena', de: 'st-helena',
+    pt: 'santa-helena', ru: 'sv-yeleny', zh: 'shenghelena', ar: 'sant-hilina', hi: 'saint-helena',
+  },
+  SJ: {
+    fr: 'svalbard', en: 'svalbard', es: 'svalbard', de: 'svalbard',
+    pt: 'svalbard', ru: 'shpitsbergen', zh: 'siwaerbade', ar: 'sfalbar', hi: 'svalbard',
+  },
+  SL: {
+    fr: 'sierra-leone', en: 'sierra-leone', es: 'sierra-leona', de: 'sierra-leone',
+    pt: 'serra-leoa', ru: 'sierra-leone', zh: 'sailaliang', ar: 'sira-lyun', hi: 'sierra-leone',
+  },
+  SM: {
+    fr: 'saint-marin', en: 'san-marino', es: 'san-marino', de: 'san-marino',
+    pt: 'sao-marinho', ru: 'san-marino', zh: 'shengmalino', ar: 'san-marinu', hi: 'san-marino',
+  },
+  SO: {
+    fr: 'somalie', en: 'somalia', es: 'somalia', de: 'somalia',
+    pt: 'somalia', ru: 'somali', zh: 'suomali', ar: 'as-sumal', hi: 'somalia',
+  },
+  SR: {
+    fr: 'suriname', en: 'suriname', es: 'surinam', de: 'suriname',
+    pt: 'suriname', ru: 'surinam', zh: 'sulinan', ar: 'surinam', hi: 'suriname',
+  },
+  SS: {
+    fr: 'soudan-du-sud', en: 'south-sudan', es: 'sudan-del-sur', de: 'suedsudan',
+    pt: 'sudao-do-sul', ru: 'yuzh-sudan', zh: 'nan-sudan', ar: 'sudan-janub', hi: 'south-sudan',
+  },
+  ST: {
+    fr: 'sao-tome-et-principe', en: 'sao-tome-principe', es: 'santo-tome', de: 'sao-tome',
+    pt: 'sao-tome-principe', ru: 'san-tome', zh: 'shengtome', ar: 'saw-tumi', hi: 'sao-tome',
+  },
+  SV: {
+    fr: 'el-salvador', en: 'el-salvador', es: 'el-salvador', de: 'el-salvador',
+    pt: 'el-salvador', ru: 'salvador', zh: 'saerwaduo', ar: 'as-salfadur', hi: 'el-salvador',
+  },
+  SX: {
+    fr: 'sint-maarten', en: 'sint-maarten', es: 'sint-maarten', de: 'sint-maarten',
+    pt: 'sint-maarten', ru: 'sint-marten', zh: 'shengmading-nl', ar: 'sint-martan', hi: 'sint-maarten',
+  },
+  SZ: {
+    fr: 'eswatini', en: 'eswatini', es: 'esuatini', de: 'eswatini',
+    pt: 'eswatini', ru: 'esvantini', zh: 'esiwadini', ar: 'iswatini', hi: 'eswatini',
+  },
+  TC: {
+    fr: 'iles-turques', en: 'turks-and-caicos', es: 'islas-turcas', de: 'turks-caicos',
+    pt: 'ilhas-turcas', ru: 'terks-kaykos', zh: 'teke-kaike', ar: 'turks-kaykus', hi: 'turks-caicos',
+  },
+  TF: {
+    fr: 'terres-australes-fr', en: 'french-southern', es: 'tierras-australes', de: 'franz-suedgebiete',
+    pt: 'terras-austr-fr', ru: 'fr-yuzhn-terr', zh: 'fa-nan-lingdi', ar: 'aradi-janub-fr', hi: 'french-southern',
+  },
+  TJ: {
+    fr: 'tadjikistan', en: 'tajikistan', es: 'tayikistan', de: 'tadschikistan',
+    pt: 'tajiquistao', ru: 'tadzhikistan', zh: 'tajikesitan', ar: 'tajikistan', hi: 'tajikistan',
+  },
+  TK: {
+    fr: 'tokelau', en: 'tokelau', es: 'tokelau', de: 'tokelau',
+    pt: 'tokelau', ru: 'tokelau', zh: 'tuokelao', ar: 'tukilaw', hi: 'tokelau',
+  },
+  TL: {
+    fr: 'timor-oriental', en: 'timor-leste', es: 'timor-oriental', de: 'osttimor',
+    pt: 'timor-leste', ru: 'vost-timor', zh: 'dongdiwen', ar: 'timur-sharq', hi: 'timor-leste',
+  },
+  TM: {
+    fr: 'turkmenistan', en: 'turkmenistan', es: 'turkmenistan', de: 'turkmenistan',
+    pt: 'turquemenistao', ru: 'turkmenistan', zh: 'tukumansitan', ar: 'turkmanistan', hi: 'turkmenistan',
+  },
+  TO: {
+    fr: 'tonga', en: 'tonga', es: 'tonga', de: 'tonga',
+    pt: 'tonga', ru: 'tonga', zh: 'tangjia', ar: 'tungha', hi: 'tonga',
+  },
+  TV: {
+    fr: 'tuvalu', en: 'tuvalu', es: 'tuvalu', de: 'tuvalu',
+    pt: 'tuvalu', ru: 'tuvalu', zh: 'tuwalu', ar: 'tufalu', hi: 'tuvalu',
+  },
+  UM: {
+    fr: 'iles-mineures-us', en: 'us-minor-islands', es: 'islas-menores-us', de: 'us-kleinere-inseln',
+    pt: 'ilhas-menores-us', ru: 'malye-ostr-us', zh: 'mei-xiao-dao', ar: 'juzur-amrik', hi: 'us-minor-islands',
+  },
+  VA: {
+    fr: 'vatican', en: 'vatican', es: 'vaticano', de: 'vatikanstadt',
+    pt: 'vaticano', ru: 'vatikan', zh: 'fandigang', ar: 'al-fatikan', hi: 'vatican',
+  },
+  VC: {
+    fr: 'saint-vincent', en: 'saint-vincent', es: 'san-vicente', de: 'st-vincent',
+    pt: 'sao-vicente', ru: 'sent-vinsent', zh: 'shengwensente', ar: 'sant-finsint', hi: 'saint-vincent',
+  },
+  VG: {
+    fr: 'iles-vierges-brit', en: 'british-virgin-isl', es: 'islas-virgenes-br', de: 'brit-jungfernins',
+    pt: 'ilhas-virgens-br', ru: 'brit-virg-ostr', zh: 'ying-weier', ar: 'juzur-brit', hi: 'brit-virgin-isl',
+  },
+  VI: {
+    fr: 'iles-vierges-us', en: 'us-virgin-islands', es: 'islas-virgenes-us', de: 'us-jungferninseln',
+    pt: 'ilhas-virgens-us', ru: 'amer-virg-ostr', zh: 'mei-weier', ar: 'juzur-amrik', hi: 'us-virgin-isl',
+  },
+  VU: {
+    fr: 'vanuatu', en: 'vanuatu', es: 'vanuatu', de: 'vanuatu',
+    pt: 'vanuatu', ru: 'vanuatu', zh: 'wanuatu', ar: 'fanwatu', hi: 'vanuatu',
+  },
+  WF: {
+    fr: 'wallis-et-futuna', en: 'wallis-and-futuna', es: 'wallis-y-futuna', de: 'wallis-futuna',
+    pt: 'wallis-e-futuna', ru: 'uollis-futuna', zh: 'walisi', ar: 'walis-futuna', hi: 'wallis-futuna',
+  },
+  WS: {
+    fr: 'samoa', en: 'samoa', es: 'samoa', de: 'samoa',
+    pt: 'samoa', ru: 'samoa', zh: 'samoya', ar: 'samwa', hi: 'samoa',
+  },
+  XK: {
+    fr: 'kosovo', en: 'kosovo', es: 'kosovo', de: 'kosovo',
+    pt: 'kosovo', ru: 'kosovo', zh: 'kesuowo', ar: 'kusufu', hi: 'kosovo',
+  },
+  YE: {
+    fr: 'yemen', en: 'yemen', es: 'yemen', de: 'jemen',
+    pt: 'iemen', ru: 'yemen', zh: 'yemen', ar: 'al-yaman', hi: 'yemen',
+  },
+  YT: {
+    fr: 'mayotte', en: 'mayotte', es: 'mayotte', de: 'mayotte',
+    pt: 'maiote', ru: 'mayotta', zh: 'mayuete', ar: 'mayut', hi: 'mayotte',
+  },
 };
 
 /**
