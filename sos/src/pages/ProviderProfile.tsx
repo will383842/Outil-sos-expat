@@ -3669,32 +3669,34 @@ const ProviderProfile: React.FC = () => {
                 const rpSlug = rpSlugs?.[currentLang || 'fr'] || rpSlugs?.['fr'];
                 const rpUrl = rpSlug
                   ? `/${rpSlug}`
-                  : `/${getLocaleString(currentLang as any)}/provider/${rp.shortId || rp.id}`;
+                  : null; // Skip providers without proper SEO slugs
                 const rpRating = typeof rp.rating === 'number' ? rp.rating.toFixed(1) : null;
                 // Translate specialties using locale-aware labels
                 const specLocale = (currentLang === 'ch' ? 'zh' : currentLang || 'fr') as any;
                 const translatedSpecs = (rp.specialties || [])
                   .slice(0, 2)
                   .map(s => getSpecialtyLabel(s, specLocale));
+                if (!rpUrl) return null; // Skip providers without proper slugs
                 return (
                   <a
                     key={rp.id}
                     href={rpUrl}
-                    className="flex items-center gap-4 bg-gray-900/50 rounded-xl p-4 border border-gray-800 hover:border-gray-600 transition-colors"
+                    className="flex items-center gap-4 bg-gradient-to-r from-gray-800/80 to-gray-800/60 rounded-xl p-4 border border-gray-700/50 hover:border-red-500/40 hover:from-gray-800 hover:to-gray-700/80 transition-all duration-200"
                   >
                     <img
                       src={rpPhoto}
                       alt={rpName}
-                      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-700"
                       loading="lazy"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }}
                     />
                     <div className="min-w-0">
                       <p className="font-semibold text-white truncate">{rpName}</p>
                       {rpRating && (
-                        <p className="text-sm text-yellow-400">★ {rpRating}</p>
+                        <p className="text-sm text-yellow-400 font-medium">★ {rpRating}</p>
                       )}
-                      <p className="text-xs text-gray-400 truncate">
-                        {translatedSpecs.join(', ')}
+                      <p className="text-sm text-gray-300 truncate">
+                        {translatedSpecs.join(' · ')}
                       </p>
                     </div>
                   </a>
