@@ -2113,10 +2113,16 @@ const ProviderProfile: React.FC = () => {
       }),
       priceRange: isLawyer ? "€49" : "€19",
       priceCurrency: "EUR",
-      areaServed: {
-        "@type": "Country",
-        name: provider.country?.toUpperCase() || '',
-      },
+      areaServed: (() => {
+        const countries = [provider.country, ...(provider.operatingCountries || [])]
+          .filter((c): c is string => !!c)
+          .map(c => c.toUpperCase())
+          .filter((c, i, arr) => arr.indexOf(c) === i); // deduplicate
+        if (countries.length === 1) {
+          return { "@type": "Country", name: countries[0] };
+        }
+        return countries.map(c => ({ "@type": "Country", name: c }));
+      })(),
       ...(provider.specialties && provider.specialties.length > 0 && {
         hasOfferCatalog: {
           "@type": "OfferCatalog",
@@ -2296,13 +2302,29 @@ const ProviderProfile: React.FC = () => {
     ? intl.formatMessage({ id: "providerProfile.lawyer" })
     : intl.formatMessage({ id: "providerProfile.expat" });
   
+  // SEO Title: Name - Role specialty, languages in Country | Brand
+  // Example: "Ahmed - Avocat immigration & visas, arabophone en Thaïlande | SOS Expat"
+  const topSpecialty = derivedSpecialties.length > 0 ? derivedSpecialties[0] : '';
+  const spokenLangs = languagesList.length > 0 ? languagesList.join(', ') : '';
+  const countryName = getCountryName(provider.country, preferredLangKey);
+  const operatingCountryNames = (provider.operatingCountries || [])
+    .slice(0, 3)
+    .map(c => getCountryName(c, preferredLangKey))
+    .filter(c => c && c !== countryName);
+
   const seoTitle = translation && !showOriginal && translation.seo?.metaTitle
     ? translation.seo.metaTitle
-    : `${formatPublicName(provider)} - ${roleLabel} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)} | SOS Expat & Travelers`;
-  
+    : `${formatPublicName(provider)} - ${roleLabel}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName} | SOS Expat`.slice(0, 60);
+
+  // SEO Description: Consult Name, role specialty in Country. Speaks Arabic, French. Covers Thailand, UAE.
   const seoDescription = translation && !showOriginal && translation.seo?.metaDescription
     ? translation.seo.metaDescription
-    : `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()} ${intl.formatMessage({ id: "providerProfile.frenchSpeaking" })} ${intl.formatMessage({ id: "providerProfile.in" })} ${getCountryName(provider.country, preferredLangKey)}. ${descriptionText.slice(0, 120)}...`;
+    : [
+        `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}.`,
+        spokenLangs ? `${intl.formatMessage({ id: "providerProfile.speaks", defaultMessage: "Speaks" })}: ${spokenLangs}.` : '',
+        operatingCountryNames.length > 0 ? `${intl.formatMessage({ id: "providerProfile.alsoCovering", defaultMessage: "Also covering" })}: ${operatingCountryNames.join(', ')}.` : '',
+        provider.yearsOfExperience ? `${provider.yearsOfExperience} ${yearsLabel}.` : '',
+      ].filter(Boolean).join(' ').slice(0, 160);
 
   const canonicalUrl = (() => {
     // BEST: Use multilingual slugs from Firestore (already contain full path with locale)
