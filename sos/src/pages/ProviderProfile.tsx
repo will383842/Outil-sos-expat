@@ -91,6 +91,7 @@ import {
   generateShortId
 } from "../utils/slugGenerator";
 import { useSnippetGenerator } from '../hooks/useSnippetGenerator';
+import { useSEOOptimized } from '../hooks/useSEOOptimized';
 
 // 👉 Translation system
 import { useProviderTranslation } from "../hooks/useProviderTranslation";
@@ -2364,8 +2365,11 @@ const ProviderProfile: React.FC = () => {
     ? intl.formatMessage({ id: "providerProfile.lawyer" })
     : intl.formatMessage({ id: "providerProfile.expat" });
   
+  // AI-generated SEO data (from seo_optimized collection)
+  const { data: seoAI } = useSEOOptimized(realProviderId, currentLang || 'fr');
+
   // SEO Title: Name - Role specialty, languages in Country | Brand
-  // Example: "Ahmed - Avocat immigration & visas, arabophone en Thaïlande | SOS Expat"
+  // Priority: AI SEO > Translation SEO > Template
   const topSpecialty = derivedSpecialties.length > 0 ? derivedSpecialties[0] : '';
   const spokenLangs = languagesList.length > 0 ? languagesList.join(', ') : '';
   const countryName = getCountryName(provider.country, preferredLangKey);
@@ -2374,19 +2378,21 @@ const ProviderProfile: React.FC = () => {
     .map(c => getCountryName(c, preferredLangKey))
     .filter(c => c && c !== countryName);
 
-  const seoTitle = translation && !showOriginal && translation.seo?.metaTitle
-    ? translation.seo.metaTitle
-    : `${formatPublicName(provider)} - ${roleLabel}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName} | SOS Expat`.slice(0, 60);
+  const seoTitle = seoAI?.metaTitle
+    || (translation && !showOriginal && translation.seo?.metaTitle
+      ? translation.seo.metaTitle
+      : `${formatPublicName(provider)} - ${roleLabel}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName} | SOS Expat`.slice(0, 60));
 
-  // SEO Description: Consult Name, role specialty in Country. Speaks Arabic, French. Covers Thailand, UAE.
-  const seoDescription = translation && !showOriginal && translation.seo?.metaDescription
-    ? translation.seo.metaDescription
-    : [
-        `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}.`,
-        spokenLangs ? `${intl.formatMessage({ id: "providerProfile.speaks", defaultMessage: "Speaks" })}: ${spokenLangs}.` : '',
-        operatingCountryNames.length > 0 ? `${intl.formatMessage({ id: "providerProfile.alsoCovering", defaultMessage: "Also covering" })}: ${operatingCountryNames.join(', ')}.` : '',
-        provider.yearsOfExperience ? `${provider.yearsOfExperience} ${yearsLabel}.` : '',
-      ].filter(Boolean).join(' ').slice(0, 160);
+  // SEO Description: Priority: AI SEO > Translation SEO > Template
+  const seoDescription = seoAI?.metaDescription
+    || (translation && !showOriginal && translation.seo?.metaDescription
+      ? translation.seo.metaDescription
+      : [
+          `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}.`,
+          spokenLangs ? `${intl.formatMessage({ id: "providerProfile.speaks", defaultMessage: "Speaks" })}: ${spokenLangs}.` : '',
+          operatingCountryNames.length > 0 ? `${intl.formatMessage({ id: "providerProfile.alsoCovering", defaultMessage: "Also covering" })}: ${operatingCountryNames.join(', ')}.` : '',
+          provider.yearsOfExperience ? `${provider.yearsOfExperience} ${yearsLabel}.` : '',
+        ].filter(Boolean).join(' ').slice(0, 160));
 
   const canonicalUrl = (() => {
     // BEST: Use multilingual slugs from Firestore (already contain full path with locale)
@@ -2445,11 +2451,11 @@ const ProviderProfile: React.FC = () => {
             ? translation.seo.jsonLd
             : structuredData
         }
-        aiSummary={intl.formatMessage(
+        aiSummary={seoAI?.aiSummary || intl.formatMessage(
           { id: 'providerProfile.aiSummary', defaultMessage: '{name} is a verified {role} in {country} with {years} years of experience. Available on SOS Expat for phone consultations in {languages}.' },
           { name: provider.firstName, role: isLawyer ? roleLabel.toLowerCase() : roleLabel.toLowerCase(), country: getCountryName(provider.country, preferredLangKey), years: String(provider.yearsOfExperience || 0), languages: languagesList.join(', ') }
         )}
-        expertise={isLawyer ? 'legal-professional' : 'expat-advisor'}
+        expertise={seoAI?.structuredData?.knowsAbout?.join(', ') || (isLawyer ? 'legal-professional' : 'expat-advisor')}
         trustworthiness={`verified-provider${providerStats.realReviewsCount > 0 ? `, ${providerStats.realReviewsCount}_reviews, ${Number((providerStats.averageRating || 0).toFixed(1))}_rating` : ''}`}
         contentQuality="high"
         lastReviewed={new Date().toISOString().split('T')[0]}
@@ -2477,11 +2483,31 @@ const ProviderProfile: React.FC = () => {
       })()}
 
       {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage) — dans <head> via Helmet */}
-      {snippetData && (
+      {/* If AI-generated FAQs exist, use them instead of templated snippetGenerator FAQs */}
+      {seoAI?.faqs && seoAI.faqs.length > 0 ? (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": seoAI.faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer,
+              },
+            })),
+          })}</script>
+          {/* Keep breadcrumb from snippetGenerator even when AI FAQs are used */}
+          {snippetData && <script type="application/ld+json">{JSON.stringify(
+            JSON.parse(snippetData.jsonLD).find((s: any) => s['@type'] === 'BreadcrumbList') || {}
+          )}</script>}
+        </Helmet>
+      ) : snippetData ? (
         <Helmet>
           <script type="application/ld+json">{snippetData.jsonLD}</script>
         </Helmet>
-      )}
+      ) : null}
 
       {/* Review Schema JSON-LD — enables Google Rich Snippets with stars on provider profiles */}
       {reviews.length > 0 && (

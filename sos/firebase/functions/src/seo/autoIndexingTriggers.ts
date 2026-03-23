@@ -82,6 +82,9 @@ export const onProfileCreated = onDocumentCreated(
 
     // 5. Soumettre les URLs de listing pays
     await submitCountryListingUrls(profile, profileId, 'profile_country');
+
+    // NOTE: AI SEO generation (generateProviderSEOCallable) is triggered manually by admin
+    // Auto-trigger via Cloud Tasks can be added in phase 2 when the system is validated
   }
 );
 

@@ -48,3 +48,10 @@ export { generateOgImage } from './ogImageService';
 
 // Affiliate OG rendering (lightweight, no Puppeteer)
 export { affiliateOgRender, generateAffiliateOgImage } from './affiliateOgRender';
+
+// AI-powered SEO generation for provider profiles
+export {
+  generateProviderSEOCallable,
+  batchGenerateSEO,
+  processSEOTask,
+} from './generateProviderSEO';

@@ -189,6 +189,22 @@ export const heavyProcessingConfig = {
 };
 
 /**
+ * SEO generation config - for Claude API calls (10 calls per profile)
+ * - Higher timeout (300s) for sequential API calls
+ * - Low maxInstances to control costs
+ */
+export const seoGenerationConfig = {
+  region: "europe-west1" as const,
+  memory: "512MiB" as const,
+  cpu: 0.5,
+  maxInstances: 3,
+  minInstances: 0,
+  concurrency: 1,
+  timeoutSeconds: 300,
+  cors: ALLOWED_ORIGINS,
+};
+
+/**
  * Partner config — for partner user-facing callables (us-central1)
  * Same region as other affiliates for Firestore latency optimization.
  */

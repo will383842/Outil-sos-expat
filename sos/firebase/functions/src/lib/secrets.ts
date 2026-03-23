@@ -165,6 +165,32 @@ export const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 export const OPENAI_SECRETS = [OPENAI_API_KEY];
 
 // ============================================================================
+// ANTHROPIC (SEO Generation via Claude)
+// ============================================================================
+
+export const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
+
+/** Anthropic secrets for function config */
+export const ANTHROPIC_SECRETS = [ANTHROPIC_API_KEY];
+
+export function getAnthropicApiKey(): string {
+  try {
+    const secretValue = ANTHROPIC_API_KEY.value()?.trim();
+    if (secretValue && secretValue.length > 0) {
+      return secretValue;
+    }
+  } catch { /* Secret not available */ }
+
+  const envValue = process.env.ANTHROPIC_API_KEY?.trim();
+  if (envValue && envValue.length > 0) {
+    return envValue;
+  }
+
+  console.error(`[Secrets] ANTHROPIC_API_KEY NOT FOUND`);
+  return "";
+}
+
+// ============================================================================
 // EXTERNAL API KEYS
 // ============================================================================
 
@@ -993,6 +1019,7 @@ export const ALL_SECRETS = [
   ...GOOGLE_ADS_SECRETS,
   ...META_CAPI_SECRETS,
   ...OPENAI_SECRETS,
+  ...ANTHROPIC_SECRETS,
   ...BACKLINK_ENGINE_SECRETS,
   ...MOTIVATION_ENGINE_SECRETS,
   ENCRYPTION_KEY,

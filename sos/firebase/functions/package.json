@@ -22,6 +22,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@google-cloud/tasks": "^6.2.0",
     "@sentry/node": "^10.32.1",
     "@sparticuz/chromium": "^131.0.1",
