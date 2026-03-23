@@ -54,6 +54,7 @@ import {
 } from "../utils/firestore";
 import SEOHead from "../components/layout/SEOHead";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
+import ReviewSchema, { firestoreToReviewItem } from "../components/seo/ReviewSchema";
 import { Review } from "../types";
 
 // 👉 Lazy load du composant Reviews (non critique au premier rendu)
@@ -2358,6 +2359,30 @@ const ProviderProfile: React.FC = () => {
         <Helmet>
           <script type="application/ld+json">{snippetData.jsonLD}</script>
         </Helmet>
+      )}
+
+      {/* Review Schema JSON-LD — enables Google Rich Snippets with stars on provider profiles */}
+      {reviews.length > 0 && (
+        <ReviewSchema
+          reviews={reviews
+            .filter(r => r.comment && r.comment.length > 0)
+            .slice(0, 10)
+            .map(r => firestoreToReviewItem({
+              id: r.id,
+              clientName: (r as any).clientName || (r as any).authorName,
+              rating: r.rating,
+              comment: r.comment,
+              createdAt: r.createdAt,
+            }))}
+          itemReviewed={{
+            type: 'ProfessionalService',
+            name: formatPublicName(provider),
+            url: canonicalUrl,
+            description: seoDescription,
+          }}
+          baseUrl={canonicalUrl}
+          includeAggregateRating={true}
+        />
       )}
 
       {/* SVG defs pour dégradé étoiles */}
