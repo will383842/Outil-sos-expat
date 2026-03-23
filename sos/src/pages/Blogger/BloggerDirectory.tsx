@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { httpsCallable } from "firebase/functions";
 import { functionsAffiliate } from "@/config/firebase";
 import {
@@ -227,6 +228,10 @@ const BloggerDirectory: React.FC = () => {
         title={intl.formatMessage({ id: 'directory.bloggers.seo.title', defaultMessage: 'Our Partner Bloggers | SOS-Expat' })}
         description={intl.formatMessage({ id: 'directory.bloggers.seo.description', defaultMessage: 'Discover our network of bloggers specialized in expatriation, travel and life abroad.' })}
       />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Bloggers Directory' }
+      ]} />
 
       {/* Hero */}
       <div className="relative bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 text-white py-20 px-4 overflow-hidden">

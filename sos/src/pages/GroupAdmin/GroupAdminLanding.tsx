@@ -18,6 +18,7 @@ import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
+import FAQPageSchema from '@/components/seo/FAQPageSchema';
 import { trackMetaViewContent } from '@/utils/metaPixel';
 import {
   ArrowRight,
@@ -268,6 +269,11 @@ const GroupAdminLanding: React.FC = () => {
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'groupAdmin.landing.seo.short_title', defaultMessage: 'Group Admin' }) }
       ]} />
+      <FAQPageSchema
+        faqs={faqItems.map(item => ({ question: item.q, answer: item.a }))}
+        pageUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+        inLanguage={intl.locale}
+      />
 
       {/* Custom styles */}
       <style>{globalStyles}</style>

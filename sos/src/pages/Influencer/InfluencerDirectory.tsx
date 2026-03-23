@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { httpsCallable } from "firebase/functions";
 import { functionsAffiliate } from "@/config/firebase";
 import {
@@ -392,6 +393,10 @@ const InfluencerDirectory: React.FC = () => {
         title={intl.formatMessage({ id: 'directory.influencers.seo.title', defaultMessage: 'Our Expat Influencers | SOS-Expat' })}
         description={intl.formatMessage({ id: 'directory.influencers.seo.description', defaultMessage: 'Discover our partner influencers specialized in the international expat community.' })}
       />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Influencers Directory' }
+      ]} />
       <Layout>
         <div className="min-h-screen bg-slate-900">
 

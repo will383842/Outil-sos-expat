@@ -12,6 +12,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { db } from '@/config/firebase';
 import Layout from '@/components/layout/Layout';
 import SEOHead from '@/components/layout/SEOHead';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import {
   Globe,
   ExternalLink,
@@ -111,6 +112,10 @@ const PartnersPage: React.FC = () => {
         title={intl.formatMessage({ id: 'partner.page.seo.title', defaultMessage: 'Our Trusted Partners - SOS-Expat' })}
         description={intl.formatMessage({ id: 'partner.page.seo.description', defaultMessage: 'Discover our trusted partner websites for expatriates.' })}
       />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Partners' }
+      ]} />
 
       <div className="bg-black text-white min-h-screen">
         {/* Hero */}

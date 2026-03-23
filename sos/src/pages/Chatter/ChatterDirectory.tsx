@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { httpsCallable } from "firebase/functions";
 import { functionsAffiliate } from "@/config/firebase";
 import {
@@ -206,6 +207,10 @@ const ChatterDirectory: React.FC = () => {
         title={intl.formatMessage({ id: 'directory.chatters.seo.title', defaultMessage: 'Our Chatters | SOS-Expat' })}
         description={intl.formatMessage({ id: 'directory.chatters.seo.description', defaultMessage: 'Discover our network of chatters — experts who recommend SOS-Expat to their expat community.' })}
       />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Chatters Directory' }
+      ]} />
 
       {/* Hero */}
       <div className="relative bg-gradient-to-br from-red-900 via-orange-900 to-red-800 text-white py-20 px-4 overflow-hidden">

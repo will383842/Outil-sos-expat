@@ -55,6 +55,7 @@ import {
   PenTool,
 } from 'lucide-react';
 import { WhatsAppGroupScreen } from '@/whatsapp-groups';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
@@ -653,6 +654,11 @@ const BloggerRegister: React.FC = () => {
   return (
     <Layout>
       <SEOHead title={seoTitle} description={seoDescription} ogImage="/og-blogger-register.jpg" ogType="website" />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Become Blogger', url: '/devenir-blogueur' },
+        { name: 'Register' }
+      ]} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <div className="min-h-screen bg-gradient-to-b from-purple-950 via-gray-950 to-black py-12 px-4">

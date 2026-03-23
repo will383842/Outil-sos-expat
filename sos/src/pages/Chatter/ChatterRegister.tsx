@@ -24,6 +24,7 @@ import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { logAnalyticsEvent } from '@/config/firebase';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 import { WhatsAppGroupScreen } from '@/whatsapp-groups';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 
 // Design tokens - Harmonized with ChatterLanding dark theme
 const UI = {
@@ -395,6 +396,11 @@ const ChatterRegister: React.FC = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SOSExpat" />
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Become Chatter', url: '/devenir-chatter' },
+        { name: 'Register' }
+      ]} />
 
       {success ? (
         <SuccessFallbackRedirect dashboardRoute={dashboardRoute} navigate={navigate} />

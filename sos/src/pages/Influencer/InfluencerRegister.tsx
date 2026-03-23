@@ -19,6 +19,7 @@ import InfluencerRegisterForm from '@/components/Influencer/Forms/InfluencerRegi
 import { CheckCircle, Gift, Users, Image, Megaphone, ArrowLeft, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getUnifiedReferralCode } from '@/utils/referralStorage';
 import { WhatsAppGroupScreen } from '@/whatsapp-groups';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 
 const UI = {
   card: "bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg",
@@ -156,6 +157,11 @@ const InfluencerRegister: React.FC = () => {
   return (
     <Layout>
       <SEOHead title={seoTitle} description={seoDescription} ogImage="/og-influencer-register.jpg" ogType="website" />
+      <BreadcrumbSchema items={[
+        { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
+        { name: 'Become Influencer', url: '/devenir-influenceur' },
+        { name: 'Register' }
+      ]} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <div className="min-h-screen bg-gradient-to-b from-red-950 via-gray-950 to-black py-12 px-4">
