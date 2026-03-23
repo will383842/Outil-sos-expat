@@ -507,7 +507,7 @@ const ProvidersByCountry: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
           {/* H1 + Provider Count */}
           <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-3">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-white">
               {countryData?.flag && <span className="mr-2">{countryData.flag}</span>}
               {roleLabel} {intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} {countryName}
             </h1>
@@ -643,7 +643,7 @@ const ProvidersByCountry: React.FC = () => {
           {/* Dynamic FAQ Section */}
           {!isLoading && providers.length > 0 && (
             <section className="mt-16">
-              <h2 className="text-2xl font-bold mb-6">
+              <h2 className="text-2xl font-bold mb-6 text-white">
                 <FormattedMessage
                   id="providers.faq.title"
                   defaultMessage="Questions frequentes"
