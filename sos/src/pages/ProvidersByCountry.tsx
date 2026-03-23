@@ -390,12 +390,41 @@ const ProvidersByCountry: React.FC = () => {
       ),
     };
 
-    return [faqConsult, faqCost, faqLanguages, faqAvailability];
+    // FAQ 5: Target audiences (expats, digital nomads, students, travelers)
+    const faqAudience: FAQItem = {
+      question: intl.formatMessage(
+        {
+          id: "providers.faq.audiences",
+          defaultMessage: "Pour qui sont destines les {role} en {country} sur SOS Expat ?",
+        },
+        { role: roleLabel.toLowerCase(), country: countryName }
+      ),
+      answer: intl.formatMessage(
+        {
+          id: "providers.faq.audiencesAnswer",
+          defaultMessage: "Nos {role} en {country} accompagnent les expatries, les digital nomades, les voyageurs, les vacanciers, les etudiants internationaux (Erasmus, echanges), les travailleurs detaches a l'etranger et toute personne ayant besoin d'assistance a l'international.",
+        },
+        { role: roleLabel.toLowerCase(), country: countryName }
+      ),
+    };
+
+    return [faqConsult, faqCost, faqLanguages, faqAvailability, faqAudience];
   }, [intl, roleLabelSingular, roleLabel, countryName]);
 
-  // SEO title & description
-  const seoTitle = `${roleLabel} ${intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} ${countryName} | SOS Expat`;
-  const seoDescription = `${intl.formatMessage({ id: "providers.find", defaultMessage: "Trouvez un" })} ${roleLabelSingular.toLowerCase()} ${intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} ${countryName}. ${providers.length} ${intl.formatMessage({ id: "providers.available", defaultMessage: "disponibles" })}. ${intl.formatMessage({ id: "providers.consultation", defaultMessage: "Consultation immediate" })} 24/7.`;
+  // SEO title & description — optimized for search queries from expats, travelers, digital nomads, students
+  const seoTitle = `${roleLabel} ${intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} ${countryName} - ${intl.formatMessage({ id: "providers.seoConsultation", defaultMessage: "Consultation 24/7" })} | SOS Expat`;
+  const seoDescription = intl.formatMessage(
+    {
+      id: "providers.seoDescription",
+      defaultMessage: "Trouvez un {role} en {country}. {count} experts disponibles pour expatries, voyageurs, digital nomades, etudiants internationaux et travailleurs a l'etranger. Consultation telephonique immediate 24/7 en {price}.",
+    },
+    {
+      role: roleLabelSingular.toLowerCase(),
+      country: countryName,
+      count: String(providers.length),
+      price: providerType === "lawyer" ? "49€/20min" : "19€/30min",
+    }
+  ).slice(0, 160);
 
   /* =========================
      Render
