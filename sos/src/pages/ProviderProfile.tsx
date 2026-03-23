@@ -117,6 +117,7 @@ import { ProviderSocialShare } from "../components/share";
 import { getLawyerSpecialityLabel } from "../data/lawyer-specialties";
 import { getExpatHelpTypeLabel } from "../data/expat-help-types";
 import { getSpecialtyLabel, mapLanguageToLocale } from "../utils/specialtyMapper";
+import { getCountrySlug } from "../data/country-slug-translations";
 
 /* ===================================================================== */
 /* CONSTANTES OPTIMISÉES                                                */
@@ -2385,9 +2386,11 @@ const ProviderProfile: React.FC = () => {
       return `https://sos-expat.com/${defaultLocale}${pathWithoutLocale}`;
     }
     // Ultimate fallback: build from provider data (no truncation)
-    const displayType = roleCountry || (currentLang
-      ? getTranslatedRouteSlug(isLawyer ? "lawyer" : "expat", currentLang)
-      : (isLawyer ? "avocat" : "expatrie"));
+    // roleCountry already has "avocat-thailande" format from route params
+    const lang = currentLang || 'fr';
+    const roleSlug = getTranslatedRouteSlug(isLawyer ? "lawyer" : "expat", lang);
+    const countrySlug = provider.country ? getCountrySlug(provider.country, lang) : '';
+    const displayType = roleCountry || (countrySlug ? `${roleSlug}-${countrySlug}` : roleSlug);
     const nameSlug = safeNormalize(provider.fullName || `${provider.firstName}-${provider.lastName}`);
     const fullId = (provider as any).shortId || provider.id || provider.uid || '';
     return `https://sos-expat.com/${defaultLocale}/${displayType}/${nameSlug}-${fullId}`;
