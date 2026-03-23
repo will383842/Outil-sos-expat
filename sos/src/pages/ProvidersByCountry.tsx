@@ -352,12 +352,12 @@ const ProvidersByCountry: React.FC = () => {
 
     const faqCost: FAQItem = {
       question: intl.formatMessage(
-        { id: "providers.faq.howMuch", defaultMessage: "Combien coute une consultation ?" }
+        { id: "providers.faq.howMuch", defaultMessage: "Combien coûte une consultation ?" }
       ),
       answer: intl.formatMessage(
         {
           id: "providers.faq.howMuchAnswer",
-          defaultMessage: "Les consultations commencent a partir de 19 EUR pour 20 minutes. Le tarif exact depend du prestataire choisi. Aucun frais cache.",
+          defaultMessage: "Les consultations commencent à partir de 19 EUR pour 20 minutes. Le tarif exact dépend du prestataire choisi. Aucun frais caché.",
         }
       ),
     };
@@ -369,7 +369,7 @@ const ProvidersByCountry: React.FC = () => {
       answer: intl.formatMessage(
         {
           id: "providers.faq.languagesAnswer",
-          defaultMessage: "Nos prestataires parlent de nombreuses langues : francais, anglais, espagnol, allemand, portugais, russe, chinois, arabe, hindi et bien d'autres. Filtrez par langue sur la page de listing.",
+          defaultMessage: "Nos prestataires parlent de nombreuses langues : français, anglais, espagnol, allemand, portugais, russe, chinois, arabe, hindi et bien d'autres. Filtrez par langue sur la page de listing.",
         }
       ),
     };
@@ -385,7 +385,7 @@ const ProvidersByCountry: React.FC = () => {
       answer: intl.formatMessage(
         {
           id: "providers.faq.availabilityAnswer",
-          defaultMessage: "Oui, SOS Expat fonctionne 24h/24 et 7j/7, y compris les week-ends et jours feries. La disponibilite en temps reel de chaque prestataire est affichee sur son profil.",
+          defaultMessage: "Oui, SOS Expat fonctionne 24h/24 et 7j/7, y compris les week-ends et jours fériés. La disponibilité en temps réel de chaque prestataire est affichée sur son profil.",
         }
       ),
     };
@@ -395,14 +395,14 @@ const ProvidersByCountry: React.FC = () => {
       question: intl.formatMessage(
         {
           id: "providers.faq.audiences",
-          defaultMessage: "Pour qui sont destines les {role} en {country} sur SOS Expat ?",
+          defaultMessage: "Pour qui sont destinés les {role} en {country} sur SOS Expat ?",
         },
         { role: roleLabel.toLowerCase(), country: countryName }
       ),
       answer: intl.formatMessage(
         {
           id: "providers.faq.audiencesAnswer",
-          defaultMessage: "Nos {role} en {country} accompagnent les expatries, les digital nomades, les voyageurs, les vacanciers, les etudiants internationaux (Erasmus, echanges), les travailleurs detaches a l'etranger et toute personne ayant besoin d'assistance a l'international.",
+          defaultMessage: "Nos {role} en {country} accompagnent les expatriés, les digital nomades, les voyageurs, les vacanciers, les étudiants internationaux (Erasmus, échanges), les travailleurs détachés à l'étranger et toute personne ayant besoin d'assistance à l'international.",
         },
         { role: roleLabel.toLowerCase(), country: countryName }
       ),
