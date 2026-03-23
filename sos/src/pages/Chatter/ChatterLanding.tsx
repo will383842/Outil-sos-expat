@@ -323,9 +323,17 @@ const ChatterLanding: React.FC = () => {
     return str ? ` (${str})` : '';
   };
 
-  // SEO titles
-  const seoTitle = intl.formatMessage({ id: 'chatter.landing.seo.title' });
-  const seoDescription = intl.formatMessage({ id: 'chatter.landing.seo.description' });
+  // SEO titles — pass values to resolve {clientCallRange} placeholder
+  const seoValues = { clientCallRange: rates.clientCallRange };
+  const seoTitle = intl.formatMessage({ id: 'chatter.landing.seo.title' }, seoValues);
+  const seoDescription = intl.formatMessage({ id: 'chatter.landing.seo.description' }, seoValues);
+
+  // OG locale for SEOHead
+  const OG_LOCALE_MAP: Record<string, string> = {
+    fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
+    ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
+  };
+  const ogLocale = OG_LOCALE_MAP[langCode] || 'fr_FR';
 
   return (
     <Layout showFooter={false}>
@@ -335,6 +343,7 @@ const ChatterLanding: React.FC = () => {
         ogImage="/og-image.png"
         ogType="website"
         contentType="LandingPage"
+        locale={ogLocale}
       />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
@@ -344,10 +353,11 @@ const ChatterLanding: React.FC = () => {
       {/* FAQPage schema — composant dédié, rendu dans <head> via Helmet */}
       <FAQPageSchema
         faqs={faqItems.map(item => ({
-          question: intl.formatMessage({ id: item.q }),
-          answer: intl.formatMessage({ id: item.a }),
+          question: intl.formatMessage({ id: item.q }, seoValues),
+          answer: intl.formatMessage({ id: item.a }, seoValues),
         }))}
         pageUrl={canonicalUrl}
+        inLanguage={htmlLang}
       />
 
       {/* Autres schemas structurés — dans <head> via Helmet */}
