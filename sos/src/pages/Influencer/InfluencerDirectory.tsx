@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
@@ -302,6 +303,7 @@ const InfluencerCard: React.FC<InfluencerCardProps> = ({ influencer }) => {
 const PAGE_SIZE = 20;
 
 const InfluencerDirectory: React.FC = () => {
+  const intl = useIntl();
   const [influencers, setInfluencers] = useState<PublicInfluencer[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [error, setError]             = useState<string | null>(null);
@@ -387,8 +389,8 @@ const InfluencerDirectory: React.FC = () => {
   return (
     <>
       <SEOHead
-        title="Nos Influenceurs Expat | SOS-Expat"
-        description="Découvrez nos influenceurs partenaires spécialisés dans la communauté expatriée internationale."
+        title={intl.formatMessage({ id: 'directory.influencers.seo.title', defaultMessage: 'Our Expat Influencers | SOS-Expat' })}
+        description={intl.formatMessage({ id: 'directory.influencers.seo.description', defaultMessage: 'Discover our partner influencers specialized in the international expat community.' })}
       />
       <Layout>
         <div className="min-h-screen bg-slate-900">

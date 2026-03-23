@@ -7510,5 +7510,14 @@
   "wizard.step3.lawyer": "Einen Anwalt",
   "wizard.step3.lawyer.desc": "Professionelle Rechtsberatung",
   "wizard.step3.subtitle": "Wählen Sie den Expertentyp",
-  "wizard.step3.title": "Wen möchten Sie kontaktieren?"
+  "wizard.step3.title": "Wen möchten Sie kontaktieren?",
+  "directory.chatters.seo.title": "Unsere Chatters | SOS-Expat",
+  "directory.chatters.seo.description": "Entdecken Sie unser Netzwerk von Chattern — Experten, die SOS-Expat ihrer Expat-Community empfehlen.",
+  "directory.influencers.seo.title": "Unsere Expat-Influencer | SOS-Expat",
+  "directory.influencers.seo.description": "Entdecken Sie unsere Partner-Influencer, spezialisiert auf die internationale Expat-Community.",
+  "directory.bloggers.seo.title": "Unsere Partner-Blogger | SOS-Expat",
+  "directory.bloggers.seo.description": "Entdecken Sie unser Netzwerk von Bloggern, spezialisiert auf Auswanderung, Reisen und Leben im Ausland.",
+  "directory.groups.seo.title": "Expat-Gruppen & Communities | SOS Expat",
+  "directory.groups.seo.description": "Entdecken Sie Expat-Gruppen und Communities weltweit. Finden Sie Ihre Community nach Land, Sprache und Interessen.",
+  "directory.groups.seo.keywords": "Expat-Gruppen, Expat-Community, Facebook Expat-Gruppe, internationales Netzwerk"
 }

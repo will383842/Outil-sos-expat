@@ -12478,5 +12478,14 @@
   "wizard.step3.lawyer": "A lawyer",
   "wizard.step3.lawyer.desc": "Professional legal advice",
   "wizard.step3.subtitle": "Select the type of expert",
-  "wizard.step3.title": "Who would you like to contact?"
+  "wizard.step3.title": "Who would you like to contact?",
+  "directory.chatters.seo.title": "Our Chatters | SOS-Expat",
+  "directory.chatters.seo.description": "Discover our network of chatters — experts who recommend SOS-Expat to their expat community.",
+  "directory.influencers.seo.title": "Our Expat Influencers | SOS-Expat",
+  "directory.influencers.seo.description": "Discover our partner influencers specialized in the international expat community.",
+  "directory.bloggers.seo.title": "Our Partner Bloggers | SOS-Expat",
+  "directory.bloggers.seo.description": "Discover our network of bloggers specialized in expatriation, travel and life abroad.",
+  "directory.groups.seo.title": "Expat Groups & Communities | SOS Expat",
+  "directory.groups.seo.description": "Discover expat groups and communities worldwide. Find your community by country, language and interests.",
+  "directory.groups.seo.keywords": "expat groups, expat community, Facebook expat group, international network"
 }

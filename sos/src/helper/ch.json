@@ -7502,5 +7502,14 @@
   "whatsapp.success.continue": "我的控制面板",
   "whatsapp.success.redirect": "自动重定向 {seconds}秒...",
   "whatsapp.dashboard.banner": "加入我们的 WhatsApp 群组，获取技巧并与社区互动！",
-  "whatsapp.dashboard.banner.button": "加入群组"
+  "whatsapp.dashboard.banner.button": "加入群组",
+  "directory.chatters.seo.title": "我们的推广员 | SOS-Expat",
+  "directory.chatters.seo.description": "探索我们的推广员网络——向外籍人士社区推荐SOS-Expat的专家。",
+  "directory.influencers.seo.title": "我们的外籍人士网红 | SOS-Expat",
+  "directory.influencers.seo.description": "发现我们专注于国际外籍人士社区的合作网红。",
+  "directory.bloggers.seo.title": "我们的合作博主 | SOS-Expat",
+  "directory.bloggers.seo.description": "发现我们专注于移居海外、旅行和海外生活的博主网络。",
+  "directory.groups.seo.title": "外籍人士群组和社区 | SOS Expat",
+  "directory.groups.seo.description": "发现全球外籍人士群组和社区。按国家、语言和兴趣找到您的社区。",
+  "directory.groups.seo.keywords": "外籍人士群组, 外籍社区, Facebook外籍人士群组, 国际网络"
 }

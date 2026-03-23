@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
@@ -407,6 +408,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
 // ============================================================================
 
 const GroupAdminDirectory: React.FC = () => {
+  const intl = useIntl();
   // Filters
   const [searchTerm,       setSearchTerm]       = useState("");
   const [selectedCountry,  setSelectedCountry]  = useState("");
@@ -538,9 +540,9 @@ const GroupAdminDirectory: React.FC = () => {
   return (
     <Layout>
       <SEOHead
-        title="Groupes et Communautes Expatries | SOS Expat"
-        description="Decouvrez des groupes et communautes d expatries du monde entier. Trouvez votre communaute selon votre pays, langue et centres d interet."
-        keywords="groupes expatries, communaute expat, Facebook groupe expatrie, reseau international"
+        title={intl.formatMessage({ id: 'directory.groups.seo.title', defaultMessage: 'Expat Groups & Communities | SOS Expat' })}
+        description={intl.formatMessage({ id: 'directory.groups.seo.description', defaultMessage: 'Discover expat groups and communities worldwide. Find your community by country, language and interests.' })}
+        keywords={intl.formatMessage({ id: 'directory.groups.seo.keywords', defaultMessage: 'expat groups, expat community, Facebook expat group, international network' })}
       />
 
       {/* ================================================================ */}

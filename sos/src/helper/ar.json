@@ -7503,5 +7503,14 @@
   "whatsapp.success.continue": "لوحة التحكم",
   "whatsapp.success.redirect": "إعادة توجيه تلقائية في {seconds} ثانية...",
   "whatsapp.dashboard.banner": "انضم إلى مجموعة واتساب الخاصة بنا للحصول على نصائح والتواصل مع المجتمع!",
-  "whatsapp.dashboard.banner.button": "انضم إلى المجموعة"
+  "whatsapp.dashboard.banner.button": "انضم إلى المجموعة",
+  "directory.chatters.seo.title": "المسوّقون لدينا | SOS-Expat",
+  "directory.chatters.seo.description": "اكتشف شبكة المسوّقين لدينا — خبراء يوصون بـ SOS-Expat لمجتمع المغتربين.",
+  "directory.influencers.seo.title": "المؤثرون لدينا | SOS-Expat",
+  "directory.influencers.seo.description": "اكتشف المؤثرين الشركاء المتخصصين في مجتمع المغتربين الدولي.",
+  "directory.bloggers.seo.title": "المدوّنون الشركاء | SOS-Expat",
+  "directory.bloggers.seo.description": "اكتشف شبكة المدوّنين المتخصصين في الاغتراب والسفر والحياة في الخارج.",
+  "directory.groups.seo.title": "مجموعات ومجتمعات المغتربين | SOS Expat",
+  "directory.groups.seo.description": "اكتشف مجموعات ومجتمعات المغتربين حول العالم. ابحث عن مجتمعك حسب البلد واللغة والاهتمامات.",
+  "directory.groups.seo.keywords": "مجموعات المغتربين, مجتمع المغتربين, مجموعة فيسبوك للمغتربين, شبكة دولية"
 }

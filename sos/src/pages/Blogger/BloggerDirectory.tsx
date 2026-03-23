@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
@@ -144,6 +145,7 @@ function getLanguageInfo(langCode: string) {
 // ============================================================================
 
 const BloggerDirectory: React.FC = () => {
+  const intl = useIntl();
   const [bloggers, setBloggers] = useState<PublicBlogger[]>([]);
   const [filtered, setFiltered] = useState<PublicBlogger[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,8 +224,8 @@ const BloggerDirectory: React.FC = () => {
   return (
     <Layout>
       <SEOHead
-        title="Nos Blogueurs Partenaires | SOS-Expat"
-        description="Découvrez notre réseau de blogueurs spécialisés dans l'expatriation, le voyage et la vie à l'étranger."
+        title={intl.formatMessage({ id: 'directory.bloggers.seo.title', defaultMessage: 'Our Partner Bloggers | SOS-Expat' })}
+        description={intl.formatMessage({ id: 'directory.bloggers.seo.description', defaultMessage: 'Discover our network of bloggers specialized in expatriation, travel and life abroad.' })}
       />
 
       {/* Hero */}

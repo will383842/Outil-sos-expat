@@ -7502,5 +7502,14 @@
   "wizard.step3.lawyer": "Адвокат",
   "wizard.step3.lawyer.desc": "Профессиональная юридическая консультация",
   "wizard.step3.subtitle": "Выберите тип эксперта",
-  "wizard.step3.title": "С кем вы хотите связаться?"
+  "wizard.step3.title": "С кем вы хотите связаться?",
+  "directory.chatters.seo.title": "Наши Чаттеры | SOS-Expat",
+  "directory.chatters.seo.description": "Откройте для себя нашу сеть чаттеров — экспертов, которые рекомендуют SOS-Expat сообществу экспатов.",
+  "directory.influencers.seo.title": "Наши Инфлюенсеры для Экспатов | SOS-Expat",
+  "directory.influencers.seo.description": "Откройте для себя наших партнёров-инфлюенсеров, специализирующихся на международном сообществе экспатов.",
+  "directory.bloggers.seo.title": "Наши Партнёры-Блогеры | SOS-Expat",
+  "directory.bloggers.seo.description": "Откройте для себя нашу сеть блогеров, специализирующихся на эмиграции, путешествиях и жизни за рубежом.",
+  "directory.groups.seo.title": "Группы и Сообщества Экспатов | SOS Expat",
+  "directory.groups.seo.description": "Откройте для себя группы и сообщества экспатов по всему миру. Найдите своё сообщество по стране, языку и интересам.",
+  "directory.groups.seo.keywords": "группы экспатов, сообщество экспатов, группа Facebook экспатов, международная сеть"
 }

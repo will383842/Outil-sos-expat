@@ -7502,5 +7502,14 @@
   "whatsapp.success.continue": "मेरा डैशबोर्ड",
   "whatsapp.success.redirect": "स्वचालित रीडायरेक्ट {seconds} सेकंड में...",
   "whatsapp.dashboard.banner": "सुझाव प्राप्त करने और समुदाय से जुड़ने के लिए हमारे WhatsApp समूह में शामिल हों!",
-  "whatsapp.dashboard.banner.button": "समूह में शामिल हों"
+  "whatsapp.dashboard.banner.button": "समूह में शामिल हों",
+  "directory.chatters.seo.title": "हमारे चैटर्स | SOS-Expat",
+  "directory.chatters.seo.description": "हमारे चैटर्स नेटवर्क की खोज करें — विशेषज्ञ जो प्रवासी समुदाय को SOS-Expat की सिफारिश करते हैं।",
+  "directory.influencers.seo.title": "हमारे प्रवासी इन्फ्लुएंसर | SOS-Expat",
+  "directory.influencers.seo.description": "अंतरराष्ट्रीय प्रवासी समुदाय में विशेषज्ञता रखने वाले हमारे साझेदार इन्फ्लुएंसर खोजें।",
+  "directory.bloggers.seo.title": "हमारे साझेदार ब्लॉगर | SOS-Expat",
+  "directory.bloggers.seo.description": "प्रवास, यात्रा और विदेश में जीवन में विशेषज्ञता रखने वाले हमारे ब्लॉगर नेटवर्क की खोज करें।",
+  "directory.groups.seo.title": "प्रवासी समूह और समुदाय | SOS Expat",
+  "directory.groups.seo.description": "दुनिया भर में प्रवासी समूहों और समुदायों की खोज करें। देश, भाषा और रुचियों के अनुसार अपना समुदाय खोजें।",
+  "directory.groups.seo.keywords": "प्रवासी समूह, प्रवासी समुदाय, फेसबुक प्रवासी समूह, अंतरराष्ट्रीय नेटवर्क"
 }

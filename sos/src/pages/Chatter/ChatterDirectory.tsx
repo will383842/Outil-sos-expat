@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useIntl } from "react-intl";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { httpsCallable } from "firebase/functions";
@@ -128,6 +129,7 @@ function getLanguageInfo(langCode: string) {
 // ============================================================================
 
 const ChatterDirectory: React.FC = () => {
+  const intl = useIntl();
   const [chatters, setChatters] = useState<PublicChatter[]>([]);
   const [filtered, setFiltered] = useState<PublicChatter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,8 +203,8 @@ const ChatterDirectory: React.FC = () => {
   return (
     <Layout>
       <SEOHead
-        title="Nos Chatters | SOS-Expat"
-        description="Découvrez notre réseau de chatters — des experts qui recommandent SOS-Expat à leur communauté d'expatriés."
+        title={intl.formatMessage({ id: 'directory.chatters.seo.title', defaultMessage: 'Our Chatters | SOS-Expat' })}
+        description={intl.formatMessage({ id: 'directory.chatters.seo.description', defaultMessage: 'Discover our network of chatters — experts who recommend SOS-Expat to their expat community.' })}
       />
 
       {/* Hero */}
