@@ -717,9 +717,31 @@ export function generateSnippets(
     }))
   };
   
-  // Breadcrumb Schema
+  // Breadcrumb Schema — translated per language
   const name = formatPublicName(provider);
   const country = getCountryName(provider.country, baseLang as any);
+  const breadcrumbTranslations: Record<string, { home: string; lawyers: string; expats: string }> = {
+    fr: { home: 'Accueil', lawyers: 'Avocats', expats: 'Expatriés' },
+    en: { home: 'Home', lawyers: 'Lawyers', expats: 'Expats' },
+    es: { home: 'Inicio', lawyers: 'Abogados', expats: 'Expatriados' },
+    de: { home: 'Startseite', lawyers: 'Anwälte', expats: 'Expats' },
+    pt: { home: 'Início', lawyers: 'Advogados', expats: 'Expatriados' },
+    ru: { home: 'Главная', lawyers: 'Адвокаты', expats: 'Экспаты' },
+    ch: { home: '首页', lawyers: '律师', expats: '外籍专家' },
+    ar: { home: 'الرئيسية', lawyers: 'محامون', expats: 'مغتربون' },
+    hi: { home: 'होम', lawyers: 'वकील', expats: 'प्रवासी' },
+  };
+  const bcT = breadcrumbTranslations[baseLang] || breadcrumbTranslations['en'];
+  const CANONICAL_LOCALES: Record<string, string> = {
+    fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+    pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+  };
+  const bcLocale = CANONICAL_LOCALES[baseLang] || 'en-us';
+  const ROLE_SLUGS: Record<string, Record<string, string>> = {
+    lawyer: { fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte', pt: 'advogados', ru: 'advokaty', ch: 'lushi', hi: 'vakil', ar: 'محامون' },
+    expat: { fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats', pt: 'expatriados', ru: 'expaty', ch: 'haiwai', hi: 'videshi', ar: 'مغتربون' },
+  };
+  const bcRoleSlug = ROLE_SLUGS[provider.type]?.[baseLang] || (provider.type === 'lawyer' ? 'lawyers' : 'expats');
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -727,20 +749,20 @@ export function generateSnippets(
       {
         "@type": "ListItem",
         "position": 1,
-        "name": "Home",
-        "item": "https://sos-expat.com"
+        "name": bcT.home,
+        "item": `https://sos-expat.com/${bcLocale}`
       },
       {
         "@type": "ListItem",
         "position": 2,
-        "name": provider.type === 'lawyer' ? 'Lawyers' : 'Expats',
-        "item": `https://sos-expat.com/${provider.type === 'lawyer' ? 'lawyers' : 'expats'}`
+        "name": provider.type === 'lawyer' ? bcT.lawyers : bcT.expats,
+        "item": `https://sos-expat.com/${bcLocale}/${bcRoleSlug}`
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": country,
-        "item": `https://sos-expat.com/${provider.type === 'lawyer' ? 'lawyers' : 'expats'}/${provider.country.toLowerCase()}`
+        "item": `https://sos-expat.com/${bcLocale}/${bcRoleSlug}/${provider.country.toLowerCase()}`
       },
       {
         "@type": "ListItem",

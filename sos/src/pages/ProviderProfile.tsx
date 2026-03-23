@@ -2112,7 +2112,7 @@ const ProviderProfile: React.FC = () => {
       ...(providerStats.realReviewsCount > 0 && {
         aggregateRating: {
           "@type": "AggregateRating",
-          ratingValue: providerStats.averageRating || 0,
+          ratingValue: Number((providerStats.averageRating || 0).toFixed(1)),
           reviewCount: providerStats.realReviewsCount || 0,
           bestRating: 5,
           worstRating: 1,
@@ -2366,17 +2366,28 @@ const ProviderProfile: React.FC = () => {
         canonicalUrl={canonicalUrl}
         ogImage={mainPhoto}
         ogType="profile"
+        locale={(() => {
+          const OG_LOCALE_MAP: Record<string, string> = {
+            fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
+            ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
+          };
+          return OG_LOCALE_MAP[currentLang || 'fr'] || 'fr_FR';
+        })()}
         noindex={false}
         structuredData={
           translation && !showOriginal && translation.seo?.jsonLd
             ? translation.seo.jsonLd
             : structuredData
         }
-        aiSummary={`${provider.firstName} is a verified ${isLawyer ? 'lawyer' : 'expat expert'} in ${getCountryName(provider.country, preferredLangKey)} with ${provider.yearsOfExperience || 0} years of experience. Available on SOS Expat for phone consultations in ${languagesList.join(', ')}.`}
+        aiSummary={intl.formatMessage(
+          { id: 'providerProfile.aiSummary', defaultMessage: '{name} is a verified {role} in {country} with {years} years of experience. Available on SOS Expat for phone consultations in {languages}.' },
+          { name: provider.firstName, role: isLawyer ? roleLabel.toLowerCase() : roleLabel.toLowerCase(), country: getCountryName(provider.country, preferredLangKey), years: String(provider.yearsOfExperience || 0), languages: languagesList.join(', ') }
+        )}
         expertise={isLawyer ? 'legal-professional' : 'expat-advisor'}
-        trustworthiness="verified-provider"
+        trustworthiness={`verified-provider${providerStats.realReviewsCount > 0 ? `, ${providerStats.realReviewsCount}_reviews, ${Number((providerStats.averageRating || 0).toFixed(1))}_rating` : ''}`}
         contentQuality="high"
         lastReviewed={new Date().toISOString().split('T')[0]}
+        twitterSite="@sosexpat"
       />
 
       {/* Hreflang links for provider profiles — uses multilingual slugs from Firestore */}
@@ -2419,14 +2430,8 @@ const ProviderProfile: React.FC = () => {
               comment: r.comment,
               createdAt: r.createdAt,
             }))}
-          itemReviewed={{
-            type: 'ProfessionalService',
-            name: formatPublicName(provider),
-            url: canonicalUrl,
-            description: seoDescription,
-          }}
           baseUrl={canonicalUrl}
-          includeAggregateRating={true}
+          includeAggregateRating={false}
         />
       )}
 
@@ -2472,7 +2477,7 @@ const ProviderProfile: React.FC = () => {
 
             {/* H1 sémantique caché pour SEO */}
             <h1 className="sr-only">
-              {formatPublicName(provider)} - {roleLabel} {derivedSpecialties[0] || ''} {languagesList[0] || ''} {intl.formatMessage({ id: "providerProfile.in" })} {getCountryName(provider.country, preferredLangKey)}
+              {formatPublicName(provider)} - {roleLabel}{derivedSpecialties[0] ? ` ${derivedSpecialties[0]}` : ''} {intl.formatMessage({ id: "providerProfile.in" })} {getCountryName(provider.country, preferredLangKey)}
             </h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
