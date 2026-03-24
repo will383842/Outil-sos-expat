@@ -208,30 +208,19 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
       let items: Provider[] = [];
 
-      // Mapper la langue utilisateur
-      const langMap: Record<string, string> = {
-        'fr': 'fr', 'en': 'en', 'es': 'es', 'de': 'de',
-        'pt': 'pt', 'ru': 'ru', 'ch': 'zh', 'hi': 'hi', 'ar': 'ar'
-      };
-      const userLang = langMap[language] || 'fr';
-
-      // Tentative 1: REST API avec filtres d'approbation + langue
+      // Tentative 1: REST API
       try {
-        // ✅ OPTIMISATION: Filtrer par langue de l'utilisateur
         const docs = await runQueryRest<any>("sos_profiles", [
           { field: 'isApproved', op: 'EQUAL', value: true },
           { field: 'isVisible', op: 'EQUAL', value: true },
-          { field: 'languages', op: 'ARRAY_CONTAINS', value: userLang }
         ], {
-          limit: 100,  // Limite raisonnable
+          limit: 100,
           timeoutMs: FIRESTORE_TIMEOUT_MS,
         });
 
-        console.log(`✅ [ProfileCarousel] REST API: ${docs.length} documents (langue: ${userLang})`);
+        console.log(`✅ [ProfileCarousel] REST API: ${docs.length} documents`);
 
-        const transformedPromises = docs
-          .map(doc => transformDoc(doc.id, doc.data));
-
+        const transformedPromises = docs.map(doc => transformDoc(doc.id, doc.data));
         const transformed = await Promise.all(transformedPromises);
         items = transformed.filter((p): p is Provider => p !== null);
 
@@ -249,12 +238,10 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
       console.log("🏠 [ProfileCarousel] Tentative 2: SDK Firestore...");
 
       try {
-        // ✅ OPTIMISATION: Filtrer par langue de l'utilisateur
         const sosProfilesQuery = query(
           collection(db, 'sos_profiles'),
-          where('isApproved', '==', true),              // ✅ Seulement approuvés
-          where('isVisible', '==', true),               // ✅ Seulement visibles
-          where('languages', 'array-contains', userLang) // ✅ Parlent la langue utilisateur
+          where('isApproved', '==', true),
+          where('isVisible', '==', true),
         );
 
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -294,7 +281,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [pageSize, selectVisibleProviders, language]);
+  }, [pageSize, selectVisibleProviders]);
 
   // Rotation
   const rotateVisibleProviders = useCallback(() => {

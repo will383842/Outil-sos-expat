@@ -276,6 +276,9 @@ Target languages: ${targetLangs.map((l) => `${l} (${langNames[l] || l})`).join("
       const message =
         error instanceof Error ? error.message : "Unknown translation error";
       logger.error("[translateMarketingContent] Error:", { error: message });
+      // Alert if OpenAI key is broken
+      const { checkAndAlertAIKeyFailure } = await import('../monitoring/aiKeyAlert');
+      await checkAndAlertAIKeyFailure(error, 'openai', 'Marketing Translation');
       throw new HttpsError("internal", `Translation failed: ${message}`);
     }
   }

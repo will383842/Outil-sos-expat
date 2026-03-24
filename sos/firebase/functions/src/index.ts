@@ -2501,6 +2501,9 @@ export {
 } from "./monitoring/serviceAlerts";
 // P1-4 FIX: Removed type exports (ServiceType, AlertLevel, etc.) — not Cloud Functions
 
+// AI API Key Health Check — daily cron that verifies all AI keys and alerts via Telegram
+export { scheduledAIKeyHealthCheck } from "./monitoring/scheduledAIKeyCheck";
+
 // Unified Analytics - Centralized analytics aggregation
 export {
   getUnifiedAnalytics,

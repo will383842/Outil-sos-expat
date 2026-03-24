@@ -81,7 +81,8 @@ ${input.totalCalls ? `- Appels réalisés : ${input.totalCalls}` : ''}
 - Disponibilité : 24/7
 - URL : ${input.profileUrl}
 
-## Ce que tu dois générer (JSON strict, sans backticks)
+## Ce que tu dois générer
+Retourne UNIQUEMENT un objet JSON valide. Pas de backticks, pas de commentaires, pas de texte avant ou après le JSON. Remplace TOUTES les valeurs d'exemple par du VRAI contenu dans la langue ${localeName}.
 {
   "metaTitle": "Max 60 chars. Nom + rôle + pays. Optimisé CTR Google.",
   "metaDescription": "Max 155 chars. Spécialité + pays + langues + prix. Call-to-action.",

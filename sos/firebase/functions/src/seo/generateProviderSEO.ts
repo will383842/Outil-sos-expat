@@ -18,6 +18,7 @@ import { getAnthropicApiKey, ANTHROPIC_SECRETS, TASKS_AUTH_SECRET } from '../lib
 import { seoGenerationConfig, ALLOWED_ORIGINS } from '../lib/functionConfigs';
 import { getCountryName } from '../utils/countryUtils';
 import { submitToIndexNow } from './indexNowService';
+import { checkAndAlertAIKeyFailure } from '../monitoring/aiKeyAlert';
 import {
   SITE_LOCALES,
   SiteLocale,
@@ -241,6 +242,7 @@ export async function generateSEOForProvider(uid: string): Promise<{
       originalDescription = validateAnalysis(parsed);
     } catch (err) {
       console.warn(`[SEO] Analysis call failed for ${uid}:`, err);
+      await checkAndAlertAIKeyFailure(err, 'anthropic', 'SEO Generation - Analysis');
     }
   }
 
@@ -267,6 +269,8 @@ export async function generateSEOForProvider(uid: string): Promise<{
       }
     } catch (err) {
       console.error(`[SEO] Failed generating ${locale} for ${uid}:`, err);
+      // Alert if API key is broken (non-blocking, with cooldown)
+      await checkAndAlertAIKeyFailure(err, 'anthropic', 'SEO Generation');
       // Continue with other locales
     }
   }
