@@ -612,47 +612,48 @@ const DefaultHelmet: React.FC<{ pathname: string }> = ({ pathname }) => {
   const { pathWithoutLocale } = parseLocaleFromPath(pathname);
   const _pathForMetadata = pathWithoutLocale === "/" ? "/" : pathWithoutLocale;
 
+  // SEO FIX: Use neutral English fallback meta tags to prevent French from leaking
+  // into non-French Google results. Each page's own Helmet (useSEOTranslations)
+  // overrides these with the correct language-specific content.
   const getPageMetadata = (path: string) => {
     const metaMap: Record<string, { title: string; description: string; lang: string }> = {
       '/': {
-        title: 'Avocat ou Expert Local en 5 min - 197 pays',
-        description: 'Parlez à un avocat ou expert local dans votre langue en moins de 5 min. 197 pays, toutes langues. Pour expatriés, voyageurs, vacanciers.',
-        lang: 'fr',
+        title: 'SOS Expat - Lawyer & Local Expert in Under 5 Min | 24/7',
+        description: 'Talk to a lawyer or local expert in your language in under 5 min. 197 countries, all languages. For expats, travelers, vacationers.',
+        lang: 'en',
       },
       '/login': {
-        title: 'Connexion - Consultation Juridique',
-        description: 'Connectez-vous à votre compte',
-        lang: 'fr',
+        title: 'Login - SOS Expat',
+        description: 'Sign in to your account',
+        lang: 'en',
       },
       '/pricing': {
-        title: 'Tarifs - Consultation Juridique',
-        description: 'Découvrez nos tarifs de consultation',
-        lang: 'fr',
+        title: 'Pricing - SOS Expat',
+        description: 'Discover our consultation pricing',
+        lang: 'en',
       },
       '/tarifs': {
-        title: 'Tarifs - Consultation Juridique',
-        description: 'Découvrez nos tarifs de consultation',
-        lang: 'fr',
+        title: 'Pricing - SOS Expat',
+        description: 'Discover our consultation pricing',
+        lang: 'en',
       },
       '/testimonials': {
-        title: 'Témoignages Clients - Consultation Juridique Expatriés',
-        description:
-          'Découvrez les témoignages de nos clients expatriés et avocats partout dans le monde',
-        lang: 'fr',
+        title: 'Customer Testimonials - SOS Expat',
+        description: 'Discover testimonials from our expat clients and lawyers worldwide',
+        lang: 'en',
       },
       '/temoignages': {
-        title: 'Témoignages Clients - Consultation Juridique Expatriés',
-        description:
-          'Découvrez les témoignages de nos clients expatriés et avocats partout dans le monde',
-        lang: 'fr',
+        title: 'Customer Testimonials - SOS Expat',
+        description: 'Discover testimonials from our expat clients and lawyers worldwide',
+        lang: 'en',
       },
     };
 
     return (
       metaMap[path] || {
-        title: 'Consultation Juridique Expatriés',
-        description: 'Service de consultation juridique pour expatriés',
-        lang: 'fr',
+        title: 'SOS Expat - Expatriate Legal Assistance',
+        description: 'Legal consultation service for expatriates worldwide',
+        lang: 'en',
       }
     );
   };

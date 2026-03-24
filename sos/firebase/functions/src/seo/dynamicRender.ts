@@ -33,6 +33,31 @@ const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const RENDER_TIMEOUT_MS = 45000; // 45 seconds for page load (Firestore SDK cold start can be slow)
 const WAIT_FOR_READY_TIMEOUT_MS = 10000; // 10 seconds to wait for React
 
+/**
+ * Extract locale from URL path and return the matching Accept-Language header.
+ * This ensures Puppeteer renders the page in the correct language,
+ * preventing mixed-language meta tags in Google search results.
+ */
+const LANG_TO_ACCEPT_LANGUAGE: Record<string, string> = {
+  fr: 'fr-FR,fr;q=0.9,en;q=0.1',
+  en: 'en-US,en;q=0.9',
+  es: 'es-ES,es;q=0.9,en;q=0.1',
+  de: 'de-DE,de;q=0.9,en;q=0.1',
+  pt: 'pt-PT,pt;q=0.9,en;q=0.1',
+  ru: 'ru-RU,ru;q=0.9,en;q=0.1',
+  zh: 'zh-CN,zh;q=0.9,en;q=0.1',
+  ar: 'ar-SA,ar;q=0.9,en;q=0.1',
+  hi: 'hi-IN,hi;q=0.9,en;q=0.1',
+};
+
+function extractLocaleFromPath(path: string): { lang: string; locale: string } {
+  const match = path.match(/^\/([a-z]{2})-([a-z]{2})(\/|$)/);
+  if (match) {
+    return { lang: match[1], locale: `${match[1]}-${match[2]}` };
+  }
+  return { lang: 'fr', locale: 'fr-fr' }; // Default fallback
+}
+
 // Firestore collection for persistent SSR cache (survives cold starts)
 const SSR_CACHE_COLLECTION = 'ssr_cache';
 
@@ -242,6 +267,16 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
+    // SEO FIX: Set Accept-Language header based on URL locale.
+    // Without this, Puppeteer defaults to English which causes mixed-language
+    // meta tags in Google search results (e.g., French title + English description).
+    const { lang: urlLang } = extractLocaleFromPath(new URL(url).pathname);
+    const acceptLanguage = LANG_TO_ACCEPT_LANGUAGE[urlLang] || LANG_TO_ACCEPT_LANGUAGE['fr'];
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': acceptLanguage,
+    });
+    logger.info('Set Puppeteer Accept-Language', { urlLang, acceptLanguage });
+
     // Block analytics/tracking scripts to prevent false hits from server IP (europe-west1 = Belgium)
     // Without this, every Puppeteer render creates a fake "Belgian visitor" in GA4/Meta
     await page.setRequestInterception(true);
@@ -415,8 +450,11 @@ export const renderForBotsV2 = onRequest(
     }
 
     // Check cache first (L1 memory → L2 Firestore)
-    // Use separate cache keys for holidays vs expat to avoid serving wrong variant
-    const cacheKey = isHolidays ? `holidays:${requestPath}` : requestPath;
+    // SEO FIX: Partition cache by locale to prevent serving wrong language content.
+    // Previously, /fr-fr/tarifs and all other locale variants shared the same cache key,
+    // so whichever language was rendered first was served to all bots.
+    const { locale: pathLocale } = extractLocaleFromPath(requestPath);
+    const cacheKey = isHolidays ? `holidays:${pathLocale}:${requestPath}` : `${pathLocale}:${requestPath}`;
     const cachedHtml = await getCachedHtml(cacheKey);
     if (cachedHtml) {
       logger.info('Serving cached HTML', { path: requestPath, isHolidays });

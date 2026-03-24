@@ -602,37 +602,9 @@ const FAQDetail: React.FC = () => {
   // Generate alternate language URLs for hreflang tags
   // Map language codes to their locale strings for URLs (using getLocaleString format: lowercase with hyphen)
   // For hreflang, we use ISO format (e.g., "en-US"), but for URLs we use lowercase (e.g., "en-us")
-  // hreflangLocale must match HreflangLinks convention: simple lang code (fr, en, es...)
-  // except Chinese which uses zh-Hans (ISO 15924 script subtag)
-  const localeMap: Record<string, { urlLocale: string; hreflangLocale: string }> = {
-    'fr': { urlLocale: 'fr-fr', hreflangLocale: 'fr' },
-    'en': { urlLocale: 'en-us', hreflangLocale: 'en' },
-    'es': { urlLocale: 'es-es', hreflangLocale: 'es' },
-    'ru': { urlLocale: 'ru-ru', hreflangLocale: 'ru' },
-    'de': { urlLocale: 'de-de', hreflangLocale: 'de' },
-    'hi': { urlLocale: 'hi-in', hreflangLocale: 'hi' },
-    'pt': { urlLocale: 'pt-pt', hreflangLocale: 'pt' },
-    'ch': { urlLocale: 'zh-cn', hreflangLocale: 'zh-Hans' },
-    'ar': { urlLocale: 'ar-sa', hreflangLocale: 'ar' }
-  };
-
-  const supportedLanguages = ['fr', 'en', 'es', 'ru', 'de', 'hi', 'pt', 'ch', 'ar'];
-
-  const alternateLanguages = supportedLanguages
-    .filter(langCode => {
-      // Only include languages where the FAQ has content
-      const hasQuestion = displayFaq.question[langCode] && displayFaq.question[langCode].trim().length > 0;
-      const hasAnswer = displayFaq.answer[langCode] && displayFaq.answer[langCode].trim().length > 0;
-      return hasQuestion && hasAnswer;
-    })
-    .map(langCode => {
-      const slug = displayFaq.slug[langCode] || displayFaq.slug['fr'] || displayFaq.slug['en'] || displayFaq.id;
-      const localeInfo = localeMap[langCode] || { urlLocale: `${langCode}-${langCode}`, hreflangLocale: `${langCode}-${langCode.toUpperCase()}` };
-      return {
-        lang: localeInfo.hreflangLocale, // Use ISO format for hreflang
-        url: `${baseUrl}/${localeInfo.urlLocale}/faq/${slug}` // Use lowercase for URL
-      };
-    });
+  // NOTE: hreflang links are handled globally by HreflangLinks component in App.tsx.
+  // Per-page alternateLanguages removed to avoid duplicate hreflang tags with different
+  // formats (e.g., hreflang="en" from global vs hreflang="en-US" from page), which confuses Google.
 
   return (
     <Layout>
@@ -641,7 +613,6 @@ const FAQDetail: React.FC = () => {
         description={answer.substring(0, 160).replace(/\n/g, ' ')}
         keywords={[displayFaq.category, 'FAQ', 'help', ...(displayFaq.tags || [])].join(', ')}
         canonicalUrl={canonicalUrl}
-        alternateLanguages={alternateLanguages}
         locale={currentLang === 'fr' ? 'fr_FR' : 
                 currentLang === 'en' ? 'en_US' :
                 currentLang === 'es' ? 'es_ES' :

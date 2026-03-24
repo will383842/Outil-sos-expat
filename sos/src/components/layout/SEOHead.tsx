@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { parseLocaleFromPath, getLocaleString } from '../../multilingual-system';
+import { isHolidaysDomain } from '../../utils/holidaysDetection';
 
 interface SEOHeadProps {
   title: string;
@@ -123,8 +124,9 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       return `${baseUrl}${cleanPath}`;
     }
 
-    // Fallback pour SSR
-    return canonicalUrl ? removeTrailingSlash(`https://sos-expat.com${canonicalUrl}`) : '';
+    // Fallback pour SSR — domain-aware to prevent sos-holidays.com canonical pointing to sos-expat.com
+    const baseDomain = isHolidaysDomain() ? 'https://sos-holidays.com' : 'https://sos-expat.com';
+    return canonicalUrl ? removeTrailingSlash(`${baseDomain}${canonicalUrl}`) : '';
   };
 
   const fullCanonicalUrl = buildCanonicalUrl();
@@ -132,7 +134,8 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   // Validation et nettoyage des données
   const cleanTitle = title?.trim() || '';
   const cleanDescription = (description?.trim().replace(/<[^>]*>/g, '') || '').substring(0, 160);
-  const fullOgImage = ogImage?.startsWith('http') ? ogImage : `https://sos-expat.com${ogImage}`;
+  const ogBaseDomain = isHolidaysDomain() ? 'https://sos-holidays.com' : 'https://sos-expat.com';
+  const fullOgImage = ogImage?.startsWith('http') ? ogImage : `${ogBaseDomain}${ogImage}`;
   
   // Génération automatique de données structurées enrichies pour les IA
   const generateEnrichedStructuredData = () => {

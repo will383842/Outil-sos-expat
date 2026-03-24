@@ -1363,6 +1363,11 @@ async function handleRequest(request, env, ctx) {
         const spaHeaders = new Headers(spaResponse.headers);
         spaHeaders.set('X-SSR-Fallback', 'true');
         spaHeaders.set('X-SSR-Original-Status', String(ssrResponse.status));
+        // SEO: Set Content-Language on fallback too (consistent with main SSR path)
+        const fallbackLocaleMatch = pathname.match(/^\/([a-z]{2})-[a-z]{2}(\/|$)/);
+        if (fallbackLocaleMatch) {
+          spaHeaders.set('Content-Language', fallbackLocaleMatch[1]);
+        }
         return new Response(spaResponse.body, {
           status: spaResponse.ok || spaResponse.status === 404 ? 200 : spaResponse.status,
           statusText: 'OK',
@@ -1374,6 +1379,14 @@ async function handleRequest(request, env, ctx) {
       const newHeaders = new Headers(ssrResponse.headers);
       newHeaders.set('X-Rendered-By', 'sos-expat-ssr');
       newHeaders.set('X-Bot-Detected', botName);
+
+      // SEO FIX: Set Content-Language header based on URL locale.
+      // This gives Google an additional signal about the page language,
+      // reinforcing the hreflang and html lang attribute.
+      const ssrLocaleMatch = pathname.match(/^\/([a-z]{2})-[a-z]{2}(\/|$)/);
+      if (ssrLocaleMatch) {
+        newHeaders.set('Content-Language', ssrLocaleMatch[1]);
+      }
 
       // Ensure proper caching headers for bots
       if (!newHeaders.has('Cache-Control')) {

@@ -1,7 +1,7 @@
 {
-  "name": "SOS Expat - Assistance Urgente Expatriés",
+  "name": "SOS Expat - 24/7 Expat Assistance",
   "short_name": "SOS Expat",
-  "description": "Assistance juridique et expatriation en urgence - Service d'aide rapide 24/7 pour expatriés dans 197 pays",
+  "description": "Emergency legal & expat assistance - 24/7 rapid help service for expatriates in 197 countries",
   "start_url": "/?utm_source=pwa&utm_medium=installed&utm_campaign=pwa_install",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "id": "sos-expat-pwa",
-  "lang": "fr-FR",
+  "lang": "en",
   "dir": "ltr",
   "categories": ["business", "productivity", "utilities", "lifestyle"],
   "prefer_related_applications": false,
@@ -89,7 +89,7 @@
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "SOS Expat - Assistance expatriés mobile"
+      "label": "SOS Expat - Mobile expat assistance"
     },
     {
       "src": "/screenshots/screenshot-wide.png",
@@ -101,9 +101,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Urgence Juridique",
-      "short_name": "Urgence",
-      "description": "Accès rapide à l'assistance juridique d'urgence",
+      "name": "Legal Emergency",
+      "short_name": "Emergency",
+      "description": "Quick access to emergency legal assistance",
       "url": "/urgence",
       "icons": [
         {
@@ -115,8 +115,8 @@
     },
     {
       "name": "Consultation",
-      "short_name": "Conseil",
-      "description": "Demander une consultation juridique",
+      "short_name": "Consult",
+      "description": "Request a legal consultation",
       "url": "/consultation",
       "icons": [
         {
@@ -129,7 +129,7 @@
     {
       "name": "Documents",
       "short_name": "Docs",
-      "description": "Accéder aux documents et guides",
+      "description": "Access documents and guides",
       "url": "/documents",
       "icons": [
         {
