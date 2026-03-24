@@ -52,7 +52,7 @@ function parseTargetAudience(targetAudience: string): string[] | "all" {
 
 export const processTelegramCampaigns = onSchedule(
   {
-    schedule: "*/5 * * * *", // Every 5 minutes (optimized from every minute - saves ~80% invocations)
+    schedule: "*/10 * * * *", // Every 10 minutes (optimized from 5min - saves ~50% invocations)
     region: "europe-west3",
     memory: "256MiB",
     cpu: 0.083,

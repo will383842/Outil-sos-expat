@@ -28,7 +28,7 @@ function ensureInitialized() {
 
 export const cleanupExpiredWithdrawalConfirmations = scheduler.onSchedule(
   {
-    schedule: "every 5 minutes",
+    schedule: "every 30 minutes",
     timeZone: "Europe/Paris",
     region: "europe-west3",
     memory: "256MiB",
