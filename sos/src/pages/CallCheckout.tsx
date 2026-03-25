@@ -19,7 +19,9 @@ import {
 } from "lucide-react";
 import { useLocaleNavigate } from "../multilingual-system";
 import { useAuth } from "../contexts/AuthContext";
-import { loadStripe, Stripe } from "@stripe/stripe-js";
+// ⚡ PERF: /pure évite le side-effect d'auto-injection du script Stripe au moment de l'import
+// Stripe ne charge que quand loadStripe() est explicitement appelé
+import { loadStripe, Stripe } from "@stripe/stripe-js/pure";
 import {
   Elements,
   CardNumberElement,
@@ -30,7 +32,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import type { PaymentRequest } from "@stripe/stripe-js";
+import type { PaymentRequest } from "@stripe/stripe-js/pure";
 import { functions, functionsPayment, db } from "../config/firebase";
 import { httpsCallable, HttpsCallable } from "firebase/functions";
 import { doc, setDoc, serverTimestamp, getDoc, onSnapshot } from "firebase/firestore";

@@ -9,7 +9,8 @@ import { useLocaleNavigate } from '../../../multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '../../../multilingual-system/core/routing/localeRoutes';
 import { useApp } from '../../../contexts/AppContext';
 import { ArrowLeft, Check, Shield, CreditCard, Loader2 } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
+// ⚡ PERF: /pure évite le side-effect d'auto-injection du script Stripe
+import { loadStripe } from '@stripe/stripe-js/pure';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { useSubscription } from '../../../hooks/useSubscription';
