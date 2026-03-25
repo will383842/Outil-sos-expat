@@ -36,7 +36,8 @@ import Layout from "../components/layout/Layout";
 import Button from "../components/common/Button";
 import AvailabilityToggle from "../components/dashboard/AvailabilityToggle";
 import NotificationSettings from "../notifications/notificationsDashboardProviders/NotificationSettings";
-import UserInvoices from "../components/dashboard/UserInvoices";
+// ⚡ PERF: UserInvoices chargé lazy (dépend de jsPDF 607KB, utilisé uniquement sur l'onglet factures)
+const UserInvoices = React.lazy(() => import("../components/dashboard/UserInvoices"));
 import DashboardMessages from "../components/dashboard/DashboardMessages";
 import ImageUploader from "../components/common/ImageUploader";
 import MultiLanguageSelect from "../components/forms-data/MultiLanguageSelect";
@@ -3557,7 +3558,11 @@ const [kycRefreshAttempted, setKycRefreshAttempted] = useState<boolean>(false);
               )}
 
               {/* FACTURES */}
-              {activeTab === "invoices" && <UserInvoices />}
+              {activeTab === "invoices" && (
+                <React.Suspense fallback={<div className="animate-pulse p-4 text-center text-gray-400">Loading...</div>}>
+                  <UserInvoices />
+                </React.Suspense>
+              )}
 
               {/* AVIS */}
               {activeTab === "reviews" && (

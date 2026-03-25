@@ -273,7 +273,7 @@
   <link rel="prefetch" href="/icons/icon-512x512.png" />
 
   <!-- 🌐 MULTILINGUAL FONTS (chargées uniquement pour les langues qui en ont besoin) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <!-- ⚡ PERF: preconnect supprimé ici (déjà couvert par dns-prefetch line 267) — Lighthouse flag >4 preconnects -->
   <script>
     // Charger les fonts spéciales uniquement pour ar/hi/ch (évite ~150KB inutile pour 90%+ des visiteurs)
     (function() {

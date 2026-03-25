@@ -112,6 +112,17 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      // ⚡ PERF: Filtrer les modulepreload inutiles (vendor-pdf 607KB, vendor-xlsx 276KB)
+      // Ces chunks sont uniquement utilisés dans des pages lazy-loaded (admin, factures)
+      // Les garder en modulepreload gaspille ~900KB de bande passante au boot
+      modulePreload: {
+        resolveDependencies: (_filename, deps) => {
+          return deps.filter(dep =>
+            !dep.includes('vendor-pdf') &&
+            !dep.includes('vendor-xlsx')
+          )
+        },
+      },
       // ES2020 pour supporter BigInt (IBAN validation) + optional chaining
       target: 'es2020',
       // Minification avec terser pour réduire la taille du bundle
