@@ -20,7 +20,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bot, Briefcase, Database, ExternalLink, Flame, GripVertical, Link2, Mail, MessageSquare, Send, Server, Settings, Target, Users, UserSearch, Wrench } from "lucide-react";
+import { Bot, Briefcase, Database, ExternalLink, Eye, Flame, GripVertical, Link2, Mail, MessageSquare, Send, Server, Settings, Target, Users, UserSearch, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -34,6 +34,7 @@ const JOB_ADS_TRACKER_URL = "https://sos-expat.com/tools/job-tracker.html";
 const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
 const CONVERSION_ENGINE_URL = "https://conversion.life-expat.com/admin/login";
+const APP_SURVEILLANCE_URL = "http://95.216.179.163:8097";
 
 const STORAGE_KEY = "admin-toolbox-order";
 
@@ -165,6 +166,15 @@ const defaultTools: ToolCard[] = [
     url: CONVERSION_ENGINE_URL,
     icon: <Target className="h-8 w-8" />,
     color: "bg-violet-600",
+    status: "live",
+  },
+  {
+    id: "app-surveillance",
+    titleKey: "Suivi nouvelles APPs",
+    descriptionKey: "Veille apps iOS, Android, Web — scores d'explosion, buzz, analyse IA automatique",
+    url: APP_SURVEILLANCE_URL,
+    icon: <Eye className="h-8 w-8" />,
+    color: "bg-lime-600",
     status: "live",
   },
 ];
