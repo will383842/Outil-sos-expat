@@ -12543,5 +12543,21 @@
   "supportingDocs.type.payroll": "[EN] Payroll",
   "supportingDocs.type.receipt": "[EN] Receipt",
   "supportingDocs.type.supplierInvoice": "[EN] Supplier Invoice",
-  "supportingDocs.type.taxDocument": "[EN] Tax Document"
+  "supportingDocs.type.taxDocument": "[EN] Tax Document",
+  "breadcrumb.becomeChatter": "Стать Чаттером",
+  "breadcrumb.consumers": "Защита потребителей",
+  "breadcrumb.expatCall": "Звонок экспату",
+  "breadcrumb.lawyerRegistration": "Регистрация адвоката",
+  "breadcrumb.partners": "Партнёры",
+  "breadcrumb.register": "Регистрация",
+  "breadcrumb.registerClient": "Регистрация клиента",
+  "breadcrumb.registerExpat": "Регистрация экспата",
+  "breadcrumb.seo": "SEO",
+  "breadcrumb.serviceStatus": "Статус сервиса",
+  "breadcrumb.sosCall": "SOS Звонок",
+  "breadcrumb.testimonials": "Отзывы",
+  "faq.categories.all": "Все категории",
+  "groupAdmin.landing.seo.short_title": "Администратор группы",
+  "serviceStatus.meta.title": "Статус сервиса | SOS Expat",
+  "serviceStatus.meta.description": "Проверьте статус работы сервисов SOS Expat в реальном времени."
 }

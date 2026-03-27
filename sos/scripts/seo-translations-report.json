@@ -1,0 +1,1025 @@
+{
+  "timestamp": "2026-03-27T10:57:33.746Z",
+  "totalSeoKeys": 218,
+  "languages": {
+    "fr": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 1,
+      "totalIssues": 17
+    },
+    "en": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 0,
+      "totalIssues": 16
+    },
+    "es": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 2,
+      "totalIssues": 18
+    },
+    "de": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 2,
+      "totalIssues": 18
+    },
+    "pt": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 2,
+      "totalIssues": 18
+    },
+    "ru": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 2,
+      "totalIssues": 18
+    },
+    "ch": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 1,
+      "totalIssues": 17
+    },
+    "hi": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 2,
+      "totalIssues": 18
+    },
+    "ar": {
+      "missingCount": 16,
+      "emptyCount": 0,
+      "placeholderCount": 0,
+      "untranslatedCount": 2,
+      "totalIssues": 18
+    }
+  },
+  "issues": [
+    {
+      "lang": "fr",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "fr",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "fr",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "en",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "es",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "es",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "es",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "de",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "de",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "de",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "pt",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "pt",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "pt",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "ru",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "ru",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ru",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "ch",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ch",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "hi",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "hi",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "hi",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.becomeChatter",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.consumers",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.expatCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.lawyerRegistration",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.partners",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.register",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.registerClient",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.registerExpat",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.seo",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.serviceStatus",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.sosCall",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "breadcrumb.testimonials",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "chatter.hero.trust.mobile",
+      "type": "IDENTICAL_TO_EN",
+      "value": "Mobile Money"
+    },
+    {
+      "lang": "ar",
+      "key": "faq.categories.all",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "groupAdmin.landing.seo.short_title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "influencer.hero.trust.4",
+      "type": "IDENTICAL_TO_EN",
+      "value": "No Min Followers"
+    },
+    {
+      "lang": "ar",
+      "key": "serviceStatus.meta.description",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    },
+    {
+      "lang": "ar",
+      "key": "serviceStatus.meta.title",
+      "type": "MISSING",
+      "enValue": "(not in en.json either)"
+    }
+  ],
+  "blogRouteSegments": {
+    "path": "C:\\Users\\willi\\Documents\\Projets\\VS_CODE\\Blog_sos-expat_frontend\\config\\route-segments.php",
+    "languageCodeNote": "Blog utilise 'zh' (standard ISO) vs SPA utilise 'ch' — attention a la coherence",
+    "issues": [],
+    "status": "OK"
+  }
+}

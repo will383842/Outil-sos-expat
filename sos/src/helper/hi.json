@@ -12543,5 +12543,21 @@
   "supportingDocs.type.payroll": "[EN] Payroll",
   "supportingDocs.type.receipt": "[EN] Receipt",
   "supportingDocs.type.supplierInvoice": "[EN] Supplier Invoice",
-  "supportingDocs.type.taxDocument": "[EN] Tax Document"
+  "supportingDocs.type.taxDocument": "[EN] Tax Document",
+  "breadcrumb.becomeChatter": "चैटर बनें",
+  "breadcrumb.consumers": "उपभोक्ता संरक्षण",
+  "breadcrumb.expatCall": "प्रवासी कॉल",
+  "breadcrumb.lawyerRegistration": "वकील पंजीकरण",
+  "breadcrumb.partners": "साझेदार",
+  "breadcrumb.register": "पंजीकरण",
+  "breadcrumb.registerClient": "ग्राहक पंजीकरण",
+  "breadcrumb.registerExpat": "प्रवासी पंजीकरण",
+  "breadcrumb.seo": "SEO",
+  "breadcrumb.serviceStatus": "सेवा स्थिति",
+  "breadcrumb.sosCall": "SOS कॉल",
+  "breadcrumb.testimonials": "प्रशंसापत्र",
+  "faq.categories.all": "सभी श्रेणियां",
+  "groupAdmin.landing.seo.short_title": "समूह व्यवस्थापक",
+  "serviceStatus.meta.title": "सेवा स्थिति | SOS Expat",
+  "serviceStatus.meta.description": "SOS Expat सेवाओं की वास्तविक समय परिचालन स्थिति जांचें।"
 }

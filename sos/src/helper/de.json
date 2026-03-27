@@ -12543,5 +12543,21 @@
   "supportingDocs.type.payroll": "[EN] Payroll",
   "supportingDocs.type.receipt": "[EN] Receipt",
   "supportingDocs.type.supplierInvoice": "[EN] Supplier Invoice",
-  "supportingDocs.type.taxDocument": "[EN] Tax Document"
+  "supportingDocs.type.taxDocument": "[EN] Tax Document",
+  "breadcrumb.becomeChatter": "Chatter werden",
+  "breadcrumb.consumers": "Verbraucherschutz",
+  "breadcrumb.expatCall": "Expat-Anruf",
+  "breadcrumb.lawyerRegistration": "Anwaltsregistrierung",
+  "breadcrumb.partners": "Partner",
+  "breadcrumb.register": "Registrierung",
+  "breadcrumb.registerClient": "Kundenregistrierung",
+  "breadcrumb.registerExpat": "Expat-Registrierung",
+  "breadcrumb.seo": "SEO",
+  "breadcrumb.serviceStatus": "Dienststatus",
+  "breadcrumb.sosCall": "SOS-Anruf",
+  "breadcrumb.testimonials": "Erfahrungsberichte",
+  "faq.categories.all": "Alle Kategorien",
+  "groupAdmin.landing.seo.short_title": "Gruppenadministrator",
+  "serviceStatus.meta.title": "Dienststatus | SOS Expat",
+  "serviceStatus.meta.description": "Überprüfen Sie den Echtzeit-Betriebsstatus der SOS Expat-Dienste."
 }

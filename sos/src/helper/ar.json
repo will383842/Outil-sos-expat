@@ -12543,5 +12543,21 @@
   "supportingDocs.type.payroll": "[EN] Payroll",
   "supportingDocs.type.receipt": "[EN] Receipt",
   "supportingDocs.type.supplierInvoice": "[EN] Supplier Invoice",
-  "supportingDocs.type.taxDocument": "[EN] Tax Document"
+  "supportingDocs.type.taxDocument": "[EN] Tax Document",
+  "breadcrumb.becomeChatter": "كن شاتر",
+  "breadcrumb.consumers": "حماية المستهلك",
+  "breadcrumb.expatCall": "اتصال المغتربين",
+  "breadcrumb.lawyerRegistration": "تسجيل المحامي",
+  "breadcrumb.partners": "شركاء",
+  "breadcrumb.register": "التسجيل",
+  "breadcrumb.registerClient": "تسجيل العميل",
+  "breadcrumb.registerExpat": "تسجيل المغترب",
+  "breadcrumb.seo": "SEO",
+  "breadcrumb.serviceStatus": "حالة الخدمة",
+  "breadcrumb.sosCall": "اتصال SOS",
+  "breadcrumb.testimonials": "شهادات",
+  "faq.categories.all": "جميع الفئات",
+  "groupAdmin.landing.seo.short_title": "مسؤول المجموعة",
+  "serviceStatus.meta.title": "حالة الخدمة | SOS Expat",
+  "serviceStatus.meta.description": "تحقق من الحالة التشغيلية لخدمات SOS Expat في الوقت الفعلي."
 }

@@ -12543,5 +12543,21 @@
   "supportingDocs.type.payroll": "[EN] Payroll",
   "supportingDocs.type.receipt": "[EN] Receipt",
   "supportingDocs.type.supplierInvoice": "[EN] Supplier Invoice",
-  "supportingDocs.type.taxDocument": "[EN] Tax Document"
+  "supportingDocs.type.taxDocument": "[EN] Tax Document",
+  "breadcrumb.becomeChatter": "成为Chatter",
+  "breadcrumb.consumers": "消费者保护",
+  "breadcrumb.expatCall": "外籍人士通话",
+  "breadcrumb.lawyerRegistration": "律师注册",
+  "breadcrumb.partners": "合作伙伴",
+  "breadcrumb.register": "注册",
+  "breadcrumb.registerClient": "客户注册",
+  "breadcrumb.registerExpat": "外籍人士注册",
+  "breadcrumb.seo": "SEO",
+  "breadcrumb.serviceStatus": "服务状态",
+  "breadcrumb.sosCall": "SOS通话",
+  "breadcrumb.testimonials": "用户评价",
+  "faq.categories.all": "所有类别",
+  "groupAdmin.landing.seo.short_title": "群组管理员",
+  "serviceStatus.meta.title": "服务状态 | SOS Expat",
+  "serviceStatus.meta.description": "查看SOS Expat服务的实时运营状态。"
 }
