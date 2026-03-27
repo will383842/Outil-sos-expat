@@ -2,6 +2,7 @@ import React, { memo, useMemo } from 'react';
 import { CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
 import { useIntl } from 'react-intl';
 import Layout from '../components/layout/Layout';
+import SEOHead from '../components/layout/SEOHead';
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import { useApp } from '../contexts/AppContext';
 import { getDateLocale } from '../utils/formatters';
@@ -134,8 +135,16 @@ const ServiceStatus: React.FC = () => {
   });
   ServiceItem.displayName = 'ServiceItem';
 
+  const language = useApp().language;
+  const OG_LOCALE: Record<string, string> = { fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', ar: 'ar_SA', hi: 'hi_IN' };
+
   return (
     <Layout>
+      <SEOHead
+        title={intl.formatMessage({ id: 'serviceStatus.meta.title', defaultMessage: 'Statut du Service | SOS Expat' })}
+        description={intl.formatMessage({ id: 'serviceStatus.meta.description', defaultMessage: 'Vérifiez l\'état opérationnel en temps réel des services SOS Expat.' })}
+        locale={OG_LOCALE[language] || 'fr_FR'}
+      />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'breadcrumb.serviceStatus', defaultMessage: 'Service Status' }) }
