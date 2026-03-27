@@ -2490,6 +2490,38 @@ const ProviderProfile: React.FC = () => {
       {/* Hreflang links — handled by global HreflangLinks component (no duplicates) */}
       <HreflangLinks pathname={location.pathname} />
 
+      {/* Product/Offer schema — shows prices in Google SERPs */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": isLawyer
+            ? intl.formatMessage({ id: 'providerProfile.offer.lawyerName', defaultMessage: 'Legal Consultation with {name}' }, { name: provider.firstName })
+            : intl.formatMessage({ id: 'providerProfile.offer.expatName', defaultMessage: 'Expat Consultation with {name}' }, { name: provider.firstName }),
+          "description": seoDescription,
+          "provider": {
+            "@type": isLawyer ? "LegalService" : "ProfessionalService",
+            "name": provider.firstName,
+            "image": mainPhoto || undefined,
+          },
+          "areaServed": provider.country,
+          "offers": {
+            "@type": "Offer",
+            "price": isLawyer ? "49" : "19",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/OnlineOnly",
+            "validFrom": new Date().toISOString().split('T')[0],
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": isLawyer ? "49" : "19",
+              "priceCurrency": "EUR",
+              "unitText": isLawyer ? "20 min" : "30 min",
+            },
+          },
+          "url": canonicalUrl,
+        })}</script>
+      </Helmet>
+
       {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage) — dans <head> via Helmet */}
       {/* If AI-generated FAQs exist, use them instead of templated snippetGenerator FAQs */}
       {seoAI?.faqs && seoAI.faqs.length > 0 ? (
