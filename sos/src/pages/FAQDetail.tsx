@@ -87,6 +87,20 @@ const FAQDetail: React.FC = () => {
     }
   }, [loading, faq]);
 
+  // Signal to Puppeteer that FAQ detail is loaded
+  useEffect(() => {
+    if (faq && !loading) {
+      document.documentElement.setAttribute('data-article-loaded', 'true');
+    }
+    if (show404) {
+      document.documentElement.setAttribute('data-page-not-found', 'true');
+    }
+    return () => {
+      document.documentElement.removeAttribute('data-article-loaded');
+      document.documentElement.removeAttribute('data-page-not-found');
+    };
+  }, [faq, loading, show404]);
+
   useEffect(() => {
     const loadFAQ = async () => {
       // Declare variables outside try block for use in finally

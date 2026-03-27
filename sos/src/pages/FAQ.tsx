@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
@@ -149,8 +150,28 @@ const FAQ: React.FC = () => {
     setOpenItems(newOpenItems);
   };
 
+  // Signal to Puppeteer that FAQ data is loaded
+  useEffect(() => {
+    if (!loading && faqItems.length > 0) {
+      document.documentElement.setAttribute('data-article-loaded', 'true');
+    }
+    return () => { document.documentElement.removeAttribute('data-article-loaded'); };
+  }, [loading, faqItems.length]);
+
   return (
     <Layout>
+      {/* Speakable schema — allows voice assistants to read FAQ answers */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": [".faq-answer", "h1", "h2"]
+          },
+          "url": `https://sos-expat.com/${getLocaleString(language as any)}/${getTranslatedRouteSlug("faq" as any, language as any) || 'faq'}`
+        })}</script>
+      </Helmet>
       <SEOHead
         title={intl.formatMessage({ id: "faq.heroTitle", defaultMessage: "Frequently Asked Questions" }) + " | SOS Expat & Travelers"}
         description={intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })}
