@@ -4,8 +4,9 @@
  * Run before Google crawls to ensure fast HTML responses (no cold Puppeteer starts).
  *
  * Usage:
- *   node scripts/warm-ssr-cache.js          # priority pages only (~50 URLs)
- *   node scripts/warm-ssr-cache.js --all    # all static pages from sitemap
+ *   node scripts/warm-ssr-cache.js                  # priority pages only (~50 URLs)
+ *   node scripts/warm-ssr-cache.js --all            # all static pages from sitemap
+ *   node scripts/warm-ssr-cache.js --top-profiles   # priority pages + top 50 provider profiles (FR+EN)
  */
 
 const SSR_FUNCTION_URL =
@@ -104,6 +105,36 @@ const PRIORITY_PATHS = [
   '/hi-in/chatter-bane',
 ];
 
+// ─── Top provider profiles (run with --top-profiles) ────────────────────────
+// TODO: automatiser via Firestore query sur sos_profiles
+//   (e.g. top 50 par totalCalls ou reviewCount, extraire shortId/slug)
+//   Exemple de query:
+//     db.collection('sos_profiles')
+//       .where('isVisible', '==', true)
+//       .orderBy('totalCalls', 'desc')
+//       .limit(50)
+//   Puis générer les paths: /{locale}/avocat/{shortId} ou /{locale}/expatrie/{shortId}
+//
+// Routes FR: /fr-fr/avocat/{slug}  et  /fr-fr/expatrie/{slug}
+// Routes EN: /en-us/lawyers/{slug} et  /en-us/expats/{slug}
+//
+// IMPORTANT: Remplacer les slugs ci-dessous par les vrais shortId/slug de vos prestataires.
+// Vous pouvez les trouver dans Firestore: sos_profiles/{uid}.shortId
+const TOP_PROFILE_SLUGS = [
+  // { slug: 'short-id-or-slug', type: 'lawyer' },  // type: 'lawyer' or 'expat'
+  // Exemple:
+  // { slug: 'jean-dupont-abc12', type: 'lawyer' },
+  // { slug: 'sarah-martin-def34', type: 'expat' },
+];
+
+// Génère les paths FR + EN pour chaque slug
+const TOP_PROFILE_PATHS = TOP_PROFILE_SLUGS.flatMap(({ slug, type }) => {
+  if (type === 'lawyer') {
+    return [`/fr-fr/avocat/${slug}`, `/en-us/lawyers/${slug}`];
+  }
+  return [`/fr-fr/expatrie/${slug}`, `/en-us/expats/${slug}`];
+});
+
 // ─── All static pages (run with --all) ─────────────────────────────────────
 // Derived from sitemap-static.xml — one canonical URL per page group
 const ALL_PATHS = [
@@ -196,11 +227,24 @@ async function runWithConcurrency(tasks, maxConcurrent) {
 
 async function main() {
   const useAll = process.argv.includes('--all');
-  const paths = useAll ? ALL_PATHS : PRIORITY_PATHS;
+  const useTopProfiles = process.argv.includes('--top-profiles');
+
+  let paths;
+  let modeLabel;
+  if (useAll) {
+    paths = ALL_PATHS;
+    modeLabel = '--all (full sitemap)';
+  } else if (useTopProfiles) {
+    paths = [...PRIORITY_PATHS, ...TOP_PROFILE_PATHS];
+    modeLabel = '--top-profiles (priority + top 50 provider profiles FR+EN)';
+  } else {
+    paths = PRIORITY_PATHS;
+    modeLabel = 'priority pages only';
+  }
   const total = paths.length;
 
   console.log(`\n🔥 SSR Cache Warm-up`);
-  console.log(`   Mode      : ${useAll ? '--all (full sitemap)' : 'priority pages only'}`);
+  console.log(`   Mode      : ${modeLabel}`);
   console.log(`   URLs      : ${total}`);
   console.log(`   Concurrent: ${MAX_CONCURRENT} (séquentiel)`);
   console.log(`   Délai     : ${DELAY_BETWEEN_MS / 1000}s entre chaque requête`);

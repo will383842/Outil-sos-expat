@@ -408,7 +408,7 @@ export const renderForBotsV2 = onRequest(
     memory: '2GiB',  // FIX: 1GiB caused OOM (1056 MiB used). Puppeteer + Chromium peaks at ~1.0-1.1 GiB
     cpu: 1,  // memory > 1GiB requires cpu >= 1
     timeoutSeconds: 120,
-    minInstances: 0,
+    minInstances: 1,  // Avoid 8-12s Puppeteer cold start for bots
     maxInstances: 10,
   },
   async (req: Request, res: Response) => {
