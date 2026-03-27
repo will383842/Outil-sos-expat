@@ -1,6 +1,6 @@
 # Robots.txt pour SOS-Expat.com
 # https://sos-expat.com
-# Dernière mise à jour: 2026-01-24
+# Dernière mise à jour: 2026-03-27
 
 # ===========================================
 # RÈGLES PAR DÉFAUT (Tous les robots)
@@ -245,8 +245,31 @@ Sitemap: https://sos-expat.com/sitemaps/articles-ar.xml
 Sitemap: https://sos-expat.com/sitemaps/articles-hi.xml
 Sitemap: https://sos-expat.com/sitemaps/categories-fr.xml
 Sitemap: https://sos-expat.com/sitemaps/categories-en.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-es.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-de.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-pt.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-ru.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-zh.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-ar.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-hi.xml
 Sitemap: https://sos-expat.com/sitemaps/tags-fr.xml
 Sitemap: https://sos-expat.com/sitemaps/tags-en.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-es.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-de.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-pt.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-ru.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-zh.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-ar.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-hi.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-fr.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-en.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-es.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-de.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-pt.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-ru.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-zh.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-ar.xml
+Sitemap: https://sos-expat.com/sitemaps/countries-hi.xml
 
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA
