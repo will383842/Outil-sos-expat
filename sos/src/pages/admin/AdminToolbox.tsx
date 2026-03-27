@@ -31,7 +31,7 @@ const SCRAPER_PRO_URL = "https://scraper.providers-expat.com";
 const EMAIL_ENGINE_URL = "https://engine.sos-expat.com";
 const MOTIVATION_ENGINE_URL = "https://motivation.life-expat.com/admin";
 const JOB_ADS_TRACKER_URL = "https://sos-expat.com/tools/job-tracker.html";
-const INFLUENCEURS_TRACKER_URL = "https://influenceurs.life-expat.com";
+const MISSION_CONTROL_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
 const CONVERSION_ENGINE_URL = "https://conversion.life-expat.com/admin/login";
 const APP_SURVEILLANCE_URL = "http://95.216.179.163:8097";
@@ -142,10 +142,10 @@ const defaultTools: ToolCard[] = [
     status: "live",
   },
   {
-    id: "influenceurs-tracker",
-    titleKey: "Influenceurs Tracker",
-    descriptionKey: "Suivi et gestion des influenceurs, contacts, rappels et statistiques",
-    url: INFLUENCEURS_TRACKER_URL,
+    id: "mission-control",
+    titleKey: "Mission Control",
+    descriptionKey: "Centre de commande : influenceurs, contacts, rappels et statistiques",
+    url: MISSION_CONTROL_URL,
     icon: <UserSearch className="h-8 w-8" />,
     color: "bg-pink-600",
     status: "live",
@@ -176,6 +176,16 @@ const defaultTools: ToolCard[] = [
     icon: <Eye className="h-8 w-8" />,
     color: "bg-lime-600",
     status: "live",
+  },
+  {
+    id: "databases",
+    titleKey: "Bases de donnees",
+    descriptionKey: "Vue complete : 10 projets, 7 PostgreSQL, 2 MySQL, 1 Firestore, containers Docker",
+    url: "",
+    icon: <Database className="h-8 w-8" />,
+    color: "bg-gray-800",
+    status: "live",
+    internalRoute: "/admin/toolbox/databases",
   },
 ];
 

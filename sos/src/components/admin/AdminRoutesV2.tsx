@@ -567,6 +567,7 @@ const AdminLegalDocuments = lazy(
 );
 const AdminFAQs = lazy(() => import("../../pages/admin/AdminFAQs"));
 const AdminBackups = lazy(() => import("../../pages/admin/AdminBackups"));
+const AdminDatabases = lazy(() => import("../../pages/admin/AdminDatabases"));
 const AdminSettings = lazy(() => import("../../pages/admin/AdminSettings"));
 const AdminSystemHealth = lazy(() => import("../../pages/admin/AdminSystemHealth"));
 
@@ -1756,6 +1757,15 @@ const AdminRoutesV2: React.FC = () => {
         }
       />
 
+      <Route
+        path="toolbox/databases"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminDatabases />
+          </Suspense>
+        }
+      />
+
       {/* 📱 TELEGRAM MARKETING - Wrapped with TelegramLayout */}
       <Route path="toolbox/telegram" element={<TelegramLayout />}>
         {/* Index route: /admin/toolbox/telegram redirects to dashboard */}
@@ -2262,6 +2272,7 @@ export const useAdminRouteValidation = () => {
       "/admin/marketing/landing-pages",
       "/admin/analytics/unified",
       "/admin/feedback",
+      "/admin/toolbox/databases",
       "/admin/toolbox/telegram",
       "/admin/toolbox/telegram/dashboard",
       "/admin/toolbox/telegram/campaigns",

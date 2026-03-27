@@ -275,7 +275,7 @@ const AdminBackups: React.FC = () => {
   const [codeError, setCodeError] = useState("");
 
   // UI state
-  const [activeSection, setActiveSection] = useState<"sos-expat" | "telegram-engine" | "motivation-engine" | "whatsapp-campaigns" | "influenceurs-tracker" | "offres-emploi">("sos-expat");
+  const [activeSection, setActiveSection] = useState<"sos-expat" | "telegram-engine" | "motivation-engine" | "whatsapp-campaigns" | "mission-control" | "offres-emploi">("sos-expat");
   const [activeTab, setActiveTab] = useState<"overview" | "restore" | "history" | "local">("overview");
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
@@ -552,7 +552,7 @@ const AdminBackups: React.FC = () => {
               { id: "telegram-engine" as const, label: "Telegram Engine", icon: Send },
               { id: "motivation-engine" as const, label: "Motivation Engine", icon: Zap },
               { id: "whatsapp-campaigns" as const, label: "WhatsApp Campaigns", icon: MessageCircle },
-              { id: "influenceurs-tracker" as const, label: "Influenceurs Tracker", icon: Search },
+              { id: "mission-control" as const, label: "Mission Control", icon: Search },
               { id: "offres-emploi" as const, label: "Offres Emploi", icon: Briefcase },
             ].map(section => (
               <button
@@ -1292,15 +1292,15 @@ const AdminBackups: React.FC = () => {
                 localCode: "VS_CODE/Outils_communication/Whatsapp_campaigns_sos_expat/",
                 backupPath: "Sauvegardes/Sauv_whatsapp_campaigns/",
               },
-              "influenceurs-tracker": {
-                name: "Influenceurs Tracker",
+              "mission-control": {
+                name: "Mission Control",
                 icon: Search,
                 color: "purple",
-                description: "Suivi et gestion des influenceurs",
+                description: "Centre de commande : influenceurs, contacts, rappels et statistiques",
                 tech: "Laravel + MySQL + Redis",
                 vps: "95.216.179.163 (/opt/influenceurs-tracker/)",
                 db: "MySQL (inf-mysql) — influenceurs_tracker",
-                localCode: "VS_CODE/Outils_communication/Influenceurs_tracker_sos_expat/",
+                localCode: "VS_CODE/Outils_communication/Mission_control_sos-expat/",
                 backupPath: "Sauvegardes/Sauv_influenceurs_tracker/",
               },
               "offres-emploi": {
