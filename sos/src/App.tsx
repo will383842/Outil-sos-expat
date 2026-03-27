@@ -278,7 +278,9 @@ export async function preloadTranslations(locale: string): Promise<void> {
  */
 function useDynamicMessages(locale: Locale): Record<string, string> {
   const [messages, setMessages] = useState<Record<string, string>>(
-    loadedMessages[locale] || loadedMessages.en
+    loadedMessages[locale]
+      ? { ...loadedMessages.en, ...loadedMessages[locale] }
+      : loadedMessages.en
   );
 
   useEffect(() => {
@@ -290,7 +292,8 @@ function useDynamicMessages(locale: Locale): Record<string, string> {
 
     // Déjà en cache mémoire
     if (loadedMessages[locale]) {
-      setMessages(loadedMessages[locale]);
+      // Merge with EN as fallback: EN keys fill gaps in incomplete translations
+      setMessages({ ...loadedMessages.en, ...loadedMessages[locale] });
       return;
     }
 
@@ -301,7 +304,8 @@ function useDynamicMessages(locale: Locale): Record<string, string> {
         .then((mod) => {
           const msgs = mod.default as unknown as Record<string, string>;
           loadedMessages[locale] = msgs; // Cache pour les futures navigations
-          setMessages(msgs);
+          // Merge with EN as fallback: EN keys fill gaps in incomplete translations
+          setMessages({ ...loadedMessages.en, ...msgs });
         })
         .catch((err) => {
           console.error(`[i18n] Failed to load ${locale} translations, falling back to EN:`, err);

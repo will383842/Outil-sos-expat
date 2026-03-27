@@ -54,6 +54,23 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
+      // Plugin pour mettre à jour lastmod dans sitemap.xml au build
+      {
+        name: 'update-sitemap-lastmod',
+        closeBundle() {
+          const today = new Date().toISOString().split('T')[0];
+          const sitemapFiles = ['sitemap.xml', 'sitemap-static.xml'];
+          for (const file of sitemapFiles) {
+            const sitemapPath = resolve(__dirname, 'dist', file);
+            if (fs.existsSync(sitemapPath)) {
+              let content = fs.readFileSync(sitemapPath, 'utf8');
+              content = content.replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${today}</lastmod>`);
+              fs.writeFileSync(sitemapPath, content);
+              console.log(`\u2705 Updated lastmod to ${today} in ${file}`);
+            }
+          }
+        }
+      },
       // Custom plugin to handle SPA routing in dev server
       {
         name: 'spa-fallback',
