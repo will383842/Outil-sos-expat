@@ -10,6 +10,7 @@ Allow: /
 Allow: /llms.txt
 Allow: /ai.txt
 Allow: /.well-known/
+Crawl-delay: 1
 
 # Pages protégées à ne pas indexer
 Disallow: /dashboard
@@ -231,6 +232,21 @@ Sitemap: https://sos-expat.com/sitemaps/help.xml
 Sitemap: https://sos-expat.com/sitemaps/faq.xml
 Sitemap: https://sos-expat.com/sitemaps/landing.xml
 Sitemap: https://sos-expat.com/sitemaps/country-listings.xml
+
+# Blog sitemaps (Laravel SSR — routed via Cloudflare Origin Rules)
+Sitemap: https://sos-expat.com/sitemaps/articles-fr.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-en.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-es.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-de.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-pt.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-ru.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-zh.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-ar.xml
+Sitemap: https://sos-expat.com/sitemaps/articles-hi.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-fr.xml
+Sitemap: https://sos-expat.com/sitemaps/categories-en.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-fr.xml
+Sitemap: https://sos-expat.com/sitemaps/tags-en.xml
 
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA

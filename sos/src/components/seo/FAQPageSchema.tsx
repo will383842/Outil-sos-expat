@@ -29,6 +29,23 @@ export interface FAQPageSchemaProps {
 }
 
 /**
+ * Strip HTML tags and decode common HTML entities to plain text.
+ * Google requires plain text in FAQ schema Answer.text.
+ */
+const stripHtml = (html: string): string => {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+/**
  * Generate FAQPage schema object
  */
 export function generateFAQPageSchema(props: FAQPageSchemaProps): object {
@@ -44,7 +61,7 @@ export function generateFAQPageSchema(props: FAQPageSchemaProps): object {
       ...(inLanguage && { inLanguage }),
       acceptedAnswer: {
         '@type': 'Answer',
-        text: faq.answer,
+        text: stripHtml(faq.answer),
       },
     })),
   };

@@ -92,6 +92,16 @@ const PRIORITY_PATHS = [
   '/zh-cn/chengwei-duizhang',
   '/ar-sa/كن-قائدا',
   '/hi-in/captain-bane',
+
+  // Chatter landing — all languages (high-traffic affiliate pages)
+  '/fr-fr/devenir-chatter',
+  '/en-us/become-chatter',
+  '/es-es/ser-chatter',
+  '/de-de/chatter-werden',
+  '/pt-pt/tornar-se-chatter',
+  '/ru-ru/stat-chatterom',
+  '/zh-cn/chengwei-chatter',
+  '/hi-in/chatter-bane',
 ];
 
 // ─── All static pages (run with --all) ─────────────────────────────────────

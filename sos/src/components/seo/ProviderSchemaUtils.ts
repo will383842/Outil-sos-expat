@@ -93,7 +93,7 @@ export function generateProviderItemSchema(
 
   // Only include aggregateRating if there are actual reviews
   // This is compliant with Google guidelines
-  if (includeAggregateRating && provider.reviewCount > 0) {
+  if (includeAggregateRating && provider.reviewCount > 0 && provider.rating > 0) {
     schema.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: provider.rating.toFixed(1),

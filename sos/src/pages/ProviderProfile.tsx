@@ -839,6 +839,26 @@ const ProviderProfile: React.FC = () => {
     }
   }, []);
 
+  // Signal to Puppeteer dynamic rendering that provider data is loaded
+  useEffect(() => {
+    if (provider && !isLoading) {
+      document.documentElement.setAttribute('data-provider-loaded', 'true');
+    }
+    return () => {
+      document.documentElement.removeAttribute('data-provider-loaded');
+    };
+  }, [provider, isLoading]);
+
+  // Signal to Puppeteer that provider was not found (proper 404)
+  useEffect(() => {
+    if (notFound) {
+      document.documentElement.setAttribute('data-provider-not-found', 'true');
+    }
+    return () => {
+      document.documentElement.removeAttribute('data-provider-not-found');
+    };
+  }, [notFound]);
+
   // Track Meta Pixel ViewContent - profil provider consulte
   useEffect(() => {
     if (provider?.id && provider?.type) {
@@ -2463,25 +2483,8 @@ const ProviderProfile: React.FC = () => {
         twitterSite="@sosexpat"
       />
 
-      {/* Hreflang links for provider profiles — uses multilingual slugs from Firestore */}
-      {(() => {
-        const providerSlugs = (provider as any).slugs as Record<string, string> | undefined;
-        const HREFLANG_MAP: Record<string, string> = {
-          fr: 'fr', en: 'en', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'zh-Hans', ar: 'ar', hi: 'hi'
-        };
-        if (providerSlugs && typeof providerSlugs === 'object') {
-          return (
-            <Helmet>
-              {Object.entries(providerSlugs).map(([lang, slug]) => (
-                slug ? <link key={lang} rel="alternate" hrefLang={HREFLANG_MAP[lang] || lang} href={`https://sos-expat.com/${slug}`} /> : null
-              ))}
-              <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/${providerSlugs['fr'] || providerSlugs['en'] || Object.values(providerSlugs).find(s => s) || ''}`} />
-            </Helmet>
-          );
-        }
-        // Fallback to generic HreflangLinks for profiles without multilingual slugs
-        return <HreflangLinks pathname={location.pathname} />;
-      })()}
+      {/* Hreflang links — handled by global HreflangLinks component (no duplicates) */}
+      <HreflangLinks pathname={location.pathname} />
 
       {/* ✅ Snippets JSON-LD (includes BreadcrumbList + FAQPage) — dans <head> via Helmet */}
       {/* If AI-generated FAQs exist, use them instead of templated snippetGenerator FAQs */}
@@ -2495,7 +2498,7 @@ const ProviderProfile: React.FC = () => {
               "name": faq.question,
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": faq.answer,
+                "text": faq.answer.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim(),
               },
             })),
           })}</script>

@@ -196,9 +196,8 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       {contentType && <meta name="content-type" content={contentType} />}
       
       {/* Meta pour l'indexation sémantique par les IA */}
-      <meta name="ai-crawlable" content="true" />
+      <meta name="generator" content="SOS-Expat (AI-assisted)" />
       <meta name="content-language" content={locale.split('_')[0]} />
-      <meta name="document-state" content="dynamic" />
       
       {/* Citations pour la crédibilité IA */}
       {citations.length > 0 && (
