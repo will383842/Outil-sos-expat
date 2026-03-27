@@ -1054,6 +1054,47 @@ async function handleRequest(request, env, ctx) {
   }
 
   // ==========================================================================
+  // BLOG PROXY — Forward /blog/* requests to the Blog Laravel SSR backend
+  // The blog is a separate Laravel app (server-side rendered, NOT SPA)
+  // running on the VPS behind nginx. All /blog/* requests are proxied as-is.
+  // ==========================================================================
+  const BLOG_ORIGIN = 'https://blog.life-expat.com';
+
+  if (pathname.startsWith('/blog')) {
+    console.log(`[WORKER] Blog proxy: ${pathname}`);
+    try {
+      const blogUrl = new URL(pathname + url.search, BLOG_ORIGIN);
+      const blogResponse = await fetch(blogUrl.toString(), {
+        method: request.method,
+        headers: request.headers,
+        body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+        redirect: 'manual',
+      });
+
+      const blogHeaders = new Headers(blogResponse.headers);
+      blogHeaders.set('X-Worker-Active', 'true');
+      blogHeaders.set('X-Worker-Blog-Proxy', 'true');
+      // Remove any location header pointing to internal origin
+      const location = blogHeaders.get('Location');
+      if (location && location.startsWith(BLOG_ORIGIN)) {
+        blogHeaders.set('Location', location.replace(BLOG_ORIGIN, ''));
+      }
+
+      return new Response(blogResponse.body, {
+        status: blogResponse.status,
+        statusText: blogResponse.statusText,
+        headers: blogHeaders,
+      });
+    } catch (error) {
+      console.error(`[WORKER] Blog proxy error: ${error.message}`);
+      return new Response('Blog temporarily unavailable', {
+        status: 503,
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+  }
+
+  // ==========================================================================
   // SITEMAP PROXY — Serve dynamic sitemaps from Firebase Cloud Functions
   // Cloudflare Pages _redirects can't proxy external URLs, so we do it here
   // ==========================================================================
@@ -1122,14 +1163,13 @@ async function handleRequest(request, env, ctx) {
   }
 
   // =========================================================================
-  // LOCALE VALIDATION (BOTS ONLY): Redirect invalid locale combos BEFORE SSR
-  // Prevents 5xx errors when SSR receives URLs like /ar-sa/centr-pomoshi/ru-...
-  // Only applies to bots — regular users use frontend LocaleRouter which
-  // accepts any valid lang + geolocation country (e.g., de-br is valid for users)
+  // LOCALE CANONICALIZATION (ALL VISITORS): Redirect non-canonical locales
+  // Applies to ALL visitors (not just bots) to prevent Google from indexing
+  // duplicate pages under non-canonical locales like /fr-us/, /de-br/, etc.
+  // Google discovers these via internal links even if bots are redirected.
   // =========================================================================
-  const isBotForLocaleCheck = isBot(userAgent);
   const localeMatch = pathname.match(/^\/([a-z]{2})-([a-z]{2})(\/.*)?$/i);
-  if (isBotForLocaleCheck && localeMatch) {
+  if (localeMatch) {
     const urlLang = localeMatch[1].toLowerCase();
     const urlCountry = localeMatch[2].toLowerCase();
     const restPath = localeMatch[3] || '';
@@ -1231,7 +1271,77 @@ async function handleRequest(request, env, ctx) {
         }
       }
 
-      // 2. Prefix match on provider role slugs (e.g., "anwalt-ee" starts with "anwalt")
+      // 2. Canonicalize help center alias slugs (same language, non-canonical slug)
+      // e.g., /ru-ru/centr-pomoshi/... → /ru-ru/tsentr-pomoshchi/...
+      // e.g., /ar-sa/markaz-almusaeada/... → /ar-sa/مركز-المساعدة/...
+      const HELP_CENTER_ALIASES = {
+        'centr-pomoshi': 'tsentr-pomoshchi',           // Russian alias → canonical
+        'markaz-almusaeada': '\u0645\u0631\u0643\u0632-\u0627\u0644\u0645\u0633\u0627\u0639\u062F\u0629',  // Arabic romanized → native مركز-المساعدة
+        'hilfe-center': 'hilfezentrum',                 // German alias → canonical (GSC had hilfe-center)
+      };
+      if (firstSlug && HELP_CENTER_ALIASES[firstSlug]) {
+        const canonicalSlug = HELP_CENTER_ALIASES[firstSlug];
+        const segments = restPath.split('/').filter(Boolean);
+        segments[0] = canonicalSlug;
+        const newRestPath = '/' + segments.join('/');
+        const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}${newRestPath}${url.search}`;
+        console.log(`[WORKER] Help center alias redirect: ${pathname} -> ${urlLang}-${urlCountry}${newRestPath}`);
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+        });
+      }
+
+      // 3. Detect article slugs with wrong language prefix
+      // e.g., /fr-fr/faq/ch-what-is-sos-expat → Chinese article under French locale
+      // e.g., /de-de/hilfezentrum/ch-how-sos-expat-works → Chinese article under German locale
+      const pathSegments = restPath.split('/').filter(Boolean);
+      if (pathSegments.length >= 2) {
+        const articleSlug = pathSegments[1];
+        // Detect language prefix pattern: 2-letter lang code followed by dash
+        const articleLangMatch = articleSlug.match(/^(fr|en|es|de|ru|pt|ch|hi|ar)-(.+)/);
+        if (articleLangMatch) {
+          const articleLang = articleLangMatch[1];
+          const canonicalArticleLang = articleLang === 'ch' ? 'zh' : articleLang;
+          // Only redirect if article language doesn't match URL language
+          // Also handle zh vs ch mismatch
+          const effectiveUrlLang = urlLang === 'zh' ? 'zh' : urlLang;
+          const effectiveArticleLang = articleLang === 'ch' ? 'zh' : articleLang;
+          if (effectiveArticleLang !== effectiveUrlLang) {
+            const correctCountry = LANG_TO_DEFAULT_COUNTRY[articleLang] || canonicalArticleLang;
+            // Translate the help center slug to the article's language
+            const HELP_CENTER_TRANSLATIONS = {
+              fr: 'centre-aide', en: 'help-center', es: 'centro-ayuda',
+              de: 'hilfezentrum', ru: 'tsentr-pomoshchi', pt: 'centro-ajuda',
+              zh: 'bangzhu-zhongxin', ch: 'bangzhu-zhongxin', hi: 'sahayata-kendra',
+              ar: '\u0645\u0631\u0643\u0632-\u0627\u0644\u0645\u0633\u0627\u0639\u062F\u0629',
+            };
+            const FAQ_TRANSLATIONS = {
+              fr: 'faq', en: 'faq', es: 'preguntas-frecuentes',
+              de: 'faq', ru: 'voprosy-otvety', pt: 'perguntas-frequentes',
+              zh: 'changjian-wenti', ch: 'changjian-wenti', hi: 'aksar-puche-jaane-wale-sawal',
+              ar: '\u0627\u0644\u0623\u0633\u0626\u0644\u0629-\u0627\u0644\u0634\u0627\u0626\u0639\u0629',
+            };
+            // Determine the correct section slug for the target language
+            const isHelpCenter = SLUG_TO_LANG[firstSlug] !== undefined && firstSlug !== 'faq';
+            const isFaq = firstSlug === 'faq' || (SLUG_TO_LANG[firstSlug] === undefined && /faq|preguntas|perguntas|voprosy|changjian|aksar/i.test(firstSlug));
+            let correctSectionSlug = firstSlug;
+            if (isHelpCenter) {
+              correctSectionSlug = HELP_CENTER_TRANSLATIONS[articleLang] || firstSlug;
+            } else if (isFaq) {
+              correctSectionSlug = FAQ_TRANSLATIONS[articleLang] || firstSlug;
+            }
+            const redirectUrl = `${url.origin}/${canonicalArticleLang}-${correctCountry}/${correctSectionSlug}/${articleSlug}${url.search}`;
+            console.log(`[WORKER] Cross-lang article redirect: ${pathname} -> /${canonicalArticleLang}-${correctCountry}/${correctSectionSlug}/${articleSlug}`);
+            return new Response(null, {
+              status: 301,
+              headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+            });
+          }
+        }
+      }
+
+      // 4. Prefix match on provider role slugs (e.g., "anwalt-ee" starts with "anwalt")
       // Profile URLs: /{locale}/{role-country}/{name-id} → first segment is role-country
       if (firstSlug) {
         for (const [prefix, prefixLang] of Object.entries(ROLE_PREFIX_TO_LANG)) {
@@ -1245,7 +1355,83 @@ async function handleRequest(request, env, ctx) {
             });
           }
         }
+
+        // 5. Normalize accented characters in provider country slugs
+        // e.g., /de-de/anwalt-thaïlande/... → /de-de/anwalt-thailande/...
+        const normalizedSlug = firstSlug.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (normalizedSlug !== firstSlug) {
+          const segments = restPath.split('/').filter(Boolean);
+          segments[0] = normalizedSlug;
+          const newRestPath = '/' + segments.join('/');
+          const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}${newRestPath}${url.search}`;
+          console.log(`[WORKER] Accent normalization redirect: ${pathname} -> ${urlLang}-${urlCountry}${newRestPath}`);
+          return new Response(null, {
+            status: 301,
+            headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+          });
+        }
       }
+    }
+  }
+
+  // ==========================================================================
+  // MALFORMED URL FIXES: Normalize common broken URL patterns from external links
+  // e.g., /register-lawyer → /register/lawyer, /es-FR/fr/... → /es-es/...
+  // ==========================================================================
+  // Fix hyphenated routes that should use slashes (e.g., /pt/register-lawyer → /pt/register/lawyer)
+  const HYPHEN_TO_SLASH_ROUTES = {
+    'register-client': 'register/client',
+    'register-lawyer': 'register/lawyer',
+    'register-expat': 'register/expat',
+    'inscription-client': 'inscription/client',
+    'inscription-avocat': 'inscription/avocat',
+    'inscription-expatrie': 'inscription/expatrie',
+    'registro-abogado': 'registro/abogado',
+    'registro-cliente': 'registro/cliente',
+    'registro-expatriado': 'registro/expatriado',
+  };
+  // Match: /{locale-or-lang}/broken-slug or just /broken-slug
+  const pathParts = pathname.replace(/\/$/, '').split('/').filter(Boolean);
+  const lastSlug = pathParts[pathParts.length - 1];
+  if (lastSlug && HYPHEN_TO_SLASH_ROUTES[lastSlug]) {
+    const fixedSlug = HYPHEN_TO_SLASH_ROUTES[lastSlug];
+    const prefix = pathParts.slice(0, -1).join('/');
+    const fixedPath = prefix ? `/${prefix}/${fixedSlug}` : `/${fixedSlug}`;
+    const redirectUrl = `${url.origin}${fixedPath}${url.search}`;
+    console.log(`[WORKER] Malformed route fix: ${pathname} -> ${fixedPath}`);
+    return new Response(null, {
+      status: 301,
+      headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+    });
+  }
+
+  // Fix uppercase locale country codes (e.g., /es-FR/... → /es-fr/...)
+  // Then the locale canonicalization above will handle the rest
+  const uppercaseLocaleMatch = pathname.match(/^\/([a-z]{2})-([A-Z]{2})(\/.*)?$/);
+  if (uppercaseLocaleMatch) {
+    const fixedPath = `/${uppercaseLocaleMatch[1]}-${uppercaseLocaleMatch[2].toLowerCase()}${uppercaseLocaleMatch[3] || ''}`;
+    const redirectUrl = `${url.origin}${fixedPath}${url.search}`;
+    console.log(`[WORKER] Uppercase locale fix: ${pathname} -> ${fixedPath}`);
+    return new Response(null, {
+      status: 301,
+      headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+    });
+  }
+
+  // Fix double-locale paths (e.g., /es-FR/fr/avocat-thailande/... → strip extra locale segment)
+  const doubleLocaleMatch = pathname.match(/^\/[a-z]{2}-[a-z]{2}\/([a-z]{2})\/(.*)/i);
+  if (doubleLocaleMatch) {
+    const innerLang = doubleLocaleMatch[1].toLowerCase();
+    const LANG_MAP = { fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru', pt: 'pt', zh: 'cn', ch: 'cn', hi: 'in', ar: 'sa' };
+    if (LANG_MAP[innerLang]) {
+      const innerLocale = `${innerLang === 'ch' ? 'zh' : innerLang}-${LANG_MAP[innerLang]}`;
+      const fixedPath = `/${innerLocale}/${doubleLocaleMatch[2]}`;
+      const redirectUrl = `${url.origin}${fixedPath}${url.search}`;
+      console.log(`[WORKER] Double-locale fix: ${pathname} -> ${fixedPath}`);
+      return new Response(null, {
+        status: 301,
+        headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+      });
     }
   }
 
@@ -1277,6 +1463,36 @@ async function handleRequest(request, env, ctx) {
         },
       });
     }
+  }
+
+  // ==========================================================================
+  // NO-LOCALE PATH REDIRECT: /login → /fr-fr/connexion, /register → /fr-fr/inscription
+  // Catches URLs without any locale prefix that Google discovered via old links.
+  // Redirects to French canonical version (default language).
+  // ==========================================================================
+  // Generic catch-all: any public path without locale prefix → redirect to /fr-fr/{path}
+  // This covers ALL current and future routes without maintaining a manual list.
+  // Excludes: static assets, API paths, locale-prefixed paths, and root path.
+  const cleanPath = pathname.replace(/\/$/, '') || '/';
+  const isStaticAssetPath = /\.(js|css|png|jpg|jpeg|webp|svg|ico|gif|woff2?|ttf|json|xml|txt|map|wasm)$/i.test(pathname);
+  const isSystemPath = /^\/(assets|api|_next|__\/auth|favicon|manifest|robots|sitemap|sw\.js|firebase-messaging|sitemaps|ref\/|rec\/|prov\/|multi-dashboard)/i.test(pathname);
+  const hasLocalePrefix = /^\/[a-z]{2}(-[a-z]{2})?(\/|$)/i.test(pathname);
+  const isRootPath = cleanPath === '/';
+
+  if (!isStaticAssetPath && !isSystemPath && !hasLocalePrefix && !isRootPath) {
+    // This is a public route without locale prefix (e.g., /login, /tarifs, /cgu-clients)
+    // Redirect to /fr-fr/ + path (French is the default language)
+    const redirectUrl = `${url.origin}/fr-fr${pathname}${url.search}`;
+    console.log(`[WORKER] No-locale redirect: ${pathname} -> /fr-fr${pathname}`);
+    return new Response(null, {
+      status: 301,
+      headers: {
+        'Location': redirectUrl,
+        'X-Worker-Active': 'true',
+        'X-Worker-Redirect': 'no-locale',
+        'Cache-Control': 'public, max-age=31536000',
+      },
+    });
   }
 
   // ==========================================================================
