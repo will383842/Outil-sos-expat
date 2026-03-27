@@ -2452,12 +2452,12 @@ const ProviderProfile: React.FC = () => {
   })();
 
   // Pre-compute noindex outside JSX to avoid TS inference issues
-  const reviewCount = providerStats.realReviewsCount;
-  const avgRating = Number(providerStats.averageRating || 0);
-  const descLength = (provider?.description || '').length;
-  const isThinProfile = reviewCount === 0 && descLength < 200;
-  const isPoorlyRated = reviewCount > 0 && avgRating < 3.5;
-  const shouldNoindex = isThinProfile || isPoorlyRated;
+  const shouldNoindex: boolean = (() => {
+    const rc: number = providerStats.realReviewsCount ?? 0;
+    const ar: number = Number(providerStats.averageRating ?? 0);
+    const dl: number = String(provider?.description ?? '').length;
+    return (rc === 0 && dl < 200) || (rc > 0 && ar < 3.5);
+  })();
 
   const OG_LOCALE_MAP: Record<string, string> = {
     fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
