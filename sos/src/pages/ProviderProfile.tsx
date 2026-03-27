@@ -2451,6 +2451,18 @@ const ProviderProfile: React.FC = () => {
     return `https://sos-expat.com/${defaultLocale}/${displayType}/${nameSlug}-${fullId}`;
   })();
 
+  // Pre-compute noindex outside JSX to avoid TS inference issues
+  const reviewCount = providerStats.realReviewsCount;
+  const avgRating = Number(providerStats.averageRating || 0);
+  const isThinProfile = reviewCount === 0 && (provider.description || '').length < 200;
+  const isPoorlyRated = reviewCount > 0 && avgRating < 3.5;
+  const shouldNoindex = isThinProfile || isPoorlyRated;
+
+  const OG_LOCALE_MAP: Record<string, string> = {
+    fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
+    ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
+  };
+
   return (
     <Layout>
       <SEOHead
@@ -2459,18 +2471,8 @@ const ProviderProfile: React.FC = () => {
         canonicalUrl={canonicalUrl}
         ogImage={mainPhoto}
         ogType="profile"
-        locale={(() => {
-          const OG_LOCALE_MAP: Record<string, string> = {
-            fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
-            ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA',
-          };
-          return OG_LOCALE_MAP[currentLang || 'fr'] || 'fr_FR';
-        })()}
-        noindex={
-          // Smart noindex: hide thin profiles and poorly rated providers from Google
-          (providerStats.realReviewsCount === 0 && (provider.description || '').length < 200)
-          || (providerStats.realReviewsCount > 0 && Number(providerStats.averageRating || 0) < 3.5)
-        }
+        locale={OG_LOCALE_MAP[currentLang || 'fr'] || 'fr_FR'}
+        noindex={shouldNoindex}
         structuredData={
           translation && !showOriginal && translation.seo?.jsonLd
             ? translation.seo.jsonLd
