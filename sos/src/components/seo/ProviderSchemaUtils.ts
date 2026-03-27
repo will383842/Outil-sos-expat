@@ -91,9 +91,10 @@ export function generateProviderItemSchema(
     availableLanguage: provider.languages,
   };
 
-  // Only include aggregateRating if there are actual reviews
-  // This is compliant with Google guidelines
-  if (includeAggregateRating && provider.reviewCount > 0 && provider.rating > 0) {
+  // Only show stars in Google SERPs for providers with good ratings (>= 4.0)
+  // Profiles with < 4.0 stars are still indexed but without AggregateRating
+  // This ensures only quality providers display star ratings in search results
+  if (includeAggregateRating && provider.reviewCount > 0 && provider.rating >= 4.0) {
     schema.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: provider.rating.toFixed(1),

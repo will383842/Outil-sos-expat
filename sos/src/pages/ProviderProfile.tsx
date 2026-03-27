@@ -2466,7 +2466,11 @@ const ProviderProfile: React.FC = () => {
           };
           return OG_LOCALE_MAP[currentLang || 'fr'] || 'fr_FR';
         })()}
-        noindex={false}
+        noindex={
+          // Smart noindex: hide thin profiles and poorly rated providers from Google
+          (providerStats.realReviewsCount === 0 && (provider.description || '').length < 200)
+          || (providerStats.realReviewsCount > 0 && (providerStats.averageRating || 0) < 3.5)
+        }
         structuredData={
           translation && !showOriginal && translation.seo?.jsonLd
             ? translation.seo.jsonLd
