@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { ChevronLeft, Clock, BookOpen } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import { ArticleSchema, BreadcrumbSchema } from "../components/seo";
@@ -188,6 +189,40 @@ const HelpArticle: React.FC = () => {
     void loadArticle();
   }, [slug]);
 
+  // Generate HowTo schema for "how to" / "guide" / "comment" articles
+  const generateHowToSchema = () => {
+    if (!article || !translatedTitle) return null;
+    const title = translatedTitle.toLowerCase();
+    const isHowTo = title.startsWith('comment') || title.startsWith('how to') || title.startsWith('how sos')
+      || title.startsWith('guide') || title.startsWith('como') || title.startsWith('wie ')
+      || title.startsWith('como ') || title.startsWith('كيف') || title.startsWith('如何')
+      || title.includes('pas à pas') || title.includes('step by step') || title.includes('schritt');
+    if (!isHowTo) return null;
+
+    // Extract steps from content headings (h2/h3 become HowToSteps)
+    const content = translatedContent || '';
+    const headingRegex = /<h[23][^>]*>(.*?)<\/h[23]>/gi;
+    const steps: { name: string }[] = [];
+    let match;
+    while ((match = headingRegex.exec(content)) !== null) {
+      const stepName = match[1].replace(/<[^>]*>/g, '').trim();
+      if (stepName) steps.push({ name: stepName });
+    }
+    if (steps.length < 2) return null; // Need at least 2 steps
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": translatedTitle,
+      "description": translatedExcerpt || translatedTitle,
+      "step": steps.map((s, i) => ({
+        "@type": "HowToStep",
+        "position": i + 1,
+        "name": s.name,
+      })),
+    };
+  };
+
   // Generate Schema.org FAQPage JSON-LD
   const generateFAQSchema = () => {
     if (!article?.faqs || article.faqs.length === 0) return null;
@@ -259,6 +294,7 @@ const HelpArticle: React.FC = () => {
   const tags = getTranslatedTags(article.tags, language);
   const currentSlug = getTranslatedValue(article.slug, language);
   const faqSchema = generateFAQSchema();
+  const howToSchema = generateHowToSchema();
   // ISO lang code for SEO (ch → zh)
   const isoLang = langCode === 'ch' ? 'zh' : langCode;
 
@@ -330,6 +366,12 @@ const HelpArticle: React.FC = () => {
         inLanguage={isoLang}
       />
       <BreadcrumbSchema items={breadcrumbs} />
+      {/* HowTo schema for "how to" / "guide" articles — enables Position 0 rich results */}
+      {howToSchema && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+        </Helmet>
+      )}
 
       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" data-article-loaded="true">
         {/* Hero compact */}
