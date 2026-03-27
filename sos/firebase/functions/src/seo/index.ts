@@ -55,3 +55,6 @@ export {
   batchGenerateSEO,
   processSEOTask,
 } from './generateProviderSEO';
+
+// Daily SEO & AEO health check (8h Paris)
+export { seoHealthCheck } from './seoHealthCheck';
