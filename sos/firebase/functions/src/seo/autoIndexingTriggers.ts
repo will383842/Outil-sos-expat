@@ -657,6 +657,41 @@ export const scheduledBulkIndexing = onSchedule(
       }
     }
 
+    // Also include help articles if we have remaining quota
+    if (urlsToSubmit.length < DAILY_QUOTA) {
+      const helpSnap = await db.collection('help_articles')
+        .where('isPublished', '==', true)
+        .limit(DAILY_QUOTA - urlsToSubmit.length)
+        .get();
+
+      const helpSegments: Record<string, string> = {
+        fr: 'centre-aide', en: 'help-center', es: 'centro-ayuda', de: 'hilfezentrum',
+        pt: 'centro-ajuda', ru: 'tsentr-pomoshchi', ch: 'bangzhu-zhongxin',
+        hi: 'sahayata-kendra', ar: 'markaz-almusaeada',
+      };
+      const defaultCountries: Record<string, string> = {
+        fr: 'fr', en: 'us', es: 'es', de: 'de', pt: 'pt', ru: 'ru', ch: 'cn', hi: 'in', ar: 'sa',
+      };
+
+      for (const doc of helpSnap.docs) {
+        if (urlsToSubmit.length >= DAILY_QUOTA) break;
+        const article = doc.data();
+        const slugs = article.slugs as Record<string, string> | undefined;
+        if (slugs) {
+          for (const [lang, slug] of Object.entries(slugs)) {
+            if (slug && urlsToSubmit.length < DAILY_QUOTA && helpSegments[lang]) {
+              const urlLang = lang === 'ch' ? 'zh' : lang;
+              urlsToSubmit.push(`${SITE_URL}/${urlLang}-${defaultCountries[lang]}/${helpSegments[lang]}/${slug}`);
+            }
+          }
+        } else if (article.slug) {
+          // Single slug — submit for FR only
+          urlsToSubmit.push(`${SITE_URL}/fr-fr/centre-aide/${article.slug}`);
+        }
+      }
+      console.log(`📚 Ajout articles aide: total ${urlsToSubmit.length} URLs`);
+    }
+
     if (urlsToSubmit.length === 0) {
       console.log('⏭️ Aucune URL à soumettre (profils sans slugs)');
       return;
