@@ -152,11 +152,11 @@ const FAQ: React.FC = () => {
 
   // Signal to Puppeteer that FAQ data is loaded
   useEffect(() => {
-    if (!loading && faqItems.length > 0) {
+    if (!loading && faqData.length > 0) {
       document.documentElement.setAttribute('data-article-loaded', 'true');
     }
     return () => { document.documentElement.removeAttribute('data-article-loaded'); };
-  }, [loading, faqItems.length]);
+  }, [loading, faqData.length]);
 
   return (
     <Layout>

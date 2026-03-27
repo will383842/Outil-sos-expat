@@ -191,30 +191,33 @@ const HelpArticle: React.FC = () => {
 
   // Generate HowTo schema for "how to" / "guide" / "comment" articles
   const generateHowToSchema = () => {
-    if (!article || !translatedTitle) return null;
-    const title = translatedTitle.toLowerCase();
-    const isHowTo = title.startsWith('comment') || title.startsWith('how to') || title.startsWith('how sos')
-      || title.startsWith('guide') || title.startsWith('como') || title.startsWith('wie ')
-      || title.startsWith('como ') || title.startsWith('كيف') || title.startsWith('如何')
-      || title.includes('pas à pas') || title.includes('step by step') || title.includes('schritt');
+    if (!article) return null;
+    const artTitle = getTranslatedValue(article.title, language);
+    if (!artTitle) return null;
+    const titleLower = artTitle.toLowerCase();
+    const isHowTo = titleLower.startsWith('comment') || titleLower.startsWith('how to') || titleLower.startsWith('how sos')
+      || titleLower.startsWith('guide') || titleLower.startsWith('como') || titleLower.startsWith('wie ')
+      || titleLower.startsWith('como ') || titleLower.startsWith('كيف') || titleLower.startsWith('如何')
+      || titleLower.includes('pas à pas') || titleLower.includes('step by step') || titleLower.includes('schritt');
     if (!isHowTo) return null;
 
     // Extract steps from content headings (h2/h3 become HowToSteps)
-    const content = translatedContent || '';
+    const artContent = getTranslatedValue(article.content, language) || '';
     const headingRegex = /<h[23][^>]*>(.*?)<\/h[23]>/gi;
     const steps: { name: string }[] = [];
     let match;
-    while ((match = headingRegex.exec(content)) !== null) {
+    while ((match = headingRegex.exec(artContent)) !== null) {
       const stepName = match[1].replace(/<[^>]*>/g, '').trim();
       if (stepName) steps.push({ name: stepName });
     }
     if (steps.length < 2) return null; // Need at least 2 steps
 
+    const artExcerpt = getTranslatedValue(article.excerpt, language);
     return {
       "@context": "https://schema.org",
       "@type": "HowTo",
-      "name": translatedTitle,
-      "description": translatedExcerpt || translatedTitle,
+      "name": artTitle,
+      "description": artExcerpt || artTitle,
       "step": steps.map((s, i) => ({
         "@type": "HowToStep",
         "position": i + 1,

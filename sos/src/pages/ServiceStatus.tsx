@@ -135,7 +135,6 @@ const ServiceStatus: React.FC = () => {
   });
   ServiceItem.displayName = 'ServiceItem';
 
-  const language = useApp().language;
   const OG_LOCALE: Record<string, string> = { fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', ar: 'ar_SA', hi: 'hi_IN' };
 
   return (
