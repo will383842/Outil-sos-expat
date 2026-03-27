@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEOHead from '../components/layout/SEOHead';
 import { useLocaleNavigate } from '../multilingual-system';
 import { useIntl } from 'react-intl';
 import { getLocaleString, getTranslatedRouteSlug } from '../multilingual-system/core/routing/localeRoutes';
@@ -338,49 +338,21 @@ const RegisterClient: React.FC = () => {
   // ===========================================================================
   return (
     <Layout>
-      <Helmet>
-        <title>{intl.formatMessage({ id: 'registerClient.seo.title' })}</title>
-        <meta name="description" content={intl.formatMessage({ id: 'registerClient.seo.description' })} />
-        <meta name="keywords" content={intl.formatMessage({ id: 'registerClient.seo.keywords' })} />
-        <meta name="robots" content={intl.formatMessage({ id: 'registerClient.seo.metaRobots' })} />
-        <meta name="author" content={intl.formatMessage({ id: 'registerClient.seo.author' })} />
-        <meta name="language" content={currentLang} />
-        <meta name="googlebot" content={intl.formatMessage({ id: 'registerClient.seo.metaGooglebot' })} />
-        <meta name="bingbot" content={intl.formatMessage({ id: 'registerClient.seo.metaBingbot' })} />
-        <meta name="geo.region" content={intl.formatMessage({ id: 'registerClient.seo.geoRegion' })} />
-        <meta name="geo.placename" content={intl.formatMessage({ id: 'registerClient.seo.geoPlacename' })} />
-        <meta name="theme-color" content={intl.formatMessage({ id: 'registerClient.seo.themeColor' })} />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content={intl.formatMessage({ id: 'registerClient.seo.appleStatusBar' })} />
-        <meta name="mobile-web-app-capable" content="yes" />
-
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content={intl.formatMessage({ id: 'registerClient.seo.siteName' })} />
-        <meta property="og:title" content={intl.formatMessage({ id: 'registerClient.seo.ogTitle' })} />
-        <meta property="og:description" content={intl.formatMessage({ id: 'registerClient.seo.ogDescription' })} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content={`${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.ogImagePath' }).replace('{lang}', currentLang)}`} />
-        <meta property="og:image:alt" content={intl.formatMessage({ id: 'registerClient.seo.imageAlt' })} />
-        <meta property="og:image:width" content={intl.formatMessage({ id: 'registerClient.seo.ogImageWidth' })} />
-        <meta property="og:image:height" content={intl.formatMessage({ id: 'registerClient.seo.ogImageHeight' })} />
-        <meta property="og:locale" content={intl.formatMessage({ id: `registerClient.seo.localeCode.${currentLang}` })} />
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content={intl.formatMessage({ id: 'registerClient.seo.twitterHandle' })} />
-        <meta name="twitter:creator" content={intl.formatMessage({ id: 'registerClient.seo.twitterHandle' })} />
-        <meta name="twitter:title" content={intl.formatMessage({ id: 'registerClient.seo.twitterTitle' })} />
-        <meta name="twitter:description" content={intl.formatMessage({ id: 'registerClient.seo.twitterDescription' })} />
-        <meta name="twitter:image" content={`${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.twitterImagePath' }).replace('{lang}', currentLang)}`} />
-        <meta name="twitter:image:alt" content={intl.formatMessage({ id: 'registerClient.seo.twitterImageAlt' })} />
-
-        {/* Canonical */}
-        <link rel="canonical" href={canonicalUrl} />
-
-        {/* JSON-LD */}
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
+      <SEOHead
+        title={intl.formatMessage({ id: 'registerClient.seo.title' })}
+        description={intl.formatMessage({ id: 'registerClient.seo.description' })}
+        canonicalUrl={canonicalUrl}
+        ogImage={`${baseUrl}${intl.formatMessage({ id: 'registerClient.seo.ogImagePath' }).replace('{lang}', currentLang)}`}
+        ogType="website"
+        twitterCard="summary_large_image"
+        twitterSite={intl.formatMessage({ id: 'registerClient.seo.twitterHandle' })}
+        twitterCreator={intl.formatMessage({ id: 'registerClient.seo.twitterHandle' })}
+        keywords={intl.formatMessage({ id: 'registerClient.seo.keywords' })}
+        author="Manon"
+        locale={intl.formatMessage({ id: `registerClient.seo.localeCode.${currentLang}` })}
+        siteName={intl.formatMessage({ id: 'registerClient.seo.siteName' })}
+        structuredData={structuredData}
+      />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'breadcrumb.register', defaultMessage: 'Register' }), url: '/register' },

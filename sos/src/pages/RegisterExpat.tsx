@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEOHead from '../components/layout/SEOHead';
 import { useLocaleNavigate } from '../multilingual-system';
 import { getLocaleString, getTranslatedRouteSlug } from '../multilingual-system/core/routing/localeRoutes';
 import { Heart, Shield } from 'lucide-react';
@@ -137,35 +137,20 @@ const RegisterExpat: React.FC = () => {
 
   return (
     <Layout>
-      <Helmet>
-        <title>{intl.formatMessage({ id: 'registerExpat.seo.title' })}</title>
-        <meta name="description" content={intl.formatMessage({ id: 'registerExpat.seo.description' })} />
-        <meta name="keywords" content={intl.formatMessage({ id: 'registerExpat.seo.keywords' })} />
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <link rel="canonical" href={canonicalUrl} />
-
-        {/* Open Graph */}
-        <meta property="og:title" content={intl.formatMessage({ id: 'registerExpat.seo.ogTitle' })} />
-        <meta property="og:description" content={intl.formatMessage({ id: 'registerExpat.seo.ogDescription' })} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content="https://sos-expat.com/images/og-register-expat.jpg" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={intl.formatMessage({ id: 'registerExpat.seo.ogImageAlt' })} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="SOS-Expat" />
-        <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : lang === 'en' ? 'en_US' : `${lang}_${lang.toUpperCase()}`} />
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={intl.formatMessage({ id: 'registerExpat.seo.twitterTitle' })} />
-        <meta name="twitter:description" content={intl.formatMessage({ id: 'registerExpat.seo.twitterDescription' })} />
-        <meta name="twitter:image" content="https://sos-expat.com/images/twitter-register-expat.jpg" />
-        <meta name="twitter:site" content="@SOSExpat" />
-
-        {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
+      <SEOHead
+        title={intl.formatMessage({ id: 'registerExpat.seo.title' })}
+        description={intl.formatMessage({ id: 'registerExpat.seo.description' })}
+        canonicalUrl={canonicalUrl}
+        ogImage="https://sos-expat.com/images/og-register-expat.jpg"
+        ogType="website"
+        twitterCard="summary_large_image"
+        twitterSite="@SOSExpat"
+        keywords={intl.formatMessage({ id: 'registerExpat.seo.keywords' })}
+        author="Manon"
+        locale={lang === 'fr' ? 'fr_FR' : lang === 'en' ? 'en_US' : `${lang}_${lang.toUpperCase()}`}
+        siteName="SOS-Expat"
+        structuredData={structuredData}
+      />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'breadcrumb.register', defaultMessage: 'Register' }), url: '/register' },
