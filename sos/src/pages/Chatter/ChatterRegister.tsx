@@ -401,6 +401,16 @@ const ChatterRegister: React.FC = () => {
         { name: 'Become Chatter', url: '/devenir-chatter' },
         { name: 'Register' }
       ]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        '@id': 'https://sos-expat.com/#organization',
+        name: 'SOS-Expat',
+        url: 'https://sos-expat.com',
+        logo: { '@type': 'ImageObject', url: 'https://sos-expat.com/logo.png', width: 512, height: 512 },
+        sameAs: ['https://www.facebook.com/sosexpat', 'https://twitter.com/sosexpat', 'https://www.linkedin.com/company/sos-expat', 'https://www.instagram.com/sosexpat'],
+        contactPoint: { '@type': 'ContactPoint', contactType: 'customer service', availableLanguage: ['fr','en','es','de','ru','hi','pt','zh','ar'] },
+      }) }} />
 
       {success ? (
         <SuccessFallbackRedirect dashboardRoute={dashboardRoute} navigate={navigate} />

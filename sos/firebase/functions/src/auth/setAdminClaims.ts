@@ -12,8 +12,9 @@ import { checkRateLimit, RATE_LIMITS } from "../lib/rateLimiter";
 
 const db = getFirestore();
 
-// Fallback admin emails: read from ADMIN_EMAILS env var, or use defaults
-const FALLBACK_ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'williamsjullin@gmail.com,williamjullin@gmail.com,julienvalentine1@gmail.com')
+// Admin emails: read from ADMIN_EMAILS env var (set via Firebase Secrets or .env)
+// SECURITY FIX: Removed hardcoded email fallback — use env var or Firestore whitelist only
+const FALLBACK_ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
   .split(',')
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);

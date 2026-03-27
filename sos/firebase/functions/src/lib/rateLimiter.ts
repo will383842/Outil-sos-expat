@@ -53,6 +53,8 @@ export async function checkRateLimit(
   } catch (error) {
     if (error instanceof HttpsError) throw error;
     console.error(`[rateLimiter] Error for ${uid}/${action}:`, error);
+    // SECURITY FIX: Fail-closed — reject request if rate limiter DB is unavailable
+    throw new HttpsError("unavailable", "Service temporarily unavailable. Please try again.");
   }
 }
 

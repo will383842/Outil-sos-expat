@@ -429,6 +429,22 @@ export const renderForBotsV2 = onRequest(
     const requestPath = getQuery('path') || req.path || '/';
     const fullUrl = getQuery('url') || `${SITE_URL}${requestPath}`;
     const botName = getHeader('x-bot-name') || getQuery('bot');
+
+    // SECURITY FIX: Whitelist allowed domains to prevent SSRF via ?url= parameter
+    const ALLOWED_HOSTS = ['sos-expat.com', 'www.sos-expat.com', 'sos-holidays.com', 'www.sos-holidays.com', 'sos-expat.pages.dev'];
+    try {
+      const parsedUrl = new URL(fullUrl);
+      if (!ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
+        logger.warn('Dynamic render SSRF blocked', { fullUrl, hostname: parsedUrl.hostname });
+        res.status(400).json({ error: 'Invalid domain' });
+        return;
+      }
+    } catch {
+      logger.warn('Dynamic render invalid URL', { fullUrl });
+      res.status(400).json({ error: 'Invalid URL' });
+      return;
+    }
+
     const isHolidays = fullUrl.includes('sos-holidays.com');
 
     // Determine if request is from a bot (via UA or explicit header from Worker)

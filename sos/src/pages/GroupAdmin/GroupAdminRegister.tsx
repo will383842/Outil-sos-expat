@@ -320,6 +320,16 @@ const GroupAdminRegister: React.FC = () => {
         <meta name="twitter:title" content={intl.formatMessage({ id: 'groupadmin.register.seo.title', defaultMessage: 'Group Admin Registration | SOS-Expat' })} />
         <meta name="twitter:description" content={intl.formatMessage({ id: 'groupadmin.register.seo.description', defaultMessage: 'Register as a Group Admin to earn commissions per call referred from your group. Free sign-up, no experience needed.' })} />
       </Helmet>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        '@id': 'https://sos-expat.com/#organization',
+        name: 'SOS-Expat',
+        url: 'https://sos-expat.com',
+        logo: { '@type': 'ImageObject', url: 'https://sos-expat.com/logo.png', width: 512, height: 512 },
+        sameAs: ['https://www.facebook.com/sosexpat', 'https://twitter.com/sosexpat', 'https://www.linkedin.com/company/sos-expat', 'https://www.instagram.com/sosexpat'],
+        contactPoint: { '@type': 'ContactPoint', contactType: 'customer service', availableLanguage: ['fr','en','es','de','ru','hi','pt','zh','ar'] },
+      }) }} />
 
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-gray-950 to-black py-12 px-4">
         {/* Radial glow */}

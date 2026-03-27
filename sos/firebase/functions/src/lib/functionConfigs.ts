@@ -17,7 +17,7 @@
 // CORS CONFIGURATION
 // ============================================================================
 
-export const ALLOWED_ORIGINS = [
+const PRODUCTION_ORIGINS = [
   "https://sos-expat.com",
   "https://www.sos-expat.com",
   "https://ia.sos-expat.com",
@@ -25,10 +25,18 @@ export const ALLOWED_ORIGINS = [
   "https://sosexpats.com",
   "https://www.sosexpats.com",
   "https://outil-sos-expat.pages.dev",
+];
+
+const DEV_ORIGINS = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
 ];
+
+// SECURITY FIX: Only include localhost origins in emulator/dev mode
+export const ALLOWED_ORIGINS = process.env.FUNCTIONS_EMULATOR === "true"
+  ? [...PRODUCTION_ORIGINS, ...DEV_ORIGINS]
+  : PRODUCTION_ORIGINS;
 
 // ============================================================================
 // BASE CONFIGURATIONS

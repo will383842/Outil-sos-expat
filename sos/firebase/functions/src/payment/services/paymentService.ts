@@ -691,8 +691,6 @@ export class PaymentService {
         throw new Error(`${withdrawal.userType} not found`);
       }
 
-      const userData = userDoc.data()!;
-      const currentBalance = userData.availableBalance || 0;
       const refundAmount = withdrawal.totalDebited || withdrawal.amount;
 
       // V10 FIX: Clear pendingWithdrawalId to unblock future withdrawals
@@ -701,8 +699,9 @@ export class PaymentService {
         ? 'pendingPayoutId'
         : 'pendingWithdrawalId';
 
+      // SECURITY FIX: Use FieldValue.increment for atomic balance refund
       transaction.update(userRef, {
-        availableBalance: currentBalance + refundAmount,
+        availableBalance: FieldValue.increment(refundAmount),
         [pendingField]: null,
         updatedAt: Timestamp.now(),
       });
@@ -815,12 +814,11 @@ export class PaymentService {
         throw new Error(`${withdrawal.userType} not found`);
       }
 
-      const userData = userDoc.data()!;
-      const currentBalance = userData.availableBalance || 0;
       const refundAmount = withdrawal.totalDebited || withdrawal.amount;
 
+      // SECURITY FIX: Use FieldValue.increment for atomic balance refund
       transaction.update(userRef, {
-        availableBalance: currentBalance + refundAmount,
+        availableBalance: FieldValue.increment(refundAmount),
         updatedAt: Timestamp.now(),
       });
     });
@@ -1499,8 +1497,10 @@ export class PaymentService {
         throw new Error('Insufficient balance');
       }
 
+      // SECURITY FIX: Use FieldValue.increment for atomic balance deduction
+      // Prevents race condition if Firestore transaction retries with stale read
       transaction.update(userRef, {
-        availableBalance: currentBalance - amount,
+        availableBalance: FieldValue.increment(-amount),
         updatedAt: Timestamp.now(),
       });
     } else {
@@ -1517,8 +1517,9 @@ export class PaymentService {
           throw new Error('Insufficient balance');
         }
 
+        // SECURITY FIX: Use FieldValue.increment for atomic balance deduction
         t.update(userRef, {
-          availableBalance: currentBalance - amount,
+          availableBalance: FieldValue.increment(-amount),
           updatedAt: Timestamp.now(),
         });
       });
@@ -1544,11 +1545,9 @@ export class PaymentService {
         throw new Error(`${userType} not found`);
       }
 
-      const userData = userDoc.data()!;
-      const currentBalance = userData.availableBalance || 0;
-
+      // SECURITY FIX: Use FieldValue.increment for atomic balance refund
       transaction.update(userRef, {
-        availableBalance: currentBalance + amount,
+        availableBalance: FieldValue.increment(amount),
         updatedAt: Timestamp.now(),
       });
     });
