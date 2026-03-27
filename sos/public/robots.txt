@@ -230,7 +230,6 @@ Sitemap: https://sos-expat.com/sitemap-static.xml
 Sitemap: https://sos-expat.com/sitemaps/profiles.xml
 Sitemap: https://sos-expat.com/sitemaps/help.xml
 Sitemap: https://sos-expat.com/sitemaps/faq.xml
-Sitemap: https://sos-expat.com/sitemaps/landing.xml
 Sitemap: https://sos-expat.com/sitemaps/country-listings.xml
 
 # Blog sitemaps (Laravel SSR — routed via Cloudflare Origin Rules)

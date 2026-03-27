@@ -1102,7 +1102,7 @@ async function handleRequest(request, env, ctx) {
     '/sitemaps/profiles.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles',
     '/sitemaps/help.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp',
     '/sitemaps/faq.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq',
-    '/sitemaps/landing.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding',
+    // landing.xml removed — landing_pages collection is empty, sitemap caused GSC errors
     '/sitemaps/country-listings.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings',
   };
   if (SITEMAP_PROXY[pathname]) {
