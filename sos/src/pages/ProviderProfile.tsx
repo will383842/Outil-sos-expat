@@ -2454,7 +2454,8 @@ const ProviderProfile: React.FC = () => {
   // Pre-compute noindex outside JSX to avoid TS inference issues
   const reviewCount = providerStats.realReviewsCount;
   const avgRating = Number(providerStats.averageRating || 0);
-  const isThinProfile = reviewCount === 0 && (provider.description || '').length < 200;
+  const descLength = (provider?.description || '').length;
+  const isThinProfile = reviewCount === 0 && descLength < 200;
   const isPoorlyRated = reviewCount > 0 && avgRating < 3.5;
   const shouldNoindex = isThinProfile || isPoorlyRated;
 
