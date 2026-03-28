@@ -1060,7 +1060,7 @@ async function handleRequest(request, env, ctx) {
   // ==========================================================================
   const BLOG_ORIGIN = 'https://blog.life-expat.com';
 
-  if (pathname.startsWith('/blog')) {
+  if (pathname === '/blog' || pathname.startsWith('/blog/')) {
     console.log(`[WORKER] Blog proxy: ${pathname}`);
     try {
       const blogUrl = new URL(pathname + url.search, BLOG_ORIGIN);
