@@ -520,9 +520,9 @@ async function checkAeoMetaTags(): Promise<AeoMetaResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
 
-    // Fetch the rendered homepage (via renderForBotsV2 for full SSR content)
-    const renderUrl = `${RENDER_BASE}?url=${encodeURIComponent(SITE_URL + "/fr-fr")}`;
-    const resp = await fetch(renderUrl, {
+    // Fetch the static homepage HTML directly (JSON-LD Organization + WebSite are in index.html)
+    // No need to go through renderForBotsV2 (SSR cache may be stale)
+    const resp = await fetch(`${SITE_URL}/fr-fr`, {
       signal: controller.signal,
       headers: { "User-Agent": "SOS-SEO-HealthCheck/1.0" },
     });
