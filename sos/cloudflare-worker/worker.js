@@ -1054,15 +1054,97 @@ async function handleRequest(request, env, ctx) {
   }
 
   // ==========================================================================
-  // BLOG PROXY — Forward /blog/* requests to the Blog Laravel SSR backend
+  // BLOG/TOOLS PROXY — Forward requests to the Blog Laravel SSR backend
   // The blog is a separate Laravel app (server-side rendered, NOT SPA)
-  // running on the VPS behind nginx. All /blog/* requests are proxied as-is.
+  // running on the VPS behind nginx.
+  //
+  // Routes proxied:
+  //   /blog/*              — legacy blog prefix (301 redirect to new URLs)
+  //   /{locale}/articles   — blog articles
+  //   /{locale}/outils     — tools (and all 9 language variants)
+  //   /{locale}/sondages   — surveys
+  //   /{locale}/annuaire   — directory
+  //   /{locale}/faq        — FAQ
+  //   /{locale}/pays       — country pages
+  //   /{locale}/categories — categories
+  //   /{locale}/tags       — tags
+  //   /sitemap.xml, /robots.txt, /llms.txt, /ai.txt — SEO files
+  //   /admin/*             — blog admin panel
+  //   /api/v1/tool-*       — tool APIs
   // ==========================================================================
   const BLOG_ORIGIN = 'https://blog.life-expat.com';
 
-  if (pathname === '/blog' || pathname.startsWith('/blog/')) {
+  // All translated URL segments from the blog Laravel app (route-segments.php)
+  // These are the ONLY segments that should be proxied — everything else stays on the SPA
+  const BLOG_SEGMENTS = new Set([
+    // articles
+    'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
+    // faq
+    'faq', 'preguntas-frecuentes', 'haeufige-fragen', 'perguntas-frequentes', 'voprosy', 'changjian-wenti', 'aksar-poochhe-jaane-wale-prashna', 'asilah-shaaiah',
+    // categories
+    'categories', 'categorias', 'kategorien', 'kategorii', 'fenlei', 'varg', 'alfiat',
+    // tags
+    'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
+    // countries
+    'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
+    // directory
+    'annuaire', 'directory', 'directorio', 'verzeichnis', 'diretorio', 'spravochnik', 'minglu', 'nirdeshika', 'dalil',
+    // tools
+    'outils', 'tools', 'herramientas', 'werkzeuge', 'ferramentas', 'instrumenty', 'gongju', 'upkaran', 'adawat',
+    // sondages
+    'sondages', 'surveys', 'encuestas', 'umfragen', 'pesquisas', 'oprosy', 'diaocha', 'sarvekshan', 'istitalaat',
+    // special
+    'feed.xml',
+  ]);
+
+  // Check if the path should be proxied to the blog backend
+  function isBlogPath(path) {
+    // Legacy /blog/* prefix — proxy as-is (Laravel will handle)
+    if (path === '/blog' || path.startsWith('/blog/')) return true;
+
+    // SEO files at root
+    if (['/sitemap.xml', '/robots.txt', '/llms.txt', '/ai.txt', '/.well-known/indexnow-key.txt'].includes(path)) return true;
+    // Blog sitemaps (exclude Firebase SPA sitemaps: profiles, help, faq, country-listings)
+    const FIREBASE_SITEMAPS = ['/sitemaps/profiles.xml', '/sitemaps/help.xml', '/sitemaps/faq.xml', '/sitemaps/country-listings.xml'];
+    if (path.startsWith('/sitemaps/') && path.endsWith('.xml') && !FIREBASE_SITEMAPS.includes(path)) return true;
+
+    // Admin panel
+    if (path.startsWith('/admin')) return true;
+
+    // Tool API endpoints
+    if (path.startsWith('/api/v1/tool-')) return true;
+
+    // Locale-prefixed paths: /{xx-yy}/{segment}
+    const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?/);
+    if (match) {
+      const segment = match[2];
+      // /{locale} alone = blog homepage
+      if (!segment) return true;
+      // /{locale}/{translated-segment} = blog content
+      if (BLOG_SEGMENTS.has(segment)) return true;
+    }
+
+    return false;
+  }
+
+  if (isBlogPath(pathname)) {
     console.log(`[WORKER] Blog proxy: ${pathname}`);
     try {
+      // Legacy /blog/* — redirect 301 to new URL without /blog prefix
+      if (pathname.startsWith('/blog/')) {
+        const newPath = pathname.replace(/^\/blog/, '');
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': newPath + url.search },
+        });
+      }
+      if (pathname === '/blog') {
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': '/' },
+        });
+      }
+
       const blogUrl = new URL(pathname + url.search, BLOG_ORIGIN);
       const blogResponse = await fetch(blogUrl.toString(), {
         method: request.method,
