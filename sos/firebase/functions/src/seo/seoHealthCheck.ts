@@ -36,10 +36,7 @@ const SITEMAP_URLS: { name: string; url: string }[] = [
     name: "sitemapFaq",
     url: "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq",
   },
-  {
-    name: "sitemapLanding",
-    url: "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding",
-  },
+  // sitemapLanding excluded: landing_pages collection is empty, function returns 0 URLs
   {
     name: "sitemapCountryListings",
     url: "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings",
@@ -292,7 +289,7 @@ async function checkSitemaps(): Promise<SitemapResult[]> {
   for (const sitemap of SITEMAP_URLS) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+      const timeout = setTimeout(() => controller.abort(), 30000);
 
       const resp = await fetch(sitemap.url, {
         signal: controller.signal,

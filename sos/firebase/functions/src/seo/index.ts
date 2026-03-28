@@ -25,7 +25,7 @@ export {
   sitemapProfiles,
   sitemapHelp,    // Centre d'aide / Help Center articles
   sitemapFaq,     // FAQ individuels
-  sitemapLanding,
+  // sitemapLanding removed: landing_pages collection is empty, caused GSC errors
   sitemapCountryListings, // Country listing pages (avocats/expatriés par pays)
 } from './sitemaps';
 

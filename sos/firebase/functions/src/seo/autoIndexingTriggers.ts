@@ -544,21 +544,15 @@ export const scheduledSitemapPing = onSchedule(
   async () => {
     console.log('⏰ Ping sitemap programmé...');
 
-    const db = admin.firestore();
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const recentProfiles = await db.collection('sos_profiles')
-      .where('createdAt', '>=', oneDayAgo)
-      .limit(1)
-      .get();
-
-    if (!recentProfiles.empty) {
-      console.log('📊 Nouvelles pages détectées (dernières 24h), ping sitemap...');
-      await pingSitemap();
-      await pingCustomSitemap('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles');
-    } else {
-      console.log('📊 Pas de nouvelles pages dans les dernières 24h, ping ignoré');
-    }
+    // Ping tous les sitemaps dynamiques quotidiennement (inconditionnellement)
+    // Note: Google a supprimé /ping?sitemap= en juin 2023, Bing reste actif
+    await Promise.all([
+      pingSitemap(),
+      pingCustomSitemap('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles'),
+      pingCustomSitemap('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp'),
+      pingCustomSitemap('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq'),
+    ]);
+    console.log('✅ Ping sitemaps terminé');
   }
 );
 

@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
-const FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/generateSitemaps';
+const FUNCTION_URL = 'https://europe-west3-sos-urgently-ac307.cloudfunctions.net/generateSitemaps';
 const TIMEOUT_MS = 30000; // 30 seconds timeout
 const CACHE_DIR = path.join(PROJECT_ROOT, 'src', 'multilingual-system', 'sitemaps');
 

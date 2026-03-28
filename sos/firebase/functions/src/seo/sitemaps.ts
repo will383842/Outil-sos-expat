@@ -121,7 +121,7 @@ export const sitemapProfiles = onRequest(
     cpu: 0.5,
     timeoutSeconds: 120,
     maxInstances: 5,
-    minInstances: 0,
+    minInstances: 1,
     invoker: 'public',
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
