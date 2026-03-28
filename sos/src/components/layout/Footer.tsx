@@ -76,6 +76,18 @@ const SOCIAL_URLS = {
   linkedin: (import.meta.env.VITE_LINKEDIN_URL as string) || "",
 } as const;
 
+const BLOG_SURVEYS_SEGMENTS: Record<string, { locale: string; slug: string }> = {
+  fr: { locale: "fr-fr", slug: "sondages" },
+  en: { locale: "en-us", slug: "surveys" },
+  es: { locale: "es-es", slug: "encuestas" },
+  de: { locale: "de-de", slug: "umfragen" },
+  pt: { locale: "pt-pt", slug: "pesquisas" },
+  ru: { locale: "ru-ru", slug: "oprosy" },
+  ch: { locale: "zh-cn", slug: "diaocha" },
+  hi: { locale: "hi-in", slug: "sarvekshan" },
+  ar: { locale: "ar-sa", slug: "istitalaat" },
+};
+
 const EXCLUDED_LEGAL_LABELS = new Set([
   "CGU Avocats",
   "CGU Expatriés",
@@ -640,6 +652,10 @@ const Footer: React.FC = () => {
     [intl, resolvedLang]
   );
 
+  // Blog surveys URL per language
+  const surveysSegment = BLOG_SURVEYS_SEGMENTS[resolvedLang] ?? BLOG_SURVEYS_SEGMENTS.fr;
+  const surveysBlogUrl = `https://sos-expat.com/blog/${surveysSegment.locale}/${surveysSegment.slug}`;
+
   // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
     () => ({
@@ -678,6 +694,10 @@ const Footer: React.FC = () => {
             label: intl.formatMessage({ id: "footer.services.testimonials" }),
             href: `/${getTranslatedRouteSlug("testimonials", resolvedLang)}`,
           },
+          {
+            label: intl.formatMessage({ id: "footer.services.surveys", defaultMessage: "Sondages Expats" }),
+            href: surveysBlogUrl,
+          },
         ],
       },
       support: {
@@ -714,7 +734,7 @@ const Footer: React.FC = () => {
         ],
       },
     }),
-    [intl, resolvedLang]
+    [intl, resolvedLang, surveysBlogUrl]
   );
 
   // Contact info - avec routes traduites

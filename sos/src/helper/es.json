@@ -12559,5 +12559,6 @@
   "faq.categories.all": "Todas las categorías",
   "groupAdmin.landing.seo.short_title": "Administrador de grupo",
   "serviceStatus.meta.title": "Estado del Servicio | SOS Expat",
-  "serviceStatus.meta.description": "Compruebe el estado operativo en tiempo real de los servicios de SOS Expat."
+  "serviceStatus.meta.description": "Compruebe el estado operativo en tiempo real de los servicios de SOS Expat.",
+  "footer.services.surveys": "Encuestas Expat"
 }

@@ -12559,5 +12559,6 @@
   "faq.categories.all": "所有类别",
   "groupAdmin.landing.seo.short_title": "群组管理员",
   "serviceStatus.meta.title": "服务状态 | SOS Expat",
-  "serviceStatus.meta.description": "查看SOS Expat服务的实时运营状态。"
+  "serviceStatus.meta.description": "查看SOS Expat服务的实时运营状态。",
+  "footer.services.surveys": "海外华人调查"
 }

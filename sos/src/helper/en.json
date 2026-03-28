@@ -12555,5 +12555,6 @@
   "faq.categories.all": "All Categories",
   "groupAdmin.landing.seo.short_title": "Group Admin",
   "serviceStatus.meta.title": "Service Status | SOS Expat",
-  "serviceStatus.meta.description": "Check the real-time operational status of SOS Expat services."
+  "serviceStatus.meta.description": "Check the real-time operational status of SOS Expat services.",
+  "footer.services.surveys": "Expat Surveys"
 }
