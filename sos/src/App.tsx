@@ -182,6 +182,7 @@ const InfluencerPayments = lazy(() => import('./pages/Influencer/InfluencerPayme
 const InfluencerProfile = lazy(() => import('./pages/Influencer/InfluencerProfile'));
 const InfluencerResources = lazy(() => import('./pages/Influencer/InfluencerResources'));
 const InfluencerTraining = lazy(() => import('./pages/Influencer/InfluencerTraining'));
+const InfluencerTools = lazy(() => import('./pages/Influencer/InfluencerTools'));
 const InfluencerSuspended = lazy(() => import('./pages/Influencer/InfluencerSuspended'));
 
 // Blogger System
@@ -195,6 +196,7 @@ const BloggerBloggerRecruitment = lazy(() => import('./pages/Blogger/BloggerBlog
 const BloggerLeaderboard = lazy(() => import('./pages/Blogger/BloggerLeaderboard'));
 const BloggerPayments = lazy(() => import('./pages/Blogger/BloggerPayments'));
 const BloggerResources = lazy(() => import('./pages/Blogger/BloggerResources'));
+const BloggerTools = lazy(() => import('./pages/Blogger/BloggerTools'));
 const BloggerGuide = lazy(() => import('./pages/Blogger/BloggerGuide'));
 const BloggerWidgets = lazy(() => import('./pages/Blogger/BloggerWidgets'));
 const BloggerProfile = lazy(() => import('./pages/Blogger/BloggerProfile'));
@@ -519,6 +521,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/influencer/paiements", component: InfluencerPayments, protected: true, role: 'influencer', translated: "influencer-payments" },
   { path: "/influencer/ressources", component: InfluencerResources, protected: true, role: 'influencer', translated: "influencer-resources" },
   { path: "/influencer/formation", component: InfluencerTraining, protected: true, role: 'influencer', translated: "influencer-training" },
+  { path: "/influencer/outils", component: InfluencerTools, protected: true, role: 'influencer', translated: "influencer-promo-tools" },
   { path: "/influencer/profil", component: InfluencerProfile, protected: true, role: 'influencer', translated: "influencer-profile" },
   { path: "/influencer/suspendu", component: InfluencerSuspended, protected: true, role: 'influencer', translated: "influencer-suspended" },
 
@@ -536,6 +539,7 @@ const protectedUserRoutes: RouteConfig[] = [
   { path: "/blogger/classement", component: BloggerLeaderboard, protected: true, role: 'blogger', translated: "blogger-leaderboard" },
   { path: "/blogger/paiements", component: BloggerPayments, protected: true, role: 'blogger', translated: "blogger-payments" },
   { path: "/blogger/ressources", component: BloggerResources, protected: true, role: 'blogger', translated: "blogger-resources" },
+  { path: "/blogger/outils", component: BloggerTools, protected: true, role: 'blogger', translated: "blogger-promo-tools" },
   { path: "/blogger/guide", component: BloggerGuide, protected: true, role: 'blogger', translated: "blogger-guide" },
   { path: "/blogger/widgets", component: BloggerWidgets, protected: true, role: 'blogger', translated: "blogger-widgets" },
   { path: "/blogger/profil", component: BloggerProfile, protected: true, role: 'blogger', translated: "blogger-profile" },

@@ -54,19 +54,29 @@ export const onProfileCreated = onDocumentCreated(
 
     // Construire les URLs pour toutes les langues
     const urls = generateProfileUrlsFromData(profile);
-    
+
     if (urls.length === 0) {
       console.log('❌ Impossible de générer les URLs (slug manquant?)');
       return;
     }
 
-    console.log(`🔗 URLs à indexer: ${urls.length}`);
+    // ✅ Prioriser FR + EN pour Google API (quota limité à 10 URLs)
+    // IndexNow reçoit TOUTES les langues (illimité)
+    const slugs = profile.slugs as Record<string, string> | undefined;
+    const priorityUrls: string[] = [];
+    if (slugs?.fr) priorityUrls.push(`${SITE_URL}/${slugs.fr}`);
+    if (slugs?.en) priorityUrls.push(`${SITE_URL}/${slugs.en}`);
+    // Compléter avec les autres langues jusqu'à 10
+    const remainingUrls = urls.filter(u => !priorityUrls.includes(u));
+    const googleUrls = [...priorityUrls, ...remainingUrls].slice(0, 10);
 
-    // 1. Soumettre à IndexNow (Bing/Yandex) - instantané
+    console.log(`🔗 URLs à indexer: ${urls.length} (Google priorité: FR+EN first)`);
+
+    // 1. Soumettre à IndexNow (Bing/Yandex) - instantané, TOUTES les langues
     const indexNowResult = await submitToIndexNow(urls);
 
-    // 2. Soumettre à Google Indexing API (max 10 URLs pour préserver quota)
-    const googleResult = await submitBatchToGoogleIndexing(urls.slice(0, 10), 10);
+    // 2. Soumettre à Google Indexing API (max 10 URLs, FR+EN prioritaires)
+    const googleResult = await submitBatchToGoogleIndexing(googleUrls, 10);
 
     // 3. Ping sitemap (Google fallback) - rapide
     await pingSitemap();
@@ -618,15 +628,26 @@ export const scheduledBulkIndexing = onSchedule(
       activeDocs = restartSnapshot.docs;
     }
 
-    // Collecter toutes les URLs (1 URL FR prioritaire par profil pour maximiser la couverture)
+    // ✅ Sort profiles by quality score (best first) for optimal quota usage
+    // High-quality profiles get indexed first in each cycle
+    const sortedDocs = [...activeDocs].sort((a, b) => {
+      const aData = a.data();
+      const bData = b.data();
+      // Simple score: reviews × rating + description length bonus
+      const scoreA = (Number(aData.reviewCount ?? aData.realReviewsCount ?? 0) * Number(aData.averageRating ?? 0))
+        + (String(aData.description ?? '').length > 200 ? 10 : 0);
+      const scoreB = (Number(bData.reviewCount ?? bData.realReviewsCount ?? 0) * Number(bData.averageRating ?? 0))
+        + (String(bData.description ?? '').length > 200 ? 10 : 0);
+      return scoreB - scoreA; // DESC
+    });
+
+    // Collecter toutes les URLs (FR prioritaire par profil, puis autres langues)
     const urlsToSubmit: string[] = [];
     let lastId = '';
 
-    for (const doc of activeDocs) {
+    for (const doc of sortedDocs) {
       const profile = doc.data();
       lastId = doc.id;
-
-      // AAA profiles are real providers — include in bulk indexing
 
       // Prioriser l'URL française (la plus importante pour SEO)
       const slugs = profile.slugs as Record<string, string> | undefined;
