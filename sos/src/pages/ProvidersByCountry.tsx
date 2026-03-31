@@ -432,7 +432,9 @@ const ProvidersByCountry: React.FC = () => {
   const SEO_LAWYERS: Record<string, string> = { fr: 'Avocats', en: 'Lawyers', es: 'Abogados', de: 'Anwälte', pt: 'Advogados', ru: 'Адвокаты', ch: '律师', hi: 'वकील', ar: 'محامون' };
   const SEO_EXPATS: Record<string, string> = { fr: 'Expatriés expérimentés', en: 'Experienced Expats', es: 'Expatriados experimentados', de: 'Erfahrene Expats', pt: 'Expatriados experientes', ru: 'Опытные экспаты', ch: '资深外籍专家', hi: 'अनुभवी प्रवासी', ar: 'مغتربون ذوو خبرة' };
   const seoRoleLabel = providerType === 'lawyer' ? (SEO_LAWYERS[effectiveLang] || 'Lawyers') : (SEO_EXPATS[effectiveLang] || 'Experienced Expats');
-  const seoTitle = `${seoRoleLabel} ${SEO_IN_WORD[effectiveLang] || 'in'} ${countryName} - ${SEO_CONSULTATION[effectiveLang] || '24/7 Consultation'} | SOS Expat`;
+  // ✅ Provider count in title for better CTR
+  const countLabel = !isLoading && providers.length > 0 ? ` (${providers.length})` : '';
+  const seoTitle = `${seoRoleLabel} ${SEO_IN_WORD[effectiveLang] || 'in'} ${countryName}${countLabel} - ${SEO_CONSULTATION[effectiveLang] || '24/7 Consultation'} | SOS Expat`;
   const seoDescription = intl.formatMessage(
     {
       id: "providers.seoDescription",
@@ -446,12 +448,40 @@ const ProvidersByCountry: React.FC = () => {
     }
   ).slice(0, 160);
 
+  // ✅ AEO: contextual summary for AI crawlers (ChatGPT, Perplexity, Google AI Overview)
+  const SEO_AEO_SUMMARY: Record<string, string> = {
+    fr: `SOS Expat propose ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.fr} ${countryName} pour expatriés, voyageurs et digital nomades. Consultation téléphonique immédiate 24/7 à partir de ${providerType === 'lawyer' ? '49€/20min' : '19€/30min'}. Service multilingue couvrant immigration, droit de la famille, fiscalité internationale et aide à l'installation.`,
+    en: `SOS Expat offers ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.en} ${countryName} for expats, travelers and digital nomads. Instant phone consultation 24/7 from ${providerType === 'lawyer' ? '€49/20min' : '€19/30min'}. Multilingual service covering immigration, family law, international tax and relocation assistance.`,
+    es: `SOS Expat ofrece ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.es} ${countryName} para expatriados, viajeros y nómadas digitales. Consulta telefónica inmediata 24/7 desde ${providerType === 'lawyer' ? '49€/20min' : '19€/30min'}.`,
+    de: `SOS Expat bietet ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.de} ${countryName} für Expats, Reisende und digitale Nomaden. Sofortige Telefonberatung 24/7 ab ${providerType === 'lawyer' ? '49€/20min' : '19€/30min'}.`,
+    pt: `SOS Expat oferece ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.pt} ${countryName} para expatriados, viajantes e nômades digitais. Consulta telefônica imediata 24/7 a partir de ${providerType === 'lawyer' ? '49€/20min' : '19€/30min'}.`,
+    ru: `SOS Expat предлагает ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.ru} ${countryName} для экспатов, путешественников и цифровых кочевников. Мгновенная телефонная консультация 24/7 от ${providerType === 'lawyer' ? '49€/20мин' : '19€/30мин'}.`,
+    ch: `SOS Expat 在${countryName}提供${providers.length}位${roleLabel.toLowerCase()}服务，面向外籍人士、旅行者和数字游民。24/7即时电话咨询，起价${providerType === 'lawyer' ? '49€/20分钟' : '19€/30分钟'}。`,
+    hi: `SOS Expat ${countryName} ${SEO_IN_WORD.hi} ${providers.length} ${roleLabel.toLowerCase()} प्रदान करता है। प्रवासियों, यात्रियों और डिजिटल नोमैड्स के लिए 24/7 तत्काल फोन परामर्श ${providerType === 'lawyer' ? '49€/20मिनट' : '19€/30मिनट'} से।`,
+    ar: `يقدم SOS Expat ${providers.length} ${roleLabel.toLowerCase()} ${SEO_IN_WORD.ar} ${countryName} للمغتربين والمسافرين والبدو الرقميين. استشارة هاتفية فورية على مدار الساعة بدءاً من ${providerType === 'lawyer' ? '49€/20 دقيقة' : '19€/30 دقيقة'}.`,
+  };
+  const aeoSummary = SEO_AEO_SUMMARY[effectiveLang] || SEO_AEO_SUMMARY.en;
+
+  // ✅ Contextual intro paragraph (visible on page, unique per country+lang+role)
+  const SEO_INTRO: Record<string, string> = {
+    fr: `Vous cherchez un ${roleLabelSingular.toLowerCase()} en ${countryName} ? SOS Expat met à votre disposition ${providers.length} professionnels qualifiés, disponibles pour une consultation téléphonique immédiate. Que vous soyez expatrié, voyageur, digital nomade ou étudiant international, nos ${roleLabel.toLowerCase()} vous accompagnent en ${countryName} sur des sujets comme l'immigration, la fiscalité, le logement ou les démarches administratives.`,
+    en: `Looking for a ${roleLabelSingular.toLowerCase()} in ${countryName}? SOS Expat connects you with ${providers.length} qualified professionals available for an instant phone consultation. Whether you're an expat, traveler, digital nomad or international student, our ${roleLabel.toLowerCase()} assist you in ${countryName} with immigration, tax, housing and administrative matters.`,
+    es: `¿Busca un ${roleLabelSingular.toLowerCase()} en ${countryName}? SOS Expat pone a su disposición ${providers.length} profesionales cualificados para consulta telefónica inmediata. Nuestros ${roleLabel.toLowerCase()} le asisten en ${countryName} en inmigración, fiscalidad, vivienda y trámites administrativos.`,
+    de: `Suchen Sie einen ${roleLabelSingular.toLowerCase()} in ${countryName}? SOS Expat verbindet Sie mit ${providers.length} qualifizierten Fachleuten für eine sofortige Telefonberatung. Unsere ${roleLabel.toLowerCase()} unterstützen Sie in ${countryName} bei Einwanderung, Steuern, Wohnung und Verwaltungsangelegenheiten.`,
+    pt: `Procura um ${roleLabelSingular.toLowerCase()} em ${countryName}? O SOS Expat disponibiliza ${providers.length} profissionais qualificados para consulta telefónica imediata. Os nossos ${roleLabel.toLowerCase()} assistem-no em ${countryName} em imigração, fiscalidade, habitação e questões administrativas.`,
+    ru: `Ищете ${roleLabelSingular.toLowerCase()} в стране ${countryName}? SOS Expat предоставляет ${providers.length} квалифицированных специалистов для мгновенной телефонной консультации. Наши ${roleLabel.toLowerCase()} помогут вам в ${countryName} по вопросам иммиграции, налогов, жилья и административных дел.`,
+    ch: `正在寻找${countryName}的${roleLabelSingular.toLowerCase()}？SOS Expat为您提供${providers.length}位合格专业人士，可立即电话咨询。无论您是外籍人士、旅行者还是数字游民，我们的${roleLabel.toLowerCase()}都能在移民、税务、住房和行政事务方面为您提供帮助。`,
+    hi: `${countryName} में ${roleLabelSingular.toLowerCase()} की तलाश है? SOS Expat आपको ${providers.length} योग्य पेशेवरों से तत्काल फोन परामर्श के लिए जोड़ता है। हमारे ${roleLabel.toLowerCase()} ${countryName} में आव्रजन, कर, आवास और प्रशासनिक मामलों में आपकी सहायता करते हैं।`,
+    ar: `هل تبحث عن ${roleLabelSingular.toLowerCase()} في ${countryName}؟ يوفر لك SOS Expat ${providers.length} محترفاً مؤهلاً لاستشارة هاتفية فورية. يساعدك ${roleLabel.toLowerCase()} لدينا في ${countryName} في شؤون الهجرة والضرائب والسكن والإجراءات الإدارية.`,
+  };
+  const introText = SEO_INTRO[effectiveLang] || SEO_INTRO.en;
+
   /* =========================
      Render
   ========================= */
   return (
     <Layout>
-      {/* SEO Head */}
+      {/* SEO Head + AEO signals */}
       <SEOHead
         title={seoTitle}
         description={seoDescription}
@@ -460,6 +490,12 @@ const ProvidersByCountry: React.FC = () => {
         noindex={isEmptyState}
         locale={effectiveLang === "fr" ? "fr_FR" : effectiveLang === "en" ? "en_US" : effectiveLang === "es" ? "es_ES" : effectiveLang === "de" ? "de_DE" : effectiveLang === "pt" ? "pt_PT" : effectiveLang === "ru" ? "ru_RU" : effectiveLang === "ar" ? "ar_SA" : effectiveLang === "hi" ? "hi_IN" : "fr_FR"}
         keywords={`${roleLabelSingular}, ${countryName}, ${intl.formatMessage({ id: "providers.seo.keywords", defaultMessage: "consultation, expatrié, aide juridique, avocat en ligne" })}`}
+        aiSummary={aeoSummary}
+        contentType="directory"
+        expertise={providerType === "lawyer" ? "legal-services" : "expat-assistance"}
+        trustworthiness={`verified-providers, ${providers.length}_professionals, ${aggregateData ? aggregateData.totalReviews + '_reviews' : '0_reviews'}`}
+        contentQuality="high"
+        lastReviewed={new Date().toISOString().split('T')[0]}
       />
 
       {/* Breadcrumb Schema */}
@@ -519,26 +555,50 @@ const ProvidersByCountry: React.FC = () => {
         })}</script>
       </Helmet>
 
+      {/* ✅ ItemList Schema — structured provider listing for rich results */}
+      {!isLoading && providers.length > 0 && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": `${roleLabel} ${intl.formatMessage({ id: 'providers.in', defaultMessage: 'en' })} ${countryName}`,
+            "numberOfItems": providers.length,
+            "itemListElement": paginatedProviders.slice(0, 20).map((p, i) => ({
+              "@type": "ListItem",
+              "position": i + 1,
+              "url": p.slugs?.[effectiveLang] ? `${BASE_URL}/${p.slugs[effectiveLang]}` : `${BASE_URL}/${localeString}/prestataire/${p.id}`,
+              "name": `${p.firstName} — ${roleLabelSingular}`,
+            })),
+          })}</script>
+        </Helmet>
+      )}
+
       {/* Main Content */}
       <div
         className="min-h-screen bg-gray-950 text-white"
         data-page-loaded="true"
       >
         <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-          {/* H1 + Provider Count */}
+          {/* H1 + Provider Count + Contextual Intro */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-white">
               {countryData?.flag && <span className="mr-2">{countryData.flag}</span>}
               {roleLabel} {intl.formatMessage({ id: "providers.in", defaultMessage: "en" })} {countryName}
             </h1>
             {!isLoading && (
-              <p className="text-gray-300 text-lg">
+              <p className="text-gray-300 text-lg mb-4">
                 {providers.length}{" "}
                 {providers.length <= 1
                   ? roleLabelSingular.toLowerCase()
                   : roleLabel.toLowerCase()}{" "}
                 {intl.formatMessage({ id: "providers.availableIn", defaultMessage: "disponible(s) en" })}{" "}
                 {countryName}
+              </p>
+            )}
+            {/* ✅ Contextual intro paragraph — unique per country+lang+role for SEO + AEO */}
+            {!isLoading && providers.length > 0 && (
+              <p className="text-gray-400 leading-relaxed max-w-3xl">
+                {introText}
               </p>
             )}
           </div>
@@ -604,10 +664,32 @@ const ProvidersByCountry: React.FC = () => {
             </div>
           )}
 
+          {/* ✅ Table of contents / Summary navigation */}
+          {!isLoading && providers.length > 0 && (
+            <nav className="mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-800" aria-label="Sommaire">
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                <FormattedMessage id="providers.toc.title" defaultMessage="Sommaire" />
+              </h2>
+              <ul className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                <li><a href="#providers-list" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  {roleLabel} ({providers.length})
+                </a></li>
+                <li><a href="#faq-section" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <FormattedMessage id="providers.faq.title" defaultMessage="Questions fréquentes" />
+                </a></li>
+                {relatedCountries.length > 0 && (
+                  <li><a href="#related-countries" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                    <FormattedMessage id="providers.seeAlso" defaultMessage="Voir aussi" />
+                  </a></li>
+                )}
+              </ul>
+            </nav>
+          )}
+
           {/* Provider Cards Grid */}
           {!isLoading && providers.length > 0 && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div id="providers-list" className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {paginatedProviders.map((provider) => (
                   <ProviderCard
                     key={provider.id}
@@ -662,7 +744,7 @@ const ProvidersByCountry: React.FC = () => {
 
           {/* Dynamic FAQ Section */}
           {!isLoading && providers.length > 0 && (
-            <section className="mt-16">
+            <section id="faq-section" className="mt-16">
               <h2 className="text-2xl font-bold mb-6 text-white">
                 <FormattedMessage
                   id="providers.faq.title"
@@ -690,7 +772,7 @@ const ProvidersByCountry: React.FC = () => {
 
           {/* "See Also" — Related Countries */}
           {!isLoading && providers.length > 0 && relatedCountries.length > 0 && (
-            <section className="mt-16 mb-8">
+            <section id="related-countries" className="mt-16 mb-8">
               <h2 className="text-xl font-semibold text-gray-300 mb-4">
                 <FormattedMessage
                   id="providers.seeAlso"
