@@ -3219,7 +3219,6 @@ const ProviderProfile: React.FC = () => {
               <div className="flex flex-col items-center justify-center bg-white/5 rounded-2xl p-4 border border-white/10 text-center" role="listitem">
                 <span className="text-3xl font-black text-white mb-1">
                   {isLawyer ? (provider.yearsOfExperience || 0) : (provider.yearsAsExpat || provider.yearsOfExperience || 0)}
-                  <span className="text-lg">ans</span>
                 </span>
                 <span className="text-xs text-white/50 uppercase tracking-wide">{yearsLabel}</span>
               </div>
@@ -3557,7 +3556,7 @@ const ProviderProfile: React.FC = () => {
                       </div>
                       
                       {getFirstString(provider.experienceDescription, preferredLangKey) && (
-                        <p className="text-gray-600 pl-13">
+                        <p className="text-gray-600 pl-14">
                           {getFirstString(provider.experienceDescription, preferredLangKey)}
                         </p>
                       )}
@@ -3599,7 +3598,7 @@ const ProviderProfile: React.FC = () => {
                         <FormattedMessage id="providerProfile.customerReviews" defaultMessage="Avis clients" />
                         {(providerStats.realReviewsCount || provider?.reviewCount || 0) > 0 && (
                           <span className="block text-sm font-normal text-gray-500 mt-0.5">
-                            {providerStats.realReviewsCount || provider?.reviewCount || 0} avis vérifiés
+                            {providerStats.realReviewsCount || provider?.reviewCount || 0} <FormattedMessage id="providerProfile.verifiedReviews" defaultMessage="avis vérifiés" />
                           </span>
                         )}
                       </span>
@@ -3634,7 +3633,9 @@ const ProviderProfile: React.FC = () => {
                               <Star key={i} size={14} className={`${i <= featured.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
                             ))}
                           </div>
-                          <span className="text-sm text-gray-600 font-semibold">{featured.authorName || 'Client vérifié'}</span>
+                          <span className="text-sm text-gray-600 font-semibold">
+                            {featured.clientName || featured.authorName || intl.formatMessage({ id: 'providerProfile.verifiedClient', defaultMessage: 'Client vérifié' })}
+                          </span>
                         </footer>
                       </blockquote>
                     );
