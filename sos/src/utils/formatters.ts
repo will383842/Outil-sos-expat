@@ -68,7 +68,7 @@ export const getCountryName = (
   }
 
   // 3️⃣ Mapping des codes de langue vers les propriétés du pays
-  const langMap: Record<string, keyof Pick<CountryData, 'nameFr' | 'nameEn' | 'nameEs' | 'nameDe' | 'namePt' | 'nameZh' | 'nameAr' | 'nameRu' | 'nameIt' | 'nameNl'>> = {
+  const langMap: Record<string, keyof Pick<CountryData, 'nameFr' | 'nameEn' | 'nameEs' | 'nameDe' | 'namePt' | 'nameZh' | 'nameAr' | 'nameRu' | 'nameIt' | 'nameNl' | 'nameHi'>> = {
     'fr': 'nameFr',
     'en': 'nameEn',
     'es': 'nameEs',
@@ -80,7 +80,7 @@ export const getCountryName = (
     'ru': 'nameRu',
     'it': 'nameIt',
     'nl': 'nameNl',
-    'hi': 'nameEn' // Hindi → fallback anglais
+    'hi': 'nameHi' // Hindi
   };
   
   // Nettoyer le code de langue (enlever les variantes régionales)
