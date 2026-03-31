@@ -1102,8 +1102,10 @@ async function handleRequest(request, env, ctx) {
     // Legacy /blog/* prefix — proxy as-is (Laravel will handle)
     if (path === '/blog' || path.startsWith('/blog/')) return true;
 
-    // SEO files at root
-    if (['/sitemap.xml', '/robots.txt', '/llms.txt', '/ai.txt', '/.well-known/indexnow-key.txt'].includes(path)) return true;
+    // SEO files at root — served from Cloudflare Pages static files (sos/public/)
+    // robots.txt, sitemap.xml, llms.txt, ai.txt all exist in sos/public/
+    // Only indexnow-key is proxied to blog (hosted there for verification)
+    if (path === '/.well-known/indexnow-key.txt') return true;
     // Blog sitemaps (exclude Firebase SPA sitemaps: profiles, help, faq, country-listings + per-language variants)
     const FIREBASE_SITEMAPS = ['/sitemaps/profiles.xml', '/sitemaps/help.xml', '/sitemaps/faq.xml', '/sitemaps/country-listings.xml'];
     // Per-language sitemaps: profiles-fr.xml, listings-en.xml, help-de.xml, etc.

@@ -233,51 +233,13 @@ Disallow: /
 # ===========================================
 # SITEMAPS
 # ===========================================
-# Dynamic sitemap index (lists all per-language sitemaps)
+# Master sitemap index — references ALL per-language sitemaps + blog + legacy
+# Google discovers all child sitemaps from this single entry
 Sitemap: https://sos-expat.com/sitemap-index.xml
+# Static pages (always indexed, manually maintained)
 Sitemap: https://sos-expat.com/sitemap-static.xml
-
-# Per-language profile sitemaps (SEO-scored, quality-gated)
-Sitemap: https://sos-expat.com/sitemaps/profiles-fr.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-en.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-es.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-de.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-pt.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-ru.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-zh.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-ar.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles-hi.xml
-
-# Per-language country listing sitemaps (min 3 qualified providers)
-Sitemap: https://sos-expat.com/sitemaps/listings-fr.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-en.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-es.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-de.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-pt.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-ru.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-zh.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-ar.xml
-Sitemap: https://sos-expat.com/sitemaps/listings-hi.xml
-
-# Per-language help center sitemaps
-Sitemap: https://sos-expat.com/sitemaps/help-fr.xml
-Sitemap: https://sos-expat.com/sitemaps/help-en.xml
-Sitemap: https://sos-expat.com/sitemaps/help-es.xml
-Sitemap: https://sos-expat.com/sitemaps/help-de.xml
-Sitemap: https://sos-expat.com/sitemaps/help-pt.xml
-Sitemap: https://sos-expat.com/sitemaps/help-ru.xml
-Sitemap: https://sos-expat.com/sitemaps/help-zh.xml
-Sitemap: https://sos-expat.com/sitemaps/help-ar.xml
-Sitemap: https://sos-expat.com/sitemaps/help-hi.xml
-
-# FAQ sitemap
-Sitemap: https://sos-expat.com/sitemaps/faq.xml
-
-# Legacy sitemaps (kept for backward compatibility during transition)
+# Legacy sitemap index (kept during transition, will be removed later)
 Sitemap: https://sos-expat.com/sitemap.xml
-Sitemap: https://sos-expat.com/sitemaps/profiles.xml
-Sitemap: https://sos-expat.com/sitemaps/help.xml
-Sitemap: https://sos-expat.com/sitemaps/country-listings.xml
 
 # Blog sitemaps (Laravel SSR — routed via Cloudflare Origin Rules)
 Sitemap: https://sos-expat.com/sitemaps/articles-fr.xml

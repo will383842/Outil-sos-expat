@@ -218,10 +218,6 @@ export const sitemapProfiles = onRequest(
       let includedCount = 0;
       let excludedByScore = 0;
 
-      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
-
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
 
@@ -291,7 +287,7 @@ export const sitemapProfiles = onRequest(
               ? profile.updatedAt.toDate().toISOString().split('T')[0]
               : today;
 
-            urlBlocks.push(`  <url>
+            allUrlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
@@ -312,7 +308,7 @@ ${hreflangs}
             if (internalFilterLang && slugLang !== internalFilterLang) return;
 
             const url = `${SITE_URL}/${legacySlug}`;
-            urlBlocks.push(`  <url>
+            allUrlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
     <xhtml:link rel="alternate" hreflang="${getHreflangCode(slugLang)}" href="${escapeXml(url)}"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(url)}"/>
@@ -333,7 +329,7 @@ ${hreflangs}
               }).join('\n');
 
               const defaultLocale = getLocaleString('fr');
-              urlBlocks.push(`  <url>
+              allUrlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${legacySlug}`)}"/>
