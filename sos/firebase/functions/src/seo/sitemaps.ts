@@ -112,7 +112,59 @@ function escapeXml(str: string): string {
 }
 
 // ============================================
+// 📊 SEO SCORING — Calcule la qualité d'un profil pour l'indexation
+// Score /100 : ≥ 60 = premium (priority 0.9), 40-59 = standard (0.6), < 40 = exclu
+// ============================================
+function calculateProfileSEOScore(profile: Record<string, unknown>): number {
+  let score = 0;
+
+  // Reviews (25 pts)
+  const reviewCount = Number(profile.reviewCount ?? profile.realReviewsCount ?? 0);
+  score += reviewCount === 0 ? 0 : reviewCount < 5 ? 12 : 25;
+
+  // Average rating (20 pts)
+  const avgRating = Number(profile.averageRating ?? 0);
+  score += avgRating < 3.5 ? 0 : avgRating < 4.3 ? 10 : 20;
+
+  // Description length (15 pts)
+  const descLen = String(profile.description ?? '').length;
+  score += descLen < 100 ? 0 : descLen < 300 ? 8 : 15;
+
+  // Photo (10 pts)
+  const photo = String(profile.photoURL ?? '');
+  score += photo && !photo.includes('default') && photo.length > 10 ? 10 : 0;
+
+  // Specialties (10 pts)
+  const specialties = Array.isArray(profile.specialties) ? profile.specialties.length
+    : Array.isArray(profile.helpTypes) ? profile.helpTypes.length : 0;
+  score += specialties === 0 ? 0 : specialties < 3 ? 5 : 10;
+
+  // Total calls (10 pts)
+  const calls = Number(profile.totalCalls ?? profile.callCount ?? 0);
+  score += calls === 0 ? 0 : calls < 10 ? 5 : 10;
+
+  // SEO data available (5 pts) — proxy: has slugs object with multiple keys
+  const slugsCount = profile.slugs && typeof profile.slugs === 'object' ? Object.keys(profile.slugs as object).length : 0;
+  score += slugsCount >= 5 ? 5 : slugsCount >= 1 ? 3 : 0;
+
+  // Languages spoken (5 pts)
+  const langs = Array.isArray(profile.languages) ? profile.languages.length : 0;
+  score += langs < 2 ? 1 : langs < 4 ? 3 : 5;
+
+  return score;
+}
+
+/** Min SEO score to include in sitemap (below = noindex, excluded) */
+const MIN_SEO_SCORE = 40;
+/** Score threshold for premium priority */
+const PREMIUM_SEO_SCORE = 60;
+/** Max URLs per sitemap file — Google recommends < 50K, we use 500 for faster crawl */
+const MAX_URLS_PER_SITEMAP = 500;
+
+// ============================================
 // 🧑‍⚖️ SITEMAP: Profils prestataires
+// Supports ?lang=fr to filter by language (optional, backward compatible)
+// Without ?lang, returns ALL languages (legacy behavior)
 // ============================================
 export const sitemapProfiles = onRequest(
   {
@@ -125,10 +177,26 @@ export const sitemapProfiles = onRequest(
     invoker: 'public',
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
-  async (_req, res) => {
+  async (req, res) => {
     ensureInitialized();
     try {
       const db = admin.firestore();
+
+      // ✅ Optional language filter: ?lang=fr returns only French URLs
+      // Without ?lang, returns all languages (backward compatible)
+      const filterLang = typeof req.query.lang === 'string' ? req.query.lang.toLowerCase() : null;
+      // Validate filter lang is a known language
+      if (filterLang && !LANGUAGES.includes(filterLang) && filterLang !== 'zh') {
+        res.status(400).send(`Invalid lang parameter: ${filterLang}. Valid: ${LANGUAGES.join(', ')}, zh`);
+        return;
+      }
+      // Map 'zh' URL param to 'ch' internal code
+      const internalFilterLang = filterLang === 'zh' ? 'ch' : filterLang;
+
+      // ✅ Optional pagination: ?page=1 (1-indexed). Without ?page, returns all URLs.
+      // When used with ?lang=, splits large sitemaps into 500-URL pages.
+      const pageParam = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : null;
+      const pageNum = pageParam && pageParam >= 1 ? pageParam : null;
 
       // ✅ Utilise sos_profiles (pas users)
       // Filtre les prestataires visibles, approuvés ET actifs
@@ -139,9 +207,12 @@ export const sitemapProfiles = onRequest(
         .get();
 
       const today = new Date().toISOString().split('T')[0];
+      const languagesToGenerate = internalFilterLang ? [internalFilterLang] : LANGUAGES;
 
       // OPTIMISÉ: Utilise array.join() au lieu de += pour éviter O(n²)
-      const urlBlocks: string[] = [];
+      const allUrlBlocks: string[] = [];
+      let includedCount = 0;
+      let excludedByScore = 0;
 
       urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -154,6 +225,16 @@ export const sitemapProfiles = onRequest(
         const name = profile.fullName || profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
         if (!name) return;
 
+        // ✅ SEO SCORING: Calculate quality score and exclude low-quality profiles
+        const seoScore = calculateProfileSEOScore(profile);
+        if (seoScore < MIN_SEO_SCORE) {
+          excludedByScore++;
+          return; // Exclude from sitemap — will be noindex on frontend
+        }
+
+        // Dynamic priority based on score
+        const priority = seoScore >= PREMIUM_SEO_SCORE ? '0.9' : '0.6';
+
         // Utilise les slugs multilingues si disponibles
         const slugs = profile.slugs as Record<string, string> | undefined;
         const hasSlugs = slugs && typeof slugs === 'object' && Object.keys(slugs).length > 0;
@@ -163,20 +244,18 @@ export const sitemapProfiles = onRequest(
 
         // Pour les profils avec slugs multilingues (nouveau format)
         if (hasSlugs) {
-          LANGUAGES.forEach(lang => {
+          languagesToGenerate.forEach(lang => {
             const slug = slugs[lang];
             if (!slug) return;
 
             // ✅ VALIDATION: Vérifier que le slug a une locale valide
             const slugLocale = extractLocaleFromSlug(slug);
             if (!slugLocale || !isValidLocale(slugLocale)) {
-              // ❌ Locale invalide détectée (ex: es-FR, zh-HR)
               console.warn(`⚠️ Slug invalide ignoré (${doc.id}, ${lang}): ${slug} (locale: ${slugLocale || 'none'})`);
-              return; // Exclure du sitemap
+              return;
             }
 
             // ✅ VALIDATION: Vérifier que la locale du slug correspond à la langue
-            // Ex: slugs['en'] ne doit pas contenir "fr-fr/avocat/..." (contamination cross-langue)
             const expectedUrlLang = lang === 'ch' ? 'zh' : lang;
             const slugLangPart = slugLocale.split('-')[0];
             if (slugLangPart !== expectedUrlLang) {
@@ -184,19 +263,15 @@ export const sitemapProfiles = onRequest(
               return;
             }
 
-            // Le slug contient déjà le chemin complet avec locale
-            // Ex: "fr-fr/avocat-thailand/julien-k7m2p9"
             const url = `${SITE_URL}/${slug}`;
 
-            // Génère tous les hreflang (uniquement pour slugs valides)
+            // Génère les hreflang pour TOUTES les langues du profil (même si filtré par langue)
+            // Google a besoin de la réciprocité complète
             const hreflangs = LANGUAGES.map(hrefLang => {
               const hrefSlug = slugs[hrefLang];
               if (!hrefSlug) return null;
-
-              // Vérifier aussi que le hreflang slug est valide
               const hrefLocale = extractLocaleFromSlug(hrefSlug);
               if (!hrefLocale || !isValidLocale(hrefLocale)) return null;
-
               return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefSlug}`)}"/>`;
             }).filter(Boolean).join('\n');
 
@@ -204,11 +279,10 @@ export const sitemapProfiles = onRequest(
             let xDefaultSlug = slugs['fr'] || slug;
             const xDefaultLocale = extractLocaleFromSlug(xDefaultSlug);
             if (!xDefaultLocale || !isValidLocale(xDefaultLocale)) {
-              xDefaultSlug = slug; // Fallback vers le slug actuel s'il est valide
+              xDefaultSlug = slug;
             }
             const xDefaultUrl = `${SITE_URL}/${xDefaultSlug}`;
 
-            // Use profile's updatedAt if available, fallback to today
             const profileLastmod = profile.updatedAt?.toDate?.()
               ? profile.updatedAt.toDate().toISOString().split('T')[0]
               : today;
@@ -218,35 +292,34 @@ export const sitemapProfiles = onRequest(
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>${priority}</priority>
     <lastmod>${profileLastmod}</lastmod>
   </url>`);
+            includedCount++;
           });
         } else if (profile.slug) {
           // Ancien format: slug unique (ex: "fr/expatrie-norvege/melissa-...")
-          // Le slug commence déjà par le code langue, utiliser tel quel
           const legacySlug = profile.slug as string;
-
-          // Détecter la langue du slug (premier segment avant /)
           const slugLang = legacySlug.split('/')[0];
           const isValidLang = LANGUAGES.includes(slugLang);
 
           if (isValidLang) {
-            // Le slug commence par une langue valide, utiliser tel quel
-            const url = `${SITE_URL}/${legacySlug}`;
+            // Skip if filtering by language and this legacy slug doesn't match
+            if (internalFilterLang && slugLang !== internalFilterLang) return;
 
-            // Pour les legacy slugs, on génère une seule URL avec hreflang pointant vers elle-même
+            const url = `${SITE_URL}/${legacySlug}`;
             urlBlocks.push(`  <url>
     <loc>${escapeXml(url)}</loc>
     <xhtml:link rel="alternate" hreflang="${getHreflangCode(slugLang)}" href="${escapeXml(url)}"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(url)}"/>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>${priority}</priority>
     <lastmod>${today}</lastmod>
   </url>`);
+            includedCount++;
           } else {
-            // Slug sans préfixe langue (très ancien format), use default locale per language
-            LANGUAGES.forEach(lang => {
+            // Slug sans préfixe langue (très ancien format)
+            languagesToGenerate.forEach(lang => {
               const locale = getLocaleString(lang);
               const url = `${SITE_URL}/${locale}/${legacySlug}`;
 
@@ -264,20 +337,54 @@ ${hreflangs}
     <priority>0.5</priority>
     <lastmod>${today}</lastmod>
   </url>`);
+              includedCount++;
             });
           }
         }
       });
 
-      urlBlocks.push(`</urlset>`);
-      const xml = urlBlocks.join('\n');
+      // ✅ PAGINATION: Slice to requested page (500 URLs max per page)
+      let urlBlocksPage = allUrlBlocks;
+      let totalPages = 1;
+      if (pageNum && allUrlBlocks.length > MAX_URLS_PER_SITEMAP) {
+        totalPages = Math.ceil(allUrlBlocks.length / MAX_URLS_PER_SITEMAP);
+        const start = (pageNum - 1) * MAX_URLS_PER_SITEMAP;
+        const end = start + MAX_URLS_PER_SITEMAP;
+        urlBlocksPage = allUrlBlocks.slice(start, end);
+        if (urlBlocksPage.length === 0) {
+          // Page out of range — return empty valid sitemap
+          res.set('Content-Type', 'application/xml; charset=utf-8');
+          res.set('Cache-Control', 'public, max-age=3600');
+          res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+          return;
+        }
+      } else if (!pageNum && allUrlBlocks.length > MAX_URLS_PER_SITEMAP && filterLang) {
+        // Auto-truncate to first page if no page param but lang is set (avoid giant sitemaps)
+        totalPages = Math.ceil(allUrlBlocks.length / MAX_URLS_PER_SITEMAP);
+        urlBlocksPage = allUrlBlocks.slice(0, MAX_URLS_PER_SITEMAP);
+      }
+
+      const xmlParts = [
+        `<?xml version="1.0" encoding="UTF-8"?>`,
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`,
+        `        xmlns:xhtml="http://www.w3.org/1999/xhtml">`,
+        ...urlBlocksPage,
+        `</urlset>`
+      ];
+      const xml = xmlParts.join('\n');
 
       res.set('Content-Type', 'application/xml; charset=utf-8');
       res.set('Cache-Control', 'public, max-age=3600');
+      if (totalPages > 1) {
+        res.set('X-Sitemap-Total-Pages', String(totalPages));
+        res.set('X-Sitemap-Total-URLs', String(allUrlBlocks.length));
+      }
       res.status(200).send(xml);
-      
-      console.log(`✅ Sitemap profils: ${snapshot.docs.length} profils (${snapshot.docs.length * LANGUAGES.length} URLs)`);
-      
+
+      const langLabel = filterLang ? ` (lang=${filterLang})` : ' (all langs)';
+      const pageLabel = totalPages > 1 ? ` (page ${pageNum || 1}/${totalPages})` : '';
+      console.log(`✅ Sitemap profils${langLabel}${pageLabel}: ${snapshot.docs.length} profils, ${includedCount} URLs included, ${excludedByScore} excluded by score < ${MIN_SEO_SCORE}`);
+
     } catch (error: unknown) {
       const err = error as Error;
       console.error('❌ Erreur sitemap profils:', {
@@ -304,17 +411,22 @@ export const sitemapHelp = onRequest(
     invoker: 'public',
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
-  async (_req, res) => {
+  async (req, res) => {
     ensureInitialized();
     try {
       console.log('🔄 Début génération sitemap help articles...');
 
+      // ✅ Optional language filter: ?lang=fr
+      const filterLang = typeof req.query.lang === 'string' ? req.query.lang.toLowerCase() : null;
+      if (filterLang && !LANGUAGES.includes(filterLang) && filterLang !== 'zh') {
+        res.status(400).send(`Invalid lang parameter: ${filterLang}`);
+        return;
+      }
+      const internalFilterLang = filterLang === 'zh' ? 'ch' : filterLang;
+
       const db = admin.firestore();
       console.log('✅ Firestore initialisé');
 
-      // ✅ CORRIGÉ: Utilise help_articles au lieu de blog_posts
-      // OPTIMIZED: Added limit(1000) and where clause to avoid full collection scan
-      // Previous: Read ALL documents → Now: Read max 1000 published articles
       console.log('📥 Récupération des help_articles...');
       const snapshot = await db.collection('help_articles')
         .where('isPublished', '==', true)
@@ -388,9 +500,11 @@ export const sitemapHelp = onRequest(
         const baseSlug = typeof article.slug === 'string' ? article.slug : null;
         const nativeLang = baseSlug ? detectSlugLangPrefix(baseSlug) : null;
 
-        LANGUAGES.forEach(lang => {
+        // ✅ Use filtered languages if ?lang= provided, otherwise all
+        const helpLanguagesToGenerate = internalFilterLang ? [internalFilterLang] : LANGUAGES;
+
+        helpLanguagesToGenerate.forEach(lang => {
           // Si le slug a un préfixe de langue (ex: "ch-"), n'inclure que pour cette langue
-          // Évite d'indexer /fr-fr/centre-aide/ch-guide avec un slug chinois
           if (nativeLang && nativeLang !== lang) return;
 
           // FIX: Pour les slugs multilingues, vérifier que le slug résolu
@@ -470,7 +584,7 @@ export const sitemapLanding = onRequest(
     cpu: 0.083,
     timeoutSeconds: 60,
     maxInstances: 3,
-    minInstances: 0,
+    minInstances: 1,
     invoker: 'public',
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
@@ -561,10 +675,14 @@ export const sitemapFaq = onRequest(
     invoker: 'public',
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
-  async (_req, res) => {
+  async (req, res) => {
     ensureInitialized();
     try {
       console.log('🔄 Début génération sitemap FAQ...');
+
+      // ✅ Optional language filter: ?lang=fr
+      const faqFilterLang = typeof req.query.lang === 'string' ? req.query.lang.toLowerCase() : null;
+      const faqInternalFilterLang = faqFilterLang === 'zh' ? 'ch' : faqFilterLang;
 
       const db = admin.firestore();
 
@@ -615,7 +733,9 @@ export const sitemapFaq = onRequest(
         const baseSlugFaq = typeof slugs === 'string' ? slugs : null;
         const nativeLangFaq = baseSlugFaq ? detectSlugLangPrefix(baseSlugFaq) : null;
 
-        LANGUAGES.forEach(lang => {
+        const faqLanguagesToGenerate = faqInternalFilterLang ? [faqInternalFilterLang] : LANGUAGES;
+
+        faqLanguagesToGenerate.forEach(lang => {
           // Si slug string avec préfixe de langue, n'inclure que pour cette langue
           if (nativeLangFaq && nativeLangFaq !== lang) return;
 
@@ -829,21 +949,35 @@ function getCountrySlug(isoCode: string, lang: string): string {
   return isoCode.toLowerCase();
 }
 
+/** Min number of qualified providers (score ≥ MIN_SEO_SCORE) for a country page to be in sitemap */
+const MIN_PROVIDERS_FOR_COUNTRY = 3;
+
 export const sitemapCountryListings = onRequest(
   {
     region: 'europe-west1',
-    memory: '256MiB',
-    timeoutSeconds: 60,
+    memory: '512MiB',
+    timeoutSeconds: 120,
     maxInstances: 5,
-    minInstances: 0,
+    minInstances: 1,
     invoker: 'public',
     cors: true,
     serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
   },
-  async (_req, res) => {
+  async (req, res) => {
     ensureInitialized();
     try {
       const db = admin.firestore();
+
+      // ✅ Optional language filter: ?lang=fr returns only French URLs
+      const filterLang = typeof req.query.lang === 'string' ? req.query.lang.toLowerCase() : null;
+      if (filterLang && !LANGUAGES.includes(filterLang) && filterLang !== 'zh') {
+        res.status(400).send(`Invalid lang parameter: ${filterLang}`);
+        return;
+      }
+      const internalFilterLang = filterLang === 'zh' ? 'ch' : filterLang;
+
+      // ✅ Optional min providers override (default: 3)
+      const minProviders = Number(req.query.min) || MIN_PROVIDERS_FOR_COUNTRY;
 
       // Query active, visible, approved providers
       const snapshot = await db.collection('sos_profiles')
@@ -852,24 +986,23 @@ export const sitemapCountryListings = onRequest(
         .where('isActive', '==', true)
         .get();
 
-      // Build country×type matrix: { "TH_lawyer": true, "FR_expat": true, ... }
-      const countryTypeSet = new Set<string>();
+      // Build country×type matrix with COUNTS of qualified providers
+      const countryTypeCounts = new Map<string, number>();
 
       snapshot.docs.forEach(doc => {
         const profile = doc.data();
-        const providerType = profile.type as string | undefined; // 'lawyer' or 'expat'
+        const providerType = profile.type as string | undefined;
         if (!providerType || (providerType !== 'lawyer' && providerType !== 'expat')) return;
 
-        // Collect all countries for this provider
-        const countries: string[] = [];
+        // ✅ Only count providers with sufficient SEO score
+        const seoScore = calculateProfileSEOScore(profile);
+        if (seoScore < MIN_SEO_SCORE) return;
 
-        // Primary country
+        const countries: string[] = [];
         if (profile.country) {
           const iso = normalizeCountryToISO(profile.country as string);
           if (iso) countries.push(iso);
         }
-
-        // All country array fields (different field names used across profiles)
         const countryArrayFields = ['operatingCountries', 'interventionCountries', 'practiceCountries'];
         for (const field of countryArrayFields) {
           const arr = profile[field];
@@ -883,35 +1016,43 @@ export const sitemapCountryListings = onRequest(
           }
         }
 
-        // Deduplicate and add to set
         const uniqueCountries = Array.from(new Set(countries));
         for (const iso of uniqueCountries) {
-          countryTypeSet.add(`${iso}_${providerType}`);
+          const key = `${iso}_${providerType}`;
+          countryTypeCounts.set(key, (countryTypeCounts.get(key) || 0) + 1);
         }
       });
 
       const today = new Date().toISOString().split('T')[0];
       const urlBlocks: string[] = [];
+      const languagesToGenerate = internalFilterLang ? [internalFilterLang] : LANGUAGES;
 
       urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
-      // For each country×type combination, generate URLs for all 9 languages
-      const entries = Array.from(countryTypeSet).sort();
-      let urlCount = 0;
+      // ✅ Filter: only country×type combos with ≥ minProviders qualified providers
+      const qualifiedEntries = Array.from(countryTypeCounts.entries())
+        .filter(([, count]) => count >= minProviders)
+        .sort((a, b) => a[0].localeCompare(b[0]));
 
-      entries.forEach(entry => {
+      let urlCount = 0;
+      const excludedByThreshold = countryTypeCounts.size - qualifiedEntries.length;
+
+      qualifiedEntries.forEach(([entry, providerCount]) => {
         const [isoCode, type] = entry.split('_');
         const rolePaths = type === 'lawyer' ? LAWYER_PATHS : EXPAT_PATHS;
 
-        LANGUAGES.forEach(lang => {
+        // Dynamic priority based on provider count
+        const priority = providerCount >= 5 ? '0.9' : '0.7';
+
+        languagesToGenerate.forEach(lang => {
           const locale = getLocaleString(lang);
           const rolePath = rolePaths[lang] || rolePaths['en'];
           const countrySlug = getCountrySlug(isoCode, lang);
           const url = `${SITE_URL}/${locale}/${rolePath}/${countrySlug}`;
 
-          // Generate hreflang alternates for all 9 languages
+          // Generate hreflang for ALL languages (reciprocity required by Google)
           const hreflangs = LANGUAGES.map(hrefLang => {
             const hrefLocale = getLocaleString(hrefLang);
             const hrefRolePath = rolePaths[hrefLang] || rolePaths['en'];
@@ -919,7 +1060,6 @@ export const sitemapCountryListings = onRequest(
             return `    <xhtml:link rel="alternate" hreflang="${getHreflangCode(hrefLang)}" href="${escapeXml(`${SITE_URL}/${hrefLocale}/${hrefRolePath}/${hrefCountrySlug}`)}"/>`;
           }).join('\n');
 
-          // x-default = French
           const defaultLocale = getLocaleString('fr');
           const defaultRolePath = rolePaths['fr'] || rolePaths['en'];
           const defaultCountrySlug = getCountrySlug(isoCode, 'fr');
@@ -930,7 +1070,7 @@ export const sitemapCountryListings = onRequest(
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>${priority}</priority>
     <lastmod>${today}</lastmod>
   </url>`);
 
@@ -945,7 +1085,8 @@ ${hreflangs}
       res.set('Cache-Control', 'public, max-age=3600');
       res.status(200).send(xml);
 
-      console.log(`✅ Sitemap country listings: ${entries.length} country×type combos, ${urlCount} URLs generated from ${snapshot.docs.length} providers`);
+      const langLabel = filterLang ? ` (lang=${filterLang})` : ' (all langs)';
+      console.log(`✅ Sitemap country listings${langLabel}: ${qualifiedEntries.length} qualified combos (${excludedByThreshold} excluded, min ${minProviders} providers), ${urlCount} URLs from ${snapshot.docs.length} providers`);
 
     } catch (error: unknown) {
       const err = error as Error;
@@ -955,6 +1096,111 @@ ${hreflangs}
         name: err.name,
       });
       res.status(500).send(`Error generating country listings sitemap: ${err.message}`);
+    }
+  }
+);
+
+// ============================================
+// 📋 SITEMAP INDEX — Dynamic index listing all segmented sitemaps
+// Returns a sitemapindex XML listing per-language sitemaps
+// Replaces the static sitemap.xml for better crawl targeting
+// ============================================
+export const sitemapIndex = onRequest(
+  {
+    region: 'europe-west1',
+    memory: '128MiB',
+    cpu: 0.083,
+    timeoutSeconds: 30,
+    maxInstances: 3,
+    minInstances: 1,
+    invoker: 'public',
+    serviceAccount: 'firebase-adminsdk-fbsvc@sos-urgently-ac307.iam.gserviceaccount.com',
+  },
+  async (_req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // All language codes used in sitemap file names (URL-safe)
+      const LANG_CODES = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'zh', 'ar', 'hi'];
+
+      const sitemaps: string[] = [];
+
+      // Static pages (single file, all languages)
+      sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemap-static.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+
+      // Per-language sitemaps: profiles, countries, help
+      for (const lang of LANG_CODES) {
+        sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/profiles-${lang}.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+      }
+
+      // "listings" (not "countries") to avoid conflict with blog countries-{lang}.xml
+      for (const lang of LANG_CODES) {
+        sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/listings-${lang}.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+      }
+
+      for (const lang of LANG_CODES) {
+        sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/help-${lang}.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+      }
+
+      // FAQ (single sitemap, small enough)
+      sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/faq.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+
+      // Blog sitemaps (generated by Laravel, 4 types × 9 languages)
+      const blogTypes = ['articles', 'categories', 'tags', 'countries'];
+      for (const type of blogTypes) {
+        for (const lang of LANG_CODES) {
+          sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/${type}-${lang}.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+        }
+      }
+
+      // Legacy sitemaps (kept for transition — Google still references them)
+      // These return the same data as the per-language versions combined
+      sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/profiles.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+      sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/country-listings.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+      sitemaps.push(`  <sitemap>
+    <loc>${SITE_URL}/sitemaps/help.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`);
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemaps.join('\n')}
+</sitemapindex>`;
+
+      res.set('Content-Type', 'application/xml; charset=utf-8');
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.status(200).send(xml);
+
+      console.log(`✅ Sitemap index: ${sitemaps.length} sitemaps listed`);
+
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Erreur sitemap index:', err.message);
+      res.status(500).send(`Error generating sitemap index: ${err.message}`);
     }
   }
 );

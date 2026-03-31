@@ -1104,9 +1104,13 @@ async function handleRequest(request, env, ctx) {
 
     // SEO files at root
     if (['/sitemap.xml', '/robots.txt', '/llms.txt', '/ai.txt', '/.well-known/indexnow-key.txt'].includes(path)) return true;
-    // Blog sitemaps (exclude Firebase SPA sitemaps: profiles, help, faq, country-listings)
+    // Blog sitemaps (exclude Firebase SPA sitemaps: profiles, help, faq, country-listings + per-language variants)
     const FIREBASE_SITEMAPS = ['/sitemaps/profiles.xml', '/sitemaps/help.xml', '/sitemaps/faq.xml', '/sitemaps/country-listings.xml'];
-    if (path.startsWith('/sitemaps/') && path.endsWith('.xml') && !FIREBASE_SITEMAPS.includes(path)) return true;
+    // Per-language sitemaps: profiles-fr.xml, listings-en.xml, help-de.xml, etc.
+    const isFirebaseLangSitemap = /^\/sitemaps\/(profiles|listings|help)-[a-z]{2}\.xml$/.test(path);
+    // Dynamic sitemap index
+    const isSitemapIndex = path === '/sitemap-index.xml';
+    if (path.startsWith('/sitemaps/') && path.endsWith('.xml') && !FIREBASE_SITEMAPS.includes(path) && !isFirebaseLangSitemap && !isSitemapIndex) return true;
 
     // Admin panel
     if (path.startsWith('/admin')) return true;
@@ -1118,8 +1122,8 @@ async function handleRequest(request, env, ctx) {
     const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?/);
     if (match) {
       const segment = match[2];
-      // /{locale} alone = blog homepage
-      if (!segment) return true;
+      // /{locale} alone = app homepage (not blog)
+      if (!segment) return false;
       // /{locale}/{translated-segment} = blog content
       if (BLOG_SEGMENTS.has(segment)) return true;
     }
@@ -1180,6 +1184,7 @@ async function handleRequest(request, env, ctx) {
   // SITEMAP PROXY — Serve dynamic sitemaps from Firebase Cloud Functions
   // Cloudflare Pages _redirects can't proxy external URLs, so we do it here
   // ==========================================================================
+  // Legacy sitemaps (unchanged, backward compatible)
   const SITEMAP_PROXY = {
     '/sitemaps/profiles.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles',
     '/sitemaps/help.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp',
@@ -1187,6 +1192,56 @@ async function handleRequest(request, env, ctx) {
     // landing.xml removed — landing_pages collection is empty, sitemap caused GSC errors
     '/sitemaps/country-listings.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings',
   };
+
+  // Per-language sitemaps: /sitemaps/profiles-fr.xml → sitemapProfiles?lang=fr
+  const langSitemapMatch = pathname.match(/^\/sitemaps\/(profiles|listings|help)-([a-z]{2})\.xml$/);
+  if (langSitemapMatch) {
+    const typeMap = {
+      'profiles': 'sitemapProfiles',
+      'listings': 'sitemapCountryListings',
+      'help': 'sitemapHelp',
+    };
+    const funcName = typeMap[langSitemapMatch[1]];
+    const lang = langSitemapMatch[2];
+    const targetUrl = `https://europe-west1-sos-urgently-ac307.cloudfunctions.net/${funcName}?lang=${lang}`;
+    try {
+      const sitemapResponse = await fetch(targetUrl, {
+        headers: { 'Accept': 'application/xml' },
+      });
+      const newHeaders = new Headers(sitemapResponse.headers);
+      newHeaders.set('Content-Type', 'application/xml; charset=utf-8');
+      newHeaders.set('Cache-Control', 'public, max-age=3600');
+      newHeaders.set('X-Worker-Sitemap-Proxy', 'lang');
+      return new Response(sitemapResponse.body, {
+        status: sitemapResponse.status,
+        headers: newHeaders,
+      });
+    } catch (error) {
+      console.error(`[WORKER] Lang sitemap proxy error for ${pathname}: ${error.message}`);
+      return new Response('Sitemap temporarily unavailable', { status: 503 });
+    }
+  }
+
+  // Dynamic sitemap index: /sitemap-index.xml → sitemapIndex Cloud Function
+  if (pathname === '/sitemap-index.xml') {
+    try {
+      const sitemapResponse = await fetch('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapIndex', {
+        headers: { 'Accept': 'application/xml' },
+      });
+      const newHeaders = new Headers(sitemapResponse.headers);
+      newHeaders.set('Content-Type', 'application/xml; charset=utf-8');
+      newHeaders.set('Cache-Control', 'public, max-age=3600');
+      newHeaders.set('X-Worker-Sitemap-Proxy', 'index');
+      return new Response(sitemapResponse.body, {
+        status: sitemapResponse.status,
+        headers: newHeaders,
+      });
+    } catch (error) {
+      console.error(`[WORKER] Sitemap index proxy error: ${error.message}`);
+      return new Response('Sitemap index temporarily unavailable', { status: 503 });
+    }
+  }
+
   if (SITEMAP_PROXY[pathname]) {
     try {
       const sitemapResponse = await fetch(SITEMAP_PROXY[pathname], {

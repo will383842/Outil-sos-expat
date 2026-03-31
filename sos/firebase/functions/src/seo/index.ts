@@ -27,6 +27,7 @@ export {
   sitemapFaq,     // FAQ individuels
   // sitemapLanding removed: landing_pages collection is empty, caused GSC errors
   sitemapCountryListings, // Country listing pages (avocats/expatriés par pays)
+  sitemapIndex,   // Dynamic sitemap index listing all per-language sitemaps
 } from './sitemaps';
 
 // Services (pour usage interne ou API)

@@ -38,16 +38,18 @@ const SITEMAP_URLS: { name: string; url: string }[] = [
   },
   // sitemapLanding excluded: landing_pages collection is empty, function returns 0 URLs
   {
+    // Test via Cloudflare Worker proxy (real user-facing URL), not the CF direct URL
     name: "sitemapCountryListings",
-    url: "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapCountryListings",
+    url: `${SITE_URL}/sitemaps/country-listings.xml`,
   },
   {
     name: "sitemap-static.xml",
     url: `${SITE_URL}/sitemap-static.xml`,
   },
   {
+    // Real sitemap index served by blog Laravel at /sitemap.xml (not /sitemap-index.xml)
     name: "sitemap-index.xml",
-    url: `${SITE_URL}/sitemap-index.xml`,
+    url: `${SITE_URL}/sitemap.xml`,
   },
 ];
 

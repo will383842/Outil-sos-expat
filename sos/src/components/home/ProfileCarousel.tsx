@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useLocaleNavigate } from '../../multilingual-system';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { storage } from '../../config/firebase';
@@ -242,6 +242,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
           collection(db, 'sos_profiles'),
           where('isApproved', '==', true),
           where('isVisible', '==', true),
+          limit(100)
         );
 
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -306,55 +307,6 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     newOnes.forEach(p => recentlyShown.current.add(p.id));
   }, [onlineProviders, visibleProviders]);
 
-  // Temps réel: statut online et availability sur les visibles
-  const updateProviderStatus = useCallback((
-    id: string,
-    isOnline: boolean,
-    availability: 'available' | 'busy' | 'offline',
-    busyReason?: 'in_call' | 'break' | 'offline' | 'manually_disabled' | null
-  ) => {
-    setOnlineProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline, availability, busyReason } : p));
-    setVisibleProviders(prev => prev.map(p => p.id === id ? { ...p, isOnline, availability, busyReason } : p));
-  }, []);
-
-  // ✅ OPTIMISATION: Un seul listener au lieu de N listeners
-  // Utilise 'in' query limitée à 30 providers max (limite Firestore)
-  const setupRealtimeListeners = useCallback(() => {
-    if (visibleProviders.length === 0) return () => {};
-
-    // Prendre les premiers 30 IDs (limite Firestore pour 'in' queries)
-    const providerIds = visibleProviders.slice(0, 30).map(p => p.id);
-
-    // Un seul listener pour tous les providers visibles
-    const sosProfilesRef = collection(db, 'sos_profiles');
-    const q = query(sosProfilesRef, where('__name__', 'in', providerIds));
-
-    const unsub = onSnapshot(q, (snap) => {
-      // ✅ Check si le composant est toujours monté
-      if (!mountedRef.current) return;
-
-      snap.docChanges().forEach((chg) => {
-        if (chg.type === 'modified') {
-          const data = chg.doc.data() as any;
-          const online = data.isOnline === true;
-          const availability = data.availability || (online ? 'available' : 'offline');
-          const busyReason = data.busyReason || null;
-          const provider = visibleProviders.find(p => p.id === chg.doc.id);
-
-          // Mettre à jour si isOnline OU availability a changé
-          if (provider && (online !== provider.isOnline || availability !== provider.availability)) {
-            updateProviderStatus(chg.doc.id, online, availability, busyReason);
-          }
-        }
-      });
-    }, (e) => {
-      if (mountedRef.current) {
-        console.error('[ProfileCarousel] Realtime listener error:', e);
-      }
-    });
-
-    return () => unsub();
-  }, [visibleProviders, updateProviderStatus]);
 
   // Timers / Effects
   useEffect(() => {
@@ -365,20 +317,20 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     return () => { if (rotationTimer.current) clearInterval(rotationTimer.current); };
   }, [rotateVisibleProviders, visibleProviders.length, onlineProviders.length]);
 
-  // ✅ OPTIMISATION: Cleanup propre avec mountedRef
+  // ✅ OPTIMISATION: Pas de onSnapshot — refresh toutes les 10 min (économie lectures Firestore)
   useEffect(() => {
     mountedRef.current = true;
     loadInitialProviders();
+
+    const refreshInterval = setInterval(() => {
+      if (mountedRef.current) loadInitialProviders();
+    }, 2 * 60 * 1000);
+
     return () => {
       mountedRef.current = false;
+      clearInterval(refreshInterval);
     };
   }, [loadInitialProviders]);
-
-  useEffect(() => {
-    if (visibleProviders.length === 0) return;
-    const cleanup = setupRealtimeListeners();
-    return cleanup;
-  }, [setupRealtimeListeners, visibleProviders.length]);
 
   // Stats
   const stats = useMemo(() => ({
