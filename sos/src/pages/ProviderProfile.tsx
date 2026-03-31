@@ -76,10 +76,11 @@ import aaaTranslationsRu from '../helper/aaaprofiles/admin_aaa_ru.json';
 import aaaTranslationsZh from '../helper/aaaprofiles/admin_aaa_zh.json';
 import aaaTranslationsAr from '../helper/aaaprofiles/admin_aaa_ar.json';
 import aaaTranslationsHi from '../helper/aaaprofiles/admin_aaa_hi.json';
-import { 
-  getCountryName, 
+import {
+  getCountryName,
   formatLanguages,
-  convertLanguageNamesToCodes
+  convertLanguageNamesToCodes,
+  getLanguageName
 } from "../utils/formatters";
 
 // ✅ Import du système de slugs
@@ -3379,7 +3380,7 @@ const ProviderProfile: React.FC = () => {
                   {/* AEO: Paragraph synthétique pour LLM indexing (ChatGPT, Perplexity, Google SGE) */}
                   {(() => {
                     const aeoCountries = [countryName, ...operatingCountryNames].filter(Boolean);
-                    const aeoLangs = languagesList.slice(0, 3);
+                    const aeoLangs = languagesList.slice(0, 3).map(code => getLanguageName(code, preferredLangKey));
                     const aeoSpecialties = derivedSpecialties.slice(0, 2);
                     return (
                       <p className="text-sm text-gray-500 italic mb-4 leading-relaxed" aria-label="Résumé automatique">
