@@ -3195,73 +3195,47 @@ const ProviderProfile: React.FC = () => {
         </header>
 
         {/* ========================================== */}
-        {/* TRUST SIGNALS — Bandeau horizontal stats  */}
+        {/* STATS SHOWCASE — Grille chiffres clés    */}
         {/* ========================================== */}
-        <div className="relative z-10 bg-white/5 backdrop-blur-sm border-y border-white/10">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-6 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory" role="list" aria-label="Statistiques du prestataire">
-              {/* Note moyenne */}
-              {(providerStats.realReviewsCount > 0 || (provider.reviewCount || 0) > 0) && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Star size={18} className="text-amber-400 fill-amber-400" aria-hidden="true" />
-                  <span className="text-xl font-bold text-white">
-                    {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : (provider.rating || 0).toFixed(1)}
+        <div className="relative z-10 bg-black/40 backdrop-blur-sm border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4" role="list" aria-label="Statistiques du prestataire">
+              {/* Note */}
+              <div className="flex flex-col items-center justify-center bg-white/5 rounded-2xl p-4 border border-white/10 text-center" role="listitem">
+                <div className="flex items-center gap-1 mb-1">
+                  <Star size={16} className="text-amber-400 fill-amber-400" aria-hidden="true" />
+                  <span className="text-3xl font-black text-white">
+                    {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : (provider.rating ? (provider.rating as number).toFixed(1) : "—")}
                   </span>
-                  <span className="text-xs text-white/60">/ 5</span>
                 </div>
-              )}
-              {/* Nombre d'avis */}
-              {(providerStats.realReviewsCount > 0 || (provider.reviewCount || 0) > 0) && (
-                <div className="flex items-center gap-1.5 flex-shrink-0 border-l border-white/10 pl-6">
-                  <CheckCircle size={16} className="text-green-400" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold text-white">{providerStats.realReviewsCount || provider.reviewCount || 0}</span>
-                    <span className="text-xs text-white/60 ml-1"><FormattedMessage id="providerProfile.reviews" /></span>
-                  </div>
-                </div>
-              )}
-              {/* Taux de réussite */}
-              {(providerStats.totalCallsReceived > 5 || (provider.totalCalls || 0) > 5) && (
-                <div className="flex items-center gap-1.5 flex-shrink-0 border-l border-white/10 pl-6">
-                  <TrendingUp size={16} className="text-emerald-400" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold text-white">{providerStats.successRate || provider.successRate || 0}%</span>
-                    <span className="text-xs text-white/60 ml-1"><FormattedMessage id="providerProfile.successRate" /></span>
-                  </div>
-                </div>
-              )}
-              {/* Années d'expérience */}
-              {(provider.yearsOfExperience > 0 || (provider.yearsAsExpat || 0) > 0) && (
-                <div className="flex items-center gap-1.5 flex-shrink-0 border-l border-white/10 pl-6">
-                  <Briefcase size={16} className="text-blue-400" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold text-white">
-                      {isLawyer ? (provider.yearsOfExperience || 0) : (provider.yearsAsExpat || provider.yearsOfExperience || 0)}
-                    </span>
-                    <span className="text-xs text-white/60 ml-1">{yearsLabel}</span>
-                  </div>
-                </div>
-              )}
-              {/* Appels traités */}
-              {(providerStats.completedCalls > 10 || (provider.totalCalls || 0) > 10) && (
-                <div className="flex items-center gap-1.5 flex-shrink-0 border-l border-white/10 pl-6">
-                  <Phone size={16} className="text-purple-400" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold text-white">{providerStats.completedCalls || provider.totalCalls || 0}+</span>
-                    <span className="text-xs text-white/60 ml-1"><FormattedMessage id="providerProfile.completedCalls" /></span>
-                  </div>
-                </div>
-              )}
-              {/* Temps de réponse */}
-              {provider.responseTime && (
-                <div className="flex items-center gap-1.5 flex-shrink-0 border-l border-white/10 pl-6">
-                  <Clock size={16} className="text-cyan-400" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold text-white">{provider.responseTime}</span>
-                    <span className="text-xs text-white/60 ml-1"><FormattedMessage id="providerProfile.responseTime" defaultMessage="rép." /></span>
-                  </div>
-                </div>
-              )}
+                <span className="text-xs text-white/50 uppercase tracking-wide"><FormattedMessage id="providerProfile.averageRating" defaultMessage="Note" /></span>
+              </div>
+              {/* Avis */}
+              <div className="flex flex-col items-center justify-center bg-white/5 rounded-2xl p-4 border border-white/10 text-center" role="listitem">
+                <span className="text-3xl font-black text-white mb-1">{providerStats.realReviewsCount || provider.reviewCount || 0}</span>
+                <span className="text-xs text-white/50 uppercase tracking-wide"><FormattedMessage id="providerProfile.reviews" defaultMessage="Avis" /></span>
+              </div>
+              {/* Expérience */}
+              <div className="flex flex-col items-center justify-center bg-white/5 rounded-2xl p-4 border border-white/10 text-center" role="listitem">
+                <span className="text-3xl font-black text-white mb-1">
+                  {isLawyer ? (provider.yearsOfExperience || 0) : (provider.yearsAsExpat || provider.yearsOfExperience || 0)}
+                  <span className="text-lg">ans</span>
+                </span>
+                <span className="text-xs text-white/50 uppercase tracking-wide">{yearsLabel}</span>
+              </div>
+              {/* Appels */}
+              <div className="flex flex-col items-center justify-center bg-white/5 rounded-2xl p-4 border border-white/10 text-center" role="listitem">
+                <span className="text-3xl font-black text-white mb-1">
+                  {(providerStats.completedCalls || provider.totalCalls || 0) > 0
+                    ? `${providerStats.completedCalls || provider.totalCalls || 0}+`
+                    : `${providerStats.successRate || provider.successRate || 0}%`}
+                </span>
+                <span className="text-xs text-white/50 uppercase tracking-wide">
+                  {(providerStats.completedCalls || provider.totalCalls || 0) > 0
+                    ? <FormattedMessage id="providerProfile.completedCalls" defaultMessage="Appels" />
+                    : <FormattedMessage id="providerProfile.successRate" defaultMessage="Réussite" />}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -3269,12 +3243,12 @@ const ProviderProfile: React.FC = () => {
         {/* ========================================== */}
         {/* MAIN CONTENT - WHITE/LIGHT SECTION        */}
         {/* ========================================== */}
-        <main className="relative bg-gradient-to-b from-white via-gray-50 to-white rounded-t-[32px] -mt-4">
-          <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-              
+        <main className="relative bg-white rounded-t-3xl -mt-2">
+          <div className="max-w-7xl mx-auto px-4 pt-8 pb-12 lg:pt-10 lg:pb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+
               {/* ===== COLONNE PRINCIPALE ===== */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-0">
                 
                 {/* Translation Banner */}
                 {realProviderId && !isLoading && (
@@ -3372,9 +3346,9 @@ const ProviderProfile: React.FC = () => {
                 )}
                 
                 {/* Section Description complète */}
-                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="about-heading" data-speakable="description">
-                  <h2 id="about-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <User size={20} className="text-red-500" aria-hidden="true" />
+                <section className="bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 rounded-3xl p-6 sm:p-8 mb-6" aria-labelledby="about-heading" data-speakable="description">
+                  <h2 id="about-heading" className="text-2xl sm:text-3xl font-black text-gray-900 mb-5 flex items-center gap-3">
+                    <span className="w-1 h-8 bg-gradient-to-b from-red-500 to-orange-400 rounded-full flex-shrink-0" aria-hidden="true" />
                     <FormattedMessage id="providerProfile.about" values={{ name: provider.firstName }} defaultMessage={`À propos de ${provider.firstName}`} />
                   </h2>
                   {/* AEO: Paragraph synthétique pour LLM indexing (ChatGPT, Perplexity, Google SGE) */}
@@ -3383,7 +3357,7 @@ const ProviderProfile: React.FC = () => {
                     const aeoLangs = languagesList.slice(0, 3).map(code => getLanguageName(code, preferredLangKey));
                     const aeoSpecialties = derivedSpecialties.slice(0, 2);
                     return (
-                      <p className="text-sm text-gray-500 italic mb-4 leading-relaxed" aria-label="Résumé automatique">
+                      <p className="text-sm text-orange-700/70 italic mb-5 leading-relaxed bg-white/60 rounded-xl px-4 py-3 border border-orange-200/50" aria-label="Résumé automatique">
                         {formatShortName(provider)} {intl.formatMessage({ id: 'providerProfile.is', defaultMessage: 'est' })} {roleLabel.toLowerCase()}
                         {aeoSpecialties.length > 0 && <> {intl.formatMessage({ id: 'providerProfile.specializedIn', defaultMessage: 'spécialisé·e en' })} {aeoSpecialties.join(', ')}</>}
                         {aeoCountries.length > 0 && <>, {intl.formatMessage({ id: 'providerProfile.basedIn', defaultMessage: 'basé·e en' })} {aeoCountries.join(', ')}</>}.
@@ -3399,7 +3373,7 @@ const ProviderProfile: React.FC = () => {
                       : descriptionText;
                     return (
                       <>
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                        <p className="text-gray-800 leading-relaxed text-base sm:text-lg whitespace-pre-line">
                           {displayed}
                         </p>
                         {isLong && (
@@ -3438,8 +3412,8 @@ const ProviderProfile: React.FC = () => {
                       motivationText = getFirstString(provider.motivation, preferredLangKey);
                     }
                     return motivationText && (
-                      <div className="mt-4 pt-4 border-t border-gray-100">
-                        <p className="text-gray-600 whitespace-pre-line italic">
+                      <div className="mt-5 pt-5 border-t border-orange-200/50">
+                        <p className="text-gray-700 whitespace-pre-line italic text-base leading-relaxed border-l-4 border-orange-400 pl-4">
                           {motivationText}
                         </p>
                       </div>
@@ -3448,21 +3422,21 @@ const ProviderProfile: React.FC = () => {
                 </section>
 
                 {/* Section Spécialités */}
-                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="specialties-heading" data-speakable="specialty">
-                  <h3 id="specialties-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <Briefcase size={20} className={isLawyer ? "text-blue-500" : "text-green-500"} aria-hidden="true" />
+                <section className="py-6 mb-6 border-b border-gray-100" aria-labelledby="specialties-heading" data-speakable="specialty">
+                  <h3 id="specialties-heading" className="text-xl sm:text-2xl font-black text-gray-900 mb-5 flex items-center gap-3">
+                    <span className={`w-1 h-7 rounded-full flex-shrink-0 ${isLawyer ? 'bg-blue-500' : 'bg-green-500'}`} aria-hidden="true" />
                     <FormattedMessage id="providerProfile.specialties" defaultMessage="Domaines d'expertise" />
                   </h3>
                   {derivedSpecialties.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {derivedSpecialties.map((s, i) => (
                         <span
                           key={`${s}-${i}`}
-                          className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-                            isLawyer 
-                              ? "bg-blue-50 text-blue-700 border-blue-200" 
-                              : "bg-green-50 text-green-700 border-green-200"
-                          }`}
+                          className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
+                            isLawyer
+                              ? "bg-blue-600 text-white"
+                              : "bg-green-600 text-white"
+                          } ${i === 0 ? 'text-base px-5 py-2.5' : ''}`}
                         >
                           {s}
                         </span>
@@ -3475,81 +3449,87 @@ const ProviderProfile: React.FC = () => {
                   )}
                 </section>
 
-                {/* Section Pays d'intervention — liens maillage interne */}
-                {provider.operatingCountries && provider.operatingCountries.length > 0 && (
-                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="countries-heading">
-                    <h3 id="countries-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <MapPin size={20} className="text-red-500" aria-hidden="true" />
-                      <FormattedMessage id="providerProfile.operatingCountries" defaultMessage="Pays couverts" />
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {provider.operatingCountries.map((countryCode, index) => {
-                        const roleSlug = getTranslatedRouteSlug(isLawyer ? 'lawyer' : 'expat', currentLang || 'fr');
-                        const cSlug = getCountrySlug(countryCode, currentLang || 'fr');
-                        const listingUrl = `/${currentLocale || 'fr-fr'}/${roleSlug}-${cSlug}`;
-                        return (
-                          <a
-                            key={`${countryCode}-${index}`}
-                            href={listingUrl}
-                            className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-full text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors"
-                          >
-                            {getCountryName(countryCode, preferredLangKey)}
-                          </a>
-                        );
-                      })}
+                {/* Section Pays + Langues — bloc combiné sombre */}
+                {((provider.operatingCountries && provider.operatingCountries.length > 0) || languageCodes.length > 0) && (
+                  <section className="bg-gray-900 rounded-3xl p-6 sm:p-8 mb-6" aria-label="Zones et langues">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {/* Pays couverts */}
+                      {provider.operatingCountries && provider.operatingCountries.length > 0 && (
+                        <div aria-labelledby="countries-heading">
+                          <h3 id="countries-heading" className="text-sm font-bold text-white/50 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <MapPin size={14} aria-hidden="true" />
+                            <FormattedMessage id="providerProfile.operatingCountries" defaultMessage="Pays couverts" />
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {provider.operatingCountries.map((countryCode, index) => {
+                              const roleSlug = getTranslatedRouteSlug(isLawyer ? 'lawyer' : 'expat', currentLang || 'fr');
+                              const cSlug = getCountrySlug(countryCode, currentLang || 'fr');
+                              const listingUrl = `/${currentLocale || 'fr-fr'}/${roleSlug}-${cSlug}`;
+                              return (
+                                <a
+                                  key={`${countryCode}-${index}`}
+                                  href={listingUrl}
+                                  className="px-3 py-1.5 bg-white/10 text-white border border-white/20 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+                                >
+                                  {getCountryName(countryCode, preferredLangKey)}
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {/* Langues */}
+                      {languageCodes.length > 0 && (
+                        <div aria-labelledby="languages-heading">
+                          <h3 id="languages-heading" className="text-sm font-bold text-white/50 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <Globe size={14} aria-hidden="true" />
+                            <FormattedMessage id="providerProfile.languages" defaultMessage="Langues" />
+                          </h3>
+                          <div className="flex flex-wrap gap-2" role="list" aria-label="Languages spoken">
+                            {languageCodes.map((code, i) => (
+                              <span
+                                key={`${code}-${i}`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/30 text-purple-200 border border-purple-400/30 rounded-full text-sm font-semibold"
+                                role="listitem"
+                              >
+                                <LanguagesIcon size={13} aria-hidden="true" />
+                                {formatLanguages([code], preferredLangKey)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </section>
                 )}
 
-                {/* Section Langues */}
-                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="languages-heading">
-                  <h3 id="languages-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <Globe size={20} className="text-purple-500" aria-hidden="true" />
-                    <FormattedMessage id="providerProfile.languages" defaultMessage="Langues de consultation" />
-                  </h3>
-                  <div className="flex flex-wrap gap-2" role="list" aria-label="Languages spoken">
-                    {languageCodes.map((code, i) => (
-                      <span
-                        key={`${code}-${i}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-sm font-medium"
-                        role="listitem"
-                      >
-                        <LanguagesIcon size={14} aria-hidden="true" />
-                        {formatLanguages([code], preferredLangKey)}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-
                 {/* Section Formation (avocats uniquement) */}
                 {isLawyer && (educationText || certificationsArray.length > 0) && (
-                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="education-heading">
-                    <h2 id="education-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <GraduationCap size={20} className="text-indigo-500" aria-hidden="true" />
+                  <section className="py-6 mb-6 border-b border-gray-100" aria-labelledby="education-heading">
+                    <h2 id="education-heading" className="text-xl sm:text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                      <span className="w-1 h-7 bg-indigo-500 rounded-full flex-shrink-0" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.educationCertifications" defaultMessage="Formation & Parcours" />
                     </h2>
-                    <div className="space-y-3">
+                    <div className="relative pl-6 border-l-2 border-indigo-100 space-y-6">
                       {educationText && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                            <GraduationCap size={16} className="text-indigo-600" aria-hidden="true" />
+                        <div className="relative">
+                          <div className="absolute -left-[29px] w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shadow-md">
+                            <GraduationCap size={16} className="text-white" aria-hidden="true" />
                           </div>
-                          <div>
-                            <p className="text-gray-800 font-medium">{educationText}</p>
-                            {provider.graduationYear && (
-                              <p className="text-gray-600 text-sm mt-0.5">
-                                <FormattedMessage id="providerProfile.graduated" /> {provider.graduationYear}
-                              </p>
-                            )}
-                          </div>
+                          <p className="text-gray-900 font-semibold text-base">{educationText}</p>
+                          {provider.graduationYear && (
+                            <p className="text-gray-500 text-sm mt-1">
+                              <FormattedMessage id="providerProfile.graduated" /> {provider.graduationYear}
+                            </p>
+                          )}
                         </div>
                       )}
                       {certificationsArray.map((cert, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                            <Award size={16} className="text-amber-600" aria-hidden="true" />
+                        <div key={i} className="relative">
+                          <div className="absolute -left-[29px] w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
+                            <Award size={16} className="text-white" aria-hidden="true" />
                           </div>
-                          <p className="text-gray-700">{cert}</p>
+                          <p className="text-gray-800 font-medium">{cert}</p>
                         </div>
                       ))}
                     </div>
@@ -3558,9 +3538,9 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section Expérience expatrié */}
                 {isExpat && (
-                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="experience-heading">
-                    <h3 id="experience-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Users size={20} className="text-green-500" aria-hidden="true" />
+                  <section className="py-6 mb-6 border-b border-gray-100" aria-labelledby="experience-heading">
+                    <h3 id="experience-heading" className="text-xl sm:text-2xl font-black text-gray-900 mb-5 flex items-center gap-3">
+                      <span className="w-1 h-7 bg-green-500 rounded-full flex-shrink-0" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.expatExperience" />
                     </h3>
                     <div className="space-y-4">
@@ -3611,21 +3591,54 @@ const ProviderProfile: React.FC = () => {
                 )}
 
                 {/* Section Avis clients — id="reviews" pour lien depuis le hero */}
-                <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" id="reviews" aria-labelledby="reviews-heading">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 id="reviews-heading" className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <Star size={20} className="text-yellow-500" aria-hidden="true" />
-                      <FormattedMessage id="providerProfile.customerReviews" defaultMessage="Avis clients vérifiés" />
-                      <span className="text-gray-600 font-normal">({providerStats.realReviewsCount || provider?.reviewCount || 0})</span>
-                    </h2>
-
-                    {!isNewProvider && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1.5 text-sm font-bold text-white shadow-sm">
-                        <Star className="w-4 h-4 fill-white" aria-hidden="true" />
-                        {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "—"}/5
+                <section className="py-6 mb-6" id="reviews" aria-labelledby="reviews-heading">
+                  <div className="flex items-start justify-between mb-6 gap-4">
+                    <h2 id="reviews-heading" className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-3">
+                      <span className="w-1 h-7 bg-yellow-500 rounded-full flex-shrink-0" aria-hidden="true" />
+                      <span>
+                        <FormattedMessage id="providerProfile.customerReviews" defaultMessage="Avis clients" />
+                        {(providerStats.realReviewsCount || provider?.reviewCount || 0) > 0 && (
+                          <span className="block text-sm font-normal text-gray-500 mt-0.5">
+                            {providerStats.realReviewsCount || provider?.reviewCount || 0} avis vérifiés
+                          </span>
+                        )}
                       </span>
+                    </h2>
+                    {!isNewProvider && (providerStats.averageRating || provider?.rating) && (
+                      <div className="flex-shrink-0 flex flex-col items-center bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl px-4 py-2 shadow-md">
+                        <span className="text-2xl font-black text-white leading-none">
+                          {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "—"}
+                        </span>
+                        <div className="flex mt-0.5" aria-hidden="true">
+                          {[1,2,3,4,5].map(i => (
+                            <Star key={i} size={10} className={`fill-white ${i <= Math.round(providerStats.averageRating || 0) ? 'text-white' : 'text-white/40'}`} />
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
+
+                  {/* Citation mise en vedette — 1er avis 5 étoiles */}
+                  {!isNewProvider && reviews && reviews.length > 0 && (() => {
+                    const featured = reviews.find(r => r.rating >= 4) || reviews[0];
+                    if (!featured?.comment) return null;
+                    return (
+                      <blockquote className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl p-6 mb-6 border border-yellow-200/60">
+                        <div className="text-4xl text-yellow-400 font-serif leading-none mb-3" aria-hidden="true">"</div>
+                        <p className="text-gray-800 text-base sm:text-lg leading-relaxed font-medium italic">
+                          {featured.comment.length > 200 ? featured.comment.slice(0, 200) + '…' : featured.comment}
+                        </p>
+                        <footer className="mt-4 flex items-center gap-3">
+                          <div className="flex">
+                            {[1,2,3,4,5].map(i => (
+                              <Star key={i} size={14} className={`${i <= featured.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600 font-semibold">{featured.authorName || 'Client vérifié'}</span>
+                        </footer>
+                      </blockquote>
+                    );
+                  })()}
 
                   {isLoadingReviews ? (
                     <div className="text-center py-8" role="status" aria-live="polite">
@@ -3671,23 +3684,23 @@ const ProviderProfile: React.FC = () => {
 
                 {/* Section FAQ */}
                 {snippetData?.snippets?.faqContent && snippetData.snippets.faqContent.length > 0 && (
-                  <section className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200" aria-labelledby="faq-heading">
-                    <h3 id="faq-heading" className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <HelpCircle size={20} className="text-cyan-500" aria-hidden="true" />
+                  <section className="bg-gray-50 rounded-3xl p-6 sm:p-8 mb-6" aria-labelledby="faq-heading">
+                    <h3 id="faq-heading" className="text-xl sm:text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                      <span className="w-1 h-7 bg-cyan-500 rounded-full flex-shrink-0" aria-hidden="true" />
                       <FormattedMessage id="providerProfile.frequentlyAskedQuestions" />
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {snippetData.snippets.faqContent.map((faq, index) => (
                         <details
                           key={`faq-${index}`}
-                          className="group border border-gray-200 rounded-xl overflow-hidden"
+                          className="group bg-white rounded-2xl overflow-hidden shadow-sm"
                         >
-                          <summary className="flex justify-between items-center cursor-pointer list-none p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <span className="text-sm font-semibold text-gray-800 pr-4">
+                          <summary className="flex justify-between items-center cursor-pointer list-none px-5 py-4 hover:bg-gray-50 transition-colors">
+                            <span className="text-sm sm:text-base font-semibold text-gray-900 pr-4">
                               {faq.question}
                             </span>
                             <svg
-                              className="w-5 h-5 text-gray-600 transition-transform group-open:rotate-180 flex-shrink-0"
+                              className="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180 flex-shrink-0"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -3697,7 +3710,7 @@ const ProviderProfile: React.FC = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                           </summary>
-                          <div className="px-4 py-3 text-sm text-gray-700 leading-relaxed bg-white border-t border-gray-100">
+                          <div className="px-5 pb-4 text-sm sm:text-base text-gray-600 leading-relaxed border-t border-gray-100 pt-3">
                             {faq.answer}
                           </div>
                         </details>
@@ -3781,63 +3794,45 @@ const ProviderProfile: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Statistiques */}
-                  <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border border-gray-200" role="region" aria-labelledby="stats-heading">
-                    <h4 id="stats-heading" className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <TrendingUp size={18} className="text-emerald-500" aria-hidden="true" />
-                      <FormattedMessage id="providerProfile.stats" />
+                  {/* Statistiques — mini-grid 2×2 */}
+                  <div className="bg-gray-900 rounded-2xl p-4" role="region" aria-labelledby="stats-heading">
+                    <h4 id="stats-heading" className="text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
+                      <FormattedMessage id="providerProfile.stats" defaultMessage="Statistiques" />
                     </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm">
-                          <FormattedMessage id="providerProfile.averageRating" />
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "--"}/5
-                        </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/5 rounded-xl p-3 text-center">
+                        <div className="text-xl font-black text-white">
+                          {providerStats.averageRating ? providerStats.averageRating.toFixed(1) : "—"}
+                        </div>
+                        <div className="text-xs text-white/50 mt-0.5"><FormattedMessage id="providerProfile.averageRating" defaultMessage="Note" /></div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm">
-                          <FormattedMessage id="providerProfile.reviews" />
-                        </span>
-                        <span className="font-semibold text-gray-900">
+                      <div className="bg-white/5 rounded-xl p-3 text-center">
+                        <div className="text-xl font-black text-white">
                           {providerStats.realReviewsCount || provider?.reviewCount || 0}
-                        </span>
+                        </div>
+                        <div className="text-xs text-white/50 mt-0.5"><FormattedMessage id="providerProfile.reviews" defaultMessage="Avis" /></div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm">
-                          <FormattedMessage id="providerProfile.successRate" />
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {isLoadingStats ? "..." : `${providerStats.successRate || provider?.successRate || 0}%`}
-                        </span>
+                      <div className="bg-white/5 rounded-xl p-3 text-center">
+                        <div className="text-xl font-black text-white">
+                          {isLoadingStats ? "…" : `${providerStats.successRate || provider?.successRate || 0}%`}
+                        </div>
+                        <div className="text-xs text-white/50 mt-0.5"><FormattedMessage id="providerProfile.successRate" defaultMessage="Réussite" /></div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm">
-                          <FormattedMessage id="providerProfile.completedCalls" />
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {isLoadingStats ? "..." : (providerStats.completedCalls || provider?.totalCalls || 0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-sm">
-                          <FormattedMessage id="providerProfile.experience" />
-                        </span>
-                        <span className="font-semibold text-gray-900">
+                      <div className="bg-white/5 rounded-xl p-3 text-center">
+                        <div className="text-xl font-black text-white">
                           {isLawyer
-                            ? `${provider.yearsOfExperience || 0} ${yearsLabel}`
-                            : `${provider.yearsAsExpat || provider.yearsOfExperience || 0} ${yearsLabel}`}
-                        </span>
+                            ? `${provider.yearsOfExperience || 0}ans`
+                            : `${provider.yearsAsExpat || provider.yearsOfExperience || 0}ans`}
+                        </div>
+                        <div className="text-xs text-white/50 mt-0.5">{yearsLabel}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Informations */}
-                  <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border border-gray-200" role="region" aria-labelledby="info-heading">
-                    <h4 id="info-heading" className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <User size={18} className="text-gray-600" aria-hidden="true" />
-                      <FormattedMessage id="providerProfile.information" />
+                  <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm" role="region" aria-labelledby="info-heading">
+                    <h4 id="info-heading" className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+                      <FormattedMessage id="providerProfile.information" defaultMessage="Infos" />
                     </h4>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-2 text-gray-700">
