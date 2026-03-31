@@ -24,6 +24,10 @@ function ensureInitialized() {
 }
 
 const SITE_URL = 'https://sos-expat.com';
+// ⚠️ CONVENTION: Chinese uses 'ch' internally (Firestore slugs key: profile.slugs['ch'])
+// but 'zh' in URLs (zh-cn) and 'zh-Hans' in hreflang (BCP 47).
+// Conversion is handled by getLocaleString() and getHreflangCode().
+// DO NOT change 'ch' to 'zh' here without migrating all Firestore slugs data.
 const LANGUAGES = ['fr', 'en', 'de', 'es', 'pt', 'ru', 'ch', 'ar', 'hi'];
 
 // Map language to default country code (must match frontend localeRoutes.ts)
@@ -428,9 +432,13 @@ export const sitemapHelp = onRequest(
       console.log('✅ Firestore initialisé');
 
       console.log('📥 Récupération des help_articles...');
+      // ✅ Optional pagination: ?page=1
+      const helpPageParam = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : null;
+      const helpPageNum = helpPageParam && helpPageParam >= 1 ? helpPageParam : null;
+
       const snapshot = await db.collection('help_articles')
         .where('isPublished', '==', true)
-        .limit(1000)
+        .limit(5000)
         .get();
       console.log(`📄 ${snapshot.docs.length} documents trouvés`);
 
@@ -473,10 +481,6 @@ export const sitemapHelp = onRequest(
 
       // OPTIMISÉ: Utilise array.join() au lieu de += pour éviter O(n²)
       const urlBlocks: string[] = [];
-
-      urlBlocks.push(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
 
       // Évite les URLs dupliquées dans le sitemap
       const seenUrls = new Set<string>();
@@ -553,14 +557,39 @@ ${hreflangs}
         });
       });
 
-      urlBlocks.push(`</urlset>`);
-      const xml = urlBlocks.join('\n');
+      // ✅ PAGINATION: Auto sitemapindex when > 500 URLs
+      const helpTotalPages = Math.ceil(urlBlocks.length / MAX_URLS_PER_SITEMAP) || 1;
+      const helpNeedsPagination = urlBlocks.length > MAX_URLS_PER_SITEMAP;
 
+      if (helpNeedsPagination && !helpPageNum) {
+        const lp = filterLang ? `lang=${filterLang}&` : '';
+        const entries = Array.from({ length: helpTotalPages }, (_, i) =>
+          `  <sitemap>\n    <loc>${SITE_URL}/sitemaps/help${filterLang ? '-' + filterLang : ''}.xml?${lp}page=${i + 1}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
+        );
+        res.set('Content-Type', 'application/xml; charset=utf-8');
+        res.set('Cache-Control', 'public, max-age=3600');
+        res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join('\n')}\n</sitemapindex>`);
+        console.log(`✅ Sitemap help index: ${helpTotalPages} pages for ${urlBlocks.length} URLs`);
+        return;
+      }
+
+      let helpPage = urlBlocks;
+      if (helpPageNum && helpNeedsPagination) {
+        const s = (helpPageNum - 1) * MAX_URLS_PER_SITEMAP;
+        helpPage = urlBlocks.slice(s, s + MAX_URLS_PER_SITEMAP);
+        if (helpPage.length === 0) {
+          res.set('Content-Type', 'application/xml; charset=utf-8');
+          res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+          return;
+        }
+      }
+
+      const helpXml = [`<?xml version="1.0" encoding="UTF-8"?>`, `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`, `        xmlns:xhtml="http://www.w3.org/1999/xhtml">`, ...helpPage, `</urlset>`].join('\n');
       res.set('Content-Type', 'application/xml; charset=utf-8');
       res.set('Cache-Control', 'public, max-age=3600');
-      res.status(200).send(xml);
+      res.status(200).send(helpXml);
 
-      console.log(`✅ Sitemap help articles: ${publishedDocs.length} articles (${publishedDocs.length * LANGUAGES.length} URLs)`);
+      console.log(`✅ Sitemap help: ${publishedDocs.length} articles, ${urlBlocks.length} URLs`);
 
     } catch (error: unknown) {
       const err = error as Error;
@@ -1108,9 +1137,9 @@ ${hreflangs}
 export const sitemapIndex = onRequest(
   {
     region: 'europe-west1',
-    memory: '128MiB',
-    cpu: 0.083,
-    timeoutSeconds: 30,
+    memory: '256MiB',
+    cpu: 0.5,
+    timeoutSeconds: 60,
     maxInstances: 3,
     minInstances: 1,
     invoker: 'public',
