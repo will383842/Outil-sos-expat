@@ -27,6 +27,7 @@ import {
   UserX,
   HelpCircle,
   X,
+  ExternalLink,
 } from "lucide-react";
 import {
   doc,
@@ -642,6 +643,87 @@ const calculateProviderStats = async (providerId: string): Promise<ProviderStats
 };
 
 
+
+/* ===================================================================== */
+/* RESSOURCES EXTERNES — Autorités officielles par pays (E-E-A-T)       */
+/* Sources: portails gouvernementaux officiels + ordres d'avocats        */
+/* ===================================================================== */
+
+/** Official immigration/visa portals per country (ISO 2-letter code) */
+const COUNTRY_IMMIGRATION_PORTALS: Record<string, string> = {
+  AE: 'https://u.ae/en/information-and-services/visa-and-emirates-id',
+  AR: 'https://cancilleria.gob.ar/en/services/foreigners',
+  AT: 'https://www.bmi.gv.at/204/start.aspx',
+  AU: 'https://immi.homeaffairs.gov.au',
+  BE: 'https://dofi.ibz.be/en',
+  BR: 'https://www.gov.br/mre/en',
+  CA: 'https://www.canada.ca/en/immigration-refugees-citizenship.html',
+  CH: 'https://www.sem.admin.ch/sem/en/',
+  CI: 'https://www.interieur.gouv.ci',
+  CM: 'https://www.dgsn.cm',
+  CN: 'https://www.nia.gov.cn',
+  DE: 'https://www.bamf.de/EN/',
+  DK: 'https://nyidanmark.dk/en-GB',
+  EG: 'https://www.interior.gov.eg',
+  ES: 'https://extranjeros.inclusion.gob.es',
+  FR: 'https://www.service-public.fr/particuliers/vosdroits/N110',
+  GB: 'https://www.gov.uk/browse/visas-immigration',
+  GH: 'https://www.ghanaimmigration.org',
+  HK: 'https://www.immd.gov.hk/eng/',
+  ID: 'https://www.imigrasi.go.id/en/',
+  IN: 'https://boi.gov.in',
+  IT: 'https://www.interno.gov.it/en/immigration',
+  JP: 'https://www.moj.go.jp/isa/index.html',
+  KE: 'https://immigration.ecitizen.go.ke',
+  LU: 'https://guichet.public.lu/en/citoyens/immigration.html',
+  MA: 'https://www.mtcas.gov.ma',
+  MX: 'https://www.gob.mx/inm',
+  MY: 'https://www.imi.gov.my',
+  NG: 'https://immigration.gov.ng',
+  NL: 'https://ind.nl/en',
+  NO: 'https://www.udi.no/en/',
+  PH: 'https://immigration.gov.ph',
+  PL: 'https://www.gov.pl/web/udsc-en',
+  PT: 'https://aima.gov.pt/en',
+  SA: 'https://www.moi.gov.sa/en',
+  SE: 'https://www.migrationsverket.se/English/',
+  SG: 'https://www.ica.gov.sg',
+  SN: 'https://www.interieur.gouv.sn',
+  TH: 'https://www.immigration.go.th/en/',
+  TN: 'https://www.mdr.gov.tn',
+  TR: 'https://www.goc.gov.tr/en',
+  TW: 'https://www.immigration.gov.tw',
+  US: 'https://travel.state.gov/content/travel/en/us-visas.html',
+  ZA: 'https://www.dha.gov.za',
+};
+
+/** Official bar associations / legal regulators per country */
+const COUNTRY_BAR_ASSOCIATIONS: Record<string, { url: string; name: string }> = {
+  AE: { url: 'https://www.adjd.gov.ae', name: 'Abu Dhabi Judicial Department' },
+  AU: { url: 'https://www.lawcouncil.asn.au', name: 'Law Council of Australia' },
+  BE: { url: 'https://www.avocat.be', name: 'Ordre des barreaux' },
+  CA: { url: 'https://www.cba.org', name: 'Canadian Bar Association' },
+  CH: { url: 'https://www.sav-fsa.ch', name: 'Swiss Bar Association' },
+  DE: { url: 'https://www.brak.de', name: 'Bundesrechtsanwaltskammer' },
+  ES: { url: 'https://www.abogacia.es', name: 'Consejo General de la Abogacía' },
+  FR: { url: 'https://www.cnb.avocat.fr', name: 'Conseil National des Barreaux' },
+  GB: { url: 'https://www.sra.org.uk', name: 'Solicitors Regulation Authority' },
+  GH: { url: 'https://www.ghanabar.org', name: 'Ghana Bar Association' },
+  ID: { url: 'https://peradi.or.id', name: 'PERADI Indonesia' },
+  IN: { url: 'https://www.barcouncilofindia.org', name: 'Bar Council of India' },
+  IT: { url: 'https://www.consiglionazionaleforense.it', name: 'Consiglio Nazionale Forense' },
+  JP: { url: 'https://www.nichibenren.or.jp/en/', name: 'Japan Federation of Bar Associations' },
+  KE: { url: 'https://www.lsk.or.ke', name: 'Law Society of Kenya' },
+  MA: { url: 'https://barreau.ma', name: 'Barreau du Maroc' },
+  NG: { url: 'https://www.nbarnigeria.org', name: 'Nigerian Bar Association' },
+  NL: { url: 'https://www.advocatenorde.nl', name: 'Nederlandse orde van advocaten' },
+  PT: { url: 'https://www.oa.pt', name: 'Ordem dos Advogados' },
+  SG: { url: 'https://www.lawsociety.org.sg', name: 'Law Society of Singapore' },
+  SN: { url: 'https://www.barreau-dakar.com', name: 'Barreau du Sénégal' },
+  TH: { url: 'https://www.thaibar.or.th', name: 'Lawyers Council of Thailand' },
+  US: { url: 'https://www.americanbar.org', name: 'American Bar Association' },
+  ZA: { url: 'https://www.lssa.org.za', name: 'Law Society of South Africa' },
+};
 
 /* ===================================================================== */
 /* COMPOSANT PRINCIPAL                                                   */
@@ -2282,6 +2364,15 @@ const ProviderProfile: React.FC = () => {
 
     return (
       <Layout>
+        {/* Noindex: not-found/unavailable pages must not be indexed */}
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+          <title>
+            {isUnavailable
+              ? `${intl.formatMessage({ id: 'providerProfile.unavailable', defaultMessage: 'Expert temporairement indisponible' })} | SOS Expat`
+              : `${intl.formatMessage({ id: 'providerProfile.notFound', defaultMessage: 'Expert introuvable' })} | SOS Expat`}
+          </title>
+        </Helmet>
         <div className="min-h-screen bg-gray-950 px-4 py-12" data-provider-not-found="true">
           <div className="max-w-2xl mx-auto">
             {/* Message principal */}
@@ -4185,6 +4276,71 @@ const ProviderProfile: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* ========================================== */}
+      {/* OFFICIAL EXTERNAL RESOURCES (E-E-A-T)     */}
+      {/* Links to government portals + bar assoc.  */}
+      {/* ========================================== */}
+      {(() => {
+        const cc = (provider?.country || '').toUpperCase();
+        const immigrationUrl = COUNTRY_IMMIGRATION_PORTALS[cc];
+        const barAssoc = isLawyer ? COUNTRY_BAR_ASSOCIATIONS[cc] : undefined;
+        // Universal fallback: UN Migration Data Portal (works for all 197 countries)
+        const iomUrl = cc ? `https://migrationdataportal.org/?destination=${cc.toLowerCase()}&theme=main` : null;
+        const hasResources = immigrationUrl || barAssoc || iomUrl;
+        if (!hasResources || !provider) return null;
+        return (
+          <section className="mt-4 mb-10 px-4" aria-labelledby="official-resources-heading">
+            <div className="max-w-6xl mx-auto">
+              <div className="bg-gray-900/40 border border-gray-800/60 rounded-2xl p-5">
+                <h2 id="official-resources-heading" className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Globe size={13} aria-hidden="true" />
+                  <FormattedMessage
+                    id="providerProfile.resources.title"
+                    defaultMessage="Official resources — {country}"
+                    values={{ country: countryName }}
+                  />
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {immigrationUrl && (
+                    <a
+                      href={immigrationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-400 hover:text-blue-300 border border-blue-500/20 hover:border-blue-400/40 rounded-full px-3 py-1.5 transition-colors"
+                    >
+                      <ExternalLink size={11} aria-hidden="true" />
+                      <FormattedMessage id="providerProfile.resources.immigration" defaultMessage="Official immigration portal" />
+                    </a>
+                  )}
+                  {barAssoc && (
+                    <a
+                      href={barAssoc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-400/40 rounded-full px-3 py-1.5 transition-colors"
+                    >
+                      <ExternalLink size={11} aria-hidden="true" />
+                      {barAssoc.name}
+                    </a>
+                  )}
+                  {iomUrl && (
+                    <a
+                      href={iomUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-gray-300 border border-gray-700/60 hover:border-gray-600 rounded-full px-3 py-1.5 transition-colors"
+                    >
+                      <ExternalLink size={11} aria-hidden="true" />
+                      <FormattedMessage id="providerProfile.resources.iom" defaultMessage="UN Migration data" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ========================================== */}
       {/* WIZARD D'AUTHENTIFICATION RAPIDE          */}
