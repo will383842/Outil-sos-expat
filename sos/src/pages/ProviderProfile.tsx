@@ -2173,9 +2173,9 @@ const ProviderProfile: React.FC = () => {
           url: "https://sos-expat.com",
           logo: "https://sos-expat.com/logo.png",
         },
-        knowsLanguage: languagesList.map((lang) => ({
+        knowsLanguage: languagesList.map((code) => ({
           "@type": "Language",
-          name: lang,
+          name: getLanguageName(code, preferredLangKey) || code,
         })),
         ...(provider.yearsOfExperience && {
           hasOccupation: {
@@ -2191,7 +2191,7 @@ const ProviderProfile: React.FC = () => {
         name: "SOS Expat & Travelers",
         url: "https://sos-expat.com",
       },
-      availableLanguage: languagesList,
+      availableLanguage: languagesList.map((code) => getLanguageName(code, preferredLangKey) || code),
       // aggregateRating is valid on LegalService/ProfessionalService
       ...(providerStats.realReviewsCount > 0 && {
         aggregateRating: {
@@ -2396,7 +2396,9 @@ const ProviderProfile: React.FC = () => {
   // SEO Title: Name - Role specialty, languages in Country | Brand
   // Priority: AI SEO > Translation SEO > Template
   const topSpecialty = derivedSpecialties.length > 0 ? derivedSpecialties[0] : '';
-  const spokenLangs = languagesList.length > 0 ? languagesList.join(', ') : '';
+  // Full language names (not ISO codes) for SEO, AEO, and JSON-LD
+  const languageFullNames = languagesList.map(code => getLanguageName(code, preferredLangKey)).filter(Boolean);
+  const spokenLangs = languageFullNames.length > 0 ? languageFullNames.join(', ') : '';
   const countryName = getCountryName(provider.country, preferredLangKey);
   const operatingCountryNames = (provider.operatingCountries || [])
     .slice(0, 3)
@@ -2416,15 +2418,20 @@ const ProviderProfile: React.FC = () => {
   })();
 
   // SEO Description: Priority: AI SEO > Translation SEO > Template
-  const seoDescription = seoAI?.metaDescription
-    || (translation && !showOriginal && translation.seo?.metaDescription
-      ? translation.seo.metaDescription
-      : [
-          `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}.`,
-          spokenLangs ? `${intl.formatMessage({ id: "providerProfile.speaks", defaultMessage: "Speaks" })}: ${spokenLangs}.` : '',
-          operatingCountryNames.length > 0 ? `${intl.formatMessage({ id: "providerProfile.alsoCovering", defaultMessage: "Also covering" })}: ${operatingCountryNames.join(', ')}.` : '',
-          provider.yearsOfExperience ? `${provider.yearsOfExperience} ${yearsLabel}.` : '',
-        ].filter(Boolean).join(' ').slice(0, 160));
+  const seoDescription = (() => {
+    if (seoAI?.metaDescription) return seoAI.metaDescription;
+    if (translation && !showOriginal && translation.seo?.metaDescription) return translation.seo.metaDescription;
+    const raw = [
+      `${intl.formatMessage({ id: "providerProfile.consult" })} ${formatPublicName(provider)}, ${roleLabel.toLowerCase()}${topSpecialty ? ` ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}.`,
+      spokenLangs ? `${intl.formatMessage({ id: "providerProfile.speaks", defaultMessage: "Langues" })}: ${spokenLangs}.` : '',
+      operatingCountryNames.length > 0 ? `${intl.formatMessage({ id: "providerProfile.alsoCovering", defaultMessage: "Intervient aussi en" })}: ${operatingCountryNames.join(', ')}.` : '',
+      provider.yearsOfExperience ? `${provider.yearsOfExperience} ${yearsLabel}.` : '',
+    ].filter(Boolean).join(' ');
+    if (raw.length <= 160) return raw;
+    const truncated = raw.slice(0, 160);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return (lastSpace > 80 ? truncated.slice(0, lastSpace) : truncated) + '…';
+  })();
 
   const canonicalUrl = (() => {
     // BEST: Use multilingual slugs from Firestore (already contain full path with locale)
@@ -2494,7 +2501,7 @@ const ProviderProfile: React.FC = () => {
         }
         aiSummary={seoAI?.aiSummary || intl.formatMessage(
           { id: 'providerProfile.aiSummary', defaultMessage: '{name} is a verified {role} in {country} with {years} years of experience. Available on SOS Expat for phone consultations in {languages}.' },
-          { name: provider.firstName, role: isLawyer ? roleLabel.toLowerCase() : roleLabel.toLowerCase(), country: getCountryName(provider.country, preferredLangKey), years: String(provider.yearsOfExperience || 0), languages: languagesList.join(', ') }
+          { name: provider.firstName, role: roleLabel.toLowerCase(), country: getCountryName(provider.country, preferredLangKey), years: String(provider.yearsOfExperience || 0), languages: languageFullNames.join(', ') }
         )}
         expertise={seoAI?.structuredData?.knowsAbout?.join(', ') || (isLawyer ? 'legal-professional' : 'expat-advisor')}
         trustworthiness={`verified-provider${providerStats.realReviewsCount > 0 ? `, ${providerStats.realReviewsCount}_reviews, ${Number((providerStats.averageRating || 0).toFixed(1))}_rating` : ''}`}
@@ -2698,7 +2705,7 @@ const ProviderProfile: React.FC = () => {
             </nav>
 
             {/* Breadcrumb visible HTML — cohérent avec BreadcrumbList JSON-LD */}
-            <nav aria-label="Breadcrumb" className="mb-3 hidden sm:flex items-center gap-1.5 text-xs text-white/50">
+            <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-1.5 text-xs text-white/50">
               <a href="/" className="hover:text-white/80 transition-colors">SOS Expat</a>
               <span aria-hidden="true">/</span>
               <a

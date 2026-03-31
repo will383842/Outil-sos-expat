@@ -140,7 +140,7 @@ A "Chatter" is an affiliate partner who helps expats, travelers, and holidaymake
 ### Payment Methods
 - Mobile Money: Orange Money, Wave, MTN MoMo, M-Pesa, Airtel Money
 - International: Wise, PayPal, Bank Transfer
-- Minimum withdrawal: $25
+- Minimum withdrawal: $30
 - Processing time: 48 hours
 
 ### Who Can Become a Chatter?
