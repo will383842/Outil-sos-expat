@@ -2340,6 +2340,10 @@ const ProviderProfile: React.FC = () => {
                           src={suggestion.profilePhoto || '/default-avatar.webp'}
                           alt={suggestion.fullName || 'Expert'}
                           className="w-12 h-12 rounded-full object-cover border-2 border-gray-700 group-hover:border-red-500/50 transition-colors"
+                          width={48}
+                          height={48}
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => { e.currentTarget.src = '/default-avatar.webp'; }}
                         />
                         <div className="flex-1 min-w-0">
@@ -2664,6 +2668,51 @@ const ProviderProfile: React.FC = () => {
         })}</script>
       </Helmet>
 
+      {/* ImageObject JSON-LD — enables Google Images rich results */}
+      {profilePhoto && profilePhoto !== '/default-avatar.webp' && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ImageObject",
+            "@id": `${canonicalUrl}#primaryImage`,
+            "contentUrl": profilePhoto.startsWith('http') ? profilePhoto : `https://sos-expat.com${profilePhoto}`,
+            "url": profilePhoto.startsWith('http') ? profilePhoto : `https://sos-expat.com${profilePhoto}`,
+            "thumbnailUrl": profilePhoto.startsWith('http') ? profilePhoto : `https://sos-expat.com${profilePhoto}`,
+            "description": intl.formatMessage(
+              { id: "providerProfile.profilePhotoAlt", defaultMessage: "{name} — {role} {country} — SOS Expat" },
+              { name: formatPublicName(provider), role: roleLabel, country: countryName }
+            ),
+            "name": `${formatPublicName(provider)} — SOS Expat`,
+            "width": IMAGE_SIZES.THUMBNAIL_WIDTH,
+            "height": IMAGE_SIZES.THUMBNAIL_HEIGHT,
+            "encodingFormat": "image/jpeg",
+            "representativeOfPage": true,
+            "inLanguage": preferredLangKey || 'fr',
+            "author": {
+              "@type": "Organization",
+              "name": "SOS Expat & Travelers",
+              "url": "https://sos-expat.com"
+            },
+            "creator": {
+              "@type": "Organization",
+              "name": "SOS Expat & Travelers",
+              "url": "https://sos-expat.com"
+            },
+            "license": "https://sos-expat.com/terms",
+            "acquireLicensePage": "https://sos-expat.com/terms",
+            "creditText": "SOS Expat & Travelers",
+          })}</script>
+          {/* Preload LCP image — critical for Core Web Vitals */}
+          <link
+            rel="preload"
+            as="image"
+            href={profilePhoto.startsWith('http') ? profilePhoto : `https://sos-expat.com${profilePhoto}`}
+            // @ts-ignore — fetchpriority is valid HTML but not yet in React typedefs
+            fetchpriority="high"
+          />
+        </Helmet>
+      )}
+
       {/* SVG defs pour dégradé étoiles */}
       <svg width="0" height="0" className="hidden" aria-hidden="true">
         <defs>
@@ -2725,8 +2774,8 @@ const ProviderProfile: React.FC = () => {
               {/* ===== COLONNE GAUCHE: Infos principales ===== */}
               <div className="lg:col-span-2">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-                  {/* Photo de profil */}
-                  <div className="relative flex-shrink-0">
+                  {/* Photo de profil — figure for Google Images semantic context */}
+                  <figure className="relative flex-shrink-0 m-0">
                     <div className="p-[3px] rounded-full bg-gradient-to-br from-red-400 via-orange-400 to-yellow-300">
                       <img
                         src={profilePhoto}
@@ -2744,6 +2793,7 @@ const ProviderProfile: React.FC = () => {
                         onClick={() => setShowImageModal(true)}
                         onError={handleImageError}
                         loading="eager"
+                        decoding="async"
                         fetchPriority="high"
                       />
                     </div>
@@ -2776,7 +2826,13 @@ const ProviderProfile: React.FC = () => {
                         <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" aria-hidden="true"></span>
                       )}
                     </div>
-                  </div>
+                    <figcaption className="sr-only">
+                      {intl.formatMessage(
+                        { id: "providerProfile.profilePhotoAlt", defaultMessage: "{name} — {role} {country} — SOS Expat" },
+                        { name: formatPublicName(provider), role: roleLabel, country: countryName }
+                      )}
+                    </figcaption>
+                  </figure>
 
                   {/* Informations textuelles */}
                   <div className="flex-1 min-w-0">
@@ -2988,6 +3044,7 @@ const ProviderProfile: React.FC = () => {
                                       alt={rpName}
                                       className="w-9 h-9 rounded-full object-cover ring-2 ring-green-400/50"
                                       loading="lazy"
+                                      decoding="async"
                                       width={36}
                                       height={36}
                                       onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }}
@@ -4024,6 +4081,7 @@ const ProviderProfile: React.FC = () => {
               className="max-w-full max-h-[90vh] object-contain rounded-2xl"
               onError={handleImageError}
               loading="lazy"
+              decoding="async"
               width={IMAGE_SIZES.MODAL_MAX_WIDTH}
               height={IMAGE_SIZES.MODAL_MAX_HEIGHT}
             />
@@ -4106,6 +4164,7 @@ const ProviderProfile: React.FC = () => {
                       alt={`${rpName} — ${isLawyer ? intl.formatMessage({ id: "providerProfile.lawyer" }) : intl.formatMessage({ id: "providerProfile.expat" })} ${getCountryName(rp.country, preferredLangKey)}`}
                       className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-700"
                       loading="lazy"
+                      decoding="async"
                       width={56}
                       height={56}
                       onError={(e) => { (e.target as HTMLImageElement).src = '/default-avatar.webp'; }}

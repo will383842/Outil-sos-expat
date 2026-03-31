@@ -235,6 +235,12 @@ export const sitemapProfiles = onRequest(
         // Dynamic priority based on score
         const priority = seoScore >= PREMIUM_SEO_SCORE ? '0.9' : '0.6';
 
+        // Image tag for Google Images indexing — included in every language variant of the URL
+        const photoUrl = (profile.photoURL as string | undefined) || (profile.profilePhoto as string | undefined) || '';
+        const imageTag = photoUrl && photoUrl.startsWith('http') && !photoUrl.includes('default-avatar')
+          ? `\n    <image:image>\n      <image:loc>${escapeXml(photoUrl)}</image:loc>\n      <image:title>${escapeXml(name)}</image:title>\n    </image:image>`
+          : '';
+
         // Utilise les slugs multilingues si disponibles
         const slugs = profile.slugs as Record<string, string> | undefined;
         const hasSlugs = slugs && typeof slugs === 'object' && Object.keys(slugs).length > 0;
@@ -293,7 +299,7 @@ ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefaultUrl)}"/>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
-    <lastmod>${profileLastmod}</lastmod>
+    <lastmod>${profileLastmod}</lastmod>${imageTag}
   </url>`);
             includedCount++;
           });
@@ -314,7 +320,7 @@ ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(url)}"/>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
-    <lastmod>${today}</lastmod>
+    <lastmod>${today}</lastmod>${imageTag}
   </url>`);
             includedCount++;
           } else {
@@ -335,7 +341,7 @@ ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/${legacySlug}`)}"/>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
-    <lastmod>${today}</lastmod>
+    <lastmod>${today}</lastmod>${imageTag}
   </url>`);
               includedCount++;
             });
@@ -367,7 +373,8 @@ ${hreflangs}
       const xmlParts = [
         `<?xml version="1.0" encoding="UTF-8"?>`,
         `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`,
-        `        xmlns:xhtml="http://www.w3.org/1999/xhtml">`,
+        `        xmlns:xhtml="http://www.w3.org/1999/xhtml"`,
+        `        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`,
         ...urlBlocksPage,
         `</urlset>`
       ];
