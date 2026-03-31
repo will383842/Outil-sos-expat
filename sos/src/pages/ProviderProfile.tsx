@@ -2424,13 +2424,13 @@ const ProviderProfile: React.FC = () => {
                         const role = suggestion.type === 'lawyer' ? 'avocat' : 'expatrie';
                         navigate(`/${role}/${slug}`);
                       }}
-                      className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-left hover:bg-gray-800/50 hover:border-gray-700 transition-all group"
+                      className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 rounded-xl p-4 text-left hover:border-red-500/40 hover:from-slate-700 hover:to-slate-800 hover:shadow-md hover:shadow-red-500/10 transition-all duration-200 group"
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <img
                           src={suggestion.profilePhoto || '/default-avatar.webp'}
                           alt={suggestion.fullName || 'Expert'}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-700 group-hover:border-red-500/50 transition-colors"
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-slate-600 group-hover:ring-red-500/50 transition-colors"
                           width={48}
                           height={48}
                           loading="lazy"
@@ -4211,7 +4211,7 @@ const ProviderProfile: React.FC = () => {
               </h2>
               {/* Lien maillage interne vers page listing pays */}
               <a
-                href={`/${currentLocale || 'fr-fr'}/${getTranslatedRouteSlug(isLawyer ? 'lawyer' : 'expat', currentLang || 'fr')}-${getCountrySlug(provider.country, currentLang || 'fr')}`}
+                href={`/${currentLocale || 'fr-fr'}/${getTranslatedRouteSlug(isLawyer ? 'lawyers-country' : 'expats-country', currentLang || 'fr')}/${getCountrySlug(provider.country, currentLang || 'fr')}`}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-red-400 hover:text-red-300 transition-colors border border-red-400/30 rounded-full px-4 py-2 hover:border-red-400/60 flex-shrink-0"
               >
                 <Globe size={15} aria-hidden="true" />
@@ -4248,12 +4248,12 @@ const ProviderProfile: React.FC = () => {
                   <a
                     key={rp.id}
                     href={rpUrl}
-                    className="flex items-center gap-4 bg-gradient-to-r from-gray-800/80 to-gray-800/60 rounded-xl p-4 border border-gray-700/50 hover:border-red-500/40 hover:from-gray-800 hover:to-gray-700/80 transition-all duration-200"
+                    className="group flex items-center gap-4 rounded-xl p-4 border transition-all duration-200 bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700/60 hover:border-red-500/50 hover:from-slate-700 hover:to-slate-800 hover:shadow-lg hover:shadow-red-500/10"
                   >
                     <img
                       src={rpPhoto}
                       alt={`${rpName} — ${isLawyer ? intl.formatMessage({ id: "providerProfile.lawyer" }) : intl.formatMessage({ id: "providerProfile.expat" })} ${getCountryName(rp.country, preferredLangKey)}`}
-                      className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-700"
+                      className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-slate-600 group-hover:ring-red-500/50 transition-colors"
                       loading="lazy"
                       decoding="async"
                       width={56}
