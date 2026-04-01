@@ -162,7 +162,8 @@ const FAQ: React.FC = () => {
   const noIndexEmpty = !loading && faqData.length === 0;
 
   // ItemList JSON-LD for rich results (top 10 FAQ links)
-  const faqPageUrl = `https://sos-expat.com/${currentLocale}/${getTranslatedRouteSlug("faq" as any, language as any) || 'faq'}`;
+  const faqRouteSlug = getTranslatedRouteSlug("faq" as any, language as any) || 'faq';
+  const faqPageUrl = `https://sos-expat.com/${currentLocale}/${faqRouteSlug}`;
   const itemListSchema = faqData.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -393,7 +394,7 @@ const FAQ: React.FC = () => {
                                   <HelpCircle size={18} />
                                 </span>
                                 <Link
-                                  to={`/${currentLocale}/faq/${item.slug?.[langCode] || item.slug?.['fr'] || item.slug?.['en'] || item.id}`}
+                                  to={`/${currentLocale}/${faqRouteSlug}/${item.slug?.[langCode] || item.slug?.['fr'] || item.slug?.['en'] || item.id}`}
                                   className="text-lg md:text-xl font-bold text-gray-900 flex-1 hover:text-red-600 transition-colors"
                                 >
                                   {item.question}

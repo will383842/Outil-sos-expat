@@ -691,7 +691,7 @@ const FAQDetail: React.FC = () => {
             {intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' })}
           </Link>
           <ChevronRight className="w-4 h-4" />
-          <Link to={`/${currentLocale}/faq`} className="hover:text-red-600 transition-colors">
+          <Link to={`/${currentLocale}/${faqRouteSlug}`} className="hover:text-red-600 transition-colors">
             {intl.formatMessage({ id: 'breadcrumb.faq', defaultMessage: 'FAQ' })}
           </Link>
           <ChevronRight className="w-4 h-4" />
@@ -739,11 +739,11 @@ const FAQDetail: React.FC = () => {
             <div className="space-y-4">
               {relatedFAQs.map(relatedFaq => {
                 const relatedQuestion = relatedFaq.question[langCode] || relatedFaq.question['fr'] || relatedFaq.question['en'];
-                const relatedSlug = relatedFaq.slug[langCode] || relatedFaq.slug['fr'] || relatedFaq.slug['en'];
+                const relatedSlug = relatedFaq.slug?.[langCode] || relatedFaq.slug?.['fr'] || relatedFaq.slug?.['en'] || relatedFaq.id;
                 return (
                   <Link
                     key={relatedFaq.id}
-                    to={`/${currentLocale}/faq/${relatedSlug}`}
+                    to={`/${currentLocale}/${faqRouteSlug}/${relatedSlug}`}
                     className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
                   >
                     <h3 className="font-semibold text-gray-900 mb-2">{relatedQuestion}</h3>
@@ -760,7 +760,7 @@ const FAQDetail: React.FC = () => {
         {/* Back to FAQ Link */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <Link
-            to={`/${currentLocale}/faq`}
+            to={`/${currentLocale}/${faqRouteSlug}`}
             className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
