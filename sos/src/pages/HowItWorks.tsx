@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle, Users, MessageSquare } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
@@ -58,13 +59,17 @@ const HowItWorksPage: React.FC = () => {
         ogType="website"
         keywords={intl.formatMessage({ id: 'howItWorks.seo.keywords', defaultMessage: 'how it works, expat, lawyer, legal consultation, expatriation help' })}
         locale={language === "fr" ? "fr_FR" : language === "en" ? "en_US" : `${language}_${language.toUpperCase()}`}
-        structuredData={structuredData}
         contentType="HowTo"
         aiSummary={intl.formatMessage({ id: 'howItWorks.seo.aiSummary', defaultMessage: 'Step-by-step guide explaining how to use SOS Expat to get quick legal help' })}
         expertise="Legal Services, Expat Assistance"
         trustworthiness="verified_lawyers, 197_countries, 24_7_availability"
         contentQuality="high"
       />
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },

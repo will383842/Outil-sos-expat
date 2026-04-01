@@ -265,7 +265,7 @@ const ChatterLanding: React.FC = () => {
       '@type': 'Organization',
       name: 'SOS-Expat',
       url: 'https://www.sos-expat.com',
-      logo: `${BASE_URL}/og-image.png`,
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png`, width: 1200, height: 630 },
     },
     description: intl.formatMessage({ id: 'chatter.landing.seo.description' }),
   }), [intl, canonicalUrl, htmlLang]);

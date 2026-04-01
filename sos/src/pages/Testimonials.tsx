@@ -373,9 +373,14 @@ const Testimonials: React.FC = () => {
     "@id": `${SEO_BASE_URL}/#professional-service`,
     "name": "SOS Expat & Travelers",
     "url": SEO_BASE_URL,
-    "image": `${SEO_BASE_URL}/sos-logo.webp`,
+    "image": {
+      "@type": "ImageObject",
+      "url": `${SEO_BASE_URL}/sos-logo.webp`,
+      "width": 512,
+      "height": 512
+    },
     "description": intl.formatMessage({ id: "testy.hero.subtitle" }),
-    "priceRange": "€€",
+    "priceRange": "$$",
     // address required by Google for LocalBusiness/ProfessionalService
     "address": {
       "@type": "PostalAddress",

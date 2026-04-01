@@ -629,11 +629,8 @@ const OptimizedHomePage: React.FC = () => {
       "addressLocality": "Paris",
       "addressCountry": "FR",
     },
-    "areaServed": {
-      "@type": "Place",
-      "name": "Worldwide",
-    },
-    "priceRange": "€€",
+    "areaServed": "Worldwide",
+    "priceRange": "$$",
     "hasOfferCatalog": {
       "@type": "OfferCatalog",
       "name": intl.formatMessage({ id: "schema.offerCatalogName" }),

@@ -878,8 +878,8 @@ const PartnerLanding: React.FC = () => {
       'addressLocality': 'Paris',
       'addressCountry': 'FR',
     },
-    'priceRange': '€€',
-    'areaServed': { '@type': 'Place', 'name': 'Worldwide' },
+    'priceRange': '$$',
+    'areaServed': 'Worldwide',
     'serviceType': 'B2B Partnership Program',
     'description': seoData.description,
     'hasOfferCatalog': {
