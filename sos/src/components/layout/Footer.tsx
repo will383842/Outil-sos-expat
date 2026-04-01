@@ -23,6 +23,7 @@ import { useApp } from "../../contexts/AppContext";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { LocaleLink, getTranslatedRouteSlug } from "../../multilingual-system";
+import type { RouteKey } from "../../multilingual-system/core/routing/localeRoutes";
 
 // ============================================================================
 // TYPES
@@ -136,7 +137,7 @@ const filterLegalLinks = (links: LegalLink[]): LegalLink[] =>
 
 const SOS_DOMAINS = ['https://sos-expat.com', 'https://www.sos-expat.com', 'https://sos-holidays.com'];
 
-const resolveDocumentHref = (data: Record<string, unknown>): string => {
+const resolveDocumentHref = (data: Record<string, unknown>, lang: SupportedLanguage = "fr"): string => {
   if (typeof data.path === "string" && data.path) {
     // Strip own domain from absolute URLs so LocaleLink can add the correct locale prefix
     const path = data.path;
@@ -148,17 +149,34 @@ const resolveDocumentHref = (data: Record<string, unknown>): string => {
 
   const type = typeof data.type === "string" ? data.type : "";
 
-  const typeToPath: Record<string, string> = {
-    terms: "/cgu-clients",
-    privacy: "/politique-confidentialite",
-    cookies: "/fr-fr/cookies",
-    legal: "/consommateurs",
-    faq: "/faq",
-    help: "/centre-aide",
-    seo: "/referencement",
+  const typeToRouteKey: Record<string, RouteKey> = {
+    terms: "terms-clients",
+    "terms-clients": "terms-clients",
+    privacy: "privacy-policy",
+    "privacy-policy": "privacy-policy",
+    cookies: "cookies",
+    legal: "consumers",
+    consumers: "consumers",
+    faq: "faq",
+    help: "help-center",
+    "help-center": "help-center",
+    seo: "seo",
+    // Underscore variants (Firestore document types use underscores)
+    terms_affiliate: "terms-affiliate",
+    terms_expats: "terms-expats",
+    terms_lawyers: "terms-lawyers",
+    terms_chatters: "terms-chatters",
+    terms_influencers: "terms-influencers",
+    terms_bloggers: "terms-bloggers",
+    terms_group_admins: "terms-group-admins",
   };
 
-  return typeToPath[type] || `/${type || "legal"}`;
+  const routeKey = typeToRouteKey[type];
+  if (routeKey) {
+    return `/${getTranslatedRouteSlug(routeKey, lang)}`;
+  }
+
+  return `/${type || "legal"}`;
 };
 
 // ============================================================================
@@ -868,7 +886,7 @@ const Footer: React.FC = () => {
               const title = String(data.title || data.type || "Document");
               const order =
                 typeof data.order === "number" ? data.order : 999;
-              const href = resolveDocumentHref(data);
+              const href = resolveDocumentHref(data, resolvedLang);
 
               return { label: title, href, order };
             })
