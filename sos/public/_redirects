@@ -279,6 +279,26 @@
 /register-expat /fr-fr/inscription/expatrie 301
 
 # =============================================
+# Wrong-locale slug fixes (Cat A) — French slug in English locale & vice-versa
+# Source: SEO audit 2026-04-01 "pages n'ont pas pu être explorées"
+# =============================================
+/en-us/politique-confidentialite /en-us/privacy-policy 301
+/en-us/sos-appel /en-us/emergency-call 301
+/en-us/cgu-clients /en-us/terms-clients 301
+/en-us/consommateurs /en-us/consumers 301
+/fr-fr/providers /fr-fr/prestataires 301
+/fr-fr/how-it-works /fr-fr/comment-ca-marche 301
+
+# =============================================
+# Underscore slug fixes (Cat B) — old format with _ instead of -
+# =============================================
+/en-us/terms_expats /en-us/terms-expats 301
+/fr-fr/terms_expats /fr-fr/cgu-expatries 301
+/en-us/terms_affiliate /en-us/terms-affiliate 301
+/fr-fr/terms_affiliate /fr-fr/cgu-affiliation 301
+/en-us/terms_lawyers /en-us/terms-lawyers 301
+
+# =============================================
 # Legacy help center slug redirects (old format -> current)
 # hilfe-center was old German slug, now hilfezentrum
 # centr-pomoshi was old Russian slug, now tsentr-pomoshchi
