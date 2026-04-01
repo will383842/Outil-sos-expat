@@ -244,12 +244,12 @@ const Cookies: React.FC = () => {
       if (line.startsWith("# ")) {
         const title = line.substring(2).replace(/\*\*/g, "");
         elements.push(
-          <h1
+          <h2
             key={currentIndex++}
             className="text-3xl sm:text-4xl font-black text-gray-900 mb-6 mt-8 border-b-2 border-orange-500 pb-4"
           >
             {title}
-          </h1>
+          </h2>
         );
         continue;
       }

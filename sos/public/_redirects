@@ -432,6 +432,29 @@
 /fr-fr/testimonials /fr-fr/temoignages 301
 
 # =============================================
+# Listing pages sans pays (lawyers/expats sans :countrySlug = 404)
+# La route /lawyers/:countrySlug exige un pays. Sans pays → redirect homepage locale.
+# =============================================
+/fr-fr/avocats /fr-fr 301
+/en-us/lawyers /en-us 301
+/es-es/abogados /es-es 301
+/de-de/anwaelte /de-de 301
+/ru-ru/advokaty /ru-ru 301
+/pt-pt/advogados /pt-pt 301
+/zh-cn/lushi /zh-cn 301
+/hi-in/vakil /hi-in 301
+/ar-sa/muhamun /ar-sa 301
+/fr-fr/expatries /fr-fr 301
+/en-us/expats /en-us 301
+/es-es/expatriados /es-es 301
+/de-de/expats /de-de 301
+/ru-ru/expaty /ru-ru 301
+/pt-pt/expatriados /pt-pt 301
+/zh-cn/haiwai /zh-cn 301
+/hi-in/videshi /hi-in 301
+/ar-sa/mughtaribun /ar-sa 301
+
+# =============================================
 # SPA fallback - MUST be last
 # All routes that don't match above are served by index.html
 # =============================================

@@ -52,21 +52,27 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
   const isUserConnected = useMemo(() => !authLoading && !!user, [authLoading, user]);
 
-  // SEO navigation - simplified structure
+  // SEO navigation — prioritise le slug Firestore multilingue (même logique que ProvidersByCountry)
   const handleProfileClick = useCallback((provider: Provider) => {
+    try { sessionStorage.setItem('selectedProvider', JSON.stringify(provider)); } catch { /* storage quota exceeded */ }
+    const slugs = (provider as any).slugs || {};
+    const localizedSlug = slugs[language];
+    if (localizedSlug) {
+      // Slug déjà complet avec locale (ex: "en-fr/lawyers/in/francais/priya-s-xxx")
+      // useLocaleNavigate détecte le préfixe locale et ne l'ajoute pas en double
+      navigate(`/${localizedSlug}`, { state: { selectedProvider: provider, navigationSource: 'home_carousel' } });
+      return;
+    }
+    // Fallback : génération dynamique (providers sans slug en Firestore)
     const typeSlug = provider.type === 'lawyer' ? 'avocat' : 'expatrie';
-    // Use translated slug if available, otherwise generate from name
     const nameSlug = (provider as any).slug || provider.name
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]/g, '-');
-    // Append ID only if slug doesn't already contain it
     const finalSlug = nameSlug.includes(provider.id) ? nameSlug : `${nameSlug}-${provider.id}`;
-    const seoUrl = `/${typeSlug}/${finalSlug}`;
-    try { sessionStorage.setItem('selectedProvider', JSON.stringify(provider)); } catch { /* storage quota exceeded */ }
-    navigate(seoUrl, { state: { selectedProvider: provider, navigationSource: 'home_carousel' } });
-  }, [navigate]);
+    navigate(`/${typeSlug}/${finalSlug}`, { state: { selectedProvider: provider, navigationSource: 'home_carousel' } });
+  }, [navigate, language]);
 
   // Sélection intelligente pour la rotation
   const selectVisibleProviders = useCallback((all: Provider[]): Provider[] => {
@@ -185,6 +191,8 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             isActive: data.isActive !== false,
             isVerified: data.isVerified === true,
           } as Provider & { __isAdmin?: boolean };
+          // Slugs SEO multilingues (format: "fr-fr/avocat-thailande/julien-penal-fsx3c9")
+          (provider as any).slugs = data.slugs || {};
           // Add internal trace
           (provider as any).__isAdmin = isAdmin;
 

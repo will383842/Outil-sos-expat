@@ -196,7 +196,7 @@ const REVIEWS: Review[] = [
     nameKey: "review.6.name",
     cityKey: "review.6.city",
     avatar:
-      "https://images.unsplash.com/photo-1544005316-00a74bdc7f77" + faceParams,
+      "https://i.pravatar.cc/600?img=68",
     fallback: "https://i.pravatar.cc/600?img=68",
     typeEchange: "expat",
     commentKey: "review.6.comment",
@@ -232,6 +232,7 @@ function CarouselSkeleton() {
 function ReviewsSlider({ theme = "dark", holidaysMode = false, resolveFn }: { theme?: "dark" | "light"; holidaysMode?: boolean; resolveFn?: (path: string) => string }) {
   const intl = useIntl();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const getLocalePath = useLocalePath();
 
   const isDark = theme === "dark";
 
@@ -239,7 +240,7 @@ function ReviewsSlider({ theme = "dark", holidaysMode = false, resolveFn }: { th
   const RLink: React.FC<{ to: string; children: React.ReactNode; className?: string; "aria-label"?: string }> = ({ to, children, ...props }) =>
     holidaysMode
       ? <a href={resolveFn ? resolveFn(to) : `${SOS_EXPAT_BASE_URL}${to}`} {...props}>{children}</a>
-      : <Link to={to} {...props}>{children}</Link>;
+      : <Link to={getLocalePath(to)} {...props}>{children}</Link>;
 
   const labelType = (t: TypeEchange): string => {
     return t === "lawyer"

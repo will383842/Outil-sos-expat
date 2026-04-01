@@ -511,6 +511,29 @@ export const renderForBotsV2 = onRequest(
       return;
     }
 
+    // Redirect root "/" to locale-appropriate homepage for bots
+    // Prevents Puppeteer from rendering React's RootLocaleRedirect (which defaults to en-us)
+    // and caching English content under the root cache key.
+    // x-default = /en-us (English); other locales detected from Accept-Language header.
+    if (requestPath === '/') {
+      const ROOT_LOCALE_MAP: Record<string, string> = {
+        'fr': '/fr-fr',
+        'en': '/en-us',
+        'es': '/es-es',
+        'de': '/de-de',
+        'pt': '/pt-pt',
+        'ru': '/ru-ru',
+        'zh': '/zh-cn',
+        'hi': '/hi-in',
+        'ar': '/ar-sa',
+      };
+      const acceptLanguage = req.headers['accept-language'] || '';
+      const primaryLang = acceptLanguage.split(',')[0]?.split(';')[0]?.split('-')[0]?.toLowerCase() || 'en';
+      const targetLocale = ROOT_LOCALE_MAP[primaryLang] || '/en-us';
+      res.redirect(301, `${SITE_URL}${targetLocale}`);
+      return;
+    }
+
     // Check cache first (L1 memory → L2 Firestore)
     // SEO FIX: Partition cache by locale to prevent serving wrong language content.
     // Previously, /fr-fr/tarifs and all other locale variants shared the same cache key,

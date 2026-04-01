@@ -134,8 +134,16 @@ const writeCache = (lang: SupportedLanguage, data: LegalLink[]): void => {
 const filterLegalLinks = (links: LegalLink[]): LegalLink[] =>
   links.filter((link) => !EXCLUDED_LEGAL_LABELS.has(link.label));
 
+const SOS_DOMAINS = ['https://sos-expat.com', 'https://www.sos-expat.com', 'https://sos-holidays.com'];
+
 const resolveDocumentHref = (data: Record<string, unknown>): string => {
-  if (typeof data.path === "string" && data.path) return data.path;
+  if (typeof data.path === "string" && data.path) {
+    // Strip own domain from absolute URLs so LocaleLink can add the correct locale prefix
+    const path = data.path;
+    const ownDomain = SOS_DOMAINS.find(d => path.startsWith(d));
+    if (ownDomain) return path.slice(ownDomain.length) || '/';
+    return path;
+  }
   if (typeof data.slug === "string" && data.slug) return `/${data.slug}`;
 
   const type = typeof data.type === "string" ? data.type : "";
@@ -143,7 +151,7 @@ const resolveDocumentHref = (data: Record<string, unknown>): string => {
   const typeToPath: Record<string, string> = {
     terms: "/cgu-clients",
     privacy: "/politique-confidentialite",
-    cookies: "/cookies",
+    cookies: "/fr-fr/cookies",
     legal: "/consommateurs",
     faq: "/faq",
     help: "/centre-aide",

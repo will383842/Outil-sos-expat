@@ -68,6 +68,7 @@ interface NavigationItem {
   readonly mobileIcon?: string;
   readonly desktopIcon?: string;
   readonly showInMobileMenu?: boolean;
+  readonly routeKey?: string; // Used to generate translated slug via getTranslatedRouteSlug
 }
 
 type WithAuthExtras = User & {
@@ -273,6 +274,7 @@ const LEFT_NAVIGATION_ITEMS: readonly NavigationItem[] = [
   },
   {
     path: "/testimonials",
+    routeKey: "testimonials",
     labelKey: "header.nav.testimonials",
     mobileIcon: "💬",
     desktopIcon: "💬",
@@ -1545,6 +1547,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useLocaleNavigate();
   const getLocalePath = useLocalePath();
+  const { language } = useApp();
   const { isLoading, user } = useAuth();
   const typedUser = user as WithAuthExtras | null;
   const affiliateRole = typedUser?.role as string | undefined;
@@ -1555,6 +1558,16 @@ const Header: React.FC = () => {
 
   const { isOnline, isUpdating, isProvider, toggle, isApproved } = useAvailabilityToggle();
   const isLockedPendingApproval = isProvider && !isApproved;
+
+  // Build the correct locale-prefixed path for a nav item, using translated slug when available.
+  // This avoids redirect chains like /fr-fr/testimonials → /fr-fr/temoignages (301).
+  const getNavPath = useCallback((item: NavigationItem): string => {
+    if (item.routeKey) {
+      const translatedSlug = getTranslatedRouteSlug(item.routeKey as any, language);
+      if (translatedSlug) return getLocalePath(`/${translatedSlug}`);
+    }
+    return getLocalePath(item.path);
+  }, [language, getLocalePath]);
 
   const isActive = useCallback(
     (path: string) => location.pathname === getLocalePath(path),
@@ -1687,7 +1700,7 @@ const Header: React.FC = () => {
                   {LEFT_NAVIGATION_ITEMS.slice(0, 2).map((item) => (
                     <Link
                       key={item.path}
-                      to={getLocalePath(item.path)}
+                      to={getNavPath(item)}
                       className={`flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors
                         ${scrolled ? "hover:bg-white/10" : "hover:bg-gray-100"}
                         ${isActive(item.path)
@@ -1743,7 +1756,7 @@ const Header: React.FC = () => {
                   ).map((item) => (
                     <Link
                       key={item.path}
-                      to={getLocalePath(item.path)}
+                      to={getNavPath(item)}
                       className={`flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors
                         ${scrolled ? "hover:bg-white/10" : "hover:bg-gray-100"}
                         ${isActive(item.path)
@@ -1903,7 +1916,7 @@ const Header: React.FC = () => {
                       MOBILE_NAVIGATION_ITEMS.map((item) => (
                         <li key={item.path}>
                           <Link
-                            to={getLocalePath(item.path)}
+                            to={getNavPath(item)}
                             className={`flex items-center space-x-3 p-3 rounded-xl text-gray-300
                               hover:bg-white/10 transition-colors
                               ${isActive(item.path) ? "bg-white/10" : ""}`}

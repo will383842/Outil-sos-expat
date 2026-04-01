@@ -359,7 +359,7 @@ const HelpCenter: React.FC = () => {
       )
       .replace(
         /^# (.*)$/gm,
-        '<h1 class="mt-10 mb-4 text-3xl md:text-4xl font-white text-white">$1</h1>'
+        '<h2 class="mt-10 mb-4 text-3xl md:text-4xl font-white text-white">$1</h2>'
       );
 
     // Gras

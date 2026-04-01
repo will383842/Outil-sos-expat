@@ -124,7 +124,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({
       hi: '/hi-in/cookies',
       ar: '/ar-sa/cookies',
     };
-    return localeMap[language] || '/cookies';
+    return localeMap[language] || '/fr-fr/cookies';
   };
 
   const handleAcceptAll = () => {
