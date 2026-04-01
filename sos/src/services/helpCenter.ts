@@ -149,9 +149,7 @@ export const listHelpCategories = async (locale?: string): Promise<HelpCategory[
   if (locale) {
     constraints.push(where("locale", "==", locale));
   }
-  // Ajout d'une limite pour éviter de charger trop de données
   constraints.push(orderBy("order", "asc"));
-  constraints.push(limit(100));
   const q = query(categoriesCol, ...constraints);
   const snap = await getDocs(q);
   return snap.docs
@@ -169,9 +167,9 @@ export const listHelpArticles = async (options?: {
   if (options?.locale) constraints.push(where("locale", "==", options.locale));
   if (options?.categoryId) constraints.push(where("categoryId", "==", options.categoryId));
   if (options?.onlyPublished) constraints.push(where("isPublished", "==", true));
-  // Ajout d'une limite pour éviter de charger trop de données
   constraints.push(orderBy("order", "asc"));
-  constraints.push(limit(options?.maxResults ?? 200));
+  // Limit only if explicitly requested — no artificial cap by default
+  if (options?.maxResults) constraints.push(limit(options.maxResults));
   const q = query(articlesCol, ...constraints);
   const snap = await getDocs(q);
   return snap.docs
