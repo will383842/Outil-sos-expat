@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useIntl } from 'react-intl';
 import { useParams, Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useLocaleNavigate } from '../multilingual-system';
 import { collection, query, where, getDocs, getDoc, doc, updateDoc, increment, orderBy, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -8,8 +9,9 @@ import Layout from '../components/layout/Layout';
 import SEOHead from '../components/layout/SEOHead';
 import { BreadcrumbSchema, generateBreadcrumbs, FAQPageSchema } from '../components/seo';
 import { useApp } from '../contexts/AppContext';
-import { getLocaleString, parseLocaleFromPath } from '../multilingual-system';
+import { getLocaleString, parseLocaleFromPath, getTranslatedRouteSlug } from '../multilingual-system';
 import { ChevronRight, Home, HelpCircle } from 'lucide-react';
+import { FAQ_CATEGORIES, getTranslatedValue } from '../services/faq';
 
 interface FAQ {
   id: string;
@@ -561,27 +563,27 @@ const FAQDetail: React.FC = () => {
     return (
       <Layout>
         <SEOHead
-          title="FAQ Not Found | SOS Expat"
-          description="The requested FAQ could not be found."
+          title={`${intl.formatMessage({ id: 'faq.detail.notFound.title', defaultMessage: 'FAQ Not Found' })} | SOS Expat`}
+          description={intl.formatMessage({ id: 'faq.detail.notFound.description', defaultMessage: 'The requested FAQ could not be found.' })}
         />
         <div className="max-w-4xl mx-auto px-4 py-12">
           <div className="text-center">
             <HelpCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">FAQ Not Found</h1>
-            <p className="text-gray-600 mb-6">{error || 'The requested FAQ could not be found.'}</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{intl.formatMessage({ id: 'faq.detail.notFound.title', defaultMessage: 'FAQ Not Found' })}</h1>
+            <p className="text-gray-600 mb-6">{intl.formatMessage({ id: 'faq.detail.notFound.description', defaultMessage: 'The requested FAQ could not be found.' })}</p>
             <div className="flex gap-4 justify-center">
               <Link
                 to={`/${currentLocale}/faq`}
                 className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
               >
                 <Home className="w-5 h-5" />
-                Back to FAQ
+                {intl.formatMessage({ id: 'faq.detail.notFound.backToFaq', defaultMessage: 'Back to FAQ' })}
               </Link>
               <Link
                 to={`/${currentLocale}`}
                 className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Go Home
+                {intl.formatMessage({ id: 'faq.detail.notFound.goHome', defaultMessage: 'Go Home' })}
               </Link>
             </div>
           </div>
@@ -609,25 +611,59 @@ const FAQDetail: React.FC = () => {
   ));
 
   // Build canonical URL with locale prefix
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sos-expat.com';
+  const CANONICAL_LOCALES: Record<string, string> = {
+    fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+    pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+  };
+  const LANG_DEFAULT_COUNTRY: Record<string, string> = {
+    fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'cn', hi: 'in', ar: 'sa',
+  };
+  const HREFLANG_CODES: Record<string, string> = {
+    fr: 'fr', en: 'en', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'zh-Hans', hi: 'hi', ar: 'ar',
+  };
+  const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
   const currentSlug = displayFaq.slug[langCode] || displayFaq.slug['fr'] || displayFaq.slug['en'] || displayFaq.id;
-  const canonicalUrl = `${baseUrl}/${currentLocale}/faq/${currentSlug}`;
+  const faqRouteSlug = getTranslatedRouteSlug('faq' as any, langCode as any) || 'faq';
+  const canonicalUrl = `https://sos-expat.com/${defaultLocale}/${faqRouteSlug}/${currentSlug}`;
 
-  // Generate alternate language URLs for hreflang tags
-  // Map language codes to their locale strings for URLs (using getLocaleString format: lowercase with hyphen)
-  // For hreflang, we use ISO format (e.g., "en-US"), but for URLs we use lowercase (e.g., "en-us")
-  // NOTE: hreflang links are handled globally by HreflangLinks component in App.tsx.
-  // Per-page alternateLanguages removed to avoid duplicate hreflang tags with different
-  // formats (e.g., hreflang="en" from global vs hreflang="en-US" from page), which confuses Google.
+  // Meta description: truncate at last "." before 160 chars for clean sentences
+  const rawDesc = answer.replace(/\n/g, ' ');
+  const metaDescription = rawDesc.length <= 160
+    ? rawDesc
+    : (rawDesc.substring(0, 160).replace(/\.[^.]*$/, '') || rawDesc.substring(0, 157)) + (rawDesc.length > 160 ? '…' : '');
+
+  // Detect untranslated FAQ: if langCode has no own content and falls back to FR/EN → noindex
+  const hasOwnTranslation = !!(displayFaq.question[langCode] && displayFaq.answer[langCode]);
+  const noIndex = !hasOwnTranslation && langCode !== 'fr';
+
+  // Per-article hreflang using translated slugs (global hreflang in App.tsx doesn't know translated slugs)
+  const ALL_LANGS = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'hi', 'ar'] as const;
+  const faqHreflang = ALL_LANGS.map(lang => {
+    const country = LANG_DEFAULT_COUNTRY[lang];
+    const artSlug = displayFaq.slug[lang] || displayFaq.slug['fr'] || displayFaq.slug['en'] || displayFaq.id;
+    const langFaqSlug = getTranslatedRouteSlug('faq' as any, lang as any) || 'faq';
+    return {
+      lang: HREFLANG_CODES[lang],
+      url: `https://sos-expat.com/${lang === 'ch' ? 'zh' : lang}-${country}/${langFaqSlug}/${artSlug}`,
+    };
+  });
 
   return (
     <Layout>
+      {/* Per-article hreflang with correct translated slugs + noindex for untranslated content */}
+      <Helmet>
+        {faqHreflang.map(alt => (
+          <link key={alt.lang} rel="alternate" hrefLang={alt.lang} href={alt.url} />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/fr-fr/faq/${displayFaq.slug['fr'] || displayFaq.id}`} />
+        {noIndex && <meta name="robots" content="noindex,follow" />}
+      </Helmet>
       <SEOHead
         title={`${question} - FAQ | SOS Expat`}
-        description={answer.substring(0, 160).replace(/\n/g, ' ')}
+        description={metaDescription}
         keywords={[displayFaq.category, 'FAQ', 'help', ...(displayFaq.tags || [])].join(', ')}
         canonicalUrl={canonicalUrl}
-        locale={currentLang === 'fr' ? 'fr_FR' : 
+        locale={currentLang === 'fr' ? 'fr_FR' :
                 currentLang === 'en' ? 'en_US' :
                 currentLang === 'es' ? 'es_ES' :
                 currentLang === 'ru' ? 'ru_RU' :
@@ -652,11 +688,11 @@ const FAQDetail: React.FC = () => {
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-gray-600 flex items-center gap-2" aria-label="Breadcrumb">
           <Link to={`/${currentLocale}`} className="hover:text-red-600 transition-colors">
-            Home
+            {intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' })}
           </Link>
           <ChevronRight className="w-4 h-4" />
           <Link to={`/${currentLocale}/faq`} className="hover:text-red-600 transition-colors">
-            FAQ
+            {intl.formatMessage({ id: 'breadcrumb.faq', defaultMessage: 'FAQ' })}
           </Link>
           <ChevronRight className="w-4 h-4" />
           <span className="text-gray-900 font-medium truncate max-w-xs sm:max-w-md">
@@ -668,11 +704,14 @@ const FAQDetail: React.FC = () => {
         <header className="mb-8 pb-6 border-b border-gray-200">
           <div className="flex items-start gap-3 mb-4">
             <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium capitalize">
-              {displayFaq.category}
+              {(() => {
+                const cat = FAQ_CATEGORIES.find(c => c.id === displayFaq.category);
+                return cat ? getTranslatedValue(cat.name, langCode, cat.name.en) : displayFaq.category;
+              })()}
             </span>
             {displayFaq.views !== undefined && (
               <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
-                {displayFaq.views} views
+                {intl.formatMessage({ id: 'faq.detail.views', defaultMessage: '{count} views' }, { count: displayFaq.views })}
               </span>
             )}
           </div>
@@ -696,7 +735,7 @@ const FAQDetail: React.FC = () => {
         {/* Related FAQs */}
         {relatedFAQs.length > 0 && (
           <div className="mt-12 pt-8 border-t border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Questions</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{intl.formatMessage({ id: 'faq.detail.relatedQuestions', defaultMessage: 'Related Questions' })}</h2>
             <div className="space-y-4">
               {relatedFAQs.map(relatedFaq => {
                 const relatedQuestion = relatedFaq.question[langCode] || relatedFaq.question['fr'] || relatedFaq.question['en'];
@@ -725,7 +764,7 @@ const FAQDetail: React.FC = () => {
             className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
-            Back to all FAQs
+            {intl.formatMessage({ id: 'faq.detail.backToAll', defaultMessage: 'Back to all FAQs' })}
           </Link>
         </div>
 

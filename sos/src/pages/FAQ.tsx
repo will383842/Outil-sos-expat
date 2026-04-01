@@ -158,9 +158,28 @@ const FAQ: React.FC = () => {
     return () => { document.documentElement.removeAttribute('data-article-loaded'); };
   }, [loading, faqData.length]);
 
+  // noindex if no FAQs loaded (thin content) and not loading
+  const noIndexEmpty = !loading && faqData.length === 0;
+
+  // ItemList JSON-LD for rich results (top 10 FAQ links)
+  const faqPageUrl = `https://sos-expat.com/${currentLocale}/${getTranslatedRouteSlug("faq" as any, language as any) || 'faq'}`;
+  const itemListSchema = faqData.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": intl.formatMessage({ id: "faq.heroTitle", defaultMessage: "Frequently Asked Questions" }),
+    "url": faqPageUrl,
+    "numberOfItems": faqData.length,
+    "itemListElement": faqData.slice(0, 10).map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.question,
+      "url": `${faqPageUrl}/${item.slug?.[langCode] || item.slug?.['fr'] || item.slug?.['en'] || item.id}`,
+    })),
+  } : null;
+
   return (
     <Layout>
-      {/* Speakable schema — allows voice assistants to read FAQ answers */}
+      {/* Speakable schema + ItemList JSON-LD + noindex if empty */}
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -169,13 +188,17 @@ const FAQ: React.FC = () => {
             "@type": "SpeakableSpecification",
             "cssSelector": [".faq-answer", "h1", "h2"]
           },
-          "url": `https://sos-expat.com/${getLocaleString(language as any)}/${getTranslatedRouteSlug("faq" as any, language as any) || 'faq'}`
+          "url": faqPageUrl,
         })}</script>
+        {itemListSchema && (
+          <script type="application/ld+json">{JSON.stringify(itemListSchema)}</script>
+        )}
+        {noIndexEmpty && <meta name="robots" content="noindex,follow" />}
       </Helmet>
       <SEOHead
         title={intl.formatMessage({ id: "faq.heroTitle", defaultMessage: "Frequently Asked Questions" }) + " | SOS Expat & Travelers"}
         description={intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })}
-        canonicalUrl={`https://sos-expat.com/${getLocaleString(language as any)}/${getTranslatedRouteSlug("faq" as any, language as any) || 'faq'}`}
+        canonicalUrl={faqPageUrl}
         author="Manon"
         contentType="FAQPage"
         locale={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'}
@@ -193,7 +216,7 @@ const FAQ: React.FC = () => {
             question: item.question,
             answer: item.answer,
           }))}
-          pageUrl={`https://sos-expat.com/${currentLocale}/faq`}
+          pageUrl={faqPageUrl}
           inLanguage={langCode}
         />
       )}
