@@ -2804,6 +2804,41 @@ const ProviderProfile: React.FC = () => {
         </Helmet>
       )}
 
+      {/* Standalone Person JSON-LD — AEO: entity recognition by ChatGPT / Perplexity / Gemini */}
+      {provider && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "@id": `https://sos-expat.com${window.location.pathname}#person`,
+            "name": formatPublicName(provider),
+            "jobTitle": roleLabel,
+            "image": profilePhoto.startsWith('http') ? profilePhoto : `https://sos-expat.com${profilePhoto}`,
+            "url": canonicalUrl,
+            "worksFor": {
+              "@type": "Organization",
+              "name": "SOS Expat & Travelers",
+              "url": "https://sos-expat.com",
+            },
+            "knowsLanguage": languagesList.map((code) => ({
+              "@type": "Language",
+              "name": getLanguageName(code, preferredLangKey) || code,
+            })),
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": (provider.country || '').toUpperCase(),
+            },
+            ...(provider.yearsOfExperience ? {
+              "hasOccupation": {
+                "@type": "Occupation",
+                "name": roleLabel,
+                "experienceRequirements": `${provider.yearsOfExperience} ${yearsLabel}`,
+              }
+            } : {}),
+          })}</script>
+        </Helmet>
+      )}
+
       {/* SVG defs pour dégradé étoiles */}
       <svg width="0" height="0" className="hidden" aria-hidden="true">
         <defs>

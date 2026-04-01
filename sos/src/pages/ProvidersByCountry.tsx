@@ -555,6 +555,25 @@ const ProvidersByCountry: React.FC = () => {
         })}</script>
       </Helmet>
 
+      {/* Country/Place schema — geo entity recognition for AEO (ChatGPT, Perplexity, Gemini) */}
+      {countryData && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Country",
+            "@id": `https://sos-expat.com/country/${countryCode.toLowerCase()}#place`,
+            "name": countryName,
+            "identifier": countryCode.toUpperCase(),
+            "description": introText,
+            "url": canonicalUrl,
+            "containedInPlace": {
+              "@type": "Continent",
+              "name": countryData.region,
+            },
+          })}</script>
+        </Helmet>
+      )}
+
       {/* ✅ ItemList Schema — structured provider listing for rich results */}
       {!isLoading && providers.length > 0 && (
         <Helmet>

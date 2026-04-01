@@ -234,7 +234,7 @@ const FAQ: React.FC = () => {
       {/* FAQPage JSON-LD (dedicated, clean schema for Google Rich Results) */}
       {faqData.length > 0 && (
         <FAQPageSchema
-          faqs={faqData.map((item) => ({
+          faqs={filteredFAQ.slice(0, 10).map((item) => ({
             question: item.question,
             answer: item.answer,
           }))}
@@ -437,7 +437,7 @@ const FAQ: React.FC = () => {
                                 </span>
                                 <Link
                                   to={`/${currentLocale}/${faqRouteSlug}/${item.slug?.[langCode] || item.slug?.['fr'] || item.slug?.['en'] || item.id}`}
-                                  className="text-lg md:text-xl font-bold text-gray-900 flex-1 hover:text-red-600 transition-colors"
+                                  className="faq-question text-lg md:text-xl font-bold text-gray-900 flex-1 hover:text-red-600 transition-colors"
                                 >
                                   {item.question}
                                 </Link>
@@ -472,7 +472,7 @@ const FAQ: React.FC = () => {
                                 className="px-6 pb-5"
                               >
                                 <div className="border-t border-white/60 md:border-white/60 pt-4">
-                                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                  <p className="faq-answer text-gray-700 leading-relaxed whitespace-pre-line">
                                     {item.answer}
                                   </p>
 
