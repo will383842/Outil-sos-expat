@@ -828,7 +828,7 @@ export const scheduledSeoHealthCheck = onSchedule(
       'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles',
       'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapHelp',
       'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapFaq',
-      'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapLanding',
+      // sitemapLanding supprimé — landing_pages collection vide, MC publie sur le blog
     ];
 
     const sitemapResults: { name: string; ok: boolean; status: number }[] = [];

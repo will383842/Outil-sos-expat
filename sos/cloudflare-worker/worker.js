@@ -187,13 +187,8 @@ const BLOG_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/ressourcen\/[^\/]+$/i,            // Resources DE
   /^\/[a-z]{2}(-[a-z]{2})?\/resursy\/[^\/]+$/i,               // Resources RU
 
-  // FAQ articles (deep links)
-  /^\/[a-z]{2}(-[a-z]{2})?\/faq\/[^\/]+$/i,                   // FAQ articles
-  /^\/[a-z]{2}(-[a-z]{2})?\/preguntas-frecuentes\/[^\/]+$/i,  // FAQ ES
-  /^\/[a-z]{2}(-[a-z]{2})?\/perguntas-frequentes\/[^\/]+$/i,  // FAQ PT
-  /^\/[a-z]{2}(-[a-z]{2})?\/voprosy-otvety\/[^\/]+$/i,        // FAQ RU
-  /^\/[a-z]{2}(-[a-z]{2})?\/changjian-wenti\/[^\/]+$/i,       // FAQ ZH
-  /^\/[a-z]{2}(-[a-z]{2})?\/aksar-puche-jaane-wale-sawal\/[^\/]+$/i, // FAQ HI
+  // FAQ articles (deep links) — couverts par le catch-all ci-dessous
+  // Routing réel géré dans isBlogPath() via FAQ_BLOG_SEGMENTS (avec/sans slug)
 
   // Nested blog categories (e.g., /blog/category/article)
   /^\/[a-z]{2}(-[a-z]{2})?\/blog\/[^\/]+\/[^\/]+$/i,
