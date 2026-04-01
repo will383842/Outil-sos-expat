@@ -1128,6 +1128,19 @@ async function handleRequest(request, env, ctx) {
       if (!segment) return false;
       // /{locale}/{translated-segment} = blog content
       if (BLOG_SEGMENTS.has(segment)) return true;
+
+      // FAQ special routing:
+      // /locale/faq           → SPA React (Firestore collection 'faqs', géré depuis la console admin)
+      // /locale/faq/slug      → Blog Laravel (articles FAQ du blog)
+      const FAQ_BLOG_SEGMENTS = new Set([
+        'faq', 'preguntas-frecuentes', 'haeufige-fragen', 'perguntas-frequentes',
+        'voprosy', 'changjian-wenti', 'aksar-poochhe-jaane-wale-prashna', 'asilah-shaaiah',
+      ]);
+      if (FAQ_BLOG_SEGMENTS.has(segment)) {
+        // Proxy vers le blog uniquement s'il y a un slug après le segment faq
+        const pathParts = path.split('/').filter(Boolean);
+        return pathParts.length >= 3; // ['fr-fr', 'faq', 'mon-slug'] = 3 parties
+      }
     }
 
     return false;

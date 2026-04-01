@@ -279,6 +279,18 @@ Sitemap: https://sos-expat.com/sitemaps/countries-zh.xml
 Sitemap: https://sos-expat.com/sitemaps/countries-ar.xml
 Sitemap: https://sos-expat.com/sitemaps/countries-hi.xml
 
+# Blog sitemaps supplémentaires (Laravel SSR)
+Sitemap: https://sos-expat.com/sitemaps/faq-countries.xml
+Sitemap: https://sos-expat.com/sitemaps/tools.xml
+Sitemap: https://sos-expat.com/sitemaps/sondages.xml
+Sitemap: https://sos-expat.com/sitemaps/directory.xml
+
+# SPA Firebase sitemaps (Firestore — Firebase Functions)
+Sitemap: https://sos-expat.com/sitemaps/profiles.xml
+Sitemap: https://sos-expat.com/sitemaps/help.xml
+Sitemap: https://sos-expat.com/sitemaps/faq.xml
+Sitemap: https://sos-expat.com/sitemaps/country-listings.xml
+
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA
 # ===========================================
