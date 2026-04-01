@@ -1,0 +1,91 @@
+{
+  "reference": "en.json",
+  "referenceKeyCount": 12532,
+  "generatedAt": "2026-03-27T10:46:27.308Z",
+  "languages": {
+    "es.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion",
+        "influencer.calculator.videos",
+        "influencer.calculator.views"
+      ]
+    },
+    "de.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion",
+        "influencer.calculator.videos",
+        "influencer.calculator.views"
+      ]
+    },
+    "pt.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion",
+        "influencer.calculator.videos",
+        "influencer.calculator.views"
+      ]
+    },
+    "ru.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion",
+        "influencer.calculator.videos",
+        "influencer.calculator.views"
+      ]
+    },
+    "ch.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.videos",
+        "influencer.calculator.views",
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion"
+      ]
+    },
+    "hi.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.videos",
+        "influencer.calculator.views",
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion"
+      ]
+    },
+    "ar.json": {
+      "totalKeys": 12536,
+      "missingCount": 0,
+      "extraCount": 4,
+      "first20Missing": [],
+      "first10Extra": [
+        "influencer.calculator.videos",
+        "influencer.calculator.views",
+        "influencer.calculator.clickrate",
+        "influencer.calculator.conversion"
+      ]
+    }
+  }
+}
