@@ -376,6 +376,11 @@ const Testimonials: React.FC = () => {
     "image": `${SEO_BASE_URL}/sos-logo.webp`,
     "description": intl.formatMessage({ id: "testy.hero.subtitle" }),
     "priceRange": "€€",
+    // address required by Google for LocalBusiness/ProfessionalService
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "FR",
+    },
     // Only include aggregateRating if both ratingCount AND reviewCount > 0 (Google requirement)
     ...(aggregateRating.ratingCount > 0 && aggregateRating.reviewCount > 0 && {
       "aggregateRating": {

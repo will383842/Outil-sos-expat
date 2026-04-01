@@ -621,6 +621,11 @@ const OptimizedHomePage: React.FC = () => {
       "@type": "Organization",
       "@id": `${seoConst.BASE_URL}/#organization`,
     },
+    // address required by Google for LocalBusiness/ProfessionalService
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "FR",
+    },
     "areaServed": {
       "@type": "Place",
       "name": "Worldwide",

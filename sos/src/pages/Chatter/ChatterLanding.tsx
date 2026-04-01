@@ -254,6 +254,7 @@ const ChatterLanding: React.FC = () => {
     operatingSystem: 'All',
     inLanguage: htmlLang,
     availableLanguage: ['fr', 'en', 'es', 'de', 'ru', 'pt', 'zh', 'hi', 'ar'],
+    screenshot: `${BASE_URL}/og-image.png`,
     offers: {
       '@type': 'Offer',
       price: '0',

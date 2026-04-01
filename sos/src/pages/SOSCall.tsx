@@ -904,6 +904,10 @@ const generateAllSchemas = (
     name: intl.formatMessage({ id: "sosCall.seo.serviceName" }),
     description: intl.formatMessage({ id: "sosCall.seo.serviceDescription" }),
     provider: { "@id": `${BASE_URL}/#organization` },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "FR",
+    },
     priceRange: "€€",
     serviceType: intl.formatMessage({ id: "sosCall.seo.serviceType" }),
     areaServed: {

@@ -812,6 +812,7 @@ const PartnerLanding: React.FC = () => {
     '@type': 'HowTo',
     'name': intl.formatMessage({ id: 'partner.landing.v2.hero.badge', defaultMessage: 'Programme Partenaire Premium' }),
     'description': seoData.description,
+    'image': 'https://sos-expat.com/og-image.png',
     'totalTime': 'PT10M',
     'step': [
       {
@@ -819,24 +820,28 @@ const PartnerLanding: React.FC = () => {
         'position': 1,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.apply.title', defaultMessage: 'Échangeons' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.apply.desc', defaultMessage: 'Contactez-nous pour nous parler de votre organisation.' }),
+        'image': 'https://sos-expat.com/og-image.png',
       },
       {
         '@type': 'HowToStep',
         'position': 2,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.negotiate.title', defaultMessage: 'Construisons ensemble' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.negotiate.desc', defaultMessage: 'Nous définissons ensemble les termes de votre partenariat.' }),
+        'image': 'https://sos-expat.com/og-image.png',
       },
       {
         '@type': 'HowToStep',
         'position': 3,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.integrate.title', defaultMessage: 'Intégrez' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.integrate.desc', defaultMessage: 'Partagez votre lien, QR code ou intégrez notre widget.' }),
+        'image': 'https://sos-expat.com/og-image.png',
       },
       {
         '@type': 'HowToStep',
         'position': 4,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.earn.title', defaultMessage: 'Profitez' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.earn.desc', defaultMessage: 'Vos clients accèdent à un service d\'exception et vous profitez des avantages négociés.' }),
+        'image': 'https://sos-expat.com/og-image.png',
       },
     ],
   }), [intl, seoData.description]);
@@ -866,6 +871,11 @@ const PartnerLanding: React.FC = () => {
     'name': `${SEO_CONSTANTS.SITE_NAME} - Partner Program`,
     'url': canonicalUrl,
     'provider': { '@type': 'Organization', '@id': `${SEO_CONSTANTS.BASE_URL}/#organization` },
+    // address required by Google for LocalBusiness/ProfessionalService
+    'address': {
+      '@type': 'PostalAddress',
+      'addressCountry': 'FR',
+    },
     'areaServed': { '@type': 'Place', 'name': 'Worldwide' },
     'serviceType': 'B2B Partnership Program',
     'description': seoData.description,
@@ -875,6 +885,8 @@ const PartnerLanding: React.FC = () => {
       'itemListElement': [
         {
           '@type': 'Offer',
+          'price': '0',
+          'priceCurrency': 'EUR',
           'itemOffered': {
             '@type': 'Service',
             'name': intl.formatMessage({ id: 'partner.landing.v2.value.monetize.title', defaultMessage: 'Un service complémentaire pour votre audience' }),
@@ -882,6 +894,8 @@ const PartnerLanding: React.FC = () => {
         },
         {
           '@type': 'Offer',
+          'price': '0',
+          'priceCurrency': 'EUR',
           'itemOffered': {
             '@type': 'Service',
             'name': intl.formatMessage({ id: 'partner.landing.v2.value.tools.title', defaultMessage: 'Outils clés en main' }),
