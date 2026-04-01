@@ -205,6 +205,24 @@ function entryTitle(e: DirectoryEntry, lang: string): string {
   return e.title;
 }
 
+// Localised country name via Intl.DisplayNames (for multilingual search)
+// The API always returns names in French — this lets users search in their own language
+const _intlCache = new Map<string, string>();
+function localizedCountryName(code: string, lang: string): string {
+  const key = `${code}:${lang}`;
+  if (_intlCache.has(key)) return _intlCache.get(key)!;
+  try {
+    const locale = lang === "ch" ? "zh" : lang === "hi" ? "hi-IN" : lang;
+    const dn = new Intl.DisplayNames([locale, "fr"], { type: "region" });
+    const name = (dn.of(code) ?? "").toLowerCase();
+    _intlCache.set(key, name);
+    return name;
+  } catch {
+    _intlCache.set(key, "");
+    return "";
+  }
+}
+
 function saveRecent(c: CountrySummary) {
   try {
     const prev: CountrySummary[] = JSON.parse(localStorage.getItem(LS_RECENT) ?? "[]");
@@ -595,16 +613,17 @@ const Annuaire: React.FC = () => {
     [countries]
   );
 
-  const filteredCountries = useMemo(() =>
-    countries.filter(c => {
-      const q = search.toLowerCase();
-      return (
-        (!search || c.country_name.toLowerCase().includes(q) || c.country_code.toLowerCase().includes(q)) &&
-        (continent === "all" || c.continent === continent)
-      );
-    }),
-    [countries, search, continent]
-  );
+  const filteredCountries = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return countries.filter(c => {
+      const matchSearch = !q ||
+        c.country_name.toLowerCase().includes(q) ||        // French name (API default)
+        c.country_code.toLowerCase().includes(q) ||        // ISO code e.g. "DE"
+        localizedCountryName(c.country_code, lang).includes(q); // user's language
+      const matchContinent = continent === "all" || c.continent === continent;
+      return matchSearch && matchContinent;
+    });
+  }, [countries, search, continent, lang]);
 
   const groupedByContinent = useMemo(() => {
     const g: Record<string, CountrySummary[]> = {};
