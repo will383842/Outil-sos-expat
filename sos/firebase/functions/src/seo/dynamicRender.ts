@@ -465,6 +465,21 @@ export const renderForBotsV2 = onRequest(
       return;
     }
 
+    // Normalize trailing slashes on locale homepage paths (e.g. /en-us/ → /en-us)
+    // Prevents hreflang self-reference conflicts: Cloudflare _redirects rules are
+    // bypassed when the Worker forwards bot requests directly to this function.
+    // Only strip trailing slash from locale root paths (/{lang}-{country}/)
+    // Leave other paths with trailing slashes untouched (they might be intentional).
+    const trailingLocalePattern = /^(\/[a-z]{2}-[a-z]{2})\/$|^\/$/;
+    const trailingMatch = requestPath.match(trailingLocalePattern);
+    if (trailingMatch && requestPath !== '/') {
+      // /en-us/ → redirect 301 to /en-us
+      const cleanPath = requestPath.replace(/\/$/, '');
+      const cleanUrl = fullUrl.replace(/\/$/, '');
+      res.redirect(301, cleanUrl || `${SITE_URL}${cleanPath}`);
+      return;
+    }
+
     // Check cache first (L1 memory → L2 Firestore)
     // SEO FIX: Partition cache by locale to prevent serving wrong language content.
     // Previously, /fr-fr/tarifs and all other locale variants shared the same cache key,

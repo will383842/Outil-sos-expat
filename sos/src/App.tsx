@@ -1171,7 +1171,9 @@ const App: React.FC = () => {
             {/* Skip on provider profile pages — they have custom slug-based hreflang */}
             {/* Skip on help-center ARTICLE pages — HelpArticle.tsx renders per-language slug hreflang */}
             {/* Skip on FAQ detail pages — FAQDetail.tsx renders per-article slug hreflang */}
-            {!location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|ekspatriado|auswanderer|expatriados)\//) &&
+            {/* Skip on root "/" — it's a client-side redirect, hreflang would conflict (no self-reference) */}
+            {location.pathname !== "/" &&
+             !location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|ekspatriado|auswanderer|expatriados)\//) &&
              !location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(centre-aide|help-center|centro-ayuda|hilfezentrum|tsentr-pomoshchi|centro-ajuda|bangzhu-zhongxin|sahayata-kendra|markaz-almosaada)\/.+/) &&
              !location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(faq|preguntas-frecuentes|voprosy-otvety|perguntas-frequentes|changjian-wenti|aksar-puche-jaane-wale-sawal)\/.+/) && (
               <HreflangLinks pathname={location.pathname} />

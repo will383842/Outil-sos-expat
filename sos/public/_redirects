@@ -425,6 +425,13 @@
 /ru-ru/expaty-v/:country /ru-ru/expaty/:country 301
 
 # =============================================
+# Slug FR vs EN mismatch — hreflang self-reference fix
+# /fr-fr/testimonials uses English slug → hreflang generates /fr-fr/temoignages
+# Redirect to the canonical French slug to restore self-reference
+# =============================================
+/fr-fr/testimonials /fr-fr/temoignages 301
+
+# =============================================
 # SPA fallback - MUST be last
 # All routes that don't match above are served by index.html
 # =============================================
