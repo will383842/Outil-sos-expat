@@ -251,10 +251,10 @@ const ChatterLanding: React.FC = () => {
     name: 'SOS-Expat Chatter',
     url: canonicalUrl,
     applicationCategory: 'BusinessApplication',
-    operatingSystem: 'All',
+    operatingSystem: 'Windows, MacOS, Linux, Android, iOS',
     inLanguage: htmlLang,
     availableLanguage: ['fr', 'en', 'es', 'de', 'ru', 'pt', 'zh', 'hi', 'ar'],
-    screenshot: `${BASE_URL}/og-image.png`,
+    screenshot: { '@type': 'ImageObject', 'url': `${BASE_URL}/og-image.png`, 'width': 1200, 'height': 630 },
     offers: {
       '@type': 'Offer',
       price: '0',

@@ -379,6 +379,7 @@ const Testimonials: React.FC = () => {
     // address required by Google for LocalBusiness/ProfessionalService
     "address": {
       "@type": "PostalAddress",
+      "addressLocality": "Paris",
       "addressCountry": "FR",
     },
     // Only include aggregateRating if both ratingCount AND reviewCount > 0 (Google requirement)

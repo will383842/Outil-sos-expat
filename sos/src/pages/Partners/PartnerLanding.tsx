@@ -870,12 +870,15 @@ const PartnerLanding: React.FC = () => {
     '@id': `${SEO_CONSTANTS.BASE_URL}/#partner-service`,
     'name': `${SEO_CONSTANTS.SITE_NAME} - Partner Program`,
     'url': canonicalUrl,
+    'image': { '@type': 'ImageObject', 'url': SEO_CONSTANTS.LOGO_URL, 'width': 512, 'height': 512 },
     'provider': { '@type': 'Organization', '@id': `${SEO_CONSTANTS.BASE_URL}/#organization` },
     // address required by Google for LocalBusiness/ProfessionalService
     'address': {
       '@type': 'PostalAddress',
+      'addressLocality': 'Paris',
       'addressCountry': 'FR',
     },
+    'priceRange': '€€',
     'areaServed': { '@type': 'Place', 'name': 'Worldwide' },
     'serviceType': 'B2B Partnership Program',
     'description': seoData.description,

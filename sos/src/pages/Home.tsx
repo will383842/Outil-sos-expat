@@ -618,6 +618,7 @@ const OptimizedHomePage: React.FC = () => {
     "@id": `${seoConst.BASE_URL}/#service`,
     "name": isHolidays ? seoConst.SITE_NAME : intl.formatMessage({ id: "schema.serviceType" }),
     "url": seoConst.BASE_URL,
+    "image": { "@type": "ImageObject", "url": `${seoConst.LOGO_URL}`, "width": 512, "height": 512 },
     "provider": {
       "@type": "Organization",
       "@id": `${seoConst.BASE_URL}/#organization`,
@@ -625,6 +626,7 @@ const OptimizedHomePage: React.FC = () => {
     // address required by Google for LocalBusiness/ProfessionalService
     "address": {
       "@type": "PostalAddress",
+      "addressLocality": "Paris",
       "addressCountry": "FR",
     },
     "areaServed": {
