@@ -1079,8 +1079,8 @@ async function handleRequest(request, env, ctx) {
   const BLOG_SEGMENTS = new Set([
     // articles
     'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
-    // faq
-    'faq', 'preguntas-frecuentes', 'haeufige-fragen', 'perguntas-frequentes', 'voprosy', 'changjian-wenti', 'aksar-poochhe-jaane-wale-prashna', 'asilah-shaaiah',
+    // faq — NOTE: 'faq' et traductions appartiennent à la SPA React (Firestore), PAS au blog
+    // 'faq', 'preguntas-frecuentes', 'haeufige-fragen', 'perguntas-frequentes', 'voprosy', 'changjian-wenti', 'aksar-poochhe-jaane-wale-prashna', 'asilah-shaaiah',
     // categories
     'categories', 'categorias', 'kategorien', 'kategorii', 'fenlei', 'varg', 'alfiat',
     // tags
