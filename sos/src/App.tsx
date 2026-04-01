@@ -675,7 +675,9 @@ const DefaultHelmet: React.FC<{ pathname: string }> = ({ pathname }) => {
     <Helmet>
       <html lang={metadata.lang} />
       <title>{metadata.title}</title>
-      <meta name="description" content={metadata.description} />
+      {/* NOTE: No default <meta name="description"> here — each page's SEOHead renders
+          its own unique description. A shared fallback description causes duplicate
+          meta description errors across all pages in SEO audits. */}
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
       <meta name="theme-color" content="#000000" />
     </Helmet>
