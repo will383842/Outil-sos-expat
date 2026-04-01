@@ -140,8 +140,8 @@ const ServiceStatus: React.FC = () => {
   return (
     <Layout>
       <SEOHead
-        title={intl.formatMessage({ id: 'serviceStatus.meta.title', defaultMessage: 'Statut du Service | SOS Expat' })}
-        description={intl.formatMessage({ id: 'serviceStatus.meta.description', defaultMessage: 'Vérifiez l\'état opérationnel en temps réel des services SOS Expat.' })}
+        title={intl.formatMessage({ id: 'serviceStatus.meta.title', defaultMessage: 'Service Status | SOS Expat' })}
+        description={intl.formatMessage({ id: 'serviceStatus.meta.description', defaultMessage: 'Check the real-time operational status of SOS Expat services.' })}
         locale={OG_LOCALE[language] || 'fr_FR'}
       />
       <BreadcrumbSchema items={[

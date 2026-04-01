@@ -889,7 +889,7 @@ const App: React.FC = () => {
   const location = useLocation();
   const {language} = useApp()
   const { isMobile } = useDeviceDetection();
-  const [locale, setLocale] = useState<Locale>("fr"); // Default to French since your site is French
+  const [locale, setLocale] = useState<Locale>((language as Locale) || "fr"); // Init from URL-detected language (AppContext reads URL synchronously)
 
   // ✅ PERF: Chargement dynamique des traductions (seul EN est statique, fallback universel)
   const currentMessages = useDynamicMessages(locale);
