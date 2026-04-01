@@ -471,14 +471,21 @@ export const renderForBotsV2 = onRequest(
     // so whichever language was rendered first was served to all bots.
     const { locale: pathLocale } = extractLocaleFromPath(requestPath);
     const cacheKey = isHolidays ? `holidays:${pathLocale}:${requestPath}` : `${pathLocale}:${requestPath}`;
-    const cachedHtml = await getCachedHtml(cacheKey);
-    if (cachedHtml) {
-      logger.info('Serving cached HTML', { path: requestPath, isHolidays });
-      res.set('Content-Type', 'text/html; charset=utf-8');
-      res.set('X-Prerender-Cache', 'HIT');
-      res.set('Cache-Control', 'public, max-age=86400'); // 24 hours
-      res.send(cachedHtml);
-      return;
+
+    // x-cache-bypass: 1 → force re-render (used by SSR warming cron after deployments)
+    // This ensures stale cached HTML with old Vite asset hashes gets replaced
+    const forceRefresh = req.headers['x-cache-bypass'] === '1';
+
+    if (!forceRefresh) {
+      const cachedHtml = await getCachedHtml(cacheKey);
+      if (cachedHtml) {
+        logger.info('Serving cached HTML', { path: requestPath, isHolidays });
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.set('X-Prerender-Cache', 'HIT');
+        res.set('Cache-Control', 'public, max-age=86400'); // 24 hours
+        res.send(cachedHtml);
+        return;
+      }
     }
 
     try {

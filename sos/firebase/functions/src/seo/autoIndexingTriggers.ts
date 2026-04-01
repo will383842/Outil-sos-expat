@@ -1197,7 +1197,13 @@ async function warmPath(path: string): Promise<boolean> {
     const timer = setTimeout(() => controller.abort(), 30000);
     const res = await fetch(url.toString(), {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Googlebot/2.1', 'Accept': 'text/html' },
+      headers: {
+        'User-Agent': 'Googlebot/2.1',
+        'Accept': 'text/html',
+        // Force re-render: bypasse le cache SSR pour éviter de servir
+        // du HTML périmé avec d'anciens hashes Vite (404 assets)
+        'x-cache-bypass': '1',
+      },
     });
     clearTimeout(timer);
     return res.ok;
