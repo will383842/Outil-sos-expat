@@ -1163,7 +1163,9 @@ const App: React.FC = () => {
 
             {/* Dynamically generate hreflang links for all locales */}
             {/* Skip on provider profile pages — they have custom slug-based hreflang */}
-            {!location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|ekspatriado|auswanderer|expatriados)/) && (
+            {/* Skip on help-center ARTICLE pages — HelpArticle.tsx renders per-language slug hreflang */}
+            {!location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(avocat|lawyer|abogado|anwalt|advogado|advokat|lushi|muhami|vakil|expatrie|expat|expatriado|ekspatriado|auswanderer|expatriados)\//) &&
+             !location.pathname.match(/\/[a-z]{2}-[a-z]{2}\/(centre-aide|help-center|centro-ayuda|hilfezentrum|tsentr-pomoshchi|centro-ajuda|bangzhu-zhongxin|sahayata-kendra|markaz-almosaada)\/.+/) && (
               <HreflangLinks pathname={location.pathname} />
             )}
             {/* P0 FIX: ErrorBoundary pour capturer les erreurs de lazy loading */}

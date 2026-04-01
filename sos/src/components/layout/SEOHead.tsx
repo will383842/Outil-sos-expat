@@ -33,6 +33,9 @@ interface SEOHeadProps {
   contentQuality?: 'high' | 'medium' | 'low';
   lastReviewed?: string;
   citations?: string[];
+  // Géolocalisation pour Bing/Yandex
+  geoRegion?: string;    // ex: "FR", "MA", "US"
+  geoPlacename?: string; // ex: "France", "Maroc", "United States"
 }
 
 const SEOHead: React.FC<SEOHeadProps> = ({
@@ -61,7 +64,9 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   trustworthiness,
   contentQuality,
   lastReviewed,
-  citations = []
+  citations = [],
+  geoRegion,
+  geoPlacename,
 }) => {
   // Construction URL canonique sécurisée
   // IMPORTANT: La canonical doit pointer vers la version "par défaut" de la page
@@ -285,6 +290,11 @@ const SEOHead: React.FC<SEOHeadProps> = ({
           }
         }, null, 0)}
       </script>
+
+      {/* Géolocalisation pour Bing, Yandex, DuckDuckGo */}
+      {geoRegion && <meta name="geo.region" content={geoRegion} />}
+      {geoPlacename && <meta name="geo.placename" content={geoPlacename} />}
+      {geoRegion && <meta name="geo.country" content={geoRegion.split('-')[0]} />}
 
       {/* Meta additionnels pour le SEO */}
       <meta name="format-detection" content="telephone=no" />

@@ -620,7 +620,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "centro-ajuda",
     ch: "bangzhu-zhongxin",
     hi: "sahayata-kendra",
-    ar: "مركز-المساعدة",
+    ar: "markaz-almosaada",
   },
   "testimonials": {
     fr: "temoignages",

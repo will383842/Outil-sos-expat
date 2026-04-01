@@ -21,10 +21,25 @@
     <loc>https://sos-expat.com/sitemaps/country-listings.xml</loc>
     <lastmod>2026-03-31</lastmod>
   </sitemap>
-  <!-- Blog SSR (outils, sondages, annuaire, articles) -->
-  <!-- TODO: décommenter quand le blog sera déployé sur https://sos-expat.com/blog/ -->
-  <!-- <sitemap>
-    <loc>https://sos-expat.com/blog/sitemap.xml</loc>
-    <lastmod>2026-03-31</lastmod>
-  </sitemap> -->
+  <!-- Blog SSR (outils, sondages, annuaire, articles) — proxié via Cloudflare Worker -->
+  <sitemap>
+    <loc>https://sos-expat.com/sitemaps/tools.xml</loc>
+    <lastmod>2026-04-01</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://sos-expat.com/sitemaps/sondages.xml</loc>
+    <lastmod>2026-04-01</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://sos-expat.com/sitemaps/directory.xml</loc>
+    <lastmod>2026-04-01</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://sos-expat.com/sitemaps/articles-fr-1.xml</loc>
+    <lastmod>2026-04-01</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://sos-expat.com/sitemaps/categories-fr.xml</loc>
+    <lastmod>2026-04-01</lastmod>
+  </sitemap>
 </sitemapindex>

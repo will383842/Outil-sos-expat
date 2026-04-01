@@ -2171,6 +2171,14 @@ export {
   onHelpArticleUpdated,
 } from './helpCenter/generateFAQ';
 
+// ========== HELP CENTER ARTICLE INITIALIZATION (admin) ==========
+export {
+  initSingleHelpArticle,
+  initHelpArticlesBatch,
+  checkHelpCategories,
+  clearHelpArticles,
+} from './helpCenter/initHelpArticles';
+
 
 // ========== INVOICE DOWNLOAD URL GENERATION ==========
 export const generateInvoiceDownloadUrl = onCall(

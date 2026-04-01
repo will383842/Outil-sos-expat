@@ -282,9 +282,14 @@
 # Legacy help center slug redirects (old format -> current)
 # hilfe-center was old German slug, now hilfezentrum
 # centr-pomoshi was old Russian slug, now tsentr-pomoshchi
+# Arabic Unicode slug -> romanized ASCII
 # =============================================
 /de-de/hilfe-center/* /de-de/hilfezentrum/:splat 301
 /de-de/hilfe-center /de-de/hilfezentrum 301
+
+# Arabic help-center: Unicode slug -> romanized ASCII (SEO: slugs must be ASCII)
+/ar-sa/%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9/* /ar-sa/markaz-almosaada/:splat 301
+/ar-sa/%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9 /ar-sa/markaz-almosaada 301
 
 # Cross-locale help center slug fixes (Russian slug under wrong locale)
 /en-us/centr-pomoshi/* /ru-ru/tsentr-pomoshchi/:splat 301

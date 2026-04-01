@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Search,
   Phone,
@@ -12,20 +13,30 @@ import {
   Clock,
   ChevronDown,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
-import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
 import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug } from "../multilingual-system";
+import { phoneCodesData } from "../data/phone-codes";
 import {
   listHelpCategories,
   listHelpArticles,
   HelpCategory as FirestoreCategory,
   HelpArticle as FirestoreArticle,
 } from "../services/helpCenter";
+
+// Lookup country name from ISO-2 code in the given language
+const getCountryNameForLang = (countryCode: string, lang: string): string => {
+  if (!countryCode) return '';
+  const entry = phoneCodesData.find(c => c.code.toLowerCase() === countryCode.toLowerCase());
+  if (!entry) return '';
+  const key = lang === 'ch' ? 'zh' : lang as keyof typeof entry;
+  return (entry[key] as string) || entry.en || '';
+};
 
 interface Article {
   id: string;
@@ -124,6 +135,8 @@ const HelpCenter: React.FC = () => {
   const langCode = urlLang || language || 'en';
   // ISO lang for html lang attribute (ch → zh)
   const isoLang = langCode === 'ch' ? 'zh' : langCode;
+  // RTL languages
+  const isRTL = langCode === 'ar';
 
   // OG locale mapping for SEOHead
   const OG_LOCALE_MAP: Record<string, string> = {
@@ -141,6 +154,23 @@ const HelpCenter: React.FC = () => {
 
   // Translated help center slug
   const helpCenterSlug = getTranslatedRouteSlug("help-center" as any, langCode as any) || 'centre-aide';
+  // Translated providers (annuaire) slug
+  const providersSlug = getTranslatedRouteSlug("providers" as any, langCode as any) || 'prestataires';
+
+  // Country-aware SEO: extract country from URL and get localized name
+  const countryCode = (urlCountry || '').toUpperCase();
+  const countryName = countryCode ? getCountryNameForLang(countryCode, langCode) : '';
+
+  // Build country-specific or generic SEO title/description
+  const seoTitle = countryName
+    ? intl.formatMessage({ id: 'helpCenter.seoTitleWithCountry' }, { country: countryName })
+    : `${intl.formatMessage({ id: 'helpCenter.title' })} | SOS Expat`;
+  const seoDesc = countryName
+    ? intl.formatMessage({ id: 'helpCenter.seoDescWithCountry' }, { country: countryName })
+    : intl.formatMessage({ id: 'helpCenter.seoDescGeneric' });
+  const pageSubtitle = countryName
+    ? intl.formatMessage({ id: 'helpCenter.subtitleWithCountry' }, { country: countryName })
+    : intl.formatMessage({ id: 'helpCenter.subtitle' });
 
   // Load categories and articles from Firestore
   useEffect(() => {
@@ -356,54 +386,138 @@ const HelpCenter: React.FC = () => {
 
   // SEO breadcrumbs
   const breadcrumbs = [
-    { name: intl.formatMessage({ id: "nav.home" }), url: "/" },
-    { name: intl.formatMessage({ id: "helpCenter.title" }) },
+    { name: intl.formatMessage({ id: "nav.home" }), url: `/${currentLocale}` },
+    {
+      name: countryName
+        ? `${intl.formatMessage({ id: "helpCenter.title" })} — ${countryName}`
+        : intl.formatMessage({ id: "helpCenter.title" })
+    },
   ];
 
   // ======================= Vue liste =======================
   return (
     <Layout>
       <SEOHead
-        title={intl.formatMessage({ id: "helpCenter.title" }) + " | SOS Expat"}
-        description={intl.formatMessage({ id: "helpCenter.subtitle" })}
+        title={seoTitle}
+        description={seoDesc}
         canonicalUrl={`https://sos-expat.com/${defaultLocale}/${helpCenterSlug}`}
         locale={ogLocale}
-        author="Manon"
+        author="SOS Expat"
+        keywords={[
+          'expatrié', 'expat', 'aide', 'guide', 'FAQ', countryName,
+          intl.formatMessage({ id: 'helpCenter.title' }),
+        ].filter(Boolean).join(', ')}
         structuredData={{
           "@type": "CollectionPage",
           "@context": "https://schema.org",
-          name: intl.formatMessage({ id: "helpCenter.title" }),
-          description: intl.formatMessage({ id: "helpCenter.subtitle" }),
+          name: seoTitle.replace(' | SOS Expat', ''),
+          description: seoDesc,
           url: `https://sos-expat.com/${defaultLocale}/${helpCenterSlug}`,
           inLanguage: isoLang,
+          ...(countryCode && {
+            locationCreated: {
+              "@type": "Country",
+              name: countryName || countryCode,
+              identifier: countryCode,
+            },
+          }),
+          audience: {
+            "@type": "Audience",
+            audienceType: countryName
+              ? `Expats in ${countryName}, Vacationers, Travelers, Immigrants`
+              : "Expats, Vacationers, Travelers, Immigrants",
+            ...(countryCode && {
+              geographicArea: { "@type": "Country", name: countryName || countryCode },
+            }),
+          },
+          speakable: {
+            "@type": "SpeakableSpecification",
+            cssSelector: ["h1", ".help-center-subtitle", ".speakable"],
+          },
           provider: {
             "@type": "Organization",
             name: "SOS Expat",
             url: "https://sos-expat.com",
+            logo: {
+              "@type": "ImageObject",
+              url: "https://sos-expat.com/sos-logo.webp",
+              width: 512,
+              height: 512,
+            },
+            sameAs: [
+              "https://www.facebook.com/sosexpat",
+              "https://twitter.com/sos_expat",
+              "https://www.linkedin.com/company/sos-expat",
+            ],
           },
         }}
         contentType="CollectionPage"
-        aiSummary={intl.formatMessage({ id: "helpCenter.subtitle" })}
-        expertise="Expat Assistance, Legal Documentation, Administrative Help"
-        trustworthiness="verified_content, regularly_updated"
+        aiSummary={seoDesc}
+        expertise="Expat Assistance, Legal Documentation, Administrative Help, International Law"
+        trustworthiness="verified_content, regularly_updated, expert_reviewed"
         contentQuality="high"
+        geoRegion={countryCode || undefined}
+        geoPlacename={countryName || undefined}
       />
-      {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
+      {/* HreflangLinks removed: handled globally in App.tsx */}
       <BreadcrumbSchema items={breadcrumbs} />
-      <div className="min-h-screen bg-gray-50">
+      {/* ItemList schema pour rich results Google */}
+      {!isLoading && articles.length > 0 && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: seoTitle.replace(' | SOS Expat', ''),
+            description: seoDesc,
+            url: `https://sos-expat.com/${defaultLocale}/${helpCenterSlug}`,
+            numberOfItems: articles.length,
+            itemListElement: articles.slice(0, 20).map((article, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              name: article.title,
+              url: `https://sos-expat.com/${defaultLocale}/${helpCenterSlug}/${article.slug}`,
+              description: article.excerpt,
+            })),
+          })}</script>
+        </Helmet>
+      )}
+      <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Fil d'Ariane HTML visible (SEO + accessibilité) */}
+        <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500" itemScope itemType="https://schema.org/BreadcrumbList">
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <Link to={`/${currentLocale}`} className="hover:text-blue-600 transition-colors" itemProp="item">
+                  <span itemProp="name">{intl.formatMessage({ id: "nav.home" })}</span>
+                </Link>
+                <meta itemProp="position" content="1" />
+              </li>
+              <li className="text-gray-300" aria-hidden="true">/</li>
+              <li className="font-medium text-gray-900" aria-current="page" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <span itemProp="name">
+                  {intl.formatMessage({ id: "helpCenter.title" })}
+                  {countryName && ` — ${countryName}`}
+                </span>
+                <meta itemProp="position" content="2" />
+              </li>
+            </ol>
+          </div>
+        </nav>
+
         {/* HERO */}
         <header className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
             <h1 className="text-4xl md:text-6xl text-white font-bold mb-4">
-              {/* {language === 'fr' ? "Centre d'aide" : 'Help Center'} */}
               {intl.formatMessage({ id: "helpCenter.title" })}
+              {countryName && (
+                <span className="block text-2xl md:text-3xl font-normal text-white/70 mt-2">
+                  {countryName}
+                </span>
+              )}
             </h1>
-            <p className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-8">
-              {/* {language === 'fr'
-                ? 'Trouvez rapidement des réponses et des guides internationaux.'
-                : 'Quickly find international answers and guides.'} */}
-              {intl.formatMessage({ id: "helpCenter.subtitle" })}
+            <p className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-8 help-center-subtitle speakable">
+              {pageSubtitle}
             </p>
 
             {/* Barre de recherche */}
@@ -617,7 +731,7 @@ const HelpCenter: React.FC = () => {
                     {filteredArticles.map((article) => (
                       <Link
                         key={article.id}
-                        to={`/${currentLocale}/centre-aide/${article.slug}`}
+                        to={`/${currentLocale}/${helpCenterSlug}/${article.slug}`}
                         className="group block rounded-3xl border border-gray-200 bg-white p-6 hover:shadow-xl transition-all hover:scale-[1.01]"
                         aria-label={article.title}
                       >
@@ -680,20 +794,32 @@ const HelpCenter: React.FC = () => {
           </div>
         </main>
 
+        {/* Liens externes — Maillage externe vers l'annuaire */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-gray-100">
+          <h2 className="text-base font-semibold text-gray-700 mb-3">
+            {intl.formatMessage({ id: "helpCenter.externalLinksTitle" })}
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`https://sos-expat.com/${currentLocale}/${providersSlug}`}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-2 text-sm text-blue-700 hover:text-blue-800 hover:underline"
+            >
+              <ExternalLink size={14} />
+              {intl.formatMessage({ id: "helpCenter.annuaireLink" })}
+            </a>
+          </div>
+        </section>
+
         {/* Contact Support */}
         <section className="relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 py-16">
           <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/20 pointer-events-none" />
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              {/* {language === "fr"
-                ? "Vous ne trouvez pas votre réponse ?"
-                : "Can't find your answer?"} */}
               {intl.formatMessage({ id: "helpCenter.supportTitle" })}
             </h2>
             <p className="text-lg md:text-xl text-white/95 mb-8">
-              {/* {language === "fr"
-                ? "Notre équipe support est disponible 24/7 pour vous aider"
-                : "Our support team is available 24/7 to help you"} */}
               {intl.formatMessage({ id: "helpCenter.supportSubtitle" })}
             </p>
 
@@ -704,10 +830,7 @@ const HelpCenter: React.FC = () => {
               >
                 <span className="relative z-10 inline-flex items-center gap-2">
                   <Mail size={20} />
-                  <span>
-                    {/* {language === "fr" ? "Nous contacter" : "Contact us"} */}
-                    {intl.formatMessage({ id: "helpCenter.contactUs" })}
-                  </span>
+                  <span>{intl.formatMessage({ id: "helpCenter.contactUs" })}</span>
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/5" />
               </a>
@@ -718,10 +841,7 @@ const HelpCenter: React.FC = () => {
               >
                 <span className="relative z-10 inline-flex items-center gap-2">
                   <Phone size={20} />
-                  <span>
-                    {/* {language === "fr" ? "Appel d'urgence" : "Emergency call"} */}
-                    {intl.formatMessage({ id: "helpCenter.emergencyCall" })}
-                  </span>
+                  <span>{intl.formatMessage({ id: "helpCenter.emergencyCall" })}</span>
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/30" />
               </a>

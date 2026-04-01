@@ -1,7 +1,7 @@
 // src/pages/HelpArticle.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { ChevronLeft, Clock, BookOpen } from "lucide-react";
+import { ChevronLeft, Clock, BookOpen, ExternalLink, List } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
@@ -9,6 +9,38 @@ import { ArticleSchema, BreadcrumbSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
 import { useIntl } from "react-intl";
 import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug, useLocaleNavigate, useLocalePath } from "../multilingual-system";
+import { phoneCodesData } from "../data/phone-codes";
+
+// Lookup country name from ISO-2 code in the given language
+const getCountryNameForLang = (countryCode: string, lang: string): string => {
+  if (!countryCode) return '';
+  const entry = phoneCodesData.find(c => c.code.toLowerCase() === countryCode.toLowerCase());
+  if (!entry) return '';
+  const key = lang === 'ch' ? 'zh' : lang as keyof typeof entry;
+  return (entry[key] as string) || entry.en || '';
+};
+
+// Parse Table of Contents from markdown content
+interface TOCItem { id: string; text: string; level: number; }
+const parseTOC = (markdown: string): TOCItem[] => {
+  const toc: TOCItem[] = [];
+  const usedIds: Record<string, number> = {};
+  const lines = markdown.split('\n');
+  for (const line of lines) {
+    const h2 = line.match(/^## (.+)$/);
+    const h3 = line.match(/^### (.+)$/);
+    const match = h2 || h3;
+    if (match) {
+      const level = h2 ? 2 : 3;
+      const text = match[1].trim();
+      const baseId = text.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-') || 'section';
+      usedIds[baseId] = (usedIds[baseId] || 0) + 1;
+      const id = usedIds[baseId] > 1 ? `${baseId}-${usedIds[baseId]}` : baseId;
+      toc.push({ id, text, level });
+    }
+  }
+  return toc;
+};
 import {
   listHelpArticles,
   HelpArticle as HelpArticleType,
@@ -51,23 +83,28 @@ const getTranslatedFAQ = (
   };
 };
 
-// Markdown to HTML converter
+// Slugify a heading text for use as HTML id
+const slugifyHeading = (text: string): string =>
+  text.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-') || 'section';
+
+// Markdown to HTML converter (with IDs on h2/h3 for TOC anchor links)
 const mdToHtml = (md: string): string => {
   let html = md
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Headers
+  const usedIds: Record<string, number> = {};
+  const makeId = (t: string): string => {
+    const base = slugifyHeading(t);
+    usedIds[base] = (usedIds[base] || 0) + 1;
+    return usedIds[base] > 1 ? `${base}-${usedIds[base]}` : base;
+  };
+
+  // Headers (h2/h3 get IDs for TOC links)
   html = html
-    .replace(
-      /^### (.*)$/gm,
-      '<h3 class="mt-6 mb-2 text-xl font-bold text-white">$1</h3>'
-    )
-    .replace(
-      /^## (.*)$/gm,
-      '<h2 class="mt-8 mb-3 text-2xl font-bold text-white">$1</h2>'
-    )
+    .replace(/^### (.*)$/gm, (_, t) => `<h3 id="${makeId(t)}" class="mt-6 mb-2 text-xl font-bold text-white">${t}</h3>`)
+    .replace(/^## (.*)$/gm, (_, t) => `<h2 id="${makeId(t)}" class="mt-8 mb-3 text-2xl font-bold text-white">${t}</h2>`)
     .replace(
       /^# (.*)$/gm,
       '<h1 class="mt-10 mb-4 text-3xl font-bold text-white">$1</h1>'
@@ -111,6 +148,10 @@ const HelpArticle: React.FC = () => {
   // Parse locale from URL to get language and country
   const { lang: urlLang, country: currentCountry } = parseLocaleFromPath(location.pathname);
   const langCode = urlLang || language || 'en';
+  const isRTL = langCode === 'ar';
+  // Country-aware SEO
+  const countryCode = (currentCountry || '').toUpperCase();
+  const countryName = countryCode ? getCountryNameForLang(countryCode, langCode) : '';
 
   // Handle language change from header - redirect to translated slug
   useEffect(() => {
@@ -300,6 +341,8 @@ const HelpArticle: React.FC = () => {
   const howToSchema = generateHowToSchema();
   // ISO lang code for SEO (ch → zh)
   const isoLang = langCode === 'ch' ? 'zh' : langCode;
+  // Table of Contents (auto-generated from markdown H2/H3)
+  const toc = useMemo(() => parseTOC(content), [content]);
 
   // OG locale mapping for SEOHead
   const OG_LOCALE_MAP: Record<string, string> = {
@@ -315,12 +358,36 @@ const HelpArticle: React.FC = () => {
     fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
     pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
   };
+  const LANG_DEFAULT_COUNTRY: Record<string, string> = {
+    fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'cn', hi: 'in', ar: 'sa',
+  };
+  const HREFLANG_CODES: Record<string, string> = {
+    fr: 'fr', en: 'en', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'zh-Hans', hi: 'hi', ar: 'ar',
+  };
   const { locale: urlLocale } = parseLocaleFromPath(location.pathname);
   const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
   const currentLocale = urlLocale || defaultLocale;
   const helpCenterSlug = getTranslatedRouteSlug("help-center" as any, langCode as any);
   // Full absolute URL bypasses SEOHead's locale re-processing (no double normalization)
   const articleUrl = `https://sos-expat.com/${defaultLocale}/${helpCenterSlug}/${currentSlug}`;
+
+  // Detect if article content is untranslated (stored as string = French only)
+  // When untranslated, non-French pages show French content = duplicate content
+  const isArticleTranslated = typeof article.title === 'object' && article.title !== null;
+  const noIndexUntranslated = !isArticleTranslated && langCode !== 'fr';
+
+  // Per-language hreflang for this article using correct translated slugs
+  const ALL_LANGS = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'hi', 'ar'] as const;
+  const articleHreflang = ALL_LANGS.map(lang => {
+    const urlLang = lang === 'ch' ? 'zh' : lang;
+    const country = LANG_DEFAULT_COUNTRY[lang];
+    const artSlug = getTranslatedValue(article.slug, lang) || currentSlug;
+    const hcSlug = getTranslatedRouteSlug("help-center" as any, lang as any);
+    return {
+      lang: HREFLANG_CODES[lang],
+      url: `https://sos-expat.com/${urlLang}-${country}/${hcSlug}/${artSlug}`,
+    };
+  });
 
   // Breadcrumbs for structured data
   const breadcrumbs = [
@@ -341,21 +408,42 @@ const HelpArticle: React.FC = () => {
         : new Date(article.updatedAt as any).toISOString())
     : datePublished;
 
+  // Country-aware SEO title/description
+  const seoTitle = countryName
+    ? `${title} — ${countryName} | SOS Expat`
+    : `${title} | SOS Expat`;
+  const seoDesc = countryName && excerpt
+    ? `${excerpt.substring(0, 120)} · ${countryName}`
+    : excerpt;
+  // Providers slug for external link
+  const providersSlug = getTranslatedRouteSlug("providers" as any, langCode as any) || 'prestataires';
+
   return (
     <Layout>
+      {/* Per-language hreflang with correct translated article slugs (replaces global HreflangLinks on article pages) */}
+      <Helmet>
+        {articleHreflang.map(alt => (
+          <link key={alt.lang} rel="alternate" hrefLang={alt.lang} href={alt.url} />
+        ))}
+        <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/fr-fr/centre-aide/${getTranslatedValue(article.slug, 'fr') || currentSlug}`} />
+        {/* noindex when article content is not yet translated (prevents indexing French content on non-FR pages) */}
+        {noIndexUntranslated && <meta name="robots" content="noindex,nofollow" />}
+      </Helmet>
       <SEOHead
-        title={`${title} | SOS Expat`}
-        description={excerpt}
+        title={seoTitle}
+        description={seoDesc}
         canonicalUrl={`https://sos-expat.com/${defaultLocale}/${helpCenterSlug}/${currentSlug}`}
         locale={ogLocale}
-        author="Manon"
+        author="SOS Expat"
         contentType="article"
         ogType="article"
         publishedTime={datePublished}
         modifiedTime={dateModified}
-        keywords={tags.join(', ')}
+        keywords={[...tags, countryName].filter(Boolean).join(', ')}
         readingTime={`${article.readTime} min`}
         structuredData={faqSchema || undefined}
+        geoRegion={countryCode || undefined}
+        geoPlacename={countryName || undefined}
       />
       <ArticleSchema
         title={title}
@@ -375,14 +463,55 @@ const HelpArticle: React.FC = () => {
           <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
         </Helmet>
       )}
+      {/* Speakable schema for AEO (voice assistants, ChatGPT, Perplexity) */}
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "@id": articleUrl,
+          speakable: {
+            "@type": "SpeakableSpecification",
+            cssSelector: [".speakable", "h1", ".help-center-subtitle"],
+          },
+          ...(countryCode && {
+            locationCreated: { "@type": "Country", name: countryName || countryCode, identifier: countryCode },
+          }),
+        })}</script>
+      </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" data-article-loaded="true">
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950" data-article-loaded="true" dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Fil d'Ariane HTML visible */}
+        <nav aria-label="breadcrumb" className="bg-gray-950/80 border-b border-white/10">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <ol className="flex flex-wrap items-center gap-1.5 text-sm text-white/60" itemScope itemType="https://schema.org/BreadcrumbList">
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <Link to={`/${currentLocale}`} className="hover:text-white transition-colors" itemProp="item">
+                  <span itemProp="name">{intl.formatMessage({ id: "nav.home" })}</span>
+                </Link>
+                <meta itemProp="position" content="1" />
+              </li>
+              <li className="text-white/30" aria-hidden="true">/</li>
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <Link to={`/${currentLocale}/${helpCenterSlug}`} className="hover:text-white transition-colors" itemProp="item">
+                  <span itemProp="name">{intl.formatMessage({ id: "helpCenter.title" })}</span>
+                </Link>
+                <meta itemProp="position" content="2" />
+              </li>
+              <li className="text-white/30" aria-hidden="true">/</li>
+              <li className="text-white/90 font-medium truncate max-w-[200px]" aria-current="page" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <span itemProp="name">{title}</span>
+                <meta itemProp="position" content="3" />
+              </li>
+            </ol>
+          </div>
+        </nav>
+
         {/* Hero compact */}
-        <div className="relative pt-16 pb-10">
+        <div className="relative pt-10 pb-6">
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
           <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              to={getLocalePath("/centre-aide")}
+              to={`/${currentLocale}/${helpCenterSlug}`}
               className="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors font-semibold"
             >
               <ChevronLeft size={20} />
@@ -397,6 +526,9 @@ const HelpArticle: React.FC = () => {
             <div className="mb-6">
               <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
                 {title}
+                {countryName && (
+                  <span className="block text-lg font-normal text-white/60 mt-1">{countryName}</span>
+                )}
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20">
@@ -415,6 +547,42 @@ const HelpArticle: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Résumé / Summary — AEO Featured Snippet */}
+            {excerpt && (
+              <div className="mb-8 rounded-xl bg-blue-500/10 border border-blue-400/20 p-4">
+                <p className="text-sm font-semibold text-blue-300 mb-1 uppercase tracking-wide">
+                  {intl.formatMessage({ id: "helpCenter.summaryTitle" })}
+                </p>
+                <p className="text-white/80 leading-relaxed text-sm speakable">{excerpt}</p>
+              </div>
+            )}
+
+            {/* Table des matières (TOC) — si ≥ 3 titres */}
+            {toc.length >= 3 && (
+              <nav aria-label={intl.formatMessage({ id: "helpCenter.tocTitle" })}
+                   className="mb-8 rounded-xl bg-white/5 border border-white/10 p-5">
+                <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+                  <List size={16} className="text-blue-400" />
+                  {intl.formatMessage({ id: "helpCenter.tocTitle" })}
+                </h2>
+                <ol className="space-y-1.5">
+                  {toc.map((item, i) => (
+                    <li key={i} className={item.level === 3 ? 'ml-4' : ''}>
+                      <a
+                        href={`#${item.id}`}
+                        className="text-sm text-blue-300 hover:text-white transition-colors inline-flex items-start gap-1.5"
+                      >
+                        <span className="text-white/40 flex-shrink-0 mt-0.5 text-xs">
+                          {item.level === 2 ? `${i + 1}.` : '○'}
+                        </span>
+                        <span>{item.text}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            )}
 
             {/* Main content */}
             <div
@@ -449,6 +617,20 @@ const HelpArticle: React.FC = () => {
               </section>
             )}
           </article>
+
+          {/* Lien externe annuaire — maillage externe SEO */}
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <p className="text-sm text-white/50 mb-2">{intl.formatMessage({ id: "helpCenter.externalLinksTitle" })}</p>
+            <a
+              href={`https://sos-expat.com/${currentLocale}/${providersSlug}`}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-2 text-sm text-blue-300 hover:text-white transition-colors"
+            >
+              <ExternalLink size={14} />
+              {intl.formatMessage({ id: "helpCenter.annuaireLink" })}
+            </a>
+          </div>
 
           {/* Articles liés (liens internes SEO) */}
           {relatedArticles.length > 0 && (

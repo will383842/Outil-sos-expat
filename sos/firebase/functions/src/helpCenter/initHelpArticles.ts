@@ -11,6 +11,7 @@ import {
   HelpArticleData
 } from '../services/helpArticles/helpArticlesInit';
 import { ALLOWED_ORIGINS } from '../lib/functionConfigs';
+import { ANTHROPIC_SECRETS } from '../lib/secrets';
 
 /**
  * Vérifie que la requête provient d'un admin authentifié.
@@ -54,6 +55,7 @@ export const initSingleHelpArticle = onRequest(
     cpu: 0.083,
     timeoutSeconds: 300,
     cors: ALLOWED_ORIGINS,
+    secrets: ANTHROPIC_SECRETS,
   },
   async (req, res) => {
     if (req.method !== 'POST') {
@@ -101,6 +103,7 @@ export const initHelpArticlesBatch = onRequest(
     cpu: 0.083,
     timeoutSeconds: 540,
     cors: ALLOWED_ORIGINS,
+    secrets: ANTHROPIC_SECRETS,
   },
   async (req, res) => {
     if (req.method !== 'POST') {

@@ -4,6 +4,8 @@
 
 import { db, FieldValue } from '../../utils/firebase';
 import { SupportedLanguage } from '../providerTranslationService';
+import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropicApiKey } from '../../lib/secrets';
 
 // Types
 export interface HelpArticleData {
@@ -110,104 +112,78 @@ function generateSlugFromTitle(title: string): string {
     .substring(0, 80); // Max 80 chars
 }
 
+// Language name mapping for Claude prompts
+const LANGUAGE_NAMES: Record<string, string> = {
+  fr: 'French', en: 'English', es: 'Spanish', pt: 'Portuguese',
+  de: 'German', ru: 'Russian', ch: 'Simplified Chinese', hi: 'Hindi', ar: 'Arabic',
+};
+
 /**
- * Traduit un texte via API gratuite (MyMemory, LibreTranslate, Google unofficial)
+ * Traduit un article complet (tous les champs courts) en une seule requête Claude Haiku.
+ * Retourne JSON avec tous les champs traduits.
  */
-async function translateText(
-  text: string,
-  from: string,
-  to: string
-): Promise<string> {
-  if (!text || text.trim().length === 0) {
-    return text;
-  }
+async function translateArticleFieldsWithClaude(
+  fields: { title: string; excerpt: string; tags: string[]; seoKeywords: string[]; faqQuestions: string[]; faqAnswers: string[] },
+  targetLang: string
+): Promise<typeof fields> {
+  const targetLangName = LANGUAGE_NAMES[targetLang] || targetLang;
+  const prompt = `Translate the following JSON from French to ${targetLangName}.
+Return ONLY valid JSON with the same structure. Keep markdown formatting. For "ar" (Arabic) use right-to-left text naturally.
 
-  if (from === to) {
-    return text;
-  }
+${JSON.stringify(fields)}`;
 
-  // Mapping pour les codes de langue
-  const languageMap: Record<string, string> = {
-    'fr': 'fr', 'en': 'en', 'es': 'es', 'pt': 'pt', 'de': 'de',
-    'ru': 'ru', 'ch': 'zh', 'hi': 'hi', 'ar': 'ar',
-  };
-
-  const targetLang = languageMap[to] || to;
-  const sourceLang = languageMap[from] || from;
-
-  // Essai 1: MyMemory Translation API
   try {
-    const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=${sourceLang}|${targetLang}`;
-
-    const response = await fetch(myMemoryUrl, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
+    const apiKey = getAnthropicApiKey();
+    if (!apiKey) throw new Error('No Anthropic API key');
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }],
     });
-
-    if (response.ok) {
-      const data = await response.json() as { responseData?: { translatedText?: string } };
-      if (data.responseData?.translatedText) {
-        return data.responseData.translatedText;
-      }
-    }
+    const rawText = (response.content[0] as { type: string; text: string }).text?.trim() || '';
+    // Extract JSON from response (may have markdown fences)
+    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, rawText];
+    const parsed = JSON.parse(jsonMatch[1] || rawText);
+    return parsed as typeof fields;
   } catch (error) {
-    console.warn(`[translateText] MyMemory API error:`, error);
+    console.warn(`[translateArticleFields] Claude error for ${targetLang}:`, error);
+    return fields; // fallback: return source
   }
-
-  // Essai 2: LibreTranslate
-  try {
-    const libreUrl = 'https://libretranslate.de/translate';
-
-    const response = await fetch(libreUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        q: text.substring(0, 500),
-        source: sourceLang,
-        target: targetLang,
-        format: 'text'
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json() as { translatedText?: string };
-      if (data.translatedText) {
-        return data.translatedText;
-      }
-    }
-  } catch (error) {
-    console.warn(`[translateText] LibreTranslate API error:`, error);
-  }
-
-  // Essai 3: Google Translate (unofficial)
-  try {
-    const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text.substring(0, 500))}`;
-
-    const response = await fetch(googleUrl, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (response.ok) {
-      const data = await response.json() as any;
-      if (data?.[0] && Array.isArray(data[0])) {
-        const translated = data[0].map((item: any[]) => item[0]).join('');
-        if (translated) {
-          return translated;
-        }
-      }
-    }
-  } catch (error) {
-    console.warn(`[translateText] Google Translate API error:`, error);
-  }
-
-  // Si tout échoue, retourner le texte original
-  console.error(`[translateText] All APIs failed for: ${from} → ${to}`);
-  return text;
 }
 
 /**
- * Traduit un article complet vers une langue cible
+ * Traduit le contenu markdown d'un article via Claude Haiku (full content, no char limit).
+ */
+async function translateContentWithClaude(content: string, targetLang: string): Promise<string> {
+  if (!content || content.trim().length === 0) return content;
+  const targetLangName = LANGUAGE_NAMES[targetLang] || targetLang;
+  const prompt = `Translate the following help center article from French to ${targetLangName}.
+Keep all markdown formatting (##, ###, **, -, numbered lists, etc.) exactly as-is.
+Return ONLY the translated markdown, no explanations.
+
+${content}`;
+
+  try {
+    const apiKey = getAnthropicApiKey();
+    if (!apiKey) throw new Error('No Anthropic API key');
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return (response.content[0] as { type: string; text: string }).text?.trim() || content;
+  } catch (error) {
+    console.warn(`[translateContent] Claude error for ${targetLang}:`, error);
+    return content; // fallback: return source
+  }
+}
+
+/**
+ * Traduit un article complet vers une langue cible via Claude Haiku.
+ * - Champs courts (title, excerpt, tags, FAQ, keywords) : 1 seul appel API
+ * - Contenu markdown (content) : appel séparé pour gérer les textes longs
  */
 async function translateArticleToLanguage(
   article: HelpArticleData,
@@ -222,8 +198,6 @@ async function translateArticleToLanguage(
   faqAnswers: string[];
   seoKeywords: string[];
 }> {
-  const sourceLang = 'fr';
-
   // Si c'est français, pas besoin de traduire
   if (targetLang === 'fr') {
     return {
@@ -238,43 +212,31 @@ async function translateArticleToLanguage(
     };
   }
 
-  // Traduire tous les champs en parallèle
-  const [title, excerpt, content] = await Promise.all([
-    translateText(article.title, sourceLang, targetLang),
-    translateText(article.excerpt, sourceLang, targetLang),
-    translateText(article.content, sourceLang, targetLang),
+  // Traduire les champs courts et le contenu en parallèle (2 appels Claude)
+  const [translatedFields, translatedContent] = await Promise.all([
+    translateArticleFieldsWithClaude({
+      title: article.title,
+      excerpt: article.excerpt,
+      tags: article.tags,
+      seoKeywords: article.seoKeywords,
+      faqQuestions: article.faqSuggestions.map(f => f.question),
+      faqAnswers: article.faqSuggestions.map(f => f.answer),
+    }, targetLang),
+    translateContentWithClaude(article.content, targetLang),
   ]);
 
-  // Traduire les tags
-  const tags = await Promise.all(
-    article.tags.map(tag => translateText(tag, sourceLang, targetLang))
-  );
-
-  // Traduire les FAQ
-  const faqQuestions = await Promise.all(
-    article.faqSuggestions.map(f => translateText(f.question, sourceLang, targetLang))
-  );
-  const faqAnswers = await Promise.all(
-    article.faqSuggestions.map(f => translateText(f.answer, sourceLang, targetLang))
-  );
-
-  // Traduire les mots-clés SEO
-  const seoKeywords = await Promise.all(
-    article.seoKeywords.map(kw => translateText(kw, sourceLang, targetLang))
-  );
-
-  // Générer le slug traduit
+  const title = translatedFields.title || article.title;
   const slug = generateSlugFromTitle(title);
 
   return {
     title,
     slug,
-    excerpt,
-    content,
-    tags,
-    faqQuestions,
-    faqAnswers,
-    seoKeywords,
+    excerpt: translatedFields.excerpt || article.excerpt,
+    content: translatedContent || article.content,
+    tags: translatedFields.tags || article.tags,
+    faqQuestions: translatedFields.faqQuestions || article.faqSuggestions.map(f => f.question),
+    faqAnswers: translatedFields.faqAnswers || article.faqSuggestions.map(f => f.answer),
+    seoKeywords: translatedFields.seoKeywords || article.seoKeywords,
   };
 }
 
