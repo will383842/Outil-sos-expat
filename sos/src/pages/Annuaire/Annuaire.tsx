@@ -205,6 +205,12 @@ function entryTitle(e: DirectoryEntry, lang: string): string {
   return e.title;
 }
 
+// Normalize string: remove accents/diacritics + lowercase
+// Critical for French search: Bénin→benin, Côte d'Ivoire→cote d'ivoire, États-Unis→etats-unis
+function normalize(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 // Localised country name via Intl.DisplayNames (for multilingual search)
 // The API always returns names in French — this lets users search in their own language
 const _intlCache = new Map<string, string>();
@@ -214,7 +220,7 @@ function localizedCountryName(code: string, lang: string): string {
   try {
     const locale = lang === "ch" ? "zh" : lang === "hi" ? "hi-IN" : lang;
     const dn = new Intl.DisplayNames([locale, "fr"], { type: "region" });
-    const name = (dn.of(code) ?? "").toLowerCase();
+    const name = normalize(dn.of(code) ?? "");
     _intlCache.set(key, name);
     return name;
   } catch {
@@ -614,12 +620,12 @@ const Annuaire: React.FC = () => {
   );
 
   const filteredCountries = useMemo(() => {
-    const q = search.toLowerCase().trim();
+    const q = normalize(search.trim());
     return countries.filter(c => {
       const matchSearch = !q ||
-        c.country_name.toLowerCase().includes(q) ||        // French name (API default)
+        normalize(c.country_name).includes(q) ||           // French name, accents stripped
         c.country_code.toLowerCase().includes(q) ||        // ISO code e.g. "DE"
-        localizedCountryName(c.country_code, lang).includes(q); // user's language
+        localizedCountryName(c.country_code, lang).includes(q); // user's language, accents stripped
       const matchContinent = continent === "all" || c.continent === continent;
       return matchSearch && matchContinent;
     });
