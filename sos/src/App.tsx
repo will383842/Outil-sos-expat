@@ -234,6 +234,7 @@ const PartnersPage = lazy(() => import('./pages/Partners/PartnersPage'));
 const InfluencerDirectory = lazy(() => import('./pages/Influencer/InfluencerDirectory'));
 const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
+const Annuaire = lazy(() => import('./pages/Annuaire/Annuaire'));
 
 // -------------------------------------------
 // Language config — chargement dynamique des traductions
@@ -385,6 +386,9 @@ const routeConfigs: RouteConfig[] = [
   // Services d'appel
   { path: "/sos-appel", component: SOSCall, translated: "sos-call" },
   { path: "/appel-expatrie", component: ExpatCall, translated: "expat-call" },
+
+  // Annuaire expatriés — ressources officielles par pays (CountryDirectory depuis Mission Control)
+  { path: "/annuaire", component: Annuaire, translated: "annuaire" },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },

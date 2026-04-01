@@ -97,9 +97,16 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       const { lang, pathWithoutLocale } = parseLocaleFromPath(cleanPath);
 
       if (lang) {
-        // Get the default locale for this language (e.g., 'fr' -> 'fr-fr', 'en' -> 'en-us')
-        const defaultLocale = getLocaleString(lang as any);
-        // Build canonical URL with default locale (no trailing slash)
+        // Use hardcoded default country per language to ensure consistent canonical URLs
+        // IMPORTANT: Do NOT use getLocaleString(lang) without country — it uses geo-detection
+        // which makes the canonical geo-dependent (e.g., fr-us instead of fr-fr for US crawlers).
+        const CANONICAL_COUNTRIES: Record<string, string> = {
+          fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru',
+          pt: 'pt', ch: 'cn', zh: 'cn', hi: 'in', ar: 'sa',
+        };
+        const urlLang = lang === 'ch' ? 'zh' : lang;
+        const country = CANONICAL_COUNTRIES[lang] || lang;
+        const defaultLocale = `${urlLang}-${country}`;
         const normalizedPathWithoutLocale = removeTrailingSlash(pathWithoutLocale);
         return `${baseUrl}/${defaultLocale}${normalizedPathWithoutLocale}`;
       }

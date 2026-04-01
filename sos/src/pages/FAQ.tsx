@@ -132,11 +132,13 @@ const FAQ: React.FC = () => {
   const filteredFAQ = faqData.filter((item) => {
     const matchesCategory =
       selectedCategory === "all" || item.category === selectedCategory;
-    const lowerSearch = searchTerm.toLowerCase();
+    const normalize = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalizedSearch = normalize(searchTerm);
     const matchesSearch =
-      item.question.toLowerCase().includes(lowerSearch) ||
-      item.answer.toLowerCase().includes(lowerSearch) ||
-      item.tags.some((tag) => tag.toLowerCase().includes(lowerSearch));
+      normalize(item.question).includes(normalizedSearch) ||
+      normalize(item.answer).includes(normalizedSearch) ||
+      item.tags.some((tag) => normalize(tag).includes(normalizedSearch));
     return matchesCategory && matchesSearch;
   });
 
@@ -161,9 +163,16 @@ const FAQ: React.FC = () => {
   // noindex if no FAQs loaded (thin content) and not loading
   const noIndexEmpty = !loading && faqData.length === 0;
 
+  // noindex for non-canonical locale variants (e.g. /fr-ma/faq, /fr-be/faq)
+  // Only the canonical locale per language (fr-fr, en-us, es-es…) should be indexed
+  // This prevents 17 000+ duplicate URLs from being crawled/indexed by Google
+  const canonicalLocale = getLocaleString(langCode as any) || 'fr-fr';
+  const isNonCanonicalLocale = currentLocale.toLowerCase() !== canonicalLocale.toLowerCase();
+
   // ItemList JSON-LD for rich results (top 10 FAQ links)
   const faqRouteSlug = getTranslatedRouteSlug("faq" as any, language as any) || 'faq';
-  const faqPageUrl = `https://sos-expat.com/${currentLocale}/${faqRouteSlug}`;
+  // CANONICAL: always use the default locale for this language (fr-fr, NOT fr-ma)
+  const faqPageUrl = `https://sos-expat.com/${canonicalLocale}/${faqRouteSlug}`;
   const itemListSchema = faqData.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -194,19 +203,31 @@ const FAQ: React.FC = () => {
         {itemListSchema && (
           <script type="application/ld+json">{JSON.stringify(itemListSchema)}</script>
         )}
-        {noIndexEmpty && <meta name="robots" content="noindex,follow" />}
+        {/* noindex: vide OU variante pays non-canonique (ex: /fr-ma/faq → noindex, /fr-fr/faq → index) */}
+        {(noIndexEmpty || isNonCanonicalLocale) && <meta name="robots" content="noindex,follow" />}
       </Helmet>
       <SEOHead
         title={intl.formatMessage({ id: "faq.heroTitle", defaultMessage: "Frequently Asked Questions" }) + " | SOS Expat & Travelers"}
-        description={intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })}
+        description={
+          !loading && faqData.length > 0
+            ? intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" }) +
+              ` (${faqData.length} ${intl.formatMessage({ id: "faq.title", defaultMessage: "FAQ" })})`
+            : intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })
+        }
         canonicalUrl={faqPageUrl}
         author="Manon"
         contentType="FAQPage"
+        noindex={noIndexEmpty || isNonCanonicalLocale}
         locale={({ fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT', ru: 'ru_RU', ch: 'zh_CN', hi: 'hi_IN', ar: 'ar_SA' } as Record<string, string>)[language] || 'fr_FR'}
         expertise="Legal Services, Expat Assistance, International Law"
         trustworthiness="verified_lawyers, gdpr_compliant, 197_countries"
         contentQuality="high"
         lastReviewed={new Date().toISOString().split('T')[0]}
+        aiSummary={
+          !loading && faqData.length > 0
+            ? `${faqData.length} frequently asked questions about expat assistance, legal services and international travel across 197 countries. Topics: ${[...new Set(faqData.slice(0, 5).map(f => f.category))].join(', ')}.`
+            : undefined
+        }
       />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
@@ -254,6 +275,27 @@ const FAQ: React.FC = () => {
             <p className="mt-3 md:mt-4 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
               {intl.formatMessage({ id: "faq.heroSubtitle" })}
             </p>
+
+            {/* Stats visibles = signal E-E-A-T + contenu de valeur pour Google */}
+            {!loading && faqData.length > 0 && (
+              <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm text-white/70">
+                <span className="flex items-center gap-1.5">
+                  <HelpCircle className="w-4 h-4 text-red-400" />
+                  <strong className="text-white">{faqData.length}</strong>
+                  {' '}{intl.formatMessage({ id: "faq.title", defaultMessage: "FAQ" })}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-4 h-4 text-blue-400" />
+                  <strong className="text-white">197</strong>
+                  {' '}countries
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-4 h-4 text-green-400" />
+                  <strong className="text-white">9</strong>
+                  {' '}languages
+                </span>
+              </div>
+            )}
 
             {/* Barre de recherche */}
             <div className="mt-8 max-w-2xl mx-auto">

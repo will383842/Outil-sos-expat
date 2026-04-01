@@ -3079,7 +3079,7 @@ const SOSCall: React.FC = () => {
   // 🔍 SEO - Génération des données structurées
   // ========================================
   
-  const canonicalUrl = `${BASE_URL}/${lang}${PAGE_PATH}`;
+  const canonicalUrl = `${BASE_URL}/${lang}${PAGE_PATH}`; // Overridden by SEOHead below (correct canonical built in IIFE)
   const onlineCount = filteredProviders.filter((p) => p.isOnline).length;
   
   const jsonLdSchemas = useMemo(() => 
@@ -3105,11 +3105,28 @@ const SOSCall: React.FC = () => {
 
   const seoKeywords = intl.formatMessage({ id: "sosCall.seo.keywords" });
 
-  const hreflangLinks = SUPPORTED_LANGUAGES.map(langCode => ({
-    // Convertir 'ch' en 'zh-Hans' pour le standard hreflang SEO
-    hreflang: langCode === 'ch' ? 'zh-Hans' : langCode,
-    href: `${BASE_URL}/${langCode}${PAGE_PATH}`,
-  }));
+  const HREFLANG_LOCALE_MAP: Record<string, string> = {
+    fr: 'fr-fr', en: 'en-us', es: 'es-es', de: 'de-de', ru: 'ru-ru',
+    pt: 'pt-pt', ch: 'zh-cn', hi: 'hi-in', ar: 'ar-sa',
+  };
+  const HREFLANG_PROVIDERS_SLUGS: Record<string, string> = {
+    fr: 'prestataires', en: 'providers', es: 'proveedores', de: 'anbieter',
+    ru: 'postavshchiki', pt: 'prestadores', ch: 'fuwu-tigongzhe', hi: 'seva-pradaata', ar: 'مقدمي-الخدمات',
+  };
+  const HREFLANG_SOS_CALL_SLUGS: Record<string, string> = {
+    fr: 'sos-appel', en: 'emergency-call', es: 'llamada-emergencia', de: 'notruf',
+    ru: 'ekstrenniy-zvonok', pt: 'chamada-emergencia', ch: 'jinji-dianhua', hi: 'aapatkaleen-call', ar: 'مكالمة-طوارئ',
+  };
+  const hreflangLinks = SUPPORTED_LANGUAGES.map(lc => {
+    const locale = HREFLANG_LOCALE_MAP[lc] || 'fr-fr';
+    const slug = isProvidersRoute
+      ? (HREFLANG_PROVIDERS_SLUGS[lc] || 'providers')
+      : (HREFLANG_SOS_CALL_SLUGS[lc] || 'sos-appel');
+    return {
+      hreflang: lc === 'ch' ? 'zh-Hans' : lc,
+      href: `${BASE_URL}/${locale}/${slug}`,
+    };
+  });
 
   return (
     <Layout>
@@ -3186,7 +3203,7 @@ const SOSCall: React.FC = () => {
             href={link.href}
           />
         ))}
-        <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}/fr-fr/sos-appel`} />
+        <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}/fr-fr/${isProvidersRoute ? 'prestataires' : 'sos-appel'}`} />
         
         {/* ===== OPEN GRAPH (Facebook, LinkedIn) ===== */}
         <meta property="og:title" content={seoTitle} />

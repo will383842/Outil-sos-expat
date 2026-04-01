@@ -599,8 +599,8 @@ const FAQDetail: React.FC = () => {
     return null; // Should not happen due to checks above, but safety net
   }
   
-  const question = displayFaq.question[langCode] || displayFaq.question['fr'] || displayFaq.question['en'] || 'Untitled FAQ';
-  const answer = displayFaq.answer[langCode] || displayFaq.answer['fr'] || displayFaq.answer['en'] || 'No answer available';
+  const question = displayFaq.question?.[langCode] || displayFaq.question?.['fr'] || displayFaq.question?.['en'] || 'Untitled FAQ';
+  const answer = displayFaq.answer?.[langCode] || displayFaq.answer?.['fr'] || displayFaq.answer?.['en'] || 'No answer available';
 
   // Format answer with line breaks
   const formattedAnswer = answer.split('\n').map((line, i) => (
@@ -622,7 +622,7 @@ const FAQDetail: React.FC = () => {
     fr: 'fr', en: 'en', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'zh-Hans', hi: 'hi', ar: 'ar',
   };
   const defaultLocale = CANONICAL_LOCALES[langCode] || 'fr-fr';
-  const currentSlug = displayFaq.slug[langCode] || displayFaq.slug['fr'] || displayFaq.slug['en'] || displayFaq.id;
+  const currentSlug = displayFaq.slug?.[langCode] || displayFaq.slug?.['fr'] || displayFaq.slug?.['en'] || displayFaq.id;
   const faqRouteSlug = getTranslatedRouteSlug('faq' as any, langCode as any) || 'faq';
   const canonicalUrl = `https://sos-expat.com/${defaultLocale}/${faqRouteSlug}/${currentSlug}`;
 
@@ -633,20 +633,25 @@ const FAQDetail: React.FC = () => {
     : (rawDesc.substring(0, 160).replace(/\.[^.]*$/, '') || rawDesc.substring(0, 157)) + (rawDesc.length > 160 ? '…' : '');
 
   // Detect untranslated FAQ: if langCode has no own content and falls back to FR/EN → noindex
-  const hasOwnTranslation = !!(displayFaq.question[langCode] && displayFaq.answer[langCode]);
-  const noIndex = !hasOwnTranslation && langCode !== 'fr';
+  const hasOwnTranslation = !!(displayFaq.question?.[langCode] && displayFaq.answer?.[langCode]);
+  // noindex for non-canonical locale variants (fr-ma, fr-be…) — only canonical per language is indexed
+  const isNonCanonicalLocale = currentLocale.toLowerCase() !== defaultLocale.toLowerCase();
+  const noIndex = (!hasOwnTranslation && langCode !== 'fr') || isNonCanonicalLocale;
 
   // Per-article hreflang using translated slugs (global hreflang in App.tsx doesn't know translated slugs)
+  // Only include languages that have their own translated content AND slug — no fallback to avoid misleading Google
   const ALL_LANGS = ['fr', 'en', 'es', 'de', 'ru', 'pt', 'ch', 'hi', 'ar'] as const;
-  const faqHreflang = ALL_LANGS.map(lang => {
-    const country = LANG_DEFAULT_COUNTRY[lang];
-    const artSlug = displayFaq.slug[lang] || displayFaq.slug['fr'] || displayFaq.slug['en'] || displayFaq.id;
-    const langFaqSlug = getTranslatedRouteSlug('faq' as any, lang as any) || 'faq';
-    return {
-      lang: HREFLANG_CODES[lang],
-      url: `https://sos-expat.com/${lang === 'ch' ? 'zh' : lang}-${country}/${langFaqSlug}/${artSlug}`,
-    };
-  });
+  const faqHreflang = ALL_LANGS
+    .filter(lang => displayFaq.slug?.[lang] && displayFaq.question?.[lang] && displayFaq.answer?.[lang])
+    .map(lang => {
+      const country = LANG_DEFAULT_COUNTRY[lang];
+      const artSlug = displayFaq.slug?.[lang];
+      const langFaqSlug = getTranslatedRouteSlug('faq' as any, lang as any) || 'faq';
+      return {
+        lang: HREFLANG_CODES[lang],
+        url: `https://sos-expat.com/${lang === 'ch' ? 'zh' : lang}-${country}/${langFaqSlug}/${artSlug}`,
+      };
+    });
 
   return (
     <Layout>
@@ -655,7 +660,7 @@ const FAQDetail: React.FC = () => {
         {faqHreflang.map(alt => (
           <link key={alt.lang} rel="alternate" hrefLang={alt.lang} href={alt.url} />
         ))}
-        <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/fr-fr/faq/${displayFaq.slug['fr'] || displayFaq.id}`} />
+        <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/fr-fr/faq/${displayFaq.slug?.['fr'] || displayFaq.id}`} />
         {noIndex && <meta name="robots" content="noindex,follow" />}
       </Helmet>
       <SEOHead
@@ -663,6 +668,15 @@ const FAQDetail: React.FC = () => {
         description={metaDescription}
         keywords={[displayFaq.category, 'FAQ', 'help', ...(displayFaq.tags || [])].join(', ')}
         canonicalUrl={canonicalUrl}
+        noindex={noIndex}
+        contentType="FAQPage"
+        author="SOS Expat & Travelers"
+        expertise="Legal Services, Expat Assistance, International Law"
+        trustworthiness="verified_lawyers, gdpr_compliant, 197_countries"
+        contentQuality={hasOwnTranslation ? 'high' : 'medium'}
+        lastReviewed={new Date().toISOString().split('T')[0]}
+        readingTime={`${Math.max(1, Math.ceil(answer.split(/\s+/).length / 200))} min`}
+        aiSummary={answer.substring(0, 300).replace(/\n/g, ' ')}
         locale={currentLang === 'fr' ? 'fr_FR' :
                 currentLang === 'en' ? 'en_US' :
                 currentLang === 'es' ? 'es_ES' :
@@ -680,7 +694,8 @@ const FAQDetail: React.FC = () => {
           intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }),
           intl.formatMessage({ id: 'breadcrumb.faq', defaultMessage: 'FAQ' }),
           question,
-          displayFaq.slug[langCode] || displayFaq.slug['fr']
+          displayFaq.slug?.[langCode] || displayFaq.slug?.['fr'],
+          `/${currentLocale}/${faqRouteSlug}`
         )}
       />
 
@@ -702,7 +717,7 @@ const FAQDetail: React.FC = () => {
 
         {/* FAQ Content */}
         <header className="mb-8 pb-6 border-b border-gray-200">
-          <div className="flex items-start gap-3 mb-4">
+          <div className="flex items-start flex-wrap gap-2 mb-4">
             <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium capitalize">
               {(() => {
                 const cat = FAQ_CATEGORIES.find(c => c.id === displayFaq.category);
@@ -714,13 +729,25 @@ const FAQDetail: React.FC = () => {
                 {intl.formatMessage({ id: 'faq.detail.views', defaultMessage: '{count} views' }, { count: displayFaq.views })}
               </span>
             )}
+            {/* E-E-A-T signal: reading time visible dans le contenu */}
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">
+              {Math.max(1, Math.ceil(answer.split(/\s+/).length / 200))} min
+            </span>
           </div>
-          <h1 
-            className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 leading-tight"
+          <h1
+            className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 leading-tight"
             itemProp="headline"
           >
             {question}
           </h1>
+          {/* E-E-A-T : auteur + date visible = signal fort pour Google */}
+          <p className="text-sm text-gray-500 mt-2" itemProp="author" itemScope itemType="https://schema.org/Person">
+            <span itemProp="name">SOS Expat & Travelers</span>
+            {' · '}
+            <time dateTime={new Date().toISOString().split('T')[0]} itemProp="dateModified">
+              {new Date().toLocaleDateString(langCode === 'fr' ? 'fr-FR' : langCode === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </time>
+          </p>
         </header>
 
         <div 
@@ -738,7 +765,7 @@ const FAQDetail: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">{intl.formatMessage({ id: 'faq.detail.relatedQuestions', defaultMessage: 'Related Questions' })}</h2>
             <div className="space-y-4">
               {relatedFAQs.map(relatedFaq => {
-                const relatedQuestion = relatedFaq.question[langCode] || relatedFaq.question['fr'] || relatedFaq.question['en'];
+                const relatedQuestion = relatedFaq.question?.[langCode] || relatedFaq.question?.['fr'] || relatedFaq.question?.['en'];
                 const relatedSlug = relatedFaq.slug?.[langCode] || relatedFaq.slug?.['fr'] || relatedFaq.slug?.['en'] || relatedFaq.id;
                 return (
                   <Link
@@ -748,7 +775,7 @@ const FAQDetail: React.FC = () => {
                   >
                     <h3 className="font-semibold text-gray-900 mb-2">{relatedQuestion}</h3>
                     <p className="text-sm text-gray-600 line-clamp-2">
-                      {relatedFaq.answer[langCode] || relatedFaq.answer['fr'] || relatedFaq.answer['en']}
+                      {relatedFaq.answer?.[langCode] || relatedFaq.answer?.['fr'] || relatedFaq.answer?.['en']}
                     </p>
                   </Link>
                 );

@@ -154,8 +154,8 @@ const HelpCenter: React.FC = () => {
 
   // Translated help center slug
   const helpCenterSlug = getTranslatedRouteSlug("help-center" as any, langCode as any) || 'centre-aide';
-  // Translated providers (annuaire) slug
-  const providersSlug = getTranslatedRouteSlug("providers" as any, langCode as any) || 'prestataires';
+  // Translated annuaire slug
+  const annuaireSlug = getTranslatedRouteSlug("annuaire" as any, langCode as any) || 'annuaire';
 
   // Country-aware SEO: extract country from URL and get localized name
   const countryCode = (urlCountry || '').toUpperCase();
@@ -801,7 +801,7 @@ const HelpCenter: React.FC = () => {
           </h2>
           <div className="flex flex-wrap gap-3">
             <a
-              href={`https://sos-expat.com/${currentLocale}/${providersSlug}`}
+              href={`https://sos-expat.com/${currentLocale}/${annuaireSlug}`}
               target="_blank"
               rel="noopener"
               className="inline-flex items-center gap-2 text-sm text-blue-700 hover:text-blue-800 hover:underline"

@@ -88,12 +88,16 @@ export const generateBreadcrumbs = {
     homeLabel: string,
     faqLabel: string,
     questionTitle: string,
-    faqSlug?: string
-  ): BreadcrumbItem[] => [
-    { name: homeLabel, url: '/' },
-    { name: faqLabel, url: '/faq' },
-    { name: questionTitle, ...(faqSlug && { url: `/faq/${faqSlug}` }) }
-  ],
+    faqSlug?: string,
+    faqListUrl?: string
+  ): BreadcrumbItem[] => {
+    const listUrl = faqListUrl || '/faq';
+    return [
+      { name: homeLabel, url: '/' },
+      { name: faqLabel, url: listUrl },
+      { name: questionTitle, ...(faqSlug && { url: `${listUrl}/${faqSlug}` }) }
+    ];
+  },
 
   /**
    * Help article breadcrumbs

@@ -48,6 +48,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { path: '/sos-appel', translated: 'sos-call', priority: 0.9, changefreq: 'daily' },
   { path: '/appel-expatrie', translated: 'expat-call', priority: 0.9, changefreq: 'daily' },
   { path: '/providers', translated: 'providers', priority: 0.8, changefreq: 'daily' },
+  { path: '/annuaire', translated: 'annuaire', priority: 0.8, changefreq: 'weekly' },
   // Landing pages affiliés
   { path: '/devenir-chatter', translated: 'chatter-landing', priority: 0.8, changefreq: 'monthly' },
   { path: '/devenir-influenceur', translated: 'influencer-landing', priority: 0.8, changefreq: 'monthly' },
@@ -99,6 +100,7 @@ export const ROUTE_TRANSLATIONS: Record<string, Record<string, string>> = {
   'sos-call': { fr: 'sos-appel', en: 'emergency-call', es: 'llamada-emergencia', ru: 'ekstrenniy-zvonok', de: 'notruf', hi: 'aapatkaalin-call', pt: 'chamada-emergencia', ch: 'jinji-dianhua', ar: 'مكالمة-طوارئ' },
   'expat-call': { fr: 'appel-expatrie', en: 'expat-call', es: 'llamada-expatriado', ru: 'zvonok-expatriantu', de: 'expatriate-anruf', hi: 'pravasi-call', pt: 'chamada-expatriado', ch: 'waipai-dianhua', ar: 'مكالمة-المغترب' },
   'providers': { fr: 'prestataires', en: 'providers', es: 'proveedores', ru: 'postavshchiki', de: 'anbieter', hi: 'seva-pradaata', pt: 'prestadores', ch: 'fuwu-tigongzhe', ar: 'مقدمي-الخدمات' },
+  'annuaire':  { fr: 'annuaire', en: 'expat-directory', es: 'directorio-expat', ru: 'spravochnik-expat', de: 'expat-verzeichnis', hi: 'nirdeshika-expat', pt: 'diretorio-expat', ch: 'zhinan-expat', ar: 'dalil-expat' },
   // Landing pages affiliés
   'chatter-landing':     { fr: 'devenir-chatter', en: 'become-chatter', es: 'convertirse-chatter', de: 'chatter-werden', ru: 'stat-chatterom', pt: 'tornar-se-chatter', ch: 'chengwei-chatter', hi: 'chatter-bane', ar: 'كن-مروجا' },
   'influencer-landing':  { fr: 'devenir-influenceur', en: 'become-influencer', es: 'convertirse-influencer', de: 'influencer-werden', ru: 'stat-influenserom', pt: 'tornar-se-influencer', ch: 'chengwei-wanghong', hi: 'influencer-bane', ar: 'كن-مؤثرا' },

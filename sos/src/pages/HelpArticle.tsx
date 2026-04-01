@@ -415,8 +415,8 @@ const HelpArticle: React.FC = () => {
   const seoDesc = countryName && excerpt
     ? `${excerpt.substring(0, 120)} · ${countryName}`
     : excerpt;
-  // Providers slug for external link
-  const providersSlug = getTranslatedRouteSlug("providers" as any, langCode as any) || 'prestataires';
+  // Annuaire slug for external link
+  const annuaireSlug = getTranslatedRouteSlug("annuaire" as any, langCode as any) || 'annuaire';
 
   return (
     <Layout>
@@ -622,7 +622,7 @@ const HelpArticle: React.FC = () => {
           <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-sm text-white/50 mb-2">{intl.formatMessage({ id: "helpCenter.externalLinksTitle" })}</p>
             <a
-              href={`https://sos-expat.com/${currentLocale}/${providersSlug}`}
+              href={`https://sos-expat.com/${currentLocale}/${annuaireSlug}`}
               target="_blank"
               rel="noopener"
               className="inline-flex items-center gap-2 text-sm text-blue-300 hover:text-white transition-colors"

@@ -269,6 +269,7 @@ export type RouteKey =
   | "consumers"          // /consumers -> /consommateurs, /consumidores, etc.
   | "service-status"    // /statut-service -> /service-status, /estado-servicio, etc.
   | "seo"               // /seo -> /referencement, /seo, etc.
+  | "annuaire"           // /annuaire -> /annuaire, /directory, /directorio, etc.
   | "providers"          // /providers -> /prestataires, /proveedores, etc.
   | "provider"           // /provider/:id -> /prestataire/:id, /proveedor/:id, etc.
   | "lawyers-country"    // /lawyers-in/:country -> /avocats-en/:pays, etc.
@@ -389,7 +390,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "advogados",
     ch: "lushi",
     hi: "vakil",
-    ar: "محامون",
+    ar: "muhamun",
   },
   "expat": {
     fr: "expatrie",
@@ -400,7 +401,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "expatriados",
     ch: "waipai",
     hi: "pravasi",
-    ar: "مغتربون",
+    ar: "mughtaribun",
   },
   "find-lawyer": {
     fr: "trouver-avocat",
@@ -411,7 +412,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "encontrar-advogado",
     ch: "zhaodao-lushi",
     hi: "vakil-khoje",
-    ar: "ابحث-عن-محامي",
+    ar: "ibhath-an-muhami",
   },
   "find-expat": {
     fr: "trouver-expatrie",
@@ -422,7 +423,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "encontrar-expatriado",
     ch: "zhaodao-waipai",
     hi: "pravasi-khoje",
-    ar: "ابحث-عن-مغترب",
+    ar: "ibhath-an-mugtarib",
   },
   "register-lawyer": {
     fr: "inscription/avocat",
@@ -433,7 +434,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "registro/advogado",
     ch: "zhuce/lushi",
     hi: "panjikaran/vakil",
-    ar: "تسجيل/محام",
+    ar: "tasjil/muhami",
   },
   "register-expat": {
     fr: "inscription/expatrie",
@@ -444,7 +445,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "registro/expatriado",
     ch: "zhuce/waipai",
     hi: "panjikaran/pravasi",
-    ar: "تسجيل/مغترب",
+    ar: "tasjil/mugtarib",
   },
   "register-client": {
     fr: "inscription/client",
@@ -455,7 +456,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "registro/cliente",
     ch: "zhuce/kehu",
     hi: "panjikaran/grahak",
-    ar: "تسجيل/عميل",
+    ar: "tasjil/amil",
   },
   "terms-lawyers": {
     fr: "cgu-avocats",
@@ -466,7 +467,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-advogados",
     ch: "tiaokuan-lushi",
     hi: "shartein-vakil",
-    ar: "شروط-المحامون",
+    ar: "shurut-al-muhamin",
   },
   "terms-expats": {
     fr: "cgu-expatries",
@@ -477,7 +478,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-expatriados",
     ch: "tiaokuan-waipai",
     hi: "shartein-pravasi",
-    ar: "شروط-المغتربين",
+    ar: "shurut-al-mugtaribin",
   },
   "terms-chatters": {
     fr: "cgu-chatters",
@@ -488,7 +489,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-chatters",
     ch: "tiaokuan-chatters",
     hi: "shartein-chatters",
-    ar: "شروط-المروجين",
+    ar: "shurut-al-murwajin",
   },
   "terms-influencers": {
     fr: "cgu-influenceurs",
@@ -499,7 +500,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-influenciadores",
     ch: "tiaokuan-wanghong",
     hi: "shartein-influencers",
-    ar: "شروط-المؤثرين",
+    ar: "shurut-al-muathirin",
   },
   "terms-bloggers": {
     fr: "cgu-bloggeurs",
@@ -510,7 +511,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-bloggers",
     ch: "tiaokuan-boke",
     hi: "shartein-bloggers",
-    ar: "شروط-المدونين",
+    ar: "shurut-al-mudawwinin",
   },
   "terms-group-admins": {
     fr: "cgu-admins-groupe",
@@ -521,7 +522,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-admins-grupo",
     ch: "tiaokuan-qunguanli",
     hi: "shartein-group-admins",
-    ar: "شروط-مشرفي-المجموعات",
+    ar: "shurut-mushrifi-al-majmuaat",
   },
   "terms-affiliate": {
     fr: "cgu-affiliation",
@@ -532,7 +533,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-afiliacao",
     ch: "tiaokuan-lianmeng",
     hi: "shartein-affiliate",
-    ar: "شروط-الشراكة",
+    ar: "shurut-al-shiraka",
   },
   "sos-call": {
     fr: "sos-appel",
@@ -543,7 +544,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chamada-emergencia",
     ch: "jinji-dianhua",
     hi: "aapatkaalin-call",
-    ar: "مكالمة-طوارئ",
+    ar: "mukalama-tawariy",
   },
   "expat-call": {
     fr: "appel-expatrie",
@@ -554,7 +555,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chamada-expatriado",
     ch: "waipai-dianhua",
     hi: "pravasi-call",
-    ar: "مكالمة-المغترب",
+    ar: "mukalama-al-mugtarib",
   },
   "terms-clients": {
     fr: "cgu-clients",
@@ -565,7 +566,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "termos-clientes",
     ch: "tiaokuan-kehu",
     hi: "shartein-grahak",
-    ar: "شروط-العملاء",
+    ar: "shurut-al-umala",
   },
   "pricing": {
     fr: "tarifs",
@@ -576,7 +577,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "precos",
     ch: "jiage",
     hi: "mulya",
-    ar: "الأسعار",
+    ar: "al-asaar",
   },
   "contact": {
     fr: "contact",
@@ -587,7 +588,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "contato",
     ch: "lianxi",
     hi: "sampark",
-    ar: "اتصل-بنا",
+    ar: "ittasil-bina",
   },
   "how-it-works": {
     fr: "comment-ca-marche",
@@ -598,7 +599,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "como-funciona",
     ch: "ruhe-yunzuo",
     hi: "kaise-kaam-karta-hai",
-    ar: "كيف-يعمل",
+    ar: "kayfa-yamal",
   },
   "faq": {
     fr: "faq",
@@ -609,7 +610,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "perguntas-frequentes",
     ch: "changjian-wenti",
     hi: "aksar-puche-jaane-wale-sawal",
-    ar: "الأسئلة-الشائعة",
+    ar: "al-asila-al-shaiya",
   },
   "help-center": {
     fr: "centre-aide",
@@ -631,7 +632,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "depoimentos",
     ch: "yonghu-pingjia",
     hi: "prashansapatra",
-    ar: "الشهادات",
+    ar: "al-shahdat",
   },
   "privacy-policy": {
     fr: "politique-confidentialite",
@@ -642,7 +643,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "politica-privacidade",
     ch: "yinsi-zhengce",
     hi: "gopaniyata-niti",
-    ar: "سياسة-الخصوصية",
+    ar: "siyasat-al-khususiya",
   },
   "cookies": {
     fr: "cookies",
@@ -653,7 +654,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "cookies",
     ch: "cookies",
     hi: "cookies",
-    ar: "ملفات-التعريف",
+    ar: "milafat-al-tarif",
   },
   "consumers": {
     fr: "consommateurs",
@@ -664,7 +665,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "consumidores",
     ch: "xiaofeizhe",
     hi: "upbhokta",
-    ar: "المستهلكين",
+    ar: "al-mustahlikin",
   },
   "service-status": {
     fr: "statut-service",
@@ -675,7 +676,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "status-servico",
     ch: "fuwu-zhuangtai",
     hi: "seva-sthiti",
-    ar: "حالة-الخدمة",
+    ar: "halat-al-khidma",
   },
   "seo": {
     fr: "referencement",
@@ -686,7 +687,18 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "seo",
     ch: "seo",
     hi: "seo",
-    ar: "تحسين-محركات-البحث",
+    ar: "tahsin-muharrikat-al-bahth",
+  },
+  "annuaire": {
+    fr: "annuaire",
+    en: "expat-directory",
+    es: "directorio-expat",
+    de: "expat-verzeichnis",
+    ru: "spravochnik-expat",
+    pt: "diretorio-expat",
+    ch: "zhinan-expat",
+    hi: "nirdeshika-expat",
+    ar: "dalil-expat",
   },
   "providers": {
     fr: "prestataires",
@@ -697,7 +709,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "prestadores",
     ch: "fuwu-tigongzhe",
     hi: "seva-pradaata",
-    ar: "مقدمي-الخدمات",
+    ar: "muqadimi-al-khidmat",
   },
   "provider": {
     fr: "prestataire",
@@ -708,7 +720,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "prestador",
     ch: "fuwu-tigongzhe",
     hi: "seva-pradaata",
-    ar: "مقدم-الخدمة",
+    ar: "muqadim-al-khidma",
   },
   "lawyers-country": {
     fr: "avocats",
@@ -719,7 +731,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "advogados",
     ch: "lushi",
     hi: "vakil",
-    ar: "محامون",
+    ar: "muhamun",
   },
   "expats-country": {
     fr: "expatries",
@@ -730,7 +742,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "expatriados",
     ch: "haiwai",
     hi: "videshi",
-    ar: "مغتربون",
+    ar: "mughtaribun",
   },
   "dashboard": {
     fr: "tableau-de-bord",
@@ -741,7 +753,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel",
     ch: "kongzhi-mianban",
     hi: "dashboard",
-    ar: "لوحة-التحكم",
+    ar: "lawhat-altahakkum",
   },
   "profile-edit": {
     fr: "profil",
@@ -752,7 +764,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "perfil",
     ch: "geren-ziliao",
     hi: "profile",
-    ar: "الملف-الشخصي",
+    ar: "al-malaf-al-shakhsi",
   },
   "call-checkout": {
     fr: "paiement-appel",
@@ -763,7 +775,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "pagamento-chamada",
     ch: "tonghua-jiesuan",
     hi: "call-bhugtaan",
-    ar: "الدفع-المكالمة",
+    ar: "al-daf-al-mukalama",
   },
   "booking-request": {
     fr: "demande-reservation",
@@ -774,7 +786,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "solicitacao-reserva",
     ch: "yuding-qingqiu",
     hi: "booking-anurodh",
-    ar: "طلب-الحجز",
+    ar: "talab-al-hujiz",
   },
   "payment-success": {
     fr: "paiement-reussi",
@@ -785,7 +797,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "pagamento-sucesso",
     ch: "zhifu-chenggong",
     hi: "bhugtaan-safal",
-    ar: "الدفع-نجح",
+    ar: "al-daf-najah",
   },
   "dashboard-messages": {
     fr: "tableau-de-bord/messages",
@@ -796,7 +808,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/mensagens",
     ch: "kongzhi-mianban/xiaoxi",
     hi: "dashboard/sandesh",
-    ar: "لوحة-التحكم/الرسائل",
+    ar: "lawhat-altahakkum/al-rasail",
   },
   "dashboard-ai-assistant": {
     fr: "tableau-de-bord/assistant-ia",
@@ -807,7 +819,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/assistente-ia",
     ch: "kongzhi-mianban/ai-zhushou",
     hi: "dashboard/ai-sahayak",
-    ar: "لوحة-التحكم/مساعد-الذكاء",
+    ar: "lawhat-altahakkum/musaid-al-dhaka",
   },
   "dashboard-subscription": {
     fr: "tableau-de-bord/abonnement",
@@ -818,7 +830,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/assinatura",
     ch: "kongzhi-mianban/dingyue",
     hi: "dashboard/sadasyata",
-    ar: "لوحة-التحكم/الاشتراك",
+    ar: "lawhat-altahakkum/al-aishtirak",
   },
   "dashboard-subscription-plans": {
     fr: "tableau-de-bord/abonnement/plans",
@@ -829,7 +841,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/assinatura/planos",
     ch: "kongzhi-mianban/dingyue/jihua",
     hi: "dashboard/sadasyata/yojana",
-    ar: "لوحة-التحكم/الاشتراك/الخطط",
+    ar: "lawhat-altahakkum/al-aishtirak/al-khitat",
   },
   "dashboard-subscription-success": {
     fr: "tableau-de-bord/abonnement/succes",
@@ -840,7 +852,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/assinatura/sucesso",
     ch: "kongzhi-mianban/dingyue/chenggong",
     hi: "dashboard/sadasyata/safal",
-    ar: "لوحة-التحكم/الاشتراك/نجاح",
+    ar: "lawhat-altahakkum/al-aishtirak/najah",
   },
   "dashboard-conversations": {
     fr: "tableau-de-bord/conversations",
@@ -851,7 +863,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/conversas",
     ch: "kongzhi-mianban/duihua",
     hi: "dashboard/baatcheet",
-    ar: "لوحة-التحكم/المحادثات",
+    ar: "lawhat-altahakkum/al-muhadathat",
   },
   "dashboard-kyc": {
     fr: "tableau-de-bord/verification",
@@ -862,7 +874,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "painel/verificacao",
     ch: "kongzhi-mianban/yanzheng",
     hi: "dashboard/satya",
-    ar: "لوحة-التحكم/التحقق",
+    ar: "lawhat-altahakkum/al-tahaqquq",
   },
   "login": {
     fr: "connexion",
@@ -873,7 +885,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "entrar",
     ch: "denglu",
     hi: "login",
-    ar: "تسجيل-الدخول",
+    ar: "tasjil-al-dakhul",
   },
   "register": {
     fr: "inscription",
@@ -884,7 +896,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "cadastro",
     ch: "zhuce",
     hi: "panjikaran",
-    ar: "التسجيل",
+    ar: "al-tasjil",
   },
   "password-reset": {
     fr: "reinitialisation-mot-de-passe",
@@ -895,7 +907,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "redefinir-senha",
     ch: "chongzhi-mima",
     hi: "password-reset",
-    ar: "إعادة-تعيين-كلمة-المرور",
+    ar: "iadat-tayin-kalimat-al-murur",
   },
   "affiliate-dashboard": {
     fr: "parrainage",
@@ -906,7 +918,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado",
     ch: "tuiguang",
     hi: "sahbhagi",
-    ar: "برنامج-الإحالة",
+    ar: "barnamaj-al-ihala",
   },
   "affiliate-earnings": {
     fr: "parrainage/gains",
@@ -917,7 +929,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado/ganhos",
     ch: "tuiguang/shouyi",
     hi: "sahbhagi/kamaai",
-    ar: "برنامج-الإحالة/الأرباح",
+    ar: "barnamaj-al-ihala/al-arbah",
   },
   "affiliate-referrals": {
     fr: "parrainage/filleuls",
@@ -928,7 +940,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado/indicacoes",
     ch: "tuiguang/tuijianren",
     hi: "sahbhagi/sandarbh",
-    ar: "برنامج-الإحالة/الإحالات",
+    ar: "barnamaj-al-ihala/al-ihalayt",
   },
   "affiliate-withdraw": {
     fr: "parrainage/retrait",
@@ -939,7 +951,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado/saque",
     ch: "tuiguang/tixian",
     hi: "sahbhagi/nikasi",
-    ar: "برنامج-الإحالة/السحب",
+    ar: "barnamaj-al-ihala/al-sahb",
   },
   "affiliate-bank-details": {
     fr: "parrainage/coordonnees-bancaires",
@@ -950,7 +962,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado/dados-bancarios",
     ch: "tuiguang/yinhang-xinxi",
     hi: "sahbhagi/bank-vivaran",
-    ar: "برنامج-الإحالة/البيانات-المصرفية",
+    ar: "barnamaj-al-ihala/al-bayanat-al-masrafiya",
   },
   "affiliate-tools": {
     fr: "parrainage/outils",
@@ -961,7 +973,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado/ferramentas",
     ch: "tuiguang/gongju",
     hi: "sahbhagi/upkaran",
-    ar: "برنامج-الإحالة/أدوات",
+    ar: "barnamaj-al-ihala/adawat",
   },
   "affiliate-telegram": {
     fr: "parrainage/telegram",
@@ -972,7 +984,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "afiliado/telegram",
     ch: "tuiguang/telegram",
     hi: "sahbhagi/telegram",
-    ar: "برنامج-الإحالة/telegram",
+    ar: "barnamaj-al-ihala/telegram",
   },
   // Chatter routes
   "chatter-landing": {
@@ -984,7 +996,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "tornar-se-chatter",
     ch: "chengwei-chatter",
     hi: "chatter-bane",
-    ar: "كن-مسوقا",
+    ar: "kun-musawwiqan",
   },
   "chatter-register": {
     fr: "chatter/inscription",
@@ -995,7 +1007,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/cadastro",
     ch: "chatter/zhuce",
     hi: "chatter/panjikaran",
-    ar: "مسوق/تسجيل",
+    ar: "musawwiq/tasjil",
   },
   "chatter-telegram": {
     fr: "chatter/telegram",
@@ -1006,7 +1018,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/telegram",
     ch: "chatter/telegram",
     hi: "chatter/telegram",
-    ar: "مسوق/تيليجرام",
+    ar: "musawwiq/telegram",
   },
   "chatter-dashboard": {
     fr: "chatter/tableau-de-bord",
@@ -1017,7 +1029,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/painel",
     ch: "chatter/kongzhi-mianban",
     hi: "chatter/dashboard",
-    ar: "مسوق/لوحة-التحكم",
+    ar: "musawwiq/lawhat-altahakkum",
   },
   "chatter-leaderboard": {
     fr: "chatter/classement",
@@ -1028,7 +1040,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/classificacao",
     ch: "chatter/paihangbang",
     hi: "chatter/ranking",
-    ar: "مسوق/الترتيب",
+    ar: "musawwiq/al-tartib",
   },
   "chatter-payments": {
     fr: "chatter/paiements",
@@ -1039,7 +1051,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/pagamentos",
     ch: "chatter/fukuan",
     hi: "chatter/bhugtaan",
-    ar: "مسوق/المدفوعات",
+    ar: "musawwiq/al-madfuat",
   },
   "chatter-suspended": {
     fr: "chatter/suspendu",
@@ -1050,7 +1062,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/suspenso",
     ch: "chatter/zanting",
     hi: "chatter/nilambit",
-    ar: "مسوق/معلق",
+    ar: "musawwiq/muallaq",
   },
   "chatter-country-selection": {
     fr: "chatter/pays",
@@ -1061,7 +1073,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/paises",
     ch: "chatter/guojia",
     hi: "chatter/desh",
-    ar: "مسوق/البلدان",
+    ar: "musawwiq/al-buldan",
   },
   "chatter-zoom": {
     fr: "chatter/zoom",
@@ -1072,7 +1084,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/zoom",
     ch: "chatter/zoom",
     hi: "chatter/zoom",
-    ar: "مسوق/زووم",
+    ar: "musawwiq/zoom",
   },
   "chatter-training": {
     fr: "chatter/formation",
@@ -1083,7 +1095,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/formacao",
     ch: "chatter/peixun",
     hi: "chatter/prashikshan",
-    ar: "مسوق/التدريب",
+    ar: "musawwiq/al-tadrib",
   },
   "chatter-resources": {
     fr: "chatter/ressources",
@@ -1094,7 +1106,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/recursos",
     ch: "chatter/ziyuan",
     hi: "chatter/sansaadhan",
-    ar: "مسوق/موارد",
+    ar: "musawwiq/mawaarid",
   },
   "chatter-referrals": {
     fr: "chatter/filleuls",
@@ -1105,7 +1117,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/indicacoes",
     ch: "chatter/tuijian",
     hi: "chatter/sandarbh",
-    ar: "مسوق/الإحالات",
+    ar: "musawwiq/al-ihalayt",
   },
   "chatter-referral-earnings": {
     fr: "chatter/gains-parrainage",
@@ -1116,7 +1128,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/ganhos-indicacoes",
     ch: "chatter/tuijian-shouyi",
     hi: "chatter/sandarbh-kamayi",
-    ar: "مسوق/أرباح-الإحالات",
+    ar: "musawwiq/arbah-al-ihalayt",
   },
   "chatter-refer": {
     fr: "chatter/parrainer",
@@ -1127,7 +1139,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/indicar",
     ch: "chatter/tuijian-pengyou",
     hi: "chatter/refer-kare",
-    ar: "مسوق/إحالة",
+    ar: "musawwiq/ihala",
   },
   "chatter-progression": {
     fr: "chatter/progression",
@@ -1138,7 +1150,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/progressao",
     ch: "chatter/jindu",
     hi: "chatter/pragati",
-    ar: "مسوق/التقدم",
+    ar: "musawwiq/al-taqaddum",
   },
   "chatter-how-to-earn": {
     fr: "chatter/comment-gagner",
@@ -1149,7 +1161,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/como-ganhar",
     ch: "chatter/ruhe-zhuanqian",
     hi: "chatter/kaise-kamaye",
-    ar: "مسوق/كيف-تكسب",
+    ar: "musawwiq/kayfa-taksab",
   },
   "chatter-captain-team": {
     fr: "chatter/mon-equipe",
@@ -1160,7 +1172,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/minha-equipe",
     ch: "chatter/wode-tuandui",
     hi: "chatter/meri-team",
-    ar: "مسوق/فريقي",
+    ar: "musawwiq/fariqii",
   },
   "chatter-profile": {
     fr: "chatter/profil",
@@ -1171,7 +1183,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "chatter/perfil",
     ch: "chatter/geren-ziliao",
     hi: "chatter/profile",
-    ar: "مسوق/الملف-الشخصي",
+    ar: "musawwiq/al-malaf-al-shakhsi",
   },
   "pioneers": {
     fr: "pioneers",
@@ -1182,7 +1194,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "pioneiros",
     ch: "xianquzhe",
     hi: "agranee",
-    ar: "الرواد",
+    ar: "al-ruwwad",
   },
   // Influencer routes
   "influencer-landing": {
@@ -1194,7 +1206,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "tornar-se-influenciador",
     ch: "chengwei-yingxiangli",
     hi: "influencer-bane",
-    ar: "كن-مؤثرا",
+    ar: "kun-muathiran",
   },
   "influencer-register": {
     fr: "influencer/inscription",
@@ -1205,7 +1217,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/cadastro",
     ch: "influencer/zhuce",
     hi: "influencer/panjikaran",
-    ar: "مؤثر/تسجيل",
+    ar: "muathir/tasjil",
   },
   "influencer-dashboard": {
     fr: "influencer/tableau-de-bord",
@@ -1216,7 +1228,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/painel",
     ch: "influencer/kongzhi-mianban",
     hi: "influencer/dashboard",
-    ar: "مؤثر/لوحة-التحكم",
+    ar: "muathir/lawhat-altahakkum",
   },
   "influencer-earnings": {
     fr: "influencer/gains",
@@ -1227,7 +1239,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/ganhos",
     ch: "influencer/shouyi",
     hi: "influencer/kamaai",
-    ar: "مؤثر/الأرباح",
+    ar: "muathir/al-arbah",
   },
   "influencer-referrals": {
     fr: "influencer/filleuls",
@@ -1238,7 +1250,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/indicacoes",
     ch: "influencer/tuijianren",
     hi: "influencer/sandarbh",
-    ar: "مؤثر/الإحالات",
+    ar: "muathir/al-ihalayt",
   },
   "influencer-leaderboard": {
     fr: "influencer/classement",
@@ -1249,7 +1261,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/classificacao",
     ch: "influencer/paihangbang",
     hi: "influencer/ranking",
-    ar: "مؤثر/الترتيب",
+    ar: "muathir/al-tartib",
   },
   "influencer-payments": {
     fr: "influencer/paiements",
@@ -1260,7 +1272,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/pagamentos",
     ch: "influencer/fukuan",
     hi: "influencer/bhugtaan",
-    ar: "مؤثر/المدفوعات",
+    ar: "muathir/al-madfuat",
   },
   "influencer-promo-tools": {
     fr: "influencer/outils",
@@ -1271,7 +1283,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/ferramentas",
     ch: "influencer/gongju",
     hi: "influencer/upkaran",
-    ar: "مؤثر/أدوات",
+    ar: "muathir/adawat",
   },
   "influencer-profile": {
     fr: "influencer/profil",
@@ -1282,7 +1294,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/perfil",
     ch: "influencer/geren-ziliao",
     hi: "influencer/profile",
-    ar: "مؤثر/الملف-الشخصي",
+    ar: "muathir/al-malaf-al-shakhsi",
   },
   "influencer-suspended": {
     fr: "influencer/suspendu",
@@ -1293,7 +1305,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/suspenso",
     ch: "influencer/zanting",
     hi: "influencer/nilambit",
-    ar: "مؤثر/معلق",
+    ar: "muathir/muallaq",
   },
   "influencer-training": {
     fr: "influencer/formation",
@@ -1304,7 +1316,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/treinamento",
     ch: "influencer/peixun",
     hi: "influencer/prashikshan",
-    ar: "مؤثر/تدريب",
+    ar: "muathir/tadrib",
   },
   "influencer-resources": {
     fr: "influencer/ressources",
@@ -1315,7 +1327,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "influencer/recursos",
     ch: "influencer/ziyuan",
     hi: "influencer/sansaadhan",
-    ar: "مؤثر/موارد",
+    ar: "muathir/mawaarid",
   },
   // Blogger routes
   "blogger-landing": {
@@ -1327,7 +1339,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "tornar-se-blogger",
     ch: "chengwei-boke",
     hi: "blogger-banen",
-    ar: "كن-مدون",
+    ar: "kun-mudawwinan",
   },
   "blogger-register": {
     fr: "blogger/inscription",
@@ -1338,7 +1350,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/registro",
     ch: "blogger/zhuce",
     hi: "blogger/panjikaran",
-    ar: "مدون/تسجيل",
+    ar: "mudawwin/tasjil",
   },
   "blogger-dashboard": {
     fr: "blogger/tableau-de-bord",
@@ -1349,7 +1361,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/painel",
     ch: "blogger/yibiaopan",
     hi: "blogger/dashboard",
-    ar: "مدون/لوحة-التحكم",
+    ar: "mudawwin/lawhat-altahakkum",
   },
   "blogger-earnings": {
     fr: "blogger/gains",
@@ -1360,7 +1372,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/ganhos",
     ch: "blogger/shouyi",
     hi: "blogger/kamayi",
-    ar: "مدون/الأرباح",
+    ar: "mudawwin/al-arbah",
   },
   "blogger-referrals": {
     fr: "blogger/filleuls",
@@ -1371,7 +1383,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/indicacoes",
     ch: "blogger/tuijian",
     hi: "blogger/sandarbh",
-    ar: "مدون/الإحالات",
+    ar: "mudawwin/al-ihalayt",
   },
   "blogger-blogger-recruitment": {
     fr: "blogger/parrainage-blogueurs",
@@ -1382,7 +1394,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/recrutamento-bloggers",
     ch: "blogger/boke-zhaom",
     hi: "blogger/blogger-bharti",
-    ar: "مدون/توظيف-المدونين",
+    ar: "mudawwin/tawzif-al-mudawwinin",
   },
   "blogger-leaderboard": {
     fr: "blogger/classement",
@@ -1393,7 +1405,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/classificacao",
     ch: "blogger/paihangbang",
     hi: "blogger/leaderboard",
-    ar: "مدون/الترتيب",
+    ar: "mudawwin/al-tartib",
   },
   "blogger-payments": {
     fr: "blogger/paiements",
@@ -1404,7 +1416,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/pagamentos",
     ch: "blogger/zhifu",
     hi: "blogger/bhugtan",
-    ar: "مدون/المدفوعات",
+    ar: "mudawwin/al-madfuat",
   },
   "blogger-resources": {
     fr: "blogger/ressources",
@@ -1415,7 +1427,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/recursos",
     ch: "blogger/ziyuan",
     hi: "blogger/sansadhan",
-    ar: "مدون/الموارد",
+    ar: "mudawwin/al-mawaarid",
   },
   "blogger-guide": {
     fr: "blogger/guide",
@@ -1426,7 +1438,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/guia",
     ch: "blogger/zhinan",
     hi: "blogger/margdarshak",
-    ar: "مدون/الدليل",
+    ar: "mudawwin/al-dalil",
   },
   "blogger-widgets": {
     fr: "blogger/widgets",
@@ -1437,7 +1449,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/widgets",
     ch: "blogger/xiaogongju",
     hi: "blogger/widgets",
-    ar: "مدون/الودجات",
+    ar: "mudawwin/al-widget",
   },
   "blogger-promo-tools": {
     fr: "blogger/outils",
@@ -1448,7 +1460,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/ferramentas",
     ch: "blogger/gongju",
     hi: "blogger/upkaran",
-    ar: "مدون/أدوات-الترويج",
+    ar: "mudawwin/adawat-al-tarwij",
   },
   "blogger-profile": {
     fr: "blogger/profil",
@@ -1459,7 +1471,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/perfil",
     ch: "blogger/geren-ziliao",
     hi: "blogger/profile",
-    ar: "مدون/الملف-الشخصي",
+    ar: "mudawwin/al-malaf-al-shakhsi",
   },
   "blogger-suspended": {
     fr: "blogger/suspendu",
@@ -1470,7 +1482,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "blogger/suspenso",
     ch: "blogger/zanting",
     hi: "blogger/nilambit",
-    ar: "مدون/معلق",
+    ar: "mudawwin/muallaq",
   },
   // GroupAdmin routes
   "groupadmin-landing": {
@@ -1482,7 +1494,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "tornar-se-admin-grupo",
     ch: "chengwei-qunzhu",
     hi: "group-admin-bane",
-    ar: "كن-مسؤول-مجموعة",
+    ar: "kun-masul-majmuaa",
   },
   "group-community": {
     fr: "groupes-communaute",
@@ -1493,7 +1505,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "grupos-comunidade",
     ch: "shequ-qunzu",
     hi: "samudayik-samuh",
-    ar: "مجموعات-المجتمع",
+    ar: "majmuaat-al-mujtamaa",
   },
   "influencer-directory": {
     fr: "nos-influenceurs",
@@ -1504,7 +1516,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "nossos-influencers",
     ch: "women-influencers",
     hi: "hamare-influencer",
-    ar: "مؤثرونا",
+    ar: "muathiruna",
   },
   "blogger-directory": {
     fr: "nos-blogueurs",
@@ -1515,7 +1527,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "nossos-bloggers",
     ch: "women-de-boke",
     hi: "hamare-blogger",
-    ar: "مدوناتنا",
+    ar: "mudawwanatuna",
   },
   "chatter-directory": {
     fr: "nos-chatters",
@@ -1523,7 +1535,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     es: "nuestros-chatters",
     de: "unsere-chatters",
     pt: "nossos-chatters",
-    ar: "محادثونا",
+    ar: "muhadithuna",
     ru: "nashi-chattery",
     hi: "hamare-chatters",
     ch: "women-de-chatters",
@@ -1537,7 +1549,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "tornar-se-capitao",
     ch: "chengwei-duizhang",
     hi: "captain-bane",
-    ar: "كن-قائدا",
+    ar: "kun-qaidan",
   },
   "press": {
     fr: "presse",
@@ -1548,7 +1560,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "imprensa",
     ch: "xinwen",
     hi: "press",
-    ar: "صحافة",
+    ar: "sahafa",
   },
   "partner-landing": {
     fr: "devenir-partenaire",
@@ -1559,7 +1571,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "tornar-se-parceiro",
     ch: "chengwei-hezuohuoban",
     hi: "partner-bane",
-    ar: "كن-شريكا",
+    ar: "ken-sharikan",
   },
   "partners-page": {
     fr: "partenaires",
@@ -1570,7 +1582,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "parceiros",
     ch: "hezuohuoban",
     hi: "saajhedar",
-    ar: "شركاء",
+    ar: "al-shuraka",
   },
   "partner-dashboard": {
     fr: "partner/tableau-de-bord",
@@ -1581,7 +1593,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/painel",
     ch: "partner/yibiaopan",
     hi: "partner/dashboard",
-    ar: "partner/لوحة-التحكم",
+    ar: "partner/lawhat-altahakkum",
   },
   "partner-earnings": {
     fr: "partner/gains",
@@ -1592,7 +1604,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/ganhos",
     ch: "partner/shouyi",
     hi: "partner/kamai",
-    ar: "partner/الأرباح",
+    ar: "partner/al-arbah",
   },
   "partner-clicks": {
     fr: "partner/statistiques",
@@ -1603,7 +1615,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/estatisticas",
     ch: "partner/tongji",
     hi: "partner/sankhyiki",
-    ar: "partner/إحصائيات",
+    ar: "partner/ihsaiyat",
   },
   "partner-widgets": {
     fr: "partner/widgets",
@@ -1614,7 +1626,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/widgets",
     ch: "partner/xiaozujian",
     hi: "partner/widgets",
-    ar: "partner/أدوات",
+    ar: "partner/adawat",
   },
   "partner-resources": {
     fr: "partner/ressources",
@@ -1625,7 +1637,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/recursos",
     ch: "partner/ziyuan",
     hi: "partner/sansadhan",
-    ar: "partner/الموارد",
+    ar: "partner/al-mawaarid",
   },
   "partner-profile": {
     fr: "partner/profil",
@@ -1636,7 +1648,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/perfil",
     ch: "partner/ziliao",
     hi: "partner/profile",
-    ar: "partner/الملف-الشخصي",
+    ar: "partner/al-malaf-al-shakhsi",
   },
   "partner-payments": {
     fr: "partner/paiements",
@@ -1647,7 +1659,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/pagamentos",
     ch: "partner/zhifu",
     hi: "partner/bhugtan",
-    ar: "partner/المدفوعات",
+    ar: "partner/al-madfuat",
   },
   "partner-subscribers": {
     fr: "partner/abonnes",
@@ -1658,7 +1670,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/assinantes",
     ch: "partner/dingyuezhe",
     hi: "partner/subscribers",
-    ar: "partner/المشتركين",
+    ar: "partner/al-mushtarikin",
   },
   "partner-agreement": {
     fr: "partner/accord",
@@ -1669,7 +1681,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/acordo",
     ch: "partner/xieyi",
     hi: "partner/agreement",
-    ar: "partner/الاتفاقية",
+    ar: "partner/al-ittifaqiya",
   },
   "partner-suspended": {
     fr: "partner/suspendu",
@@ -1680,7 +1692,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "partner/suspenso",
     ch: "partner/tingzhi",
     hi: "partner/nilambit",
-    ar: "partner/معلق",
+    ar: "partner/muallaq",
   },
   "partner-telegram": {
     fr: "partner/telegram",
@@ -1702,7 +1714,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/registro",
     ch: "groupadmin/zhuce",
     hi: "groupadmin/panjikaran",
-    ar: "مسؤول-مجموعة/التسجيل",
+    ar: "masul-majmuaa/al-tasjil",
   },
   "groupadmin-dashboard": {
     fr: "groupadmin/tableau-de-bord",
@@ -1713,7 +1725,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/painel",
     ch: "groupadmin/yibiaopan",
     hi: "groupadmin/dashboard",
-    ar: "مسؤول-مجموعة/لوحة-التحكم",
+    ar: "masul-majmuaa/lawhat-altahakkum",
   },
   "groupadmin-resources": {
     fr: "groupadmin/ressources",
@@ -1724,7 +1736,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/recursos",
     ch: "groupadmin/ziyuan",
     hi: "groupadmin/sansadhan",
-    ar: "مسؤول-مجموعة/الموارد",
+    ar: "masul-majmuaa/al-mawaarid",
   },
   "groupadmin-posts": {
     fr: "groupadmin/publications",
@@ -1735,7 +1747,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/publicacoes",
     ch: "groupadmin/fabu",
     hi: "groupadmin/post",
-    ar: "مسؤول-مجموعة/المنشورات",
+    ar: "masul-majmuaa/al-manshurat",
   },
   "groupadmin-payments": {
     fr: "groupadmin/paiements",
@@ -1746,7 +1758,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/pagamentos",
     ch: "groupadmin/zhifu",
     hi: "groupadmin/bhugtan",
-    ar: "مسؤول-مجموعة/المدفوعات",
+    ar: "masul-majmuaa/al-madfuat",
   },
   "groupadmin-referrals": {
     fr: "groupadmin/filleuls",
@@ -1757,7 +1769,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/indicacoes",
     ch: "groupadmin/tuijian",
     hi: "groupadmin/referral",
-    ar: "مسؤول-مجموعة/الإحالات",
+    ar: "masul-majmuaa/al-ihalayt",
   },
   "groupadmin-admin-recruitment": {
     fr: "groupadmin/parrainage-admins",
@@ -1768,7 +1780,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/recrutamento-admins",
     ch: "groupadmin/admin-zhaomu",
     hi: "groupadmin/admin-bharti",
-    ar: "مسؤول-مجموعة/توظيف-المشرفين",
+    ar: "masul-majmuaa/tawzif-al-mushrifin",
   },
   "groupadmin-leaderboard": {
     fr: "groupadmin/classement",
@@ -1779,7 +1791,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/classificacao",
     ch: "groupadmin/paihangbang",
     hi: "groupadmin/leaderboard",
-    ar: "مسؤول-مجموعة/الترتيب",
+    ar: "masul-majmuaa/al-tartib",
   },
   "groupadmin-guide": {
     fr: "groupadmin/guide",
@@ -1790,7 +1802,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/guia",
     ch: "groupadmin/zhinan",
     hi: "groupadmin/guide",
-    ar: "مسؤول-مجموعة/الدليل",
+    ar: "masul-majmuaa/al-dalil",
   },
   "groupadmin-suspended": {
     fr: "groupadmin/suspendu",
@@ -1801,7 +1813,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "groupadmin/suspenso",
     ch: "groupadmin/zanting",
     hi: "groupadmin/nilambit",
-    ar: "مسؤول-مجموعة/معلق",
+    ar: "masul-majmuaa/muallaq",
   },
   "groupadmin-profile": {
     fr: "group-admin/profil",
@@ -1812,7 +1824,7 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     pt: "group-admin/perfil",
     ch: "group-admin/ziliao",
     hi: "group-admin/profail",
-    ar: "مسؤول-مجموعة/ملف-شخصي",
+    ar: "masul-majmuaa/malaf-shakhsi",
   },
   "influencer-telegram": {
     fr: "influencer/telegram",
