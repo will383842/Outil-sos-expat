@@ -1,23 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- App principale SOS Expat -->
   <sitemap>
     <loc>https://sos-expat.com/sitemap-static.xml</loc>
-    <lastmod>2026-03-23</lastmod>
+    <lastmod>2026-03-31</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://sos-expat.com/sitemaps/profiles.xml</loc>
-    <lastmod>2026-03-23</lastmod>
+    <lastmod>2026-03-31</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://sos-expat.com/sitemaps/help.xml</loc>
-    <lastmod>2026-03-23</lastmod>
+    <lastmod>2026-03-31</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://sos-expat.com/sitemaps/faq.xml</loc>
-    <lastmod>2026-03-23</lastmod>
+    <lastmod>2026-03-31</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://sos-expat.com/sitemaps/country-listings.xml</loc>
-    <lastmod>2026-03-23</lastmod>
+    <lastmod>2026-03-31</lastmod>
   </sitemap>
+  <!-- Blog SSR (outils, sondages, annuaire, articles) -->
+  <!-- TODO: décommenter quand le blog sera déployé sur https://sos-expat.com/blog/ -->
+  <!-- <sitemap>
+    <loc>https://sos-expat.com/blog/sitemap.xml</loc>
+    <lastmod>2026-03-31</lastmod>
+  </sitemap> -->
 </sitemapindex>

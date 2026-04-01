@@ -2849,7 +2849,7 @@ const ProviderProfile: React.FC = () => {
               <a href="/" className="hover:text-white/80 transition-colors">SOS Expat</a>
               <span aria-hidden="true">/</span>
               <a
-                href={`/${currentLocale || 'fr-fr'}/${getTranslatedRouteSlug(isLawyer ? 'lawyer' : 'expat', currentLang || 'fr')}-${getCountrySlug(provider.country, currentLang || 'fr')}`}
+                href={`/${currentLocale || 'fr-fr'}/${getTranslatedRouteSlug(isLawyer ? 'lawyers-country' : 'expats-country', currentLang || 'fr')}/${getCountrySlug(provider.country, currentLang || 'fr')}`}
                 className="hover:text-white/80 transition-colors"
               >
                 {isLawyer
@@ -3667,7 +3667,7 @@ const ProviderProfile: React.FC = () => {
                     <div className="relative pl-6 border-l-2 border-indigo-100 space-y-6">
                       {educationText && (
                         <div className="relative">
-                          <div className="absolute -left-[29px] w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shadow-md">
+                          <div className="absolute -left-10 w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shadow-md ring-4 ring-white">
                             <GraduationCap size={16} className="text-white" aria-hidden="true" />
                           </div>
                           <p className="text-gray-900 font-semibold text-base">{educationText}</p>
@@ -3680,7 +3680,7 @@ const ProviderProfile: React.FC = () => {
                       )}
                       {certificationsArray.map((cert, i) => (
                         <div key={i} className="relative">
-                          <div className="absolute -left-[29px] w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
+                          <div className="absolute -left-10 w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shadow-md ring-4 ring-white">
                             <Award size={16} className="text-white" aria-hidden="true" />
                           </div>
                           <p className="text-gray-800 font-medium">{cert}</p>
@@ -4194,7 +4194,7 @@ const ProviderProfile: React.FC = () => {
       {/* RELATED PROVIDERS IN SAME COUNTRY          */}
       {/* ========================================== */}
       {relatedProviders.length > 0 && provider && (
-        <section className="mt-8 mb-12 px-4" aria-labelledby="related-heading">
+        <section className="mt-2 mb-0 px-4 py-10 bg-gray-900 border-t border-white/5" aria-labelledby="related-heading">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 id="related-heading" className="text-xl font-bold text-white">

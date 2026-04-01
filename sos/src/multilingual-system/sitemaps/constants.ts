@@ -48,6 +48,25 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { path: '/sos-appel', translated: 'sos-call', priority: 0.9, changefreq: 'daily' },
   { path: '/appel-expatrie', translated: 'expat-call', priority: 0.9, changefreq: 'daily' },
   { path: '/providers', translated: 'providers', priority: 0.8, changefreq: 'daily' },
+  // Landing pages affiliés
+  { path: '/devenir-chatter', translated: 'chatter-landing', priority: 0.8, changefreq: 'monthly' },
+  { path: '/devenir-influenceur', translated: 'influencer-landing', priority: 0.8, changefreq: 'monthly' },
+  { path: '/devenir-blogger', translated: 'blogger-landing', priority: 0.8, changefreq: 'monthly' },
+  { path: '/devenir-admin-groupe', translated: 'groupadmin-landing', priority: 0.8, changefreq: 'monthly' },
+  { path: '/devenir-capitaine', translated: 'captain-landing', priority: 0.7, changefreq: 'monthly' },
+  { path: '/devenir-partenaire', translated: 'partner-landing', priority: 0.8, changefreq: 'monthly' },
+  { path: '/partenaires', translated: 'partners-page', priority: 0.7, changefreq: 'weekly' },
+  // Pages communautaires
+  { path: '/groupes-communaute', translated: 'group-community', priority: 0.7, changefreq: 'weekly' },
+  { path: '/nos-influenceurs', translated: 'influencer-directory', priority: 0.7, changefreq: 'weekly' },
+  { path: '/nos-blogueurs', translated: 'blogger-directory', priority: 0.7, changefreq: 'weekly' },
+  { path: '/nos-chatters', translated: 'chatter-directory', priority: 0.7, changefreq: 'weekly' },
+  // Presse
+  { path: '/presse', translated: 'press', priority: 0.6, changefreq: 'monthly' },
+  // CGU affiliés
+  { path: '/terms-influencers', translated: 'terms-influencers', priority: 0.4, changefreq: 'yearly' },
+  { path: '/terms-bloggers', translated: 'terms-bloggers', priority: 0.4, changefreq: 'yearly' },
+  { path: '/terms-group-admins', translated: 'terms-group-admins', priority: 0.4, changefreq: 'yearly' },
 ];
 
 // Route translations mapping
@@ -80,5 +99,24 @@ export const ROUTE_TRANSLATIONS: Record<string, Record<string, string>> = {
   'sos-call': { fr: 'sos-appel', en: 'emergency-call', es: 'llamada-emergencia', ru: 'ekstrenniy-zvonok', de: 'notruf', hi: 'aapatkaalin-call', pt: 'chamada-emergencia', ch: 'jinji-dianhua', ar: 'مكالمة-طوارئ' },
   'expat-call': { fr: 'appel-expatrie', en: 'expat-call', es: 'llamada-expatriado', ru: 'zvonok-expatriantu', de: 'expatriate-anruf', hi: 'pravasi-call', pt: 'chamada-expatriado', ch: 'waipai-dianhua', ar: 'مكالمة-المغترب' },
   'providers': { fr: 'prestataires', en: 'providers', es: 'proveedores', ru: 'postavshchiki', de: 'anbieter', hi: 'seva-pradaata', pt: 'prestadores', ch: 'fuwu-tigongzhe', ar: 'مقدمي-الخدمات' },
+  // Landing pages affiliés
+  'chatter-landing':     { fr: 'devenir-chatter', en: 'become-chatter', es: 'convertirse-chatter', de: 'chatter-werden', ru: 'stat-chatterom', pt: 'tornar-se-chatter', ch: 'chengwei-chatter', hi: 'chatter-bane', ar: 'كن-مروجا' },
+  'influencer-landing':  { fr: 'devenir-influenceur', en: 'become-influencer', es: 'convertirse-influencer', de: 'influencer-werden', ru: 'stat-influenserom', pt: 'tornar-se-influencer', ch: 'chengwei-wanghong', hi: 'influencer-bane', ar: 'كن-مؤثرا' },
+  'blogger-landing':     { fr: 'devenir-blogger', en: 'become-blogger', es: 'convertirse-blogger', de: 'blogger-werden', ru: 'stat-blogerom', pt: 'tornar-se-blogger', ch: 'chengwei-boke', hi: 'blogger-bane', ar: 'كن-مدونا' },
+  'groupadmin-landing':  { fr: 'devenir-admin-groupe', en: 'become-group-admin', es: 'convertirse-admin-grupo', de: 'gruppenadmin-werden', ru: 'stat-admin-gruppy', pt: 'tornar-se-admin-grupo', ch: 'chengwei-qunzhu', hi: 'group-admin-bane', ar: 'كن-مسؤول-مجموعة' },
+  'captain-landing':     { fr: 'devenir-capitaine', en: 'become-captain', es: 'convertirse-capitan', de: 'kapitan-werden', ru: 'stat-kapitanom', pt: 'tornar-se-capitao', ch: 'chengwei-duizhang', hi: 'captain-bane', ar: 'كن-قائدا' },
+  'partner-landing':     { fr: 'devenir-partenaire', en: 'become-partner', es: 'ser-socio', de: 'partner-werden', ru: 'stat-partnerom', pt: 'tornar-se-parceiro', ch: 'chengwei-hezuohuoban', hi: 'partner-bane', ar: 'كن-شريكا' },
+  'partners-page':       { fr: 'partenaires', en: 'partners', es: 'socios', de: 'partner', ru: 'partnery', pt: 'parceiros', ch: 'hezuohuoban', hi: 'bhagidar', ar: 'الشركاء' },
+  // Pages communautaires
+  'group-community':     { fr: 'groupes-communaute', en: 'community-groups', es: 'grupos-comunidad', de: 'gemeinschaftsgruppen', ru: 'soobshchestvo-gruppy', pt: 'grupos-comunidade', ch: 'shequ-qunzu', hi: 'samudayik-samuh', ar: 'مجموعات-المجتمع' },
+  'influencer-directory':{ fr: 'nos-influenceurs', en: 'our-influencers', es: 'nuestros-influencers', de: 'unsere-influencer', ru: 'nashi-influensery', pt: 'nossos-influencers', ch: 'women-influencers', hi: 'hamare-influencer', ar: 'مؤثرونا' },
+  'blogger-directory':   { fr: 'nos-blogueurs', en: 'our-bloggers', es: 'nuestros-bloggers', de: 'unsere-blogger', ru: 'nashi-blogery', pt: 'nossos-bloggers', ch: 'women-de-boke', hi: 'hamare-blogger', ar: 'مدوناتنا' },
+  'chatter-directory':   { fr: 'nos-chatters', en: 'our-chatters', es: 'nuestros-chatters', de: 'unsere-chatters', ru: 'nashi-chattery', pt: 'nossos-chatters', ch: 'women-de-chatters', hi: 'hamare-chatters', ar: 'محادثونا' },
+  // Presse
+  'press':               { fr: 'presse', en: 'press', es: 'prensa', de: 'presse', ru: 'pressa', pt: 'imprensa', ch: 'xinwen', hi: 'press', ar: 'صحافة' },
+  // CGU affiliés
+  'terms-influencers':   { fr: 'cgu-influenceurs', en: 'terms-influencers', es: 'terminos-influencers', de: 'agb-influencer', ru: 'usloviya-influensery', pt: 'termos-influenciadores', ch: 'tiaokuan-wanghong', hi: 'shartein-influencers', ar: 'شروط-المؤثرين' },
+  'terms-bloggers':      { fr: 'cgu-bloggeurs', en: 'terms-bloggers', es: 'terminos-bloggers', de: 'agb-blogger', ru: 'usloviya-blogery', pt: 'termos-bloggers', ch: 'tiaokuan-boke', hi: 'shartein-bloggers', ar: 'شروط-المدونين' },
+  'terms-group-admins':  { fr: 'cgu-admins-groupe', en: 'terms-group-admins', es: 'terminos-admins-grupo', de: 'agb-gruppenadmins', ru: 'usloviya-adminy-grupp', pt: 'termos-admins-grupo', ch: 'tiaokuan-qunguanli', hi: 'shartein-group-admins', ar: 'شروط-مشرفي-المجموعات' },
 };
 
