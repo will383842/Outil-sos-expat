@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useIntl } from 'react-intl';
 import { useApp } from '../contexts/AppContext';
+import SEOHead from '../components/layout/SEOHead';
 import BreadcrumbSchema from '../components/seo/BreadcrumbSchema';
 import { getDateLocale } from '../utils/formatters';
 import {
@@ -266,6 +267,11 @@ const SEO: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="SEO Dashboard - SOS Expat"
+        description="Internal SEO monitoring dashboard."
+        noindex
+      />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'breadcrumb.seo', defaultMessage: 'SEO' }) }

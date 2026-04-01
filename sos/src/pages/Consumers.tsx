@@ -11,6 +11,7 @@ import {
   Languages,
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
+import SEOHead from "../components/layout/SEOHead";
 import { useApp } from "../contexts/AppContext";
 import {
   collection,
@@ -1079,6 +1080,11 @@ const defaultCh = `
 
   return (
     <Layout>
+      <SEOHead
+        title={intl.formatMessage({ id: 'consumers.seo.title', defaultMessage: 'Consumer Rights & Expat Resources | SOS Expat' })}
+        description={intl.formatMessage({ id: 'consumers.seo.description', defaultMessage: 'Access consumer rights information and expert resources for expatriates worldwide. Find lawyers, local experts and legal assistance in 197 countries.' })}
+        keywords={intl.formatMessage({ id: 'consumers.seo.keywords', defaultMessage: 'expat consumer rights, expatriate legal resources, international consumer protection, expat assistance' })}
+      />
       <BreadcrumbSchema items={[
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'breadcrumb.consumers', defaultMessage: 'Consumers' }) }

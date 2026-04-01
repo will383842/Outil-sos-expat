@@ -10,6 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useLocaleNavigate } from '../multilingual-system';
 import { Lock, CheckCircle, AlertCircle, ArrowLeft, Eye, EyeOff, Shield } from 'lucide-react';
 import Layout from '../components/layout/Layout';
+import SEOHead from '../components/layout/SEOHead';
 import Button from '../components/common/Button';
 import { useApp } from '../contexts/AppContext';
 import { auth } from '../config/firebase';
@@ -326,6 +327,11 @@ const PasswordResetConfirm: React.FC = React.memo(() => {
   // Main form
   return (
     <Layout>
+      <SEOHead
+        title={t('reset.page_title') || 'Reset your password - SOS Expat'}
+        description={t('reset.page_description') || 'Set a new password for your SOS Expat account. Secure and instant.'}
+        noindex
+      />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900/20 to-slate-900 px-4 py-12">
         <div className="max-w-md w-full">
           {/* Back link */}
