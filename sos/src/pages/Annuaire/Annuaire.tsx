@@ -539,9 +539,19 @@ const Annuaire: React.FC = () => {
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   // ── List UI ───────────────────────────────────────────────────────────────
-  const [search, setSearch] = useState("");
+  // search is stored in URL (?q=...) — visible, bookmarkable, and bypasses
+  // any potential React controlled-input reconciliation issues
+  const hasInteracted = useRef(false);
+  const search = searchParams.get("q") ?? "";
   const [continent, setContinent] = useState("all");
   const [recent, setRecent] = useState<CountrySummary[]>(loadRecent);
+
+  const setSearch = useCallback((val: string) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (val) { next.set("q", val); } else { next.delete("q"); }
+    // Use "replace" to avoid polluting browser history on every keystroke
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // ── Detail UI ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<string>("");
@@ -558,9 +568,6 @@ const Annuaire: React.FC = () => {
       .then((data: CountrySummary[]) => { setCountries(data); setLoadingList(false); })
       .catch(err => { setErrorList(err.message); setLoadingList(false); });
   }, []);
-
-  // Track whether user has already interacted (typing / filtering)
-  const hasInteracted = useRef(false);
 
   // ── Auto-show nationality picker (only if user hasn't interacted) ────────
   useEffect(() => {
@@ -913,7 +920,7 @@ const Annuaire: React.FC = () => {
         <input
           type="text"
           value={search}
-          onChange={e => { hasInteracted.current = true; setSearch(e.target.value); }}
+          onChange={e => { hasInteracted.current = true; setSearch(e.target.value.trimStart()); }}
           placeholder={t("searchPlaceholder", lang)}
           className="w-full pl-12 pr-10 py-4 border border-gray-200 rounded-2xl text-base shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
