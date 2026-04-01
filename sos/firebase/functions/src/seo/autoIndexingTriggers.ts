@@ -1156,6 +1156,85 @@ async function submitCountryListingUrls(
   }
 }
 
+// ============================================
+// 🔥 CRON: Préchauffage cache SSR toutes les 20h
+// Évite les cold starts Puppeteer qui font échouer les crawls SEO
+// ============================================
+const SSR_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
+
+const SSR_PRIORITY_PATHS = [
+  // Homepages — 9 locales
+  '/fr-fr', '/en-us', '/es-es', '/de-de', '/pt-pt', '/ru-ru', '/zh-cn', '/ar-sa', '/hi-in',
+  // FR — pages clés
+  '/fr-fr/comment-ca-marche', '/fr-fr/tarifs', '/fr-fr/centre-aide', '/fr-fr/contact',
+  '/fr-fr/sos-appel', '/fr-fr/prestataires', '/fr-fr/temoignages', '/fr-fr/devenir-chatter',
+  '/fr-fr/devenir-influenceur', '/fr-fr/devenir-blogueur', '/fr-fr/devenir-admin-groupe',
+  '/fr-fr/devenir-partenaire', '/fr-fr/consommateurs', '/fr-fr/politique-confidentialite',
+  '/fr-fr/cgu-clients', '/fr-fr/nos-chatters', '/fr-fr/nos-influenceurs', '/fr-fr/nos-blogueurs',
+  // EN — key pages
+  '/en-us/how-it-works', '/en-us/pricing', '/en-us/help-center', '/en-us/contact',
+  '/en-us/emergency-call', '/en-us/providers', '/en-us/testimonials', '/en-us/become-chatter',
+  '/en-us/become-influencer', '/en-us/become-blogger', '/en-us/become-group-admin',
+  '/en-us/become-partner', '/en-us/consumers', '/en-us/privacy-policy',
+  '/en-us/our-chatters', '/en-us/our-influencers', '/en-us/our-bloggers',
+  // Other locales — homepages + chatter landing (high traffic)
+  '/de-de/chatter-werden', '/es-es/ser-chatter', '/pt-pt/tornar-se-chatter',
+  '/ru-ru/stat-chatterom', '/hi-in/chatter-bane', '/zh-cn/chengwei-chatter',
+];
+
+export const scheduledWarmSsrCache = onSchedule(
+  {
+    // Toutes les 20h — cache SSR dure 24h, on précauffe avant expiration
+    schedule: '0 */20 * * *',
+    region: REGION,
+    memory: '512MiB',
+    cpu: 0.25,
+    timeoutSeconds: 540, // 9 min — ~45 pages × 10s max chacune
+  },
+  async () => {
+    console.log(`[SSR Warm] Démarrage préchauffage — ${SSR_PRIORITY_PATHS.length} pages`);
+    let success = 0;
+    let errors = 0;
+
+    for (const path of SSR_PRIORITY_PATHS) {
+      try {
+        const url = new URL(SSR_FUNCTION_URL);
+        url.searchParams.set('path', path);
+        url.searchParams.set('url', `https://sos-expat.com${path}`);
+        url.searchParams.set('bot', 'googlebot');
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 30000); // 30s timeout par page
+
+        const res = await fetch(url.toString(), {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Googlebot/2.1',
+            'Accept': 'text/html',
+          },
+        });
+        clearTimeout(timer);
+
+        if (res.ok) {
+          success++;
+          console.log(`[SSR Warm] ✅ ${path} (${res.status})`);
+        } else {
+          errors++;
+          console.warn(`[SSR Warm] ⚠️ ${path} → ${res.status}`);
+        }
+      } catch (err: any) {
+        errors++;
+        console.error(`[SSR Warm] ❌ ${path} → ${err.message}`);
+      }
+
+      // 2s entre chaque requête pour éviter de surcharger renderForBotsV2
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    console.log(`[SSR Warm] Terminé — ${success} OK, ${errors} erreurs`);
+  }
+);
+
 /**
  * Log l'événement d'indexation dans Firestore
  */

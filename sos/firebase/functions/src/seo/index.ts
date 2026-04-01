@@ -18,6 +18,7 @@ export {
   scheduledSitemapPing,
   scheduledBulkIndexing,
   scheduledSeoHealthCheck,
+  scheduledWarmSsrCache,
 } from './autoIndexingTriggers';
 
 // Sitemaps dynamiques
