@@ -394,6 +394,37 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
 }
 
 /**
+ * Strips bot-irrelevant HTML noise from a pre-rendered SPA page.
+ *
+ * Removes:
+ * - <script type="module" src="..."> : Vite bundle entry points — bots don't execute JS
+ * - <link rel="modulepreload"> : Vite module preload hints — useless for bots
+ * - <link rel="preload" as="script"> : script preload hints — useless for bots
+ *
+ * Keeps intentionally:
+ * - <script type="application/ld+json"> : structured data — essential for SEO
+ * - <link rel="canonical"> / <link rel="alternate"> : SEO signals
+ * - <link rel="stylesheet"> : needed for rendering in some bots
+ * - All <meta> tags
+ *
+ * Impact: reduces HTML size by ~20-40%, improving text/HTML ratio in SEO audits.
+ */
+function stripBotNoise(html: string): string {
+  return html
+    // Remove external module scripts (<script type="module" src="...">)
+    // The src= attribute distinguishes external from inline scripts.
+    // This removes Vite's entry chunks without touching JSON-LD blocks.
+    .replace(/<script\b[^>]*\btype="module"\b[^>]*\bsrc="[^"]*"[^>]*>\s*<\/script>/gi, '')
+    .replace(/<script\b[^>]*\bsrc="[^"]*"\b[^>]*\btype="module"\b[^>]*>\s*<\/script>/gi, '')
+    // Remove <link rel="modulepreload"> (Vite build artifact)
+    .replace(/<link\b[^>]*\brel="modulepreload"\b[^>]*\/?>/gi, '')
+    // Remove <link rel="preload" as="script"> (preload hints for JS chunks)
+    .replace(/<link\b[^>]*\brel="preload"\b[^>]*\bas="script"\b[^>]*\/?>/gi, '')
+    // Collapse 3+ consecutive blank lines into 2 (whitespace cleanup)
+    .replace(/(\r?\n\s*){3,}/g, '\n\n');
+}
+
+/**
  * Main Cloud Function for dynamic rendering
  *
  * This function:
@@ -518,14 +549,21 @@ export const renderForBotsV2 = onRequest(
         return;
       }
 
+      // Post-process HTML before caching: strip bot-irrelevant tags to improve
+      // the text/HTML ratio detected by SEO auditors.
+      // Bots don't execute JavaScript, so Vite module scripts & modulepreload hints
+      // are pure HTML noise that inflates the ratio without adding text content.
+      // JSON-LD scripts (type="application/ld+json") are intentionally preserved.
+      const botHtml = stripBotNoise(html);
+
       // Cache the result (only for valid pages)
-      cacheHtml(cacheKey, html);
+      cacheHtml(cacheKey, botHtml);
 
       // Return the rendered HTML
       res.set('Content-Type', 'text/html; charset=utf-8');
       res.set('X-Prerender-Cache', 'MISS');
       res.set('Cache-Control', 'public, max-age=86400'); // 24 hours
-      res.send(html);
+      res.send(botHtml);
 
       logger.info('Page rendered successfully', { path: requestPath });
     } catch (error) {
