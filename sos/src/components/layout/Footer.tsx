@@ -622,6 +622,11 @@ const Footer: React.FC = () => {
         order: 20,
       },
       {
+        label: intl.formatMessage({ id: "footer.legal.termsExpats", defaultMessage: "CGU Expatriés" }),
+        href: `/${getTranslatedRouteSlug("terms-expats", resolvedLang)}`,
+        order: 25,
+      },
+      {
         label: intl.formatMessage({ id: "footer.legal.cookies" }),
         href: `/${getTranslatedRouteSlug("cookies", resolvedLang)}`,
         order: 50,

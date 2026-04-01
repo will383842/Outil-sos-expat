@@ -177,8 +177,8 @@ const HelpCenter: React.FC = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Use the selected language as locale (matches Firestore locale keys: en, hi, ar, ch, de, es, fr, pt, ru)
-        const locale = language;
+        // Use langCode from URL (not AppContext language which defaults to 'fr' before URL detection)
+        const locale = langCode;
         // Load all categories and articles (they contain translations)
         const [firestoreCategories, firestoreArticles] = await Promise.all([
           listHelpCategories(), // Load all categories
@@ -234,7 +234,7 @@ const HelpCenter: React.FC = () => {
     };
 
     void loadData();
-  }, [language]);
+  }, [langCode]);
 
   // Build hierarchical category structure
   const { mainCategories } = useMemo(() => {

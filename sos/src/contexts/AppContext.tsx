@@ -97,7 +97,17 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [language, setLanguage] = useState<Language>("fr");
+  const [language, setLanguage] = useState<Language>(() => {
+    // Synchronous init from URL to prevent first-render flash of French content
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (hasLocalePrefix(pathname)) {
+        const { lang } = parseLocaleFromPath(pathname);
+        if (lang) return lang as Language;
+      }
+    }
+    return 'fr';
+  });
   const [supportedCountries, setSupportedCountries] = useState<string[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
 
