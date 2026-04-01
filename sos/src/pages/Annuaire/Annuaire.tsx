@@ -273,9 +273,19 @@ const NationalityPicker: React.FC<{
     ).slice(0, 25);
   }, [countries, search]);
 
+  // Close on Escape key
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onSkip(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onSkip]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 relative">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onSkip}
+    >
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 relative" onClick={e => e.stopPropagation()}>
         <button onClick={onSkip} className="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition-colors">
           <X size={20} />
         </button>
@@ -549,10 +559,15 @@ const Annuaire: React.FC = () => {
       .catch(err => { setErrorList(err.message); setLoadingList(false); });
   }, []);
 
-  // ── Auto-show nationality picker ──────────────────────────────────────────
+  // Track whether user has already interacted (typing / filtering)
+  const hasInteracted = useRef(false);
+
+  // ── Auto-show nationality picker (only if user hasn't interacted) ────────
   useEffect(() => {
     if (!pickerDismissed && countries.length > 0) {
-      const t = setTimeout(() => setShowPicker(true), 1400);
+      const t = setTimeout(() => {
+        if (!hasInteracted.current) setShowPicker(true);
+      }, 3000);
       return () => clearTimeout(t);
     }
   }, [pickerDismissed, countries.length]);
@@ -898,7 +913,7 @@ const Annuaire: React.FC = () => {
         <input
           type="text"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => { hasInteracted.current = true; setSearch(e.target.value); }}
           placeholder={t("searchPlaceholder", lang)}
           className="w-full pl-12 pr-10 py-4 border border-gray-200 rounded-2xl text-base shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
