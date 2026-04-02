@@ -73,23 +73,35 @@ const t = (key: string, lang: string) => T[key]?.[lang] || T[key]?.fr || key;
 
 const BLOG_API = "https://blog.life-expat.com/api/v1/public";
 
-const SONDAGE_SEGMENT: Record<string, string> = {
-  fr: "sondages", en: "surveys", es: "encuestas", de: "umfragen",
-  pt: "pesquisas", ru: "oprosy", zh: "diaocha", ch: "diaocha", hi: "sarvekshan", ar: "istitalaat",
+// Segments blog (correspondent aux routes Laravel proxifiées par le Worker)
+const EXPAT_SEGMENT: Record<string, string> = {
+  fr: "sondages-expatries", en: "expat-surveys", es: "encuestas-expatriados",
+  de: "expat-umfragen", pt: "pesquisas-expatriados", ru: "oprosy-expatov",
+  zh: "expat-diaocha", ch: "expat-diaocha", hi: "pravasi-sarvekshan", ar: "istitalaat-mughtaribeen",
+};
+const VACANCIER_SEGMENT: Record<string, string> = {
+  fr: "sondages-vacanciers", en: "holiday-surveys", es: "encuestas-vacaciones",
+  de: "urlaubsumfragen", pt: "pesquisas-ferias", ru: "oprosy-otpusk",
+  zh: "jiaqi-diaocha", ch: "jiaqi-diaocha", hi: "chhutti-sarvekshan", ar: "istitalaat-ijaza",
 };
 const LANG_LOCALE: Record<string, string> = {
   fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de",
   ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", ch: "zh-cn", hi: "hi-in", ar: "ar-sa",
 };
 
-function sondageUrl(lang: string, slug: string): string {
-  return `/sondages/${slug}`;  // SPA route (Cloudflare Pages)
+// URL sur sos-expat.com — Worker proxifie vers le blog
+function sondageUrl(lang: string, slug: string, type: string, localeSlug: string): string {
+  const seg = type === "vacancier"
+    ? (VACANCIER_SEGMENT[lang] ?? "sondages-vacanciers")
+    : (EXPAT_SEGMENT[lang] ?? "sondages-expatries");
+  return `/${localeSlug}/${seg}/${slug}`;
 }
 
 // Flat interface used internally
 interface Sondage {
   id: number;
   external_id: string;
+  type: string;
   slug: string;
   title: string;
   description: string;
@@ -119,6 +131,7 @@ function normalizeSondage(raw: RawSondage): Sondage {
   return {
     id:              raw.id,
     external_id:     raw.external_id,
+    type:            raw.type ?? "expat",
     slug:            raw.translation?.slug        ?? raw.slug        ?? "",
     title:           raw.translation?.title       ?? raw.title       ?? "",
     description:     raw.translation?.description ?? raw.description ?? "",
@@ -173,8 +186,8 @@ const SondagesListing: React.FC = () => {
     const ctrl = new AbortController();
 
     Promise.all([
-      fetch(`${BLOG_API}/sondages?lang=${lang}&status=active`,  { signal: ctrl.signal }).then(r => r.json()),
-      fetch(`${BLOG_API}/sondages?lang=${lang}&status=closed`,  { signal: ctrl.signal }).then(r => r.json()),
+      fetch(`${BLOG_API}/sondages?lang=${lang}&status=active`,  { signal: ctrl.signal, headers: { Accept: "application/json" } }).then(r => r.json()),
+      fetch(`${BLOG_API}/sondages?lang=${lang}&status=closed`,  { signal: ctrl.signal, headers: { Accept: "application/json" } }).then(r => r.json()),
     ])
       .then(([activeRes, closedRes]) => {
         // API returns a raw array [], not { data: [] } — handle both shapes
@@ -362,7 +375,7 @@ const SondagesListing: React.FC = () => {
 
                       <div className="shrink-0">
                         <a
-                          href={sondageUrl(lang, survey.slug)}
+                          href={sondageUrl(lang, survey.slug, survey.type, localeSlug)}
                           className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-red-600/30 active:scale-[0.97]"
                         >
                           {t("participate", lang)}
@@ -429,7 +442,7 @@ const SondagesListing: React.FC = () => {
                       )}
                     </div>
                     <a
-                      href={sondageUrl(lang, survey.slug)}
+                      href={sondageUrl(lang, survey.slug, survey.type, localeSlug)}
                       className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 transition-colors hover:text-red-700"
                     >
                       {t("seeResults", lang)}

@@ -1162,9 +1162,9 @@ async function handleRequest(request, env, ctx) {
       // Articles: listing (/en-us/articles) = SPA, detail (/en-us/articles/slug) = Blog
       if (ARTICLES_SEGMENTS.has(segment)) return !!slug;
 
-      // Sondages: listing (/fr-fr/sondages) = SPA, detail pages (/fr-fr/sondages-expatries/slug) = Blog
-      // Also covers results sub-pages (/fr-fr/sondages-expatries/slug/resultats)
-      if (SONDAGES_SEGMENTS.has(segment)) return !!slug;
+      // Sondages: detail pages (/fr-fr/sondages-expatries/slug) = Blog
+      // Listing pages (/fr-fr/sondages-vacanciers) also proxied so category pages work
+      if (SONDAGES_SEGMENTS.has(segment)) return true;
 
       // /{locale}/{translated-segment} = blog content (categories, tags, countries, vie-a-letranger)
       if (BLOG_SEGMENTS.has(segment)) return true;
