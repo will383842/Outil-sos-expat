@@ -5,7 +5,7 @@
  * Route: /fr-fr/articles, /en-us/articles, etc.
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { parseLocaleFromPath } from "@/multilingual-system";
@@ -16,7 +16,6 @@ import {
   Search,
   Clock,
   Calendar,
-  User,
   BookOpen,
   Tag,
   TrendingUp,
@@ -24,6 +23,7 @@ import {
   Mail,
   FileText,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 // ============================================================
@@ -79,118 +79,102 @@ const t = (key: string, lang: string): string =>
   T[key]?.[lang] || T[key]?.["fr"] || key;
 
 // ============================================================
-// TYPES
+// TYPES & CONSTANTS
 // ============================================================
 
 type Category = "all" | "country" | "thematic" | "practical" | "faq" | "news";
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   category: Category;
   categoryLabel: string;
-  author: string;
   date: string;
   readTime: number;
   tags: string[];
   featured?: boolean;
+  imageUrl?: string;
   imageGradient: string;
 }
 
-// ============================================================
-// MOCK DATA
-// ============================================================
+// Blog API public endpoint
+const BLOG_API = "https://sos-expat.com/api/v1/public";
 
-const MOCK_ARTICLES: Article[] = [
-  {
-    id: "1",
-    title: "S'expatrier en Espagne en 2026 : le guide complet",
-    excerpt:
-      "Visa, logement, sante, fiscalite... Tout ce que vous devez savoir avant de vous installer en Espagne. Un guide pas-a-pas pour reussir votre expatriation.",
-    category: "country",
-    categoryLabel: "Fiches pays",
-    author: "Equipe SOS-Expat",
-    date: "2026-03-28",
-    readTime: 12,
-    tags: ["Espagne", "Visa", "Logement"],
-    featured: true,
-    imageGradient: "from-red-600 to-orange-500",
-  },
-  {
-    id: "2",
-    title: "Les 10 erreurs a eviter lors de votre premiere expatriation",
-    excerpt:
-      "Decouvrez les pieges les plus courants et comment les eviter pour une expatriation reussie des le premier jour.",
-    category: "practical",
-    categoryLabel: "Guides pratiques",
-    author: "Marie Dupont",
-    date: "2026-03-25",
-    readTime: 8,
-    tags: ["Conseils", "Debutant"],
-    imageGradient: "from-red-600 to-rose-500",
-  },
-  {
-    id: "3",
-    title: "Fiscalite des expatries : double imposition et conventions",
-    excerpt:
-      "Comprendre les conventions fiscales bilaterales et eviter la double imposition quand vous vivez a l'etranger.",
-    category: "thematic",
-    categoryLabel: "Fiches thematiques",
-    author: "Pierre Martin",
-    date: "2026-03-20",
-    readTime: 15,
-    tags: ["Fiscalite", "Impots"],
-    imageGradient: "from-emerald-600 to-teal-500",
-  },
-  {
-    id: "4",
-    title: "Comment obtenir un visa de travail au Canada ?",
-    excerpt:
-      "Le processus complet pour obtenir votre permis de travail canadien, du PVT au LMIA en passant par Entree Express.",
-    category: "country",
-    categoryLabel: "Fiches pays",
-    author: "Sophie Leclerc",
-    date: "2026-03-18",
-    readTime: 10,
-    tags: ["Canada", "Visa", "Travail"],
-    imageGradient: "from-rose-600 to-pink-500",
-  },
-  {
-    id: "5",
-    title: "Assurance sante a l'etranger : quelle couverture choisir ?",
-    excerpt:
-      "CFE, assurance locale, assurance internationale... Comparatif et conseils pour bien vous couvrir selon votre situation.",
-    category: "faq",
-    categoryLabel: "FAQ",
-    author: "Equipe SOS-Expat",
-    date: "2026-03-15",
-    readTime: 7,
-    tags: ["Sante", "Assurance"],
-    imageGradient: "from-violet-600 to-purple-500",
-  },
-  {
-    id: "6",
-    title: "Nouveautes 2026 : visas numeriques et teletravail international",
-    excerpt:
-      "Tour d'horizon des nouveaux visas digital nomad et des pays qui facilitent le teletravail depuis l'etranger en 2026.",
-    category: "news",
-    categoryLabel: "Actualites",
-    author: "Lucas Bernard",
-    date: "2026-03-10",
-    readTime: 6,
-    tags: ["Digital Nomad", "Teletravail", "2026"],
-    imageGradient: "from-amber-600 to-yellow-500",
-  },
-];
+// Map blog category slugs → SPA Category type
+const CATEGORY_MAP: Record<string, Category> = {
+  "fiches-pays":        "country",
+  "fiches-thematiques": "thematic",
+  "fiches-pratiques":   "practical",
+};
+
+const CATEGORY_LABEL_MAP: Record<string, Record<string, string>> = {
+  "fiches-pays":        { fr: "Fiches pays",        en: "Country Guides" },
+  "fiches-thematiques": { fr: "Fiches thematiques", en: "Thematic Guides" },
+  "fiches-pratiques":   { fr: "Guides pratiques",   en: "Practical Guides" },
+};
+
+// Category gradient by slug
+const GRADIENT_MAP: Record<string, string> = {
+  "fiches-pays":        "from-red-600 to-orange-500",
+  "fiches-thematiques": "from-violet-600 to-purple-500",
+  "fiches-pratiques":   "from-emerald-600 to-teal-500",
+};
+
+// Blog article URL: /{locale}/{articles-segment}/{slug}
+const LANG_LOCALE: Record<string, string> = {
+  fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de",
+  ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", hi: "hi-in", ar: "ar-sa",
+};
+const ARTICLES_SEGMENT: Record<string, string> = {
+  fr: "articles", en: "articles", es: "articulos", de: "artikel",
+  pt: "artigos", ru: "stati", zh: "wenzhang", hi: "lekh", ar: "maqalat",
+};
+function articleUrl(lang: string, slug: string): string {
+  const locale = LANG_LOCALE[lang] ?? "fr-fr";
+  const segment = ARTICLES_SEGMENT[lang] ?? "articles";
+  return `/${locale}/${segment}/${slug}`;
+}
+
+// Raw article from Blog API
+interface RawArticle {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string | null;
+  content_type: string;
+  featured_image_url: string | null;
+  reading_time_minutes: number;
+  published_at: string;
+  tags: string[];
+  is_featured: boolean;
+}
+
+function mapRawArticle(raw: RawArticle, lang: string): Article {
+  const catSlug = raw.category ?? "";
+  return {
+    id:            raw.id,
+    slug:          raw.slug,
+    title:         raw.title,
+    excerpt:       raw.excerpt,
+    category:      CATEGORY_MAP[catSlug] ?? "practical",
+    categoryLabel: CATEGORY_LABEL_MAP[catSlug]?.[lang] ?? CATEGORY_LABEL_MAP[catSlug]?.["fr"] ?? catSlug,
+    date:          raw.published_at,
+    readTime:      raw.reading_time_minutes,
+    tags:          raw.tags,
+    featured:      raw.is_featured,
+    imageUrl:      raw.featured_image_url ?? undefined,
+    imageGradient: GRADIENT_MAP[catSlug] ?? "from-red-600 to-rose-500",
+  };
+}
 
 const CATEGORIES: { key: Category; labelKey: string }[] = [
   { key: "all", labelKey: "cat.all" },
   { key: "country", labelKey: "cat.country" },
   { key: "thematic", labelKey: "cat.thematic" },
   { key: "practical", labelKey: "cat.practical" },
-  { key: "faq", labelKey: "cat.faq" },
-  { key: "news", labelKey: "cat.news" },
 ];
 
 const POPULAR_TAGS = [
@@ -256,47 +240,55 @@ function ArticleCard({
       whileHover={{ y: -4 }}
       className="group bg-white rounded-2xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-red-100 cursor-pointer"
     >
-      {/* Image placeholder */}
-      <div
-        className={`relative h-48 bg-gradient-to-br ${article.imageGradient} flex items-center justify-center`}
-      >
-        <BookOpen className="w-12 h-12 text-white/30" />
-        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
-      </div>
-
-      <div className="p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <CategoryBadge label={article.categoryLabel} />
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <Clock className="w-3 h-3" />
-            {article.readTime} {t("read.time", lang)}
-          </span>
-        </div>
-
-        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
-          {article.title}
-        </h3>
-
-        <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-          {article.excerpt}
-        </p>
-
-        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="w-3.5 h-3.5 text-gray-500" />
+      <a href={articleUrl(lang, article.slug)} aria-label={article.title}>
+        {/* Image */}
+        <div className="relative h-48 overflow-hidden">
+          {article.imageUrl ? (
+            <img
+              src={article.imageUrl}
+              alt={article.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${article.imageGradient} flex items-center justify-center`}>
+              <BookOpen className="w-12 h-12 text-white/30" />
             </div>
-            <span className="text-xs text-gray-500">{article.author}</span>
-          </div>
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <Calendar className="w-3 h-3" />
-            {new Date(article.date).toLocaleDateString(
-              lang === "fr" ? "fr-FR" : "en-US",
-              { day: "numeric", month: "short", year: "numeric" }
-            )}
-          </span>
+          )}
+          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
         </div>
-      </div>
+
+        <div className="p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <CategoryBadge label={article.categoryLabel} />
+            <span className="flex items-center gap-1 text-xs text-gray-400">
+              <Clock className="w-3 h-3" />
+              {article.readTime} {t("read.time", lang)}
+            </span>
+          </div>
+
+          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+            {article.title}
+          </h3>
+
+          <p className="text-sm text-gray-500 line-clamp-2 mb-4">
+            {article.excerpt}
+          </p>
+
+          <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+            <span className="flex items-center gap-1 text-xs text-gray-400">
+              <Calendar className="w-3 h-3" />
+              {new Date(article.date).toLocaleDateString(
+                lang === "fr" ? "fr-FR" : "en-US",
+                { day: "numeric", month: "short", year: "numeric" }
+              )}
+            </span>
+            <span className="text-xs font-medium text-red-600 group-hover:underline">
+              {t("read.article", lang)} →
+            </span>
+          </div>
+        </div>
+      </a>
     </motion.article>
   );
 }
@@ -317,98 +309,99 @@ function FeaturedCard({
       viewport={{ once: true }}
       className="group relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer"
     >
-      <div className="grid md:grid-cols-2 gap-0">
-        {/* Image placeholder */}
-        <div
-          className={`relative h-64 md:h-full min-h-[280px] bg-gradient-to-br ${article.imageGradient} flex items-center justify-center`}
-        >
-          <BookOpen className="w-16 h-16 text-white/20" />
-          <div className="absolute top-4 left-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-gray-900 backdrop-blur-sm shadow-sm">
-              <TrendingUp className="w-3.5 h-3.5 text-red-600" />
-              {t("featured.badge", lang)}
-            </span>
-          </div>
-        </div>
-
-        <div className="p-6 md:p-8 flex flex-col justify-center">
-          <div className="flex items-center gap-3 mb-4">
-            <CategoryBadge label={article.categoryLabel} />
-            <span className="flex items-center gap-1 text-xs text-gray-400">
-              <Clock className="w-3.5 h-3.5" />
-              {article.readTime} {t("read.time", lang)}
-            </span>
-          </div>
-
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-red-600 transition-colors leading-tight">
-            {article.title}
-          </h2>
-
-          <p className="text-base text-gray-500 mb-6 leading-relaxed">
-            {article.excerpt}
-          </p>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-500" />
+      <a href={articleUrl(lang, article.slug)} aria-label={article.title}>
+        <div className="grid md:grid-cols-2 gap-0">
+          {/* Image */}
+          <div className="relative h-64 md:h-full min-h-[280px] overflow-hidden">
+            {article.imageUrl ? (
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+            ) : (
+              <div className={`w-full h-full bg-gradient-to-br ${article.imageGradient} flex items-center justify-center`}>
+                <BookOpen className="w-16 h-16 text-white/20" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">
-                  {article.author}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {new Date(article.date).toLocaleDateString(
-                    lang === "fr" ? "fr-FR" : "en-US",
-                    { day: "numeric", month: "long", year: "numeric" }
-                  )}
-                </p>
-              </div>
+            )}
+            <div className="absolute top-4 left-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-gray-900 backdrop-blur-sm shadow-sm">
+                <TrendingUp className="w-3.5 h-3.5 text-red-600" />
+                {t("featured.badge", lang)}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8 flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-4">
+              <CategoryBadge label={article.categoryLabel} />
+              <span className="flex items-center gap-1 text-xs text-gray-400">
+                <Clock className="w-3.5 h-3.5" />
+                {article.readTime} {t("read.time", lang)}
+              </span>
             </div>
 
-            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 group-hover:gap-2.5 transition-all">
-              {t("read.article", lang)}
-              <ArrowRight className="w-4 h-4" />
-            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-red-600 transition-colors leading-tight">
+              {article.title}
+            </h2>
+
+            <p className="text-base text-gray-500 mb-6 leading-relaxed">
+              {article.excerpt}
+            </p>
+
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                {new Date(article.date).toLocaleDateString(
+                  lang === "fr" ? "fr-FR" : "en-US",
+                  { day: "numeric", month: "long", year: "numeric" }
+                )}
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 group-hover:gap-2.5 transition-all">
+                {t("read.article", lang)}
+                <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </a>
     </motion.article>
   );
 }
 
-function Sidebar({ lang }: { lang: string }) {
-  const popular = MOCK_ARTICLES.slice(0, 4);
+function Sidebar({ lang, articles }: { lang: string; articles: Article[] }) {
+  const popular = articles.slice(0, 4);
 
   return (
     <aside className="space-y-8">
       {/* Popular articles */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-red-600" />
-          {t("sidebar.popular", lang)}
-        </h3>
-        <ul className="space-y-4">
-          {popular.map((a, i) => (
-            <li
-              key={a.id}
-              className="group flex items-start gap-3 cursor-pointer"
-            >
-              <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400 group-hover:bg-red-50 group-hover:text-red-600 transition-colors">
-                {i + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-red-600 transition-colors">
-                  {a.title}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {a.readTime} {t("read.time", lang)}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {popular.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+          <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-red-600" />
+            {t("sidebar.popular", lang)}
+          </h3>
+          <ul className="space-y-4">
+            {popular.map((a, i) => (
+              <li key={a.id} className="group flex items-start gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400 group-hover:bg-red-50 group-hover:text-red-600 transition-colors">
+                  {i + 1}
+                </span>
+                <div className="min-w-0">
+                  <a
+                    href={articleUrl(lang, a.slug)}
+                    className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-red-600 transition-colors"
+                  >
+                    {a.title}
+                  </a>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {a.readTime} {t("read.time", lang)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Categories */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
@@ -418,9 +411,7 @@ function Sidebar({ lang }: { lang: string }) {
         </h3>
         <ul className="space-y-2">
           {CATEGORIES.filter((c) => c.key !== "all").map((cat) => {
-            const count = MOCK_ARTICLES.filter(
-              (a) => a.category === cat.key
-            ).length;
+            const count = articles.filter((a) => a.category === cat.key).length;
             return (
               <li
                 key={cat.key}
@@ -429,9 +420,11 @@ function Sidebar({ lang }: { lang: string }) {
                 <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                   {t(cat.labelKey, lang)}
                 </span>
-                <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                  {count}
-                </span>
+                {count > 0 && (
+                  <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    {count}
+                  </span>
+                )}
               </li>
             );
           })}
@@ -490,10 +483,29 @@ export default function Articles() {
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [allArticles, setAllArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // --- Filter articles ---
+  // Fetch from Blog API
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+
+    fetch(`${BLOG_API}/articles?lang=${lang}&per_page=50`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        const raw: RawArticle[] = json.data ?? [];
+        setAllArticles(raw.map((r) => mapRawArticle(r, lang)));
+      })
+      .catch(() => {/* network error: show empty state */})
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [lang]);
+
+  // Filter articles
   const filteredArticles = useMemo(() => {
-    let list = MOCK_ARTICLES;
+    let list = allArticles;
 
     if (activeCategory !== "all") {
       list = list.filter((a) => a.category === activeCategory);
@@ -510,7 +522,7 @@ export default function Articles() {
     }
 
     return list;
-  }, [search, activeCategory]);
+  }, [search, activeCategory, allArticles]);
 
   const featured = filteredArticles.find((a) => a.featured);
   const gridArticles = filteredArticles.filter((a) => a !== featured);
@@ -598,7 +610,11 @@ export default function Articles() {
 
       {/* =============== CONTENT =============== */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        {filteredArticles.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+          </div>
+        ) : filteredArticles.length === 0 ? (
           <EmptyState lang={lang} />
         ) : (
           <div className="grid lg:grid-cols-[1fr_320px] gap-10">
@@ -631,7 +647,7 @@ export default function Articles() {
             {/* Sidebar (desktop) */}
             <div className="hidden lg:block">
               <div className="sticky top-20">
-                <Sidebar lang={lang} />
+                <Sidebar lang={lang} articles={allArticles} />
               </div>
             </div>
           </div>

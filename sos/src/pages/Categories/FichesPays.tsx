@@ -387,7 +387,11 @@ const FichesPays: React.FC = () => {
       {/* ====== COUNTRY CARDS ====== */}
       <section className="bg-gray-50/50 py-14 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          {grouped.length === 0 && (
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <Loader2 className="h-8 w-8 text-red-500 animate-spin" />
+            </div>
+          ) : grouped.length === 0 ? (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -395,146 +399,83 @@ const FichesPays: React.FC = () => {
             >
               {t("noResults", lang)}
             </motion.p>
-          )}
-
-          {grouped.map(([continent, countries]) => (
-            <motion.div
-              key={continent}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-              variants={fadeInUp}
-              className="mb-14 last:mb-0"
-            >
-              {/* Continent header */}
-              <div className="flex items-center gap-3 mb-6">
-                <Layers className="h-5 w-5 text-red-600" />
-                <h2 className="text-xl font-bold text-gray-900">
-                  {t(CONTINENT_FILTER_KEYS[continent], lang)}
-                </h2>
-                <span className="text-sm text-gray-400 font-medium">
-                  ({countries.length})
-                </span>
-              </div>
-
-              {/* Cards grid */}
+          ) : (
+            grouped.map(([continent, continentCountries]) => (
               <motion.div
-                variants={staggerContainer}
+                key={continent}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+                viewport={{ once: true, margin: "-60px" }}
+                variants={fadeInUp}
+                className="mb-14 last:mb-0"
               >
-                {countries.map((country) => (
-                  <motion.article
-                    key={country.code}
-                    variants={cardVariant}
-                    whileHover={{ y: -4, scale: 1.01 }}
-                    className="group relative bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-xl hover:border-red-100 transition-all duration-300 cursor-pointer"
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Flag */}
-                      <div className="flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img
-                          src={`https://flagcdn.com/w40/${country.code.toLowerCase()}.png`}
-                          alt={country.name[lang] || country.name.fr}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
+                {/* Continent header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <Layers className="h-5 w-5 text-red-600" />
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {t(CONTINENT_FILTER_KEYS[continent], lang)}
+                  </h2>
+                  <span className="text-sm text-gray-400 font-medium">
+                    ({continentCountries.length})
+                  </span>
+                </div>
 
-                      <div className="flex-1 min-w-0">
-                        {/* Country name */}
-                        <h3 className="text-base font-semibold text-gray-900 group-hover:text-red-600 transition-colors truncate">
-                          {country.name[lang] || country.name.fr}
-                        </h3>
-
-                        {/* Continent badge */}
-                        <span className="inline-block mt-1 text-xs font-medium text-gray-400 bg-gray-50 rounded-full px-2.5 py-0.5">
-                          {t(CONTINENT_FILTER_KEYS[country.continent], lang)}
-                        </span>
-
-                        {/* Rubrique count */}
-                        <p className="mt-2.5 text-sm text-gray-500 flex items-center gap-1.5">
-                          <BookOpen className="h-3.5 w-3.5 text-gray-400" />
-                          {country.rubriqueCount} {t("rubriques", lang)}
-                        </p>
-
-                        {/* Updated badge */}
-                        {country.lastUpdated && (
-                          <span className="inline-flex items-center gap-1 mt-2 text-xs text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5 font-medium">
-                            <Clock className="h-3 w-3" />
-                            {t("updatedOn", lang)} {formatDate(country.lastUpdated, lang)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Arrow */}
-                      <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-1 flex-shrink-0" />
-                    </div>
-                  </motion.article>
-                ))}
-              </motion.div>
-            </motion.div>
-          ))}
-
-          {/* ====== COMING SOON ====== */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-60px" }}
-            variants={fadeInUp}
-            className="mt-16"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <MapPin className="h-5 w-5 text-gray-400" />
-              <h2 className="text-xl font-bold text-gray-400">
-                {t("comingSoon", lang)}
-              </h2>
-            </div>
-
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            >
-              {COMING_SOON.map((country) => (
+                {/* Cards grid */}
                 <motion.div
-                  key={country.code}
-                  variants={cardVariant}
-                  className="relative bg-white/60 rounded-2xl border border-dashed border-gray-200 p-5 opacity-60"
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center grayscale">
-                      <img
-                        src={`https://flagcdn.com/w40/${country.code.toLowerCase()}.png`}
-                        alt={country.name[lang] || country.name.fr}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-gray-400 truncate">
-                        {country.name[lang] || country.name.fr}
-                      </h3>
-                      <span className="inline-block mt-1 text-xs font-medium text-gray-300 bg-gray-50 rounded-full px-2.5 py-0.5">
-                        {t(CONTINENT_FILTER_KEYS[country.continent], lang)}
-                      </span>
-                    </div>
-                  </div>
+                  {continentCountries.map((country) => (
+                    <motion.article
+                      key={country.code}
+                      variants={cardVariant}
+                      whileHover={{ y: -4, scale: 1.01 }}
+                      className="group relative bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-xl hover:border-red-100 transition-all duration-300"
+                    >
+                      <a href={articleUrl(lang, country.slug)} className="flex items-start gap-4" aria-label={country.name}>
+                        {/* Flag */}
+                        <div className="flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={`https://flagcdn.com/w40/${country.code.toLowerCase()}.png`}
+                            alt={country.code}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
 
-                  {/* Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/40 backdrop-blur-[1px]">
-                    <span className="rounded-full bg-gray-100 px-4 py-1.5 text-xs font-semibold text-gray-500 shadow-sm">
-                      {t("comingSoon", lang)}
-                    </span>
-                  </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-semibold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
+                            {country.name}
+                          </h3>
+
+                          <span className="inline-block mt-1 text-xs font-medium text-gray-400 bg-gray-50 rounded-full px-2.5 py-0.5">
+                            {t(CONTINENT_FILTER_KEYS[country.continent], lang)}
+                          </span>
+
+                          <p className="mt-2.5 text-sm text-gray-500 flex items-center gap-1.5">
+                            <BookOpen className="h-3.5 w-3.5 text-gray-400" />
+                            {country.readingTime} {t("rubriques", lang)}
+                          </p>
+
+                          {country.publishedAt && (
+                            <span className="inline-flex items-center gap-1 mt-2 text-xs text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5 font-medium">
+                              <Clock className="h-3 w-3" />
+                              {t("updatedOn", lang)} {formatDate(country.publishedAt, lang)}
+                            </span>
+                          )}
+                        </div>
+
+                        <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-1 flex-shrink-0" />
+                      </a>
+                    </motion.article>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
+              </motion.div>
+            ))
+          )}
         </div>
       </section>
 
