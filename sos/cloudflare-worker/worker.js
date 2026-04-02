@@ -1095,8 +1095,8 @@ async function handleRequest(request, env, ctx) {
     'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
     // countries
     'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
-    // gallery (image bank) — all 9 languages
-    'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitravali', 'maarad',
+    // gallery: moved to SPA React page (layout + sélecteur langue cohérents)
+    // 'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitravali', 'maarad',
     // NOTE: annuaire/directory = SPA React page (NOT blog) -- ne pas ajouter ici
     // NOTE: outils/tools and sondages/surveys = SPA React listing pages -- ne pas ajouter ici
     // special

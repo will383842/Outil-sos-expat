@@ -247,6 +247,7 @@ const SondagesPage = lazy(() => import('./pages/Sondages/Sondages'));
 const SondagesResultats = lazy(() => import('./pages/Sondages/SondagesResultats'));
 const OutilsListing = lazy(() => import('./pages/Categories/OutilsListing'));
 const OutilsPage = lazy(() => import('./pages/Outils/Outils'));
+const GaleriePage = lazy(() => import('./pages/Galerie/Galerie'));
 
 // -------------------------------------------
 // Language config — chargement dynamique des traductions
@@ -413,6 +414,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/resultats-sondages", component: SondagesResultats, translated: "resultats-sondages" },
   { path: "/nos-outils", component: OutilsListing, translated: "outils-listing" },
   { path: "/outils", component: OutilsPage, translated: "outils" },
+  { path: "/galerie", component: GaleriePage, translated: "galerie" },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
