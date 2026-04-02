@@ -239,7 +239,7 @@ const FAQ: React.FC = () => {
             answer: item.answer,
           }))}
           pageUrl={faqPageUrl}
-          inLanguage={langCode}
+          inLanguage={langCode === 'ch' ? 'zh' : langCode}
         />
       )}
 

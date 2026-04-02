@@ -295,6 +295,10 @@ const HelpArticle: React.FC = () => {
     };
   };
 
+  // Table of Contents — must be called before early returns (Rules of Hooks)
+  const content = article ? getTranslatedValue(article.content, language) : '';
+  const toc = useMemo(() => parseTOC(content), [content]);
+
   if (isLoading) {
     return (
       <Layout>
@@ -333,7 +337,6 @@ const HelpArticle: React.FC = () => {
   }
 
   const title = getTranslatedValue(article.title, language);
-  const content = getTranslatedValue(article.content, language);
   const excerpt = getTranslatedValue(article.excerpt, language);
   const tags = getTranslatedTags(article.tags, language);
   const currentSlug = getTranslatedValue(article.slug, language);
@@ -341,8 +344,6 @@ const HelpArticle: React.FC = () => {
   const howToSchema = generateHowToSchema();
   // ISO lang code for SEO (ch → zh)
   const isoLang = langCode === 'ch' ? 'zh' : langCode;
-  // Table of Contents (auto-generated from markdown H2/H3)
-  const toc = useMemo(() => parseTOC(content), [content]);
 
   // OG locale mapping for SEOHead
   const OG_LOCALE_MAP: Record<string, string> = {

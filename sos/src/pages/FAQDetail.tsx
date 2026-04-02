@@ -798,7 +798,7 @@ const FAQDetail: React.FC = () => {
         {/* FAQPage schema — composant dédié, rendu dans <head> via Helmet */}
         <FAQPageSchema
           faqs={[{ question, answer }]}
-          inLanguage={langCode}
+          inLanguage={langCode === 'ch' ? 'zh' : langCode}
         />
       </article>
     </Layout>
