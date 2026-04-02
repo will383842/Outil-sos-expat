@@ -711,15 +711,15 @@ const Footer: React.FC = () => {
             href: `/${getTranslatedRouteSlug("testimonials", resolvedLang)}`,
           },
           {
-            label: intl.formatMessage({ id: "footer.services.surveys", defaultMessage: "Sondages Expats" }),
+            label: intl.formatMessage({ id: "footer.services.surveys", defaultMessage: "Nos Sondages" }),
             href: surveysBlogUrl,
           },
           {
-            label: intl.formatMessage({ id: "footer.services.tools", defaultMessage: "Nos Outils Voyageurs" }),
+            label: intl.formatMessage({ id: "footer.services.tools", defaultMessage: "Nos Outils" }),
             href: toolsUrl,
           },
           {
-            label: intl.formatMessage({ id: "footer.services.directory", defaultMessage: "Annuaire Mondiale" }),
+            label: intl.formatMessage({ id: "footer.services.directory", defaultMessage: "Annuaire Mondial" }),
             href: `/${getTranslatedRouteSlug("annuaire", resolvedLang)}`,
           },
         ],
