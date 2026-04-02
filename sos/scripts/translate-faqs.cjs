@@ -175,7 +175,7 @@ async function main() {
   }
 
   // Load all active FAQs
-  const snapshot = await db.collection('faqs').where('isActive', '==', true).get();
+  const snapshot = await db.collection('app_faq').where('isActive', '==', true).get();
   const faqs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   console.log(`Loaded ${faqs.length} active FAQs from Firestore`);
 
@@ -245,7 +245,7 @@ async function main() {
       updatePayload['updatedAt'] = admin.firestore.FieldValue.serverTimestamp();
 
       try {
-        await db.collection('faqs').doc(faq.id).update(updatePayload);
+        await db.collection('app_faq').doc(faq.id).update(updatePayload);
         console.log(`  💾 Saved ${Object.keys(newQuestion).length} new translations to Firestore`);
       } catch (err) {
         console.error(`  ❌ Failed to save: ${err.message}`);
