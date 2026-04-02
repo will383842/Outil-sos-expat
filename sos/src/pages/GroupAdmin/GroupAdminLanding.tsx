@@ -908,7 +908,7 @@ const GroupAdminLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content">
           <div className="max-w-4xl mx-auto">
-            <ImageBankSection accentColor="blue" bgClass="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20" />
+            <ImageBankSection accent="blue" />
           </div>
         </section>
 

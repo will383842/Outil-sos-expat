@@ -70,27 +70,64 @@ const TEXTS: Record<string, { title: string; desc: string; cta: string }> = {
   },
 };
 
+type AccentColor = "emerald" | "pink" | "blue" | "amber" | "purple" | "red";
+
+/** Static Tailwind class maps — dynamic interpolation doesn't compile */
+const ACCENT_STYLES: Record<AccentColor, { iconBg: string; iconText: string; btnBg: string; containerBg: string }> = {
+  emerald: {
+    iconBg: "bg-emerald-500/20",
+    iconText: "text-emerald-400",
+    btnBg: "bg-emerald-600 hover:bg-emerald-700",
+    containerBg: "bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20",
+  },
+  pink: {
+    iconBg: "bg-pink-500/20",
+    iconText: "text-pink-400",
+    btnBg: "bg-pink-600 hover:bg-pink-700",
+    containerBg: "bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20",
+  },
+  blue: {
+    iconBg: "bg-blue-500/20",
+    iconText: "text-blue-400",
+    btnBg: "bg-blue-600 hover:bg-blue-700",
+    containerBg: "bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20",
+  },
+  amber: {
+    iconBg: "bg-amber-500/20",
+    iconText: "text-amber-400",
+    btnBg: "bg-amber-600 hover:bg-amber-700",
+    containerBg: "bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20",
+  },
+  purple: {
+    iconBg: "bg-purple-500/20",
+    iconText: "text-purple-400",
+    btnBg: "bg-purple-600 hover:bg-purple-700",
+    containerBg: "bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20",
+  },
+  red: {
+    iconBg: "bg-red-500/20",
+    iconText: "text-red-400",
+    btnBg: "bg-red-600 hover:bg-red-700",
+    containerBg: "bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20",
+  },
+};
+
 interface ImageBankSectionProps {
-  /** Override accent color class (default: emerald for dark theme) */
-  accentColor?: string;
-  /** Override background classes */
-  bgClass?: string;
+  accent?: AccentColor;
 }
 
-const ImageBankSection: React.FC<ImageBankSectionProps> = ({
-  accentColor = "emerald",
-  bgClass = "bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20",
-}) => {
+const ImageBankSection: React.FC<ImageBankSectionProps> = ({ accent = "emerald" }) => {
   const { language } = useApp();
   const lang = language || "en";
   const t = TEXTS[lang] || TEXTS.en;
   const galleryPath = GALLERY_SEGMENTS[lang] || GALLERY_SEGMENTS.en;
+  const s = ACCENT_STYLES[accent] || ACCENT_STYLES.emerald;
 
   return (
-    <div className={`${bgClass} rounded-2xl p-5 sm:p-8`}>
+    <div className={`${s.containerBg} rounded-2xl p-5 sm:p-8`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-        <div className={`w-12 h-12 bg-${accentColor}-500/20 rounded-xl flex items-center justify-center flex-shrink-0`}>
-          <ImageIcon className={`w-6 h-6 text-${accentColor}-400`} />
+        <div className={`w-12 h-12 ${s.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+          <ImageIcon className={`w-6 h-6 ${s.iconText}`} />
         </div>
         <div className="flex-1">
           <h3 className="text-lg sm:text-xl font-bold mb-1">{t.title}</h3>
@@ -100,7 +137,7 @@ const ImageBankSection: React.FC<ImageBankSectionProps> = ({
               href={`/${galleryPath}/`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 px-5 py-2.5 bg-${accentColor}-600 hover:bg-${accentColor}-700 text-white text-sm font-semibold rounded-lg transition-colors`}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 ${s.btnBg} text-white text-sm font-semibold rounded-lg transition-colors`}
             >
               <ImageIcon className="w-4 h-4" />
               {t.cta}

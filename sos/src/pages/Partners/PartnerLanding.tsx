@@ -1480,7 +1480,7 @@ const PartnerLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content">
           <div className="max-w-4xl mx-auto">
-            <ImageBankSection accentColor="amber" bgClass="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20" />
+            <ImageBankSection accent="amber" />
           </div>
         </section>
 

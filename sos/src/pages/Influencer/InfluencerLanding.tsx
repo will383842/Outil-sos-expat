@@ -879,7 +879,7 @@ const InfluencerLanding: React.FC = () => {
         ================================================================ */}
         <section className="section-content">
           <div className="max-w-4xl mx-auto">
-            <ImageBankSection accentColor="pink" bgClass="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20" />
+            <ImageBankSection accent="pink" />
           </div>
         </section>
 
