@@ -235,7 +235,7 @@ const FAQ: React.FC = () => {
       {/* FAQPage JSON-LD (dedicated, clean schema for Google Rich Results) */}
       {faqData.length > 0 && (
         <FAQPageSchema
-          faqs={filteredFAQ.slice(0, 10).map((item) => ({
+          faqs={faqData.slice(0, 10).map((item) => ({
             question: item.question,
             answer: item.answer,
           }))}

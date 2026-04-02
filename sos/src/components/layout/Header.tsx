@@ -1973,7 +1973,7 @@ const Header: React.FC = () => {
                       </p>
                       <ul className="space-y-1" role="list">
                         {CONTENT_MOBILE_ITEMS.map((item) => {
-                          const slug = getTranslatedRouteSlug(item.key, language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
+                          const slug = getTranslatedRouteSlug(item.key as Parameters<typeof getTranslatedRouteSlug>[0], language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
                           const href = `/${localeSlug}/${slug}`;
                           const label = item.labels[language] || item.labels.fr;
                           return (

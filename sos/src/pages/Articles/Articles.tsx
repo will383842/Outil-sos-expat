@@ -557,7 +557,7 @@ export default function Articles() {
         title={`${t("page.title", lang)} | SOS-Expat`}
         description={t("page.subtitle", lang)}
         canonicalUrl={canonicalArticles}
-        ogType="blog"
+        ogType="website"
       />
       <BreadcrumbSchema items={[
         { name: t("home", lang), url: `/${localeSlug}` },
