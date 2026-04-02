@@ -25,47 +25,47 @@ const GALLERY_SEGMENTS: Record<string, string> = {
 const TEXTS: Record<string, { title: string; desc: string; cta: string }> = {
   en: {
     title: "SOS Expat Image Bank — 210+ Free HD Images",
-    desc: "Use our professional images in your content for free (CC BY 4.0). Just credit SOS Expat. Ready-to-copy embed code on every image.",
+    desc: "Use our professional images for free (CC BY 4.0). Just include a link to sos-expat.com. Copy the embed code — the link is already included.",
     cta: "Browse Image Gallery",
   },
   fr: {
     title: "Banque d'images SOS Expat — 210+ visuels HD gratuits",
-    desc: "Utilisez nos images professionnelles dans vos contenus gratuitement (CC BY 4.0). Mentionnez SOS Expat. Code embed pret a copier sur chaque image.",
+    desc: "Utilisez nos images gratuitement (CC BY 4.0). Il suffit d'inclure un lien vers sos-expat.com. Copiez le code embed — le lien est deja inclus.",
     cta: "Voir la galerie",
   },
   es: {
     title: "Banco de imagenes SOS Expat — 210+ imagenes HD gratis",
-    desc: "Use nuestras imagenes profesionales en su contenido gratis (CC BY 4.0). Solo acredite SOS Expat. Codigo embed listo para copiar.",
+    desc: "Use nuestras imagenes gratis (CC BY 4.0). Solo incluya un enlace a sos-expat.com. Copie el codigo embed — el enlace ya esta incluido.",
     cta: "Ver galeria",
   },
   de: {
     title: "SOS Expat Bildergalerie — 210+ HD-Bilder kostenlos",
-    desc: "Nutzen Sie unsere professionellen Bilder kostenlos (CC BY 4.0). Nennen Sie SOS Expat. Embed-Code zum Kopieren auf jedem Bild.",
+    desc: "Nutzen Sie unsere Bilder kostenlos (CC BY 4.0). Fugen Sie einfach einen Link zu sos-expat.com ein. Embed-Code kopieren — Link ist bereits enthalten.",
     cta: "Bildergalerie ansehen",
   },
   pt: {
     title: "Banco de imagens SOS Expat — 210+ imagens HD gratis",
-    desc: "Use nossas imagens profissionais gratuitamente (CC BY 4.0). Credite SOS Expat. Codigo embed pronto para copiar.",
+    desc: "Use nossas imagens gratuitamente (CC BY 4.0). Basta incluir um link para sos-expat.com. Copie o codigo embed — o link ja esta incluido.",
     cta: "Ver galeria",
   },
   ru: {
-    title: "Банк изображений SOS Expat — 210+ бесплатных HD-изображений",
-    desc: "Используйте наши профессиональные изображения бесплатно (CC BY 4.0). Укажите SOS Expat. Код для встраивания готов к копированию.",
+    title: "Банк изображений SOS Expat — 210+ бесплатных HD",
+    desc: "Используйте наши изображения бесплатно (CC BY 4.0). Просто добавьте ссылку на sos-expat.com. Код встраивания уже содержит ссылку.",
     cta: "Открыть галерею",
   },
   zh: {
     title: "SOS Expat 图库 — 210+ 免费高清图片",
-    desc: "免费使用我们的专业图片（CC BY 4.0）。注明 SOS Expat 即可。每张图片都有即用型嵌入代码。",
+    desc: "免费使用我们的图片（CC BY 4.0）。只需包含指向 sos-expat.com 的链接。复制嵌入代码——链接已包含在内。",
     cta: "浏览图库",
   },
   hi: {
     title: "SOS Expat छवि बैंक — 210+ मुफ्त HD छवियां",
-    desc: "हमारी पेशेवर छवियों का मुफ्त उपयोग करें (CC BY 4.0)। बस SOS Expat का श्रेय दें। हर छवि पर कॉपी-रेडी एम्बेड कोड।",
+    desc: "हमारी छवियां मुफ्त में उपयोग करें (CC BY 4.0)। बस sos-expat.com का लिंक शामिल करें। एम्बेड कोड कॉपी करें — लिंक पहले से शामिल है।",
     cta: "गैलरी देखें",
   },
   ar: {
     title: "بنك صور SOS Expat — 210+ صورة HD مجانية",
-    desc: "استخدم صورنا المهنية مجانًا (CC BY 4.0). فقط اذكر SOS Expat. رمز التضمين جاهز للنسخ على كل صورة.",
+    desc: "استخدم صورنا مجانًا (CC BY 4.0). فقط أضف رابطًا إلى sos-expat.com. انسخ كود التضمين — الرابط مضمّن بالفعل.",
     cta: "تصفح المعرض",
   },
 };

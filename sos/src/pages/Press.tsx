@@ -643,8 +643,8 @@ const Press: React.FC = () => {
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                       {lang === "fr"
-                        ? "Tous nos visuels sont disponibles gratuitement sous licence Creative Commons BY 4.0. Téléchargez, intégrez dans vos articles — il suffit de créditer SOS Expat. Code embed prêt à copier sur chaque image."
-                        : "All our visuals are available free under Creative Commons BY 4.0 license. Download, embed in your articles — just credit SOS Expat. Ready-to-copy embed code on every image."}
+                        ? "Tous nos visuels sont disponibles gratuitement sous licence Creative Commons BY 4.0. Téléchargez, intégrez dans vos articles — il suffit d'inclure un lien vers sos-expat.com. Copiez le code embed, le lien est déjà inclus."
+                        : "All our visuals are available free under Creative Commons BY 4.0 license. Download, embed in your articles — just include a link to sos-expat.com. Copy the embed code, the link is already included."}
                     </p>
                     <div className="flex flex-wrap gap-3">
                       <a

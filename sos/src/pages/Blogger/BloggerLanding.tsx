@@ -1051,7 +1051,7 @@ const BloggerLanding: React.FC = () => {
                   <p className="text-sm opacity-80 mb-3">
                     <FormattedMessage
                       id="blogger.imageBank.desc"
-                      defaultMessage="Use our professional images in your articles for free (CC BY 4.0). Just credit SOS Expat. Embed code ready to copy on every image — paste it in your blog in seconds."
+                      defaultMessage="Use our professional images in your articles for free (CC BY 4.0). Just include a link to sos-expat.com. Copy the embed code — the link is already included."
                     />
                   </p>
                   <div className="flex flex-wrap gap-3">
