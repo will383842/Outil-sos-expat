@@ -36,6 +36,9 @@ if (!fs.existsSync(sourceDir)) {
   process.exit(0);
 }
 
+// Directories to skip — they contain stale or deleted references
+const SKIP_DIRS = new Set(['global', 'language-country']);
+
 function copyRecursive(src, dest) {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
@@ -48,6 +51,10 @@ function copyRecursive(src, dest) {
     const destPath = path.join(dest, entry.name);
 
     if (entry.isDirectory()) {
+      if (SKIP_DIRS.has(entry.name)) {
+        console.log(`⏭️  Skipped stale directory: ${entry.name}/`);
+        continue;
+      }
       copyRecursive(srcPath, destPath);
     } else {
       fs.copyFileSync(srcPath, destPath);

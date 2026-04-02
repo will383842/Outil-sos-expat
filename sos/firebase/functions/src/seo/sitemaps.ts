@@ -560,32 +560,10 @@ ${hreflangs}
         });
       });
 
-      // ✅ PAGINATION: Auto sitemapindex when > 500 URLs
-      const helpTotalPages = Math.ceil(urlBlocks.length / MAX_URLS_PER_SITEMAP) || 1;
-      const helpNeedsPagination = urlBlocks.length > MAX_URLS_PER_SITEMAP;
-
-      if (helpNeedsPagination && !helpPageNum) {
-        const lp = filterLang ? `lang=${filterLang}&` : '';
-        const entries = Array.from({ length: helpTotalPages }, (_, i) =>
-          `  <sitemap>\n    <loc>${SITE_URL}/sitemaps/help${filterLang ? '-' + filterLang : ''}.xml?${lp}page=${i + 1}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
-        );
-        res.set('Content-Type', 'application/xml; charset=utf-8');
-        res.set('Cache-Control', 'public, max-age=3600');
-        res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join('\n')}\n</sitemapindex>`);
-        console.log(`✅ Sitemap help index: ${helpTotalPages} pages for ${urlBlocks.length} URLs`);
-        return;
-      }
-
-      let helpPage = urlBlocks;
-      if (helpPageNum && helpNeedsPagination) {
-        const s = (helpPageNum - 1) * MAX_URLS_PER_SITEMAP;
-        helpPage = urlBlocks.slice(s, s + MAX_URLS_PER_SITEMAP);
-        if (helpPage.length === 0) {
-          res.set('Content-Type', 'application/xml; charset=utf-8');
-          res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
-          return;
-        }
-      }
+      // ✅ Toujours retourner un urlset (jamais un sitemapindex)
+      // Raison: sitemap.xml est lui-même un sitemapindex — Google interdit les sitemapindex imbriqués.
+      // La limite Google est 50K URLs/fichier, largement au-dessus du volume help actuel.
+      const helpPage = urlBlocks;
 
       const helpXml = [`<?xml version="1.0" encoding="UTF-8"?>`, `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`, `        xmlns:xhtml="http://www.w3.org/1999/xhtml">`, ...helpPage, `</urlset>`].join('\n');
       res.set('Content-Type', 'application/xml; charset=utf-8');
@@ -982,7 +960,7 @@ function getCountrySlug(isoCode: string, lang: string): string {
 }
 
 /** Min number of qualified providers (score ≥ MIN_SEO_SCORE) for a country page to be in sitemap */
-const MIN_PROVIDERS_FOR_COUNTRY = 3;
+const MIN_PROVIDERS_FOR_COUNTRY = 1;
 
 export const sitemapCountryListings = onRequest(
   {

@@ -1254,7 +1254,9 @@ async function handleRequest(request, env, ctx) {
 
   if (SITEMAP_PROXY[pathname]) {
     try {
-      const sitemapResponse = await fetch(SITEMAP_PROXY[pathname], {
+      // Forward query params (e.g., ?page=1 for paginated sitemaps)
+      const sitemapTarget = url.search ? `${SITEMAP_PROXY[pathname]}${url.search}` : SITEMAP_PROXY[pathname];
+      const sitemapResponse = await fetch(sitemapTarget, {
         headers: { 'Accept': 'application/xml' },
       });
       const newHeaders = new Headers(sitemapResponse.headers);
