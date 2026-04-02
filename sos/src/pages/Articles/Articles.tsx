@@ -536,12 +536,18 @@ export default function Articles() {
       </nav>
 
       {/* ===================== HERO ===================== */}
-      <section className="relative bg-gradient-to-b from-gray-50 to-white pt-12 pb-8 sm:pt-16 sm:pb-12 overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-red-50 rounded-full blur-3xl opacity-40 -translate-y-1/2 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-gray-100 rounded-full blur-3xl opacity-50 translate-y-1/2 -translate-x-1/4" />
-        </div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+        {/* Grille décorative */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        {/* Halo rouge */}
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
@@ -549,16 +555,16 @@ export default function Articles() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 mb-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-600/30 bg-red-600/10 px-5 py-1.5 text-sm font-semibold text-red-400 mb-6">
               <BookOpen className="w-3.5 h-3.5" />
               Blog SOS-Expat
             </span>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-4">
               {t("page.title", lang)}
             </h1>
 
-            <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
               {t("page.subtitle", lang)}
             </p>
           </motion.div>
@@ -571,14 +577,14 @@ export default function Articles() {
             className="max-w-xl mx-auto"
           >
             <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-red-400 transition-colors" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("search.placeholder", lang)}
                 aria-label={t("search.placeholder", lang)}
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-gray-200 text-sm text-gray-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/10 border border-white/10 text-sm text-white placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500/40 backdrop-blur transition-all"
               />
             </div>
           </motion.div>

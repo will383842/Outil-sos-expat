@@ -18,6 +18,7 @@ import {
   ArrowRight,
   BookOpen,
   ChevronDown,
+  ChevronRight,
   Sparkles,
   Globe,
   LucideIcon,
@@ -26,7 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import { useApp } from "@/contexts/AppContext";
-import { parseLocaleFromPath } from "@/multilingual-system";
+import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 
 /* ------------------------------------------------------------------ */
 /*  i18n                                                               */
@@ -60,6 +61,8 @@ const T: Record<string, Record<string, string>> = {
     fr: "Guides thematiques complets pour expatries : visa, fiscalite, sante, scolarite, logement, banque et plus. Ressources organisees par theme pour reussir votre expatriation.",
     en: "Complete thematic guides for expats: visa, taxes, health, education, housing, banking and more. Resources organized by theme for a successful expatriation.",
   },
+  home: { fr: "Accueil", en: "Home" },
+  breadLabel: { fr: "Guides thematiques", en: "Thematic guides" },
 
   // Featured themes
   "visa.title": { fr: "Visa & Immigration", en: "Visa & Immigration" },
@@ -202,6 +205,10 @@ const FichesThematiques: React.FC = () => {
   const { language } = useApp();
   const location = useLocation();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
+  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
+  const _urlLangFT = lang === "ch" ? "zh" : lang;
+  const _localeRegionFT: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const canonicalFT = `https://sos-expat.com/${_urlLangFT}-${_localeRegionFT[lang] ?? lang}/${getTranslatedRouteSlug("fiches-thematiques" as any, lang as any) || "fiches-thematiques"}`;
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -210,7 +217,7 @@ const FichesThematiques: React.FC = () => {
       <SEOHead
         title={t("seoTitle", lang)}
         description={t("seoDesc", lang)}
-        canonicalUrl={`/${lang}/fiches-thematiques`}
+        canonicalUrl={canonicalFT}
         ogType="website"
         keywords={
           lang === "fr"
@@ -219,19 +226,35 @@ const FichesThematiques: React.FC = () => {
         }
       />
 
-      {/* ===== HERO ===== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-28 pb-20 lg:pt-36 lg:pb-28">
-        {/* decorative blobs */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-red-600/10 blur-[120px]" />
-          <div className="absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-red-500/10 blur-[100px]" />
+      {/* ===== BREADCRUMB ===== */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li><a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">{t("home", lang)}</a></li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{t("breadLabel", lang)}</li>
+          </ol>
         </div>
+      </nav>
+
+      {/* ===== HERO ===== */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+        {/* Grid décorative */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        {/* Halo rouge */}
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-4 text-center">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.span
               variants={fadeUp}
-              className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1.5 text-sm font-medium text-red-400"
+              className="inline-flex items-center gap-2 rounded-full border border-red-600/30 bg-red-600/10 px-5 py-1.5 text-sm font-semibold text-red-400"
             >
               <BookOpen className="h-4 w-4" />
               {t("badge", lang)}
@@ -239,14 +262,14 @@ const FichesThematiques: React.FC = () => {
 
             <motion.h1
               variants={fadeUp}
-              className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
+              className="mt-6 text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
             >
               {t("h1", lang)}
             </motion.h1>
 
             <motion.p
               variants={fadeUp}
-              className="mx-auto mt-5 max-w-2xl text-lg text-slate-400"
+              className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400"
             >
               {t("subtitle", lang)}
             </motion.p>

@@ -91,50 +91,34 @@ const HowItWorksPage: React.FC = () => {
         </div>
       </nav>
 
-      <div className="min-h-screen bg-gray-950">
-        {/* Header avec style moderne comme la home */}
-        <section className="relative pt-20 pb-32 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-blue-500/20 pointer-events-none" />
+      <div className="min-h-screen bg-white">
+        {/* Hero dark slate standard SOS Expat */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
-          {/* Effets visuels */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-full blur-3xl animate-pulse delay-1000" />
-            <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-r from-yellow-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse delay-500" />
-          </div>
-
-          <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black mb-4 leading-tight">
-              <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
-                <FormattedMessage id="howItWorks.title1" />
-              </span>
-              <br />
-              <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
-                <FormattedMessage id="howItWorks.title2" />
-              </span>
+          <div className="relative mx-auto max-w-6xl px-4 text-center">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              <FormattedMessage id="howItWorks.title1" />
+              {' '}
+              <FormattedMessage id="howItWorks.title2" />
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400">
               <FormattedMessage id="howItWorks.subtitle" />
             </p>
-            
-            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed mt-4">
+
+            <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-slate-400">
               <FormattedMessage id="howItWorks.description" />
             </p>
           </div>
         </section>
 
-        {/* Section des étapes avec tailles corrigées */}
-        <section className="py-28 bg-gradient-to-b from-gray-950 to-gray-900 relative overflow-hidden">
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-2xl" />
-          </div>
-
-          <div className="relative z-10 max-w-7xl mx-auto px-6">
+        {/* Section des étapes */}
+        <section className="py-28 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-6">
                 <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
                   <FormattedMessage id="howItWorks.stepsTitle" />
                 </span>

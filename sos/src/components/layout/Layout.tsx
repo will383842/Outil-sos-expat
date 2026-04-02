@@ -11,6 +11,7 @@ import ErrorBoundary from '../common/ErrorBoundary';
 // InstallBanner removed — PWA install now handled via PWAInstallCards in dashboards
 import CookieBanner from '../common/CookieBanner';
 import { shouldHideBannersOnRoute } from '../../constants/excludedBannerRoutes';
+import ContentNav from './ContentNav';
 
 interface LayoutProps {
   children: ReactNode;
@@ -222,6 +223,7 @@ const Layout: React.FC<LayoutProps> = ({
         </nav>
 
         {showHeader && <Header />}
+        <ContentNav />
 
       <main
         id="main-content"

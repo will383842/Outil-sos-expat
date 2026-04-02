@@ -7,7 +7,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { parseLocaleFromPath } from "@/multilingual-system";
+import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
@@ -184,6 +184,9 @@ const FichesPays: React.FC = () => {
   const { language } = useApp();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
   const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
+  const _urlLangFP = lang === "ch" ? "zh" : lang;
+  const _localeRegionFP: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const canonical = `https://sos-expat.com/${_urlLangFP}-${_localeRegionFP[lang] ?? lang}/${getTranslatedRouteSlug("fiches-pays" as any, lang as any) || "fiches-pays"}`;
 
   const [activeContinent, setActiveContinent] = useState<Continent | null>(null);
   const [search, setSearch] = useState("");
@@ -290,6 +293,7 @@ const FichesPays: React.FC = () => {
       <SEOHead
         title={t("seoTitle", lang)}
         description={t("seoDescription", lang)}
+        canonicalUrl={canonical}
       />
       <BreadcrumbSchema items={[
         { name: t("home", lang), url: `/${localeSlug}` },
@@ -312,12 +316,18 @@ const FichesPays: React.FC = () => {
       </nav>
 
       {/* ====== HERO ====== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-red-50/40 pt-20 pb-16 sm:pt-28 sm:pb-20">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: "radial-gradient(circle at 1px 1px, #DC2626 1px, transparent 0)",
-          backgroundSize: "32px 32px",
-        }} />
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+        {/* Grille décorative */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        {/* Halo rouge */}
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 text-center">
           <motion.div
@@ -326,18 +336,18 @@ const FichesPays: React.FC = () => {
             variants={fadeInUp}
           >
             {/* Badge */}
-            <span className="inline-flex items-center gap-2 rounded-full bg-red-600/10 px-4 py-1.5 text-sm font-semibold text-red-600 mb-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-red-600/30 bg-red-600/10 px-5 py-1.5 text-sm font-semibold text-red-400 mb-6">
               <Flag className="h-4 w-4" />
               {t("badge", lang)}
             </span>
 
             {/* H1 */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-5 leading-[1.1]">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-5 leading-[1.1]">
               {t("title", lang)}
             </h1>
 
             {/* Subtitle */}
-            <p className="mx-auto max-w-2xl text-base sm:text-lg text-gray-500 leading-relaxed mb-10">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-slate-400 leading-relaxed mb-10">
               {t("subtitle", lang)}
             </p>
 
@@ -345,12 +355,12 @@ const FichesPays: React.FC = () => {
             <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
               {stats.map((s) => (
                 <div key={s.label} className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600/10">
-                    <s.icon className="h-5 w-5 text-red-600" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600/15">
+                    <s.icon className="h-5 w-5 text-red-400" />
                   </div>
                   <div className="text-left">
-                    <p className="text-xl font-bold text-gray-900">{s.value}</p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">{s.label}</p>
+                    <p className="text-2xl font-bold text-white">{s.value}</p>
+                    <p className="text-sm text-slate-500">{s.label}</p>
                   </div>
                 </div>
               ))}

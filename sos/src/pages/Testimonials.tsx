@@ -730,56 +730,34 @@ const Testimonials: React.FC = () => {
         key={`testimonials-${currentLanguage}`}
       >
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-20 sm:py-28 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-          </div>
+        <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-
-
+          <div className="relative mx-auto max-w-6xl px-4 text-center">
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-white/20 mb-6 sm:mb-8">
               <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
-              <span className="font-semibold text-sm sm:text-base">
-                {/* {t.hero.badge} */}
+              <span className="font-semibold text-sm sm:text-base text-white">
                 <FormattedMessage id="testy.hero.badge" />
               </span>
               <Award className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black mb-4 sm:mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
-                {/* {t.hero.title.split(" ")[0]} */}
-                {intl.formatMessage({ id: "testy.hero.titleFirst" })}
-              </span>
-              <br />
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-5">
+              {intl.formatMessage({ id: "testy.hero.titleFirst" })}{" "}
               <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
-                {/* {t.hero.title.split(" ")[1]} */}
                 {intl.formatMessage({ id: "testy.hero.titleSecond" })}
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 sm:mb-12 leading-relaxed px-4">
-              {/* {t.hero.subtitle} */}
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400">
               <FormattedMessage id="testy.hero.subtitle" />
             </p>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* <div className="text-center group">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Award className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-4xl font-black text-white mb-2">
-                  {stats.count}
-                </div>
-                <div className="text-white/80 font-medium">
-                  <FormattedMessage id="testimonials.hero.stats.testimonials" />
-                </div>
-              </div> */}
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
               <div className="text-center group">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-500 mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Star className="w-8 h-8 text-white" />
@@ -787,8 +765,7 @@ const Testimonials: React.FC = () => {
                 <div className="text-4xl font-black text-white mb-2">
                   {stats.averageRating}
                 </div>
-                <div className="text-white/80 font-medium">
-                  {/* {t.hero.stats.averageRating} */}
+                <div className="text-slate-400 font-medium">
                   <FormattedMessage id="testimonials.hero.stats.averageRating" />
                 </div>
               </div>
@@ -798,10 +775,8 @@ const Testimonials: React.FC = () => {
                 </div>
                 <div className="text-4xl font-black text-white mb-2">
                   {stats.countries}+
-                  {/* <FormattedMessage id="testimonials.hero.stats.countries" />+ */}
                 </div>
-                <div className="text-white/80 font-medium">
-                  {/* {t.hero.stats.countries} */}
+                <div className="text-slate-400 font-medium">
                   <FormattedMessage id="testimonials.hero.stats.countries" />
                 </div>
               </div>

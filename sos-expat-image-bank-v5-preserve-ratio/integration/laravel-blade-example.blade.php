@@ -1,0 +1,1 @@
+<img src="/{{ $image['new_path'] }}" alt="{{ $image['alt_suggested'] }}" title="{{ $image['title_suggested'] }}" width="{{ $image['original_width'] }}" height="{{ $image['original_height'] }}" loading="lazy" decoding="async">

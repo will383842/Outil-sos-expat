@@ -469,43 +469,35 @@ const Pricing: React.FC = () => {
         )}
 
         {/* Hero Section */}
-        <section className="relative pt-20 pb-32 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-          </div>
+        <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6">
-            <div className="text-center mb-20">
-              <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 mb-8">
-                <Sparkles className="w-5 h-5 text-yellow-400" />
-                <span className="text-white font-medium">
-                  <FormattedMessage id="pricing.badge" />
-                </span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black mb-8 leading-tight">
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
-                  <FormattedMessage id="pricing.heading" />{" "}
-                </span>
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-                  <FormattedMessage id="pricing.headingHighlight" />
-                </span>
-              </h1>
-
-              <h2 className="text-2xl md:text-3xl text-white font-semibold max-w-4xl mx-auto mb-12 leading-relaxed">
-                <FormattedMessage
-                  id="pricing.subtitle"
-                  values={{
-                    strong: (chunks) => <strong className="text-red-400">{chunks}</strong>
-                  }}
-                />
-              </h2>
-
+          <div className="relative mx-auto max-w-6xl px-4 text-center">
+            <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20 mb-8">
+              <Sparkles className="w-5 h-5 text-yellow-400" />
+              <span className="text-white font-medium">
+                <FormattedMessage id="pricing.badge" />
+              </span>
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             </div>
+
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6">
+              <FormattedMessage id="pricing.heading" />{" "}
+              <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+                <FormattedMessage id="pricing.headingHighlight" />
+              </span>
+            </h1>
+
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400">
+              <FormattedMessage
+                id="pricing.subtitle"
+                values={{
+                  strong: (chunks) => <strong className="text-red-400">{chunks}</strong>
+                }}
+              />
+            </p>
           </div>
         </section>
 

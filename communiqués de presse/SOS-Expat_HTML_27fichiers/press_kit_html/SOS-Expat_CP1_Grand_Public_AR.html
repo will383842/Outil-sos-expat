@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS-Expat.com — بيان صحفي — الجمهور العام</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:       #B91C1C;
+    --red-light: #DC2626;
+    --red-dim:   rgba(185,28,28,0.22);
+    --red-border:rgba(185,28,28,0.50);
+    --black:     #0D0D0D;
+    --black-mid: #181818;
+    --black-card:#272727;
+    --black-soft:#323232;
+    --white:     #FFFFFF;
+    --off-white: #EEEEEE;
+    --grey:      #ABABAB;
+    --grey-light:#D2D2D2;
+    --green:     #15803D;
+    --green-dim: rgba(21,128,61,0.15);
+    --divider:   rgba(255,255,255,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    direction: rtl;
+    text-align: right;
+    background: #0D0D0D;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 64px 48px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .logo-block .logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 30px;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-block .logo span { color: var(--red); }
+
+  .logo-block .tagline {
+    font-size: 11px;
+    color: var(--grey);
+    font-weight: 300;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+
+  .meta-block { text-align: right; }
+
+  .badge {
+    display: inline-block;
+    background: var(--red);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+  }
+
+  .meta-block .date {
+    display: block;
+    font-size: 13px;
+    color: var(--grey);
+    font-weight: 300;
+  }
+
+  /* ── HERO ── */
+  .hero { margin-bottom: 64px; }
+
+  .hero .kicker {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero .kicker::after {
+    content: '';
+    display: inline-block;
+    width: 48px;
+    height: 1px;
+    background: var(--red);
+    opacity: 0.6;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 54px;
+    font-weight: 900;
+    line-height: 1.08;
+    color: var(--white);
+    margin-bottom: 28px;
+    letter-spacing: -1.5px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--red);
+  }
+
+  .hero .deck {
+    font-size: 19px;
+    font-weight: 300;
+    color: var(--off-white);
+    line-height: 1.7;
+    max-width: 700px;
+    border-left: 3px solid var(--red);
+    padding-left: 22px;
+  }
+
+  /* ── STATS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--divider);
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 64px;
+  }
+
+  .stat-cell {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    padding: 28px 18px;
+    text-align: center;
+  }
+
+  .stat-cell .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-cell .lbl {
+    font-size: 11px;
+    color: var(--grey);
+    font-weight: 300;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 56px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .section-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.3px;
+  }
+
+  .section p {
+    font-size: 16px;
+    color: var(--off-white);
+    font-weight: 300;
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .section p strong { color: var(--white); font-weight: 600; }
+
+  /* ── SCENARIO CARDS ── */
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 28px 0;
+  }
+
+  .scenario-card {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--divider);
+    border-radius: 6px;
+    padding: 22px 18px;
+    border-top: 3px solid var(--red);
+  }
+
+  .scenario-card.resolved { border-top-color: var(--green); }
+
+  .scenario-card .loc {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+
+  .scenario-card.resolved .loc { color: var(--green); }
+
+  .scenario-card .situation {
+    font-size: 14px;
+    color: var(--off-white);
+    line-height: 1.6;
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+
+  .scenario-card .result {
+    font-size: 12px;
+    color: var(--grey);
+    font-style: italic;
+  }
+
+  .scenario-card.resolved .result {
+    color: #22c55e;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* ── AUDIENCE ── */
+  .audience-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 28px 0;
+  }
+
+  .audience-card {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 6px;
+    padding: 22px;
+    border-left: 3px solid var(--red);
+  }
+
+  .audience-card h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .audience-card p {
+    font-size: 13px;
+    color: var(--grey-light);
+    font-weight: 300;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 0; margin: 28px 0; }
+
+  .step {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 900;
+    color: var(--black-soft);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 52px;
+    text-align: center;
+  }
+
+  .step-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .step-content p {
+    font-size: 14px;
+    color: var(--grey-light);
+    font-weight: 300;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* ── BREAKTHROUGHS ── */
+  .breakthroughs { display: flex; flex-direction: column; gap: 10px; margin: 28px 0; }
+
+  .bt-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 20px;
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 6px;
+    border-left: 2px solid var(--red);
+  }
+
+  .bt-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--red);
+    opacity: 0.5;
+    flex-shrink: 0;
+    width: 26px;
+    line-height: 1.4;
+  }
+
+  .bt-text {
+    font-size: 15px;
+    color: var(--off-white);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  .bt-text strong { color: var(--white); font-weight: 600; }
+
+  /* ── QUOTE ── */
+  .quote-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--red-border);
+    border-radius: 10px;
+    padding: 40px;
+    margin: 48px 0;
+    position: relative;
+  }
+
+  .quote-block::before {
+    content: '\201C';
+    font-family: 'Playfair Display', serif;
+    font-size: 110px;
+    color: var(--red);
+    opacity: 0.12;
+    position: absolute;
+    top: -16px;
+    left: 28px;
+    line-height: 1;
+  }
+
+  .quote-block blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--off-white);
+    line-height: 1.65;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-attribution { display: flex; align-items: center; gap: 16px; }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    flex-shrink: 0;
+  }
+
+  .attr-text .name { font-size: 14px; font-weight: 600; color: var(--white); }
+  .attr-text .title { font-size: 12px; color: var(--grey); font-weight: 300; }
+
+  /* ── CONTACT ── */
+  .contact-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 60px;
+  }
+
+  .contact-block h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--white);
+    grid-column: 1 / -1;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 4px;
+  }
+
+  .contact-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .contact-item .lbl {
+    font-size: 10px;
+    color: var(--red);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .contact-item .val {
+    font-size: 15px;
+    color: var(--white);
+  }
+
+  .contact-item .val a { color: var(--off-white); text-decoration: none; }
+
+  .kit-press {
+    grid-column: 1 / -1;
+    background: var(--black-soft);
+    border-radius: 6px;
+    padding: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .kit-item {
+    font-size: 12px;
+    color: var(--grey-light);
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--divider);
+  }
+
+  .divider { width: 100%; height: 1px; background: var(--divider); margin: 40px 0; }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--divider);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer .legal { font-size: 12px; color: var(--grey); font-weight: 300; }
+
+  .footer .end-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    color: var(--grey);
+    letter-spacing: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <header class="header">
+    <div class="logo-block">
+      <div class="logo">SOS-Expat<span>.com</span></div>
+      <div class="tagline">خدمة الطوارئ العالمية · 197 دولة · 24/7</div>
+    </div>
+    <div class="meta-block">
+      <span class="badge">للنشر الفوري</span>
+      <span class="date">5 أبريل 2026</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">بيان صحفي — عموم الجمهور &amp; الإعلام</div>
+    <h1>وحيداً في الخارج<br>في الساعة الثالثة صباحاً —<br><em>لن يحدث ذلك مرة أخرى.</em></h1>
+    <p class="deck">
+      SOS-Expat.com، منصة التواصل المباشر بين العملاء ومزودي الخدمات، تطلق أول خدمة طوارئ عالمية: أي مسافر أو مغترب أو سائح أو طالب أو عامل رقمي يتواصل مع محامٍ أو مساعد مغترب اختاره وفق الدولة واللغة والتقييمات والتخصص — والذي <strong>يعيد الاتصال في أقل من 5 دقائق</strong> — بغض النظر عن جنسيته، أينما كان في العالم.
+    </p>
+  </section>
+
+  <div class="stats-row">
+    <div class="stat-cell">
+      <div class="num">304M</div>
+      <div class="lbl">المغتربون في العالم</div>
+    </div>
+    <div class="stat-cell">
+      <div class="num">1,645Md</div>
+      <div class="lbl">مسافرون دوليون / سنة</div>
+    </div>
+    <div class="stat-cell">
+      <div class="num">+40%</div>
+      <div class="lbl">حوادث خارجية في 3 سنوات (الأمم المتحدة)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="num">0</div>
+      <div class="lbl">خدمة الطوارئ العالمية الموجودة — قبل اليوم</div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2>المشكلة — عالمية، لم تُحل قط</h2>
+    </div>
+    <p>كل يوم، يجد آلاف الأشخاص أنفسهم وحدهم في مواجهة طارئ في بلد أجنبي. السفارات لا تجيب ليلاً. شركات التأمين لا تتحدث بلغتك. <strong>لم يضمن أحد مساعدة فورية بلغتهم في أقل من 5 دقائق.</strong> حتى اليوم.</p>
+
+    <div class="scenario-grid">
+      <div class="scenario-card">
+        <div class="loc">Bangkok — 23h</div>
+        <div class="situation">إخلاء غير قانوني. القنصلية مغلقة. لا محامٍ محلي متاح. ليلة بلا نوم.</div>
+        <div class="result">السفارة: رسالة صوتية</div>
+      </div>
+      <div class="scenario-card">
+        <div class="loc">Medellín — Accident</div>
+        <div class="situation">عائلة لا تتحدث الإسبانية. الشرطة في المكان. التأمين غير متاح. سوء فهم تام.</div>
+        <div class="result">التأمين: نموذج إلكتروني، 48 ساعة</div>
+      </div>
+      <div class="scenario-card">
+        <div class="loc">Dubaï — Week-end</div>
+        <div class="situation">رجل أعمال محاصر. نزاع تعاقدي عاجل. لا محامٍ متاح بلغته.</div>
+        <div class="result">الإنترنت: نتائج غير ذات صلة</div>
+      </div>
+    </div>
+
+    <p>هذه الحالات الثلاث تشترك في شيء واحد: <strong>لم يكن لديها حل قبل SOS-Expat.com.</strong> لا للمغتربين، ولا للمسافرين، ولا للسياح، ولا للطلاب، ولا للعمال الرقميين — بغض النظر عن جنسيتهم أو لغتهم.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2>الحل — في أقل من 5 دقائق. في كل مكان. دائماً.</h2>
+    </div>
+    <p>من الآن فصاعداً، أي شخص في ضائقة في أي بلد في العالم يتواصل مع <strong>خبير يفهم وضعه ويتحدث لغته</strong> — في أقل من 5 دقائق. مضمون.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>أصف حاجتي</h4>
+          <p>البلد، اللغة، نوع الموقف، التخصص. في ثوانٍ من التطبيق، 24/7.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>أختار خبيري</h4>
+          <p>من بين المحامين المعتمدين والمساعدين المغتربين الموثوقين — مصفّون حسب بلد التدخل واللغة المنطوقة والتخصص وتقييمات العملاء الموثوقة. الاختيار ينتمي كلياً للعميل.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>يعيد الاتصال بي — مضمون</h4>
+          <p>بعد اختيار الخبير، يعيد الاتصال بالعميل. في أقل من 5 دقائق. مضمون. بلغته. في أي مكان في العالم. ليلاً ونهاراً. يدفع العميل مباشرة للخبير.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-grid">
+      <div class="scenario-card resolved">
+        <div class="loc">بانكوك — نفس الموقف</div>
+        <div class="situation">تفتح SOS-Expat.com. تصفي حسب الدولة (كوريا) واللغة (الفرنسية) والتخصص (العقارات) وتقرأ التقييمات. تختار. المحامي يعيد الاتصال. في الصباح التالي لا تزال في شقتها.</div>
+        <div class="result">✓ محامٍ ناطق بالفرنسية — 4 دقائق 20</div>
+      </div>
+      <div class="scenario-card resolved">
+        <div class="loc">ميديين — نفس الموقف</div>
+        <div class="situation">يختار مساعداً مغترباً ثنائي اللغة. يتم شرح الموقف للشرطة. العائلة في رعاية.</div>
+        <div class="result">✓ مساعد ثنائي اللغة — 3 د 10</div>
+      </div>
+      <div class="scenario-card resolved">
+        <div class="loc">دبي — نفس الموقف</div>
+        <div class="situation">يصفّي: محامٍ، الإمارات، القانون التجاري. يختار حسب التقييمات. العقد محلّل في غضون ساعة.</div>
+        <div class="result">✓ محامٍ متخصص — 4 دقائق 05</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2>لمن — لكل شخص بعيد عن وطنه</h2>
+    </div>
+    <p>SOS-Expat.com ليست منصة لجنسية أو لغة واحدة. إنها خدمة <strong>universel</strong>، مصمم هكذا منذ اليوم الأول، بجميع اللغات، لجميع الجنسيات، في 197 دولة.</p>
+
+    <div class="audience-grid">
+      <div class="audience-card">
+        <h4>المغتربون والعائلات</h4>
+        <p>مقيمون بشكل دائم في الخارج — السكن والمدرسة والبنك والضرائب وحالات الطوارئ غير المتوقعة. شبكة أمان دائمة بلغتهم.</p>
+      </div>
+      <div class="audience-card">
+        <h4>المسافرون &amp; السياح</h4>
+        <p>في سفر، مواجهة حادث أو استشفاء أو سرقة أو تأشيرة أو احتجاز. 1.645 مليار رحلة سنوياً.</p>
+      </div>
+      <div class="audience-card">
+        <h4>Digital nomades</h4>
+        <p>35 مليون شخص بلا قاعدة ثابتة أو شبكة محلية. أول خدمة مصممة لمن يعيشون بين الحدود.</p>
+      </div>
+      <div class="audience-card">
+        <h4>الطلاب في الخارج</h4>
+        <p>في برامج التبادل أو التدريب أو السنة الجامعية — يواجهون حالات طوارئ دون شبكة محلية أو معرفة باللغة المحلية.</p>
+      </div>
+      <div class="audience-card">
+        <h4>المستثمرون &amp; رواد الأعمال</h4>
+        <p>المحامون والموثقون والمترجمون والمحاسبون في حالات الطوارئ — في أي ولاية قضائية في العالم.</p>
+      </div>
+      <div class="audience-card">
+        <h4>جميع الجنسيات، جميع اللغات</h4>
+        <p>الفرنسية والإنجليزية والإسبانية والعربية والصينية والهندية والبرتغالية والألمانية واليابانية والكورية والروسية — وأي لغة في العالم.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="quote-block">
+    <blockquote>
+      عشت وحدي في الخارج دون أحد أتصل به. بنيت الخدمة التي كنت أتمنى امتلاكها — لنفسي، ولـ304 مليون شخص يعيشون نفس الشيء كل يوم.
+    </blockquote>
+    <div class="quote-attribution">
+      <div class="avatar">WJ</div>
+      <div class="attr-text">
+        <div class="name">Williams Jullin</div>
+        <div class="title">المؤسس &amp; الرئيس التنفيذي، SOS-Expat.com — تالين، إستونيا</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <h2>5 اختراقات — لماذا هذا إنجاز عالمي</h2>
+    </div>
+    <div class="breakthroughs">
+      <div class="bt-item"><div class="bt-num">01</div><div class="bt-text"><strong>الخدمة الوحيدة للطوارئ العالمية</strong> مع ضمان الرد في أقل من 5 دقائق، 24/7، 197 دولة، جميع الجنسيات، جميع اللغات.</div></div>
+      <div class="bt-item"><div class="bt-num">02</div><div class="bt-text">العميل <strong>يختار خبيره بنفسه</strong> بناءً على التقييمات واللغة والتخصص — ثم يتلقى المكالمة. لم يُفعل من قبل.</div></div>
+      <div class="bt-item"><div class="bt-num">03</div><div class="bt-text"><strong>شبكة مزدوجة</strong> : محامون معتمدون ومساعدون مغتربون موثوقون — نوعان من الخبراء، منصة واحدة.</div></div>
+      <div class="bt-item"><div class="bt-num">04</div><div class="bt-text"><strong>جميع أنواع الصعوبات</strong> — juridique, médical, logement, visa, fiscal, traduction, éducation, banque, dépannage.</div></div>
+      <div class="bt-item"><div class="bt-num">05</div><div class="bt-text"><strong>عالمي منذ اليوم الأول</strong> — جميع الجنسيات، جميع اللغات بشكل أصيل، 197 دولة، 24/7.</div></div>
+    </div>
+  </section>
+
+  <div class="contact-block">
+    <h3>Contact presse</h3>
+    <div class="contact-item">
+      <div class="lbl">Contact</div>
+      <div class="val">Williams Jullin — المؤسس &amp; الرئيس التنفيذي</div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">Email</div>
+      <div class="val"><a href="mailto:williamsjullin@sos-expat.com">williamsjullin@sos-expat.com</a></div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">الموقع الإلكتروني</div>
+      <div class="val"><a href="https://sos-expat.com">sos-expat.com</a></div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">التوفر</div>
+      <div class="val">فورية — أي منطقة زمنية</div>
+    </div>
+    <div class="kit-press">
+      <div class="kit-item">📸 صور عالية الدقة</div>
+      <div class="kit-item">📊 Données marché</div>
+      <div class="kit-item">💬 Témoignages 20+ pays</div>
+      <div class="kit-item">🖥 Démo live</div>
+      <div class="kit-item">📈 Stats 2026</div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="legal">SOS-Expat.com — شركة مسجلة في إستونيا — المقر الرئيسي: تالين، إستونيا</div>
+    <div class="end-mark">— ### —</div>
+  </footer>
+
+</div>
+</body>
+</html>

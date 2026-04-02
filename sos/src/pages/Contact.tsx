@@ -1128,78 +1128,66 @@ const Contact: React.FC = () => {
         </div>
       </nav>
 
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
-        {/* Header avec design fun et énergique */}
-        <header className="relative pt-12 pb-16 overflow-hidden">
-          {/* Fond animé */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-emerald-300/10 to-green-300/10 rounded-full blur-3xl animate-pulse delay-500" />
-          </div>
+      <div className="min-h-screen bg-white">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Badge fun */}
+          <div className="relative mx-auto max-w-6xl px-4 text-center">
+            {/* Badge */}
             <div className="inline-flex items-center justify-center mb-6">
-              <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-emerald-200">
+              <div className="bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
                 <div className="flex items-center space-x-2">
-                  <Heart className="w-5 h-5 text-emerald-600 animate-pulse" />
-                  <span className="text-sm font-bold text-emerald-700">
+                  <Heart className="w-5 h-5 text-red-400" />
+                  <span className="text-sm font-bold text-white">
                     {lang === "fr"
                       ? "Équipe super sympa"
                       : "Super friendly team"}
                   </span>
-                  <Sparkles className="w-5 h-5 text-emerald-600 animate-pulse delay-300" />
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </div>
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">
-              <span className="bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 bg-clip-text text-transparent">
-                {t.pageTitle}
-              </span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              {t.pageTitle}
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed mb-4">
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400">
               {t.pageSubtitle}
             </p>
 
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              {t.pageDescription}
-            </p>
-
-            {/* Stats fun */}
+            {/* Stats */}
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-md border border-emerald-100">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/20">
                 <div className="flex items-center space-x-2">
-                  <Zap className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-bold text-gray-800">
-                    {/* {lang === "fr" ? "Réponse < 24h" : "Response < 24h"} */}
+                  <Zap className="w-5 h-5 text-slate-300" />
+                  <span className="text-sm font-bold text-slate-300">
                     {intl.formatMessage({ id: "contact.response24h" })}
                   </span>
                 </div>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-md border border-emerald-100">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/20">
                 <div className="flex items-center space-x-2">
-                  <Globe className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-bold text-gray-800">
-                    {/* {lang === "fr" ? "24/7 Partout" : "24/7 Anywhere"} */}
+                  <Globe className="w-5 h-5 text-slate-300" />
+                  <span className="text-sm font-bold text-slate-300">
                     {intl.formatMessage({ id: "contact.anywhere247" })}
                   </span>
                 </div>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-md border border-emerald-100">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/20">
                 <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-bold text-gray-800">
-                    {/* {lang === "fr" ? "100% Humain" : "100% Human"} */}
+                  <Star className="w-5 h-5 text-slate-300" />
+                  <span className="text-sm font-bold text-slate-300">
                     {intl.formatMessage({ id: "contact.human100" })}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        </header>
+        </section>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

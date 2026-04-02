@@ -1314,75 +1314,85 @@ const Annuaire: React.FC = () => {
   // ============================================================
 
   const renderList = () => (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-10">
+    <>
+      {/* ── HERO DARK SLATE ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-20 sm:pb-16">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
-      {/* ── BREADCRUMB VISUEL ── */}
-      <nav aria-label="breadcrumb" className="mb-6 flex items-center gap-1.5 text-sm text-gray-400 flex-wrap">
-        <a href={`${BASE_URL}/${locale}`} className="hover:text-red-600 transition-colors font-medium">
-          {t("home", lang)}
-        </a>
-        <ChevronRight size={14} className="text-gray-300 shrink-0" />
-        <span className="text-gray-700 font-medium">{t("pageTitle", lang)}</span>
-      </nav>
+        <div className="relative mx-auto max-w-6xl px-4">
+          {/* ── BREADCRUMB VISUEL ── */}
+          <nav aria-label="breadcrumb" className="mb-8 flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">
+            <a href={`${BASE_URL}/${locale}`} className="hover:text-red-400 transition-colors font-medium">
+              {t("home", lang)}
+            </a>
+            <ChevronRight size={14} className="text-slate-600 shrink-0" />
+            <span className="text-slate-200 font-medium">{t("pageTitle", lang)}</span>
+          </nav>
 
-      {/* ── HERO SECTION ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="text-center mb-10"
-      >
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-2 bg-red-50 text-red-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-5 border border-red-100"
-        >
-          <Globe size={13} />
-          200+ {t("countries", lang)}
-        </motion.div>
-
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight leading-tight">
-          {t("pageTitle", lang)}
-        </h1>
-        <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          {t("pageDesc", lang)}
-        </p>
-
-        {/* ── Paragraphe sémantique SEO/AEO (visible uniquement hors recherche) ── */}
-        {!search && (
-          <p className="mt-4 text-gray-400 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
-            {t("introText", lang)}
-          </p>
-        )}
-
-        {/* Nationality pill */}
-        <div className="mt-6 flex justify-center">
-          {userNat ? (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowPicker(true)}
-              className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-full px-5 py-3 shadow-sm hover:shadow-md hover:border-red-200 transition-all text-sm"
+          {/* ── HERO CONTENT ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+            className="text-center"
+          >
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 border border-red-600/30 bg-red-600/10 text-red-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-5"
             >
-              <FlagImg code={userNat.code} size={22} />
-              <span className="text-gray-700">{t("iAmFrom", lang)} <strong className="text-gray-900">{userNat.name}</strong></span>
-              <span className="text-red-500 text-xs font-semibold ml-1">{t("changeNat", lang)}</span>
-            </motion.button>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowPicker(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold text-sm px-6 py-3 rounded-full shadow-lg shadow-red-600/20 transition-all"
-            >
-              <Sparkles size={15} />
-              {t("personalizeExp", lang)}
-            </motion.button>
-          )}
+              <Globe size={13} />
+              200+ {t("countries", lang)}
+            </motion.div>
+
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-4">
+              {t("pageTitle", lang)}
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400 leading-relaxed">
+              {t("pageDesc", lang)}
+            </p>
+
+            {/* ── Paragraphe sémantique SEO/AEO (visible uniquement hors recherche) ── */}
+            {!search && (
+              <p className="mt-4 text-slate-400 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
+                {t("introText", lang)}
+              </p>
+            )}
+
+            {/* Nationality pill */}
+            <div className="mt-6 flex justify-center">
+              {userNat ? (
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowPicker(true)}
+                  className="flex items-center gap-2.5 bg-slate-800/60 border border-slate-700/50 rounded-full px-5 py-3 shadow-sm hover:shadow-md hover:border-red-600/30 transition-all text-sm"
+                >
+                  <FlagImg code={userNat.code} size={22} />
+                  <span className="text-slate-300">{t("iAmFrom", lang)} <strong className="text-white">{userNat.name}</strong></span>
+                  <span className="text-red-400 text-xs font-semibold ml-1">{t("changeNat", lang)}</span>
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowPicker(true)}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold text-sm px-6 py-3 rounded-full shadow-lg shadow-red-600/20 transition-all"
+                >
+                  <Sparkles size={15} />
+                  {t("personalizeExp", lang)}
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
+      </section>
+
+      {/* ── CONTENU PRINCIPAL (bg-white) ── */}
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-10">
 
       {/* ── SEARCH BAR ── */}
       <motion.div
@@ -1755,6 +1765,7 @@ const Annuaire: React.FC = () => {
       )}
 
     </div>
+    </>
   );
 
   // ============================================================
@@ -1793,7 +1804,7 @@ const Annuaire: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <main className="min-h-screen bg-gradient-to-b from-white via-gray-50/50 to-gray-50">
+      <main className="min-h-screen bg-white">
         <AnimatePresence mode="wait">
           {paysSlug && selectedCountry ? (
             <React.Fragment key="detail">{renderDetail()}</React.Fragment>

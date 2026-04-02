@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { parseLocaleFromPath } from "@/multilingual-system";
+import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
@@ -62,6 +62,8 @@ const T: Record<string, Record<string, string>> = {
   aiPowered:    { fr: "IA", en: "AI", es: "IA", de: "KI", pt: "IA", ru: "ИИ", ch: "AI", hi: "AI", ar: "ذكاء اصطناعي" },
   loading:      { fr: "Chargement des outils…", en: "Loading tools…", es: "Cargando herramientas…", de: "Tools werden geladen…", pt: "Carregando ferramentas…", ru: "Загрузка инструментов…", ch: "正在加载工具…", hi: "उपकरण लोड हो रहे हैं…", ar: "جاري تحميل الأدوات…" },
   error:        { fr: "Impossible de charger les outils. Réessayez.", en: "Unable to load tools. Please try again.", es: "No se pueden cargar las herramientas. Inténtalo de nuevo.", de: "Tools konnten nicht geladen werden. Bitte versuchen Sie es erneut.", pt: "Não foi possível carregar as ferramentas. Tente novamente.", ru: "Не удалось загрузить инструменты. Попробуйте ещё раз.", ch: "无法加载工具，请重试。", hi: "उपकरण लोड नहीं हो सके। कृपया पुनः प्रयास करें।", ar: "تعذّر تحميل الأدوات. حاول مرة أخرى." },
+  emptyTitle:   { fr: "Aucun outil disponible", en: "No tools available", es: "Sin herramientas disponibles", de: "Keine Tools verfügbar", pt: "Nenhuma ferramenta disponível", ru: "Инструменты недоступны", ch: "暂无可用工具", hi: "कोई उपकरण उपलब्ध नहीं", ar: "لا توجد أدوات متاحة" },
+  emptyDesc:    { fr: "Les outils seront disponibles très prochainement. Revenez bientôt !", en: "Tools will be available very soon. Check back shortly!", es: "Las herramientas estarán disponibles muy pronto. ¡Vuelve pronto!", de: "Die Tools werden sehr bald verfügbar sein. Schau bald wieder vorbei!", pt: "As ferramentas estarão disponíveis em breve. Volte em breve!", ru: "Инструменты скоро появятся. Загляните позже!", ch: "工具即将上线，敬请期待！", hi: "उपकरण जल्द ही उपलब्ध होंगे। जल्द वापस आएं!", ar: "ستتوفر الأدوات قريباً جداً. عد بعد قليل!" },
   home:         { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
   breadTools:   { fr: "Outils", en: "Tools", es: "Herramientas", de: "Tools", pt: "Ferramentas", ru: "Инструменты", ch: "工具", hi: "टूल्स", ar: "الأدوات" },
 };
@@ -161,8 +163,9 @@ export default function Outils() {
   const visibleCats = activeTab === "all" ? catOrder : [activeTab];
 
   const urlLang   = lang === "ch" ? "zh" : lang;
-  const urlRegion = lang === "en" ? "us" : lang === "pt" ? "pt" : lang === "ch" ? "cn" : lang === "hi" ? "in" : lang === "ar" ? "sa" : lang;
-  const canonical = `https://sos-expat.com/${urlLang}-${urlRegion}/outils`;
+  const _regionMap: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const urlRegion = _regionMap[lang] ?? lang;
+  const canonical = `https://sos-expat.com/${urlLang}-${urlRegion}/${getTranslatedRouteSlug("outils" as any, lang as any) || "outils"}`;
   const isRtl = lang === "ar";
 
   return (
@@ -333,6 +336,22 @@ export default function Outils() {
               <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-red-400" />
               <p className="text-base text-slate-500">{tr("error", lang)}</p>
             </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && tools.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center justify-center py-24 text-center gap-4"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <Wrench className="w-8 h-8 text-slate-400" />
+              </div>
+              <p className="text-lg font-semibold text-slate-700">{tr("emptyTitle", lang)}</p>
+              <p className="text-sm text-slate-400 max-w-xs">{tr("emptyDesc", lang)}</p>
+            </motion.div>
           )}
 
           {/* Sections par catégorie */}

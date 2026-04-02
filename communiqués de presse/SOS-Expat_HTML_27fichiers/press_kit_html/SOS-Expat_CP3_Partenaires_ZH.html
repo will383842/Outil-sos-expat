@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS-Expat.com — 新闻稿 — 合作伙伴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:       #B91C1C;
+    --red-light: #DC2626;
+    --red-dim:   rgba(185,28,28,0.22);
+    --red-border:rgba(185,28,28,0.50);
+    --black:     #0D0D0D;
+    --black-mid: #181818;
+    --black-card:#272727;
+    --black-soft:#323232;
+    --white:     #FFFFFF;
+    --off-white: #EEEEEE;
+    --grey:      #ABABAB;
+    --grey-light:#D2D2D2;
+    --green:     #15803D;
+    --divider:   rgba(255,255,255,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0D0D0D;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-wrapper { max-width: 900px; margin: 0 auto; padding: 64px 48px; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .logo-block .logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 30px;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-block .logo span { color: var(--red); }
+
+  .logo-block .tagline {
+    font-size: 11px;
+    color: var(--grey);
+    font-weight: 300;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+
+  .meta-block { text-align: right; }
+
+  .badge {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+  }
+
+  .meta-block .date { display: block; font-size: 13px; color: var(--grey); font-weight: 300; }
+
+  /* ── HERO ── */
+  .hero { margin-bottom: 64px; }
+
+  .hero .kicker {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero .kicker::after {
+    content: '';
+    display: inline-block;
+    width: 48px;
+    height: 1px;
+    background: var(--red);
+    opacity: 0.6;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.08;
+    color: var(--white);
+    margin-bottom: 28px;
+    letter-spacing: -1.5px;
+  }
+
+  .hero h1 em { font-style: italic; color: var(--red); }
+
+  .hero .deck {
+    font-size: 19px;
+    font-weight: 300;
+    color: var(--off-white);
+    line-height: 1.7;
+    max-width: 700px;
+    border-left: 3px solid var(--red);
+    padding-left: 22px;
+  }
+
+  /* ── PROMISE STRIP ── */
+  .promise-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--red-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 64px;
+  }
+
+  .promise-cell {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    padding: 30px 24px;
+    text-align: center;
+  }
+
+  .promise-cell .icon { font-size: 28px; margin-bottom: 12px; }
+
+  .promise-cell .lbl {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .promise-cell .desc { font-size: 13px; color: var(--grey-light); font-weight: 300; line-height: 1.5; }
+
+  /* ── SECTIONS ── */
+  .section { margin-bottom: 56px; }
+
+  .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+
+  .section-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.3px;
+  }
+
+  .section p { font-size: 16px; color: var(--off-white); font-weight: 300; line-height: 1.8; margin-bottom: 16px; }
+  .section p strong { color: var(--white); font-weight: 600; }
+
+  /* ── STORIES ── */
+  .stories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 28px 0; }
+
+  .story-card {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 8px;
+    padding: 26px;
+    border-top: 3px solid var(--red);
+  }
+
+  .story-card.aidant { border-top-color: #22c55e; }
+
+  .story-card .persona {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+
+  .story-card.aidant .persona { color: #22c55e; }
+
+  .story-card blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--off-white);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .story-card .result {
+    font-size: 12px;
+    font-weight: 600;
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── PROFILES ── */
+  .profiles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 28px 0; }
+
+  .profile-card {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 6px;
+    padding: 20px 22px;
+    border-left: 3px solid var(--red);
+  }
+
+  .profile-card h4 { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .profile-card p { font-size: 13px; color: var(--grey-light); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 0; margin: 28px 0; }
+
+  .step {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 900;
+    color: var(--black-soft);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 52px;
+    text-align: center;
+  }
+
+  .step-content h4 { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .step-content p { font-size: 14px; color: var(--grey-light); font-weight: 300; margin: 0; line-height: 1.6; }
+
+  /* ── ECONOMICS TABLE ── */
+  .economics-table { width: 100%; border-collapse: collapse; margin: 28px 0; }
+
+  .economics-table th {
+    padding: 13px 18px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid var(--divider);
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+  }
+
+  .economics-table td {
+    padding: 14px 18px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .economics-table tr:last-child td { border-bottom: none; }
+  .economics-table td:first-child { font-weight: 500; color: var(--off-white); }
+  .economics-table td:nth-child(2) { color: var(--grey-light); font-weight: 300; font-size: 13px; }
+  .economics-table td:last-child { font-weight: 600; color: #22c55e; }
+
+  /* ── FREEDOM ── */
+  .freedom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0; }
+
+  .freedom-item {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 6px;
+    padding: 22px 18px;
+    text-align: center;
+    border: 1px solid var(--divider);
+    border-top: 2px solid var(--red);
+  }
+
+  .freedom-item .when {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .freedom-item h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .freedom-item p { font-size: 13px; color: var(--grey-light); font-weight: 300; line-height: 1.5; margin: 0; }
+
+  /* ── FAQ ── */
+  .faq-list { display: flex; flex-direction: column; gap: 0; margin: 28px 0; }
+
+  .faq-item {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .faq-item:last-child { border-bottom: none; }
+
+  .faq-item .question {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .faq-item .question::before {
+    content: '?';
+    width: 22px;
+    height: 22px;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--red);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .faq-item .answer { font-size: 15px; color: var(--off-white); font-weight: 300; line-height: 1.7; padding-left: 34px; }
+
+  /* ── CTA ── */
+  .cta-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--red-border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    text-align: center;
+    margin: 56px 0;
+  }
+
+  .cta-block h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .cta-block .sub {
+    font-size: 16px;
+    color: var(--grey-light);
+    font-weight: 300;
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+
+  .cta-benefits {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .cta-benefit { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--off-white); }
+  .cta-benefit .check { color: var(--red); font-weight: 700; }
+
+  .cta-url {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── QUOTE ── */
+  .quote-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--red-border);
+    border-radius: 10px;
+    padding: 40px;
+    margin: 48px 0;
+    position: relative;
+  }
+
+  .quote-block::before {
+    content: '\201C';
+    font-family: 'Playfair Display', serif;
+    font-size: 110px;
+    color: var(--red);
+    opacity: 0.12;
+    position: absolute;
+    top: -16px;
+    left: 28px;
+    line-height: 1;
+  }
+
+  .quote-block blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--off-white);
+    line-height: 1.65;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-attribution { display: flex; align-items: center; gap: 16px; }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    flex-shrink: 0;
+  }
+
+  .attr-text .name { font-size: 14px; font-weight: 600; color: var(--white); }
+  .attr-text .title { font-size: 12px; color: var(--grey); font-weight: 300; }
+
+  /* ── CONTACT ── */
+  .contact-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 60px;
+  }
+
+  .contact-block h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--white);
+    grid-column: 1 / -1;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 4px;
+  }
+
+  .contact-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .contact-item .lbl {
+    font-size: 10px;
+    color: var(--red);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .contact-item .val { font-size: 15px; color: var(--white); }
+  .contact-item .val a { color: var(--off-white); text-decoration: none; }
+
+  .divider { width: 100%; height: 1px; background: var(--divider); margin: 40px 0; }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--divider);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer .legal { font-size: 12px; color: var(--grey); font-weight: 300; }
+  .footer .end-mark { font-family: 'Playfair Display', serif; font-size: 13px; color: var(--grey); letter-spacing: 3px; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <header class="header">
+    <div class="logo-block">
+      <div class="logo">SOS-Expat<span>.com</span></div>
+      <div class="tagline">招募合作伙伴 · 律师 · 旅居助理 · 197个国家</div>
+    </div>
+    <div class="meta-block">
+      <span class="badge">合作伙伴招募</span>
+      <span class="date">2026年4月5日 — 立即发布</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">新闻稿 — 合作伙伴 &amp; 服务商网络</div>
+    <h1>您的专业知识。<br>说话的客户<br><em>您的语言。</em></h1>
+    <p class="deck">
+      SOS-Expat.com发起全球合作伙伴招募：来自各国的律师、法律顾问、公证人、会计师和旅居助理 <strong>所有国籍，所有语言</strong>，来自世界任何地方。免费。直接即时付款。完全自由。
+    </p>
+  </section>
+
+  <div class="promise-strip">
+    <div class="promise-cell">
+      <div class="icon">💰</div>
+      <div class="lbl">即时收入</div>
+      <div class="desc">从第一次通话起。来自客户的直接付款，即时。</div>
+    </div>
+    <div class="promise-cell">
+      <div class="icon">🔓</div>
+      <div class="lbl">完全自由</div>
+      <div class="desc">您想要的时候，从您想要的地方，以您想要的价格。一次点击。</div>
+    </div>
+    <div class="promise-cell">
+      <div class="icon">🌍</div>
+      <div class="lbl">197个国家的客户</div>
+      <div class="desc">说您语言的客户现在正在寻找您。</div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2>两个故事 — 一个平台</h2>
+    </div>
+    <p>SOS-Expat.com——直接连接平台——同时解决两个问题：陷入紧急情况却没有本语言帮助的人——以及没有 <strong>没有接待国际客户的渠道</strong> 从他们的定居国。</p>
+
+    <div class="stories-grid">
+      <div class="story-card">
+        <div class="persona">Karim, 35 ans — Vacancier à Istanbul</div>
+        <blockquote>"我的酒店拒绝退款。我明天离开。我不会说土耳其语。我打开SOS-Expat.com，根据评价选择了一位阿拉伯语律师。他4分钟后给我回了电话。"</blockquote>
+        <div class="result">✓ Litige résolu avant son vol — 4 min 10 secondes</div>
+      </div>
+      <div class="story-card aidant">
+        <div class="persona">Leila，律师 — 旅居迪拜</div>
+        <blockquote>"我是专攻法国法律的律师。在迪拜，我接到来自世界各地困境中人们的请求。每次通话都有报酬。"</blockquote>
+        <div class="result">✓ 来自国外的额外收入——无需改变生活方式</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2>谁可以成为合作伙伴</h2>
+    </div>
+    <p>SOS-Expat.com正在寻找合作伙伴 <strong>所有语言，所有国家</strong>。无论身处巴黎、曼谷、迪拜、布宜诺斯艾利斯还是首尔——只要您掌握一门语言和专业知识，您就在平台上有自己的位置。</p>
+
+    <div class="profiles-grid">
+      <div class="profile-card">
+        <h4>⚖️ Avocats &amp; juristes</h4>
+        <p>所有专业、所有国籍、所有司法管辖区——自由职业者或受雇者，世界任何地方。</p>
+      </div>
+      <div class="profile-card">
+        <h4>🏛 Experts spécialisés</h4>
+        <p>Notaires, experts-comptables, conseillers fiscaux, traducteurs assermentés, agents immobiliers, conseillers en immigration.</p>
+      </div>
+      <div class="profile-card">
+        <h4>🤝 旅居助理</h4>
+        <p>驻扎在目标国家，精通当地语言，了解当地情况——任何国籍，任何行业。</p>
+      </div>
+      <div class="profile-card">
+        <h4>🩺 Médicaux &amp; spécialisés</h4>
+        <p>医疗、税务、房地产、银行、行政——任何专业知识可以解决海外紧急情况的专家。</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2>Comment ça marche — 4 étapes</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>您创建个人资料——免费</h4>
+          <p>语言、国家、专业、费率。几分钟内完成。无注册费。我们的团队对资质进行简单核实。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>一键——您已上线</h4>
+          <p>从您的应用程序，无论您身处世界何处。您随时激活可用性。无数量承诺。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>客户联系您——您提供帮助</h4>
+          <p>他们根据您的评价、语言和专业选择了您。您接听电话，尽力提供帮助。这是您的核心业务。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h4>您获得报酬——立即</h4>
+          <p>安全付款，在通话结束时直接转账。任何后续案件都在平台外处理。完全属于您。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <h2>商业模式——100%透明</h2>
+    </div>
+
+    <table class="economics-table">
+      <thead>
+        <tr>
+          <th>项目</th>
+          <th>原则</th>
+          <th>为您</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>注册</td>
+          <td>完全免费——永远没有订阅费</td>
+          <td>✓ 免费</td>
+        </tr>
+        <tr>
+          <td>您的收费</td>
+          <td>您自由设定。客户在联系您之前接受它们。</td>
+          <td>✓ 您的选择</td>
+        </tr>
+        <tr>
+          <td>付款</td>
+          <td>直接从客户到您。即时。安全。无中间商。</td>
+          <td>✓ 即时</td>
+        </tr>
+        <tr>
+          <td>Commission SOS-Expat</td>
+          <td>仅在实际通话发生时收取少量份额——连接费。</td>
+          <td>每次通话</td>
+        </tr>
+        <tr>
+          <td>后续案件</td>
+          <td>完全在平台外。您的全额费用，您的条款。</td>
+          <td>✓ 100% 属于您</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <h2>完全自由——您的规则，您的日程</h2>
+    </div>
+
+    <div class="freedom-grid">
+      <div class="freedom-item">
+        <div class="when">Quand</div>
+        <h4>您想要</h4>
+        <p>早上、晚上、周末。一键激活和停用。没有时间限制。</p>
+      </div>
+      <div class="freedom-item">
+        <div class="when">D'où</div>
+        <h4>您想要</h4>
+        <p>办公室、客厅、咖啡馆、机场。曼谷、巴黎、迪拜或纽约。有网络连接就够了。</p>
+      </div>
+      <div class="freedom-item">
+        <div class="when">Au prix</div>
+        <h4>您想要的</h4>
+        <p>您按分钟或按次通话设置费率。您可以随时调整。没有上限。</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="quote-block">
+    <blockquote>
+      我不是在寻找服务提供商。我在寻找合作伙伴——想要帮助他人、了解旅居现实、值得获得公平报酬的人。一次点击。一次通话。一次付款。接下来的一切都属于您。
+    </blockquote>
+    <div class="quote-attribution">
+      <div class="avatar">WJ</div>
+      <div class="attr-text">
+        <div class="name">Williams Jullin</div>
+        <div class="title">创始人 &amp; CEO，SOS-Expat.com — 爱沙尼亚塔林</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <h2>Questions essentielles</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="question">Est-ce vraiment gratuit ?</div>
+        <div class="answer">是的，完全是。注册、创建个人资料和上线不需要任何费用。SOS-Expat仅在实际发生通话时收取连接费。不提前。没有其他方式。</div>
+      </div>
+      <div class="faq-item">
+        <div class="question">第一次通话后会发生什么？</div>
+        <div class="answer">任何未来的案件——咨询、代理、跟进——都直接在您和您的客户之间管理，在平台之外。SOS-Expat不介入。这位客户完全属于您，您的全部费用由您保留。</div>
+      </div>
+      <div class="faq-item">
+        <div class="question">我需要随时可用吗？</div>
+        <div class="answer">不。您只需一键激活或停用可用性。无数量承诺，无最少工时，无限制。您是自己日程的主人。</div>
+      </div>
+      <div class="faq-item">
+        <div class="question">我如何以及何时获得报酬？</div>
+        <div class="answer">客户在通话结束时直接通过平台付款。扣除连接费后，金额立即转给您。无需等待，无需开具发票。</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-block">
+    <h2>加入 SOS-Expat.com</h2>
+    <p class="sub">说您语言的客户现在正在寻找您。<br>几分钟内注册。无承诺。无费用。</p>
+    <div class="cta-benefits">
+      <div class="cta-benefit"><span class="check">✓</span>免费</div>
+      <div class="cta-benefit"><span class="check">✓</span>即时付款</div>
+      <div class="cta-benefit"><span class="check">✓</span>完全自由</div>
+      <div class="cta-benefit"><span class="check">✓</span>您的客户属于您</div>
+    </div>
+    <div class="cta-url">sos-expat.com → 成为合作伙伴</div>
+  </div>
+
+  <div class="contact-block">
+    <h3>合作联系</h3>
+    <div class="contact-item">
+      <div class="lbl">Contact</div>
+      <div class="val">Williams Jullin — 创始人 &amp; CEO</div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">合作邮箱</div>
+      <div class="val"><a href="mailto:williamsjullin@sos-expat.com">williamsjullin@sos-expat.com</a></div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">网站</div>
+      <div class="val"><a href="https://sos-expat.com">sos-expat.com</a></div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">可用性</div>
+      <div class="val">即时 — 任何时区</div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="legal">SOS-Expat.com — 注册于爱沙尼亚 — 总部：爱沙尼亚塔林 — 197个国家</div>
+    <div class="end-mark">— ### —</div>
+  </footer>
+
+</div>
+</body>
+</html>

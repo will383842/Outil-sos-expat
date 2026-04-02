@@ -19,7 +19,7 @@ import {
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
-import { parseLocaleFromPath } from "@/multilingual-system";
+import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 
 /* ------------------------------------------------------------------ */
@@ -118,6 +118,9 @@ const SondagesListing: React.FC = () => {
   const { language } = useApp();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
   const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
+  const _urlLang = lang === "ch" ? "zh" : lang;
+  const _localeRegion: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const canonical = `https://sos-expat.com/${_urlLang}-${_localeRegion[lang] ?? lang}/${getTranslatedRouteSlug("sondages-listing" as any, lang as any) || "nos-sondages"}`;
 
   const [activeSurveys, setActiveSurveys]       = useState<Sondage[]>([]);
   const [completedSurveys, setCompletedSurveys] = useState<Sondage[]>([]);
@@ -145,7 +148,7 @@ const SondagesListing: React.FC = () => {
 
   return (
     <Layout>
-      <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} />
+      <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} canonicalUrl={canonical} />
       <BreadcrumbSchema items={[
         { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("breadcrumbLabel", lang) },

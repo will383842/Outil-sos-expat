@@ -20,6 +20,7 @@ import {
   Wrench,
   Sparkles,
   ArrowRight,
+  ChevronRight,
   Star,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -29,6 +30,8 @@ import type { LucideIcon } from "lucide-react";
 // ============================================================
 
 const T: Record<string, Record<string, string>> = {
+  home: { fr: "Accueil", en: "Home" },
+  breadLabel: { fr: "Outils", en: "Tools" },
   badge: { fr: "Outils", en: "Tools" },
   title: { fr: "Outils pour expatries", en: "Tools for expats" },
   subtitle: {
@@ -266,6 +269,7 @@ const OutilsListing: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
+  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
 
   const [activeCategory, setActiveCategory] = useState<ToolCategory | null>(null);
 
@@ -293,13 +297,29 @@ const OutilsListing: React.FC = () => {
         description={t("seoDescription", lang)}
       />
 
+      {/* ====== BREADCRUMB ====== */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li><a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">{t("home", lang)}</a></li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{t("breadLabel", lang)}</li>
+          </ol>
+        </div>
+      </nav>
+
       {/* ====== HERO ====== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-red-50/40 pt-20 pb-16 sm:pt-28 sm:pb-20">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: "radial-gradient(circle at 1px 1px, #DC2626 1px, transparent 0)",
-          backgroundSize: "32px 32px",
-        }} />
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+        {/* Grid décorative */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        {/* Halo rouge */}
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 text-center">
           <motion.div
@@ -308,30 +328,30 @@ const OutilsListing: React.FC = () => {
             variants={fadeInUp}
           >
             {/* Badge */}
-            <span className="inline-flex items-center gap-2 rounded-full bg-red-600/10 px-4 py-1.5 text-sm font-semibold text-red-600 mb-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-red-600/30 bg-red-600/10 px-5 py-1.5 text-sm font-semibold text-red-400 mb-6">
               <Wrench className="h-4 w-4" />
               {t("badge", lang)}
             </span>
 
             {/* H1 */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-5 leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-5 leading-[1.1]">
               {t("title", lang)}
             </h1>
 
             {/* Subtitle */}
-            <p className="mx-auto max-w-2xl text-lg text-gray-500 leading-relaxed mb-10">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-slate-400 leading-relaxed mb-10">
               {t("subtitle", lang)}
             </p>
 
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600/10">
-                  <Wrench className="h-5 w-5 text-red-600" />
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600/15">
+                  <Wrench className="h-5 w-5 text-red-400" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xl font-bold text-gray-900">{TOOLS.length}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">{t("statTools", lang)}</p>
+                  <p className="text-2xl font-bold text-white">{TOOLS.length}</p>
+                  <p className="text-sm text-slate-500">{t("statTools", lang)}</p>
                 </div>
               </div>
             </div>

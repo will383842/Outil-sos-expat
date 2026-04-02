@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS-Expat.com — Press Release — Partners</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:       #B91C1C;
+    --red-light: #DC2626;
+    --red-dim:   rgba(185,28,28,0.22);
+    --red-border:rgba(185,28,28,0.50);
+    --black:     #0D0D0D;
+    --black-mid: #181818;
+    --black-card:#272727;
+    --black-soft:#323232;
+    --white:     #FFFFFF;
+    --off-white: #EEEEEE;
+    --grey:      #ABABAB;
+    --grey-light:#D2D2D2;
+    --green:     #15803D;
+    --divider:   rgba(255,255,255,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0D0D0D;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-wrapper { max-width: 900px; margin: 0 auto; padding: 64px 48px; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .logo-block .logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 30px;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-block .logo span { color: var(--red); }
+
+  .logo-block .tagline {
+    font-size: 11px;
+    color: var(--grey);
+    font-weight: 300;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+
+  .meta-block { text-align: right; }
+
+  .badge {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+  }
+
+  .meta-block .date { display: block; font-size: 13px; color: var(--grey); font-weight: 300; }
+
+  /* ── HERO ── */
+  .hero { margin-bottom: 64px; }
+
+  .hero .kicker {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero .kicker::after {
+    content: '';
+    display: inline-block;
+    width: 48px;
+    height: 1px;
+    background: var(--red);
+    opacity: 0.6;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.08;
+    color: var(--white);
+    margin-bottom: 28px;
+    letter-spacing: -1.5px;
+  }
+
+  .hero h1 em { font-style: italic; color: var(--red); }
+
+  .hero .deck {
+    font-size: 19px;
+    font-weight: 300;
+    color: var(--off-white);
+    line-height: 1.7;
+    max-width: 700px;
+    border-left: 3px solid var(--red);
+    padding-left: 22px;
+  }
+
+  /* ── PROMISE STRIP ── */
+  .promise-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--red-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 64px;
+  }
+
+  .promise-cell {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    padding: 30px 24px;
+    text-align: center;
+  }
+
+  .promise-cell .icon { font-size: 28px; margin-bottom: 12px; }
+
+  .promise-cell .lbl {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .promise-cell .desc { font-size: 13px; color: var(--grey-light); font-weight: 300; line-height: 1.5; }
+
+  /* ── SECTIONS ── */
+  .section { margin-bottom: 56px; }
+
+  .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+
+  .section-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.3px;
+  }
+
+  .section p { font-size: 16px; color: var(--off-white); font-weight: 300; line-height: 1.8; margin-bottom: 16px; }
+  .section p strong { color: var(--white); font-weight: 600; }
+
+  /* ── STORIES ── */
+  .stories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 28px 0; }
+
+  .story-card {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 8px;
+    padding: 26px;
+    border-top: 3px solid var(--red);
+  }
+
+  .story-card.aidant { border-top-color: #22c55e; }
+
+  .story-card .persona {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+
+  .story-card.aidant .persona { color: #22c55e; }
+
+  .story-card blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--off-white);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .story-card .result {
+    font-size: 12px;
+    font-weight: 600;
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── PROFILES ── */
+  .profiles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 28px 0; }
+
+  .profile-card {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 6px;
+    padding: 20px 22px;
+    border-left: 3px solid var(--red);
+  }
+
+  .profile-card h4 { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .profile-card p { font-size: 13px; color: var(--grey-light); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 0; margin: 28px 0; }
+
+  .step {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 900;
+    color: var(--black-soft);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 52px;
+    text-align: center;
+  }
+
+  .step-content h4 { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .step-content p { font-size: 14px; color: var(--grey-light); font-weight: 300; margin: 0; line-height: 1.6; }
+
+  /* ── ECONOMICS TABLE ── */
+  .economics-table { width: 100%; border-collapse: collapse; margin: 28px 0; }
+
+  .economics-table th {
+    padding: 13px 18px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid var(--divider);
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+  }
+
+  .economics-table td {
+    padding: 14px 18px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .economics-table tr:last-child td { border-bottom: none; }
+  .economics-table td:first-child { font-weight: 500; color: var(--off-white); }
+  .economics-table td:nth-child(2) { color: var(--grey-light); font-weight: 300; font-size: 13px; }
+  .economics-table td:last-child { font-weight: 600; color: #22c55e; }
+
+  /* ── FREEDOM ── */
+  .freedom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0; }
+
+  .freedom-item {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border-radius: 6px;
+    padding: 22px 18px;
+    text-align: center;
+    border: 1px solid var(--divider);
+    border-top: 2px solid var(--red);
+  }
+
+  .freedom-item .when {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .freedom-item h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .freedom-item p { font-size: 13px; color: var(--grey-light); font-weight: 300; line-height: 1.5; margin: 0; }
+
+  /* ── FAQ ── */
+  .faq-list { display: flex; flex-direction: column; gap: 0; margin: 28px 0; }
+
+  .faq-item {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .faq-item:last-child { border-bottom: none; }
+
+  .faq-item .question {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .faq-item .question::before {
+    content: '?';
+    width: 22px;
+    height: 22px;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--red);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .faq-item .answer { font-size: 15px; color: var(--off-white); font-weight: 300; line-height: 1.7; padding-left: 34px; }
+
+  /* ── CTA ── */
+  .cta-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--red-border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    text-align: center;
+    margin: 56px 0;
+  }
+
+  .cta-block h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .cta-block .sub {
+    font-size: 16px;
+    color: var(--grey-light);
+    font-weight: 300;
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+
+  .cta-benefits {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .cta-benefit { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--off-white); }
+  .cta-benefit .check { color: var(--red); font-weight: 700; }
+
+  .cta-url {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── QUOTE ── */
+  .quote-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--red-border);
+    border-radius: 10px;
+    padding: 40px;
+    margin: 48px 0;
+    position: relative;
+  }
+
+  .quote-block::before {
+    content: '\201C';
+    font-family: 'Playfair Display', serif;
+    font-size: 110px;
+    color: var(--red);
+    opacity: 0.12;
+    position: absolute;
+    top: -16px;
+    left: 28px;
+    line-height: 1;
+  }
+
+  .quote-block blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--off-white);
+    line-height: 1.65;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-attribution { display: flex; align-items: center; gap: 16px; }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    flex-shrink: 0;
+  }
+
+  .attr-text .name { font-size: 14px; font-weight: 600; color: var(--white); }
+  .attr-text .title { font-size: 12px; color: var(--grey); font-weight: 300; }
+
+  /* ── CONTACT ── */
+  .contact-block {
+    background: linear-gradient(160deg, #2E2E2E, #222222);
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 60px;
+  }
+
+  .contact-block h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--white);
+    grid-column: 1 / -1;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 4px;
+  }
+
+  .contact-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .contact-item .lbl {
+    font-size: 10px;
+    color: var(--red);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .contact-item .val { font-size: 15px; color: var(--white); }
+  .contact-item .val a { color: var(--off-white); text-decoration: none; }
+
+  .divider { width: 100%; height: 1px; background: var(--divider); margin: 40px 0; }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--divider);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer .legal { font-size: 12px; color: var(--grey); font-weight: 300; }
+  .footer .end-mark { font-family: 'Playfair Display', serif; font-size: 13px; color: var(--grey); letter-spacing: 3px; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <header class="header">
+    <div class="logo-block">
+      <div class="logo">SOS-Expat<span>.com</span></div>
+      <div class="tagline">Call for partners · Lawyers · Expat helpers · 197 countries</div>
+    </div>
+    <div class="meta-block">
+      <span class="badge">Partner Application</span>
+      <span class="date">April 5, 2026 — For Immediate Release</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">Press Release — Partners &amp; Provider Network</div>
+    <h1>Your expertise.<br>Clients who speak<br><em>your language.</em></h1>
+    <p class="deck">
+      SOS-Expat.com launches a global call for partners: lawyers, jurists, notaries, accountants and expat helpers from <strong>all nationalities, in all languages</strong>, from anywhere in the world. Free. Direct and immediate payment. Total freedom.
+    </p>
+  </section>
+
+  <div class="promise-strip">
+    <div class="promise-cell">
+      <div class="icon">💰</div>
+      <div class="lbl">Immediate revenue</div>
+      <div class="desc">From the first call. Direct payment from the client, instant.</div>
+    </div>
+    <div class="promise-cell">
+      <div class="icon">🔓</div>
+      <div class="lbl">Total freedom</div>
+      <div class="desc">When you want, from where you want, at the price you want. One click.</div>
+    </div>
+    <div class="promise-cell">
+      <div class="icon">🌍</div>
+      <div class="lbl">197 countries of clients</div>
+      <div class="desc">Clients who speak your language are looking for you right now.</div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2>Two stories — one single platform</h2>
+    </div>
+    <p>SOS-Expat.com — direct connection platform — simultaneously solves two problems: that of the person in emergency without help in their language — and that of the expatriate professional who has no <strong>no channel to receive international clients</strong> from their country of installation.</p>
+
+    <div class="stories-grid">
+      <div class="story-card">
+        <div class="persona">Karim, 35 ans — Vacancier à Istanbul</div>
+        <blockquote>"My hotel refuses to refund me. I leave tomorrow. I don't speak Turkish. I opened SOS-Expat.com, chose an Arabic-speaking lawyer based on reviews. He called me back in 4 minutes."</blockquote>
+        <div class="result">✓ Litige résolu avant son vol — 4 min 10 secondes</div>
+      </div>
+      <div class="story-card aidant">
+        <div class="persona">Leila, Lawyer — Expatriate in Dubai</div>
+        <blockquote>"I am a lawyer specializing in French law. From Dubai, I receive requests from people in difficulty all over the world. Every call is paid."</blockquote>
+        <div class="result">✓ Additional income from abroad — without changing your life</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2>Who can become a partner</h2>
+    </div>
+    <p>SOS-Expat.com is looking for partners <strong>in all languages, in all countries</strong>. Based in Paris, Bangkok, Dubai, Buenos Aires or Seoul — if you master a language and an expertise, you have your place on the platform.</p>
+
+    <div class="profiles-grid">
+      <div class="profile-card">
+        <h4>⚖️ Avocats &amp; juristes</h4>
+        <p>All specialties, all nationalities, all jurisdictions — freelance or employed, anywhere in the world.</p>
+      </div>
+      <div class="profile-card">
+        <h4>🏛 Experts spécialisés</h4>
+        <p>Notaires, experts-comptables, conseillers fiscaux, traducteurs assermentés, agents immobiliers, conseillers en immigration.</p>
+      </div>
+      <div class="profile-card">
+        <h4>🤝 Expat helpers</h4>
+        <p>Based in the target country, mastery of the local language, knowledge of the terrain — any nationality, any sector.</p>
+      </div>
+      <div class="profile-card">
+        <h4>🩺 Médicaux &amp; spécialisés</h4>
+        <p>Medical, tax, real estate, banking, administrative — any expert whose expertise can resolve an emergency abroad.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2>Comment ça marche — 4 étapes</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>You create your profile — for free</h4>
+          <p>Language(s), country, specialty, rate. In a few minutes. No registration fees. Simple verification of qualifications by our team.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>One click — you're online</h4>
+          <p>From your app, wherever you are in the world. You activate your availability when you want. No volume commitment.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>A client contacts you — you help</h4>
+          <p>They chose you based on your reviews, your language and your specialty. You answer, you help as much as possible. That's your core business.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h4>You are paid — immediately</h4>
+          <p>Secure payment, transferred directly at the end of the call. Any future case is handled outside the platform. It belongs entirely to you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <h2>Business model — 100% transparent</h2>
+    </div>
+
+    <table class="economics-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Principle</th>
+          <th>For you</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Registration</td>
+          <td>Completely free — no subscription, ever</td>
+          <td>✓ Free</td>
+        </tr>
+        <tr>
+          <td>Your fees</td>
+          <td>You set them freely. The client accepts them before contacting you.</td>
+          <td>✓ Your choice</td>
+        </tr>
+        <tr>
+          <td>Payment</td>
+          <td>Direct from client to you. Instant. Secure. No intermediary.</td>
+          <td>✓ Immediate</td>
+        </tr>
+        <tr>
+          <td>Commission SOS-Expat</td>
+          <td>Reduced share only when an actual call takes place — connection fee.</td>
+          <td>Per call</td>
+        </tr>
+        <tr>
+          <td>Follow-up cases</td>
+          <td>Entirely outside the platform. Your full fees, your terms.</td>
+          <td>✓ 100% yours</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <h2>Total freedom — your rules, your schedule</h2>
+    </div>
+
+    <div class="freedom-grid">
+      <div class="freedom-item">
+        <div class="when">Quand</div>
+        <h4>You want</h4>
+        <p>Morning, evening, weekend. Activate and deactivate with one click. No time constraints.</p>
+      </div>
+      <div class="freedom-item">
+        <div class="when">D'où</div>
+        <h4>You want</h4>
+        <p>Office, living room, café, airport. Bangkok, Paris, Dubai or New York. A connection is all you need.</p>
+      </div>
+      <div class="freedom-item">
+        <div class="when">Au prix</div>
+        <h4>That you want</h4>
+        <p>You set your rate per minute or per call. You adjust it at any time. No ceiling.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="quote-block">
+    <blockquote>
+      I'm not looking for service providers. I'm looking for partners — people who want to help, who know the reality of expatriation, and who deserve to be fairly compensated for it. One click. One call. One payment. What follows belongs to you.
+    </blockquote>
+    <div class="quote-attribution">
+      <div class="avatar">WJ</div>
+      <div class="attr-text">
+        <div class="name">Williams Jullin</div>
+        <div class="title">Founder &amp; CEO, SOS-Expat.com — Tallinn, Estonia</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <h2>Questions essentielles</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="question">Est-ce vraiment gratuit ?</div>
+        <div class="answer">Yes, entirely. Registration, profile creation and going online cost nothing. SOS-Expat only charges a connection fee when a call actually takes place. Not before. Not otherwise.</div>
+      </div>
+      <div class="faq-item">
+        <div class="question">What happens after the first call?</div>
+        <div class="answer">Any future case — consultation, representation, follow-up — is managed directly between you and your client, outside the platform. SOS-Expat does not intervene. This client belongs entirely to you, with your full fees.</div>
+      </div>
+      <div class="faq-item">
+        <div class="question">Do I need to be available all the time?</div>
+        <div class="answer">No. You activate and deactivate your availability with one click. No volume commitment, no minimum hours, no constraints. You are master of your schedule.</div>
+      </div>
+      <div class="faq-item">
+        <div class="question">How and when am I paid?</div>
+        <div class="answer">The client pays directly through the platform at the end of the call. The amount is transferred to you instantly, minus the connection fee. No waiting, no invoice to issue.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-block">
+    <h2>Join SOS-Expat.com</h2>
+    <p class="sub">Clients who speak your language are looking for you right now.<br>Sign up in minutes. No commitment. No fees.</p>
+    <div class="cta-benefits">
+      <div class="cta-benefit"><span class="check">✓</span>Free</div>
+      <div class="cta-benefit"><span class="check">✓</span>Immediate payment</div>
+      <div class="cta-benefit"><span class="check">✓</span>Total freedom</div>
+      <div class="cta-benefit"><span class="check">✓</span>Your clients belong to you</div>
+    </div>
+    <div class="cta-url">sos-expat.com → Become a partner</div>
+  </div>
+
+  <div class="contact-block">
+    <h3>Partnership contact</h3>
+    <div class="contact-item">
+      <div class="lbl">Contact</div>
+      <div class="val">Williams Jullin — Founder &amp; CEO</div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">Partnership email</div>
+      <div class="val"><a href="mailto:williamsjullin@sos-expat.com">williamsjullin@sos-expat.com</a></div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">Website</div>
+      <div class="val"><a href="https://sos-expat.com">sos-expat.com</a></div>
+    </div>
+    <div class="contact-item">
+      <div class="lbl">Availability</div>
+      <div class="val">Immediate — any time zone</div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="legal">SOS-Expat.com — Company registered in Estonia — Headquarters: Tallinn, Estonia — 197 countries</div>
+    <div class="end-mark">— ### —</div>
+  </footer>
+
+</div>
+</body>
+</html>

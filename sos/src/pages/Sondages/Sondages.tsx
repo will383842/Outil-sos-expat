@@ -6,6 +6,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ChevronRight } from "lucide-react";
 import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
@@ -24,7 +26,7 @@ const SURVEY_SEGMENTS: Record<string, { surveys: string; vacanciers: string }> =
   de: { surveys: "expat-umfragen", vacanciers: "urlaubsumfragen" },
   pt: { surveys: "pesquisas-expatriados", vacanciers: "pesquisas-ferias" },
   ru: { surveys: "oprosy-expatov", vacanciers: "oprosy-otpusk" },
-  zh: { surveys: "expat-diaocha", vacanciers: "jiaqi-diaocha" },
+  ch: { surveys: "expat-diaocha", vacanciers: "jiaqi-diaocha" },
   hi: { surveys: "pravasi-sarvekshan", vacanciers: "chhutti-sarvekshan" },
   ar: { surveys: "istitalaat-mughtaribeen", vacanciers: "istitalaat-ijaza" },
 };
@@ -36,7 +38,7 @@ const LOCALE_COUNTRY: Record<string, string> = {
   de: "de-de",
   pt: "pt-pt",
   ru: "ru-ru",
-  zh: "zh-cn",
+  ch: "zh-cn",
   hi: "hi-in",
   ar: "ar-sa",
 };
@@ -107,7 +109,7 @@ function detectLang(
 const labels: Record<string, Record<string, string>> = {
   title: {
     fr: "Sondages", en: "Surveys", es: "Encuestas", de: "Umfragen",
-    pt: "Pesquisas", ru: "Опросы", zh: "调查", hi: "सर्वेक्षण", ar: "الاستطلاعات",
+    pt: "Pesquisas", ru: "Опросы", ch: "调查", hi: "सर्वेक्षण", ar: "الاستطلاعات",
   },
   subtitle: {
     fr: "Découvrez les sondages de la communauté expatriée.",
@@ -116,57 +118,65 @@ const labels: Record<string, Record<string, string>> = {
     de: "Entdecken Sie Umfragen der Expat-Community.",
     pt: "Descubra as pesquisas da comunidade expatriada.",
     ru: "Откройте для себя опросы сообщества экспатов.",
-    zh: "发现海外侨民社区的调查。",
+    ch: "发现海外侨民社区的调查。",
     hi: "प्रवासी समुदाय के सर्वेक्षण खोजें।",
     ar: "اكتشف استطلاعات مجتمع المغتربين.",
   },
   all: {
     fr: "Tous", en: "All", es: "Todos", de: "Alle", pt: "Todos",
-    ru: "Все", zh: "全部", hi: "सभी", ar: "الكل",
+    ru: "Все", ch: "全部", hi: "सभी", ar: "الكل",
   },
   expat: {
     fr: "Expatriés", en: "Expats", es: "Expatriados", de: "Expats",
-    pt: "Expatriados", ru: "Экспаты", zh: "外籍人士", hi: "प्रवासी", ar: "المغتربون",
+    pt: "Expatriados", ru: "Экспаты", ch: "外籍人士", hi: "प्रवासी", ar: "المغتربون",
   },
   vacancier: {
     fr: "Vacanciers", en: "Holidaymakers", es: "Vacacionistas", de: "Urlauber",
-    pt: "Férias", ru: "Отдыхающие", zh: "度假者", hi: "अवकाश", ar: "المصطافون",
+    pt: "Férias", ru: "Отдыхающие", ch: "度假者", hi: "अवकाश", ar: "المصطافون",
   },
   active: {
     fr: "En cours", en: "Active", es: "En curso", de: "Aktiv",
-    pt: "Em curso", ru: "Активен", zh: "进行中", hi: "सक्रिय", ar: "نشط",
+    pt: "Em curso", ru: "Активен", ch: "进行中", hi: "सक्रिय", ar: "نشط",
   },
   closed: {
     fr: "Terminé", en: "Closed", es: "Cerrado", de: "Beendet",
-    pt: "Encerrado", ru: "Завершён", zh: "已结束", hi: "बंद", ar: "مغلق",
+    pt: "Encerrado", ru: "Завершён", ch: "已结束", hi: "बंद", ar: "مغلق",
   },
   responses: {
     fr: "réponses", en: "responses", es: "respuestas", de: "Antworten",
-    pt: "respostas", ru: "ответов", zh: "回复", hi: "उत्तर", ar: "إجابات",
+    pt: "respostas", ru: "ответов", ch: "回复", hi: "उत्तर", ar: "إجابات",
   },
   participate: {
     fr: "Participer", en: "Take survey", es: "Participar", de: "Teilnehmen",
-    pt: "Participar", ru: "Пройти", zh: "参与", hi: "भाग लें", ar: "شارك",
+    pt: "Participar", ru: "Пройти", ch: "参与", hi: "भाग लें", ar: "شارك",
   },
   closes: {
     fr: "Ferme le", en: "Closes", es: "Cierra el", de: "Endet am",
-    pt: "Fecha em", ru: "Закрыт", zh: "截止", hi: "बंद होता है", ar: "يغلق",
+    pt: "Fecha em", ru: "Закрыт", ch: "截止", hi: "बंद होता है", ar: "يغلق",
   },
   loading_text: {
     fr: "Chargement…", en: "Loading…", es: "Cargando…", de: "Laden…",
-    pt: "A carregar…", ru: "Загрузка…", zh: "加载中…", hi: "लोड हो रहा है…", ar: "جارٍ التحميل…",
+    pt: "A carregar…", ru: "Загрузка…", ch: "加载中…", hi: "लोड हो रहा है…", ar: "جارٍ التحميل…",
   },
   empty: {
     fr: "Aucun sondage disponible.", en: "No surveys available.",
     es: "No hay encuestas disponibles.", de: "Keine Umfragen verfügbar.",
     pt: "Nenhuma pesquisa disponível.", ru: "Нет доступных опросов.",
-    zh: "暂无调查。", hi: "कोई सर्वेक्षण उपलब्ध नहीं।", ar: "لا توجد استطلاعات متاحة.",
+    ch: "暂无调查。", hi: "कोई सर्वेक्षण उपलब्ध नहीं।", ar: "لا توجد استطلاعات متاحة.",
   },
   network_error: {
     fr: "Erreur réseau. Veuillez réessayer.", en: "Network error. Please try again.",
     es: "Error de red. Por favor, inténtelo de nuevo.", de: "Netzwerkfehler. Bitte versuchen Sie es erneut.",
     pt: "Erro de rede. Por favor, tente novamente.", ru: "Ошибка сети. Пожалуйста, попробуйте снова.",
-    zh: "网络错误，请重试。", hi: "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।", ar: "خطأ في الشبكة. يرجى المحاولة مرة أخرى.",
+    ch: "网络错误，请重试。", hi: "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।", ar: "خطأ في الشبكة. يرجى المحاولة مرة أخرى.",
+  },
+  home: {
+    fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite",
+    pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية",
+  },
+  surveys: {
+    fr: "Sondages", en: "Surveys", es: "Encuestas", de: "Umfragen",
+    pt: "Pesquisas", ru: "Опросы", ch: "调查", hi: "सर्वेक्षण", ar: "الاستطلاعات",
   },
 };
 
@@ -178,20 +188,20 @@ const t = (key: string, lang: string): string =>
 // ============================================================
 
 const SkeletonCard: React.FC = () => (
-  <div className="bg-white/5 border border-white/10 rounded-2xl p-5 animate-pulse">
+  <div className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse shadow-sm">
     <div className="flex gap-2 mb-3">
-      <div className="h-5 w-16 bg-white/10 rounded" />
-      <div className="h-5 w-20 bg-white/10 rounded" />
+      <div className="h-5 w-16 bg-gray-100 rounded" />
+      <div className="h-5 w-20 bg-gray-100 rounded" />
     </div>
-    <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-    <div className="h-3 w-full bg-white/10 rounded mb-1" />
-    <div className="h-3 w-5/6 bg-white/10 rounded mb-1" />
-    <div className="h-3 w-2/3 bg-white/10 rounded mb-4" />
-    <div className="border-t border-white/5 pt-2 flex justify-between">
-      <div className="h-3 w-24 bg-white/10 rounded" />
-      <div className="h-3 w-24 bg-white/10 rounded" />
+    <div className="h-4 w-3/4 bg-gray-100 rounded mb-2" />
+    <div className="h-3 w-full bg-gray-100 rounded mb-1" />
+    <div className="h-3 w-5/6 bg-gray-100 rounded mb-1" />
+    <div className="h-3 w-2/3 bg-gray-100 rounded mb-4" />
+    <div className="border-t border-gray-50 pt-2 flex justify-between">
+      <div className="h-3 w-24 bg-gray-100 rounded" />
+      <div className="h-3 w-24 bg-gray-100 rounded" />
     </div>
-    <div className="mt-3 h-3 w-20 bg-white/10 rounded" />
+    <div className="mt-3 h-3 w-20 bg-gray-100 rounded" />
   </div>
 );
 
@@ -218,15 +228,15 @@ const SurveyCard: React.FC<{ sondage: Sondage; lang: string }> = ({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-[#DC2626]/40 hover:bg-white/[0.08] transition-all"
+      className="group block bg-white border border-gray-100 rounded-2xl p-5 hover:border-red-200 hover:shadow-md transition-all shadow-sm"
     >
       {/* Badges */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <span
           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
             sondage.status === "active"
-              ? "text-green-400 bg-green-400/10 border border-green-400/20"
-              : "text-white/40 bg-white/5 border border-white/10"
+              ? "text-green-600 bg-green-50 border border-green-200"
+              : "text-gray-400 bg-gray-50 border border-gray-200"
           }`}
         >
           {sondage.status === "active" && "● "}
@@ -235,8 +245,8 @@ const SurveyCard: React.FC<{ sondage: Sondage; lang: string }> = ({
         <span
           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
             sondage.type === "expat"
-              ? "text-[#DC2626] bg-[#DC2626]/10 border border-[#DC2626]/20"
-              : "text-blue-400 bg-blue-400/10 border border-blue-400/20"
+              ? "text-red-600 bg-red-50 border border-red-200"
+              : "text-blue-600 bg-blue-50 border border-blue-200"
           }`}
         >
           {sondage.type === "expat" ? "✈️ " : "🏖️ "}
@@ -245,19 +255,19 @@ const SurveyCard: React.FC<{ sondage: Sondage; lang: string }> = ({
       </div>
 
       {/* Title */}
-      <h2 className="text-white font-semibold leading-snug mb-2 line-clamp-2 group-hover:text-[#DC2626] transition-colors text-sm">
+      <h2 className="text-gray-900 font-semibold leading-snug mb-2 line-clamp-2 group-hover:text-red-600 transition-colors text-sm">
         {sondage.translation.title}
       </h2>
 
       {/* Description */}
       {sondage.translation.description && (
-        <p className="text-white/50 text-xs leading-relaxed line-clamp-3 mb-3">
+        <p className="text-gray-500 text-xs leading-relaxed line-clamp-3 mb-3">
           {sondage.translation.description}
         </p>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-white/40 mt-auto pt-2 border-t border-white/5">
+      <div className="flex items-center justify-between text-xs text-gray-400 mt-auto pt-2 border-t border-gray-50">
         <span>
           📊 {sondage.responses_count} {t("responses", lang)}
         </span>
@@ -268,7 +278,7 @@ const SurveyCard: React.FC<{ sondage: Sondage; lang: string }> = ({
         )}
       </div>
 
-      <div className="mt-3 text-[#DC2626] text-xs font-semibold group-hover:underline">
+      <div className="mt-3 text-red-600 text-xs font-semibold group-hover:underline">
         {t("participate", lang)} →
       </div>
     </a>
@@ -283,6 +293,8 @@ const Sondages: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const lang = detectLang(language, location.pathname);
+
+  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
 
   const [filter, setFilter] = useState<FilterTab>("all");
   const [surveys, setSurveys] = useState<Sondage[]>([]);
@@ -335,16 +347,57 @@ const Sondages: React.FC = () => {
         description={t("subtitle", lang)}
       />
 
-      <div className="min-h-screen bg-[#0F172A] text-white">
-        {/* Header */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 pb-6">
-          <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-white mb-1">
+      {/* Breadcrumb visuel */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li>
+              <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
+                {t("home", lang)}
+              </a>
+            </li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{t("surveys", lang)}</li>
+          </ol>
+        </div>
+      </nav>
+
+      {/* Hero dark slate */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
+        <div className="relative mx-auto max-w-6xl px-4 text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
+          >
             {t("title", lang)}
-          </h1>
-          <p className="text-white/40 text-sm mb-5">{t("subtitle", lang)}</p>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="mt-4 text-white/50 text-base sm:text-lg max-w-2xl mx-auto"
+          >
+            {t("subtitle", lang)}
+          </motion.p>
 
           {/* Filter tabs */}
-          <div className="flex gap-2 flex-wrap">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex gap-2 flex-wrap justify-center mt-8"
+          >
             {(["all", "expat", "vacancier"] as FilterTab[]).map((f) => (
               <button
                 key={f}
@@ -360,11 +413,13 @@ const Sondages: React.FC = () => {
                 {t(f, lang)}
               </button>
             ))}
-          </div>
+          </motion.div>
         </div>
+      </section>
 
-        {/* Content */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
+      {/* Content */}
+      <div className="bg-white min-h-screen">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {[1, 2, 3].map((n) => (
@@ -372,9 +427,9 @@ const Sondages: React.FC = () => {
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-20 text-red-400">{error}</div>
+            <div className="text-center py-20 text-red-500">{error}</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-20 text-white/50">
+            <div className="text-center py-20 text-gray-400">
               {t("empty", lang)}
             </div>
           ) : (

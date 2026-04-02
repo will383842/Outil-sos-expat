@@ -1,0 +1,1 @@
+Version corrigée: aucun recadrage, aucune bordure blanche, ratio original conservé, dimensions originales conservées, conversion WebP uniquement.
