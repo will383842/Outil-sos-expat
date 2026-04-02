@@ -1957,6 +1957,7 @@ const Header: React.FC = () => {
                     { key: 'fiches-pays',        icon: '🗺️', labels: { fr: 'Pays',         en: 'Countries',    es: 'Países',        de: 'Länder',      ru: 'Страны',       pt: 'Países',       ch: '国家',   hi: 'देश',        ar: 'بلدان'      } },
                     { key: 'fiches-thematiques', icon: '🗂️', labels: { fr: 'Thématiques',  en: 'Themes',       es: 'Temáticas',     de: 'Themen',      ru: 'Темы',         pt: 'Temáticas',    ch: '专题',   hi: 'विषयवस्तु',  ar: 'مواضيع'     } },
                     { key: 'faq',                icon: '❓', labels: { fr: 'FAQ',          en: 'FAQ',          es: 'FAQ',           de: 'FAQ',         ru: 'ЧаВо',         pt: 'FAQ',          ch: 'FAQ',    hi: 'FAQ',        ar: 'أسئلة'      } },
+                    { key: 'galerie',            icon: '🖼️', labels: { fr: 'Images',       en: 'Images',       es: 'Imágenes',      de: 'Bilder',      ru: 'Галерея',      pt: 'Imagens',      ch: '图片',   hi: 'चित्र',      ar: 'صور'        } },
                   ];
                   const LOCALE_REGION_MAP: Record<string, string> = {
                     fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'cn', hi: 'in', ar: 'sa',

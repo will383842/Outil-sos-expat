@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Globe, BookOpen, Wrench, BarChart3, MapPin, Layers, HelpCircle } from 'lucide-react';
+import { Globe, BookOpen, Wrench, BarChart3, MapPin, Layers, HelpCircle, Image } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import {
   getTranslatedRouteSlug,
@@ -11,7 +11,7 @@ import {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Language = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
-type RouteKey = 'annuaire' | 'articles' | 'outils' | 'sondages-listing' | 'fiches-pays' | 'fiches-thematiques' | 'faq';
+type RouteKey = 'annuaire' | 'articles' | 'outils' | 'sondages-listing' | 'fiches-pays' | 'fiches-thematiques' | 'faq' | 'galerie';
 
 // ─── Nav items definition ─────────────────────────────────────────────────────
 
@@ -125,6 +125,21 @@ const NAV_ITEMS: NavItem[] = [
       ch: 'FAQ',
       hi: 'FAQ',
       ar: 'أسئلة',
+    },
+  },
+  {
+    key: 'galerie',
+    icon: Image,
+    labels: {
+      fr: 'Images',
+      en: 'Images',
+      es: 'Imágenes',
+      de: 'Bilder',
+      ru: 'Галерея',
+      pt: 'Imagens',
+      ch: '图片',
+      hi: 'चित्र',
+      ar: 'صور',
     },
   },
 ];

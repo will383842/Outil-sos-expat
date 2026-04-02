@@ -389,7 +389,8 @@ export type RouteKey =
   | "sondages"           // /sondages -> /surveys, etc.
   | "resultats-sondages" // /resultats-sondages -> /surveys-results, etc.
   | "outils-listing"     // /categories/outils -> /categories/tools, etc.
-  | "outils";            // /outils -> /tools, etc.
+  | "outils"             // /outils -> /tools, etc.
+  | "galerie";           // /galerie -> /gallery, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1980,6 +1981,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "gongju",
     hi: "upakaran",
     ar: "adawat",
+  },
+  "galerie": {
+    fr: "galerie",
+    en: "gallery",
+    es: "galeria",
+    de: "galerie",
+    ru: "gallery",
+    pt: "galeria",
+    ch: "gallery",
+    hi: "gallery",
+    ar: "gallery",
   },
 };
 
