@@ -699,6 +699,7 @@ const Footer: React.FC = () => {
   const surveysSegment = BLOG_SURVEYS_SEGMENTS[resolvedLang] ?? BLOG_SURVEYS_SEGMENTS.fr;
   const surveysBlogUrl = `https://sos-expat.com/blog/${surveysSegment.locale}/${surveysSegment.slug}`;
   const toolsUrl = `https://sos-expat.com/${surveysSegment.locale}/outils`;
+  const galerieUrl = `https://sos-expat.com/${surveysSegment.locale}/galerie`;
   const livingAbroadSegment = BLOG_LIVING_ABROAD_SEGMENTS[resolvedLang] ?? BLOG_LIVING_ABROAD_SEGMENTS.fr;
   const livingAbroadUrl = `https://sos-expat.com/${livingAbroadSegment.locale}/${livingAbroadSegment.slug}`;
 
@@ -743,6 +744,10 @@ const Footer: React.FC = () => {
           {
             label: intl.formatMessage({ id: "footer.services.livingAbroad", defaultMessage: "Vie à l'Étranger" }),
             href: livingAbroadUrl,
+          },
+          {
+            label: intl.formatMessage({ id: "footer.services.gallery", defaultMessage: "Galerie Images" }),
+            href: galerieUrl,
           },
         ],
       },
