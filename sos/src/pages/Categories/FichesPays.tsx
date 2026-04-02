@@ -19,7 +19,7 @@ import {
   ArrowRight,
   Clock,
   Layers,
-  Map,
+  Map as MapIcon,
   Flag,
 } from "lucide-react";
 
@@ -208,7 +208,7 @@ const FichesPays: React.FC = () => {
 
   const stats = [
     { icon: BookOpen, value: COUNTRIES.length, label: t("statSheets", lang) },
-    { icon: Map, value: 7, label: t("statContinents", lang) },
+    { icon: MapIcon, value: 7, label: t("statContinents", lang) },
     { icon: Globe, value: "200+", label: t("statCountries", lang) },
   ];
 
