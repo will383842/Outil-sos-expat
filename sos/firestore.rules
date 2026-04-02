@@ -3241,6 +3241,20 @@ service cloud.firestore {
       allow write: if false; // Cloud Functions Admin SDK uniquement
     }
 
+    // ================= PRESS RELEASES =================
+    // Communiqués de presse — lecture publique si isActive=true
+    match /press_releases/{releaseId} {
+      allow read: if resource.data.isActive == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ================= PRESS DOWNLOADS =================
+    // Tracking des téléchargements presse — création publique, admin lecture
+    match /press_downloads/{dlId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production
