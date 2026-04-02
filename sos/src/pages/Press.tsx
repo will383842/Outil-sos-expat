@@ -78,9 +78,16 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Maps app language codes to Firestore storage codes (ZH is stored as "ch")
+const LANG_TO_FIRESTORE: Record<string, string> = { zh: "ch" };
+function toFirestoreLang(lang: string): string {
+  return LANG_TO_FIRESTORE[lang] ?? lang;
+}
+
 function getLocalizedText(field: Record<string, string> | undefined, lang: string): string {
   if (!field) return "";
-  return field[lang] || field["en"] || field["fr"] || "";
+  const fsLang = toFirestoreLang(lang);
+  return field[fsLang] || field[lang] || field["en"] || field["fr"] || "";
 }
 
 function isImageFormat(format: string | null): boolean {
@@ -544,7 +551,28 @@ const Press: React.FC = () => {
             {/* PRESS RELEASES */}
             <section id="releases" className="scroll-mt-16 py-20 sm:py-24 border-t border-white/5">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <SectionTitle id="releases-title" icon={Newspaper} title={t("press.releases.title")} subtitle={t("press.releases.subtitle")} />
+                <div className="flex items-start justify-between gap-4 mb-12 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-red-600/20">
+                        <Newspaper className="w-6 h-6 text-red-400" />
+                      </div>
+                      <h2 id="releases-title" className="scroll-mt-24 text-2xl sm:text-3xl font-bold text-white">{t("press.releases.title")}</h2>
+                    </div>
+                    <p className="ml-16 text-base text-white/60">{t("press.releases.subtitle")}</p>
+                  </div>
+                  {/* Per-section language switcher — quick pill buttons */}
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {LANG_OPTIONS.map((opt) => (
+                      <button key={opt.code} onClick={() => setResourceLang(opt.code)}
+                        title={opt.label}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${resourceLang === opt.code ? "bg-red-600 border-red-500 text-white" : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/20"}`}>
+                        <span>{opt.flag}</span>
+                        <span className="hidden sm:inline">{opt.code.toUpperCase()}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {loadingReleases ? (
                   <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-red-500 animate-spin" /></div>
                 ) : releases.length === 0 ? (
@@ -555,11 +583,13 @@ const Press: React.FC = () => {
                 ) : (
                   <div className="max-w-4xl space-y-5">
                     {releases.map((release) => {
-                      const title = getLocalizedText(release.title, lang);
-                      const summary = getLocalizedText(release.summary, lang);
-                      const content = getLocalizedText(release.content, lang);
-                      const pdfUrl = release.pdfUrl?.[lang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
-                      const htmlViewUrl = release.htmlUrl?.[lang] || release.htmlUrl?.["en"] || release.htmlUrl?.["fr"];
+                      const relLang = resourceLang;
+                      const fsLang = toFirestoreLang(relLang);
+                      const title = getLocalizedText(release.title, relLang);
+                      const summary = getLocalizedText(release.summary, relLang);
+                      const content = getLocalizedText(release.content, relLang);
+                      const pdfUrl = release.pdfUrl?.[fsLang] || release.pdfUrl?.[relLang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
+                      const htmlViewUrl = release.htmlUrl?.[fsLang] || release.htmlUrl?.[relLang] || release.htmlUrl?.["en"] || release.htmlUrl?.["fr"];
                       const isExpanded = expandedRelease === release.id;
                       return (
                         <article key={release.id} className="bg-white/[0.05] border border-white/10 rounded-2xl hover:border-white/20 transition-all">
