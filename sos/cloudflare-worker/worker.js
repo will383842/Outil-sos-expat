@@ -1074,8 +1074,11 @@ async function handleRequest(request, env, ctx) {
   const BLOG_SEGMENTS = new Set([
     // articles
     'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
-    // faq — NOTE: 'faq' et traductions appartiennent à la SPA React (Firestore), PAS au blog
+    // faq SOS Expat — appartient à la SPA React (Firestore), PAS au blog
     // 'faq', 'preguntas-frecuentes', 'haeufige-fragen', 'perguntas-frequentes', 'voprosy', 'changjian-wenti', 'aksar-poochhe-jaane-wale-prashna', 'asilah-shaaiah',
+    // vie-a-letranger — FAQ pratiques par pays (blog Laravel, URLs distinctes de /faq Firestore)
+    'vie-a-letranger', 'living-abroad', 'vivir-en-el-extranjero', 'leben-im-ausland',
+    'viver-no-estrangeiro', 'zhizn-za-rubezhom', 'haiwai-shenghuo', 'videsh-mein-jeevan', 'alhayat-fi-alkhaarij',
     // categories
     'categories', 'categorias', 'kategorien', 'kategorii', 'fenlei', 'varg', 'alfiat',
     // tags
