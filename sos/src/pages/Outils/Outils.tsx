@@ -7,7 +7,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { parseLocaleFromPath } from "@/multilingual-system";
-import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
@@ -20,12 +19,12 @@ import {
   CreditCard,
   Briefcase,
   AlertTriangle,
-  Hospital,
+  Cross,
   Compass,
   ExternalLink,
   Loader2,
-  ChevronRight,
   Sparkles,
+  ChevronRight,
 } from "lucide-react";
 
 // ============================================================
@@ -40,7 +39,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Kostenlose Tools für Expats | SOS-Expat",
     pt: "Ferramentas Gratuitas para Expatriados | SOS-Expat",
     ru: "Бесплатные инструменты для экспатов | SOS-Expat",
-    zh: "外籍人士免费工具 | SOS-Expat",
+    ch: "外籍人士免费工具 | SOS-Expat",
     hi: "प्रवासियों के लिए मुफ्त उपकरण | SOS-Expat",
     ar: "أدوات مجانية للمغتربين | SOS-Expat",
   },
@@ -51,7 +50,7 @@ const T: Record<string, Record<string, string>> = {
     de: "26 kostenlose interaktive Tools für Expats: Rechner, Vergleicher, Dokumentengeneratoren und Notfallführer. In 9 Sprachen für 197 Länder verfügbar.",
     pt: "26 ferramentas interativas gratuitas para a sua expatriação: calculadoras, comparadores, geradores de documentos e guias de emergência. Disponíveis em 9 idiomas para 197 países.",
     ru: "26 бесплатных интерактивных инструментов для экспатов: калькуляторы, сравнители, генераторы документов и экстренные руководства. Доступны на 9 языках для 197 стран.",
-    zh: "26个免费互动工具，助您准备海外移居：计算器、比较器、文件生成器和紧急指南。提供9种语言，覆盖197个国家。",
+    ch: "26个免费互动工具，助您准备海外移居：计算器、比较器、文件生成器和紧急指南。提供9种语言，覆盖197个国家。",
     hi: "26 मुफ्त इंटरैक्टिव उपकरण: कैलकुलेटर, तुलनाकर्ता, दस्तावेज़ जनरेटर और आपातकालीन गाइड। 9 भाषाओं में 197 देशों के लिए उपलब्ध।",
     ar: "26 أداة تفاعلية مجانية للمغتربين: حاسبات، مقارنات، مولدات وثائق وأدلة طوارئ. متاحة بـ9 لغات لـ197 دولة.",
   },
@@ -62,7 +61,7 @@ const T: Record<string, Record<string, string>> = {
     de: "26 kostenlose Tools",
     pt: "26 ferramentas gratuitas",
     ru: "26 бесплатных инструментов",
-    zh: "26个免费工具",
+    ch: "26个免费工具",
     hi: "26 मुफ्त उपकरण",
     ar: "26 أداة مجانية",
   },
@@ -73,7 +72,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Tools für Expats",
     pt: "Ferramentas para expatriados",
     ru: "Инструменты для экспатов",
-    zh: "外籍人士工具",
+    ch: "外籍人士工具",
     hi: "प्रवासियों के लिए उपकरण",
     ar: "أدوات للمغتربين",
   },
@@ -84,7 +83,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Rechner, Vergleicher, Generatoren und Notfallführer — alles für Ihre Auswanderung, kostenlos und ohne Anmeldung.",
     pt: "Calculadoras, comparadores, geradores e guias de emergência — tudo o que precisa para a sua expatriação, gratuito e sem registo.",
     ru: "Калькуляторы, сравнители, генераторы и экстренные руководства — всё необходимое для эмиграции, бесплатно без регистрации.",
-    zh: "计算器、比较器、生成器和紧急指南——您海外移居所需的一切，免费且无需注册。",
+    ch: "计算器、比较器、生成器和紧急指南——您海外移居所需的一切，免费且无需注册。",
     hi: "कैलकुलेटर, तुलनाकर्ता, जनरेटर और आपातकालीन गाइड — प्रवास के लिए आवश्यक सब कुछ, मुफ्त और बिना पंजीकरण।",
     ar: "حاسبات، مقارنات، مولدات وأدلة طوارئ — كل ما تحتاجه لهجرتك، مجاني وبدون تسجيل.",
   },
@@ -95,7 +94,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Rechner",
     pt: "Calculadoras",
     ru: "Калькуляторы",
-    zh: "计算器",
+    ch: "计算器",
     hi: "कैलकुलेटर",
     ar: "حاسبات",
   },
@@ -106,7 +105,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Vergleicher",
     pt: "Comparadores",
     ru: "Сравнители",
-    zh: "比较器",
+    ch: "比较器",
     hi: "तुलनाकर्ता",
     ar: "مقارنات",
   },
@@ -117,7 +116,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Generatoren",
     pt: "Geradores",
     ru: "Генераторы",
-    zh: "生成器",
+    ch: "生成器",
     hi: "जनरेटर",
     ar: "مولدات",
   },
@@ -128,7 +127,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Notfall & Sicherheit",
     pt: "Emergências & Segurança",
     ru: "Экстренная помощь",
-    zh: "紧急情况与安全",
+    ch: "紧急情况与安全",
     hi: "आपातकाल और सुरक्षा",
     ar: "الطوارئ والسلامة",
   },
@@ -139,12 +138,12 @@ const T: Record<string, Record<string, string>> = {
     de: "Jetzt nutzen",
     pt: "Usar agora",
     ru: "Использовать",
-    zh: "立即使用",
+    ch: "立即使用",
     hi: "अभी उपयोग करें",
     ar: "استخدم الآن",
   },
-  free: { fr: "Gratuit", en: "Free", es: "Gratis", de: "Kostenlos", pt: "Grátis", ru: "Бесплатно", zh: "免费", hi: "मुफ्त", ar: "مجاني" },
-  aiPowered: { fr: "IA", en: "AI", es: "IA", de: "KI", pt: "IA", ru: "ИИ", zh: "AI", hi: "AI", ar: "ذكاء اصطناعي" },
+  free: { fr: "Gratuit", en: "Free", es: "Gratis", de: "Kostenlos", pt: "Grátis", ru: "Бесплатно", ch: "免费", hi: "मुफ्त", ar: "مجاني" },
+  aiPowered: { fr: "IA", en: "AI", es: "IA", de: "KI", pt: "IA", ru: "ИИ", ch: "AI", hi: "AI", ar: "ذكاء اصطناعي" },
   loading: {
     fr: "Chargement des outils…",
     en: "Loading tools…",
@@ -152,7 +151,7 @@ const T: Record<string, Record<string, string>> = {
     de: "Tools werden geladen…",
     pt: "Carregando ferramentas…",
     ru: "Загрузка инструментов…",
-    zh: "正在加载工具…",
+    ch: "正在加载工具…",
     hi: "उपकरण लोड हो रहे हैं…",
     ar: "جاري تحميل الأدوات…",
   },
@@ -163,12 +162,12 @@ const T: Record<string, Record<string, string>> = {
     de: "Tools konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
     pt: "Não foi possível carregar as ferramentas. Tente novamente.",
     ru: "Не удалось загрузить инструменты. Попробуйте ещё раз.",
-    zh: "无法加载工具，请重试。",
+    ch: "无法加载工具，请重试。",
     hi: "उपकरण लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
     ar: "تعذّر تحميل الأدوات. حاول مرة أخرى.",
   },
-  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", zh: "首页", hi: "होम", ar: "الرئيسية" },
-  breadTools: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Tools", pt: "Ferramentas", ru: "Инструменты", zh: "工具", hi: "टूल्स", ar: "الأدوات" },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  breadTools: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Tools", pt: "Ferramentas", ru: "Инструменты", ch: "工具", hi: "टूल्स", ar: "الأدوات" },
 };
 
 function tr(key: string, lang: string): string {
@@ -201,7 +200,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "freelance-contract-ai": FileText,
   "embassy-finder": Globe,
   "passport-theft": AlertTriangle,
-  "doctors-directory": Hospital,
+  "doctors-directory": Cross,
   "risk-map": AlertTriangle,
 };
 
@@ -238,9 +237,8 @@ interface ToolItem {
 
 export default function Outils() {
   const location = useLocation();
-  const { theme } = useApp();
   const lang = parseLocaleFromPath(location.pathname)?.lang || "fr";
-  const isDark = theme === "dark";
+  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
 
   const [tools, setTools] = useState<ToolItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,7 +249,7 @@ export default function Outils() {
     setLoading(true);
     setError(false);
 
-    fetch(`https://blog.life-expat.com/api/v1/public/tools?lang=${lang}`, {
+    fetch(`https://blog.life-expat.com/api/v1/public/tools?lang=${lang === "ch" ? "zh" : lang}`, {
       signal: controller.signal,
     })
       .then((r) => {
@@ -290,7 +288,9 @@ export default function Outils() {
   // SEO
   const seoTitle = tr("pageTitle", lang);
   const seoDescription = tr("pageDesc", lang);
-  const canonical = `https://sos-expat.com/${lang}-${lang === "en" ? "us" : lang === "pt" ? "pt" : lang === "zh" ? "cn" : lang === "hi" ? "in" : lang === "ar" ? "sa" : lang}/outils`;
+  const urlLang = lang === "ch" ? "zh" : lang;
+  const urlRegion = lang === "en" ? "us" : lang === "pt" ? "pt" : lang === "ch" ? "cn" : lang === "hi" ? "in" : lang === "ar" ? "sa" : lang;
+  const canonical = `https://sos-expat.com/${urlLang}-${urlRegion}/outils`;
 
   const breadcrumbs = [
     { name: tr("home", lang), url: `https://sos-expat.com` },
@@ -302,22 +302,31 @@ export default function Outils() {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        canonical={canonical}
-        lang={lang}
-        noindex={false}
+        canonicalUrl={canonical}
       />
       <BreadcrumbSchema items={breadcrumbs} />
 
+      {/* ── BREADCRUMB VISUEL ── */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 lg:px-6 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500" dir={lang === "ar" ? "rtl" : "ltr"}>
+            <li>
+              <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
+                {tr("home", lang)}
+              </a>
+            </li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{tr("breadTools", lang)}</li>
+          </ol>
+        </div>
+      </nav>
+
       <div
-        className="min-h-screen"
-        style={{ background: "var(--color-bg)" }}
+        className="min-h-screen bg-slate-950"
         dir={lang === "ar" ? "rtl" : "ltr"}
       >
         {/* Header */}
-        <header
-          className="border-b"
-          style={{ background: "var(--color-s1)", borderColor: "var(--color-b1)" }}
-        >
+        <header className="border-b border-slate-800 bg-slate-900">
           <div className="max-w-6xl mx-auto px-4 lg:px-6 pt-8 pb-10 lg:pt-12 lg:pb-14">
             <div
               className="inline-flex items-center gap-2 px-3 py-1 text-[11px] font-bold uppercase tracking-[1.2px]
@@ -328,19 +337,13 @@ export default function Outils() {
             </div>
 
             <h1
-              className="font-light leading-[1.1] tracking-[-0.5px] mb-4"
-              style={{
-                fontSize: "clamp(26px, 4.5vw, 44px)",
-                color: "var(--color-t1)",
-              }}
+              className="text-slate-100 font-light leading-[1.1] tracking-[-0.5px] mb-4"
+              style={{ fontSize: "clamp(26px, 4.5vw, 44px)" }}
             >
               {tr("heading", lang)}
             </h1>
 
-            <p
-              className="text-base max-w-2xl"
-              style={{ color: "var(--color-t3)" }}
-            >
+            <p className="text-slate-400 text-base max-w-2xl">
               {tr("subheading", lang)}
             </p>
           </div>
@@ -349,14 +352,14 @@ export default function Outils() {
         {/* Content */}
         <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10">
           {loading && (
-            <div className="flex items-center justify-center py-24 gap-3" style={{ color: "var(--color-t3)" }}>
+            <div className="flex items-center justify-center py-24 gap-3 text-slate-400">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span className="text-base">{tr("loading", lang)}</span>
             </div>
           )}
 
           {error && !loading && (
-            <div className="text-center py-20" style={{ color: "var(--color-t3)" }}>
+            <div className="text-center py-20 text-slate-400">
               <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-red-400" />
               <p className="text-base">{tr("error", lang)}</p>
             </div>
@@ -378,7 +381,7 @@ export default function Outils() {
                       >
                         {tr(catLabelKeys[cat] || "catCalculate", lang)}
                       </span>
-                      <span className="text-sm" style={{ color: "var(--color-t3)" }}>
+                      <span className="text-sm text-slate-400">
                         {catTools.length} {lang === "fr" ? "outils" : lang === "ar" ? "أدوات" : "tools"}
                       </span>
                     </div>
@@ -396,24 +399,7 @@ export default function Outils() {
                             href={tool.blog_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex flex-col rounded-xl border p-5 transition-all hover:shadow-lg"
-                            style={{
-                              background: "var(--color-s1)",
-                              borderColor: "var(--color-b1)",
-                            }}
-                            onMouseEnter={(e) => {
-                              const el = e.currentTarget;
-                              el.style.borderColor = colors.text.replace("text-", "").includes("blue")
-                                ? "rgba(96,165,250,0.4)"
-                                : colors.text.includes("purple")
-                                ? "rgba(167,139,250,0.4)"
-                                : colors.text.includes("emerald")
-                                ? "rgba(52,211,153,0.4)"
-                                : "rgba(248,113,113,0.4)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = "var(--color-b1)";
-                            }}
+                            className="group flex flex-col rounded-xl border border-slate-700/60 bg-slate-900 p-5 transition-all hover:shadow-lg hover:border-slate-500/70"
                           >
                             {/* Icon + badges */}
                             <div className="flex items-start justify-between mb-3">
@@ -435,19 +421,13 @@ export default function Outils() {
                             </div>
 
                             {/* Title */}
-                            <h2
-                              className={`font-semibold text-base leading-snug mb-2 transition-colors ${colors.text} group-hover:opacity-80`}
-                              style={{ color: "var(--color-t1)" }}
-                            >
+                            <h2 className="font-semibold text-base leading-snug mb-2 text-slate-100 group-hover:opacity-80 transition-opacity">
                               {tool.translation.title}
                             </h2>
 
                             {/* Description */}
                             {shortDesc && (
-                              <p
-                                className="text-sm leading-relaxed flex-1 mb-4"
-                                style={{ color: "var(--color-t3)" }}
-                              >
+                              <p className="text-sm leading-relaxed flex-1 mb-4 text-slate-400">
                                 {shortDesc}
                               </p>
                             )}
