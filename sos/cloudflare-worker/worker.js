@@ -1065,26 +1065,25 @@ async function handleRequest(request, env, ctx) {
   // running on the VPS behind nginx.
   //
   // Routes proxied:
-  //   /blog/*              — legacy blog prefix (301 redirect to new URLs)
-  //   /{locale}/articles   — blog articles
-  //   /{locale}/outils     — tools (and all 9 language variants)
-  //   /{locale}/sondages   — surveys
-  //   /{locale}/annuaire   — directory
-  //   /{locale}/faq        — FAQ
-  //   /{locale}/pays       — country pages
-  //   /{locale}/categories — categories
-  //   /{locale}/tags       — tags
-  //   /sitemap.xml, /robots.txt, /llms.txt, /ai.txt — SEO files
-  //   /admin/*             — blog admin panel
-  //   /api/v1/tool-*       — tool APIs
+  //   /blog/*                     -- legacy blog prefix (301 redirect to new URLs)
+  //   /{locale}/articles/{slug}   -- blog article DETAIL pages (listing = SPA)
+  //   /{locale}/vie-a-letranger/* -- living abroad FAQ articles
+  //   /{locale}/faq               -- FAQ (SPA React/Firestore, NOT blog)
+  //   /{locale}/pays              -- country pages
+  //   /{locale}/categories        -- categories
+  //   /{locale}/tags              -- tags
+  //   /sitemaps/*.xml             -- blog sitemaps
+  //   /admin/*                    -- blog admin panel
+  //   /api/v1/tool-*              -- tool APIs
+  // NOT proxied (SPA pages): /articles listing, /outils, /tools, /sondages, /surveys, /annuaire
   // ==========================================================================
   const BLOG_ORIGIN = 'https://blog.life-expat.com';
 
   // All translated URL segments from the blog Laravel app (route-segments.php)
   // These are the ONLY segments that should be proxied — everything else stays on the SPA
   const BLOG_SEGMENTS = new Set([
-    // articles
-    'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
+    // articles listing = SPA React page -- detail pages (with slug) handled separately via ARTICLES_SEGMENTS
+    // (articles segments moved to ARTICLES_SEGMENTS below)
     // faq SOS Expat — appartient à la SPA React (Firestore), PAS au blog
     // 'faq', 'preguntas-frecuentes', 'haeufige-fragen', 'perguntas-frequentes', 'voprosy', 'changjian-wenti', 'aksar-poochhe-jaane-wale-prashna', 'asilah-shaaiah',
     // vie-a-letranger — FAQ pratiques par pays (blog Laravel, URLs distinctes de /faq Firestore)
@@ -1096,13 +1095,15 @@ async function handleRequest(request, env, ctx) {
     'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
     // countries
     'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
-    // NOTE: annuaire/directory = SPA React page (NOT blog) — ne pas ajouter ici
-    // tools
-    'outils', 'tools', 'herramientas', 'werkzeuge', 'ferramentas', 'instrumenty', 'gongju', 'upkaran', 'adawat',
-    // sondages
-    'sondages', 'surveys', 'encuestas', 'umfragen', 'pesquisas', 'oprosy', 'diaocha', 'sarvekshan', 'istitalaat',
+    // NOTE: annuaire/directory = SPA React page (NOT blog) -- ne pas ajouter ici
+    // NOTE: outils/tools and sondages/surveys = SPA React listing pages -- ne pas ajouter ici
     // special
     'feed.xml',
+  ]);
+
+  // Article segments (all 9 languages) -- listing page (/en-us/articles) is SPA, detail pages (/en-us/articles/slug) go to Blog
+  const ARTICLES_SEGMENTS = new Set([
+    'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
   ]);
 
   // Check if the path should be proxied to the blog backend
@@ -1128,13 +1129,18 @@ async function handleRequest(request, env, ctx) {
     // Tool API endpoints
     if (path.startsWith('/api/v1/tool-')) return true;
 
-    // Locale-prefixed paths: /{xx-yy}/{segment}
-    const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?/);
+    // Locale-prefixed paths: /{xx-yy}/{segment}[/{slug}]
+    const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?(?:\/([^\/]+))?/);
     if (match) {
       const segment = match[2];
+      const slug = match[3];
       // /{locale} alone = app homepage (not blog)
       if (!segment) return false;
-      // /{locale}/{translated-segment} = blog content
+
+      // Articles: listing (/en-us/articles) = SPA, detail (/en-us/articles/slug) = Blog
+      if (ARTICLES_SEGMENTS.has(segment)) return !!slug;
+
+      // /{locale}/{translated-segment} = blog content (categories, tags, countries, vie-a-letranger)
       if (BLOG_SEGMENTS.has(segment)) return true;
 
       // FAQ — toujours SPA React (Firestore, géré depuis la console admin SOS Expat)
