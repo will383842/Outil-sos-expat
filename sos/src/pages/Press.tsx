@@ -50,7 +50,7 @@ interface PressRelease {
   id: string; title: Record<string, string>; summary: Record<string, string>;
   content: Record<string, string>; slug: Record<string, string>;
   publishedAt: Date; isActive: boolean; imageUrl?: string;
-  pdfUrl?: Record<string, string>; tags: string[];
+  pdfUrl?: Record<string, string>; htmlUrl?: Record<string, string>; tags: string[];
 }
 
 const SECTION_IDS = ["about", "identity", "press-kit", "releases", "images", "data", "contact"];
@@ -559,6 +559,7 @@ const Press: React.FC = () => {
                       const summary = getLocalizedText(release.summary, lang);
                       const content = getLocalizedText(release.content, lang);
                       const pdfUrl = release.pdfUrl?.[lang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
+                      const htmlViewUrl = release.htmlUrl?.[lang] || release.htmlUrl?.["en"] || release.htmlUrl?.["fr"];
                       const isExpanded = expandedRelease === release.id;
                       return (
                         <article key={release.id} className="bg-white/[0.05] border border-white/10 rounded-2xl hover:border-white/20 transition-all">
@@ -577,12 +578,19 @@ const Press: React.FC = () => {
                             {isExpanded && content && (
                               <div className="mt-6 pt-6 border-t border-white/10 prose prose-sm prose-invert max-w-none text-white/60 whitespace-pre-line">{content}</div>
                             )}
-                            <div className="flex items-center gap-4 mt-5 pt-4 border-t border-white/5">
+                            <div className="flex items-center gap-4 mt-5 pt-4 border-t border-white/5 flex-wrap">
                               {content && (
                                 <button onClick={() => setExpandedRelease(isExpanded ? null : release.id)}
                                   className="text-sm font-semibold text-red-400 hover:text-red-300 flex items-center gap-1.5 transition-colors">
                                   {isExpanded ? <><ChevronUp className="w-4 h-4" />{t("press.releases.collapse")}</> : <><ChevronDown className="w-4 h-4" />{t("press.releases.readMore")}</>}
                                 </button>
+                              )}
+                              {htmlViewUrl && (
+                                <a href={htmlViewUrl} target="_blank" rel="noopener noreferrer"
+                                  className="text-sm font-semibold text-white/70 hover:text-white flex items-center gap-1.5 transition-colors border border-white/10 hover:border-white/30 px-3 py-1.5 rounded-lg">
+                                  <FileText className="w-3.5 h-3.5" />
+                                  {t("press.releases.viewFull", "Communiqué complet")}
+                                </a>
                               )}
                               {pdfUrl && (
                                 <a href={pdfUrl} target="_blank" rel="noopener noreferrer"

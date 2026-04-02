@@ -43,6 +43,7 @@ interface PressRelease {
   isActive: boolean;
   imageUrl?: string;
   pdfUrl?: Record<string, string>;
+  htmlUrl?: Record<string, string>;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +57,7 @@ interface FormData {
   isActive: boolean;
   imageUrl: string;
   pdfUrl: Record<string, string>;
+  htmlUrl: Record<string, string>;
   tags: string;
 }
 
@@ -111,6 +113,7 @@ const emptyFormData = (): FormData => ({
   isActive: true,
   imageUrl: "",
   pdfUrl: emptyMultilingual(),
+  htmlUrl: emptyMultilingual(),
   tags: "",
 });
 
@@ -128,6 +131,7 @@ const AdminPressReleases: React.FC = () => {
   const [activeLang, setActiveLang] = useState<SupportedLanguage>("fr");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pdfFiles, setPdfFiles] = useState<Record<string, File | null>>({});
+  const [htmlFiles, setHtmlFiles] = useState<Record<string, File | null>>({});
 
   // ==================== LOAD DATA ====================
 
@@ -168,6 +172,7 @@ const AdminPressReleases: React.FC = () => {
     setActiveLang("fr");
     setImageFile(null);
     setPdfFiles({});
+    setHtmlFiles({});
     setShowModal(true);
   };
 
@@ -182,11 +187,13 @@ const AdminPressReleases: React.FC = () => {
       isActive: release.isActive,
       imageUrl: release.imageUrl || "",
       pdfUrl: { ...emptyMultilingual(), ...(release.pdfUrl || {}) },
+      htmlUrl: { ...emptyMultilingual(), ...(release.htmlUrl || {}) },
       tags: release.tags?.join(", ") || "",
     });
     setActiveLang("fr");
     setImageFile(null);
     setPdfFiles({});
+    setHtmlFiles({});
     setShowModal(true);
   };
 
@@ -264,6 +271,7 @@ const AdminPressReleases: React.FC = () => {
         isActive: formData.isActive,
         imageUrl: formData.imageUrl || null,
         pdfUrl: { ...formData.pdfUrl },
+        htmlUrl: { ...formData.htmlUrl },
         tags: tagsArray,
         updatedAt: serverTimestamp(),
       };
@@ -301,13 +309,25 @@ const AdminPressReleases: React.FC = () => {
         }
       }
 
+      // Upload HTML files if provided (standalone HTML communiqués)
+      const htmlUrl = { ...baseDocData.htmlUrl } as Record<string, string>;
+      for (const [langCode, file] of Object.entries(htmlFiles)) {
+        if (file) {
+          const storagePath = `press/releases/${docId}/html/${langCode}.html`;
+          const storageRef = ref(storage, storagePath);
+          const snapshot = await uploadBytes(storageRef, file, { contentType: "text/html; charset=utf-8" });
+          htmlUrl[langCode] = await getDownloadURL(snapshot.ref);
+        }
+      }
+
       // Update document with file URLs if any uploads happened
-      const hasUploads = imageFile || Object.values(pdfFiles).some(Boolean);
+      const hasUploads = imageFile || Object.values(pdfFiles).some(Boolean) || Object.values(htmlFiles).some(Boolean);
       if (hasUploads || !isCreating) {
         await updateDoc(doc(db, "press_releases", docId), {
           ...(isCreating ? {} : baseDocData),
           imageUrl: imageUrl || null,
           pdfUrl,
+          htmlUrl,
           updatedAt: serverTimestamp(),
         });
       }
@@ -617,7 +637,40 @@ const AdminPressReleases: React.FC = () => {
               )}
             </div>
             {formData.pdfUrl[activeLang] && !pdfFiles[activeLang] && (
-              <p className="text-xs text-gray-400 mt-1">PDF existant pour cette langue</p>
+              <p className="text-xs text-gray-400 mt-1">
+                PDF existant —{" "}
+                <a href={formData.pdfUrl[activeLang]} target="_blank" rel="noopener noreferrer" className="text-red-600 underline">Voir</a>
+              </p>
+            )}
+          </div>
+
+          {/* HTML file upload per language */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Communiqué HTML complet ({LANGUAGES.find((l) => l.code === activeLang)?.label})
+            </label>
+            <p className="text-xs text-gray-400 mb-2">Fichier HTML standalone — affiché en pleine page pour les journalistes</p>
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept=".html,.htm"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setHtmlFiles((prev) => ({ ...prev, [activeLang]: file }));
+                  }
+                }}
+                className="text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+              />
+              {(htmlFiles[activeLang] || formData.htmlUrl[activeLang]) && (
+                <Check className="w-4 h-4 text-green-500" />
+              )}
+            </div>
+            {formData.htmlUrl[activeLang] && !htmlFiles[activeLang] && (
+              <p className="text-xs text-gray-400 mt-1">
+                HTML existant —{" "}
+                <a href={formData.htmlUrl[activeLang]} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Aperçu</a>
+              </p>
             )}
           </div>
 
@@ -697,7 +750,9 @@ const AdminPressReleases: React.FC = () => {
                 const hasTitle = formData.title[lang.code]?.trim();
                 const hasSummary = formData.summary[lang.code]?.trim();
                 const hasContent = formData.content[lang.code]?.trim();
-                const complete = hasTitle && hasSummary && hasContent;
+                const hasPdf = formData.pdfUrl[lang.code]?.trim() || pdfFiles[lang.code];
+                const hasHtml = formData.htmlUrl[lang.code]?.trim() || htmlFiles[lang.code];
+                const complete = hasTitle && hasSummary && hasContent && hasPdf && hasHtml;
                 const partial = hasTitle || hasSummary || hasContent;
                 return (
                   <span
@@ -709,13 +764,16 @@ const AdminPressReleases: React.FC = () => {
                           ? "bg-yellow-100 text-yellow-700"
                           : "bg-gray-200 text-gray-400"
                     }`}
-                    title={`${lang.label}: ${complete ? "Complet" : partial ? "Partiel" : "Vide"}`}
+                    title={`${lang.label}: texte${hasTitle ? "✓" : "✗"} / résumé${hasSummary ? "✓" : "✗"} / contenu${hasContent ? "✓" : "✗"} / PDF${hasPdf ? "✓" : "✗"} / HTML${hasHtml ? "✓" : "✗"}`}
                   >
-                    {lang.flag} {complete ? "OK" : partial ? "..." : "-"}
+                    {lang.flag} {complete ? "✓" : partial ? "…" : "-"}
+                    {hasPdf && <span className="ml-0.5 text-[9px] text-blue-500">P</span>}
+                    {hasHtml && <span className="ml-0.5 text-[9px] text-purple-500">H</span>}
                   </span>
                 );
               })}
             </div>
+            <p className="text-[10px] text-gray-400 mt-2">✓ texte complet · P = PDF · H = HTML</p>
           </div>
 
           {/* Actions */}
