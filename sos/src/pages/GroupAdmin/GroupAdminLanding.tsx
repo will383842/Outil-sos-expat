@@ -170,7 +170,7 @@ const FAQItem: React.FC<{
       id={`faq-question-${index}`}
     >
       <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
-      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-blue-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
@@ -959,7 +959,8 @@ const GroupAdminLanding: React.FC = () => {
                             <FileText className="w-14 h-14 text-white/15" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
+                        {/* Overlay — always visible on mobile (no hover on touch), hover-only on sm+ */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
                           <span className="text-white text-xs font-bold bg-blue-600 px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
                             <ExternalLink className="w-3.5 h-3.5" />
                             <FormattedMessage id="groupAdmin.press.view" defaultMessage="Voir le communiqué" />
@@ -976,13 +977,13 @@ const GroupAdminLanding: React.FC = () => {
                         <div className="flex gap-2 pt-1">
                           {htmlUrl && (
                             <a href={htmlUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex-1 text-center text-xs font-semibold text-white bg-blue-600/80 hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                              className="flex-1 text-center text-xs font-semibold text-white bg-blue-600/80 hover:bg-blue-600 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
                               <FileText className="w-3.5 h-3.5" />HTML
                             </a>
                           )}
                           {pdfUrl && (
                             <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                              className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
                               <FileText className="w-3.5 h-3.5" />PDF
                             </a>
                           )}

@@ -74,11 +74,11 @@ const globalStyles = `
     font-size: inherit;
   }
 
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
-    50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
+  @keyframes pulse-glow-purple {
+    0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+    50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.6); }
   }
-  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+  .animate-pulse-glow-purple-purple { animation: pulse-glow-purple 2s ease-in-out infinite; }
   .section-content {
     padding: 3rem 1rem;
     position: relative;
@@ -95,11 +95,11 @@ const globalStyles = `
 
   /* Slider custom styling */
   .blogger-landing input[type="range"] {
-    height: 12px;
+    height: 8px;
     background: transparent;
   }
   .blogger-landing input[type="range"]::-webkit-slider-runnable-track {
-    height: 12px;
+    height: 8px;
     background: rgba(255,255,255,0.1);
     border-radius: 9999px;
   }
@@ -110,12 +110,12 @@ const globalStyles = `
     border-radius: 50%;
     background: #a855f7;
     cursor: pointer;
-    margin-top: -5px;
+    margin-top: -7px;
     border: 2px solid rgba(0,0,0,0.15);
     box-shadow: 0 0 0 4px rgba(168,85,247,0.25);
   }
   .blogger-landing input[type="range"]::-moz-range-track {
-    height: 12px;
+    height: 8px;
     background: rgba(255,255,255,0.1);
     border-radius: 9999px;
   }
@@ -167,7 +167,7 @@ const FAQItem: React.FC<{
       id={`faq-question-${index}`}
     >
       <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
-      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-purple-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
@@ -392,7 +392,7 @@ const BloggerLanding: React.FC = () => {
             </div>
 
             {/* CTA */}
-            <CTAButton onClick={goToRegister} size="large" className="animate-pulse-glow mx-auto" ariaLabel={ctaAriaLabel}>
+            <CTAButton onClick={goToRegister} size="large" className="animate-pulse-glow-purple mx-auto" ariaLabel={ctaAriaLabel}>
               <FormattedMessage id="blogger.hero.cta" defaultMessage="Become a Blogger Partner - It's Free" />
             </CTAButton>
 
@@ -753,7 +753,7 @@ const BloggerLanding: React.FC = () => {
               {/* Method 1: Sidebar */}
               <div className="bg-white/10 border rounded-2xl p-5 sm:p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-11 h-11 bg-amber-400 text-black rounded-full flex items-center justify-center">
+                  <div className="w-11 h-11 bg-purple-400 text-black rounded-full flex items-center justify-center">
                     <Zap className="w-5 h-5" aria-hidden="true" />
                   </div>
                   <div>
@@ -774,7 +774,7 @@ const BloggerLanding: React.FC = () => {
                   ))}
                 </ul>
                 <div className="mt-4 bg-white/10 rounded-xl p-3 flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-amber-400" aria-hidden="true" />
+                  <Clock className="w-4 h-4 text-purple-400" aria-hidden="true" />
                   <span className="font-semibold">
                     <FormattedMessage id="blogger.existing.method1.time" defaultMessage="5 minutes, one time only" />
                   </span>
@@ -815,7 +815,7 @@ const BloggerLanding: React.FC = () => {
 
             {/* Pro tip */}
             <div className="bg-white/10 border rounded-2xl p-4 mb-8 max-w-2xl mx-auto text-center">
-              <span className="font-bold text-amber-400">💡 <FormattedMessage id="blogger.existing.tip.label" defaultMessage="Pro tip:" /></span>{' '}
+              <span className="font-bold text-purple-400">💡 <FormattedMessage id="blogger.existing.tip.label" defaultMessage="Pro tip:" /></span>{' '}
               <span className="text-gray-300">
                 <FormattedMessage id="blogger.existing.tip.text" defaultMessage="Add the widget in your sidebar for all pages, PLUS inside your 10 best articles for maximum visibility." />
               </span>
@@ -1034,7 +1034,7 @@ const BloggerLanding: React.FC = () => {
               {[
                 { icon: <Code className="w-6 h-6 text-purple-400" />, titleId: 'blogger.resources.widgets.title', titleDefault: 'Smart Widgets', descId: 'blogger.resources.widgets.desc', descDefault: 'Boutons et bannières avec votre lien déjà intégré. Copy-paste le code HTML dans vos articles.', borderClass: 'border-purple-500/20', bgClass: 'bg-purple-500/20' },
                 { icon: <Copy className="w-6 h-6 text-blue-400" />, titleId: 'blogger.resources.texts.title', titleDefault: 'Textes prêts à copier', descId: 'blogger.resources.texts.desc', descDefault: 'Textes promotionnels en 9 langues. Copiez, collez, c\'est fait. Votre lien est déjà inclus.', borderClass: 'border-blue-500/20', bgClass: 'bg-blue-500/20' },
-                { icon: <FileText className="w-6 h-6 text-amber-400" />, titleId: 'blogger.resources.guide.title', titleDefault: 'Guide d\'intégration', descId: 'blogger.resources.guide.desc', descDefault: 'Procédure pas à pas pour insérer le widget dans tous vos articles existants en quelques minutes.', borderClass: 'border-amber-500/20', bgClass: 'bg-amber-500/20' },
+                { icon: <FileText className="w-6 h-6 text-purple-400" />, titleId: 'blogger.resources.guide.title', titleDefault: 'Guide d\'intégration', descId: 'blogger.resources.guide.desc', descDefault: 'Procédure pas à pas pour insérer le widget dans tous vos articles existants en quelques minutes.', borderClass: 'border-purple-500/20', bgClass: 'bg-purple-500/20' },
               ].map((card, i) => (
                 <div key={i} className={`bg-white/10 border ${card.borderClass} rounded-2xl p-5 sm:p-6`}>
                   <div className={`w-11 h-11 ${card.bgClass} rounded-xl flex items-center justify-center mb-3`} aria-hidden="true">
@@ -1259,7 +1259,8 @@ const BloggerLanding: React.FC = () => {
                             <FileText className="w-14 h-14 text-white/15" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
+                        {/* Overlay — always visible on mobile (no hover on touch), hover-only on sm+ */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
                           <span className="text-white text-xs font-bold bg-purple-600 px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
                             <ExternalLink className="w-3.5 h-3.5" />
                             <FormattedMessage id="blogger.press.view" defaultMessage="Voir le communiqué" />
@@ -1276,13 +1277,13 @@ const BloggerLanding: React.FC = () => {
                         <div className="flex gap-2 pt-1">
                           {htmlUrl && (
                             <a href={htmlUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex-1 text-center text-xs font-semibold text-white bg-purple-600/80 hover:bg-purple-600 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                              className="flex-1 text-center text-xs font-semibold text-white bg-purple-600/80 hover:bg-purple-600 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
                               <FileText className="w-3.5 h-3.5" />HTML
                             </a>
                           )}
                           {pdfUrl && (
                             <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                              className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
                               <FileText className="w-3.5 h-3.5" />PDF
                             </a>
                           )}
@@ -1345,7 +1346,7 @@ const BloggerLanding: React.FC = () => {
               ))}
             </div>
 
-            <CTAButton onClick={goToRegister} size="large" className="animate-pulse-glow mx-auto" ariaLabel={ctaAriaLabel}>
+            <CTAButton onClick={goToRegister} size="large" className="animate-pulse-glow-purple mx-auto" ariaLabel={ctaAriaLabel}>
               <FormattedMessage id="blogger.final.cta" defaultMessage="Become a Blogger Partner Now" />
             </CTAButton>
           </div>

@@ -69,11 +69,11 @@ const globalStyles = `
     font-size: inherit;
   }
 
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
-    50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
+  @keyframes pulse-glow-cyan {
+    0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); }
+    50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.6); }
   }
-  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+  .animate-pulse-glow-cyan { animation: pulse-glow-cyan 2s ease-in-out infinite; }
   .section-content { padding: 3rem 1rem; position: relative; }
   @media (min-width: 640px) { .section-content { padding: 4rem 1.5rem; } }
   @media (min-width: 1024px) { .section-content { padding: 6rem 2rem; } }
@@ -97,11 +97,11 @@ const globalStyles = `
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #ef4444;
+    background: #06b6d4;
     cursor: pointer;
     margin-top: -7px;
     border: 2px solid rgba(0,0,0,0.15);
-    box-shadow: 0 0 0 4px rgba(239,68,68,0.25);
+    box-shadow: 0 0 0 4px rgba(6,182,212,0.25);
   }
   .influencer-landing input[type="range"]::-moz-range-track {
     height: 8px;
@@ -112,10 +112,10 @@ const globalStyles = `
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #ef4444;
+    background: #06b6d4;
     cursor: pointer;
     border: 2px solid rgba(0,0,0,0.15);
-    box-shadow: 0 0 0 4px rgba(239,68,68,0.25);
+    box-shadow: 0 0 0 4px rgba(6,182,212,0.25);
   }
 `;
 
@@ -156,7 +156,7 @@ const FAQItem: React.FC<{
       id={`faq-question-${index}`}
     >
       <span className="text-base sm:text-lg font-semibold pr-2">{question}</span>
-      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-amber-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
+      <span className={`flex flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center transition-all duration-300 ${isOpen ? 'bg-cyan-400 text-black' : 'bg-white/10 text-white'}`} aria-hidden="true">
         {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       </span>
     </button>
@@ -317,19 +317,19 @@ const InfluencerLanding: React.FC = () => {
         {/* ================================================================
             HERO - FULL VIEWPORT
         ================================================================ */}
-        <section className="min-h-[100svh] flex justify-center items-center relative bg-gradient-to-b from-red-950 via-red-900 to-black overflow-hidden" aria-label={seoTitle}>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(239,68,68,0.15),transparent_50%)]" aria-hidden="true" />
+        <section className="min-h-[100svh] flex justify-center items-center relative bg-gradient-to-b from-cyan-950 via-cyan-900 to-black overflow-hidden" aria-label={seoTitle}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(6,182,212,0.15),transparent_50%)]" aria-hidden="true" />
 
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base font-bold border mb-4 sm:mb-6">
+            <div className="inline-flex items-center gap-2 bg-cyan-500/20 text-cyan-300 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full sm:text-base font-bold border border-cyan-500/30 mb-4 sm:mb-6">
               <Video className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               <AnimatedCounter end={847} suffix="+" className="font-black" />
               <FormattedMessage id="influencer.hero.badge" defaultMessage=" Influencers worldwide" />
             </div>
 
             <h1 className="!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-3 sm:mb-6 !leading-[1.1]">
-              <span className="text-amber-400"><FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> ${rates.clientCallRange}{local(rates.clientCallMax)}</span>
+              <span className="text-cyan-400"><FormattedMessage id="influencer.hero.earn" defaultMessage="Earn" /> ${rates.clientCallRange}{local(rates.clientCallMax)}</span>
               <br />
               <span className="text-2xl sm:text-4xl lg:text-5xl">
                 <FormattedMessage id="influencer.hero.perClient" defaultMessage="Per Client Referred" />
@@ -376,7 +376,7 @@ const InfluencerLanding: React.FC = () => {
           <div className="max-w-5xl mx-auto">
             {/* Badge + Titre */}
             <div className="text-center mb-8 sm:mb-12">
-              <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-red-500/30 mb-4">
+              <div className="inline-flex items-center gap-2 bg-cyan-500/20 text-cyan-300 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-bold border border-cyan-500/30 mb-4">
                 <FormattedMessage id="influencer.landing.value.badge" defaultMessage="Gagnant-Gagnant" />
               </div>
               <h2 id="influencer-value-title" className="!text-3xl sm:!text-4xl lg:!text-5xl font-black mb-4">
@@ -390,7 +390,7 @@ const InfluencerLanding: React.FC = () => {
             {/* 4 Scénarios problème/solution */}
             <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
               {/* Méthode 1 */}
-              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+              <article className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <span className="text-3xl" aria-hidden="true">🚀</span>
                   <div className="flex-1">
@@ -402,7 +402,7 @@ const InfluencerLanding: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                <div className="bg-black/30 border border-cyan-500/30 rounded-xl p-3 sm:p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
                     <span className="text-xs sm:text-sm font-bold text-green-400">
@@ -416,7 +416,7 @@ const InfluencerLanding: React.FC = () => {
               </article>
 
               {/* Méthode 2 */}
-              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+              <article className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <span className="text-3xl" aria-hidden="true">📱</span>
                   <div className="flex-1">
@@ -428,7 +428,7 @@ const InfluencerLanding: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                <div className="bg-black/30 border border-cyan-500/30 rounded-xl p-3 sm:p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
                     <span className="text-xs sm:text-sm font-bold text-green-400">
@@ -442,7 +442,7 @@ const InfluencerLanding: React.FC = () => {
               </article>
 
               {/* Méthode 3 */}
-              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+              <article className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <span className="text-3xl" aria-hidden="true">👥</span>
                   <div className="flex-1">
@@ -454,7 +454,7 @@ const InfluencerLanding: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                <div className="bg-black/30 border border-cyan-500/30 rounded-xl p-3 sm:p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
                     <span className="text-xs sm:text-sm font-bold text-green-400">
@@ -468,7 +468,7 @@ const InfluencerLanding: React.FC = () => {
               </article>
 
               {/* Méthode 4 */}
-              <article className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl p-5 sm:p-6">
+              <article className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 rounded-2xl p-5 sm:p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <span className="text-3xl" aria-hidden="true">💎</span>
                   <div className="flex-1">
@@ -480,7 +480,7 @@ const InfluencerLanding: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="bg-black/30 border border-red-500/30 rounded-xl p-3 sm:p-4">
+                <div className="bg-black/30 border border-cyan-500/30 rounded-xl p-3 sm:p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Check className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
                     <span className="text-xs sm:text-sm font-bold text-green-400">
@@ -495,14 +495,14 @@ const InfluencerLanding: React.FC = () => {
             </div>
 
             {/* Win-Win final */}
-            <div className="bg-gradient-to-r from-red-500/20 via-orange-500/20 to-amber-500/20 border-2 border-red-500/30 rounded-2xl p-5 sm:p-8 text-center">
+            <div className="bg-gradient-to-r from-cyan-500/20 via-teal-500/20 to-cyan-500/20 border-2 border-cyan-500/30 rounded-2xl p-5 sm:p-8 text-center">
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-3">
                 <FormattedMessage id="influencer.landing.value.winwin.title" defaultMessage="🎯 Vous créez du contenu utile. Vous aidez ET gagnez." />
               </h3>
               <p className="text-base sm:text-lg text-white/90 mb-4">
                 <FormattedMessage id="influencer.landing.value.winwin.desc" defaultMessage="Chaque follower aidé = problème résolu + tips gratuits + {discount} économisés + {clientCallMax}$ gagnés pour vous. Tout le monde gagne." values={{ discount: rates.discountLabel, clientCallMax: rates.clientCallMax, clientCallRange: rates.clientCallRange }} />
               </p>
-              <div className="inline-flex items-center gap-2 bg-red-500/30 border border-red-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
+              <div className="inline-flex items-center gap-2 bg-cyan-500/30 border border-cyan-400/50 rounded-full px-4 py-2 text-sm sm:text-base font-bold">
                 <Check className="w-4 h-4 text-green-400" aria-hidden="true" />
                 <FormattedMessage id="influencer.landing.value.winwin.tag" defaultMessage="Contenu utile + Revenus récurrents" />
               </div>
@@ -523,8 +523,8 @@ const InfluencerLanding: React.FC = () => {
             </p>
 
             <div className="grid lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-              <article className="bg-gradient-to-br from-red-500/20 to-orange-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-red-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
+              <article className="bg-gradient-to-br from-cyan-500/20 to-teal-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-cyan-500 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6" aria-hidden="true">
                   <Video className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
                 </div>
                 <div className="text-sm font-bold mb-2"><FormattedMessage id="influencer.step1.label" defaultMessage="STEP 1" /></div>
@@ -577,10 +577,10 @@ const InfluencerLanding: React.FC = () => {
             </div>
 
             {/* Lawyer OR Helper note */}
-            <div className="mt-8 sm:mt-12 bg-amber-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+            <div className="mt-8 sm:mt-12 bg-cyan-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
               <div className="flex sm:flex-row sm:items-center gap-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-500/20 rounded-xl flex items-center justify-center" aria-hidden="true">
-                  <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-cyan-500/20 rounded-xl flex items-center justify-center" aria-hidden="true">
+                  <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7 text-cyan-400" />
                 </div>
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold mb-1">
@@ -631,7 +631,7 @@ const InfluencerLanding: React.FC = () => {
             </div>
 
             {/* Why followers need SOS-Expat */}
-            <div className="mt-8 sm:mt-12 bg-gradient-to-br from-red-500/15 to-orange-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
+            <div className="mt-8 sm:mt-12 bg-gradient-to-br from-cyan-500/15 to-teal-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8">
               <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-6">
                 <FormattedMessage id="influencer.profiles.why.title" defaultMessage="Why Your Followers Need SOS-Expat" />
               </h3>
@@ -671,7 +671,7 @@ const InfluencerLanding: React.FC = () => {
 
             <div className="grid sm:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12">
               {contentTypes.map((content, idx) => (
-                <div key={idx} className={`bg-white/10 border rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center ${content.highlight ? 'border-red-500/40 ring-1 ring-red-500/20' : 'border-white/10'}`}>
+                <div key={idx} className={`bg-white/10 border rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center ${content.highlight ? 'border-cyan-500/40 ring-1 ring-cyan-500/20' : 'border-white/10'}`}>
                   <span className="text-2xl sm:text-3xl block mb-2" aria-hidden="true">{content.icon}</span>
                   <div className={`font-bold text-sm sm:text-base ${content.highlight ? 'text-red-400' : 'text-white'}`}>{content.name}</div>
                   <div className="text-xs mt-1">{content.desc}</div>
@@ -686,7 +686,7 @@ const InfluencerLanding: React.FC = () => {
             </h3>
             <div className="grid sm:grid-cols-6 gap-3 sm:gap-4">
               {platforms.map((platform, idx) => (
-                <div key={idx} className={`bg-white/10 border rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center ${(platform as any).highlight ? 'border-red-500/40' : 'border-white/10'}`}>
+                <div key={idx} className={`bg-white/10 border rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center ${(platform as any).highlight ? 'border-cyan-500/40' : 'border-white/10'}`}>
                   <span className="text-2xl sm:text-3xl block mb-2" aria-hidden="true">{platform.icon}</span>
                   <div className={`font-bold text-xs sm:text-sm ${(platform as any).highlight ? 'text-red-400' : 'text-white'}`}>{platform.name}</div>
                   <div className="text-xs mt-1 hidden sm:block">{platform.desc}</div>
@@ -710,7 +710,7 @@ const InfluencerLanding: React.FC = () => {
 
             <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
               {/* Main earning card */}
-              <div className="bg-gradient-to-br from-red-500/15 to-orange-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center">
+              <div className="bg-gradient-to-br from-cyan-500/15 to-teal-500/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-center">
                 <Phone className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400 opacity-80" aria-hidden="true" />
                 <div className="text-5xl sm:text-6xl lg:text-7xl font-black mb-2">${rates.clientCallRange}{local(rates.clientCallMax) && <span className="text-2xl sm:text-3xl lg:text-4xl">{local(rates.clientCallMax)}</span>}</div>
                 <p className="text-base sm:text-lg">
@@ -808,7 +808,7 @@ const InfluencerLanding: React.FC = () => {
 
             <div className="bg-white/10 border rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-10 max-w-3xl mx-auto">
               <div className="flex items-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-500 rounded-full flex items-center justify-center shadow-xl mb-2" aria-hidden="true">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-cyan-500 rounded-full flex items-center justify-center shadow-xl mb-2" aria-hidden="true">
                   <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-black" />
                 </div>
                 <span className="font-bold text-base sm:text-lg"><FormattedMessage id="influencer.network.you" defaultMessage="YOU" /></span>
@@ -905,8 +905,8 @@ const InfluencerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 9 - FINAL CTA
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 via-red-950/20 to-black relative" aria-labelledby="section-cta-final">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(239,68,68,0.06),transparent_50%)]" aria-hidden="true" />
+        <section className="section-content bg-gradient-to-b from-gray-950 via-cyan-950/20 to-black relative" aria-labelledby="section-cta-final">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.06),transparent_50%)]" aria-hidden="true" />
 
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             <h2 id="section-cta-final" className="!text-2xl sm:!text-4xl lg:!text-5xl xl:!text-6xl font-black text-white mb-6 sm:mb-8">
@@ -924,8 +924,8 @@ const InfluencerLanding: React.FC = () => {
                 { id: 'influencer.final.trust.3', dm: 'All Countries' },
                 { id: 'influencer.final.trust.4', dm: 'Promo Tools Included' },
               ].map((item, i) => (
-                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/15 border text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 sm:text-base font-medium">
-                  <Check className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" aria-hidden="true" />
+                <span key={i} className="flex items-center gap-1.5 sm:gap-2 bg-cyan-500/15 border text-white rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 sm:text-base font-medium">
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" aria-hidden="true" />
                   <FormattedMessage id={item.id} defaultMessage={item.dm} />
                 </span>
               ))}
