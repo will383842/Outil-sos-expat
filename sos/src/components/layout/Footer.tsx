@@ -686,6 +686,7 @@ const Footer: React.FC = () => {
   // Blog surveys URL per language
   const surveysSegment = BLOG_SURVEYS_SEGMENTS[resolvedLang] ?? BLOG_SURVEYS_SEGMENTS.fr;
   const surveysBlogUrl = `https://sos-expat.com/blog/${surveysSegment.locale}/${surveysSegment.slug}`;
+  const toolsUrl = `https://sos-expat.com/${surveysSegment.locale}/outils`;
 
   // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
@@ -712,6 +713,14 @@ const Footer: React.FC = () => {
           {
             label: intl.formatMessage({ id: "footer.services.surveys", defaultMessage: "Sondages Expats" }),
             href: surveysBlogUrl,
+          },
+          {
+            label: intl.formatMessage({ id: "footer.services.tools", defaultMessage: "Nos Outils Voyageurs" }),
+            href: toolsUrl,
+          },
+          {
+            label: intl.formatMessage({ id: "footer.services.directory", defaultMessage: "Annuaire Mondiale" }),
+            href: `/${getTranslatedRouteSlug("annuaire", resolvedLang)}`,
           },
         ],
       },

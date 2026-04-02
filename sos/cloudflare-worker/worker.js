@@ -1082,8 +1082,7 @@ async function handleRequest(request, env, ctx) {
     'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
     // countries
     'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
-    // directory
-    'annuaire', 'directory', 'directorio', 'verzeichnis', 'diretorio', 'spravochnik', 'minglu', 'nirdeshika', 'dalil',
+    // NOTE: annuaire/directory = SPA React page (NOT blog) — ne pas ajouter ici
     // tools
     'outils', 'tools', 'herramientas', 'werkzeuge', 'ferramentas', 'instrumenty', 'gongju', 'upkaran', 'adawat',
     // sondages
@@ -1504,6 +1503,36 @@ async function handleRequest(request, env, ctx) {
           const newRestPath = '/' + segments.join('/');
           const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}${newRestPath}${url.search}`;
           console.log(`[WORKER] Accent normalization redirect: ${pathname} -> ${urlLang}-${urlCountry}${newRestPath}`);
+          return new Response(null, {
+            status: 301,
+            headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+          });
+        }
+
+        // 6. Legacy Arabic Unicode slugs → ASCII romanized equivalents
+        // Old routes used Arabic script (محامون, مغتربون, etc.); now all slugs are ASCII.
+        // Google still has these indexed — redirect to current ASCII versions.
+        const ARABIC_UNICODE_TO_ASCII = {
+          '\u0645\u062D\u0627\u0645\u0648\u0646': 'muhamun',                       // محامون → lawyers-country
+          '\u0645\u063A\u062A\u0631\u0628\u0648\u0646': 'mughtaribun',              // مغتربون → expats-country
+          '\u0645\u0642\u062F\u0645\u064A-\u0627\u0644\u062E\u062F\u0645\u0627\u062A': 'muqadimi-al-khidmat', // مقدمي-الخدمات → providers
+          '\u0634\u0631\u0648\u0637-\u0627\u0644\u0645\u063A\u062A\u0631\u0628\u064A\u0646': 'shurut-al-mugtaribin', // شروط-المغتربين → terms-expats
+          '\u0634\u0631\u0648\u0637-\u0627\u0644\u0639\u0645\u0644\u0627\u0621': 'shurut-al-umala',       // شروط-العملاء → terms-clients
+          '\u0634\u0631\u0648\u0637-\u0627\u0644\u0645\u062D\u0627\u0645\u064A\u0646': 'shurut-al-muhamin', // شروط-المحامين → terms-lawyers
+          '\u0627\u0644\u0623\u0633\u0639\u0627\u0631': 'al-asaar',                 // الأسعار → pricing
+          '\u0643\u064A\u0641-\u064A\u0639\u0645\u0644': 'kayfa-yamal',             // كيف-يعمل → how-it-works
+          '\u0627\u062A\u0635\u0644-\u0628\u0646\u0627': 'ittasil-bina',            // اتصل-بنا → contact
+          '\u0627\u0644\u0634\u0647\u0627\u062F\u0627\u062A': 'al-shahdat',         // الشهادات → testimonials
+          '\u0627\u0644\u062A\u0633\u062C\u064A\u0644': 'al-tasjil',               // التسجيل → register
+        };
+        const decodedFirstSlug = (() => { try { return decodeURIComponent(firstSlug); } catch (_e) { return firstSlug; } })();
+        if (ARABIC_UNICODE_TO_ASCII[decodedFirstSlug]) {
+          const asciiSlug = ARABIC_UNICODE_TO_ASCII[decodedFirstSlug];
+          const segments = restPath.split('/').filter(Boolean);
+          segments[0] = asciiSlug;
+          const newRestPath = '/' + segments.join('/');
+          const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}${newRestPath}${url.search}`;
+          console.log(`[WORKER] Arabic Unicode→ASCII redirect: ${pathname} -> ${urlLang}-${urlCountry}${newRestPath}`);
           return new Response(null, {
             status: 301,
             headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
