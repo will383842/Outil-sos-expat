@@ -89,6 +89,18 @@ const BLOG_SURVEYS_SEGMENTS: Record<string, { locale: string; slug: string }> = 
   ar: { locale: "ar-sa", slug: "istitalaat" },
 };
 
+const BLOG_LIVING_ABROAD_SEGMENTS: Record<string, { locale: string; slug: string }> = {
+  fr: { locale: "fr-fr", slug: "vie-a-letranger" },
+  en: { locale: "en-us", slug: "living-abroad" },
+  es: { locale: "es-es", slug: "vivir-en-el-extranjero" },
+  de: { locale: "de-de", slug: "leben-im-ausland" },
+  pt: { locale: "pt-pt", slug: "viver-no-estrangeiro" },
+  ru: { locale: "ru-ru", slug: "zhizn-za-rubezhom" },
+  ch: { locale: "zh-cn", slug: "haiwai-shenghuo" },
+  hi: { locale: "hi-in", slug: "videsh-mein-jeevan" },
+  ar: { locale: "ar-sa", slug: "alhayat-fi-alkhaarij" },
+};
+
 const EXCLUDED_LEGAL_LABELS = new Set([
   "CGU Avocats",
   "CGU Expatriés",
@@ -687,6 +699,8 @@ const Footer: React.FC = () => {
   const surveysSegment = BLOG_SURVEYS_SEGMENTS[resolvedLang] ?? BLOG_SURVEYS_SEGMENTS.fr;
   const surveysBlogUrl = `https://sos-expat.com/blog/${surveysSegment.locale}/${surveysSegment.slug}`;
   const toolsUrl = `https://sos-expat.com/${surveysSegment.locale}/outils`;
+  const livingAbroadSegment = BLOG_LIVING_ABROAD_SEGMENTS[resolvedLang] ?? BLOG_LIVING_ABROAD_SEGMENTS.fr;
+  const livingAbroadUrl = `https://sos-expat.com/${livingAbroadSegment.locale}/${livingAbroadSegment.slug}`;
 
   // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
@@ -722,6 +736,10 @@ const Footer: React.FC = () => {
             label: intl.formatMessage({ id: "footer.services.directory", defaultMessage: "Annuaire Mondial" }),
             href: `/${getTranslatedRouteSlug("annuaire", resolvedLang)}`,
           },
+          {
+            label: intl.formatMessage({ id: "footer.services.livingAbroad", defaultMessage: "Vie à l'Étranger" }),
+            href: livingAbroadUrl,
+          },
         ],
       },
       support: {
@@ -754,7 +772,7 @@ const Footer: React.FC = () => {
         ],
       },
     }),
-    [intl, resolvedLang, surveysBlogUrl]
+    [intl, resolvedLang, surveysBlogUrl, livingAbroadUrl]
   );
 
   // Contact info - avec routes traduites
