@@ -12,6 +12,7 @@ import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import { phoneCodesData } from "@/data/phone-codes";
 import {
   Search, MapPin, Phone, Mail, Clock, ExternalLink, Shield,
   Loader2, ArrowLeft, X, AlertTriangle,
@@ -186,15 +187,93 @@ const CONTINENT_LABEL: Record<string, Record<string, string>> = {
 };
 
 // ============================================================
-// HELPERS
+// NATIONALITY ADJECTIVES (French — adjectifs de nationalité)
 // ============================================================
 
-function flag(code: string): string {
-  if (!code || code.length !== 2) return "🌍";
-  return code.toUpperCase().split("").map(c =>
-    String.fromCodePoint(c.charCodeAt(0) + 127397)
-  ).join("");
-}
+const NATIONALITY_ADJ_FR: Record<string, string> = {
+  AD: "Andorrane", AE: "Émiratie", AF: "Afghane", AG: "Antiguaise",
+  AL: "Albanaise", AM: "Arménienne", AO: "Angolaise", AR: "Argentine",
+  AT: "Autrichienne", AU: "Australienne", AZ: "Azerbaïdjanaise",
+  BA: "Bosnienne", BB: "Barbadienne", BD: "Bangladaise", BE: "Belge",
+  BF: "Burkinabée", BG: "Bulgare", BH: "Bahreïnienne", BI: "Burundaise",
+  BJ: "Béninoise", BN: "Brunéienne", BO: "Bolivienne", BR: "Brésilienne",
+  BS: "Bahaméenne", BT: "Bhoutanaise", BW: "Botswanaise", BY: "Biélorusse",
+  BZ: "Bélizienne", CA: "Canadienne", CD: "Congolaise (RDC)", CG: "Congolaise",
+  CH: "Suisse", CI: "Ivoirienne", CL: "Chilienne", CM: "Camerounaise",
+  CN: "Chinoise", CO: "Colombienne", CR: "Costaricaine", CU: "Cubaine",
+  CV: "Cap-verdienne", CY: "Chypriote", CZ: "Tchèque",
+  DE: "Allemande", DJ: "Djiboutienne", DK: "Danoise", DM: "Dominiquaise",
+  DO: "Dominicaine", DZ: "Algérienne",
+  EC: "Équatorienne", EE: "Estonienne", EG: "Égyptienne", ER: "Érythréenne",
+  ES: "Espagnole", ET: "Éthiopienne", SZ: "Swazie",
+  FI: "Finlandaise", FJ: "Fidjienne", FM: "Micronésienne", FR: "Française",
+  GA: "Gabonaise", GB: "Britannique", GD: "Grenadienne", GE: "Géorgienne",
+  GH: "Ghanéenne", GM: "Gambienne", GN: "Guinéenne", GQ: "Équato-guinéenne",
+  GR: "Grecque", GT: "Guatémaltèque", GW: "Guinéo-bissauenne", GY: "Guyanienne",
+  HN: "Hondurienne", HR: "Croate", HT: "Haïtienne", HU: "Hongroise",
+  ID: "Indonésienne", IE: "Irlandaise", IL: "Israélienne", IN: "Indienne",
+  IQ: "Irakienne", IR: "Iranienne", IS: "Islandaise", IT: "Italienne",
+  JM: "Jamaïcaine", JO: "Jordanienne", JP: "Japonaise",
+  KE: "Kényane", KG: "Kirghize", KH: "Cambodgienne", KI: "Kiribatienne",
+  KM: "Comorienne", KN: "Kittitienne", KP: "Nord-coréenne", KR: "Sud-coréenne",
+  KW: "Koweïtienne", KZ: "Kazakhstanaise",
+  LA: "Laotienne", LB: "Libanaise", LC: "Saint-Lucienne", LI: "Liechtensteinoise",
+  LK: "Sri-Lankaise", LR: "Libérienne", LS: "Lésothane", LT: "Lituanienne",
+  LU: "Luxembourgeoise", LV: "Lettone", LY: "Libyenne",
+  MA: "Marocaine", MC: "Monégasque", MD: "Moldave", ME: "Monténégrine",
+  MG: "Malgache", MH: "Marshallaise", MK: "Macédonienne", ML: "Malienne",
+  MM: "Birmane", MN: "Mongole", MR: "Mauritanienne", MT: "Maltaise",
+  MU: "Mauricienne", MV: "Maldivienne", MW: "Malawienne", MX: "Mexicaine",
+  MY: "Malaisienne", MZ: "Mozambicaine",
+  NA: "Namibienne", NE: "Nigérienne", NG: "Nigériane", NI: "Nicaraguayenne",
+  NL: "Néerlandaise", NO: "Norvégienne", NP: "Népalaise", NR: "Nauruane",
+  NZ: "Néo-Zélandaise",
+  OM: "Omanaise",
+  PA: "Panaméenne", PE: "Péruvienne", PG: "Papouasienne", PH: "Philippinoise",
+  PK: "Pakistanaise", PL: "Polonaise", PT: "Portugaise", PW: "Palaosienne",
+  PY: "Paraguayenne",
+  QA: "Qatarienne",
+  RO: "Roumaine", RS: "Serbe", RU: "Russe", RW: "Rwandaise",
+  SA: "Saoudienne", SB: "Salomonaise", SC: "Seychelloise", SD: "Soudanaise",
+  SE: "Suédoise", SG: "Singapourienne", SI: "Slovène", SK: "Slovaque",
+  SL: "Sierra-Léonaise", SM: "Saint-Marinaise", SN: "Sénégalaise",
+  SO: "Somalienne", SR: "Surinamaise", SS: "Sud-soudanaise", ST: "Santoméenne",
+  SV: "Salvadorienne", SY: "Syrienne",
+  TD: "Tchadienne", TG: "Togolaise", TH: "Thaïlandaise", TJ: "Tadjike",
+  TL: "Timoraise", TM: "Turkmène", TN: "Tunisienne", TO: "Tongienne",
+  TR: "Turque", TT: "Trinidadienne", TV: "Tuvaluane", TZ: "Tanzanienne",
+  UA: "Ukrainienne", UG: "Ougandaise", US: "Américaine", UY: "Uruguayenne",
+  UZ: "Ouzbèke", VA: "Vaticane", VC: "Vincentaise", VE: "Vénézuélienne",
+  VN: "Vietnamienne", VU: "Vanuataise",
+  WS: "Samoane", XK: "Kosovare", YE: "Yéménite",
+  ZA: "Sud-africaine", ZM: "Zambienne", ZW: "Zimbabwéenne",
+};
+
+// ============================================================
+// FLAG IMAGE COMPONENT (flagcdn.com — renders on all platforms)
+// ============================================================
+
+const FlagImg: React.FC<{ code: string; size: number; className?: string }> = ({ code, size, className = "" }) => {
+  if (!code || code.length !== 2) {
+    return <span style={{ fontSize: size, lineHeight: 1 }}>🌍</span>;
+  }
+  const w = size >= 48 ? 80 : size >= 28 ? 40 : 20;
+  return (
+    <img
+      src={`https://flagcdn.com/w${w}/${code.toLowerCase()}.png`}
+      alt={code.toUpperCase()}
+      width={size}
+      height={Math.round(size * 0.75)}
+      className={`inline-block rounded-sm object-cover flex-shrink-0 ${className}`}
+      loading="lazy"
+      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+    />
+  );
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
 
 function catLabel(cat: string, lang: string): string {
   return CAT_LABEL[cat]?.[lang] ?? CAT_LABEL[cat]?.["fr"] ?? cat;
@@ -246,32 +325,51 @@ function loadRecent(): CountrySummary[] {
 // ============================================================
 
 const NationalityPicker: React.FC<{
-  countries: CountrySummary[];
   onSelect: (code: string, name: string) => void;
   onSkip: () => void;
   lang: string;
-}> = ({ countries, onSelect, onSkip, lang }) => {
+}> = ({ onSelect, onSkip, lang }) => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<{ code: string; name: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Map app lang key to phoneCodesData field
+  const langKey = (lang === "ch" ? "zh" : ["fr","en","es","de","pt","ru","zh","ar","hi"].includes(lang) ? lang : "fr") as "fr"|"en"|"es"|"de"|"pt"|"ru"|"zh"|"ar"|"hi";
+
+  // Build sorted nationality list: popular countries first, then alphabetical
+  const allNationalities = useMemo(() => {
+    const getName = (code: string, entry: typeof phoneCodesData[0]) => {
+      if (lang === "fr") return NATIONALITY_ADJ_FR[code] ?? entry.fr;
+      return (entry[langKey] as string) || entry.fr;
+    };
+    const all = phoneCodesData.map(e => ({ code: e.code, name: getName(e.code, e) }));
+    const popularSet = new Set(POPULAR_CODES);
+    const popular = POPULAR_CODES
+      .map(code => all.find(e => e.code === code))
+      .filter(Boolean) as { code: string; name: string }[];
+    const rest = all
+      .filter(e => !popularSet.has(e.code))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return [...popular, ...rest];
+  }, [lang, langKey]);
 
   // Auto-detect from browser
   useEffect(() => {
     const detected = (navigator.language || "").split("-")[1]?.toUpperCase();
     if (detected) {
-      const match = countries.find(c => c.country_code === detected);
-      if (match) setSelected({ code: match.country_code, name: match.country_name });
+      const match = allNationalities.find(c => c.code === detected);
+      if (match) setSelected(match);
     }
     setTimeout(() => inputRef.current?.focus(), 80);
-  }, [countries]);
+  }, [allNationalities]);
 
   const filtered = useMemo(() => {
-    if (!search) return countries.slice(0, 40);
-    const q = search.toLowerCase();
-    return countries.filter(c =>
-      c.country_name.toLowerCase().includes(q) || c.country_code.toLowerCase().includes(q)
-    ).slice(0, 25);
-  }, [countries, search]);
+    if (!search) return allNationalities;
+    const q = normalize(search);
+    return allNationalities.filter(c =>
+      normalize(c.name).includes(q) || c.code.toLowerCase().includes(q)
+    );
+  }, [allNationalities, search]);
 
   // Close on Escape key
   useEffect(() => {
@@ -310,17 +408,17 @@ const NationalityPicker: React.FC<{
         <div className="max-h-52 overflow-y-auto rounded-xl border border-gray-100 mb-5">
           {filtered.map(c => (
             <button
-              key={c.country_code}
-              onClick={() => setSelected({ code: c.country_code, name: c.country_name })}
+              key={c.code}
+              onClick={() => setSelected(c)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
-                selected?.code === c.country_code
+                selected?.code === c.code
                   ? "bg-blue-50 text-blue-700 font-semibold"
                   : "text-gray-700"
               }`}
             >
-              <span className="text-xl leading-none">{flag(c.country_code)}</span>
-              <span className="flex-1 text-left">{c.country_name}</span>
-              {selected?.code === c.country_code && <span className="text-blue-500 text-base">✓</span>}
+              <FlagImg code={c.code} size={20} />
+              <span className="flex-1 text-left">{c.name}</span>
+              {selected?.code === c.code && <span className="text-blue-500 text-base">✓</span>}
             </button>
           ))}
         </div>
@@ -422,7 +520,7 @@ const CountryCard: React.FC<{
     className="group w-full bg-white border border-gray-100 rounded-2xl p-4 text-left hover:shadow-lg hover:border-blue-100 hover:-translate-y-0.5 transition-all"
   >
     <div className="flex items-center gap-3">
-      <span className="text-3xl leading-none shrink-0">{flag(country.country_code)}</span>
+      <FlagImg code={country.country_code} size={32} className="shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-gray-900 text-sm truncate">{country.country_name}</div>
         <div className="text-xs text-gray-400 mt-0.5">
@@ -454,7 +552,7 @@ const PersonalizedKit: React.FC<{
   return (
     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white mb-5">
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-3xl leading-none">{flag(nationality.code)}</span>
+        <FlagImg code={nationality.code} size={32} />
         <div>
           <p className="font-bold text-base leading-tight">{t("myKit", lang)}</p>
           <p className="text-xs text-blue-200 mt-0.5">{t("myKitDesc", lang)}</p>
@@ -713,7 +811,7 @@ const Annuaire: React.FC = () => {
         {/* Country Hero */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-5">
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-            <span className="text-7xl leading-none shrink-0">{flag(selectedCountry.country_code)}</span>
+            <FlagImg code={selectedCountry.country_code} size={72} className="shrink-0" />
 
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
@@ -732,7 +830,7 @@ const Annuaire: React.FC = () => {
                 className="mt-3 inline-flex items-center gap-2 text-xs border border-gray-200 rounded-full px-3 py-1.5 hover:border-blue-300 hover:text-blue-600 transition-colors text-gray-500"
               >
                 {userNat ? (
-                  <><span>{flag(userNat.code)}</span><span>{userNat.name}</span></>
+                  <><FlagImg code={userNat.code} size={16} /><span>{userNat.name}</span></>
                 ) : (
                   <><span>🌍</span><span>{t("myNationality", lang)}</span></>
                 )}
@@ -836,7 +934,7 @@ const Annuaire: React.FC = () => {
                 {activeTab === "ambassade" && userNat && (
                   <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl leading-none">{flag(userNat.code)}</span>
+                      <FlagImg code={userNat.code} size={20} />
                       <p className="text-sm text-gray-600 font-medium">
                         {showAllEmbassies
                           ? `${detail.entries.ambassade?.length ?? 0} ambassades au total`
@@ -899,7 +997,7 @@ const Annuaire: React.FC = () => {
               onClick={() => setShowPicker(true)}
               className="flex items-center gap-2 bg-white border border-blue-100 rounded-full px-4 py-2.5 shadow-sm hover:shadow-md transition-all text-sm"
             >
-              <span className="text-xl leading-none">{flag(userNat.code)}</span>
+              <FlagImg code={userNat.code} size={20} />
               <span className="text-gray-700">{t("iAmFrom", lang)} <strong>{userNat.name}</strong></span>
               <span className="text-blue-500 text-xs font-medium">{t("changeNat", lang)}</span>
             </button>
@@ -959,7 +1057,7 @@ const Annuaire: React.FC = () => {
                     onClick={() => goToCountry(c)}
                     className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3 py-2 text-sm hover:border-blue-300 hover:shadow-sm transition-all"
                   >
-                    <span className="text-lg leading-none">{flag(c.country_code)}</span>
+                    <FlagImg code={c.country_code} size={20} />
                     <span className="text-gray-700">{c.country_name}</span>
                   </button>
                 ))}
@@ -980,7 +1078,7 @@ const Annuaire: React.FC = () => {
                     onClick={() => goToCountry(c)}
                     className="flex flex-col items-center gap-1.5 bg-white border border-gray-100 rounded-2xl p-3 hover:shadow-md hover:border-blue-100 hover:-translate-y-0.5 transition-all"
                   >
-                    <span className="text-3xl leading-none">{flag(c.country_code)}</span>
+                    <FlagImg code={c.country_code} size={32} />
                     <span className="text-xs font-medium text-gray-700 text-center leading-tight line-clamp-2">{c.country_name}</span>
                     {c.emergency_number && (
                       <span className="text-xs text-red-500 font-bold">{c.emergency_number}</span>
@@ -1076,7 +1174,6 @@ const Annuaire: React.FC = () => {
 
       {showPicker && (
         <NationalityPicker
-          countries={countries}
           onSelect={handleNatSelect}
           onSkip={handleNatSkip}
           lang={lang}
