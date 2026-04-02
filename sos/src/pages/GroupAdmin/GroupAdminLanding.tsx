@@ -34,6 +34,7 @@ import {
   Globe,
   Gift,
 } from 'lucide-react';
+import ImageBankSection from '@/components/ImageBankSection';
 import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
 import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
 
@@ -899,6 +900,15 @@ const GroupAdminLanding: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            IMAGE BANK — Free images for group admins
+        ================================================================ */}
+        <section className="section-content">
+          <div className="max-w-4xl mx-auto">
+            <ImageBankSection accentColor="blue" bgClass="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20" />
           </div>
         </section>
 

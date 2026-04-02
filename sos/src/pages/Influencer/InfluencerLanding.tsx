@@ -39,6 +39,7 @@ import {
   Percent,
   Video,
 } from 'lucide-react';
+import ImageBankSection from '@/components/ImageBankSection';
 import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
 
@@ -870,6 +871,15 @@ const InfluencerLanding: React.FC = () => {
               </div>
               <p className="text-xs sm:text-sm mt-4"><FormattedMessage id="influencer.payment.note" defaultMessage="Processed in 48h • Worldwide" /></p>
             </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            IMAGE BANK — Free images for influencers
+        ================================================================ */}
+        <section className="section-content">
+          <div className="max-w-4xl mx-auto">
+            <ImageBankSection accentColor="pink" bgClass="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20" />
           </div>
         </section>
 

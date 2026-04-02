@@ -34,6 +34,7 @@ import {
   Minus,
   DollarSign,
 } from 'lucide-react';
+import ImageBankSection from '@/components/ImageBankSection';
 import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
 
@@ -1103,6 +1104,15 @@ const ChatterLanding: React.FC = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            IMAGE BANK — Free images for chatters
+        ================================================================ */}
+        <section className="section-content">
+          <div className="max-w-4xl mx-auto">
+            <ImageBankSection />
           </div>
         </section>
 

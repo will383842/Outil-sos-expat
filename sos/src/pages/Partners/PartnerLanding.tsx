@@ -54,6 +54,7 @@ import {
   PhoneCall,
   Landmark,
 } from 'lucide-react';
+import ImageBankSection from '@/components/ImageBankSection';
 
 // ============================================================================
 // STYLES
@@ -1471,6 +1472,15 @@ const PartnerLanding: React.FC = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ================================================================
+            IMAGE BANK — Free images for partners
+        ================================================================ */}
+        <section className="section-content">
+          <div className="max-w-4xl mx-auto">
+            <ImageBankSection accentColor="amber" bgClass="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20" />
           </div>
         </section>
 
