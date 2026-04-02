@@ -31,38 +31,31 @@ import {
 // ============================================================
 
 const T: Record<string, Record<string, string>> = {
-  badge: { fr: "Fiches Pays", en: "Country Sheets" },
-  title: { fr: "Guides par pays de destination", en: "Guides by destination country" },
-  subtitle: {
-    fr: "Retrouvez toutes les informations essentielles pour votre expatriation : demarches administratives, cout de la vie, sante, logement, fiscalite et bien plus.",
-    en: "Find all essential information for your expatriation: administrative procedures, cost of living, healthcare, housing, taxes and more.",
-  },
-  statSheets: { fr: "fiches pays", en: "country sheets" },
-  statContinents: { fr: "continents", en: "continents" },
-  statCountries: { fr: "pays couverts", en: "countries covered" },
-  filterAll: { fr: "Tous", en: "All" },
-  filterEurope: { fr: "Europe", en: "Europe" },
-  filterAfrica: { fr: "Afrique", en: "Africa" },
-  filterAsia: { fr: "Asie", en: "Asia" },
-  filterAmericas: { fr: "Ameriques", en: "Americas" },
-  filterMiddleEast: { fr: "Moyen-Orient", en: "Middle East" },
-  filterOceania: { fr: "Oceanie", en: "Oceania" },
-  searchPlaceholder: { fr: "Rechercher un pays...", en: "Search a country..." },
-  rubriques: { fr: "rubriques disponibles", en: "sections available" },
-  updatedOn: { fr: "Mis a jour le", en: "Updated on" },
-  comingSoon: { fr: "Bientot disponible", en: "Coming soon" },
-  ctaTitle: { fr: "Un pays manque a l'appel ?", en: "A country missing?" },
-  ctaSubtitle: {
-    fr: "Suggerez un pays et notre equipe preparera une fiche complete pour vous.",
-    en: "Suggest a country and our team will prepare a complete sheet for you.",
-  },
-  ctaButton: { fr: "Suggerer un pays", en: "Suggest a country" },
-  noResults: { fr: "Aucun pays ne correspond a votre recherche.", en: "No country matches your search." },
-  seoTitle: { fr: "Fiches Pays Expatriation | SOS-Expat", en: "Country Expatriation Sheets | SOS-Expat" },
-  seoDescription: {
-    fr: "Guides complets par pays de destination : demarches, cout de la vie, sante, logement, fiscalite. Plus de 200 pays couverts sur 7 continents.",
-    en: "Complete guides by destination country: procedures, cost of living, healthcare, housing, taxes. Over 200 countries covered across 7 continents.",
-  },
+  badge: { fr: "Fiches Pays", en: "Country Sheets", es: "Fichas de Países", de: "Länderprofile", pt: "Fichas de Países", ru: "Страновые справки", ch: "国家资料", hi: "देश शीट्स", ar: "بطاقات الدول" },
+  title: { fr: "Guides par pays de destination", en: "Guides by destination country", es: "Guías por país de destino", de: "Ratgeber nach Zielland", pt: "Guias por país de destino", ru: "Гиды по странам назначения", ch: "按目的地国家分类的指南", hi: "गंतव्य देश के अनुसार गाइड", ar: "أدلة حسب بلد المقصد" },
+  subtitle: { fr: "Retrouvez toutes les informations essentielles pour votre expatriation : demarches administratives, cout de la vie, sante, logement, fiscalite et bien plus.", en: "Find all essential information for your expatriation: administrative procedures, cost of living, healthcare, housing, taxes and more.", es: "Encuentra toda la información esencial para tu expatriación: trámites administrativos, coste de la vida, salud, vivienda, fiscalidad y mucho más.", de: "Finden Sie alle wesentlichen Informationen für Ihre Auswanderung: Behördengänge, Lebenshaltungskosten, Gesundheitsversorgung, Wohnen, Steuern und vieles mehr.", pt: "Encontre todas as informações essenciais para a sua expatriação: procedimentos administrativos, custo de vida, saúde, habitação, fiscalidade e muito mais.", ru: "Найдите всю необходимую информацию для эмиграции: административные процедуры, стоимость жизни, здравоохранение, жильё, налоги и многое другое.", ch: "查找海外移居所需的全部关键信息：行政手续、生活成本、医疗、住房、税务等。", hi: "अपने प्रवास के लिए सभी आवश्यक जानकारी प्राप्त करें: प्रशासनिक प्रक्रियाएं, जीवन यापन लागत, स्वास्थ्य, आवास, कर और भी बहुत कुछ।", ar: "اعثر على جميع المعلومات الأساسية لهجرتك: الإجراءات الإدارية، تكلفة المعيشة، الرعاية الصحية، السكن، الضرائب والمزيد." },
+  statSheets: { fr: "fiches pays", en: "country sheets", es: "fichas de países", de: "Länderprofile", pt: "fichas de países", ru: "страновых справок", ch: "个国家资料", hi: "देश शीट्स", ar: "بطاقة دول" },
+  statContinents: { fr: "continents", en: "continents", es: "continentes", de: "Kontinente", pt: "continentes", ru: "континентов", ch: "大洲", hi: "महाद्वीप", ar: "قارات" },
+  statCountries: { fr: "pays couverts", en: "countries covered", es: "países cubiertos", de: "Länder abgedeckt", pt: "países cobertos", ru: "стран охвачено", ch: "个国家", hi: "देश शामिल", ar: "دولة مغطاة" },
+  filterAll: { fr: "Tous", en: "All", es: "Todos", de: "Alle", pt: "Todos", ru: "Все", ch: "全部", hi: "सभी", ar: "الكل" },
+  filterEurope: { fr: "Europe", en: "Europe", es: "Europa", de: "Europa", pt: "Europa", ru: "Европа", ch: "欧洲", hi: "यूरोप", ar: "أوروبا" },
+  filterAfrica: { fr: "Afrique", en: "Africa", es: "África", de: "Afrika", pt: "África", ru: "Африка", ch: "非洲", hi: "अफ्रीका", ar: "أفريقيا" },
+  filterAsia: { fr: "Asie", en: "Asia", es: "Asia", de: "Asien", pt: "Ásia", ru: "Азия", ch: "亚洲", hi: "एशिया", ar: "آسيا" },
+  filterAmericas: { fr: "Ameriques", en: "Americas", es: "Américas", de: "Amerika", pt: "Américas", ru: "Америка", ch: "美洲", hi: "अमेरिका", ar: "الأمريكتان" },
+  filterMiddleEast: { fr: "Moyen-Orient", en: "Middle East", es: "Oriente Medio", de: "Naher Osten", pt: "Médio Oriente", ru: "Ближний Восток", ch: "中东", hi: "मध्य पूर्व", ar: "الشرق الأوسط" },
+  filterOceania: { fr: "Oceanie", en: "Oceania", es: "Oceanía", de: "Ozeanien", pt: "Oceânia", ru: "Океания", ch: "大洋洲", hi: "ओशिनिया", ar: "أوقيانوسيا" },
+  searchPlaceholder: { fr: "Rechercher un pays...", en: "Search a country...", es: "Buscar un país...", de: "Land suchen...", pt: "Pesquisar um país...", ru: "Поиск страны...", ch: "搜索国家...", hi: "देश खोजें...", ar: "ابحث عن دولة..." },
+  rubriques: { fr: "rubriques disponibles", en: "sections available", es: "secciones disponibles", de: "Abschnitte verfügbar", pt: "secções disponíveis", ru: "разделов доступно", ch: "个可用章节", hi: "उपलब्ध अनुभाग", ar: "أقسام متاحة" },
+  updatedOn: { fr: "Mis a jour le", en: "Updated on", es: "Actualizado el", de: "Aktualisiert am", pt: "Atualizado em", ru: "Обновлено", ch: "更新于", hi: "अपडेट किया गया", ar: "تم التحديث في" },
+  comingSoon: { fr: "Bientot disponible", en: "Coming soon", es: "Próximamente", de: "Demnächst", pt: "Em breve", ru: "Скоро", ch: "即将推出", hi: "जल्द आ रहा है", ar: "قريباً" },
+  ctaTitle: { fr: "Un pays manque a l'appel ?", en: "A country missing?", es: "¿Falta algún país?", de: "Fehlt ein Land?", pt: "Falta algum país?", ru: "Какой-то страны не хватает?", ch: "缺少某个国家？", hi: "कोई देश छूट गया?", ar: "هل دولة ما غائبة؟" },
+  ctaSubtitle: { fr: "Suggerez un pays et notre equipe preparera une fiche complete pour vous.", en: "Suggest a country and our team will prepare a complete sheet for you.", es: "Sugiere un país y nuestro equipo preparará una ficha completa para ti.", de: "Schlagen Sie ein Land vor und unser Team erstellt ein vollständiges Profil für Sie.", pt: "Sugira um país e a nossa equipa preparará uma ficha completa para si.", ru: "Предложите страну, и наша команда подготовит для вас полный гид.", ch: "推荐一个国家，我们的团队将为您准备完整的资料。", hi: "एक देश सुझाएं और हमारी टीम आपके लिए एक पूर्ण शीट तैयार करेगी।", ar: "اقترح دولة وسيُعدّ فريقنا ملفاً كاملاً لك." },
+  ctaButton: { fr: "Suggerer un pays", en: "Suggest a country", es: "Sugerir un país", de: "Land vorschlagen", pt: "Sugerir um país", ru: "Предложить страну", ch: "建议添加国家", hi: "देश सुझाएं", ar: "اقترح دولة" },
+  noResults: { fr: "Aucun pays ne correspond a votre recherche.", en: "No country matches your search.", es: "Ningún país coincide con tu búsqueda.", de: "Kein Land entspricht Ihrer Suche.", pt: "Nenhum país corresponde à sua pesquisa.", ru: "Ни одна страна не соответствует вашему запросу.", ch: "没有与您搜索匹配的国家。", hi: "आपकी खोज से कोई देश मेल नहीं खाता।", ar: "لا توجد دولة تطابق بحثك." },
+  seoTitle: { fr: "Fiches Pays Expatriation | SOS-Expat", en: "Country Expatriation Sheets | SOS-Expat", es: "Fichas de Países para Expatriados | SOS-Expat", de: "Länderprofile Auswanderung | SOS-Expat", pt: "Fichas de Países Expatriação | SOS-Expat", ru: "Страновые справки для эмигрантов | SOS-Expat", ch: "外籍人士国家资料 | SOS-Expat", hi: "देश प्रवास शीट्स | SOS-Expat", ar: "بطاقات الدول للمغتربين | SOS-Expat" },
+  seoDescription: { fr: "Guides complets par pays de destination : demarches, cout de la vie, sante, logement, fiscalite. Plus de 200 pays couverts sur 7 continents.", en: "Complete guides by destination country: procedures, cost of living, healthcare, housing, taxes. Over 200 countries covered across 7 continents.", es: "Guías completas por país de destino: trámites, coste de la vida, salud, vivienda, fiscalidad. Más de 200 países cubiertos en los 7 continentes.", de: "Umfassende Ratgeber nach Zielland: Behördengänge, Lebenshaltungskosten, Gesundheit, Wohnen, Steuern. Über 200 Länder auf 7 Kontinenten abgedeckt.", pt: "Guias completos por país de destino: procedimentos, custo de vida, saúde, habitação, fiscalidade. Mais de 200 países cobertos nos 7 continentes.", ru: "Подробные гиды по странам назначения: процедуры, стоимость жизни, здоровье, жильё, налоги. Охвачено более 200 стран на 7 континентах.", ch: "按目的地国家分类的完整指南：手续、生活成本、医疗、住房、税务。覆盖全球7大洲200多个国家。", hi: "गंतव्य देश के अनुसार संपूर्ण गाइड: प्रक्रियाएं, जीवन यापन लागत, स्वास्थ्य, आवास, कर। 7 महाद्वीपों पर 200 से अधिक देश शामिल।", ar: "أدلة شاملة حسب بلد المقصد: إجراءات، تكلفة المعيشة، صحة، سكن، ضرائب. أكثر من 200 دولة مغطاة عبر 7 قارات." },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  breadcrumbLabel: { fr: "Fiches Pays", en: "Country Guides", es: "Fichas de Países", de: "Länderprofile", pt: "Fichas de Países", ru: "Страновые справки", ch: "国家资料", hi: "देश गाइड", ar: "بطاقات الدول" },
 };
 
 // ============================================================
@@ -299,8 +292,8 @@ const FichesPays: React.FC = () => {
         description={t("seoDescription", lang)}
       />
       <BreadcrumbSchema items={[
-        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
-        { name: lang === "en" ? "Country Guides" : "Fiches Pays" },
+        { name: t("home", lang), url: `/${localeSlug}` },
+        { name: t("breadcrumbLabel", lang) },
       ]} />
 
       {/* ── BREADCRUMB VISUEL ── */}
@@ -309,11 +302,11 @@ const FichesPays: React.FC = () => {
           <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
             <li>
               <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
-                {lang === "en" ? "Home" : "Accueil"}
+                {t("home", lang)}
               </a>
             </li>
             <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
-            <li className="text-gray-900 font-medium">{lang === "en" ? "Country Guides" : "Fiches Pays"}</li>
+            <li className="text-gray-900 font-medium">{t("breadcrumbLabel", lang)}</li>
           </ol>
         </div>
       </nav>

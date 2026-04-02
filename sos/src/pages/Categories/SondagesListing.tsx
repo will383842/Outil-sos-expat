@@ -27,44 +27,31 @@ import { useApp } from "@/contexts/AppContext";
 /* ------------------------------------------------------------------ */
 
 const T: Record<string, Record<string, string>> = {
-  badge:               { fr: "Sondages",           en: "Surveys" },
-  heroTitle:           { fr: "Votre voix compte",  en: "Your voice matters" },
-  heroSubtitle: {
-    fr: "Participez a nos sondages et contribuez a ameliorer l'experience des expatries.",
-    en: "Take part in our surveys and help improve the expat experience.",
-  },
-  statActive:      { fr: "sondages actifs",   en: "active surveys" },
-  statParticipants:{ fr: "participants",       en: "participants" },
-  statCompleted:   { fr: "sondages termines", en: "completed surveys" },
-  activeSectionTitle: { fr: "Sondages en cours",             en: "Active surveys" },
-  activeSectionSub: {
-    fr: "Votre avis facon\u0327ne le futur de SOS-Expat",
-    en: "Your opinion shapes the future of SOS-Expat",
-  },
-  participate:  { fr: "Participer",       en: "Participate" },
-  daysLeft:     { fr: "jours restants",   en: "days left" },
-  votes:        { fr: "participants",     en: "participants" },
-  completedSectionTitle: { fr: "Resultats des sondages passes", en: "Past survey results" },
-  completedSectionSub: {
-    fr: "Decouvrez ce que la communaute a repondu",
-    en: "Discover what the community answered",
-  },
-  seeResults:   { fr: "Voir les resultats", en: "See results" },
-  totalVotes:   { fr: "reponses",           en: "responses" },
-  completedOn:  { fr: "Termine le",         en: "Completed" },
-  emptyActive:  { fr: "Aucun sondage actif pour le moment.", en: "No active surveys at the moment." },
-  emptyCompleted: { fr: "Aucun sondage termine.",            en: "No completed surveys yet." },
-  ctaTitle:  { fr: "Vous avez une idee de sondage ?", en: "Have a survey idea?" },
-  ctaSub: {
-    fr: "Proposez un sujet qui vous tient a coeur et contribuez a notre communaute.",
-    en: "Suggest a topic you care about and contribute to our community.",
-  },
-  ctaButton: { fr: "Proposer un sondage", en: "Suggest a survey" },
-  seoTitle: { fr: "Sondages Expatries | SOS-Expat",       en: "Expat Surveys | SOS-Expat" },
-  seoDesc: {
-    fr: "Participez aux sondages SOS-Expat sur la vie d'expatrie, le droit international et les destinations. Donnez votre avis et aidez des milliers d'expatries dans le monde entier.",
-    en: "Take part in SOS-Expat surveys on expat life, international law and top destinations. Share your opinion and help thousands of expats around the world make better decisions.",
-  },
+  badge: { fr: "Sondages", en: "Surveys", es: "Encuestas", de: "Umfragen", pt: "Sondagens", ru: "Опросы", ch: "调查问卷", hi: "सर्वेक्षण", ar: "الاستطلاعات" },
+  heroTitle: { fr: "Votre voix compte", en: "Your voice matters", es: "Tu voz importa", de: "Ihre Stimme zählt", pt: "A sua voz importa", ru: "Ваш голос важен", ch: "您的声音很重要", hi: "आपकी आवाज़ मायने रखती है", ar: "صوتك يُحدث فرقاً" },
+  heroSubtitle: { fr: "Participez a nos sondages et contribuez a ameliorer l'experience des expatries.", en: "Take part in our surveys and help improve the expat experience.", es: "Participa en nuestras encuestas y contribuye a mejorar la experiencia de los expatriados.", de: "Nehmen Sie an unseren Umfragen teil und helfen Sie dabei, die Erfahrung von Expats zu verbessern.", pt: "Participe nos nossos sondagens e contribua para melhorar a experiência dos expatriados.", ru: "Участвуйте в наших опросах и помогайте улучшать опыт экспатов.", ch: "参与我们的调查，帮助改善外籍人士的体验。", hi: "हमारे सर्वेक्षणों में भाग लें और प्रवासियों के अनुभव को बेहतर बनाने में योगदान दें।", ar: "شارك في استطلاعاتنا وساهم في تحسين تجربة المغتربين." },
+  statActive: { fr: "sondages actifs", en: "active surveys", es: "encuestas activas", de: "aktive Umfragen", pt: "sondagens ativas", ru: "активных опросов", ch: "进行中的调查", hi: "सक्रिय सर्वेक्षण", ar: "استطلاعات نشطة" },
+  statParticipants: { fr: "participants", en: "participants", es: "participantes", de: "Teilnehmer", pt: "participantes", ru: "участников", ch: "参与者", hi: "प्रतिभागी", ar: "مشاركون" },
+  statCompleted: { fr: "sondages termines", en: "completed surveys", es: "encuestas completadas", de: "abgeschlossene Umfragen", pt: "sondagens concluídas", ru: "завершённых опросов", ch: "已完成的调查", hi: "पूर्ण सर्वेक्षण", ar: "استطلاعات مكتملة" },
+  activeSectionTitle: { fr: "Sondages en cours", en: "Active surveys", es: "Encuestas en curso", de: "Laufende Umfragen", pt: "Sondagens em curso", ru: "Текущие опросы", ch: "进行中的调查", hi: "चल रहे सर्वेक्षण", ar: "الاستطلاعات الجارية" },
+  activeSectionSub: { fr: "Votre avis facon\u0327ne le futur de SOS-Expat", en: "Your opinion shapes the future of SOS-Expat", es: "Tu opinión moldea el futuro de SOS-Expat", de: "Ihre Meinung gestaltet die Zukunft von SOS-Expat", pt: "A sua opinião molda o futuro do SOS-Expat", ru: "Ваше мнение формирует будущее SOS-Expat", ch: "您的意见塑造SOS-Expat的未来", hi: "आपकी राय SOS-Expat का भविष्य आकार देती है", ar: "رأيك يُشكّل مستقبل SOS-Expat" },
+  participate: { fr: "Participer", en: "Participate", es: "Participar", de: "Teilnehmen", pt: "Participar", ru: "Участвовать", ch: "参与", hi: "भाग लें", ar: "شارك" },
+  daysLeft: { fr: "jours restants", en: "days left", es: "días restantes", de: "Tage verbleibend", pt: "dias restantes", ru: "дней осталось", ch: "剩余天数", hi: "दिन शेष", ar: "أيام متبقية" },
+  votes: { fr: "participants", en: "participants", es: "participantes", de: "Teilnehmer", pt: "participantes", ru: "участников", ch: "参与者", hi: "प्रतिभागी", ar: "مشاركون" },
+  completedSectionTitle: { fr: "Resultats des sondages passes", en: "Past survey results", es: "Resultados de encuestas pasadas", de: "Ergebnisse vergangener Umfragen", pt: "Resultados das sondagens anteriores", ru: "Результаты прошедших опросов", ch: "往期调查结果", hi: "पिछले सर्वेक्षणों के परिणाम", ar: "نتائج الاستطلاعات السابقة" },
+  completedSectionSub: { fr: "Decouvrez ce que la communaute a repondu", en: "Discover what the community answered", es: "Descubre lo que respondió la comunidad", de: "Entdecken Sie, was die Community geantwortet hat", pt: "Descubra o que a comunidade respondeu", ru: "Узнайте, что ответило сообщество", ch: "了解社区的回答", hi: "जानें कि समुदाय ने क्या उत्तर दिया", ar: "اكتشف ما أجابت به المجتمع" },
+  seeResults: { fr: "Voir les resultats", en: "See results", es: "Ver resultados", de: "Ergebnisse ansehen", pt: "Ver resultados", ru: "Посмотреть результаты", ch: "查看结果", hi: "परिणाम देखें", ar: "عرض النتائج" },
+  totalVotes: { fr: "reponses", en: "responses", es: "respuestas", de: "Antworten", pt: "respostas", ru: "ответов", ch: "回复数", hi: "जवाब", ar: "إجابات" },
+  completedOn: { fr: "Termine le", en: "Completed", es: "Finalizado el", de: "Abgeschlossen am", pt: "Concluído a", ru: "Завершён", ch: "完成于", hi: "पूर्ण तिथि", ar: "اكتمل في" },
+  emptyActive: { fr: "Aucun sondage actif pour le moment.", en: "No active surveys at the moment.", es: "No hay encuestas activas por el momento.", de: "Derzeit keine aktiven Umfragen.", pt: "Nenhuma sondagem ativa de momento.", ru: "На данный момент нет активных опросов.", ch: "目前暂无进行中的调查。", hi: "अभी कोई सक्रिय सर्वेक्षण नहीं है।", ar: "لا توجد استطلاعات نشطة في الوقت الحالي." },
+  emptyCompleted: { fr: "Aucun sondage termine.", en: "No completed surveys yet.", es: "Aún no hay encuestas completadas.", de: "Noch keine abgeschlossenen Umfragen.", pt: "Ainda não há sondagens concluídas.", ru: "Завершённых опросов пока нет.", ch: "暂无已完成的调查。", hi: "अभी तक कोई पूर्ण सर्वेक्षण नहीं है।", ar: "لا توجد استطلاعات مكتملة بعد." },
+  ctaTitle: { fr: "Vous avez une idee de sondage ?", en: "Have a survey idea?", es: "¿Tienes una idea de encuesta?", de: "Haben Sie eine Idee für eine Umfrage?", pt: "Tem uma ideia de sondagem?", ru: "Есть идея для опроса?", ch: "有调查建议吗？", hi: "क्या आपके पास सर्वेक्षण का कोई विचार है?", ar: "هل لديك فكرة لاستطلاع؟" },
+  ctaSub: { fr: "Proposez un sujet qui vous tient a coeur et contribuez a notre communaute.", en: "Suggest a topic you care about and contribute to our community.", es: "Sugiere un tema que te importe y contribuye a nuestra comunidad.", de: "Schlagen Sie ein Thema vor, das Ihnen am Herzen liegt, und tragen Sie zu unserer Community bei.", pt: "Sugira um tema que lhe importa e contribua para a nossa comunidade.", ru: "Предложите тему, которая вам важна, и внесите вклад в наше сообщество.", ch: "提出您关心的话题，为我们的社区做出贡献。", hi: "कोई ऐसा विषय सुझाएं जो आपके दिल के करीब हो और हमारे समुदाय में योगदान दें।", ar: "اقترح موضوعاً يهمك وساهم في مجتمعنا." },
+  ctaButton: { fr: "Proposer un sondage", en: "Suggest a survey", es: "Proponer una encuesta", de: "Umfrage vorschlagen", pt: "Sugerir uma sondagem", ru: "Предложить опрос", ch: "提交调查建议", hi: "सर्वेक्षण सुझाएं", ar: "اقترح استطلاعاً" },
+  seoTitle: { fr: "Sondages Expatries | SOS-Expat", en: "Expat Surveys | SOS-Expat", es: "Encuestas para Expatriados | SOS-Expat", de: "Expat-Umfragen | SOS-Expat", pt: "Sondagens para Expatriados | SOS-Expat", ru: "Опросы для экспатов | SOS-Expat", ch: "外籍人士调查 | SOS-Expat", hi: "प्रवासी सर्वेक्षण | SOS-Expat", ar: "استطلاعات المغتربين | SOS-Expat" },
+  seoDesc: { fr: "Participez aux sondages SOS-Expat sur la vie d'expatrie, le droit international et les destinations. Donnez votre avis et aidez des milliers d'expatries dans le monde entier.", en: "Take part in SOS-Expat surveys on expat life, international law and top destinations. Share your opinion and help thousands of expats around the world make better decisions.", es: "Participa en las encuestas de SOS-Expat sobre la vida del expatriado, el derecho internacional y los mejores destinos. Da tu opinión y ayuda a miles de expatriados en todo el mundo.", de: "Nehmen Sie an SOS-Expat-Umfragen zu Expat-Leben, internationalem Recht und Top-Destinationen teil. Teilen Sie Ihre Meinung und helfen Sie tausenden Expats weltweit.", pt: "Participe nos sondagens SOS-Expat sobre a vida de expatriado, direito internacional e os melhores destinos. Dê a sua opinião e ajude milhares de expatriados em todo o mundo.", ru: "Участвуйте в опросах SOS-Expat о жизни экспатов, международном праве и лучших направлениях. Делитесь своим мнением и помогайте тысячам экспатов по всему миру.", ch: "参与SOS-Expat关于外籍人士生活、国际法及热门目的地的调查。分享您的看法，帮助全球数千名外籍人士做出更明智的决策。", hi: "SOS-Expat के प्रवासी जीवन, अंतर्राष्ट्रीय कानून और शीर्ष गंतव्यों पर सर्वेक्षणों में भाग लें। अपनी राय दें और दुनिया भर के हज़ारों प्रवासियों को बेहतर निर्णय लेने में मदद करें।", ar: "شارك في استطلاعات SOS-Expat حول حياة المغتربين والقانون الدولي والوجهات المفضلة. شارك برأيك وساعد آلاف المغتربين حول العالم على اتخاذ قرارات أفضل." },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  breadcrumbLabel: { fr: "Sondages", en: "Surveys", es: "Encuestas", de: "Umfragen", pt: "Sondagens", ru: "Опросы", ch: "调查问卷", hi: "सर्वेक्षण", ar: "الاستطلاعات" },
 };
 
 const t = (key: string, lang: string) => T[key]?.[lang] || T[key]?.fr || key;
@@ -160,8 +147,8 @@ const SondagesListing: React.FC = () => {
     <Layout>
       <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} />
       <BreadcrumbSchema items={[
-        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
-        { name: lang === "en" ? "Surveys" : "Sondages" },
+        { name: t("home", lang), url: `/${localeSlug}` },
+        { name: t("breadcrumbLabel", lang) },
       ]} />
 
       {/* ── BREADCRUMB VISUEL ── */}
@@ -170,11 +157,11 @@ const SondagesListing: React.FC = () => {
           <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
             <li>
               <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
-                {lang === "en" ? "Home" : "Accueil"}
+                {t("home", lang)}
               </a>
             </li>
             <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
-            <li className="text-gray-900 font-medium">{lang === "en" ? "Surveys" : "Sondages"}</li>
+            <li className="text-gray-900 font-medium">{t("breadcrumbLabel", lang)}</li>
           </ol>
         </div>
       </nav>

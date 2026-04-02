@@ -34,66 +34,35 @@ import {
 // ============================================================
 
 const T: Record<string, Record<string, string>> = {
-  pageTitle: {
-    fr: "Outils Interactifs pour Expatries",
-    en: "Interactive Tools for Expats",
-  },
-  pageDesc: {
-    fr: "Calculateurs, comparateurs et checklists gratuits pour preparer votre expatriation sereinement. Checklist demenagement, convertisseur de devises, comparateur de pays et plus encore.",
-    en: "Free calculators, comparators and checklists to prepare your move abroad with confidence. Moving checklist, currency converter, country comparator and more tools for expats.",
-  },
-  toolCostOfLiving: { fr: "Calculateur cout de vie", en: "Cost of Living Calculator" },
-  toolCountryCompare: { fr: "Comparateur de pays", en: "Country Comparator" },
-  toolChecklist: { fr: "Checklist demenagement", en: "Moving Checklist" },
-  toolCurrency: { fr: "Convertisseur devises", en: "Currency Converter" },
-  comingSoon: { fr: "Bientot disponible", en: "Coming soon" },
-  comingSoonDesc: {
-    fr: "Cet outil est en cours de developpement. Soyez notifie des sa sortie !",
-    en: "This tool is under development. Get notified when it launches!",
-  },
-  notifyMe: { fr: "Me notifier", en: "Notify me" },
-  notified: { fr: "Vous serez notifie !", en: "You will be notified!" },
-  checklistTitle: { fr: "Checklist Demenagement International", en: "International Moving Checklist" },
-  checklistDesc: {
-    fr: "Ne rien oublier pour votre expatriation. Cochez chaque etape au fur et a mesure de votre preparation.",
-    en: "Don't forget anything for your move abroad. Check off each step as you prepare.",
-  },
-  completed: { fr: "termine", en: "completed" },
-  reset: { fr: "Reinitialiser", en: "Reset" },
-  exportPdf: { fr: "Exporter PDF", en: "Export PDF" },
-  catBefore: { fr: "Avant le depart", en: "Before departure" },
-  catDocuments: { fr: "Documents", en: "Documents" },
-  catHousing: { fr: "Logement", en: "Housing" },
-  catAdmin: { fr: "Administratif", en: "Administrative" },
-  encourageStart: {
-    fr: "Commencez a cocher les etapes de votre preparation !",
-    en: "Start checking off your preparation steps!",
-  },
-  encourageProgress: {
-    fr: "Bien joue ! Vous avancez dans votre preparation.",
-    en: "Well done! You're making progress.",
-  },
-  encourageAlmost: {
-    fr: "Presque termine ! Courage, vous y etes presque.",
-    en: "Almost there! Keep going, you're nearly done.",
-  },
-  encourageDone: {
-    fr: "Felicitations ! Vous etes pret pour votre nouvelle aventure !",
-    en: "Congratulations! You're ready for your new adventure!",
-  },
-  relatedTitle: { fr: "Explorez aussi", en: "Also explore" },
-  costDesc: {
-    fr: "Estimez votre budget mensuel dans plus de 100 pays.",
-    en: "Estimate your monthly budget in 100+ countries.",
-  },
-  compareDesc: {
-    fr: "Comparez qualite de vie, salaires et cout entre deux pays.",
-    en: "Compare quality of life, salaries and cost between two countries.",
-  },
-  currencyDesc: {
-    fr: "Convertissez vos devises en temps reel avec les taux du jour.",
-    en: "Convert currencies in real-time with today's rates.",
-  },
+  pageTitle: { fr: "Outils Interactifs pour Expatries", en: "Interactive Tools for Expats", es: "Herramientas Interactivas para Expatriados", de: "Interaktive Tools für Expats", pt: "Ferramentas Interativas para Expatriados", ru: "Интерактивные инструменты для экспатов", ch: "外籍人士互动工具", hi: "प्रवासियों के लिए इंटरैक्टिव टूल्स", ar: "أدوات تفاعلية للمغتربين" },
+  pageDesc: { fr: "Calculateurs, comparateurs et checklists gratuits pour preparer votre expatriation sereinement. Checklist demenagement, convertisseur de devises, comparateur de pays et plus encore.", en: "Free calculators, comparators and checklists to prepare your move abroad with confidence. Moving checklist, currency converter, country comparator and more tools for expats.", es: "Calculadoras, comparadores y checklists gratuitos para preparar tu expatriación con tranquilidad. Lista de mudanza, conversor de divisas, comparador de países y mucho más.", de: "Kostenlose Rechner, Vergleicher und Checklisten für eine entspannte Vorbereitung Ihrer Auswanderung. Umzugscheckliste, Währungsrechner, Ländervergleich und vieles mehr.", pt: "Calculadoras, comparadores e checklists gratuitos para preparar a sua expatriação com tranquilidade. Lista de mudança, conversor de moedas, comparador de países e muito mais.", ru: "Бесплатные калькуляторы, сравнители и чеклисты для подготовки к эмиграции. Чеклист переезда, конвертер валют, сравнение стран и другие инструменты для экспатов.", ch: "免费的计算器、比较工具和清单，帮助您从容准备海外移居。搬家清单、货币换算、国家比较以及更多外籍人士专用工具。", hi: "अपने प्रवास को शांति से तैयार करने के लिए मुफ़्त कैलकुलेटर, तुलनाकर्ता और चेकलिस्ट। स्थानांतरण चेकलिस्ट, मुद्रा परिवर्तक, देश तुलनाकर्ता और प्रवासियों के लिए और भी बहुत कुछ।", ar: "حاسبات ومقارنات وقوائم تحقق مجانية لتحضير هجرتك بكل هدوء. قائمة الانتقال، محوّل العملات، مقارنة الدول والمزيد من الأدوات للمغتربين." },
+  toolCostOfLiving: { fr: "Calculateur cout de vie", en: "Cost of Living Calculator", es: "Calculadora de coste de vida", de: "Lebenshaltungskosten-Rechner", pt: "Calculadora de custo de vida", ru: "Калькулятор стоимости жизни", ch: "生活成本计算器", hi: "जीवन यापन लागत कैलकुलेटर", ar: "حاسبة تكلفة المعيشة" },
+  toolCountryCompare: { fr: "Comparateur de pays", en: "Country Comparator", es: "Comparador de países", de: "Ländervergleich", pt: "Comparador de países", ru: "Сравнение стран", ch: "国家比较工具", hi: "देश तुलनाकर्ता", ar: "مقارنة الدول" },
+  toolChecklist: { fr: "Checklist demenagement", en: "Moving Checklist", es: "Lista de mudanza", de: "Umzugscheckliste", pt: "Lista de mudança", ru: "Чеклист переезда", ch: "搬家清单", hi: "स्थानांतरण चेकलिस्ट", ar: "قائمة الانتقال" },
+  toolCurrency: { fr: "Convertisseur devises", en: "Currency Converter", es: "Conversor de divisas", de: "Währungsrechner", pt: "Conversor de moedas", ru: "Конвертер валют", ch: "货币换算器", hi: "मुद्रा परिवर्तक", ar: "محوّل العملات" },
+  comingSoon: { fr: "Bientot disponible", en: "Coming soon", es: "Próximamente", de: "Demnächst verfügbar", pt: "Em breve disponível", ru: "Скоро будет доступно", ch: "即将推出", hi: "जल्द आ रहा है", ar: "قريباً" },
+  comingSoonDesc: { fr: "Cet outil est en cours de developpement. Soyez notifie des sa sortie !", en: "This tool is under development. Get notified when it launches!", es: "Esta herramienta está en desarrollo. ¡Recibe una notificación cuando esté lista!", de: "Dieses Tool befindet sich in der Entwicklung. Lassen Sie sich bei der Veröffentlichung benachrichtigen!", pt: "Esta ferramenta está em desenvolvimento. Seja notificado assim que for lançada!", ru: "Этот инструмент находится в разработке. Получите уведомление о его запуске!", ch: "此工具正在开发中。上线时立即获得通知！", hi: "यह टूल विकास के अधीन है। लॉन्च होने पर सूचित हों!", ar: "هذه الأداة قيد التطوير. احصل على إشعار فور إطلاقها!" },
+  notifyMe: { fr: "Me notifier", en: "Notify me", es: "Notificarme", de: "Benachrichtigen", pt: "Notificar-me", ru: "Уведомить меня", ch: "通知我", hi: "मुझे सूचित करें", ar: "أبلغني" },
+  notified: { fr: "Vous serez notifie !", en: "You will be notified!", es: "¡Serás notificado!", de: "Sie werden benachrichtigt!", pt: "Você será notificado!", ru: "Вы получите уведомление!", ch: "您将收到通知！", hi: "आपको सूचित किया जाएगा!", ar: "ستتلقى إشعاراً!" },
+  checklistTitle: { fr: "Checklist Demenagement International", en: "International Moving Checklist", es: "Lista de mudanza internacional", de: "Internationale Umzugscheckliste", pt: "Lista de mudança internacional", ru: "Чеклист международного переезда", ch: "国际搬家清单", hi: "अंतर्राष्ट्रीय स्थानांतरण चेकलिस्ट", ar: "قائمة الانتقال الدولي" },
+  checklistDesc: { fr: "Ne rien oublier pour votre expatriation. Cochez chaque etape au fur et a mesure de votre preparation.", en: "Don't forget anything for your move abroad. Check off each step as you prepare.", es: "No olvides nada para tu expatriación. Marca cada paso a medida que te preparas.", de: "Vergessen Sie nichts für Ihren Auslandsumzug. Haken Sie jeden Schritt ab, während Sie sich vorbereiten.", pt: "Não se esqueça de nada para a sua expatriação. Marque cada etapa à medida que se prepara.", ru: "Ничего не забудьте для эмиграции. Отмечайте каждый шаг по мере подготовки.", ch: "海外移居时不要遗漏任何事项。在准备过程中逐步勾选每个步骤。", hi: "प्रवास के लिए कुछ भी न भूलें। तैयारी करते समय प्रत्येक चरण को चेक करें।", ar: "لا تنسَ شيئاً في انتقالك إلى الخارج. ضع علامة على كل خطوة أثناء تحضيرك." },
+  completed: { fr: "termine", en: "completed", es: "completado", de: "erledigt", pt: "concluído", ru: "выполнено", ch: "已完成", hi: "पूर्ण", ar: "مكتمل" },
+  reset: { fr: "Reinitialiser", en: "Reset", es: "Reiniciar", de: "Zurücksetzen", pt: "Redefinir", ru: "Сбросить", ch: "重置", hi: "रीसेट करें", ar: "إعادة تعيين" },
+  exportPdf: { fr: "Exporter PDF", en: "Export PDF", es: "Exportar PDF", de: "PDF exportieren", pt: "Exportar PDF", ru: "Экспорт PDF", ch: "导出PDF", hi: "PDF निर्यात करें", ar: "تصدير PDF" },
+  catBefore: { fr: "Avant le depart", en: "Before departure", es: "Antes de la partida", de: "Vor der Abreise", pt: "Antes da partida", ru: "До отъезда", ch: "出发前", hi: "प्रस्थान से पहले", ar: "قبل المغادرة" },
+  catDocuments: { fr: "Documents", en: "Documents", es: "Documentos", de: "Dokumente", pt: "Documentos", ru: "Документы", ch: "证件文件", hi: "दस्तावेज़", ar: "الوثائق" },
+  catHousing: { fr: "Logement", en: "Housing", es: "Vivienda", de: "Wohnen", pt: "Habitação", ru: "Жильё", ch: "住房", hi: "आवास", ar: "السكن" },
+  catAdmin: { fr: "Administratif", en: "Administrative", es: "Administrativo", de: "Verwaltung", pt: "Administrativo", ru: "Административное", ch: "行政事务", hi: "प्रशासनिक", ar: "إداري" },
+  encourageStart: { fr: "Commencez a cocher les etapes de votre preparation !", en: "Start checking off your preparation steps!", es: "¡Empieza a marcar los pasos de tu preparación!", de: "Beginnen Sie, Ihre Vorbereitungsschritte abzuhaken!", pt: "Comece a marcar as etapas da sua preparação!", ru: "Начните отмечать шаги вашей подготовки!", ch: "开始勾选您的准备步骤！", hi: "अपनी तैयारी के चरणों को चेक करना शुरू करें!", ar: "ابدأ بتحديد خطوات تحضيرك!" },
+  encourageProgress: { fr: "Bien joue ! Vous avancez dans votre preparation.", en: "Well done! You're making progress.", es: "¡Bien hecho! Estás avanzando en tu preparación.", de: "Gut gemacht! Sie machen Fortschritte.", pt: "Muito bem! Está a avançar na sua preparação.", ru: "Отлично! Вы продвигаетесь в подготовке.", ch: "做得好！您的准备工作正在推进中。", hi: "शाबाश! आप अपनी तैयारी में आगे बढ़ रहे हैं।", ar: "أحسنت! أنت تُحرز تقدماً في تحضيرك." },
+  encourageAlmost: { fr: "Presque termine ! Courage, vous y etes presque.", en: "Almost there! Keep going, you're nearly done.", es: "¡Casi listo! Ánimo, ya casi terminas.", de: "Fast geschafft! Weiter so, Sie sind fast fertig.", pt: "Quase pronto! Coragem, está quase a acabar.", ru: "Почти готово! Продолжайте, вы почти закончили.", ch: "快完成了！加油，您即将大功告成。", hi: "लगभग हो गया! हिम्मत रखें, बस थोड़ा ही बाकी है।", ar: "اقتربت من النهاية! تشجع، أنت على وشك الانتهاء." },
+  encourageDone: { fr: "Felicitations ! Vous etes pret pour votre nouvelle aventure !", en: "Congratulations! You're ready for your new adventure!", es: "¡Felicitaciones! ¡Estás listo para tu nueva aventura!", de: "Herzlichen Glückwunsch! Sie sind bereit für Ihr neues Abenteuer!", pt: "Parabéns! Está pronto para a sua nova aventura!", ru: "Поздравляем! Вы готовы к своему новому приключению!", ch: "恭喜！您已准备好迎接全新的冒险！", hi: "बधाई हो! आप अपने नए साहसिक जीवन के लिए तैयार हैं!", ar: "تهانينا! أنت مستعد لمغامرتك الجديدة!" },
+  relatedTitle: { fr: "Explorez aussi", en: "Also explore", es: "Explora también", de: "Entdecken Sie auch", pt: "Explore também", ru: "Также изучите", ch: "还可以探索", hi: "यह भी देखें", ar: "اكتشف أيضاً" },
+  costDesc: { fr: "Estimez votre budget mensuel dans plus de 100 pays.", en: "Estimate your monthly budget in 100+ countries.", es: "Estima tu presupuesto mensual en más de 100 países.", de: "Schätzen Sie Ihr monatliches Budget in über 100 Ländern.", pt: "Estime o seu orçamento mensal em mais de 100 países.", ru: "Оцените свой ежемесячный бюджет в более чем 100 странах.", ch: "估算您在100多个国家的每月生活预算。", hi: "100 से अधिक देशों में अपना मासिक बजट अनुमानित करें।", ar: "قدّر ميزانيتك الشهرية في أكثر من 100 دولة." },
+  compareDesc: { fr: "Comparez qualite de vie, salaires et cout entre deux pays.", en: "Compare quality of life, salaries and cost between two countries.", es: "Compara calidad de vida, salarios y coste entre dos países.", de: "Vergleichen Sie Lebensqualität, Gehälter und Kosten zwischen zwei Ländern.", pt: "Compare qualidade de vida, salários e custo entre dois países.", ru: "Сравните качество жизни, зарплаты и расходы между двумя странами.", ch: "比较两国的生活质量、薪资水平和生活成本。", hi: "दो देशों के बीच जीवन गुणवत्ता, वेतन और लागत की तुलना करें।", ar: "قارن جودة الحياة والرواتب وتكاليف المعيشة بين دولتين." },
+  currencyDesc: { fr: "Convertissez vos devises en temps reel avec les taux du jour.", en: "Convert currencies in real-time with today's rates.", es: "Convierte divisas en tiempo real con los tipos de cambio actuales.", de: "Konvertieren Sie Währungen in Echtzeit mit den aktuellen Kursen.", pt: "Converta moedas em tempo real com as taxas do dia.", ru: "Конвертируйте валюты в режиме реального времени по актуальным курсам.", ch: "以当日汇率实时换算货币。", hi: "आज की दरों के साथ रियल-टाइम में मुद्राएं परिवर्तित करें।", ar: "حوّل عملاتك في الوقت الفعلي بأسعار الصرف اليومية." },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  breadcrumbLabel: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Tools", pt: "Ferramentas", ru: "Инструменты", ch: "工具", hi: "टूल्स", ar: "الأدوات" },
 };
 
 function t(key: string, lang: string): string {
@@ -512,8 +481,8 @@ const Outils: React.FC = () => {
         description={t("pageDesc", lang)}
       />
       <BreadcrumbSchema items={[
-        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
-        { name: t("pageTitle", lang) },
+        { name: t("home", lang), url: `/${localeSlug}` },
+        { name: t("breadcrumbLabel", lang) },
       ]} />
 
       {/* ── BREADCRUMB VISUEL ── */}
@@ -522,11 +491,11 @@ const Outils: React.FC = () => {
           <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
             <li>
               <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
-                {lang === "en" ? "Home" : "Accueil"}
+                {t("home", lang)}
               </a>
             </li>
             <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
-            <li className="text-gray-900 font-medium">{lang === "en" ? "Tools" : "Outils"}</li>
+            <li className="text-gray-900 font-medium">{t("breadcrumbLabel", lang)}</li>
           </ol>
         </div>
       </nav>

@@ -32,48 +32,28 @@ import {
 // ============================================================
 
 const T: Record<string, Record<string, string>> = {
-  "page.title": {
-    fr: "Articles & Guides",
-    en: "Articles & Guides",
-  },
-  "page.subtitle": {
-    fr: "Conseils pratiques, fiches pays et guides complets pour preparer votre expatriation dans plus de 200 pays. Droit, logement, fiscalite, sante et vie quotidienne a l'etranger.",
-    en: "Practical advice, country guides and comprehensive tips to prepare your move to 200+ countries. Law, housing, taxes, health and daily life abroad covered by expat experts.",
-  },
-  "search.placeholder": {
-    fr: "Rechercher un article...",
-    en: "Search articles...",
-  },
-  "cat.all": { fr: "Tous", en: "All" },
-  "cat.country": { fr: "Fiches pays", en: "Country Guides" },
-  "cat.thematic": { fr: "Fiches thematiques", en: "Thematic Guides" },
-  "cat.practical": { fr: "Guides pratiques", en: "Practical Guides" },
-  "cat.faq": { fr: "FAQ", en: "FAQ" },
-  "cat.news": { fr: "Actualites", en: "News" },
-  "featured.badge": { fr: "A la une", en: "Featured" },
-  "read.time": { fr: "min de lecture", en: "min read" },
-  "read.article": { fr: "Lire l'article", en: "Read article" },
-  "sidebar.popular": { fr: "Articles populaires", en: "Popular Articles" },
-  "sidebar.categories": { fr: "Categories", en: "Categories" },
-  "sidebar.tags": { fr: "Tags populaires", en: "Popular Tags" },
-  "newsletter.title": {
-    fr: "Restez informe ou que vous soyez",
-    en: "Stay informed wherever you are",
-  },
-  "newsletter.subtitle": {
-    fr: "Recevez nos meilleurs articles et guides directement dans votre boite mail",
-    en: "Get our best articles and guides delivered to your inbox",
-  },
-  "newsletter.placeholder": { fr: "Votre email", en: "Your email" },
-  "newsletter.cta": { fr: "S'abonner", en: "Subscribe" },
-  "empty.title": {
-    fr: "Aucun article trouve",
-    en: "No articles found",
-  },
-  "empty.subtitle": {
-    fr: "Essayez une autre recherche ou une autre categorie",
-    en: "Try a different search or category",
-  },
+  "page.title": { fr: "Articles & Guides", en: "Articles & Guides", es: "Artículos y Guías", de: "Artikel & Ratgeber", pt: "Artigos & Guias", ru: "Статьи и руководства", ch: "文章与指南", hi: "लेख और गाइड", ar: "المقالات والأدلة" },
+  "page.subtitle": { fr: "Conseils pratiques, fiches pays et guides complets pour preparer votre expatriation dans plus de 200 pays. Droit, logement, fiscalite, sante et vie quotidienne a l'etranger.", en: "Practical advice, country guides and comprehensive tips to prepare your move to 200+ countries. Law, housing, taxes, health and daily life abroad covered by expat experts.", es: "Consejos prácticos, fichas por país y guías completas para preparar tu expatriación en más de 200 países. Derecho, vivienda, fiscalidad, salud y vida cotidiana en el extranjero.", de: "Praktische Tipps, Länderprofile und umfassende Ratgeber zur Vorbereitung Ihrer Auswanderung in über 200 Länder. Recht, Wohnen, Steuern, Gesundheit und Alltag im Ausland.", pt: "Conselhos práticos, fichas por país e guias completos para preparar a sua expatriação em mais de 200 países. Direito, habitação, fiscalidade, saúde e vida quotidiana no estrangeiro.", ru: "Практические советы, страновые гиды и подробные руководства для подготовки к эмиграции в более чем 200 странах. Право, жильё, налоги, здоровье и повседневная жизнь за рубежом.", ch: "实用建议、国家指南和全面攻略，助您为移居全球200多个国家做好准备。涵盖法律、住房、税务、医疗及海外日常生活各方面。", hi: "200 से अधिक देशों में अपने प्रवास की तैयारी के लिए व्यावहारिक सुझाव, देश-गाइड और व्यापक मार्गदर्शिकाएँ। कानून, आवास, कर, स्वास्थ्य और विदेश में दैनिक जीवन।", ar: "نصائح عملية وأدلة الدول وإرشادات شاملة للتحضير لهجرتك إلى أكثر من 200 دولة. القانون والسكن والضرائب والصحة والحياة اليومية في الخارج." },
+  "search.placeholder": { fr: "Rechercher un article...", en: "Search articles...", es: "Buscar un artículo...", de: "Artikel suchen...", pt: "Pesquisar um artigo...", ru: "Поиск статей...", ch: "搜索文章...", hi: "लेख खोजें...", ar: "ابحث عن مقال..." },
+  "cat.all": { fr: "Tous", en: "All", es: "Todos", de: "Alle", pt: "Todos", ru: "Все", ch: "全部", hi: "सभी", ar: "الكل" },
+  "cat.country": { fr: "Fiches pays", en: "Country Guides", es: "Fichas por país", de: "Länderprofile", pt: "Fichas por país", ru: "Страновые гиды", ch: "国家指南", hi: "देश गाइड", ar: "أدلة الدول" },
+  "cat.thematic": { fr: "Fiches thematiques", en: "Thematic Guides", es: "Guías temáticas", de: "Thematische Ratgeber", pt: "Guias temáticos", ru: "Тематические руководства", ch: "专题指南", hi: "विषयगत गाइड", ar: "أدلة موضوعية" },
+  "cat.practical": { fr: "Guides pratiques", en: "Practical Guides", es: "Guías prácticas", de: "Praktische Ratgeber", pt: "Guias práticos", ru: "Практические руководства", ch: "实用指南", hi: "व्यावहारिक गाइड", ar: "أدلة عملية" },
+  "cat.faq": { fr: "FAQ", en: "FAQ", es: "FAQ", de: "FAQ", pt: "FAQ", ru: "FAQ", ch: "常见问题", hi: "FAQ", ar: "الأسئلة الشائعة" },
+  "cat.news": { fr: "Actualites", en: "News", es: "Actualidad", de: "Aktuelles", pt: "Notícias", ru: "Новости", ch: "新闻资讯", hi: "समाचार", ar: "الأخبار" },
+  "featured.badge": { fr: "A la une", en: "Featured", es: "Destacado", de: "Featured", pt: "Destaque", ru: "Главное", ch: "精选", hi: "विशेष", ar: "مميز" },
+  "read.time": { fr: "min de lecture", en: "min read", es: "min de lectura", de: "Min. Lesezeit", pt: "min de leitura", ru: "мин чтения", ch: "分钟阅读", hi: "मिनट पढ़ें", ar: "دقائق قراءة" },
+  "read.article": { fr: "Lire l'article", en: "Read article", es: "Leer el artículo", de: "Artikel lesen", pt: "Ler o artigo", ru: "Читать статью", ch: "阅读文章", hi: "लेख पढ़ें", ar: "اقرأ المقال" },
+  "sidebar.popular": { fr: "Articles populaires", en: "Popular Articles", es: "Artículos populares", de: "Beliebte Artikel", pt: "Artigos populares", ru: "Популярные статьи", ch: "热门文章", hi: "लोकप्रिय लेख", ar: "المقالات الأكثر قراءة" },
+  "sidebar.categories": { fr: "Categories", en: "Categories", es: "Categorías", de: "Kategorien", pt: "Categorias", ru: "Категории", ch: "分类", hi: "श्रेणियाँ", ar: "الفئات" },
+  "sidebar.tags": { fr: "Tags populaires", en: "Popular Tags", es: "Etiquetas populares", de: "Beliebte Tags", pt: "Tags populares", ru: "Популярные теги", ch: "热门标签", hi: "लोकप्रिय टैग", ar: "الوسوم الشائعة" },
+  "newsletter.title": { fr: "Restez informe ou que vous soyez", en: "Stay informed wherever you are", es: "Mantente informado estés donde estés", de: "Bleiben Sie überall informiert", pt: "Fique informado onde quer que esteja", ru: "Оставайтесь в курсе событий, где бы вы ни были", ch: "无论身在何处，保持信息畅通", hi: "चाहे जहाँ भी हों, सूचित रहें", ar: "ابقَ على اطلاع أينما كنت" },
+  "newsletter.subtitle": { fr: "Recevez nos meilleurs articles et guides directement dans votre boite mail", en: "Get our best articles and guides delivered to your inbox", es: "Recibe nuestros mejores artículos y guías directamente en tu correo", de: "Erhalten Sie unsere besten Artikel und Ratgeber direkt in Ihr Postfach", pt: "Receba os nossos melhores artigos e guias diretamente na sua caixa de email", ru: "Получайте наши лучшие статьи и руководства прямо на почту", ch: "将我们最优质的文章和指南直接发送到您的邮箱", hi: "हमारे सर्वश्रेष्ठ लेख और गाइड सीधे अपने इनबॉक्स में पाएं", ar: "احصل على أفضل مقالاتنا وأدلتنا مباشرة في بريدك الإلكتروني" },
+  "newsletter.placeholder": { fr: "Votre email", en: "Your email", es: "Tu correo electrónico", de: "Ihre E-Mail-Adresse", pt: "O seu email", ru: "Ваш email", ch: "您的邮箱", hi: "आपका ईमेल", ar: "بريدك الإلكتروني" },
+  "newsletter.cta": { fr: "S'abonner", en: "Subscribe", es: "Suscribirse", de: "Abonnieren", pt: "Subscrever", ru: "Подписаться", ch: "订阅", hi: "सदस्यता लें", ar: "اشترك" },
+  "empty.title": { fr: "Aucun article trouve", en: "No articles found", es: "Ningún artículo encontrado", de: "Keine Artikel gefunden", pt: "Nenhum artigo encontrado", ru: "Статьи не найдены", ch: "未找到文章", hi: "कोई लेख नहीं मिला", ar: "لم يُعثر على أي مقال" },
+  "empty.subtitle": { fr: "Essayez une autre recherche ou une autre categorie", en: "Try a different search or category", es: "Intenta con otra búsqueda o categoría", de: "Versuchen Sie eine andere Suche oder Kategorie", pt: "Tente uma pesquisa ou categoria diferente", ru: "Попробуйте другой запрос или категорию", ch: "请尝试其他搜索词或分类", hi: "कोई अन्य खोज या श्रेणी आज़माएं", ar: "جرّب بحثاً أو فئة مختلفة" },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
 };
 
 const t = (key: string, lang: string): string =>
@@ -536,7 +516,7 @@ export default function Articles() {
         description={t("page.subtitle", lang)}
       />
       <BreadcrumbSchema items={[
-        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
+        { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("page.title", lang) },
       ]} />
 
@@ -546,7 +526,7 @@ export default function Articles() {
           <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
             <li>
               <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
-                {lang === "en" ? "Home" : "Accueil"}
+                {t("home", lang)}
               </a>
             </li>
             <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
