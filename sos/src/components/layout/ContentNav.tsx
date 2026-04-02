@@ -137,19 +137,21 @@ for (const item of NAV_ITEMS) {
   ALL_SLUGS_BY_KEY[item.key] = getAllTranslatedSlugs(item.key);
 }
 
-// Content routes prefixes — ContentNav only appears on these routes
-const CONTENT_ROUTE_PATTERNS = [
-  /^\/[a-z]{2}-[a-z]{2}\/(annuaire|directory|directorio|diretorio|verzeichnis|adreslar|katalog|adresboek|spravochnik|mu-lu)/,
-  /^\/[a-z]{2}-[a-z]{2}\/(articles?)/,
-  /^\/[a-z]{2}-[a-z]{2}\/(outils|tools|herramientas|ferramentas|werkzeuge|instrumenty|adawat|upakaran|gongju)/,
-  /^\/[a-z]{2}-[a-z]{2}\/(categories|kategorie|categorias|kategorien)/,
-  /^\/[a-z]{2}-[a-z]{2}\/(faq|preguntas-frecuentes|perguntas-frequentes|haeufige-fragen|chasto-zadavaemye-voprosy|sawaalaat|savalar)/,
-  // Individual item routes
-  /^\/[a-z]{2}-[a-z]{2}\/[a-z-]+\/(outil|tool|herramienta|ferramenta|werkzeug|instrument|sondage|survey|encuesta|pesquisa|umfrage)/,
-];
-
+// Content routes: show ContentNav on any of the 7 nav sections (and their sub-pages)
 function isContentRoute(pathname: string): boolean {
-  return CONTENT_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname));
+  const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}-[a-z]{2}/, '');
+  // Match any slug from any nav item — direct or nested sub-page
+  for (const slugs of Object.values(ALL_SLUGS_BY_KEY)) {
+    for (const slug of slugs ?? []) {
+      if (
+        pathWithoutLocale === `/${slug}` ||
+        pathWithoutLocale.startsWith(`/${slug}/`)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 // ─── Locale region map ────────────────────────────────────────────────────────
