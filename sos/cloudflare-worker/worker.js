@@ -1095,6 +1095,8 @@ async function handleRequest(request, env, ctx) {
     'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
     // countries
     'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
+    // gallery (image bank) — all 9 languages
+    'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitravali', 'maarad',
     // NOTE: annuaire/directory = SPA React page (NOT blog) -- ne pas ajouter ici
     // NOTE: outils/tools and sondages/surveys = SPA React listing pages -- ne pas ajouter ici
     // special
@@ -1111,9 +1113,14 @@ async function handleRequest(request, env, ctx) {
     // Legacy /blog/* prefix — proxy as-is (Laravel will handle)
     if (path === '/blog' || path.startsWith('/blog/')) return true;
 
-    // SEO files at root — served from Cloudflare Pages static files (sos/public/)
-    // robots.txt, sitemap.xml, llms.txt, ai.txt all exist in sos/public/
-    // Only indexnow-key is proxied to blog (hosted there for verification)
+    // SEO files — sitemap.xml, robots.txt, llms.txt, ai.txt served from BLOG LARAVEL
+    // The blog generates a dynamic sitemap index that includes all content types
+    // (articles, categories, countries, tools, sondages, AND image bank).
+    // This is scalable: any new content added via admin auto-appears in sitemap.
+    if (path === '/sitemap.xml') return true;
+    if (path === '/robots.txt') return true;
+    if (path === '/llms.txt') return true;
+    if (path === '/ai.txt') return true;
     if (path === '/.well-known/indexnow-key.txt') return true;
     // Blog sitemaps (exclude Firebase SPA sitemaps: profiles, help, faq, country-listings + per-language variants)
     const FIREBASE_SITEMAPS = ['/sitemaps/profiles.xml', '/sitemaps/help.xml', '/sitemaps/faq.xml', '/sitemaps/country-listings.xml'];
@@ -1122,6 +1129,9 @@ async function handleRequest(request, env, ctx) {
     // Dynamic sitemap index
     const isSitemapIndex = path === '/sitemap-index.xml';
     if (path.startsWith('/sitemaps/') && path.endsWith('.xml') && !FIREBASE_SITEMAPS.includes(path) && !isFirebaseLangSitemap && !isSitemapIndex) return true;
+
+    // Image Bank storage files (served by VPS nginx, needed for Google Images)
+    if (path.startsWith('/storage/image-bank/')) return true;
 
     // Admin panel
     if (path.startsWith('/admin')) return true;
