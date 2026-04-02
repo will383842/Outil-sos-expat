@@ -244,6 +244,7 @@ const ProgrammeChatter = lazy(() => import('./pages/Categories/ProgrammeChatter'
 const AffiliationPage = lazy(() => import('./pages/Categories/Affiliation'));
 const SondagesListing = lazy(() => import('./pages/Categories/SondagesListing'));
 const SondagesPage = lazy(() => import('./pages/Sondages/Sondages'));
+const SondagesResultats = lazy(() => import('./pages/Sondages/SondagesResultats'));
 const OutilsListing = lazy(() => import('./pages/Categories/OutilsListing'));
 const OutilsPage = lazy(() => import('./pages/Outils/Outils'));
 
@@ -409,6 +410,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/programme-affiliation", component: AffiliationPage, translated: "programme-affiliation" },
   { path: "/nos-sondages", component: SondagesListing, translated: "sondages-listing" },
   { path: "/sondages", component: SondagesPage, translated: "sondages" },
+  { path: "/resultats-sondages", component: SondagesResultats, translated: "resultats-sondages" },
   { path: "/nos-outils", component: OutilsListing, translated: "outils-listing" },
   { path: "/outils", component: OutilsPage, translated: "outils" },
 
