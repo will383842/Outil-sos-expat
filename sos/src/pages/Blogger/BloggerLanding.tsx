@@ -9,7 +9,9 @@
  * - Sticky CTA on mobile, prefers-reduced-motion
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation } from 'react-router-dom';
 import { useLocaleNavigate } from '@/multilingual-system';
@@ -201,6 +203,16 @@ const BloggerLanding: React.FC = () => {
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
+  const [bloggerReleases, setBloggerReleases] = useState<Array<{ id: string; title: Record<string, string>; htmlUrl?: Record<string, string>; pdfUrl?: Record<string, string>; tags?: string[]; publishedAt?: Date }>>([]);
+
+  const loadBloggerReleases = useCallback(async () => {
+    try {
+      const snap = await getDocs(query(collection(db, 'blogger_releases'), where('isActive', '==', true), orderBy('publishedAt', 'desc')));
+      setBloggerReleases(snap.docs.map(d => ({ id: d.id, ...(d.data() as any), publishedAt: d.data().publishedAt?.toDate?.() })));
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { loadBloggerReleases(); }, [loadBloggerReleases]);
 
   // Country-specific config
   const { countryCode, lang: urlLang } = useCountryFromUrl();
@@ -1213,6 +1225,74 @@ const BloggerLanding: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* ================================================================
+            SECTION COMMUNIQUÉ BLOGUEURS — vignette document iframe
+        ================================================================ */}
+        {bloggerReleases.length > 0 && (
+          <section className="section-content" aria-label="Communiqué partenariat">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-black mb-2 text-center">
+                <FormattedMessage id="blogger.press.title" defaultMessage="Notre communiqué partenariat" />
+              </h2>
+              <p className="text-center text-sm mb-8 opacity-60">
+                <FormattedMessage id="blogger.press.subtitle" defaultMessage="Téléchargez et partagez notre kit presse" />
+              </p>
+              <div className={`grid gap-6 ${bloggerReleases.length === 1 ? 'max-w-sm mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                {bloggerReleases.map(release => {
+                  const fsLang = langCode;
+                  const title = release.title?.[fsLang] || release.title?.en || release.title?.fr || '';
+                  const htmlUrl = release.htmlUrl?.[fsLang] || release.htmlUrl?.en || release.htmlUrl?.fr;
+                  const pdfUrl = release.pdfUrl?.[fsLang] || release.pdfUrl?.en || release.pdfUrl?.fr;
+                  return (
+                    <article key={release.id} className="group flex flex-col rounded-2xl overflow-hidden border border-white/10 hover:border-purple-500/40 transition-all duration-300 bg-white/[0.03]">
+                      <a href={htmlUrl || '#'} target="_blank" rel="noopener noreferrer"
+                        className="relative overflow-hidden bg-white flex-shrink-0 cursor-pointer" style={{ height: '280px' }}
+                        aria-label={title}>
+                        {htmlUrl ? (
+                          <iframe src={htmlUrl} title={title} scrolling="no" tabIndex={-1}
+                            style={{ width: '960px', height: '1280px', border: 'none', pointerEvents: 'none', transform: 'scale(0.29)', transformOrigin: 'top left', display: 'block' }} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-white/5">
+                            <FileText className="w-14 h-14 text-white/15" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
+                          <span className="text-white text-xs font-bold bg-purple-600 px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <FormattedMessage id="blogger.press.view" defaultMessage="Voir le communiqué" />
+                          </span>
+                        </div>
+                      </a>
+                      <div className="p-4 flex flex-col gap-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {release.tags?.slice(0, 3).map(tag => (
+                            <span key={tag} className="px-2 py-0.5 bg-purple-600/15 text-purple-400 text-[10px] rounded-full font-semibold">{tag}</span>
+                          ))}
+                        </div>
+                        <h3 className="text-sm font-bold text-white leading-snug line-clamp-2">{title}</h3>
+                        <div className="flex gap-2 pt-1">
+                          {htmlUrl && (
+                            <a href={htmlUrl} target="_blank" rel="noopener noreferrer"
+                              className="flex-1 text-center text-xs font-semibold text-white bg-purple-600/80 hover:bg-purple-600 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5" />HTML
+                            </a>
+                          )}
+                          {pdfUrl && (
+                            <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
+                              className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5" />PDF
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ================================================================
             SECTION 8 - FAQ (accessible accordion)

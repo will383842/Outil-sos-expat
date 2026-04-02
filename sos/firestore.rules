@@ -3255,6 +3255,20 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // ================= BLOGGER RELEASES =================
+    // Communiqués pour blogueurs — lecture publique si isActive=true
+    match /blogger_releases/{releaseId} {
+      allow read: if resource.data.isActive == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ================= GROUP ADMIN RELEASES =================
+    // Communiqués pour admins de groupes — lecture publique si isActive=true
+    match /group_admin_releases/{releaseId} {
+      allow read: if resource.data.isActive == true;
+      allow create, update, delete: if isAdmin();
+    }
+
     // ================= CATCH-ALL (deny by default) =================
     // SECURITE: Refuse TOUT acces non explicitement autorise
     // Le role 'dev' est desactive en production

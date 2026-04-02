@@ -634,6 +634,8 @@ const AdminMarketingResources = lazy(() => import("../../pages/admin/marketing/A
 // ===== LAZY IMPORTS - PRESS =====
 const AdminPressResources = lazy(() => import("../../pages/admin/AdminPressResources"));
 const AdminPressReleases = lazy(() => import("../../pages/admin/AdminPressReleases"));
+const AdminBloggerReleases = lazy(() => import("../../pages/admin/AdminBloggerReleases"));
+const AdminGroupAdminReleases = lazy(() => import("../../pages/admin/AdminGroupAdminReleases"));
 
 // ===== LAZY IMPORTS - TELEGRAM =====
 import TelegramLayout from "../Telegram/TelegramLayout";
@@ -2130,6 +2132,22 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminPressReleases />
+          </Suspense>
+        }
+      />
+      <Route
+        path="blogger/releases"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminBloggerReleases />
+          </Suspense>
+        }
+      />
+      <Route
+        path="group-admin/releases"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminGroupAdminReleases />
           </Suspense>
         }
       />
