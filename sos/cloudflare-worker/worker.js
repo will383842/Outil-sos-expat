@@ -233,7 +233,7 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/kaise-kaam-karta-hai\/?$/i,  // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/كيف-يعمل\/?$/i,              // AR (native)
 
-  // ========== FAQ - All 9 languages ==========
+  // ========== FAQ SOS Expat (SPA React / Firestore) - All 9 languages ==========
   /^\/[a-z]{2}(-[a-z]{2})?\/faq\/?$/i,                   // FR/EN/DE
   /^\/[a-z]{2}(-[a-z]{2})?\/preguntas-frecuentes\/?$/i,  // ES
   /^\/[a-z]{2}(-[a-z]{2})?\/perguntas-frequentes\/?$/i,  // PT
@@ -241,6 +241,17 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/changjian-wenti\/?$/i,       // ZH
   /^\/[a-z]{2}(-[a-z]{2})?\/aksar-puche-jaane-wale-sawal\/?$/i, // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/الأسئلة-الشائعة\/?$/i,       // AR (native)
+
+  // ========== Vie à l'étranger (blog Laravel / PostgreSQL) - All 9 languages ==========
+  /^\/[a-z]{2}(-[a-z]{2})?\/vie-a-letranger(\/.*)?$/i,          // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/living-abroad(\/.*)?$/i,            // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/vivir-en-el-extranjero(\/.*)?$/i,   // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/leben-im-ausland(\/.*)?$/i,         // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/viver-no-estrangeiro(\/.*)?$/i,     // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/zhizn-za-rubezhom(\/.*)?$/i,        // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/haiwai-shenghuo(\/.*)?$/i,          // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/videsh-mein-jeevan(\/.*)?$/i,       // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/alhayat-fi-alkhaarij(\/.*)?$/i,     // AR
 
   // ========== TESTIMONIALS - All 9 languages ==========
   /^\/[a-z]{2}(-[a-z]{2})?\/temoignages\/?$/i,           // FR
