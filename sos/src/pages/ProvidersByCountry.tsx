@@ -349,6 +349,21 @@ const ProvidersByCountry: React.FC = () => {
   const canonicalUrl = `${BASE_URL}/${localeString}/${rolePath}/${slugify(countryName)}`;
   const isEmptyState = !isLoading && providers.length === 0;
 
+  // Hreflang: link all 9 language versions of this country page
+  const ALL_LANGS = ["fr", "en", "es", "de", "ru", "pt", "ch", "hi", "ar"] as const;
+  const LANG_LOCALES: Record<string, string> = {
+    fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de", ru: "ru-ru",
+    pt: "pt-pt", ch: "zh-cn", hi: "hi-in", ar: "ar-sa",
+  };
+  const HREFLANG_CODES: Record<string, string> = {
+    fr: "fr", en: "en", es: "es", de: "de", ru: "ru",
+    pt: "pt", ch: "zh-Hans", hi: "hi", ar: "ar",
+  };
+  const alternateLanguages = countryData ? ALL_LANGS.map(l => ({
+    lang: HREFLANG_CODES[l],
+    url: `${BASE_URL}/${LANG_LOCALES[l]}/${getRolePath(providerType, l)}/${slugify(getCountryName(countryData.code, l))}`,
+  })) : [];
+
   // Dynamic FAQs
   const dynamicFaqs: FAQItem[] = useMemo(() => {
     const faqConsult: FAQItem = {
@@ -487,6 +502,7 @@ const ProvidersByCountry: React.FC = () => {
         title={seoTitle}
         description={seoDescription}
         canonicalUrl={canonicalUrl}
+        alternateLanguages={alternateLanguages}
         ogType="website"
         noindex={isEmptyState}
         locale={effectiveLang === "fr" ? "fr_FR" : effectiveLang === "en" ? "en_US" : effectiveLang === "es" ? "es_ES" : effectiveLang === "de" ? "de_DE" : effectiveLang === "pt" ? "pt_PT" : effectiveLang === "ru" ? "ru_RU" : effectiveLang === "ar" ? "ar_SA" : effectiveLang === "hi" ? "hi_IN" : "fr_FR"}

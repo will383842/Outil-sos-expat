@@ -208,6 +208,16 @@ const HelpArticle: React.FC = () => {
         });
 
         if (foundArticle) {
+          // Redirect if slug doesn't match current language (cross-language slug)
+          // e.g., /fr-fr/centre-aide/how-to-expatriate → /fr-fr/centre-aide/comment-s-expatrier
+          if (foundArticle.slug && typeof foundArticle.slug === 'object') {
+            const correctSlug = foundArticle.slug[langCode] || foundArticle.slug['en'] || foundArticle.slug['fr'];
+            if (correctSlug && correctSlug !== slug) {
+              const helpSlug = getTranslatedRouteSlug("help-center" as any, langCode as any);
+              navigate(`/${currentLocale}/${helpSlug}/${correctSlug}`, { replace: true });
+              return;
+            }
+          }
           articleRef.current = foundArticle;
           setArticle(foundArticle);
           setNotFound(false);

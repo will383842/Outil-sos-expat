@@ -2605,8 +2605,33 @@ const ProviderProfile: React.FC = () => {
         twitterSite="@sosexpat"
       />
 
-      {/* Hreflang links — handled by global HreflangLinks component (no duplicates) */}
-      <HreflangLinks pathname={location.pathname} />
+      {/* Hreflang links — use provider.slugs from Firestore for accurate per-language URLs */}
+      {(() => {
+        const providerSlugs = (provider as any).slugs as Record<string, string> | undefined;
+        if (providerSlugs && typeof providerSlugs === 'object') {
+          const HREFLANG_CODES: Record<string, string> = {
+            fr: 'fr', en: 'en', es: 'es', de: 'de', ru: 'ru',
+            pt: 'pt', ch: 'zh-Hans', hi: 'hi', ar: 'ar',
+          };
+          const entries = Object.entries(providerSlugs)
+            .filter(([, slug]) => slug && typeof slug === 'string')
+            .map(([lang, slug]) => ({
+              hreflang: HREFLANG_CODES[lang] || lang,
+              url: `https://sos-expat.com/${slug}`,
+            }));
+          const frSlug = providerSlugs['fr'];
+          return (
+            <Helmet>
+              {entries.map(({ hreflang, url }) => (
+                <link key={hreflang} rel="alternate" hrefLang={hreflang} href={url} />
+              ))}
+              {frSlug && <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/${frSlug}`} />}
+            </Helmet>
+          );
+        }
+        // Fallback: generic HreflangLinks (less accurate but better than nothing)
+        return <HreflangLinks pathname={location.pathname} />;
+      })()}
 
       {/* Product/Offer schema — shows prices in Google SERPs */}
       <Helmet>

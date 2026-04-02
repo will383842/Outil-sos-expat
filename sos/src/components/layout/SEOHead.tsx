@@ -262,15 +262,20 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       {twitterSite && <meta name="twitter:site" content={twitterSite} />}
       {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
 
-      {/* Langues alternatives */}
+      {/* Langues alternatives + x-default */}
       {alternateLanguages.map((alt) => (
-        <link 
-          key={alt.lang} 
-          rel="alternate" 
-          hrefLang={alt.lang} 
+        <link
+          key={alt.lang}
+          rel="alternate"
+          hrefLang={alt.lang}
           href={alt.url}
         />
       ))}
+      {alternateLanguages.length > 0 && (() => {
+        const frAlt = alternateLanguages.find(a => a.lang === 'fr');
+        const xDefaultUrl = frAlt?.url || alternateLanguages[0]?.url;
+        return xDefaultUrl ? <link rel="alternate" hrefLang="x-default" href={xDefaultUrl} /> : null;
+      })()}
 
       {/* Schema.org Structured Data enrichi pour IA */}
       <script type="application/ld+json">

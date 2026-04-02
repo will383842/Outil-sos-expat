@@ -522,6 +522,18 @@ const FAQDetail: React.FC = () => {
     navigate(newUrl, { replace: true });
   }, [language, langCode, faq, navigate, currentCountry]);
 
+  // Redirect cross-language slug to correct slug for current language
+  // e.g., /fr-fr/faq/wie-funktioniert-die-plattform → /fr-fr/faq/comment-fonctionne-la-plateforme
+  useEffect(() => {
+    const currentFaq = faqDataRef.current || faq;
+    if (!currentFaq || !slug || loading) return;
+    const correctSlug = currentFaq.slug?.[langCode] || currentFaq.slug?.['fr'] || currentFaq.slug?.['en'];
+    if (correctSlug && correctSlug !== slug) {
+      const faqRouteSlug = getTranslatedRouteSlug('faq', langCode as any);
+      navigate(`/${currentLocale}/${faqRouteSlug}/${correctSlug}`, { replace: true });
+    }
+  }, [faq, slug, langCode, currentLocale, loading, navigate]);
+
   // CRITICAL: Check ref FIRST before any other render decisions
   // Ref is set synchronously, so it's the most reliable source of truth
   const hasFaqInRef = !!faqDataRef.current && loadedSlugRef.current === slug;
