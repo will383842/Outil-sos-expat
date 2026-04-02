@@ -4,7 +4,7 @@
  * Guides complets par pays de destination pour expatries
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { parseLocaleFromPath } from "@/multilingual-system";
@@ -21,6 +21,7 @@ import {
   Layers,
   Map as MapIcon,
   Flag,
+  Loader2,
 } from "lucide-react";
 
 // ============================================================
@@ -87,43 +88,61 @@ const CONTINENT_FILTER_KEYS: Record<Continent, string> = {
 };
 
 // ============================================================
-// MOCK DATA
+// TYPES & API
 // ============================================================
 
 interface CountrySheet {
   code: string;
-  name: Record<string, string>;
+  name: string;  // title from blog article in requested lang
+  slug: string;  // article slug for linking
   continent: Continent;
-  rubriqueCount: number;
-  lastUpdated?: string;
+  readingTime: number;
+  publishedAt?: string;
 }
 
-const COUNTRIES: CountrySheet[] = [
-  { code: "FR", name: { fr: "France", en: "France" }, continent: "Europe", rubriqueCount: 12, lastUpdated: "2026-03-28" },
-  { code: "ES", name: { fr: "Espagne", en: "Spain" }, continent: "Europe", rubriqueCount: 10, lastUpdated: "2026-03-25" },
-  { code: "DE", name: { fr: "Allemagne", en: "Germany" }, continent: "Europe", rubriqueCount: 11, lastUpdated: "2026-03-20" },
-  { code: "PT", name: { fr: "Portugal", en: "Portugal" }, continent: "Europe", rubriqueCount: 9 },
-  { code: "IT", name: { fr: "Italie", en: "Italy" }, continent: "Europe", rubriqueCount: 8 },
-  { code: "BE", name: { fr: "Belgique", en: "Belgium" }, continent: "Europe", rubriqueCount: 7 },
-  { code: "MA", name: { fr: "Maroc", en: "Morocco" }, continent: "Afrique", rubriqueCount: 8, lastUpdated: "2026-03-15" },
-  { code: "SN", name: { fr: "Senegal", en: "Senegal" }, continent: "Afrique", rubriqueCount: 6 },
-  { code: "CI", name: { fr: "Cote d'Ivoire", en: "Ivory Coast" }, continent: "Afrique", rubriqueCount: 5 },
-  { code: "JP", name: { fr: "Japon", en: "Japan" }, continent: "Asie", rubriqueCount: 9, lastUpdated: "2026-03-22" },
-  { code: "TH", name: { fr: "Thailande", en: "Thailand" }, continent: "Asie", rubriqueCount: 8 },
-  { code: "SG", name: { fr: "Singapour", en: "Singapore" }, continent: "Asie", rubriqueCount: 7 },
-  { code: "CA", name: { fr: "Canada", en: "Canada" }, continent: "Ameriques", rubriqueCount: 11, lastUpdated: "2026-03-27" },
-  { code: "BR", name: { fr: "Bresil", en: "Brazil" }, continent: "Ameriques", rubriqueCount: 7 },
-  { code: "MX", name: { fr: "Mexique", en: "Mexico" }, continent: "Ameriques", rubriqueCount: 6 },
-  { code: "AE", name: { fr: "Emirats arabes unis", en: "United Arab Emirates" }, continent: "Moyen-Orient", rubriqueCount: 10, lastUpdated: "2026-03-18" },
-  { code: "AU", name: { fr: "Australie", en: "Australia" }, continent: "Oceanie", rubriqueCount: 10, lastUpdated: "2026-03-26" },
-  { code: "NZ", name: { fr: "Nouvelle-Zelande", en: "New Zealand" }, continent: "Oceanie", rubriqueCount: 6 },
-];
+const BLOG_API = "https://sos-expat.com/api/v1/public";
 
-const COMING_SOON: { code: string; name: Record<string, string>; continent: Continent }[] = [
-  { code: "KR", name: { fr: "Coree du Sud", en: "South Korea" }, continent: "Asie" },
-  { code: "CO", name: { fr: "Colombie", en: "Colombia" }, continent: "Ameriques" },
-  { code: "ZA", name: { fr: "Afrique du Sud", en: "South Africa" }, continent: "Afrique" },
-];
+// Blog article URL helpers (same as in Articles.tsx)
+const LANG_LOCALE: Record<string, string> = {
+  fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de",
+  ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", hi: "hi-in", ar: "ar-sa",
+};
+const ARTICLES_SEGMENT: Record<string, string> = {
+  fr: "articles", en: "articles", es: "articulos", de: "artikel",
+  pt: "artigos", ru: "stati", zh: "wenzhang", hi: "lekh", ar: "maqalat",
+};
+function articleUrl(lang: string, slug: string): string {
+  return `/${LANG_LOCALE[lang] ?? "fr-fr"}/${ARTICLES_SEGMENT[lang] ?? "articles"}/${slug}`;
+}
+
+// Continent lookup by country code (comprehensive for expat destinations)
+const COUNTRY_CONTINENT: Record<string, Continent> = {
+  // Europe
+  FR: "Europe", DE: "Europe", ES: "Europe", IT: "Europe", PT: "Europe", BE: "Europe",
+  NL: "Europe", CH: "Europe", AT: "Europe", SE: "Europe", NO: "Europe", DK: "Europe",
+  FI: "Europe", PL: "Europe", CZ: "Europe", HU: "Europe", RO: "Europe", GR: "Europe",
+  GB: "Europe", IE: "Europe", LU: "Europe", HR: "Europe", SK: "Europe", SI: "Europe",
+  BG: "Europe", EE: "Europe", LV: "Europe", LT: "Europe", MT: "Europe", CY: "Europe",
+  // Africa
+  MA: "Afrique", TN: "Afrique", DZ: "Afrique", SN: "Afrique", CI: "Afrique",
+  ZA: "Afrique", NG: "Afrique", KE: "Afrique", EG: "Afrique", GH: "Afrique",
+  CM: "Afrique", MU: "Afrique", MG: "Afrique", ET: "Afrique", TZ: "Afrique",
+  // Asia
+  JP: "Asie", CN: "Asie", TH: "Asie", SG: "Asie", KR: "Asie", IN: "Asie",
+  HK: "Asie", VN: "Asie", MY: "Asie", ID: "Asie", PH: "Asie", TW: "Asie",
+  BD: "Asie", PK: "Asie", LK: "Asie", MM: "Asie", NP: "Asie", KH: "Asie",
+  // Americas
+  CA: "Ameriques", US: "Ameriques", BR: "Ameriques", MX: "Ameriques",
+  CO: "Ameriques", AR: "Ameriques", CL: "Ameriques", PE: "Ameriques",
+  EC: "Ameriques", BO: "Ameriques", PY: "Ameriques", UY: "Ameriques",
+  CR: "Ameriques", PA: "Ameriques", CU: "Ameriques", DO: "Ameriques",
+  // Middle East
+  AE: "Moyen-Orient", SA: "Moyen-Orient", QA: "Moyen-Orient", KW: "Moyen-Orient",
+  IL: "Moyen-Orient", TR: "Moyen-Orient", JO: "Moyen-Orient", LB: "Moyen-Orient",
+  BH: "Moyen-Orient", OM: "Moyen-Orient", IQ: "Moyen-Orient", IR: "Moyen-Orient",
+  // Oceania
+  AU: "Oceanie", NZ: "Oceanie", FJ: "Oceanie", PG: "Oceanie",
+};
 
 // ============================================================
 // ANIMATIONS
@@ -172,10 +191,56 @@ const FichesPays: React.FC = () => {
 
   const [activeContinent, setActiveContinent] = useState<Continent | null>(null);
   const [search, setSearch] = useState("");
+  const [countries, setCountries] = useState<CountrySheet[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ----- Filtered & grouped countries -----
+  // Fetch from Blog API: fiches-pays category, 1 article per country
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+
+    fetch(`${BLOG_API}/articles?category=fiches-pays&lang=${lang}&per_page=100`, {
+      signal: controller.signal,
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        const raw: Array<{
+          id: string;
+          slug: string;
+          title: string;
+          reading_time_minutes: number;
+          published_at: string;
+          countries: string[];
+        }> = json.data ?? [];
+
+        // Map each article to a CountrySheet using its first country code
+        const seen = new Set<string>();
+        const sheets: CountrySheet[] = [];
+
+        for (const article of raw) {
+          const code = (article.countries?.[0] ?? "").toUpperCase();
+          if (!code || seen.has(code)) continue;
+          seen.add(code);
+          sheets.push({
+            code,
+            name:       article.title,
+            slug:       article.slug,
+            continent:  COUNTRY_CONTINENT[code] ?? "Europe",
+            readingTime: article.reading_time_minutes,
+            publishedAt: article.published_at,
+          });
+        }
+        setCountries(sheets);
+      })
+      .catch(() => {/* network error: show empty state */})
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [lang]);
+
+  // Filtered & grouped
   const filtered = useMemo(() => {
-    let list = COUNTRIES;
+    let list = countries;
     if (activeContinent) {
       list = list.filter((c) => c.continent === activeContinent);
     }
@@ -183,13 +248,12 @@ const FichesPays: React.FC = () => {
       const q = search.trim().toLowerCase();
       list = list.filter(
         (c) =>
-          c.name.fr.toLowerCase().includes(q) ||
-          c.name.en.toLowerCase().includes(q) ||
+          c.name.toLowerCase().includes(q) ||
           c.code.toLowerCase().includes(q)
       );
     }
     return list;
-  }, [activeContinent, search]);
+  }, [activeContinent, search, countries]);
 
   const grouped = useMemo(() => {
     const map = new Map<Continent, CountrySheet[]>();
@@ -197,7 +261,6 @@ const FichesPays: React.FC = () => {
       if (!map.has(c.continent)) map.set(c.continent, []);
       map.get(c.continent)!.push(c);
     }
-    // Sort by CONTINENT_KEYS order
     const sorted: [Continent, CountrySheet[]][] = [];
     for (const key of CONTINENT_KEYS) {
       const items = map.get(key);
@@ -206,9 +269,14 @@ const FichesPays: React.FC = () => {
     return sorted;
   }, [filtered]);
 
+  const continentCount = useMemo(
+    () => new Set(countries.map((c) => c.continent)).size,
+    [countries]
+  );
+
   const stats = [
-    { icon: BookOpen, value: COUNTRIES.length, label: t("statSheets", lang) },
-    { icon: MapIcon, value: 7, label: t("statContinents", lang) },
+    { icon: BookOpen, value: loading ? "…" : countries.length, label: t("statSheets", lang) },
+    { icon: MapIcon, value: loading ? "…" : continentCount, label: t("statContinents", lang) },
     { icon: Globe, value: "200+", label: t("statCountries", lang) },
   ];
 

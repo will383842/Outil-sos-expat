@@ -378,8 +378,14 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId) || isAdmin();
     }
 
-    // ================= FAQ COLLECTION =================
+    // ================= FAQ COLLECTION (legacy — collection vide, conservée pour rétro-compatibilité) =================
     match /faqs/{faqId} {
+      allow read: if resource.data.isActive == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ================= APP FAQ COLLECTION (collection officielle SOS Expat) =================
+    match /app_faq/{faqId} {
       allow read: if resource.data.isActive == true || isAdmin();
       allow create, update, delete: if isAdmin();
     }
