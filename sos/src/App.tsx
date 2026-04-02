@@ -402,15 +402,15 @@ const routeConfigs: RouteConfig[] = [
   { path: "/annuaire", component: Annuaire, translated: "annuaire" },
 
   // Public content pages (Redesign 2026)
-  { path: "/articles", component: Articles },
-  { path: "/categories/fiches-pays", component: FichesPays },
-  { path: "/categories/fiches-thematiques", component: FichesThematiques },
-  { path: "/categories/programme", component: ProgrammeChatter },
-  { path: "/categories/affiliation", component: AffiliationPage },
-  { path: "/categories/sondages", component: SondagesListing },
-  { path: "/sondages", component: SondagesPage },
-  { path: "/categories/outils", component: OutilsListing },
-  { path: "/outils", component: OutilsPage },
+  { path: "/articles", component: Articles, translated: "articles" },
+  { path: "/categories/fiches-pays", component: FichesPays, translated: "fiches-pays" },
+  { path: "/categories/fiches-thematiques", component: FichesThematiques, translated: "fiches-thematiques" },
+  { path: "/categories/programme", component: ProgrammeChatter, translated: "programme-chatter" },
+  { path: "/categories/affiliation", component: AffiliationPage, translated: "programme-affiliation" },
+  { path: "/categories/sondages", component: SondagesListing, translated: "sondages-listing" },
+  { path: "/sondages", component: SondagesPage, translated: "sondages" },
+  { path: "/categories/outils", component: OutilsListing, translated: "outils-listing" },
+  { path: "/outils", component: OutilsPage, translated: "outils" },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },

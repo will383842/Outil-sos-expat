@@ -192,7 +192,7 @@ const FichesPays: React.FC = () => {
   }, [activeContinent, search]);
 
   const grouped = useMemo(() => {
-    const map = new Map() as Map<Continent, CountrySheet[]>;
+    const map = new Map<Continent, CountrySheet[]>();
     for (const c of filtered) {
       if (!map.has(c.continent)) map.set(c.continent, []);
       map.get(c.continent)!.push(c);
