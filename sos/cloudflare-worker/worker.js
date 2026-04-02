@@ -1430,6 +1430,25 @@ async function handleRequest(request, env, ctx) {
         });
       }
 
+      // 2b. Legacy route slug aliases → canonical slugs
+      // Old slugs that were renamed but Google still has indexed
+      const LEGACY_SLUG_ALIASES = {
+        'lvshi': 'lushi',                     // Old ZH lawyers listing → canonical
+        'aapatkaleen-call': 'aapatkaalin-call', // Old HI emergency call → canonical
+      };
+      if (firstSlug && LEGACY_SLUG_ALIASES[firstSlug]) {
+        const canonicalSlug = LEGACY_SLUG_ALIASES[firstSlug];
+        const segments = restPath.split('/').filter(Boolean);
+        segments[0] = canonicalSlug;
+        const newRestPath = '/' + segments.join('/');
+        const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}${newRestPath}${url.search}`;
+        console.log(`[WORKER] Legacy slug alias redirect: ${pathname} -> ${urlLang}-${urlCountry}${newRestPath}`);
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+        });
+      }
+
       // 3. Detect article slugs with wrong language prefix
       // e.g., /fr-fr/faq/ch-what-is-sos-expat → Chinese article under French locale
       // e.g., /de-de/hilfezentrum/ch-how-sos-expat-works → Chinese article under German locale
