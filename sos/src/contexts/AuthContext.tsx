@@ -1732,12 +1732,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         if (userDoc.exists()) {
           const existing = userDoc.data() as Partial<User>;
-          if (existing.role && existing.role !== 'client') {
-            devLog("[DEBUG] " + "❌ GOOGLE POPUP: Rôle non-client - " + existing.role);
-            await firebaseSignOut(auth);
-            setError('Les comptes Google sont réservés aux clients.');
-            throw new Error('Role restriction');
-          }
           await updateDoc(userRef, {
             lastLoginAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -1847,10 +1841,25 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         const popupErrorCode = (popupError as { code?: string })?.code || '';
         devLog("[DEBUG] " + "⚠️ GOOGLE POPUP échoué: " + popupErrorCode);
 
-        if (popupErrorCode === 'auth/popup-closed-by-user' ||
-            popupErrorCode === 'auth/cancelled-popup-request') {
-          // User closed popup, don't fallback
+        if (popupErrorCode === 'auth/cancelled-popup-request') {
+          // Duplicate popup request cancelled, don't fallback
           throw popupError;
+        }
+
+        if (popupErrorCode === 'auth/popup-closed-by-user') {
+          // Could be user action OR COOP blocking window.closed — fallback to redirect
+          devLog("[DEBUG] " + "🔄 Popup fermé (COOP ou utilisateur), fallback vers REDIRECT...");
+          let redirectTarget = window.location.pathname + window.location.search;
+          try {
+            const loginRedirect = sessionStorage.getItem('loginRedirect');
+            if (loginRedirect) {
+              redirectTarget = loginRedirect;
+              sessionStorage.removeItem('loginRedirect');
+            }
+          } catch {}
+          safeStorage.setItem('googleAuthRedirect', redirectTarget);
+          await signInWithRedirect(auth, provider);
+          return;
         }
 
         if (popupErrorCode === 'auth/popup-blocked') {
@@ -1996,24 +2005,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         if (userDoc.exists()) {
           const existing = userDoc.data() as Partial<User>;
-          if (existing.role && existing.role !== 'client') {
-            devLog("[DEBUG] " + "❌ GOOGLE REDIRECT: Rôle non-client détecté - " + existing.role);
-            await firebaseSignOut(auth);
-            setAuthMetrics((m) => ({
-              ...m,
-              failedLogins: m.failedLogins + 1,
-              roleRestrictionBlocks: m.roleRestrictionBlocks + 1,
-            }));
-            setError('Les comptes Google sont réservés aux clients. En tant que prestataire, connectez-vous avec votre email et mot de passe.');
-            // Log en arrière-plan (ne pas bloquer le UI)
-            logAuthEvent('google_login_role_restriction', {
-              userId: googleUser.uid,
-              role: existing.role,
-              email: googleUser.email,
-              deviceInfo
-            }).catch(() => { /* ignoré */ });
-            return;
-          }
           // Split displayName if firstName/lastName are missing
           const needsNameSplit = !existing.firstName || !existing.lastName;
           const { firstName, lastName } = needsNameSplit 
