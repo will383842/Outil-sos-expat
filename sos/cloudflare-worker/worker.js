@@ -1108,6 +1108,18 @@ async function handleRequest(request, env, ctx) {
     'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
   ]);
 
+  // Sondage segments (all 9 languages) -- listing page (/fr-fr/sondages) = SPA, detail pages = Blog
+  // Expat surveys
+  const SONDAGES_SEGMENTS = new Set([
+    'sondages-expatries', 'expat-surveys', 'encuestas-expatriados', 'expat-umfragen',
+    'pesquisas-expatriados', 'oprosy-expatov', 'expat-diaocha', 'pravasi-sarvekshan',
+    'istitalaat-mughtaribeen',
+    // Vacancier surveys
+    'sondages-vacanciers', 'holiday-surveys', 'encuestas-vacaciones', 'urlaubsumfragen',
+    'pesquisas-ferias', 'oprosy-otpusk', 'jiaqi-diaocha', 'chhutti-sarvekshan',
+    'istitalaat-ijaza',
+  ]);
+
   // Check if the path should be proxied to the blog backend
   function isBlogPath(path) {
     // Legacy /blog/* prefix — proxy as-is (Laravel will handle)
@@ -1149,6 +1161,10 @@ async function handleRequest(request, env, ctx) {
 
       // Articles: listing (/en-us/articles) = SPA, detail (/en-us/articles/slug) = Blog
       if (ARTICLES_SEGMENTS.has(segment)) return !!slug;
+
+      // Sondages: listing (/fr-fr/sondages) = SPA, detail pages (/fr-fr/sondages-expatries/slug) = Blog
+      // Also covers results sub-pages (/fr-fr/sondages-expatries/slug/resultats)
+      if (SONDAGES_SEGMENTS.has(segment)) return !!slug;
 
       // /{locale}/{translated-segment} = blog content (categories, tags, countries, vie-a-letranger)
       if (BLOG_SEGMENTS.has(segment)) return true;
