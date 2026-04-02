@@ -401,15 +401,15 @@ const routeConfigs: RouteConfig[] = [
   // Annuaire expatriés — ressources officielles par pays (CountryDirectory depuis Mission Control)
   { path: "/annuaire", component: Annuaire, translated: "annuaire" },
 
-  // Public content pages (Redesign 2026)
+  // Public content pages (Redesign 2026) — slugs à la racine pour éviter interception blog Laravel /categories/*
   { path: "/articles", component: Articles, translated: "articles" },
-  { path: "/categories/fiches-pays", component: FichesPays, translated: "fiches-pays" },
-  { path: "/categories/fiches-thematiques", component: FichesThematiques, translated: "fiches-thematiques" },
-  { path: "/categories/programme", component: ProgrammeChatter, translated: "programme-chatter" },
-  { path: "/categories/affiliation", component: AffiliationPage, translated: "programme-affiliation" },
-  { path: "/categories/sondages", component: SondagesListing, translated: "sondages-listing" },
+  { path: "/fiches-pays", component: FichesPays, translated: "fiches-pays" },
+  { path: "/fiches-thematiques", component: FichesThematiques, translated: "fiches-thematiques" },
+  { path: "/programme-chatter", component: ProgrammeChatter, translated: "programme-chatter" },
+  { path: "/programme-affiliation", component: AffiliationPage, translated: "programme-affiliation" },
+  { path: "/nos-sondages", component: SondagesListing, translated: "sondages-listing" },
   { path: "/sondages", component: SondagesPage, translated: "sondages" },
-  { path: "/categories/outils", component: OutilsListing, translated: "outils-listing" },
+  { path: "/nos-outils", component: OutilsListing, translated: "outils-listing" },
   { path: "/outils", component: OutilsPage, translated: "outils" },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
