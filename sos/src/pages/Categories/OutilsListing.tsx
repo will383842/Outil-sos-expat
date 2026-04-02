@@ -11,6 +11,8 @@ import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import { getTranslatedRouteSlug } from "@/multilingual-system";
 import {
   Calculator,
   Globe,
@@ -30,35 +32,56 @@ import type { LucideIcon } from "lucide-react";
 // ============================================================
 
 const T: Record<string, Record<string, string>> = {
-  home: { fr: "Accueil", en: "Home" },
-  breadLabel: { fr: "Outils", en: "Tools" },
-  badge: { fr: "Outils", en: "Tools" },
-  title: { fr: "Outils pour expatries", en: "Tools for expats" },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  breadLabel: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Werkzeuge", pt: "Ferramentas", ru: "Инструменты", ch: "工具", hi: "उपकरण", ar: "أدوات" },
+  badge: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Werkzeuge", pt: "Ferramentas", ru: "Инструменты", ch: "工具", hi: "उपकरण", ar: "أدوات" },
+  title: { fr: "Outils pour expatries", en: "Tools for expats", es: "Herramientas para expatriados", de: "Werkzeuge für Expats", pt: "Ferramentas para expatriados", ru: "Инструменты для экспатов", ch: "外籍人士工具", hi: "प्रवासियों के लिए उपकरण", ar: "أدوات للمغتربين" },
   subtitle: {
     fr: "Des outils gratuits pour preparer et reussir votre expatriation.",
     en: "Free tools to prepare and succeed in your expatriation.",
+    es: "Herramientas gratuitas para preparar y tener éxito en tu expatriación.",
+    de: "Kostenlose Werkzeuge für eine erfolgreiche Auswanderung.",
+    pt: "Ferramentas gratuitas para preparar e ter sucesso na sua expatriação.",
+    ru: "Бесплатные инструменты для подготовки и успеха в эмиграции.",
+    ch: "免费工具，助您为移居海外做好准备。",
+    hi: "अपने प्रवास की तैयारी और सफलता के लिए मुफ्त उपकरण।",
+    ar: "أدوات مجانية للتحضير والنجاح في هجرتك.",
   },
-  statTools: { fr: "outils disponibles", en: "tools available" },
-  filterAll: { fr: "Tous", en: "All" },
-  filterCalculateurs: { fr: "Calculateurs", en: "Calculators" },
-  filterGuides: { fr: "Guides interactifs", en: "Interactive guides" },
-  filterChecklists: { fr: "Checklists", en: "Checklists" },
-  filterComparateurs: { fr: "Comparateurs", en: "Comparators" },
-  popular: { fr: "Les plus populaires", en: "Most popular" },
-  free: { fr: "Gratuit", en: "Free" },
-  premium: { fr: "Premium", en: "Premium" },
-  newBadge: { fr: "Nouveau", en: "New" },
-  cta: { fr: "Utiliser", en: "Use" },
-  ctaTitle: { fr: "Un outil vous manque ?", en: "Missing a tool?" },
+  statTools: { fr: "outils disponibles", en: "tools available", es: "herramientas disponibles", de: "verfügbare Werkzeuge", pt: "ferramentas disponíveis", ru: "доступных инструментов", ch: "可用工具", hi: "उपलब्ध उपकरण", ar: "أدوات متاحة" },
+  filterAll: { fr: "Tous", en: "All", es: "Todos", de: "Alle", pt: "Todos", ru: "Все", ch: "全部", hi: "सभी", ar: "الكل" },
+  filterCalculateurs: { fr: "Calculateurs", en: "Calculators", es: "Calculadoras", de: "Rechner", pt: "Calculadoras", ru: "Калькуляторы", ch: "计算器", hi: "कैलकुलेटर", ar: "الآلات الحاسبة" },
+  filterGuides: { fr: "Guides interactifs", en: "Interactive guides", es: "Guías interactivas", de: "Interaktive Guides", pt: "Guias interativos", ru: "Интерактивные гиды", ch: "互动指南", hi: "इंटरएक्टिव गाइड", ar: "الأدلة التفاعلية" },
+  filterChecklists: { fr: "Checklists", en: "Checklists", es: "Listas de verificación", de: "Checklisten", pt: "Checklists", ru: "Чеклисты", ch: "清单", hi: "चेकलिस्ट", ar: "قوائم التحقق" },
+  filterComparateurs: { fr: "Comparateurs", en: "Comparators", es: "Comparadores", de: "Vergleicher", pt: "Comparadores", ru: "Сравнители", ch: "比较器", hi: "तुलनित्र", ar: "أدوات المقارنة" },
+  popular: { fr: "Les plus populaires", en: "Most popular", es: "Los más populares", de: "Am beliebtesten", pt: "Mais populares", ru: "Самые популярные", ch: "最受欢迎", hi: "सबसे लोकप्रिय", ar: "الأكثر شعبية" },
+  free: { fr: "Gratuit", en: "Free", es: "Gratis", de: "Kostenlos", pt: "Grátis", ru: "Бесплатно", ch: "免费", hi: "मुफ्त", ar: "مجاني" },
+  premium: { fr: "Premium", en: "Premium", es: "Premium", de: "Premium", pt: "Premium", ru: "Премиум", ch: "高级", hi: "प्रीमियम", ar: "مميز" },
+  newBadge: { fr: "Nouveau", en: "New", es: "Nuevo", de: "Neu", pt: "Novo", ru: "Новое", ch: "新", hi: "नया", ar: "جديد" },
+  cta: { fr: "Utiliser", en: "Use", es: "Usar", de: "Verwenden", pt: "Usar", ru: "Использовать", ch: "使用", hi: "उपयोग करें", ar: "استخدم" },
+  ctaTitle: { fr: "Un outil vous manque ?", en: "Missing a tool?", es: "¿Falta una herramienta?", de: "Fehlt ein Werkzeug?", pt: "Falta uma ferramenta?", ru: "Не хватает инструмента?", ch: "缺少某个工具？", hi: "कोई उपकरण नहीं मिला?", ar: "هل تفتقد أداة ما؟" },
   ctaSubtitle: {
     fr: "Suggerez un outil et notre equipe le developpera pour vous aider dans votre expatriation.",
     en: "Suggest a tool and our team will develop it to help you with your expatriation.",
+    es: "Sugiera una herramienta y nuestro equipo la desarrollará para ayudarle en su expatriación.",
+    de: "Schlagen Sie ein Werkzeug vor und unser Team wird es entwickeln, um Ihnen bei Ihrer Auswanderung zu helfen.",
+    pt: "Sugira uma ferramenta e a nossa equipa irá desenvolvê-la para o ajudar na sua expatriação.",
+    ru: "Предложите инструмент, и наша команда разработает его, чтобы помочь вам в эмиграции.",
+    ch: "建议添加一个工具，我们的团队将为您开发，帮助您移居海外。",
+    hi: "एक उपकरण सुझाएं और हमारी टीम इसे आपके प्रवास में मदद के लिए विकसित करेगी।",
+    ar: "اقترح أداة وسيقوم فريقنا بتطويرها لمساعدتك في هجرتك.",
   },
-  ctaButton: { fr: "Suggerer un outil", en: "Suggest a tool" },
-  seoTitle: { fr: "Outils Expatriation Gratuits | SOS-Expat", en: "Free Expatriation Tools | SOS-Expat" },
+  ctaButton: { fr: "Suggerer un outil", en: "Suggest a tool", es: "Sugerir una herramienta", de: "Tool vorschlagen", pt: "Sugerir uma ferramenta", ru: "Предложить инструмент", ch: "建议添加工具", hi: "उपकरण सुझाएं", ar: "اقترح أداة" },
+  seoTitle: { fr: "Outils Expatriation Gratuits | SOS-Expat", en: "Free Expatriation Tools | SOS-Expat", es: "Herramientas Gratuitas Expatriación | SOS-Expat", de: "Kostenlose Auswanderungstools | SOS-Expat", pt: "Ferramentas Gratuitas Expatriação | SOS-Expat", ru: "Бесплатные инструменты для экспатов | SOS-Expat", ch: "免费移居工具 | SOS-Expat", hi: "मुफ्त प्रवास उपकरण | SOS-Expat", ar: "أدوات هجرة مجانية | SOS-Expat" },
   seoDescription: {
     fr: "Calculateurs, comparateurs, checklists et guides interactifs gratuits pour preparer votre expatriation. 8 outils disponibles.",
     en: "Free calculators, comparators, checklists and interactive guides to prepare your expatriation. 8 tools available.",
+    es: "Calculadoras, comparadores, listas de verificación y guías interactivas gratuitas para preparar su expatriación. 8 herramientas disponibles.",
+    de: "Kostenlose Rechner, Vergleicher, Checklisten und interaktive Guides zur Vorbereitung Ihrer Auswanderung. 8 Werkzeuge verfügbar.",
+    pt: "Calculadoras, comparadores, checklists e guias interativos gratuitos para preparar a sua expatriação. 8 ferramentas disponíveis.",
+    ru: "Бесплатные калькуляторы, сравнители, чеклисты и интерактивные гиды для подготовки к эмиграции. 8 инструментов доступно.",
+    ch: "免费的计算器、比较器、清单和互动指南，帮助您为移居海外做好准备。8个工具可用。",
+    hi: "अपने प्रवास की तैयारी के लिए मुफ्त कैलकुलेटर, तुलनित्र, चेकलिस्ट और इंटरएक्टिव गाइड। 8 उपकरण उपलब्ध।",
+    ar: "آلات حاسبة وأدوات مقارنة وقوائم تحقق وأدلة تفاعلية مجانية للتحضير لهجرتك. 8 أدوات متاحة.",
   },
 };
 
@@ -270,6 +293,9 @@ const OutilsListing: React.FC = () => {
   const { language } = useApp();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
   const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
+  const _urlLangOL = lang === "ch" ? "zh" : lang;
+  const _regionOL: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const canonicalOutils = `https://sos-expat.com/${_urlLangOL}-${_regionOL[lang] ?? lang}/${getTranslatedRouteSlug("outils-listing" as any, lang as any) || "nos-outils"}`;
 
   const [activeCategory, setActiveCategory] = useState<ToolCategory | null>(null);
 
@@ -295,7 +321,13 @@ const OutilsListing: React.FC = () => {
       <SEOHead
         title={t("seoTitle", lang)}
         description={t("seoDescription", lang)}
+        canonicalUrl={canonicalOutils}
+        ogType="website"
       />
+      <BreadcrumbSchema items={[
+        { name: t("home", lang), url: `/${localeSlug}` },
+        { name: t("breadLabel", lang) },
+      ]} />
 
       {/* ====== BREADCRUMB ====== */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">

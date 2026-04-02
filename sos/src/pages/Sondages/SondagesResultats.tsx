@@ -15,6 +15,8 @@ import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import { getTranslatedRouteSlug } from "@/multilingual-system";
 
 // ─────────────────────────────────────────────
 // CONFIG
@@ -380,6 +382,9 @@ const SondagesResultats: React.FC = () => {
   const { language } = useApp();
   const lang = detectLang(language, location.pathname);
   const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
+  const _urlLangR = lang === "ch" ? "zh" : lang;
+  const _regionR: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const canonicalResultats = `https://sos-expat.com/${_urlLangR}-${_regionR[lang] ?? lang}/${getTranslatedRouteSlug("resultats-sondages" as any, lang as any) || "resultats-sondages"}`;
 
   const [filter, setFilter] = useState<FilterTab>("all");
   const [sondages, setSondages] = useState<Sondage[]>([]);
@@ -421,7 +426,13 @@ const SondagesResultats: React.FC = () => {
       <SEOHead
         title={`${t("page_title", lang)} | SOS-Expat`}
         description={t("page_sub", lang)}
+        canonicalUrl={canonicalResultats}
+        ogType="website"
       />
+      <BreadcrumbSchema items={[
+        { name: t("home", lang), url: `/${localeSlug}` },
+        { name: t("page_title", lang) },
+      ]} />
 
       {/* Breadcrumb */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">

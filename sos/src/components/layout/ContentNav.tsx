@@ -137,21 +137,25 @@ for (const item of NAV_ITEMS) {
   ALL_SLUGS_BY_KEY[item.key] = getAllTranslatedSlugs(item.key);
 }
 
-// Content routes: show ContentNav on any of the 7 nav sections (and their sub-pages)
+// Extra route keys whose pages also display ContentNav (sub-sections of content areas)
+const EXTRA_CONTENT_KEYS = ['sondages', 'resultats-sondages', 'outils-listing'] as const;
+const EXTRA_CONTENT_SLUGS: string[] = [];
+for (const key of EXTRA_CONTENT_KEYS) {
+  EXTRA_CONTENT_SLUGS.push(...getAllTranslatedSlugs(key as any));
+}
+
+// Content routes: show ContentNav on any of the 7 nav sections + their sub-pages
 function isContentRoute(pathname: string): boolean {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}-[a-z]{2}/, '');
-  // Match any slug from any nav item — direct or nested sub-page
-  for (const slugs of Object.values(ALL_SLUGS_BY_KEY)) {
-    for (const slug of slugs ?? []) {
-      if (
-        pathWithoutLocale === `/${slug}` ||
-        pathWithoutLocale.startsWith(`/${slug}/`)
-      ) {
-        return true;
-      }
-    }
-  }
-  return false;
+  const allSlugs = [
+    ...Object.values(ALL_SLUGS_BY_KEY).flat(),
+    ...EXTRA_CONTENT_SLUGS,
+  ];
+  return allSlugs.some(
+    (slug) =>
+      pathWithoutLocale === `/${slug}` ||
+      pathWithoutLocale.startsWith(`/${slug}/`),
+  );
 }
 
 // ─── Locale region map ────────────────────────────────────────────────────────
