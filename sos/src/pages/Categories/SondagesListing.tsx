@@ -333,7 +333,7 @@ const SondagesListing: React.FC = () => {
               initial="hidden" whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
               variants={stagger}
-              className="flex flex-col gap-6"
+              className="grid gap-6 sm:grid-cols-2"
             >
               {activeSurveys.map((survey, idx) => {
                 const days   = daysUntil(survey.closes_at);
@@ -342,46 +342,41 @@ const SondagesListing: React.FC = () => {
                   <motion.div
                     key={survey.id}
                     variants={fadeUp} custom={idx}
-                    className={`group relative rounded-2xl border bg-white shadow-md transition-shadow hover:shadow-xl ${
-                      urgent ? "animate-pulse-border border-red-400" : "border-slate-200"
+                    className={`group relative flex flex-col rounded-2xl border bg-white p-6 shadow-md transition-shadow hover:shadow-xl ${
+                      urgent ? "border-red-400" : "border-slate-200"
                     }`}
-                    style={{ borderLeftWidth: "4px", borderLeftColor: "#DC2626" }}
+                    style={{ borderTopWidth: "4px", borderTopColor: "#DC2626" }}
                   >
-                    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex-1 space-y-2">
-                        <h3 className="text-xl font-bold text-slate-900">{survey.title}</h3>
-                        {survey.description && (
-                          <p className="text-sm leading-relaxed text-slate-500 line-clamp-2">
-                            {survey.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-5 pt-1 text-sm text-slate-400">
-                          {survey.closes_at && (
-                            <span className="flex items-center gap-1.5">
-                              <Clock className="h-4 w-4" />
-                              <span className={urgent ? "font-semibold text-red-600" : ""}>
-                                {days} {t("daysLeft", lang)}
-                              </span>
-                            </span>
-                          )}
-                          {survey.responses_count > 0 && (
-                            <span className="flex items-center gap-1.5">
-                              <Users className="h-4 w-4" />
-                              {survey.responses_count} {t("votes", lang)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="shrink-0">
-                        <a
-                          href={sondageUrl(lang, survey.slug, survey.type, localeSlug)}
-                          className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-red-600/30 active:scale-[0.97]"
-                        >
-                          {t("participate", lang)}
-                          <ArrowRight className="h-4 w-4" />
-                        </a>
-                      </div>
+                    <h3 className="text-lg font-bold text-slate-900">{survey.title}</h3>
+                    {survey.description && (
+                      <p className="mt-2 text-sm leading-relaxed text-slate-500 line-clamp-3">
+                        {survey.description}
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-400">
+                      {survey.closes_at && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span className={urgent ? "font-semibold text-red-600" : ""}>
+                            {days} {t("daysLeft", lang)}
+                          </span>
+                        </span>
+                      )}
+                      {survey.responses_count > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5" />
+                          {survey.responses_count} {t("votes", lang)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-auto pt-5">
+                      <a
+                        href={sondageUrl(lang, survey.slug, survey.type, localeSlug)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-red-600/30 active:scale-[0.97]"
+                      >
+                        {t("participate", lang)}
+                        <ArrowRight className="h-4 w-4" />
+                      </a>
                     </div>
                   </motion.div>
                 );
