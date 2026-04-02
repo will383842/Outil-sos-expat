@@ -1643,9 +1643,9 @@ const Annuaire: React.FC = () => {
       {/* ── BACKLINK WIDGET ── */}
       {!search && !loadingList && (() => {
         const annuaireUrl = `https://sos-expat.com/${locale}/${ANNUAIRE_SLUGS[lang] ?? "annuaire"}`;
-        const badgeCode = `<a href="${annuaireUrl}" target="_blank" rel="noopener" title="Annuaire Mondial Expatriés — SOS-Expat"><img src="https://sos-expat.com/sos-logo.webp" alt="SOS-Expat — Annuaire Mondial Expatriés" width="220" height="60" style="border:2px solid #e11d48;border-radius:12px;padding:6px 12px;background:#fff"></a>`;
+        const badgeHtml = `<a href="${annuaireUrl}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"><div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0f172a,#1e293b);border:2px solid #e11d48;border-radius:16px;padding:14px 20px;min-width:280px;box-shadow:0 4px 20px rgba(225,29,72,.15)"><img src="https://sos-expat.com/sos-logo.webp" alt="SOS-Expat" width="48" height="48" style="border-radius:10px;flex-shrink:0"><div style="flex:1"><div style="color:#fff;font-weight:700;font-size:14px;line-height:1.2">SOS-Expat</div><div style="color:#94a3b8;font-size:11px;margin-top:2px">Annuaire Mondial Expatriés</div><div style="display:flex;gap:10px;margin-top:6px"><span style="color:#f87171;font-size:10px;font-weight:600">✓ 197 pays</span><span style="color:#f87171;font-size:10px;font-weight:600">✓ 9 langues</span><span style="color:#f87171;font-size:10px;font-weight:600">✓ Vérifié</span></div></div></div></a>`;
         const textCode = `<a href="${annuaireUrl}" target="_blank" rel="noopener">Annuaire Mondial Expatriés — SOS-Expat</a>`;
-        const activeCode = badgeTab === "badge" ? badgeCode : textCode;
+        const activeCode = badgeTab === "badge" ? badgeHtml : textCode;
         return (
         <section className="mt-12 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8">
           <div className="text-center mb-6">
@@ -1661,35 +1661,44 @@ const Annuaire: React.FC = () => {
           <div className="flex justify-center gap-2 mb-6">
             <button
               onClick={() => setBadgeTab("badge")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${badgeTab === "badge" ? "bg-red-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${badgeTab === "badge" ? "bg-red-600 text-white shadow-lg shadow-red-600/20" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
             >
               {t("backlinkBadge", lang)}
             </button>
             <button
               onClick={() => setBadgeTab("text")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${badgeTab === "text" ? "bg-red-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${badgeTab === "text" ? "bg-red-600 text-white shadow-lg shadow-red-600/20" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
             >
               {t("backlinkText", lang)}
             </button>
           </div>
 
           {/* Preview */}
-          <div className="text-center mb-4">
-            <p className="text-slate-500 text-xs uppercase tracking-wider mb-3">{t("backlinkPreview", lang)}</p>
-            <div className="inline-block bg-white rounded-2xl p-4 shadow-lg">
+          <div className="text-center mb-6">
+            <p className="text-slate-500 text-xs uppercase tracking-wider mb-4">{t("backlinkPreview", lang)}</p>
+            <div className="inline-block rounded-2xl p-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner">
               {badgeTab === "badge" ? (
-                <div style={{ border: "2px solid #e11d48", borderRadius: 12, padding: "6px 12px", background: "#fff", display: "inline-block" }}>
-                  <img src="/sos-logo.webp" alt="SOS-Expat — Annuaire Mondial Expatriés" width={220} height={60} style={{ display: "block" }} />
+                <div className="inline-flex items-center gap-3 rounded-2xl p-3.5 px-5" style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", border: "2px solid #e11d48", boxShadow: "0 4px 20px rgba(225,29,72,.15)", minWidth: 280 }}>
+                  <img src="/sos-logo.webp" alt="SOS-Expat" width={48} height={48} className="rounded-xl flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-white font-bold text-sm leading-tight">SOS-Expat</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Annuaire Mondial Expatriés</div>
+                    <div className="flex gap-2.5 mt-1.5">
+                      <span className="text-red-400 text-[10px] font-semibold">✓ 197 pays</span>
+                      <span className="text-red-400 text-[10px] font-semibold">✓ 9 langues</span>
+                      <span className="text-red-400 text-[10px] font-semibold">✓ Vérifié</span>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <span className="text-blue-600 underline text-sm">Annuaire Mondial Expatriés — SOS-Expat</span>
+                <span className="text-blue-600 underline underline-offset-2 text-sm hover:text-blue-700">Annuaire Mondial Expatriés — SOS-Expat</span>
               )}
             </div>
           </div>
 
           {/* Code block */}
-          <div className="bg-slate-950 rounded-2xl p-4 text-left mb-4 overflow-x-auto">
-            <code className="text-green-400 text-xs font-mono whitespace-pre-wrap break-all">
+          <div className="bg-slate-950 rounded-2xl p-4 text-left mb-4 overflow-x-auto max-h-32">
+            <code className="text-green-400 text-xs font-mono whitespace-pre-wrap break-all leading-relaxed">
               {activeCode}
             </code>
           </div>
@@ -1703,7 +1712,7 @@ const Annuaire: React.FC = () => {
                   setTimeout(() => setCodeCopied(false), 2500);
                 });
               }}
-              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3 rounded-full transition-all shadow-lg shadow-red-600/20"
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3 rounded-full transition-all shadow-lg shadow-red-600/20 hover:scale-105"
             >
               {codeCopied ? t("copied", lang) : t("copyCode", lang)}
             </button>
