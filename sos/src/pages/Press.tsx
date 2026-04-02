@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import ImageBankSection from "../components/ImageBankSection";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import OrganizationSchema from "../components/seo/OrganizationSchema";
 import FAQPageSchema from "../components/seo/FAQPageSchema";
@@ -714,46 +715,12 @@ const Press: React.FC = () => {
               </section>
             )}
 
-            {/* IMAGE BANK — CC BY 4.0, embed codes, HD downloads */}
+            {/* IMAGE BANK — carousel with thumbnails */}
             <section className="py-20 sm:py-24 border-t border-white/5" id="images">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="images-title" icon={Camera} title={t("press.section.images")} subtitle={t("press.section.imagesDesc")} />
-                <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 rounded-2xl p-6 sm:p-10 border border-red-100 dark:border-red-900/30 mt-8">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                    <div className="w-14 h-14 bg-red-100 dark:bg-red-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Camera className="w-7 h-7 text-red-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-1">
-                        {lang === "fr" ? "Banque d'images SOS Expat — 210+ visuels HD" : "SOS Expat Image Bank — 210+ HD visuals"}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                        {lang === "fr"
-                          ? "Tous nos visuels sont disponibles gratuitement sous licence Creative Commons BY 4.0. Téléchargez en JPG ou WebP, intégrez dans vos articles — il suffit d'inclure un lien vers sos-expat.com. Copiez le code embed, le lien est déjà inclus."
-                          : "All our visuals are available free under Creative Commons BY 4.0 license. Download in JPG or WebP, embed in your articles — just include a link to sos-expat.com. Copy the embed code, the link is already included."}
-                      </p>
-                      <div className="flex flex-wrap gap-3">
-                        <a
-                          href={`/${lang === "fr" ? "fr-fr/galerie" : lang === "es" ? "es-es/galeria" : lang === "de" ? "de-de/bildergalerie" : lang === "pt" ? "pt-pt/galeria" : lang === "ru" ? "ru-ru/galereya" : lang === "zh" ? "zh-cn/tuku" : lang === "hi" ? "hi-in/chitravali" : lang === "ar" ? "ar-sa/maarad" : "en-us/gallery"}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                        >
-                          <Camera className="w-4 h-4" />
-                          {lang === "fr" ? "Voir la galerie complète" : "View full gallery"}
-                          <ArrowRight className="w-4 h-4" />
-                        </a>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium rounded-lg">
-                          <Shield className="w-3.5 h-3.5" />
-                          CC BY 4.0
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-lg">
-                          <Languages className="w-3.5 h-3.5" />
-                          9 {lang === "fr" ? "langues" : "languages"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="mt-8">
+                  <ImageBankSection accent="red" />
                 </div>
               </div>
             </section>
