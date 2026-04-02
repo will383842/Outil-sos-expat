@@ -14,6 +14,7 @@ import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import ContentSectionLinks from "@/components/layout/ContentSectionLinks";
 import AnnuaireJsonLd, { FAQ_CONTENT } from "@/components/seo/AnnuaireJsonLd";
 import { phoneCodesData } from "@/data/phone-codes";
 import {
@@ -1814,6 +1815,8 @@ const Annuaire: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
+
+      <ContentSectionLinks currentSection="annuaire" lang={lang} localeSlug={locale} />
     </Layout>
   );
 };

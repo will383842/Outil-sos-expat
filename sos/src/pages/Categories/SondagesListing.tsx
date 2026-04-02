@@ -19,6 +19,8 @@ import {
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import FAQPageSchema from "@/components/seo/FAQPageSchema";
+import ContentSectionLinks from "@/components/layout/ContentSectionLinks";
 import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 
@@ -52,6 +54,15 @@ const T: Record<string, Record<string, string>> = {
   seoDesc: { fr: "Participez aux sondages SOS-Expat sur la vie d'expatrie, le droit international et les destinations. Donnez votre avis et aidez des milliers d'expatries dans le monde entier.", en: "Take part in SOS-Expat surveys on expat life, international law and top destinations. Share your opinion and help thousands of expats around the world make better decisions.", es: "Participa en las encuestas de SOS-Expat sobre la vida del expatriado, el derecho internacional y los mejores destinos. Da tu opinión y ayuda a miles de expatriados en todo el mundo.", de: "Nehmen Sie an SOS-Expat-Umfragen zu Expat-Leben, internationalem Recht und Top-Destinationen teil. Teilen Sie Ihre Meinung und helfen Sie tausenden Expats weltweit.", pt: "Participe nos sondagens SOS-Expat sobre a vida de expatriado, direito internacional e os melhores destinos. Dê a sua opinião e ajude milhares de expatriados em todo o mundo.", ru: "Участвуйте в опросах SOS-Expat о жизни экспатов, международном праве и лучших направлениях. Делитесь своим мнением и помогайте тысячам экспатов по всему миру.", ch: "参与SOS-Expat关于外籍人士生活、国际法及热门目的地的调查。分享您的看法，帮助全球数千名外籍人士做出更明智的决策。", hi: "SOS-Expat के प्रवासी जीवन, अंतर्राष्ट्रीय कानून और शीर्ष गंतव्यों पर सर्वेक्षणों में भाग लें। अपनी राय दें और दुनिया भर के हज़ारों प्रवासियों को बेहतर निर्णय लेने में मदद करें।", ar: "شارك في استطلاعات SOS-Expat حول حياة المغتربين والقانون الدولي والوجهات المفضلة. شارك برأيك وساعد آلاف المغتربين حول العالم على اتخاذ قرارات أفضل." },
   home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
   breadcrumbLabel: { fr: "Sondages", en: "Surveys", es: "Encuestas", de: "Umfragen", pt: "Sondagens", ru: "Опросы", ch: "调查问卷", hi: "सर्वेक्षण", ar: "الاستطلاعات" },
+  faqTitle: { fr: "Questions fréquentes sur les sondages", en: "Frequently asked questions about surveys", es: "Preguntas frecuentes sobre encuestas", de: "Häufig gestellte Fragen zu Umfragen", pt: "Perguntas frequentes sobre sondagens", ru: "Часто задаваемые вопросы об опросах", ch: "关于调查的常见问题", hi: "सर्वेक्षणों के बारे में सामान्य प्रश्न", ar: "أسئلة شائعة حول الاستطلاعات" },
+  "faq1.q": { fr: "Qui peut participer aux sondages SOS-Expat ?", en: "Who can participate in SOS-Expat surveys?", es: "¿Quién puede participar en las encuestas de SOS-Expat?", de: "Wer kann an SOS-Expat-Umfragen teilnehmen?", pt: "Quem pode participar nas sondagens SOS-Expat?", ru: "Кто может участвовать в опросах SOS-Expat?", ch: "谁可以参与SOS-Expat的调查？", hi: "SOS-Expat सर्वेक्षणों में कौन भाग ले सकता है?", ar: "من يمكنه المشاركة في استطلاعات SOS-Expat؟" },
+  "faq1.a": { fr: "Tous les utilisateurs peuvent participer aux sondages SOS-Expat, qu'ils soient expatriés, en cours d'expatriation ou simplement intéressés par les questions de mobilité internationale. L'inscription est gratuite et facultative.", en: "All users can participate in SOS-Expat surveys, whether they are expats, planning to expatriate, or simply interested in international mobility questions. Registration is free and optional.", es: "Todos los usuarios pueden participar en las encuestas de SOS-Expat, ya sean expatriados, en proceso de expatriación o simplemente interesados en cuestiones de movilidad internacional.", de: "Alle Nutzer können an SOS-Expat-Umfragen teilnehmen, ob Expats, Auswanderungswillige oder an internationaler Mobilität Interessierte.", pt: "Todos os utilizadores podem participar nas sondagens SOS-Expat, sejam expatriados, em processo de expatriação ou simplesmente interessados em questões de mobilidade internacional.", ru: "Все пользователи могут участвовать в опросах SOS-Expat — экспаты, планирующие эмиграцию или просто интересующиеся международной мобильностью.", ch: "所有用户都可以参与SOS-Expat的调查，无论是外籍人士、正在计划移居的人，还是对国际流动问题感兴趣的人。", hi: "सभी उपयोगकर्ता SOS-Expat सर्वेक्षणों में भाग ले सकते हैं, चाहे वे प्रवासी हों, प्रवास की योजना बना रहे हों, या अंतर्राष्ट्रीय गतिशीलता के प्रश्नों में रुचि रखते हों।", ar: "يمكن لجميع المستخدمين المشاركة في استطلاعات SOS-Expat، سواء أكانوا مغتربين أم يخططون للهجرة أم مهتمين بقضايا التنقل الدولي." },
+  "faq2.q": { fr: "Les résultats des sondages sont-ils publics ?", en: "Are survey results public?", es: "¿Son públicos los resultados de las encuestas?", de: "Sind die Umfrageergebnisse öffentlich?", pt: "Os resultados das sondagens são públicos?", ru: "Являются ли результаты опросов общедоступными?", ch: "调查结果是公开的吗？", hi: "क्या सर्वेक्षण परिणाम सार्वजनिक हैं?", ar: "هل نتائج الاستطلاعات عامة؟" },
+  "faq2.a": { fr: "Oui, les résultats de tous les sondages terminés sont accessibles à tous sur la page des sondages SOS-Expat. Vous pouvez voir les statistiques détaillées, les tendances et les analyses par pays ou profil d'expatrié.", en: "Yes, results of all completed surveys are accessible to everyone on the SOS-Expat surveys page. You can see detailed statistics, trends and analyses by country or expat profile.", es: "Sí, los resultados de todas las encuestas completadas son accesibles para todos en la página de encuestas de SOS-Expat.", de: "Ja, die Ergebnisse aller abgeschlossenen Umfragen sind für alle auf der SOS-Expat-Umfrageseite zugänglich.", pt: "Sim, os resultados de todas as sondagens concluídas são acessíveis a todos na página de sondagens SOS-Expat.", ru: "Да, результаты всех завершённых опросов доступны всем на странице опросов SOS-Expat.", ch: "是的，所有已完成调查的结果都可以在SOS-Expat调查页面上访问，可查看详细统计数据、趋势和分析。", hi: "हां, सभी पूर्ण सर्वेक्षणों के परिणाम SOS-Expat सर्वेक्षण पृष्ठ पर सभी के लिए उपलब्ध हैं।", ar: "نعم، نتائج جميع الاستطلاعات المكتملة متاحة للجميع على صفحة استطلاعات SOS-Expat." },
+  "faq3.q": { fr: "Comment sont créés les sondages SOS-Expat ?", en: "How are SOS-Expat surveys created?", es: "¿Cómo se crean las encuestas de SOS-Expat?", de: "Wie werden SOS-Expat-Umfragen erstellt?", pt: "Como são criadas as sondagens SOS-Expat?", ru: "Как создаются опросы SOS-Expat?", ch: "SOS-Expat的调查是如何创建的？", hi: "SOS-Expat सर्वेक्षण कैसे बनाए जाते हैं?", ar: "كيف يتم إنشاء استطلاعات SOS-Expat؟" },
+  "faq3.a": { fr: "Les sondages sont créés par notre équipe éditoriale en collaboration avec des experts en droit de l'expatriation, des conseillers en mobilité internationale et notre communauté d'expatriés. Vous pouvez également proposer un sujet de sondage via le formulaire de contact.", en: "Surveys are created by our editorial team in collaboration with expat law experts, international mobility advisors and our expat community. You can also suggest a survey topic via the contact form.", es: "Las encuestas son creadas por nuestro equipo editorial en colaboración con expertos en derecho de expatriación, asesores de movilidad internacional y nuestra comunidad de expatriados.", de: "Umfragen werden von unserem Redaktionsteam in Zusammenarbeit mit Experten für Auswanderungsrecht, Beratern für internationale Mobilität und unserer Expat-Community erstellt.", pt: "As sondagens são criadas pela nossa equipa editorial em colaboração com especialistas em direito de expatriação, consultores de mobilidade internacional e a nossa comunidade de expatriados.", ru: "Опросы создаются нашей редакционной командой совместно с экспертами в области права об эмиграции, консультантами по международной мобильности и нашим сообществом экспатов.", ch: "调查由我们的编辑团队与移居法律专家、国际流动顾问和我们的外籍人士社区合作创建。", hi: "सर्वेक्षण हमारी संपादकीय टीम द्वारा प्रवासी कानून विशेषज्ञों, अंतर्राष्ट्रीय गतिशीलता सलाहकारों और हमारे प्रवासी समुदाय के सहयोग से बनाए जाते हैं।", ar: "تُنشأ الاستطلاعات من قِبل فريقنا التحريري بالتعاون مع خبراء في قانون الهجرة ومستشاري التنقل الدولي ومجتمع المغتربين لدينا." },
+  "faq4.q": { fr: "Puis-je proposer un sujet de sondage ?", en: "Can I suggest a survey topic?", es: "¿Puedo sugerir un tema de encuesta?", de: "Kann ich ein Umfragethema vorschlagen?", pt: "Posso sugerir um tema de sondagem?", ru: "Могу ли я предложить тему для опроса?", ch: "我可以建议调查主题吗？", hi: "क्या मैं कोई सर्वेक्षण विषय सुझा सकता हूं?", ar: "هل يمكنني اقتراح موضوع استطلاع؟" },
+  "faq4.a": { fr: "Oui ! Nous accueillons les suggestions de sujets de sondage de notre communauté. Utilisez le bouton 'Proposer un sondage' en bas de page pour soumettre votre idée. Les meilleures suggestions sont intégrées dans notre calendrier éditorial.", en: "Yes! We welcome survey topic suggestions from our community. Use the 'Suggest a survey' button at the bottom of the page to submit your idea. The best suggestions are incorporated into our editorial calendar.", es: "¡Sí! Damos la bienvenida a sugerencias de temas de encuesta de nuestra comunidad. Usa el botón 'Proponer una encuesta' al final de la página para enviar tu idea.", de: "Ja! Wir begrüßen Vorschläge für Umfragethemen aus unserer Community. Nutzen Sie die Schaltfläche 'Umfrage vorschlagen' am Ende der Seite.", pt: "Sim! Recebemos sugestões de temas de sondagem da nossa comunidade. Use o botão 'Sugerir uma sondagem' no final da página para enviar a sua ideia.", ru: "Да! Мы приветствуем предложения тем для опросов от нашего сообщества. Нажмите кнопку 'Предложить опрос' внизу страницы.", ch: "是的！我们欢迎社区提出调查主题建议。使用页面底部的'提交调查建议'按钮提交您的想法。", hi: "हां! हम अपने समुदाय से सर्वेक्षण विषय सुझाव स्वागत करते हैं। अपना विचार सबमिट करने के लिए पृष्ठ के निचले भाग में 'सर्वेक्षण सुझाएं' बटन का उपयोग करें।", ar: "نعم! نرحب باقتراحات موضوعات الاستطلاع من مجتمعنا. استخدم زر 'اقترح استطلاعاً' في أسفل الصفحة لتقديم فكرتك." },
 };
 
 const t = (key: string, lang: string) => T[key]?.[lang] || T[key]?.fr || key;
@@ -156,6 +167,7 @@ const SondagesListing: React.FC = () => {
   const [activeSurveys, setActiveSurveys]       = useState<Sondage[]>([]);
   const [completedSurveys, setCompletedSurveys] = useState<Sondage[]>([]);
   const [loading, setLoading]                   = useState(true);
+  const [openFaq, setOpenFaq]                   = useState<number | null>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -187,6 +199,14 @@ const SondagesListing: React.FC = () => {
         { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("breadcrumbLabel", lang) },
       ]} />
+      <FAQPageSchema
+        faqs={[1,2,3,4].map(i => ({
+          question: t(`faq${i}.q`, lang),
+          answer: t(`faq${i}.a`, lang),
+        }))}
+        pageUrl={canonical}
+        inLanguage={lang === "ch" ? "zh" : lang}
+      />
 
       {/* ── BREADCRUMB VISUEL ── */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
@@ -455,6 +475,37 @@ const SondagesListing: React.FC = () => {
         }
         .animate-pulse-border { animation: pulseBorder 2s ease-in-out infinite; }
       `}</style>
+
+      {/* ── FAQ ── */}
+      <section className="bg-white py-14 border-t border-gray-100">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">{t("faqTitle", lang)}</h2>
+          <div className="space-y-3">
+            {[1,2,3,4].map((i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div key={i} className="rounded-2xl border border-gray-100 bg-gray-50 overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between px-5 py-4 text-left"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{t(`faq${i}.q`, lang)}</span>
+                    <ChevronRight className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <p className="px-5 pb-4 text-sm leading-relaxed text-gray-600">
+                      {t(`faq${i}.a`, lang)}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <ContentSectionLinks currentSection="sondages-listing" lang={lang} localeSlug={localeSlug} />
     </Layout>
   );
 };

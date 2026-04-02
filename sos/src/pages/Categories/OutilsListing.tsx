@@ -12,6 +12,8 @@ import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import FAQPageSchema from "@/components/seo/FAQPageSchema";
+import ContentSectionLinks from "@/components/layout/ContentSectionLinks";
 import { getTranslatedRouteSlug } from "@/multilingual-system";
 import {
   Calculator,
@@ -71,6 +73,15 @@ const T: Record<string, Record<string, string>> = {
     ar: "اقترح أداة وسيقوم فريقنا بتطويرها لمساعدتك في هجرتك.",
   },
   ctaButton: { fr: "Suggerer un outil", en: "Suggest a tool", es: "Sugerir una herramienta", de: "Tool vorschlagen", pt: "Sugerir uma ferramenta", ru: "Предложить инструмент", ch: "建议添加工具", hi: "उपकरण सुझाएं", ar: "اقترح أداة" },
+  faqTitle: { fr: "Questions fréquentes sur les outils", en: "Frequently asked questions about tools", es: "Preguntas frecuentes sobre herramientas", de: "Häufig gestellte Fragen zu Werkzeugen", pt: "Perguntas frequentes sobre ferramentas", ru: "Часто задаваемые вопросы об инструментах", ch: "关于工具的常见问题", hi: "उपकरणों के बारे में सामान्य प्रश्न", ar: "أسئلة شائعة حول الأدوات" },
+  "faq1.q": { fr: "Les outils SOS-Expat sont-ils gratuits ?", en: "Are SOS-Expat tools free?", es: "¿Son gratuitas las herramientas de SOS-Expat?", de: "Sind die SOS-Expat-Werkzeuge kostenlos?", pt: "As ferramentas SOS-Expat são gratuitas?", ru: "Инструменты SOS-Expat бесплатны?", ch: "SOS-Expat的工具是免费的吗？", hi: "क्या SOS-Expat उपकरण मुफ्त हैं?", ar: "هل أدوات SOS-Expat مجانية؟" },
+  "faq1.a": { fr: "La majorité des outils SOS-Expat sont entièrement gratuits. Certains outils avancés sont disponibles en version Premium pour les abonnés. Les calculateurs, checklists et guides interactifs de base sont accessibles sans inscription.", en: "The majority of SOS-Expat tools are completely free. Some advanced tools are available in Premium version for subscribers. Basic calculators, checklists and interactive guides are accessible without registration.", es: "La mayoría de las herramientas de SOS-Expat son completamente gratuitas. Algunas herramientas avanzadas están disponibles en versión Premium para suscriptores.", de: "Die meisten SOS-Expat-Werkzeuge sind völlig kostenlos. Einige erweiterte Werkzeuge sind für Abonnenten in der Premium-Version verfügbar.", pt: "A maioria das ferramentas SOS-Expat são completamente gratuitas. Algumas ferramentas avançadas estão disponíveis em versão Premium para assinantes.", ru: "Большинство инструментов SOS-Expat полностью бесплатны. Некоторые расширенные инструменты доступны в версии Premium для подписчиков.", ch: "大多数SOS-Expat工具是完全免费的。一些高级工具以高级版本提供给订阅者。基础计算器、清单和互动指南无需注册即可访问。", hi: "अधिकांश SOS-Expat उपकरण पूरी तरह से मुफ्त हैं। कुछ उन्नत उपकरण सदस्यों के लिए प्रीमियम संस्करण में उपलब्ध हैं।", ar: "معظم أدوات SOS-Expat مجانية تماماً. بعض الأدوات المتقدمة متاحة في الإصدار المميز للمشتركين." },
+  "faq2.q": { fr: "Quels types d'outils sont disponibles pour les expatriés ?", en: "What types of tools are available for expats?", es: "¿Qué tipos de herramientas están disponibles para expatriados?", de: "Welche Arten von Werkzeugen stehen Expats zur Verfügung?", pt: "Que tipos de ferramentas estão disponíveis para expatriados?", ru: "Какие инструменты доступны для экспатов?", ch: "哪些类型的工具适用于外籍人士？", hi: "प्रवासियों के लिए किस प्रकार के उपकरण उपलब्ध हैं?", ar: "ما أنواع الأدوات المتاحة للمغتربين؟" },
+  "faq2.a": { fr: "SOS-Expat propose 4 catégories d'outils : des calculateurs (coût de la vie, impôts, budget), des comparateurs (visas, assurances), des checklists (déménagement, formalités) et des guides interactifs (procédures étape par étape). Tous sont disponibles en plusieurs langues.", en: "SOS-Expat offers 4 categories of tools: calculators (cost of living, taxes, budget), comparators (visas, insurance), checklists (moving, formalities) and interactive guides (step-by-step procedures). All available in multiple languages.", es: "SOS-Expat ofrece 4 categorías de herramientas: calculadoras, comparadores, listas de verificación y guías interactivas. Todas disponibles en varios idiomas.", de: "SOS-Expat bietet 4 Kategorien von Werkzeugen: Rechner, Vergleicher, Checklisten und interaktive Guides. Alle verfügbar in mehreren Sprachen.", pt: "O SOS-Expat oferece 4 categorias de ferramentas: calculadoras, comparadores, checklists e guias interativos. Todos disponíveis em vários idiomas.", ru: "SOS-Expat предлагает 4 категории инструментов: калькуляторы, сравнители, чеклисты и интерактивные гиды. Все доступны на нескольких языках.", ch: "SOS-Expat提供4类工具：计算器、比较器、清单和互动指南。所有工具均支持多种语言。", hi: "SOS-Expat 4 श्रेणियों के उपकरण प्रदान करता है: कैलकुलेटर, तुलनित्र, चेकलिस्ट और इंटरएक्टिव गाइड। सभी कई भाषाओं में उपलब्ध हैं।", ar: "يقدم SOS-Expat 4 فئات من الأدوات: الآلات الحاسبة، أدوات المقارنة، قوائم التحقق والأدلة التفاعلية. جميعها متاحة بلغات متعددة." },
+  "faq3.q": { fr: "Comment utiliser le calculateur de coût de la vie ?", en: "How to use the cost of living calculator?", es: "¿Cómo usar la calculadora del costo de vida?", de: "Wie verwende ich den Lebenshaltungskosten-Rechner?", pt: "Como usar a calculadora do custo de vida?", ru: "Как использовать калькулятор стоимости жизни?", ch: "如何使用生活成本计算器？", hi: "जीवन यापन लागत कैलकुलेटर का उपयोग कैसे करें?", ar: "كيف تستخدم آلة حساب تكلفة المعيشة؟" },
+  "faq3.a": { fr: "Sélectionnez votre pays d'origine et votre pays de destination, entrez votre revenu actuel et cliquez sur 'Calculer'. L'outil analyse les différences de coût sur plus de 200 paramètres (loyer, alimentation, transports, loisirs) et vous donne une estimation précise du budget nécessaire.", en: "Select your country of origin and destination country, enter your current income and click 'Calculate'. The tool analyzes cost differences across 200+ parameters (rent, food, transport, leisure) and gives you a precise budget estimate.", es: "Selecciona tu país de origen y destino, ingresa tu ingreso actual y haz clic en 'Calcular'. La herramienta analiza diferencias de costo en más de 200 parámetros.", de: "Wählen Sie Ihr Herkunftsland und Zielland, geben Sie Ihr aktuelles Einkommen ein und klicken Sie auf 'Berechnen'.", pt: "Selecione o seu país de origem e destino, insira o seu rendimento atual e clique em 'Calcular'.", ru: "Выберите страну происхождения и назначения, введите текущий доход и нажмите 'Рассчитать'.", ch: "选择原籍国和目的地国，输入当前收入并点击'计算'。该工具分析200多个参数的成本差异。", hi: "अपना मूल देश और गंतव्य देश चुनें, अपनी वर्तमान आय दर्ज करें और 'गणना करें' पर क्लिक करें।", ar: "اختر بلد الأصل وبلد الوجهة، أدخل دخلك الحالي واضغط على 'حساب'." },
+  "faq4.q": { fr: "Puis-je suggérer un nouvel outil ?", en: "Can I suggest a new tool?", es: "¿Puedo sugerir una nueva herramienta?", de: "Kann ich ein neues Werkzeug vorschlagen?", pt: "Posso sugerir uma nova ferramenta?", ru: "Могу ли я предложить новый инструмент?", ch: "我可以建议一个新工具吗？", hi: "क्या मैं एक नया उपकरण सुझा सकता हूं?", ar: "هل يمكنني اقتراح أداة جديدة؟" },
+  "faq4.a": { fr: "Absolument ! Nous développons continuellement de nouveaux outils basés sur les besoins de notre communauté d'expatriés. Utilisez le bouton 'Suggérer un outil' en bas de page ou contactez-nous directement. Les meilleures suggestions sont prioritaires dans notre roadmap de développement.", en: "Absolutely! We continuously develop new tools based on our expat community's needs. Use the 'Suggest a tool' button at the bottom of the page or contact us directly. The best suggestions are prioritized in our development roadmap.", es: "¡Absolutamente! Desarrollamos continuamente nuevas herramientas basadas en las necesidades de nuestra comunidad de expatriados.", de: "Auf jeden Fall! Wir entwickeln kontinuierlich neue Werkzeuge basierend auf den Bedürfnissen unserer Expat-Community.", pt: "Absolutamente! Desenvolvemos continuamente novas ferramentas com base nas necessidades da nossa comunidade de expatriados.", ru: "Абсолютно! Мы постоянно разрабатываем новые инструменты на основе потребностей нашего сообщества экспатов.", ch: "当然！我们根据外籍人士社区的需求不断开发新工具。使用页面底部的'建议添加工具'按钮或直接联系我们。", hi: "बिल्कुल! हम अपने प्रवासी समुदाय की जरूरतों के आधार पर लगातार नए उपकरण विकसित करते हैं।", ar: "بالتأكيد! نطور باستمرار أدوات جديدة بناءً على احتياجات مجتمع المغتربين لدينا." },
   seoTitle: { fr: "Outils Expatriation Gratuits | SOS-Expat", en: "Free Expatriation Tools | SOS-Expat", es: "Herramientas Gratuitas Expatriación | SOS-Expat", de: "Kostenlose Auswanderungstools | SOS-Expat", pt: "Ferramentas Gratuitas Expatriação | SOS-Expat", ru: "Бесплатные инструменты для экспатов | SOS-Expat", ch: "免费移居工具 | SOS-Expat", hi: "मुफ्त प्रवास उपकरण | SOS-Expat", ar: "أدوات هجرة مجانية | SOS-Expat" },
   seoDescription: {
     fr: "Calculateurs, comparateurs, checklists et guides interactifs gratuits pour preparer votre expatriation. 8 outils disponibles.",
@@ -298,6 +309,7 @@ const OutilsListing: React.FC = () => {
   const canonicalOutils = `https://sos-expat.com/${_urlLangOL}-${_regionOL[lang] ?? lang}/${getTranslatedRouteSlug("outils-listing" as any, lang as any) || "nos-outils"}`;
 
   const [activeCategory, setActiveCategory] = useState<ToolCategory | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // ----- Filtered tools -----
   const filtered = useMemo(() => {
@@ -328,6 +340,14 @@ const OutilsListing: React.FC = () => {
         { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("breadLabel", lang) },
       ]} />
+      <FAQPageSchema
+        faqs={[1,2,3,4].map(i => ({
+          question: t(`faq${i}.q`, lang),
+          answer: t(`faq${i}.a`, lang),
+        }))}
+        pageUrl={canonicalOutils}
+        inLanguage={lang === "ch" ? "zh" : lang}
+      />
 
       {/* ====== BREADCRUMB ====== */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
@@ -583,6 +603,37 @@ const OutilsListing: React.FC = () => {
           </div>
         </div>
       </motion.section>
+
+      {/* ====== FAQ ====== */}
+      <section className="bg-white py-14 border-t border-gray-100">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">{t("faqTitle", lang)}</h2>
+          <div className="space-y-3">
+            {[1,2,3,4].map((i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div key={i} className="rounded-2xl border border-gray-100 bg-gray-50 overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between px-5 py-4 text-left"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{t(`faq${i}.q`, lang)}</span>
+                    <ChevronRight className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <p className="px-5 pb-4 text-sm leading-relaxed text-gray-600">
+                      {t(`faq${i}.a`, lang)}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <ContentSectionLinks currentSection="outils" lang={lang} localeSlug={localeSlug} />
     </Layout>
   );
 };

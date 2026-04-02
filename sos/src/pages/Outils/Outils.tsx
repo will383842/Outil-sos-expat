@@ -11,6 +11,7 @@ import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-syst
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import ContentSectionLinks from "@/components/layout/ContentSectionLinks";
 import {
   Calculator, Scale, Globe, FileText, ClipboardCheck,
   CreditCard, Briefcase, AlertTriangle, Cross, Compass,
@@ -449,6 +450,8 @@ export default function Outils() {
           )}
         </div>
       </section>
+
+      <ContentSectionLinks currentSection="outils" lang={lang} localeSlug={localeSlug} />
     </Layout>
   );
 }

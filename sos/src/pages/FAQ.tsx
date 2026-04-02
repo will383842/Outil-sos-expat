@@ -18,6 +18,7 @@ import { db } from "../config/firebase";
 import { Helmet } from "react-helmet-async";
 import Layout from "../components/layout/Layout";
 import SEOHead from "../components/layout/SEOHead";
+import ContentSectionLinks from "../components/layout/ContentSectionLinks";
 import HreflangLinks from "../multilingual-system/components/HrefLang/HreflangLinks";
 import { BreadcrumbSchema, generateBreadcrumbs, FAQPageSchema } from "../components/seo";
 import { useApp } from "../contexts/AppContext";
@@ -563,6 +564,8 @@ const FAQ: React.FC = () => {
           </div>
         </section>
       </div>
+
+      <ContentSectionLinks currentSection="faq" lang={langCode} localeSlug={currentLocale} />
     </Layout>
   );
 };

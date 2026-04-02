@@ -13,6 +13,8 @@ import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import FAQPageSchema from "@/components/seo/FAQPageSchema";
+import ContentSectionLinks from "@/components/layout/ContentSectionLinks";
 import {
   Search,
   Clock,
@@ -57,6 +59,15 @@ const T: Record<string, Record<string, string>> = {
   "empty.title": { fr: "Aucun article trouve", en: "No articles found", es: "Ningún artículo encontrado", de: "Keine Artikel gefunden", pt: "Nenhum artigo encontrado", ru: "Статьи не найдены", ch: "未找到文章", hi: "कोई लेख नहीं मिला", ar: "لم يُعثر على أي مقال" },
   "empty.subtitle": { fr: "Essayez une autre recherche ou une autre categorie", en: "Try a different search or category", es: "Intenta con otra búsqueda o categoría", de: "Versuchen Sie eine andere Suche oder Kategorie", pt: "Tente uma pesquisa ou categoria diferente", ru: "Попробуйте другой запрос или категорию", ch: "请尝试其他搜索词或分类", hi: "कोई अन्य खोज या श्रेणी आज़माएं", ar: "جرّب بحثاً أو فئة مختلفة" },
   home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  "faq.title": { fr: "Questions fréquentes sur le blog", en: "Frequently asked questions about the blog", es: "Preguntas frecuentes sobre el blog", de: "Häufig gestellte Fragen zum Blog", pt: "Perguntas frequentes sobre o blog", ru: "Часто задаваемые вопросы о блоге", ch: "关于博客的常见问题", hi: "ब्लॉग के बारे में सामान्य प्रश्न", ar: "أسئلة شائعة حول المدونة" },
+  "faq1.q": { fr: "Qui rédige les articles du blog SOS-Expat ?", en: "Who writes SOS-Expat blog articles?", es: "¿Quién redacta los artículos del blog SOS-Expat?", de: "Wer schreibt die SOS-Expat Blog-Artikel?", pt: "Quem redige os artigos do blog SOS-Expat?", ru: "Кто пишет статьи блога SOS-Expat?", ch: "谁撰写SOS-Expat博客文章？", hi: "SOS-Expat ब्लॉग लेख कौन लिखता है?", ar: "من يكتب مقالات مدونة SOS-Expat؟" },
+  "faq1.a": { fr: "Nos articles sont rédigés par une équipe d'experts en droit international, d'expatriés expérimentés et de spécialistes par pays. Chaque article est révisé par des professionnels pour garantir l'exactitude des informations juridiques, fiscales et pratiques.", en: "Our articles are written by a team of international law experts, experienced expats and country specialists. Each article is reviewed by professionals to ensure the accuracy of legal, tax and practical information.", es: "Nuestros artículos son redactados por un equipo de expertos en derecho internacional, expatriados experimentados y especialistas por país.", de: "Unsere Artikel werden von einem Team aus Experten für internationales Recht, erfahrenen Expats und Länderspezialisten verfasst.", pt: "Os nossos artigos são redigidos por uma equipa de especialistas em direito internacional, expatriados experientes e especialistas por país.", ru: "Наши статьи написаны командой экспертов в международном праве, опытных экспатов и страновых специалистов.", ch: "我们的文章由国际法专家、经验丰富的外籍人士和各国专家团队撰写，并由专业人士审核。", hi: "हमारे लेख अंतर्राष्ट्रीय कानून विशेषज्ञों, अनुभवी प्रवासियों और देश विशेषज्ञों की टीम द्वारा लिखे जाते हैं।", ar: "تُكتب مقالاتنا من قِبل فريق من خبراء القانون الدولي والمغتربين المخضرمين والمتخصصين في كل دولة." },
+  "faq2.q": { fr: "À quelle fréquence de nouveaux articles sont-ils publiés ?", en: "How often are new articles published?", es: "¿Con qué frecuencia se publican nuevos artículos?", de: "Wie oft werden neue Artikel veröffentlicht?", pt: "Com que frequência são publicados novos artigos?", ru: "Как часто публикуются новые статьи?", ch: "新文章发布频率如何？", hi: "नए लेख कितनी बार प्रकाशित होते हैं?", ar: "كم مرة تُنشر مقالات جديدة؟" },
+  "faq2.a": { fr: "Nous publions plusieurs nouveaux articles chaque semaine couvrant les nouvelles réglementations, les mises à jour pays, les guides pratiques et les actualités de l'expatriation. Abonnez-vous à notre newsletter pour être informé en temps réel.", en: "We publish several new articles each week covering new regulations, country updates, practical guides and expatriation news. Subscribe to our newsletter to be informed in real time.", es: "Publicamos varios artículos nuevos cada semana cubriendo nuevas regulaciones, actualizaciones de países, guías prácticas y noticias de expatriación.", de: "Wir veröffentlichen jede Woche mehrere neue Artikel zu neuen Regelungen, Länderaktualisierungen, praktischen Ratgebern und Auswanderungsnachrichten.", pt: "Publicamos vários novos artigos por semana cobrindo novas regulamentações, atualizações de países, guias práticos e notícias de expatriação.", ru: "Мы публикуем несколько новых статей каждую неделю по новым нормативным актам, обновлениям стран, практическим руководствам и новостям эмиграции.", ch: "我们每周发布多篇新文章，涵盖最新法规、各国更新、实用指南和移居资讯。订阅我们的新闻通讯，实时获取信息。", hi: "हम हर हफ्ते नई विनियमों, देश अपडेट, व्यावहारिक गाइड और प्रवासन समाचारों पर कई नए लेख प्रकाशित करते हैं।", ar: "ننشر عدة مقالات جديدة كل أسبوع تغطي اللوائح الجديدة وتحديثات الدول والأدلة العملية وأخبار الهجرة." },
+  "faq3.q": { fr: "Les articles sont-ils disponibles dans toutes les langues ?", en: "Are articles available in all languages?", es: "¿Están los artículos disponibles en todos los idiomas?", de: "Sind Artikel in allen Sprachen verfügbar?", pt: "Os artigos estão disponíveis em todos os idiomas?", ru: "Доступны ли статьи на всех языках?", ch: "文章是否支持所有语言？", hi: "क्या लेख सभी भाषाओं में उपलब्ध हैं?", ar: "هل المقالات متاحة بجميع اللغات؟" },
+  "faq3.a": { fr: "La majorité des articles sont disponibles en 9 langues : français, anglais, espagnol, allemand, portugais, russe, chinois, hindi et arabe. Certains articles peuvent n'être disponibles que dans certaines langues selon la pertinence géographique.", en: "Most articles are available in 9 languages: French, English, Spanish, German, Portuguese, Russian, Chinese, Hindi and Arabic. Some articles may only be available in certain languages depending on geographic relevance.", es: "La mayoría de los artículos están disponibles en 9 idiomas. Algunos pueden estar disponibles solo en ciertos idiomas según la relevancia geográfica.", de: "Die meisten Artikel sind in 9 Sprachen verfügbar. Einige Artikel sind möglicherweise nur in bestimmten Sprachen verfügbar, je nach geografischer Relevanz.", pt: "A maioria dos artigos está disponível em 9 idiomas. Alguns artigos podem estar disponíveis apenas em certos idiomas dependendo da relevância geográfica.", ru: "Большинство статей доступны на 9 языках. Некоторые статьи могут быть доступны только на определённых языках в зависимости от географической значимости.", ch: "大多数文章提供9种语言版本。部分文章可能根据地理相关性仅提供特定语言版本。", hi: "अधिकांश लेख 9 भाषाओं में उपलब्ध हैं। कुछ लेख भौगोलिक प्रासंगिकता के आधार पर केवल कुछ भाषाओं में उपलब्ध हो सकते हैं।", ar: "معظم المقالات متاحة بـ9 لغات. قد تكون بعض المقالات متاحة فقط بلغات معينة حسب الأهمية الجغرافية." },
+  "faq4.q": { fr: "Comment soumettre un article ou suggérer un sujet ?", en: "How to submit an article or suggest a topic?", es: "¿Cómo enviar un artículo o sugerir un tema?", de: "Wie kann man einen Artikel einreichen oder ein Thema vorschlagen?", pt: "Como enviar um artigo ou sugerir um tema?", ru: "Как предложить статью или тему?", ch: "如何提交文章或建议主题？", hi: "लेख सबमिट कैसे करें या विषय कैसे सुझाएं?", ar: "كيف تقدم مقالاً أو تقترح موضوعاً؟" },
+  "faq4.a": { fr: "Vous pouvez proposer un sujet d'article via notre formulaire de contact. Les blogueurs partenaires peuvent aussi soumettre leurs articles directement pour publication sur notre blog en rejoignant notre programme Blogger SOS-Expat.", en: "You can suggest an article topic via our contact form. Partner bloggers can also submit their articles directly for publication on our blog by joining our SOS-Expat Blogger program.", es: "Puedes proponer un tema de artículo a través de nuestro formulario de contacto. Los bloggers asociados también pueden enviar sus artículos directamente para publicación.", de: "Sie können ein Artikelthema über unser Kontaktformular vorschlagen. Partnerblogger können auch ihre Artikel direkt für die Veröffentlichung einreichen.", pt: "Pode propor um tema de artigo através do nosso formulário de contacto. Os bloggers parceiros também podem enviar os seus artigos diretamente para publicação.", ru: "Вы можете предложить тему статьи через нашу форму обратной связи. Партнёры-блоггеры также могут отправлять свои статьи для публикации в нашем блоге.", ch: "您可以通过联系表单建议文章主题。合作博主也可以通过加入SOS-Expat博主计划直接提交文章发布。", hi: "आप हमारे संपर्क फॉर्म के माध्यम से लेख विषय सुझा सकते हैं। साझेदार ब्लॉगर हमारे SOS-Expat ब्लॉगर प्रोग्राम में शामिल होकर प्रकाशन के लिए सीधे लेख सबमिट कर सकते हैं।", ar: "يمكنك اقتراح موضوع مقالة عبر نموذج التواصل. يمكن للمدونين الشركاء أيضاً تقديم مقالاتهم مباشرة للنشر في مدونتنا من خلال الانضمام إلى برنامج المدونين SOS-Expat." },
 };
 
 const t = (key: string, lang: string): string =>
@@ -496,6 +507,7 @@ export default function Articles() {
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSent, setNewsletterSent] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Fetch from Blog API
   useEffect(() => {
@@ -563,6 +575,14 @@ export default function Articles() {
         { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("page.title", lang) },
       ]} />
+      <FAQPageSchema
+        faqs={[1,2,3,4].map(i => ({
+          question: t(`faq${i}.q`, lang),
+          answer: t(`faq${i}.a`, lang),
+        }))}
+        pageUrl={canonicalArticles}
+        inLanguage={lang === "ch" ? "zh" : lang}
+      />
 
       {/* ── BREADCRUMB VISUEL ── */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
@@ -779,6 +799,37 @@ export default function Articles() {
           </div>
         </div>
       </section>
+
+      {/* ── FAQ ── */}
+      <section className="bg-white py-14 border-t border-gray-100">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">{t("faq.title", lang)}</h2>
+          <div className="space-y-3">
+            {[1,2,3,4].map((i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div key={i} className="rounded-2xl border border-gray-100 bg-gray-50 overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between px-5 py-4 text-left"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{t(`faq${i}.q`, lang)}</span>
+                    <ChevronRight className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <p className="px-5 pb-4 text-sm leading-relaxed text-gray-600">
+                      {t(`faq${i}.a`, lang)}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <ContentSectionLinks currentSection="articles" lang={lang} localeSlug={localeSlug} />
     </Layout>
   );
 }

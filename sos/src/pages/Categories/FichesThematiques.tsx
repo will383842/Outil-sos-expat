@@ -27,6 +27,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import FAQPageSchema from "@/components/seo/FAQPageSchema";
+import ContentSectionLinks from "@/components/layout/ContentSectionLinks";
 import { useApp } from "@/contexts/AppContext";
 import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 
@@ -258,6 +260,14 @@ const FichesThematiques: React.FC = () => {
         { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("breadLabel", lang) },
       ]} />
+      <FAQPageSchema
+        faqs={[1,2,3,4].map(i => ({
+          question: t(`faq${i}.q`, lang),
+          answer: t(`faq${i}.a`, lang),
+        }))}
+        pageUrl={canonicalFT}
+        inLanguage={lang === "ch" ? "zh" : lang}
+      />
 
       {/* ===== BREADCRUMB ===== */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
@@ -559,6 +569,8 @@ const FichesThematiques: React.FC = () => {
           </motion.div>
         </motion.div>
       </section>
+
+      <ContentSectionLinks currentSection="fiches-thematiques" lang={lang} localeSlug={localeSlug} />
     </Layout>
   );
 };
