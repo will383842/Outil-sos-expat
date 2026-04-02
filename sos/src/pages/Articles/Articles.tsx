@@ -37,8 +37,8 @@ const T: Record<string, Record<string, string>> = {
     en: "Articles & Guides",
   },
   "page.subtitle": {
-    fr: "Conseils pratiques, fiches pays et guides pour expatries dans plus de 200 pays",
-    en: "Practical advice, country guides and tips for expats in 200+ countries",
+    fr: "Conseils pratiques, fiches pays et guides complets pour preparer votre expatriation dans plus de 200 pays. Droit, logement, fiscalite, sante et vie quotidienne a l'etranger.",
+    en: "Practical advice, country guides and comprehensive tips to prepare your move to 200+ countries. Law, housing, taxes, health and daily life abroad covered by expat experts.",
   },
   "search.placeholder": {
     fr: "Rechercher un article...",
@@ -713,6 +713,7 @@ export default function Articles() {
                 <input
                   type="email"
                   placeholder={t("newsletter.placeholder", lang)}
+                  aria-label={t("newsletter.placeholder", lang)}
                   className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 backdrop-blur transition-all"
                 />
                 <motion.button

@@ -39,8 +39,8 @@ const T: Record<string, Record<string, string>> = {
     en: "Interactive Tools for Expats",
   },
   pageDesc: {
-    fr: "Calculateurs, comparateurs et checklists pour preparer votre expatriation en toute serenite.",
-    en: "Calculators, comparators and checklists to prepare your expatriation with confidence.",
+    fr: "Calculateurs, comparateurs et checklists gratuits pour preparer votre expatriation sereinement. Checklist demenagement, convertisseur de devises, comparateur de pays et plus encore.",
+    en: "Free calculators, comparators and checklists to prepare your move abroad with confidence. Moving checklist, currency converter, country comparator and more tools for expats.",
   },
   toolCostOfLiving: { fr: "Calculateur cout de vie", en: "Cost of Living Calculator" },
   toolCountryCompare: { fr: "Comparateur de pays", en: "Country Comparator" },

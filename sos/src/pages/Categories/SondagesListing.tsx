@@ -62,8 +62,8 @@ const T: Record<string, Record<string, string>> = {
   ctaButton: { fr: "Proposer un sondage", en: "Suggest a survey" },
   seoTitle: { fr: "Sondages Expatries | SOS-Expat",       en: "Expat Surveys | SOS-Expat" },
   seoDesc: {
-    fr: "Participez aux sondages SOS-Expat et aidez-nous a ameliorer l'experience des expatries dans le monde entier.",
-    en: "Take part in SOS-Expat surveys and help us improve the expat experience worldwide.",
+    fr: "Participez aux sondages SOS-Expat sur la vie d'expatrie, le droit international et les destinations. Donnez votre avis et aidez des milliers d'expatries dans le monde entier.",
+    en: "Take part in SOS-Expat surveys on expat life, international law and top destinations. Share your opinion and help thousands of expats around the world make better decisions.",
   },
 };
 
