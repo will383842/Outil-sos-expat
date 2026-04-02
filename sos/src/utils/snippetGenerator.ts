@@ -738,8 +738,8 @@ export function generateSnippets(
   };
   const bcLocale = CANONICAL_LOCALES[baseLang] || 'en-us';
   const ROLE_SLUGS: Record<string, Record<string, string>> = {
-    lawyer: { fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte', pt: 'advogados', ru: 'advokaty', ch: 'lushi', hi: 'vakil', ar: 'محامون' },
-    expat: { fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats', pt: 'expatriados', ru: 'expaty', ch: 'haiwai', hi: 'videshi', ar: 'مغتربون' },
+    lawyer: { fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte', pt: 'advogados', ru: 'advokaty', ch: 'lushi', hi: 'vakil', ar: 'muhamun' },
+    expat: { fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats', pt: 'expatriados', ru: 'expaty', ch: 'haiwai', hi: 'videshi', ar: 'mughtaribun' },
   };
   const bcRoleSlug = ROLE_SLUGS[provider.type]?.[baseLang] || (provider.type === 'lawyer' ? 'lawyers' : 'expats');
   const breadcrumbSchema = {

@@ -922,13 +922,13 @@ const COUNTRY_SLUGS: Record<string, Record<string, string>> = {
 /** Role paths per language for lawyers */
 const LAWYER_PATHS: Record<string, string> = {
   fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte',
-  pt: 'advogados', ru: 'advokaty', ch: 'lushi', ar: 'muhamin', hi: 'vakil',
+  pt: 'advogados', ru: 'advokaty', ch: 'lushi', ar: 'muhamun', hi: 'vakil',
 };
 
 /** Role paths per language for expats */
 const EXPAT_PATHS: Record<string, string> = {
   fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats',
-  pt: 'expatriados', ru: 'expaty', ch: 'haiwai', ar: 'mughtaribin', hi: 'videshi',
+  pt: 'expatriados', ru: 'expaty', ch: 'haiwai', ar: 'mughtaribun', hi: 'videshi',
 };
 
 /**

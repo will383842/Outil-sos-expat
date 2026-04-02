@@ -1540,6 +1540,94 @@ async function handleRequest(request, env, ctx) {
         }
       }
     }
+
+    // =========================================================================
+    // 8. GENERIC CROSS-LANGUAGE SLUG REDIRECT
+    // Detects when a public route slug belongs to a different language than the
+    // URL locale and redirects to the correct translated slug.
+    // e.g., /fr-fr/testimonials → /fr-fr/temoignages (EN slug under FR locale)
+    //        /de-de/sos-appel → /de-de/notruf (FR slug under DE locale)
+    // =========================================================================
+    const ROUTE_LANG_SLUGS = {
+      'sos-call':       { fr:'sos-appel', en:'emergency-call', es:'llamada-emergencia', de:'notruf', ru:'ekstrenniy-zvonok', pt:'chamada-emergencia', zh:'jinji-dianhua', hi:'aapatkaalin-call', ar:'mukalama-tawariy' },
+      'expat-call':     { fr:'appel-expatrie', en:'expat-call', es:'llamada-expatriado', de:'expatriate-anruf', ru:'zvonok-expatriantu', pt:'chamada-expatriado', zh:'waipai-dianhua', hi:'pravasi-call', ar:'mukalama-al-mugtarib' },
+      'pricing':        { fr:'tarifs', en:'pricing', es:'precios', de:'preise', ru:'tseny', pt:'precos', zh:'jiage', hi:'mulya', ar:'al-asaar' },
+      'contact':        { fr:'contact', en:'contact', es:'contacto', de:'kontakt', ru:'kontakt', pt:'contato', zh:'lianxi', hi:'sampark', ar:'ittasil-bina' },
+      'how-it-works':   { fr:'comment-ca-marche', en:'how-it-works', es:'como-funciona', de:'wie-es-funktioniert', ru:'kak-eto-rabotaet', pt:'como-funciona', zh:'ruhe-yunzuo', hi:'kaise-kaam-karta-hai', ar:'kayfa-yamal' },
+      'testimonials':   { fr:'temoignages', en:'testimonials', es:'testimonios', de:'testimonials', ru:'otzyvy', pt:'depoimentos', zh:'yonghu-pingjia', hi:'prashansapatra', ar:'al-shahdat' },
+      'login':          { fr:'connexion', en:'login', es:'iniciar-sesion', de:'anmeldung', ru:'vkhod', pt:'entrar', zh:'denglu', hi:'login', ar:'tasjil-al-dakhul' },
+      'register':       { fr:'inscription', en:'register', es:'registro', de:'registrierung', ru:'registratsiya', pt:'cadastro', zh:'zhuce', hi:'panjikaran', ar:'al-tasjil' },
+      'password-reset': { fr:'reinitialisation-mot-de-passe', en:'password-reset', es:'restablecer-contrasena', de:'passwort-zurucksetzen', ru:'sbros-parolya', pt:'redefinir-senha', zh:'chongzhi-mima', hi:'password-reset', ar:'iadat-tayin-kalimat-al-murur' },
+      'privacy-policy': { fr:'politique-confidentialite', en:'privacy-policy', es:'politica-privacidad', de:'datenschutzrichtlinie', ru:'politika-konfidentsialnosti', pt:'politica-privacidade', zh:'yinsi-zhengce', hi:'gopaniyata-niti', ar:'siyasat-al-khususiya' },
+      'providers':      { fr:'prestataires', en:'providers', es:'proveedores', de:'anbieter', ru:'postavshchiki', pt:'prestadores', zh:'fuwu-tigongzhe', hi:'seva-pradaata', ar:'muqadimi-al-khidmat' },
+      'annuaire':       { fr:'annuaire', en:'expat-directory', es:'directorio-expat', de:'expat-verzeichnis', ru:'spravochnik-expat', pt:'diretorio-expat', zh:'zhinan-expat', hi:'nirdeshika-expat', ar:'dalil-expat' },
+      'consumers':      { fr:'consommateurs', en:'consumers', es:'consumidores', de:'verbraucher', ru:'potrebiteli', pt:'consumidores', zh:'xiaofeizhe', hi:'upbhokta', ar:'al-mustahlikin' },
+      'service-status': { fr:'statut-service', en:'service-status', es:'estado-servicio', de:'dienststatus', ru:'status-servisa', pt:'status-servico', zh:'fuwu-zhuangtai', hi:'seva-sthiti', ar:'halat-al-khidma' },
+      'cookies':        { fr:'cookies', en:'cookies', es:'cookies', de:'cookies', ru:'cookies', pt:'cookies', zh:'cookies', hi:'cookies', ar:'milafat-al-tarif' },
+      'seo':            { fr:'referencement', en:'seo', es:'seo', de:'seo', ru:'seo', pt:'seo', zh:'seo', hi:'seo', ar:'tahsin-muharrikat-al-bahth' },
+      'terms-clients':  { fr:'cgu-clients', en:'terms-clients', es:'terminos-clientes', de:'agb-kunden', ru:'usloviya-klienty', pt:'termos-clientes', zh:'tiaokuan-kehu', hi:'shartein-grahak', ar:'shurut-al-umala' },
+      'terms-lawyers':  { fr:'cgu-avocats', en:'terms-lawyers', es:'terminos-abogados', de:'agb-anwaelte', ru:'usloviya-advokaty', pt:'termos-advogados', zh:'tiaokuan-lushi', hi:'shartein-vakil', ar:'shurut-al-muhamin' },
+      'terms-expats':   { fr:'cgu-expatries', en:'terms-expats', es:'terminos-expatriados', de:'agb-expatriates', ru:'usloviya-expatrianty', pt:'termos-expatriados', zh:'tiaokuan-waipai', hi:'shartein-pravasi', ar:'shurut-al-mugtaribin' },
+      'terms-chatters': { fr:'cgu-chatters', en:'terms-chatters', es:'terminos-chatters', de:'agb-chatters', ru:'usloviya-chattery', pt:'termos-chatters', zh:'tiaokuan-chatters', hi:'shartein-chatters', ar:'shurut-al-murwajin' },
+      'terms-affiliate':{ fr:'cgu-affiliation', en:'terms-affiliate', es:'terminos-afiliacion', de:'agb-partnerprogramm', ru:'usloviya-partnerstva', pt:'termos-afiliacao', zh:'tiaokuan-lianmeng', hi:'shartein-affiliate', ar:'shurut-al-shiraka' },
+      'terms-influencers':  { fr:'cgu-influenceurs', en:'terms-influencers', es:'terminos-influencers', de:'agb-influencer', ru:'usloviya-influensery', pt:'termos-influenciadores', zh:'tiaokuan-wanghong', hi:'shartein-influencers', ar:'shurut-al-muathirin' },
+      'terms-bloggers':     { fr:'cgu-bloggeurs', en:'terms-bloggers', es:'terminos-bloggers', de:'agb-blogger', ru:'usloviya-blogery', pt:'termos-bloggers', zh:'tiaokuan-boke', hi:'shartein-bloggers', ar:'shurut-al-mudawwinin' },
+      'terms-group-admins': { fr:'cgu-admins-groupe', en:'terms-group-admins', es:'terminos-admins-grupo', de:'agb-gruppenadmins', ru:'usloviya-adminy-grupp', pt:'termos-admins-grupo', zh:'tiaokuan-qunguanli', hi:'shartein-group-admins', ar:'shurut-mushrifi-al-majmuaat' },
+      'chatter-landing':    { fr:'devenir-chatter', en:'become-chatter', es:'ser-chatter', de:'chatter-werden', ru:'stat-chatterom', pt:'tornar-se-chatter', zh:'chengwei-chatter', hi:'chatter-bane', ar:'kun-musawwiqan' },
+      'influencer-landing': { fr:'devenir-influenceur', en:'become-influencer', es:'convertirse-influencer', de:'influencer-werden', ru:'stat-influenserom', pt:'tornar-se-influencer', zh:'chengwei-wanghong', hi:'influencer-bane', ar:'kun-muathiran' },
+      'blogger-landing':    { fr:'devenir-blogger', en:'become-blogger', es:'convertirse-blogger', de:'blogger-werden', ru:'stat-blogerom', pt:'tornar-se-blogger', zh:'chengwei-boke', hi:'blogger-bane', ar:'kun-mudawwinan' },
+      'groupadmin-landing': { fr:'devenir-admin-groupe', en:'become-group-admin', es:'convertirse-admin-grupo', de:'gruppenadmin-werden', ru:'stat-admin-gruppy', pt:'tornar-se-admin-grupo', zh:'chengwei-qunzhu', hi:'group-admin-bane', ar:'kun-masul-majmuaa' },
+      'captain-landing':    { fr:'devenir-capitaine', en:'become-captain', es:'convertirse-capitan', de:'kapitan-werden', ru:'stat-kapitanom', pt:'tornar-se-capitao', zh:'chengwei-duizhang', hi:'captain-bane', ar:'kun-qaidan' },
+      'partner-landing':    { fr:'devenir-partenaire', en:'become-partner', es:'ser-socio', de:'partner-werden', ru:'stat-partnerom', pt:'tornar-se-parceiro', zh:'chengwei-hezuohuoban', hi:'partner-bane', ar:'ken-sharikan' },
+      'partners-page':      { fr:'partenaires', en:'partners', es:'socios', de:'partner', ru:'partnery', pt:'parceiros', zh:'hezuohuoban', hi:'bhagidar', ar:'al-shuraka' },
+      'group-community':    { fr:'groupes-communaute', en:'community-groups', es:'grupos-comunidad', de:'gemeinschaftsgruppen', ru:'soobshchestvo-gruppy', pt:'grupos-comunidade', zh:'shequ-qunzu', hi:'samudayik-samuh', ar:'majmuaat-al-mujtamaa' },
+      'influencer-dir':     { fr:'nos-influenceurs', en:'our-influencers', es:'nuestros-influencers', de:'unsere-influencer', ru:'nashi-influensery', pt:'nossos-influencers', zh:'women-influencers', hi:'hamare-influencer', ar:'muathiruna' },
+      'blogger-dir':        { fr:'nos-blogueurs', en:'our-bloggers', es:'nuestros-bloggers', de:'unsere-blogger', ru:'nashi-blogery', pt:'nossos-bloggers', zh:'women-de-boke', hi:'hamare-blogger', ar:'mudawwanatuna' },
+      'chatter-dir':        { fr:'nos-chatters', en:'our-chatters', es:'nuestros-chatters', de:'unsere-chatters', ru:'nashi-chattery', pt:'nossos-chatters', zh:'women-de-chatters', hi:'hamare-chatters', ar:'muhadithuna' },
+      'press':              { fr:'presse', en:'press', es:'prensa', de:'presse', ru:'pressa', pt:'imprensa', zh:'xinwen', hi:'press', ar:'sahafa' },
+    };
+
+    // Build reverse map: slug → { langs: [languages that use this slug], route }
+    // A slug like "testimonials" is used by both en+de, "contact" by fr+en, etc.
+    // We only redirect when the URL's language is NOT among the slug's valid languages.
+    const _slugToRoute = {};
+    for (const [route, langs] of Object.entries(ROUTE_LANG_SLUGS)) {
+      for (const [lang, slug] of Object.entries(langs)) {
+        const seg = slug.split('/')[0]; // first segment only
+        if (!_slugToRoute[seg]) {
+          _slugToRoute[seg] = { langs: [lang], route };
+        } else if (!_slugToRoute[seg].langs.includes(lang)) {
+          _slugToRoute[seg].langs.push(lang);
+        }
+      }
+    }
+
+    if (restPath) {
+      let csFirstSlug;
+      try { csFirstSlug = decodeURIComponent(restPath.split('/').filter(Boolean)[0] || ''); }
+      catch (_e) { csFirstSlug = restPath.split('/').filter(Boolean)[0]; }
+
+      if (csFirstSlug) {
+        const match = _slugToRoute[csFirstSlug];
+        const effectiveUrlLang = urlLang === 'zh' ? 'zh' : urlLang;
+        if (match && !match.langs.includes(effectiveUrlLang)) {
+          // Slug belongs to a different language — find the correct slug for this locale
+          const routeSlugs = ROUTE_LANG_SLUGS[match.route];
+          const correctSlug = routeSlugs[effectiveUrlLang] || routeSlugs['en'];
+          if (correctSlug && correctSlug.split('/')[0] !== csFirstSlug) {
+            const segments = restPath.split('/').filter(Boolean);
+            segments[0] = correctSlug.split('/')[0];
+            const newRestPath = '/' + segments.join('/');
+            const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}${newRestPath}${url.search}`;
+            console.log(`[WORKER] Cross-lang slug fix: ${pathname} -> /${urlLang}-${urlCountry}${newRestPath}`);
+            return new Response(null, {
+              status: 301,
+              headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+            });
+          }
+        }
+      }
+    }
   }
 
   // ==========================================================================

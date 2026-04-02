@@ -1014,8 +1014,8 @@ function generateHelpCenterUrls(slug: string): string[] {
 
 /** Role path translations for country listing pages */
 const ROLE_PATHS: Record<string, Record<string, string>> = {
-  lawyer: { fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte', pt: 'advogados', ru: 'advokaty', zh: 'lushi', ar: 'محامون', hi: 'vakil' },
-  expat: { fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats', pt: 'expatriados', ru: 'expaty', zh: 'haiwai', ar: 'مغتربون', hi: 'videshi' },
+  lawyer: { fr: 'avocats', en: 'lawyers', es: 'abogados', de: 'anwaelte', pt: 'advogados', ru: 'advokaty', zh: 'lushi', ar: 'muhamun', hi: 'vakil' },
+  expat: { fr: 'expatries', en: 'expats', es: 'expatriados', de: 'expats', pt: 'expatriados', ru: 'expaty', zh: 'haiwai', ar: 'mughtaribun', hi: 'videshi' },
 };
 
 /** Default locale suffixes per language */

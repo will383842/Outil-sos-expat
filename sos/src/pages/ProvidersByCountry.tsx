@@ -139,13 +139,14 @@ const getRoleLabel = (
 
 /** Build translated role path slug */
 const getRolePath = (type: "lawyer" | "expat", lang: string): string => {
+  // IMPORTANT: These MUST match localeRoutes.ts "lawyers-country" / "expats-country"
   const lawyerPaths: Record<string, string> = {
     fr: "avocats", en: "lawyers", es: "abogados", de: "anwaelte",
-    pt: "advogados", ru: "advokaty", ch: "lvshi", hi: "vakil", ar: "muhamin",
+    pt: "advogados", ru: "advokaty", ch: "lushi", hi: "vakil", ar: "muhamun",
   };
   const expatPaths: Record<string, string> = {
     fr: "expatries", en: "expats", es: "expatriados", de: "expats",
-    pt: "expatriados", ru: "expaty", ch: "waiguoren", hi: "pravasi", ar: "mughtaribin",
+    pt: "expatriados", ru: "expaty", ch: "haiwai", hi: "pravasi", ar: "mughtaribun",
   };
   return type === "lawyer"
     ? lawyerPaths[lang] || "lawyers"
