@@ -37,6 +37,7 @@ import {
   Gift,
   ExternalLink,
   FileText,
+  Download,
 } from 'lucide-react';
 import ImageBankSection from '@/components/ImageBankSection';
 import { useCountryFromUrl, useCountryLandingConfig, convertToLocal } from '@/country-landing';
@@ -982,9 +983,9 @@ const GroupAdminLanding: React.FC = () => {
                             </a>
                           )}
                           {pdfUrl && (
-                            <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
+                            <a href={pdfUrl} download target="_blank" rel="noopener noreferrer"
                               className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
-                              <FileText className="w-3.5 h-3.5" />PDF
+                              <Download className="w-3.5 h-3.5" />PDF
                             </a>
                           )}
                         </div>
