@@ -236,6 +236,17 @@ const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
 const Annuaire = lazy(() => import('./pages/Annuaire/Annuaire'));
 
+// Public content pages (Redesign 2026)
+const Articles = lazy(() => import('./pages/Articles/Articles'));
+const FichesPays = lazy(() => import('./pages/Categories/FichesPays'));
+const FichesThematiques = lazy(() => import('./pages/Categories/FichesThematiques'));
+const ProgrammeChatter = lazy(() => import('./pages/Categories/ProgrammeChatter'));
+const AffiliationPage = lazy(() => import('./pages/Categories/Affiliation'));
+const SondagesListing = lazy(() => import('./pages/Categories/SondagesListing'));
+const SondagesPage = lazy(() => import('./pages/Sondages/Sondages'));
+const OutilsListing = lazy(() => import('./pages/Categories/OutilsListing'));
+const OutilsPage = lazy(() => import('./pages/Outils/Outils'));
+
 // -------------------------------------------
 // Language config — chargement dynamique des traductions
 // EN est statique (fallback universel), les 8 autres langues sont chargées à la demande
@@ -389,6 +400,17 @@ const routeConfigs: RouteConfig[] = [
 
   // Annuaire expatriés — ressources officielles par pays (CountryDirectory depuis Mission Control)
   { path: "/annuaire", component: Annuaire, translated: "annuaire" },
+
+  // Public content pages (Redesign 2026)
+  { path: "/articles", component: Articles },
+  { path: "/categories/fiches-pays", component: FichesPays },
+  { path: "/categories/fiches-thematiques", component: FichesThematiques },
+  { path: "/categories/programme", component: ProgrammeChatter },
+  { path: "/categories/affiliation", component: AffiliationPage },
+  { path: "/categories/sondages", component: SondagesListing },
+  { path: "/sondages", component: SondagesPage },
+  { path: "/categories/outils", component: OutilsListing },
+  { path: "/outils", component: OutilsPage },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },
