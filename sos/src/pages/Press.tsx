@@ -300,7 +300,7 @@ const Press: React.FC = () => {
         aiSummary={t("press.boilerplate.short")}
         contentQuality="high"
         trustworthiness="high"
-        keywords={t("press.seo.description")}
+        keywords={t("press.seo.keywords", "press room, press release, expatriates, press kit, logos, media")}
       />
       <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t("press.hero.badge") }]} />
       <OrganizationSchema aggregateRating={{ ratingValue: aggregateRating.ratingValue, ratingCount: aggregateRating.ratingCount, reviewCount: aggregateRating.reviewCount }} />
@@ -308,15 +308,67 @@ const Press: React.FC = () => {
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <Helmet>
+        {/* WebPage schema with speakable for AEO/voice search */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebPage",
           "name": seoTitle,
           "description": seoDescription,
           "url": `https://sos-expat.com/${lang}/presse`,
-          "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["#press-boilerplate", "#press-facts"] },
-          "mainEntity": { "@type": "Organization", "name": "SOS-Expat", "url": "https://sos-expat.com", "foundingDate": "2025-08", "areaServed": "Worldwide" },
+          "inLanguage": localeMap[lang] || "fr-FR",
+          "isPartOf": { "@type": "WebSite", "url": "https://sos-expat.com" },
+          "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": ["#press-boilerplate", "#press-facts", "#releases-title"],
+          },
+          "mainEntity": {
+            "@type": "NewsMediaOrganization",
+            "name": "SOS-Expat",
+            "url": "https://sos-expat.com",
+            "foundingDate": "2025-08",
+            "areaServed": "Worldwide",
+            "publishingPrinciples": `https://sos-expat.com/${lang}/presse`,
+            "pressContact": {
+              "@type": "ContactPoint",
+              "contactType": "press",
+              "email": "williamsjullin@sos-expat.com",
+              "availableLanguage": ["French","English","Spanish","German","Portuguese","Russian","Chinese","Arabic","Hindi"],
+            },
+          },
         })}</script>
+        {/* ItemList schema for press releases — AEO/snippet 0 eligible */}
+        {releases.length > 0 && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": t("press.releases.title"),
+            "description": t("press.releases.subtitle"),
+            "url": `https://sos-expat.com/${lang}/presse#releases`,
+            "numberOfItems": releases.length,
+            "itemListElement": releases.map((r, i) => ({
+              "@type": "ListItem",
+              "position": i + 1,
+              "item": {
+                "@type": "NewsArticle",
+                "@id": `https://sos-expat.com/${lang}/presse#release-${r.id}`,
+                "headline": getLocalizedText(r.title, lang),
+                "description": getLocalizedText(r.summary, lang),
+                "datePublished": r.publishedAt.toISOString(),
+                "dateModified": r.publishedAt.toISOString(),
+                "inLanguage": localeMap[lang] || "fr-FR",
+                "publisher": {
+                  "@type": "Organization",
+                  "name": "SOS-Expat",
+                  "url": "https://sos-expat.com",
+                  "logo": { "@type": "ImageObject", "url": "https://sos-expat.com/sos-logo.webp" },
+                },
+                "author": { "@type": "Person", "name": "Williams Jullin", "jobTitle": "Founder & CEO" },
+                "keywords": r.tags?.join(", "),
+                ...(r.htmlUrl?.[toFirestoreLang(lang)] ? { "url": r.htmlUrl[toFirestoreLang(lang)] } : {}),
+              },
+            })),
+          })}</script>
+        )}
       </Helmet>
 
       {/* Custom styles */}
@@ -648,19 +700,10 @@ const Press: React.FC = () => {
               </section>
             )}
 
-            {/* IMAGE BANK */}
-            <section className="py-20 sm:py-24 border-t border-white/5">
+            {/* IMAGE BANK — CC BY 4.0, embed codes, HD downloads */}
+            <section className="py-20 sm:py-24 border-t border-white/5" id="images">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <SectionTitle id="images" icon={Camera} title={t("press.section.images")} subtitle={t("press.section.imagesDesc")} />
-                {photos.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">{photos.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
-                ) : (
-                  <EmptySection icon={Camera} label={t("press.label.comingSoon")} btnLabel={t("press.label.requestPhotos")} onRequest={openContact} />
-                )}
-              </div>
-            </section>
-
-            {/* FULL IMAGE BANK — CC BY 4.0, embed codes, HD downloads */}
+                <SectionTitle id="images-title" icon={Camera} title={t("press.section.images")} subtitle={t("press.section.imagesDesc")} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
               <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 rounded-2xl p-6 sm:p-10 border border-red-100 dark:border-red-900/30">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
@@ -700,6 +743,7 @@ const Press: React.FC = () => {
                 </div>
               </div>
             </div>
+            </section>
 
             {/* B-ROLL & VIDEOS */}
             {bRoll.length > 0 && (
