@@ -39,6 +39,9 @@ import {
   Clock,
   FileText,
   Copy,
+  ImageIcon,
+  Shield,
+  ExternalLink,
 } from 'lucide-react';
 import { useCountryFromUrl, useCountryLandingConfig, formatPaymentMethodDisplay, convertToLocal } from '@/country-landing';
 import { usePublicCommissionRates } from '@/hooks/usePublicCommissionRates';
@@ -1033,6 +1036,42 @@ const BloggerLanding: React.FC = () => {
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* IMAGE BANK — CC BY 4.0 free images for bloggers */}
+            <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl p-5 sm:p-8 mb-10">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <ImageIcon className="w-6 h-6 text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold mb-1">
+                    <FormattedMessage id="blogger.imageBank.title" defaultMessage="SOS Expat Image Bank — 210+ Free HD Images" />
+                  </h3>
+                  <p className="text-sm opacity-80 mb-3">
+                    <FormattedMessage
+                      id="blogger.imageBank.desc"
+                      defaultMessage="Use our professional images in your articles for free (CC BY 4.0). Just credit SOS Expat. Embed code ready to copy on every image — paste it in your blog in seconds."
+                    />
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href={`/${language === "fr" ? "fr-fr/galerie" : language === "es" ? "es-es/galeria" : language === "de" ? "de-de/bildergalerie" : language === "pt" ? "pt-pt/galeria" : "en-us/gallery"}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      <FormattedMessage id="blogger.imageBank.cta" defaultMessage="Browse Image Gallery" />
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-green-500/10 text-green-400 text-xs font-medium rounded-lg border border-green-500/20">
+                      <Shield className="w-3.5 h-3.5" />
+                      CC BY 4.0
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Earnings overview */}
