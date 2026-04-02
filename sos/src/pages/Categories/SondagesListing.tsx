@@ -246,7 +246,7 @@ const SondagesListing: React.FC = () => {
       </section>
 
       {/* ========== ACTIVE SURVEYS ========== */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-12 sm:py-20">
         <div className="mx-auto max-w-6xl px-4">
           <motion.div
             initial="hidden" whileInView="visible"
@@ -290,7 +290,7 @@ const SondagesListing: React.FC = () => {
                     }`}
                     style={{ borderLeftWidth: "4px", borderLeftColor: "#DC2626" }}
                   >
-                    <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex-1 space-y-2">
                         <h3 className="text-xl font-bold text-slate-900">{survey.title}</h3>
                         {survey.description && (
@@ -336,7 +336,7 @@ const SondagesListing: React.FC = () => {
 
       {/* ========== COMPLETED SURVEYS ========== */}
       {(loading || completedSurveys.length > 0) && (
-        <section className="bg-slate-50 py-20">
+        <section className="bg-slate-50 py-12 sm:py-20">
           <div className="mx-auto max-w-6xl px-4">
             <motion.div
               initial="hidden" whileInView="visible"
@@ -400,7 +400,7 @@ const SondagesListing: React.FC = () => {
       )}
 
       {/* ========== CTA ========== */}
-      <section className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-20">
+      <section className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-12 sm:py-20">
         <motion.div
           initial="hidden" whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}

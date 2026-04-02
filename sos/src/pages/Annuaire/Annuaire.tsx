@@ -1498,7 +1498,7 @@ const Annuaire: React.FC = () => {
                 <Sparkles size={12} className="text-amber-400" />
                 {t("popularDest", lang)}
               </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {popularCountries.map((c, i) => (
                   <motion.button
                     key={c.country_code}

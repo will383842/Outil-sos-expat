@@ -556,7 +556,7 @@ export default function Articles() {
       </nav>
 
       {/* ===================== HERO ===================== */}
-      <section className="relative bg-gradient-to-b from-gray-50 to-white pt-16 pb-12 overflow-hidden">
+      <section className="relative bg-gradient-to-b from-gray-50 to-white pt-12 pb-8 sm:pt-16 sm:pb-12 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-red-50 rounded-full blur-3xl opacity-40 -translate-y-1/2 translate-x-1/3" />
