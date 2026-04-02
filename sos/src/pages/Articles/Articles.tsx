@@ -553,11 +553,11 @@ export default function Articles() {
               Blog SOS-Expat
             </span>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
               {t("page.title", lang)}
             </h1>
 
-            <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto mb-8 leading-relaxed">
               {t("page.subtitle", lang)}
             </p>
           </motion.div>
@@ -642,9 +642,16 @@ export default function Articles() {
                   ))}
                 </motion.div>
               )}
+
+              {/* Sidebar mobile: displayed below articles on small screens */}
+              {!loading && allArticles.length > 0 && (
+                <div className="lg:hidden">
+                  <Sidebar lang={lang} articles={allArticles} />
+                </div>
+              )}
             </div>
 
-            {/* Sidebar (desktop) */}
+            {/* Sidebar (desktop only) */}
             <div className="hidden lg:block">
               <div className="sticky top-20">
                 <Sidebar lang={lang} articles={allArticles} />

@@ -317,12 +317,12 @@ const FichesPays: React.FC = () => {
             </span>
 
             {/* H1 */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-5 leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-5 leading-[1.1]">
               {t("title", lang)}
             </h1>
 
             {/* Subtitle */}
-            <p className="mx-auto max-w-2xl text-lg text-gray-500 leading-relaxed mb-10">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-gray-500 leading-relaxed mb-10">
               {t("subtitle", lang)}
             </p>
 
@@ -488,7 +488,7 @@ const FichesPays: React.FC = () => {
         className="bg-white py-16 sm:py-20"
       >
         <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
-          <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-gray-800 p-10 sm:p-14 shadow-2xl">
+          <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-gray-800 p-6 sm:p-10 md:p-14 shadow-2xl">
             <Globe className="mx-auto h-10 w-10 text-red-500 mb-5" />
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
               {t("ctaTitle", lang)}

@@ -158,7 +158,7 @@ const SondagesListing: React.FC = () => {
       <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} />
 
       {/* ========== HERO ========== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-28 pb-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
           style={{
@@ -183,7 +183,7 @@ const SondagesListing: React.FC = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
             {t("heroTitle", lang)}
           </motion.h1>
