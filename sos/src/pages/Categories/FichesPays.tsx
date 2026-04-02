@@ -106,7 +106,7 @@ interface CountrySheet {
   publishedAt?: string;
 }
 
-const BLOG_API = "https://sos-expat.com/api/v1/public";
+const BLOG_API = "https://blog.life-expat.com/api/v1/public";
 
 // Blog article URL helpers (same as in Articles.tsx)
 const LANG_LOCALE: Record<string, string> = {

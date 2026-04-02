@@ -95,7 +95,7 @@ interface Article {
 }
 
 // Blog API public endpoint
-const BLOG_API = "https://sos-expat.com/api/v1/public";
+const BLOG_API = "https://blog.life-expat.com/api/v1/public";
 
 // Map blog category slugs → SPA Category type
 const CATEGORY_MAP: Record<string, Category> = {

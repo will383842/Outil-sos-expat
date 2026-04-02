@@ -71,7 +71,7 @@ const t = (key: string, lang: string) => T[key]?.[lang] || T[key]?.fr || key;
 /*  Types & API                                                        */
 /* ------------------------------------------------------------------ */
 
-const BLOG_API = "https://sos-expat.com/api/v1/public";
+const BLOG_API = "https://blog.life-expat.com/api/v1/public";
 
 const SONDAGE_SEGMENT: Record<string, string> = {
   fr: "sondages", en: "surveys", es: "encuestas", de: "umfragen",

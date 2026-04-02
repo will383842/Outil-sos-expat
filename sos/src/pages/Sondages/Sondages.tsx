@@ -19,7 +19,7 @@ import { getTranslatedRouteSlug } from "@/multilingual-system";
 // CONFIG
 // ============================================================
 
-const API_BASE = "https://sos-expat.com/api/v1/public/sondages";
+const API_BASE = "https://blog.life-expat.com/api/v1/public/sondages";
 
 const SURVEY_SEGMENTS: Record<string, { surveys: string; vacanciers: string }> = {
   fr: { surveys: "sondages-expatries", vacanciers: "sondages-vacanciers" },
