@@ -31,10 +31,10 @@ const SURVEY_SEGMENTS: Record<string, { surveys: string; vacanciers: string }> =
 
 const LOCALE_COUNTRY: Record<string, string> = {
   fr: "fr-fr",
-  en: "en-gb",
+  en: "en-us",
   es: "es-es",
   de: "de-de",
-  pt: "pt-br",
+  pt: "pt-pt",
   ru: "ru-ru",
   zh: "zh-cn",
   hi: "hi-in",
