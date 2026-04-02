@@ -20,7 +20,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bot, Briefcase, Database, ExternalLink, Eye, Flame, GripVertical, Link2, Mail, MessageSquare, Send, Server, Settings, Target, Users, UserSearch, Wrench } from "lucide-react";
+import { Bot, Briefcase, Database, ExternalLink, Eye, Flame, GripVertical, ImageIcon, Link2, Mail, MessageSquare, Send, Server, Settings, Target, Users, UserSearch, Wrench } from "lucide-react";
 
 const BACKLINK_ENGINE_URL = "https://backlinks.life-expat.com";
 const MAILWIZZ_FRONTEND_URL = "https://mail.sos-expat.com";
@@ -35,6 +35,7 @@ const MISSION_CONTROL_URL = "https://influenceurs.life-expat.com";
 const WHATSAPP_CAMPAIGNS_URL = "https://whatsapp.life-expat.com";
 const CONVERSION_ENGINE_URL = "https://conversion.life-expat.com/admin/login";
 const APP_SURVEILLANCE_URL = "http://95.216.179.163:8097";
+const IMAGE_BANK_URL = "https://sos-expat.com/admin/image-bank";
 
 const STORAGE_KEY = "admin-toolbox-order";
 
@@ -175,6 +176,15 @@ const defaultTools: ToolCard[] = [
     url: APP_SURVEILLANCE_URL,
     icon: <Eye className="h-8 w-8" />,
     color: "bg-lime-600",
+    status: "live",
+  },
+  {
+    id: "image-bank",
+    titleKey: "Banque Images SOS Expat",
+    descriptionKey: "210 images, 9 langues, SEO Google Images, embed CC BY 4.0, sitemaps automatiques",
+    url: IMAGE_BANK_URL,
+    icon: <ImageIcon className="h-8 w-8" />,
+    color: "bg-red-600",
     status: "live",
   },
   {
