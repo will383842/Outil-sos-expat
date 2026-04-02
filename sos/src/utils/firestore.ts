@@ -309,7 +309,7 @@ export const ensureCollectionsExist = async () => {
       "promo_codes",
       "review_reports",
       "call_logs",
-      "faqs",
+      "app_faq",
     ];
     for (const collectionName of collections) {
       const colRef = collection(db, collectionName);

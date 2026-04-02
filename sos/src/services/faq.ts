@@ -241,7 +241,7 @@ export const listFAQs = async (options?: {
   onlyActive?: boolean;
   locale?: string;
 }): Promise<FAQ[]> => {
-  const faqsCol = collection(db, "faqs");
+  const faqsCol = collection(db, "app_faq");
   const constraints = [];
 
   if (options?.category) {
@@ -274,7 +274,7 @@ export const listFAQs = async (options?: {
  * Récupérer une FAQ par ID
  */
 export const getFAQById = async (id: string): Promise<FAQ | null> => {
-  const docRef = doc(db, "faqs", id);
+  const docRef = doc(db, "app_faq", id);
   const snap = await getDoc(docRef);
   if (!snap.exists()) return null;
   return mapFAQ({ id: snap.id, ...snap.data() });
@@ -323,7 +323,7 @@ export const getFAQBySlug = async (slug: string, locale?: string): Promise<FAQ |
  * Créer une nouvelle FAQ
  */
 export const createFAQ = async (data: FAQInput): Promise<FAQ> => {
-  const faqsCol = collection(db, "faqs");
+  const faqsCol = collection(db, "app_faq");
   const payload = {
     ...data,
     views: 0,
@@ -343,7 +343,7 @@ export const updateFAQ = async (
   id: string,
   data: Partial<FAQInput>
 ): Promise<void> => {
-  await updateDoc(doc(db, "faqs", id), {
+  await updateDoc(doc(db, "app_faq", id), {
     ...data,
     updatedAt: serverTimestamp(),
   });
@@ -353,14 +353,14 @@ export const updateFAQ = async (
  * Supprimer une FAQ
  */
 export const deleteFAQ = (id: string): Promise<void> =>
-  deleteDoc(doc(db, "faqs", id));
+  deleteDoc(doc(db, "app_faq", id));
 
 /**
  * Incrémenter le compteur de vues
  */
 export const incrementFAQViews = async (id: string): Promise<void> => {
   try {
-    await updateDoc(doc(db, "faqs", id), {
+    await updateDoc(doc(db, "app_faq", id), {
       views: increment(1),
     });
   } catch (error) {

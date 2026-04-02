@@ -2298,7 +2298,7 @@ const SOSCall: React.FC = () => {
           return;
         }
 
-        const faqsRef = collection(db, 'faqs');
+        const faqsRef = collection(db, 'app_faq');
         
         // Load active FAQs (we filter by language in JavaScript since Firestore can't query nested fields)
         const q = query(

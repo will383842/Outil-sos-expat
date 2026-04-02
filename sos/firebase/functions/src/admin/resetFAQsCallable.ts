@@ -268,7 +268,7 @@ export const adminResetFAQs = onCall(
     try {
       // 1. Supprimer les FAQ existantes qui correspondent aux FAQ modifiées
       console.log("[adminResetFAQs] Suppression des FAQ existantes...");
-      const snapshot = await getDb().collection("faqs").get();
+      const snapshot = await getDb().collection("app_faq").get();
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
@@ -310,7 +310,7 @@ export const adminResetFAQs = onCall(
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           };
 
-          await getDb().collection("faqs").add(faqData);
+          await getDb().collection("app_faq").add(faqData);
           results.created++;
           console.log(`[adminResetFAQs] Créée: ${faq.question.substring(0, 40)}...`);
 

@@ -55,7 +55,7 @@ const FAQ: React.FC = () => {
     const loadFAQs = async () => {
       try {
         setLoading(true);
-        const faqRef = collection(db, "faqs");
+        const faqRef = collection(db, "app_faq");
         const q = query(faqRef, where("isActive", "==", true));
         const snapshot = await getDocs(q);
 

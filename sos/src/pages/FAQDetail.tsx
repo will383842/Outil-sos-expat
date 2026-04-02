@@ -132,7 +132,7 @@ const FAQDetail: React.FC = () => {
         }
 
         // Query FAQ by slug in current language
-        const faqsRef = collection(db, 'faqs');
+        const faqsRef = collection(db, 'app_faq');
         
         // Clean the slug first
         const cleanedSlugForIdCheck = slug.trim();
@@ -144,7 +144,7 @@ const FAQDetail: React.FC = () => {
         // First, try to get document directly by ID if it looks like one
         if (looksLikeDocId) {
           try {
-            const docRef = doc(db, 'faqs', cleanedSlugForIdCheck);
+            const docRef = doc(db, 'app_faq', cleanedSlugForIdCheck);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
               const data = docSnap.data();
@@ -327,7 +327,7 @@ const FAQDetail: React.FC = () => {
             
             // Increment view count
             try {
-              await updateDoc(doc(db, 'faqs', faqData.id), {
+              await updateDoc(doc(db, 'app_faq', faqData.id), {
                 views: increment(1)
               });
             } catch (err) {
@@ -375,7 +375,7 @@ const FAQDetail: React.FC = () => {
           const looksLikeDocId = /^[a-zA-Z0-9]{20,}$/.test(cleanedSlug);
           if (looksLikeDocId) {
             try {
-              const docRef = doc(db, 'faqs', cleanedSlug);
+              const docRef = doc(db, 'app_faq', cleanedSlug);
               const docSnap = await getDoc(docRef);
               if (docSnap.exists() && docSnap.data().isActive !== false) {
                 const faqData = { id: docSnap.id, ...docSnap.data() } as FAQ;
@@ -432,7 +432,7 @@ const FAQDetail: React.FC = () => {
 
           // Increment view count
           try {
-            await updateDoc(doc(db, 'faqs', faqDoc.id), {
+            await updateDoc(doc(db, 'app_faq', faqDoc.id), {
               views: increment(1)
             });
           } catch (err) {
