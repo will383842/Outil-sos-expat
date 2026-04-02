@@ -12,6 +12,7 @@ import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import {
   Calculator,
   BarChart3,
@@ -497,6 +498,7 @@ const Outils: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
+  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
 
   const [activeTool, setActiveTool] = useState<ToolId>("checklist");
 
@@ -509,6 +511,25 @@ const Outils: React.FC = () => {
         title={t("pageTitle", lang)}
         description={t("pageDesc", lang)}
       />
+      <BreadcrumbSchema items={[
+        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
+        { name: t("pageTitle", lang) },
+      ]} />
+
+      {/* ── BREADCRUMB VISUEL ── */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li>
+              <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
+                {lang === "en" ? "Home" : "Accueil"}
+              </a>
+            </li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{lang === "en" ? "Tools" : "Outils"}</li>
+          </ol>
+        </div>
+      </nav>
 
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

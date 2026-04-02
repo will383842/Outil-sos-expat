@@ -12,6 +12,7 @@ import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import {
   Search,
   Clock,
@@ -480,6 +481,7 @@ export default function Articles() {
   const lang = (language ||
     parseLocaleFromPath(location.pathname)?.lang ||
     "fr") as string;
+  const localeSlug = LANG_LOCALE[lang] ?? "fr-fr";
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("all");
@@ -533,6 +535,25 @@ export default function Articles() {
         title={`${t("page.title", lang)} | SOS-Expat`}
         description={t("page.subtitle", lang)}
       />
+      <BreadcrumbSchema items={[
+        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
+        { name: t("page.title", lang) },
+      ]} />
+
+      {/* ── BREADCRUMB VISUEL ── */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li>
+              <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
+                {lang === "en" ? "Home" : "Accueil"}
+              </a>
+            </li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{t("page.title", lang)}</li>
+          </ol>
+        </div>
+      </nav>
 
       {/* ===================== HERO ===================== */}
       <section className="relative bg-gradient-to-b from-gray-50 to-white pt-16 pb-12 overflow-hidden">

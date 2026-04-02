@@ -14,9 +14,11 @@ import {
   Vote,
   Loader2,
   MessageSquarePlus,
+  ChevronRight,
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 
@@ -128,6 +130,7 @@ const SondagesListing: React.FC = () => {
   const location = useLocation();
   const { language } = useApp();
   const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
+  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
 
   const [activeSurveys, setActiveSurveys]       = useState<Sondage[]>([]);
   const [completedSurveys, setCompletedSurveys] = useState<Sondage[]>([]);
@@ -156,6 +159,25 @@ const SondagesListing: React.FC = () => {
   return (
     <Layout>
       <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} />
+      <BreadcrumbSchema items={[
+        { name: lang === "en" ? "Home" : "Accueil", url: `/${localeSlug}` },
+        { name: lang === "en" ? "Surveys" : "Sondages" },
+      ]} />
+
+      {/* ── BREADCRUMB VISUEL ── */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li>
+              <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
+                {lang === "en" ? "Home" : "Accueil"}
+              </a>
+            </li>
+            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
+            <li className="text-gray-900 font-medium">{lang === "en" ? "Surveys" : "Sondages"}</li>
+          </ol>
+        </div>
+      </nav>
 
       {/* ========== HERO ========== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">

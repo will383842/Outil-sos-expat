@@ -75,6 +75,22 @@ const HowItWorksPage: React.FC = () => {
         { name: intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Home' }), url: '/' },
         { name: intl.formatMessage({ id: 'howItWorks.title1', defaultMessage: 'How it works' }) }
       ]} />
+
+      {/* ── BREADCRUMB VISUEL ── */}
+      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <li>
+              <Link to={`/${language}`} className="hover:text-red-600 transition-colors">
+                {intl.formatMessage({ id: 'breadcrumb.home', defaultMessage: 'Accueil' })}
+              </Link>
+            </li>
+            <li><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 shrink-0"><polyline points="9 18 15 12 9 6"/></svg></li>
+            <li className="text-gray-900 font-medium">{intl.formatMessage({ id: 'howItWorks.title1', defaultMessage: 'How it works' })}</li>
+          </ol>
+        </div>
+      </nav>
+
       <div className="min-h-screen bg-gray-950">
         {/* Header avec style moderne comme la home */}
         <section className="relative pt-20 pb-32 overflow-hidden">

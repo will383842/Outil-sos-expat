@@ -213,27 +213,30 @@ const T: Record<string, Record<string, string>> = {
 
   // ── Backlink widget ──
   backlinkTitle: {
-    fr: "Ajoutez ce répertoire sur votre site",
-    en: "Add this directory to your website",
-    es: "Añade este directorio a tu sitio web",
-    de: "Fügen Sie dieses Verzeichnis zu Ihrer Website hinzu",
-    ru: "Добавьте этот справочник на свой сайт",
-    pt: "Adicione este diretório ao seu site",
-    ar: "أضف هذا الدليل إلى موقعك",
-    ch: "将此指南添加到您的网站",
-    hi: "इस निर्देशिका को अपनी वेबसाइट पर जोड़ें",
+    fr: "Ajoutez notre badge sur votre site",
+    en: "Add our badge to your website",
+    es: "Añade nuestra insignia a tu sitio web",
+    de: "Fügen Sie unser Badge zu Ihrer Website hinzu",
+    ru: "Добавьте наш значок на свой сайт",
+    pt: "Adicione nosso selo ao seu site",
+    ar: "أضف شارتنا إلى موقعك",
+    ch: "将我们的徽章添加到您的网站",
+    hi: "हमारा बैज अपनी वेबसाइट पर जोड़ें",
   },
   backlinkDesc: {
-    fr: "Aidez vos visiteurs expatriés en ajoutant un lien gratuit vers l'annuaire mondial SOS-Expat — vérifiés, 197 pays, 9 langues.",
-    en: "Help your expat visitors by adding a free link to the SOS-Expat world directory — verified, 197 countries, 9 languages.",
-    es: "Ayuda a tus visitantes expatriados añadiendo un enlace gratuito al directorio mundial SOS-Expat — verificado, 197 países, 9 idiomas.",
-    de: "Helfen Sie Ihren Expat-Besuchern mit einem kostenlosen Link zum SOS-Expat-Weltverzeichnis — verifiziert, 197 Länder, 9 Sprachen.",
-    ru: "Помогите своим посетителям-экспатам, добавив бесплатную ссылку на мировой справочник SOS-Expat — проверено, 197 стран, 9 языков.",
-    pt: "Ajude os seus visitantes expatriados adicionando um link gratuito ao diretório mundial SOS-Expat — verificado, 197 países, 9 idiomas.",
-    ar: "ساعد زوارك المغتربين بإضافة رابط مجاني لدليل SOS-Expat العالمي — موثق، 197 دولة، 9 لغات.",
-    ch: "添加免费链接至SOS-Expat全球指南，帮助您的海外访客 — 已验证，197个国家，9种语言。",
-    hi: "SOS-Expat विश्व निर्देशिका का एक मुफ्त लिंक जोड़कर अपने प्रवासी आगंतुकों की सहायता करें — सत्यापित, 197 देश, 9 भाषाएं।",
+    fr: "Aidez vos visiteurs expatriés en ajoutant ce badge gratuit — annuaire vérifié, 197 pays, 9 langues.",
+    en: "Help your expat visitors by adding this free badge — verified directory, 197 countries, 9 languages.",
+    es: "Ayuda a tus visitantes expatriados con esta insignia gratuita — directorio verificado, 197 países, 9 idiomas.",
+    de: "Helfen Sie Ihren Expat-Besuchern mit diesem kostenlosen Badge — verifiziertes Verzeichnis, 197 Länder, 9 Sprachen.",
+    ru: "Помогите своим посетителям-экспатам с этим бесплатным значком — проверенный справочник, 197 стран, 9 языков.",
+    pt: "Ajude os seus visitantes expatriados com este selo gratuito — diretório verificado, 197 países, 9 idiomas.",
+    ar: "ساعد زوارك المغتربين بإضافة هذه الشارة المجانية — دليل موثق، 197 دولة، 9 لغات.",
+    ch: "添加此免费徽章帮助您的海外访客 — 已验证目录，197个国家，9种语言。",
+    hi: "यह मुफ्त बैज जोड़कर अपने प्रवासी आगंतुकों की सहायता करें — सत्यापित निर्देशिका, 197 देश, 9 भाषाएं।",
   },
+  backlinkBadge: { fr: "Badge visuel", en: "Visual badge", es: "Insignia visual", de: "Visuelles Badge", ru: "Визуальный значок", pt: "Selo visual", ar: "شارة بصرية", ch: "视觉徽章", hi: "विजुअल बैज" },
+  backlinkText: { fr: "Lien texte", en: "Text link", es: "Enlace de texto", de: "Text-Link", ru: "Текстовая ссылка", pt: "Link de texto", ar: "رابط نصي", ch: "文字链接", hi: "टेक्स्ट लिंक" },
+  backlinkPreview: { fr: "Aperçu", en: "Preview", es: "Vista previa", de: "Vorschau", ru: "Предпросмотр", pt: "Pré-visualização", ar: "معاينة", ch: "预览", hi: "पूर्वावलोकन" },
   copyCode: { fr: "Copier le code", en: "Copy code", es: "Copiar código", de: "Code kopieren", ru: "Скопировать код", pt: "Copiar código", ar: "نسخ الكود", ch: "复制代码", hi: "कोड कॉपी करें" },
   copied: { fr: "Copié !", en: "Copied!", es: "¡Copiado!", de: "Kopiert!", ru: "Скопировано!", pt: "Copiado!", ar: "تم النسخ!", ch: "已复制！", hi: "कॉपी हो गया!" },
 
@@ -955,8 +958,9 @@ const Annuaire: React.FC = () => {
     try { localStorage.setItem(LS_PICKER_DISMISSED, "1"); } catch { /* ignore */ }
   };
 
-  // ── Backlink widget copy state
+  // ── Backlink widget state
   const [codeCopied, setCodeCopied] = useState(false);
+  const [badgeTab, setBadgeTab] = useState<"badge" | "text">("badge");
 
   // ── Derived list data
   const totalResources = useMemo(() => countries.reduce((s, c) => s + c.total_links, 0), [countries]);
@@ -1637,33 +1641,76 @@ const Annuaire: React.FC = () => {
       )}
 
       {/* ── BACKLINK WIDGET ── */}
-      {!search && !loadingList && (
-        <section className="mt-12 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 text-center">
-          <h2 className="text-xl font-bold text-white mb-2">
-            {t("backlinkTitle", lang)}
-          </h2>
-          <p className="text-slate-400 text-sm mb-6 max-w-xl mx-auto">
-            {t("backlinkDesc", lang)}
-          </p>
+      {!search && !loadingList && (() => {
+        const annuaireUrl = `https://sos-expat.com/${locale}/${ANNUAIRE_SLUGS[lang] ?? "annuaire"}`;
+        const badgeCode = `<a href="${annuaireUrl}" target="_blank" rel="noopener" title="Annuaire Mondial Expatriés — SOS-Expat"><img src="https://sos-expat.com/sos-logo.webp" alt="SOS-Expat — Annuaire Mondial Expatriés" width="220" height="60" style="border:2px solid #e11d48;border-radius:12px;padding:6px 12px;background:#fff"></a>`;
+        const textCode = `<a href="${annuaireUrl}" target="_blank" rel="noopener">Annuaire Mondial Expatriés — SOS-Expat</a>`;
+        const activeCode = badgeTab === "badge" ? badgeCode : textCode;
+        return (
+        <section className="mt-12 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-white mb-2">
+              {t("backlinkTitle", lang)}
+            </h2>
+            <p className="text-slate-400 text-sm max-w-xl mx-auto">
+              {t("backlinkDesc", lang)}
+            </p>
+          </div>
+
+          {/* Tab selector */}
+          <div className="flex justify-center gap-2 mb-6">
+            <button
+              onClick={() => setBadgeTab("badge")}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${badgeTab === "badge" ? "bg-red-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+            >
+              {t("backlinkBadge", lang)}
+            </button>
+            <button
+              onClick={() => setBadgeTab("text")}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${badgeTab === "text" ? "bg-red-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+            >
+              {t("backlinkText", lang)}
+            </button>
+          </div>
+
+          {/* Preview */}
+          <div className="text-center mb-4">
+            <p className="text-slate-500 text-xs uppercase tracking-wider mb-3">{t("backlinkPreview", lang)}</p>
+            <div className="inline-block bg-white rounded-2xl p-4 shadow-lg">
+              {badgeTab === "badge" ? (
+                <div style={{ border: "2px solid #e11d48", borderRadius: 12, padding: "6px 12px", background: "#fff", display: "inline-block" }}>
+                  <img src="/sos-logo.webp" alt="SOS-Expat — Annuaire Mondial Expatriés" width={220} height={60} style={{ display: "block" }} />
+                </div>
+              ) : (
+                <span className="text-blue-600 underline text-sm">Annuaire Mondial Expatriés — SOS-Expat</span>
+              )}
+            </div>
+          </div>
+
+          {/* Code block */}
           <div className="bg-slate-950 rounded-2xl p-4 text-left mb-4 overflow-x-auto">
             <code className="text-green-400 text-xs font-mono whitespace-pre-wrap break-all">
-              {`<a href="https://sos-expat.com/${locale}/${ANNUAIRE_SLUGS[lang] ?? "annuaire"}" rel="nofollow" target="_blank">Annuaire Mondial Expatriés — SOS-Expat</a>`}
+              {activeCode}
             </code>
           </div>
-          <button
-            onClick={() => {
-              const code = `<a href="https://sos-expat.com/${locale}/${ANNUAIRE_SLUGS[lang] ?? "annuaire"}" rel="nofollow" target="_blank">Annuaire Mondial Expatriés — SOS-Expat</a>`;
-              navigator.clipboard.writeText(code).then(() => {
-                setCodeCopied(true);
-                setTimeout(() => setCodeCopied(false), 2500);
-              });
-            }}
-            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3 rounded-full transition-all shadow-lg shadow-red-600/20"
-          >
-            {codeCopied ? t("copied", lang) : t("copyCode", lang)}
-          </button>
+
+          {/* Copy button */}
+          <div className="text-center">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(activeCode).then(() => {
+                  setCodeCopied(true);
+                  setTimeout(() => setCodeCopied(false), 2500);
+                });
+              }}
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3 rounded-full transition-all shadow-lg shadow-red-600/20"
+            >
+              {codeCopied ? t("copied", lang) : t("copyCode", lang)}
+            </button>
+          </div>
         </section>
-      )}
+        );
+      })()}
 
       {/* ── MAILLAGE INTERNE ── */}
       {!search && !loadingList && (
