@@ -558,7 +558,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 2 - HOW IT WORKS (3 steps)
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-steps-title">
+        <section className="section-content bg-gray-950" aria-labelledby="blogger-steps-title">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-steps-title" className="text-2xl sm:text-4xl font-black mb-3">
@@ -667,7 +667,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 3 - WHO CAN JOIN (8 profiles)
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-profiles-title">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-purple-950/15 to-gray-950" aria-labelledby="blogger-profiles-title">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-profiles-title" className="text-2xl sm:text-4xl font-black mb-3">
@@ -735,7 +735,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 4 - MONETIZE EXISTING BLOG + CALCULATOR
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-existing-title">
+        <section className="section-content bg-gradient-to-b from-gray-950 to-black" aria-labelledby="blogger-existing-title">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-existing-title" className="text-2xl sm:text-4xl font-black mb-3">
@@ -894,7 +894,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 5 - ARTICLE TOPICS + WIDGET HIGHLIGHT
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-topics-title">
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="blogger-topics-title">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-topics-title" className="text-2xl sm:text-4xl font-black mb-3">
@@ -1006,7 +1006,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 6 - RESOURCES + EARNINGS
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-resources-title">
+        <section className="section-content bg-gray-950" aria-labelledby="blogger-resources-title">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-resources-title" className="text-2xl sm:text-4xl font-black mb-3">
@@ -1115,7 +1115,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 7 - RECRUIT PARTNERS (Network diagram)
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-passive-title">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-purple-950/15 to-black" aria-labelledby="blogger-passive-title">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10 sm:mb-14">
               <h2 id="blogger-passive-title" className="text-2xl sm:text-4xl font-black mb-3">
@@ -1197,7 +1197,7 @@ const BloggerLanding: React.FC = () => {
             SECTION COMMUNIQUÉ BLOGUEURS — vignette document iframe
         ================================================================ */}
         {bloggerReleases.length > 0 && (
-          <section className="section-content" aria-label="Communiqué partenariat">
+          <section className="section-content bg-black" aria-label="Communiqué partenariat">
             <div className="max-w-5xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-black mb-2 text-center">
                 <FormattedMessage id="blogger.press.title" defaultMessage="Notre communiqué partenariat" />
@@ -1267,7 +1267,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 8 - FAQ (accessible accordion)
         ================================================================ */}
-        <section className="section-content" aria-labelledby="blogger-faq-title">
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" aria-labelledby="blogger-faq-title">
           <div className="max-w-3xl mx-auto">
             <h2 id="blogger-faq-title" className="text-2xl sm:text-4xl font-black mb-8 sm:mb-10">
               <FormattedMessage id="blogger.faq.title" defaultMessage="Questions?" />
@@ -1290,7 +1290,7 @@ const BloggerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 9 - FINAL CTA
         ================================================================ */}
-        <section className="section-content" aria-label="Call to action">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-purple-950/20 to-black relative" aria-label="Call to action">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl sm:text-4xl font-black mb-4 sm:mb-6">
               <FormattedMessage id="blogger.final.title" defaultMessage="Ready to Monetize Your Blog?" />

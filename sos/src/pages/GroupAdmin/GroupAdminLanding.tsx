@@ -882,7 +882,7 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             SECTION 5 - TARGET GROUPS (pills)
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" aria-labelledby="section-targets">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-blue-950/15 to-gray-950" aria-labelledby="section-targets">
           <div className="max-w-7xl mx-auto">
 
             <h2 id="section-targets" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
@@ -920,7 +920,7 @@ const GroupAdminLanding: React.FC = () => {
         {/* ================================================================
             IMAGE BANK — Free images for group admins
         ================================================================ */}
-        <section className="section-content">
+        <section className="section-content bg-gradient-to-b from-gray-950 to-black">
           <div className="max-w-4xl mx-auto">
             <ImageBankSection accent="blue" />
           </div>
@@ -930,7 +930,7 @@ const GroupAdminLanding: React.FC = () => {
             SECTION COMMUNIQUÉ ADMIN GROUPES — vignette document iframe
         ================================================================ */}
         {gaReleases.length > 0 && (
-          <section className="section-content" aria-label="Communiqué admin groupes">
+          <section className="section-content bg-black" aria-label="Communiqué admin groupes">
             <div className="max-w-5xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-black mb-2 text-center">
                 <FormattedMessage id="groupAdmin.press.title" defaultMessage="Notre communiqué communautés" />

@@ -660,7 +660,7 @@ const InfluencerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 4 - CONTENT TYPES + PLATFORMS
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" aria-labelledby="section-content">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-cyan-950/10 to-gray-950" aria-labelledby="section-content">
           <div className="max-w-7xl mx-auto">
             <h2 id="section-content" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="influencer.content.title" defaultMessage="Content That Converts Best" />
@@ -797,7 +797,7 @@ const InfluencerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 6 - BUILD NETWORK
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 via-orange-950/20 to-gray-950" aria-labelledby="section-network">
+        <section className="section-content bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950" aria-labelledby="section-network">
           <div className="max-w-7xl mx-auto">
             <h2 id="section-network" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="influencer.network.title" defaultMessage="Build Your Network, Earn More" />
@@ -877,7 +877,7 @@ const InfluencerLanding: React.FC = () => {
         {/* ================================================================
             IMAGE BANK — Free images for influencers
         ================================================================ */}
-        <section className="section-content">
+        <section className="section-content bg-gradient-to-b from-gray-950 to-black">
           <div className="max-w-4xl mx-auto">
             <ImageBankSection accent="pink" />
           </div>
@@ -886,7 +886,7 @@ const InfluencerLanding: React.FC = () => {
         {/* ================================================================
             SECTION 8 - FAQ
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq">
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" id="faq" aria-labelledby="section-faq">
           <div className="max-w-3xl mx-auto">
             <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="influencer.faq.title" defaultMessage="Questions?" />

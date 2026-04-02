@@ -493,7 +493,7 @@ const Press: React.FC = () => {
         </nav>
 
         {/* ══════════════ KEY STATS ══════════════ */}
-        <section className="py-6 border-b border-white/5">
+        <section className="py-6 border-b border-white/[0.08] bg-gray-950/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
@@ -515,7 +515,7 @@ const Press: React.FC = () => {
         </section>
 
         {/* ══════════════ ABOUT + FACTS ══════════════ */}
-        <section id="about" className="scroll-mt-16 py-20 sm:py-28">
+        <section id="about" className="scroll-mt-16 py-20 sm:py-28 bg-gradient-to-b from-black to-gray-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
               <div className="lg:col-span-3">
@@ -568,7 +568,7 @@ const Press: React.FC = () => {
         ) : (
           <>
             {/* IDENTITY / LOGOS */}
-            <section className="py-20 sm:py-24 border-t border-white/5">
+            <section className="py-20 sm:py-24 border-t border-white/[0.08]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="identity" icon={Palette} title={t("press.section.identity")} subtitle={t("press.section.identityDesc")} />
                 {logos.length > 0 ? (
@@ -581,7 +581,7 @@ const Press: React.FC = () => {
 
             {/* BRAND GUIDELINES */}
             {brandGuidelines.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/5">
+              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="brand-guidelines" icon={Shield} title={t("press.section.brandGuidelines")} subtitle={t("press.section.brandGuidelinesDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{brandGuidelines.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -590,7 +590,7 @@ const Press: React.FC = () => {
             )}
 
             {/* PRESS KIT */}
-            <section className="py-20 sm:py-24 border-t border-white/5">
+            <section className="py-20 sm:py-24 border-t border-white/[0.08]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="press-kit" icon={FolderOpen} title={t("press.section.pressKit")} subtitle={t("press.section.pressKitDesc")} />
                 {kits.length > 0 ? (
@@ -602,7 +602,7 @@ const Press: React.FC = () => {
             </section>
 
             {/* PRESS RELEASES */}
-            <section id="releases" className="scroll-mt-16 py-20 sm:py-24 border-t border-white/5">
+            <section id="releases" className="scroll-mt-16 py-20 sm:py-24 border-t border-white/[0.08]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-start justify-between gap-4 mb-12 flex-wrap">
                   <div className="flex-1 min-w-0">
@@ -707,7 +707,7 @@ const Press: React.FC = () => {
 
             {/* SPOKESPERSON & BIOS */}
             {spokespersons.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/5">
+              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="spokesperson" icon={Users} title={t("press.section.spokesperson")} subtitle={t("press.section.spokespersonDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{spokespersons.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -716,7 +716,7 @@ const Press: React.FC = () => {
             )}
 
             {/* IMAGE BANK — carousel with thumbnails */}
-            <section className="py-20 sm:py-24 border-t border-white/5" id="images">
+            <section className="py-20 sm:py-24 border-t border-white/[0.08]" id="images">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="images-title" icon={Camera} title={t("press.section.images")} subtitle={t("press.section.imagesDesc")} />
                 <div className="mt-8">
@@ -727,7 +727,7 @@ const Press: React.FC = () => {
 
             {/* B-ROLL & VIDEOS */}
             {bRoll.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/5">
+              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="b-roll" icon={Camera} title={t("press.section.bRoll")} subtitle={t("press.section.bRollDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{bRoll.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -736,7 +736,7 @@ const Press: React.FC = () => {
             )}
 
             {/* DATA & KEY FIGURES */}
-            <section className="py-20 sm:py-24 border-t border-white/5">
+            <section className="py-20 sm:py-24 border-t border-white/[0.08]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="data" icon={BarChart3} title={t("press.section.data")} subtitle={t("press.section.dataDesc")} />
                 {dataRes.length > 0 ? (
@@ -749,7 +749,7 @@ const Press: React.FC = () => {
 
             {/* FACT SHEETS */}
             {factSheets.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/5">
+              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="fact-sheets" icon={FileText} title={t("press.section.factSheets")} subtitle={t("press.section.factSheetsDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{factSheets.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -760,7 +760,7 @@ const Press: React.FC = () => {
         )}
 
         {/* ══════════════ FAQ ══════════════ */}
-        <section className="py-20 sm:py-24 border-t border-white/5">
+        <section className="py-20 sm:py-24 border-t border-white/[0.08]">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-12">{t("press.faq.title")}</h2>
             <div className="space-y-3">

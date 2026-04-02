@@ -1119,7 +1119,7 @@ const ChatterLanding: React.FC = () => {
         {/* ================================================================
             SECTION 7 - FAQ (Google Snippet 0 + Microdata)
         ================================================================ */}
-        <section className="section-content bg-gradient-to-b from-gray-950 to-gray-950" id="faq" aria-labelledby="section-faq">
+        <section className="section-content bg-gradient-to-b from-black to-gray-950" id="faq" aria-labelledby="section-faq">
           <div className="max-w-3xl mx-auto">
             <h2 id="section-faq" className="!text-3xl sm:!text-3xl lg:!text-4xl xl:!text-5xl font-black text-center mb-3 sm:mb-4">
               <FormattedMessage id="chatter.faq.title" defaultMessage="Questions ?" />
