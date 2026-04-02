@@ -14,6 +14,7 @@ import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
+import AnnuaireJsonLd, { FAQ_CONTENT } from "@/components/seo/AnnuaireJsonLd";
 import { phoneCodesData } from "@/data/phone-codes";
 import {
   Search, MapPin, Phone, Mail, Clock, ExternalLink, Shield,
@@ -167,6 +168,87 @@ const T: Record<string, Record<string, string>> = {
   noData:            { fr: "Aucune ressource disponible",                en: "No resources available",                es: "Sin recursos disponibles",                de: "Keine Ressourcen verfügbar",         ru: "Нет доступных ресурсов",               pt: "Sem recursos disponíveis",               ar: "لا توجد موارد متاحة",          ch: "暂无资源",          hi: "कोई संसाधन उपलब्ध नहीं" },
   verifiedResources: { fr: "ressources vérifiées",                       en: "verified resources",                    es: "recursos verificados",                    de: "verifizierte Ressourcen",            ru: "проверенных ресурсов",                 pt: "recursos verificados",                   ar: "موارد موثقة",                  ch: "已验证资源",         hi: "सत्यापित संसाधन" },
   categoriesCovered: { fr: "catégories couvertes",                       en: "categories covered",                    es: "categorías cubiertas",                    de: "abgedeckte Kategorien",              ru: "категорий",                            pt: "categorias cobertas",                    ar: "فئات مغطاة",                   ch: "涵盖类别",          hi: "श्रेणियां" },
+
+  // ── SEO meta titles enrichis ──
+  metaTitle: {
+    fr: "Annuaire Mondial Expatriés 2026 — Ambassades, Urgences, 197 Pays | SOS-Expat",
+    en: "World Expat Directory 2026 — Embassies, Emergencies, 197 Countries | SOS-Expat",
+    es: "Directorio Mundial Expatriados 2026 — Embajadas, Urgencias, 197 Países | SOS-Expat",
+    de: "Weltweites Expat-Verzeichnis 2026 — Botschaften, Notfall, 197 Länder | SOS-Expat",
+    ru: "Мировой справочник экспатов 2026 — Посольства, Экстренные, 197 стран | SOS-Expat",
+    pt: "Diretório Mundial Expatriados 2026 — Embaixadas, Urgências, 197 Países | SOS-Expat",
+    ar: "الدليل العالمي للمغتربين 2026 — السفارات، الطوارئ، 197 دولة | SOS-Expat",
+    ch: "2026海外人员世界指南 — 大使馆、紧急情况、197国 | SOS-Expat",
+    hi: "विश्व प्रवासी निर्देशिका 2026 — दूतावास, आपातकाल, 197 देश | SOS-Expat",
+  },
+
+  // ── Breadcrumb ──
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", ru: "Главная", pt: "Início", ar: "الرئيسية", ch: "首页", hi: "होम" },
+
+  // ── Intro sémantique ──
+  introText: {
+    fr: "Retrouvez en un clic toutes les coordonnées essentielles pour votre expatriation, voyage ou séjour : ambassades, numéros d'urgence, services d'immigration, hôpitaux, banques et bien plus encore — vérifiés et mis à jour dans 197+ pays sur 7 continents.",
+    en: "Find in one click all the essential contacts for your expat life, trip or stay: embassies, emergency numbers, immigration services, hospitals, banks and much more — verified and updated in 197+ countries across 7 continents.",
+    es: "Encuentra en un clic todos los contactos esenciales para tu expatriación, viaje o estancia: embajadas, números de emergencia, servicios de inmigración, hospitales, bancos y mucho más — verificados y actualizados en 197+ países de 7 continentes.",
+    de: "Finden Sie mit einem Klick alle wesentlichen Kontakte für Ihren Auslandsaufenthalt: Botschaften, Notrufnummern, Einwanderungsdienste, Krankenhäuser, Banken und vieles mehr — verifiziert und aktualisiert in 197+ Ländern auf 7 Kontinenten.",
+    ru: "Найдите одним кликом все необходимые контакты для эмиграции, поездки или пребывания: посольства, номера экстренных служб, иммиграционные службы, больницы, банки и многое другое — проверенные данные по 197+ странам на 7 континентах.",
+    pt: "Encontre num clique todos os contactos essenciais para a sua expatriação, viagem ou estadia: embaixadas, números de emergência, serviços de imigração, hospitais, bancos e muito mais — verificados e atualizados em 197+ países de 7 continentes.",
+    ar: "اعثر بنقرة واحدة على جميع جهات الاتصال الأساسية لهجرتك أو رحلتك أو إقامتك: السفارات وأرقام الطوارئ وخدمات الهجرة والمستشفيات والبنوك والمزيد — موثقة ومحدثة في 197+ دولة عبر 7 قارات.",
+    ch: "一键找到您移居、旅行或逗留所需的所有基本联系方式：大使馆、紧急号码、移民服务、医院、银行等 — 涵盖7大洲197+个国家，已验证并持续更新。",
+    hi: "एक क्लिक में अपने प्रवास, यात्रा या ठहराव के लिए सभी आवश्यक संपर्क खोजें: दूतावास, आपातकालीन नंबर, आव्रजन सेवाएं, अस्पताल, बैंक और बहुत कुछ — 7 महाद्वीपों के 197+ देशों में सत्यापित और अपडेट किया गया।",
+  },
+
+  // ── FAQ section heading ──
+  faqHeading: {
+    fr: "Questions fréquentes sur l'Annuaire",
+    en: "Frequently asked questions about the Directory",
+    es: "Preguntas frecuentes sobre el Directorio",
+    de: "Häufige Fragen zum Verzeichnis",
+    ru: "Часто задаваемые вопросы о справочнике",
+    pt: "Perguntas frequentes sobre o Diretório",
+    ar: "الأسئلة الشائعة حول الدليل",
+    ch: "关于指南的常见问题",
+    hi: "निर्देशिका के बारे में अक्सर पूछे जाने वाले प्रश्न",
+  },
+
+  // ── Backlink widget ──
+  backlinkTitle: {
+    fr: "Ajoutez ce répertoire sur votre site",
+    en: "Add this directory to your website",
+    es: "Añade este directorio a tu sitio web",
+    de: "Fügen Sie dieses Verzeichnis zu Ihrer Website hinzu",
+    ru: "Добавьте этот справочник на свой сайт",
+    pt: "Adicione este diretório ao seu site",
+    ar: "أضف هذا الدليل إلى موقعك",
+    ch: "将此指南添加到您的网站",
+    hi: "इस निर्देशिका को अपनी वेबसाइट पर जोड़ें",
+  },
+  backlinkDesc: {
+    fr: "Aidez vos visiteurs expatriés en ajoutant un lien gratuit vers l'annuaire mondial SOS-Expat — vérifiés, 197 pays, 9 langues.",
+    en: "Help your expat visitors by adding a free link to the SOS-Expat world directory — verified, 197 countries, 9 languages.",
+    es: "Ayuda a tus visitantes expatriados añadiendo un enlace gratuito al directorio mundial SOS-Expat — verificado, 197 países, 9 idiomas.",
+    de: "Helfen Sie Ihren Expat-Besuchern mit einem kostenlosen Link zum SOS-Expat-Weltverzeichnis — verifiziert, 197 Länder, 9 Sprachen.",
+    ru: "Помогите своим посетителям-экспатам, добавив бесплатную ссылку на мировой справочник SOS-Expat — проверено, 197 стран, 9 языков.",
+    pt: "Ajude os seus visitantes expatriados adicionando um link gratuito ao diretório mundial SOS-Expat — verificado, 197 países, 9 idiomas.",
+    ar: "ساعد زوارك المغتربين بإضافة رابط مجاني لدليل SOS-Expat العالمي — موثق، 197 دولة، 9 لغات.",
+    ch: "添加免费链接至SOS-Expat全球指南，帮助您的海外访客 — 已验证，197个国家，9种语言。",
+    hi: "SOS-Expat विश्व निर्देशिका का एक मुफ्त लिंक जोड़कर अपने प्रवासी आगंतुकों की सहायता करें — सत्यापित, 197 देश, 9 भाषाएं।",
+  },
+  copyCode: { fr: "Copier le code", en: "Copy code", es: "Copiar código", de: "Code kopieren", ru: "Скопировать код", pt: "Copiar código", ar: "نسخ الكود", ch: "复制代码", hi: "कोड कॉपी करें" },
+  copied: { fr: "Copié !", en: "Copied!", es: "¡Copiado!", de: "Kopiert!", ru: "Скопировано!", pt: "Copiado!", ar: "تم النسخ!", ch: "已复制！", hi: "कॉपी हो गया!" },
+
+  // ── Internal links heading ──
+  exploreMore: {
+    fr: "Explorez SOS-Expat",
+    en: "Explore SOS-Expat",
+    es: "Explorar SOS-Expat",
+    de: "SOS-Expat erkunden",
+    ru: "Изучите SOS-Expat",
+    pt: "Explorar SOS-Expat",
+    ar: "استكشف SOS-Expat",
+    ch: "探索 SOS-Expat",
+    hi: "SOS-Expat एक्सप्लोर करें",
+  },
 };
 
 function t(key: string, lang: string): string {
@@ -873,6 +955,9 @@ const Annuaire: React.FC = () => {
     try { localStorage.setItem(LS_PICKER_DISMISSED, "1"); } catch { /* ignore */ }
   };
 
+  // ── Backlink widget copy state
+  const [codeCopied, setCodeCopied] = useState(false);
+
   // ── Derived list data
   const totalResources = useMemo(() => countries.reduce((s, c) => s + c.total_links, 0), [countries]);
 
@@ -1227,6 +1312,15 @@ const Annuaire: React.FC = () => {
   const renderList = () => (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-10">
 
+      {/* ── BREADCRUMB VISUEL ── */}
+      <nav aria-label="breadcrumb" className="mb-6 flex items-center gap-1.5 text-sm text-gray-400 flex-wrap">
+        <a href={`${BASE_URL}/${locale}`} className="hover:text-red-600 transition-colors font-medium">
+          {t("home", lang)}
+        </a>
+        <ChevronRight size={14} className="text-gray-300 shrink-0" />
+        <span className="text-gray-700 font-medium">{t("pageTitle", lang)}</span>
+      </nav>
+
       {/* ── HERO SECTION ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -1251,6 +1345,13 @@ const Annuaire: React.FC = () => {
         <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
           {t("pageDesc", lang)}
         </p>
+
+        {/* ── Paragraphe sémantique SEO/AEO (visible uniquement hors recherche) ── */}
+        {!search && (
+          <p className="mt-4 text-gray-400 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
+            {t("introText", lang)}
+          </p>
+        )}
 
         {/* Nationality pill */}
         <div className="mt-6 flex justify-center">
@@ -1503,6 +1604,100 @@ const Annuaire: React.FC = () => {
           )}
         </>
       )}
+
+      {/* ── FAQ SECTION — visible SEO/AEO ── */}
+      {!search && !loadingList && (
+        <section aria-labelledby="faq-annuaire-heading" className="mt-16 border-t border-gray-100 pt-12">
+          <h2
+            id="faq-annuaire-heading"
+            className="text-2xl font-extrabold text-gray-900 mb-8 text-center"
+          >
+            {t("faqHeading", lang)}
+          </h2>
+          <div className="grid gap-3 max-w-3xl mx-auto">
+            {(FAQ_CONTENT[lang] ?? FAQ_CONTENT["fr"]).map((item, i) => (
+              <details
+                key={i}
+                className="group bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
+              >
+                <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none font-semibold text-gray-800 text-sm hover:text-red-600 transition-colors">
+                  <span>{item.q}</span>
+                  <ChevronRight
+                    size={16}
+                    className="text-gray-300 shrink-0 group-open:rotate-90 transition-transform"
+                  />
+                </summary>
+                <div className="px-5 pb-4 text-sm text-gray-500 leading-relaxed border-t border-gray-50 pt-3">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── BACKLINK WIDGET ── */}
+      {!search && !loadingList && (
+        <section className="mt-12 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 text-center">
+          <h2 className="text-xl font-bold text-white mb-2">
+            {t("backlinkTitle", lang)}
+          </h2>
+          <p className="text-slate-400 text-sm mb-6 max-w-xl mx-auto">
+            {t("backlinkDesc", lang)}
+          </p>
+          <div className="bg-slate-950 rounded-2xl p-4 text-left mb-4 overflow-x-auto">
+            <code className="text-green-400 text-xs font-mono whitespace-pre-wrap break-all">
+              {`<a href="https://sos-expat.com/${locale}/${ANNUAIRE_SLUGS[lang] ?? "annuaire"}" rel="nofollow" target="_blank">Annuaire Mondial Expatriés — SOS-Expat</a>`}
+            </code>
+          </div>
+          <button
+            onClick={() => {
+              const code = `<a href="https://sos-expat.com/${locale}/${ANNUAIRE_SLUGS[lang] ?? "annuaire"}" rel="nofollow" target="_blank">Annuaire Mondial Expatriés — SOS-Expat</a>`;
+              navigator.clipboard.writeText(code).then(() => {
+                setCodeCopied(true);
+                setTimeout(() => setCodeCopied(false), 2500);
+              });
+            }}
+            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3 rounded-full transition-all shadow-lg shadow-red-600/20"
+          >
+            {codeCopied ? t("copied", lang) : t("copyCode", lang)}
+          </button>
+        </section>
+      )}
+
+      {/* ── MAILLAGE INTERNE ── */}
+      {!search && !loadingList && (
+        <section aria-labelledby="explore-more-heading" className="mt-12">
+          <h2 id="explore-more-heading" className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+            <Globe size={13} className="text-red-500" />
+            {t("exploreMore", lang)}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              { icon: Users,    labelFr: "Trouver un prestataire",   labels: { fr: "Trouver un prestataire", en: "Find a provider", es: "Encontrar proveedor", de: "Anbieter finden", ru: "Найти специалиста", pt: "Encontrar prestador", ar: "البحث عن مزود", ch: "寻找服务商", hi: "प्रदाता खोजें" }, path: "sos-appel" },
+              { icon: FileText, labelFr: "Articles et Guides",        labels: { fr: "Articles et Guides", en: "Articles & Guides", es: "Artículos y Guías", de: "Artikel & Guides", ru: "Статьи и гиды", pt: "Artigos e Guias", ar: "مقالات وأدلة", ch: "文章与指南", hi: "लेख और गाइड" }, path: "articles" },
+              { icon: Globe,    labelFr: "FAQ SOS-Expat",              labels: { fr: "FAQ SOS-Expat", en: "FAQ SOS-Expat", es: "FAQ SOS-Expat", de: "FAQ SOS-Expat", ru: "FAQ SOS-Expat", pt: "FAQ SOS-Expat", ar: "أسئلة شائعة", ch: "常见问题", hi: "FAQ" }, path: "faq" },
+              { icon: Siren,    labelFr: "Appel SOS d'urgence",        labels: { fr: "Appel SOS d'urgence", en: "Emergency SOS Call", es: "Llamada SOS urgencia", de: "Notfall SOS-Anruf", ru: "Экстренный вызов SOS", pt: "Chamada SOS urgência", ar: "مكالمة طوارئ SOS", ch: "紧急SOS呼叫", hi: "आपातकालीन SOS कॉल" }, path: "sos-appel" },
+              { icon: Scale,    labelFr: "Nos sondages",               labels: { fr: "Nos sondages", en: "Our surveys", es: "Nuestras encuestas", de: "Unsere Umfragen", ru: "Наши опросы", pt: "Os nossos inquéritos", ar: "استطلاعاتنا", ch: "我们的调查", hi: "हमारे सर्वेक्षण" }, path: "nos-sondages" },
+              { icon: BookOpen, labelFr: "Nos outils",                 labels: { fr: "Nos outils", en: "Our tools", es: "Nuestras herramientas", de: "Unsere Tools", ru: "Наши инструменты", pt: "As nossas ferramentas", ar: "أدواتنا", ch: "我们的工具", hi: "हमारे उपकरण" }, path: "nos-outils" },
+            ].map(({ icon: Icon, labels, path }, i) => (
+              <a
+                key={i}
+                href={`${BASE_URL}/${locale}/${path}`}
+                className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-md hover:border-red-100 hover:text-red-600 transition-all group"
+              >
+                <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-red-50 transition-colors">
+                  <Icon size={16} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+                </div>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors leading-tight">
+                  {labels[lang as keyof typeof labels] ?? labels.fr}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
     </div>
   );
 
@@ -1515,13 +1710,21 @@ const Annuaire: React.FC = () => {
       <SEOHead
         title={
           selectedCountry
-            ? `${selectedCountry.country_name} — ${t("pageTitle", lang)} | SOS Expat`
-            : `${t("pageTitle", lang)} | SOS Expat`
+            ? `${selectedCountry.country_name} — ${t("pageTitle", lang)} | SOS-Expat`
+            : t("metaTitle", lang)
         }
-        description={t("pageDesc", lang)}
+        description={t("introText", lang)}
         canonicalUrl={canonicalUrl}
         alternateLanguages={alternateLanguages}
       />
+      {!selectedCountry && (
+        <AnnuaireJsonLd
+          lang={lang}
+          canonicalUrl={canonicalUrl}
+          pageTitle={t("metaTitle", lang)}
+          pageDesc={t("introText", lang)}
+        />
+      )}
       <BreadcrumbSchema items={breadcrumbs} />
 
       <AnimatePresence>

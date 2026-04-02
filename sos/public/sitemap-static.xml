@@ -5503,4 +5503,161 @@
     <priority>0.4</priority>
   </url>
 
+  <!-- ═══════════════════════════════════════════════════════════
+       ANNUAIRE MONDIAL — 9 langues
+       ═══════════════════════════════════════════════════════════ -->
+
+  <url>
+    <loc>https://sos-expat.com/fr-fr/annuaire</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/en-us/expat-directory</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/es-es/directorio-expat</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/de-de/expat-verzeichnis</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/pt-pt/diretorio-expat</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/ru-ru/spravochnik-expat</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/zh-cn/zhinan-expat</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/hi-in/nirdeshika-expat</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://sos-expat.com/ar-sa/dalil-expat</loc>
+    <lastmod>2026-04-02</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/expat-directory"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/directorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sos-expat.com/de-de/expat-verzeichnis"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sos-expat.com/pt-pt/diretorio-expat"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://sos-expat.com/ru-ru/spravochnik-expat"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://sos-expat.com/zh-cn/zhinan-expat"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/nirdeshika-expat"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://sos-expat.com/ar-sa/dalil-expat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/annuaire"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
 </urlset>
