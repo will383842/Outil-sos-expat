@@ -19,7 +19,6 @@ import {
   getTranslatedRouteSlug,
   findChildRouteBySegment,
 } from "./localeRoutes";
-import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { devLog, devWarn } from "../../../utils/devLog";
 
 interface LocaleRouterProps {
@@ -271,10 +270,11 @@ const LocaleRouter: React.FC<LocaleRouterProps> = ({ children }) => {
     return <Navigate to={redirectWithQuery} replace />;
   }
 
-  // During language sync, show loading briefly to prevent flash
-  if (newLang && newLang !== language) {
-    return <LoadingSpinner size="large" color="red" />;
-  }
+  // NOTE: intentionally no spinner here — when newLang !== language it's a transient
+  // single-render mismatch caused by navigate() and setLanguage() not committing in the
+  // same React render cycle. The useEffect above already queues setLanguage(newLang),
+  // so the next render will be correct. Showing a full-screen spinner here produced a
+  // jarring flash on every language change without any real benefit.
 
   return <>{children}</>;
 };

@@ -1783,6 +1783,7 @@ const Annuaire: React.FC = () => {
         description={t("introText", lang)}
         canonicalUrl={canonicalUrl}
         alternateLanguages={alternateLanguages}
+        ogType="website"
       />
       {!selectedCountry && (
         <AnnuaireJsonLd

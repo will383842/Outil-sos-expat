@@ -148,7 +148,7 @@ const SondagesListing: React.FC = () => {
 
   return (
     <Layout>
-      <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} canonicalUrl={canonical} />
+      <SEOHead title={t("seoTitle", lang)} description={t("seoDesc", lang)} canonicalUrl={canonical} ogType="website" />
       <BreadcrumbSchema items={[
         { name: t("home", lang), url: `/${localeSlug}` },
         { name: t("breadcrumbLabel", lang) },

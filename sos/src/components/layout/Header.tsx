@@ -1942,6 +1942,60 @@ const Header: React.FC = () => {
 
                 <div className="border-t border-white/10" aria-hidden="true" />
 
+                {/* Content navigation — only shown on content routes on desktop,
+                    exposed here in the mobile menu for all users */}
+                {(() => {
+                  const CONTENT_MOBILE_ITEMS: Array<{
+                    key: string;
+                    icon: string;
+                    labels: Record<string, string>;
+                  }> = [
+                    { key: 'annuaire',           icon: '🌐', labels: { fr: 'Annuaire',     en: 'Directory',    es: 'Directorio',    de: 'Verzeichnis', ru: 'Каталог',      pt: 'Diretório',    ch: '目录',   hi: 'निर्देशिका', ar: 'دليل'       } },
+                    { key: 'articles',           icon: '📖', labels: { fr: 'Articles',     en: 'Articles',     es: 'Artículos',     de: 'Artikel',     ru: 'Статьи',       pt: 'Artigos',      ch: '文章',   hi: 'लेख',        ar: 'مقالات'     } },
+                    { key: 'outils',             icon: '🔧', labels: { fr: 'Outils',       en: 'Tools',        es: 'Herramientas',  de: 'Werkzeuge',   ru: 'Инструменты',  pt: 'Ferramentas',  ch: '工具',   hi: 'उपकरण',      ar: 'أدوات'      } },
+                    { key: 'sondages-listing',   icon: '📊', labels: { fr: 'Sondages',     en: 'Surveys',      es: 'Encuestas',     de: 'Umfragen',    ru: 'Опросы',       pt: 'Pesquisas',    ch: '调查',   hi: 'सर्वेक्षण',  ar: 'استطلاعات'  } },
+                    { key: 'fiches-pays',        icon: '🗺️', labels: { fr: 'Pays',         en: 'Countries',    es: 'Países',        de: 'Länder',      ru: 'Страны',       pt: 'Países',       ch: '国家',   hi: 'देश',        ar: 'بلدان'      } },
+                    { key: 'fiches-thematiques', icon: '🗂️', labels: { fr: 'Thématiques',  en: 'Themes',       es: 'Temáticas',     de: 'Themen',      ru: 'Темы',         pt: 'Temáticas',    ch: '专题',   hi: 'विषयवस्तु',  ar: 'مواضيع'     } },
+                    { key: 'faq',                icon: '❓', labels: { fr: 'FAQ',          en: 'FAQ',          es: 'FAQ',           de: 'FAQ',         ru: 'ЧаВо',         pt: 'FAQ',          ch: 'FAQ',    hi: 'FAQ',        ar: 'أسئلة'      } },
+                  ];
+                  const LOCALE_REGION_MAP: Record<string, string> = {
+                    fr: 'fr', en: 'us', es: 'es', de: 'de', ru: 'ru', pt: 'pt', ch: 'cn', hi: 'in', ar: 'sa',
+                  };
+                  const { country } = parseLocaleFromPath(location.pathname);
+                  const urlLang = language === 'ch' ? 'zh' : language;
+                  const urlRegion = country || LOCALE_REGION_MAP[language] || 'fr';
+                  const localeSlug = `${urlLang}-${urlRegion}`;
+
+                  return (
+                    <nav aria-label={intl.formatMessage({ id: 'header.nav.contentNavAria', defaultMessage: 'Navigation contenu' })}>
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 px-3 mb-2">
+                        {{ fr: 'Explorer', en: 'Explore', es: 'Explorar', de: 'Erkunden', ru: 'Изучить', pt: 'Explorar', ch: '探索', hi: 'अन्वेषण', ar: 'استكشاف' }[language] ?? 'Explorer'}
+                      </p>
+                      <ul className="space-y-1" role="list">
+                        {CONTENT_MOBILE_ITEMS.map((item) => {
+                          const slug = getTranslatedRouteSlug(item.key, language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
+                          const href = `/${localeSlug}/${slug}`;
+                          const label = item.labels[language] || item.labels.fr;
+                          return (
+                            <li key={item.key}>
+                              <Link
+                                to={href}
+                                className="flex items-center space-x-3 p-3 rounded-xl text-gray-300 hover:bg-white/10 transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                <span className="text-lg" aria-hidden="true">{item.icon}</span>
+                                <span className="font-medium text-sm">{label}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </nav>
+                  );
+                })()}
+
+                <div className="border-t border-white/10" aria-hidden="true" />
+
                 <div>
                   <LanguageDropdown isMobile />
                 </div>

@@ -26,6 +26,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { useApp } from "@/contexts/AppContext";
 import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 
@@ -34,35 +35,63 @@ import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-syst
 /* ------------------------------------------------------------------ */
 
 const T: Record<string, Record<string, string>> = {
-  badge: { fr: "Guides Thematiques", en: "Thematic Guides" },
-  h1: { fr: "Guides thematiques pour expatries", en: "Thematic guides for expats" },
+  badge: { fr: "Guides Thematiques", en: "Thematic Guides", es: "Guías Temáticas", de: "Thematische Leitfäden", ru: "Тематические руководства", pt: "Guias Temáticos", ch: "专题指南", hi: "विषयगत गाइड", ar: "أدلة موضوعية" },
+  h1: { fr: "Guides thematiques pour expatries", en: "Thematic guides for expats", es: "Guías temáticas para expatriados", de: "Thematische Ratgeber für Expats", ru: "Тематические руководства для экспатов", pt: "Guias temáticos para expatriados", ch: "外籍人士专题指南", hi: "प्रवासियों के लिए विषयगत गाइड", ar: "أدلة موضوعية للمغتربين" },
   subtitle: {
     fr: "Des ressources detaillees organisees par theme pour vous accompagner dans chaque aspect de votre vie a l'etranger, quel que soit votre pays de destination.",
     en: "Detailed resources organized by theme to support you through every aspect of life abroad, regardless of your destination country.",
+    es: "Recursos detallados organizados por tema para acompañarte en cada aspecto de tu vida en el extranjero.",
+    de: "Detaillierte Ressourcen nach Themen geordnet, die Sie bei jedem Aspekt des Lebens im Ausland begleiten.",
+    ru: "Подробные ресурсы, организованные по темам, для поддержки на каждом этапе жизни за рубежом.",
+    pt: "Recursos detalhados organizados por tema para acompanhá-lo em cada aspeto da sua vida no estrangeiro.",
+    ch: "按主题整理的详细资源，助您应对海外生活的方方面面，无论您的目的地是哪个国家。",
+    hi: "विषय-वार व्यवस्थित विस्तृत संसाधन जो विदेश में जीवन के हर पहलू में आपका साथ देते हैं।",
+    ar: "موارد مفصّلة منظّمة حسب الموضوع لمرافقتك في كل جانب من جوانب حياتك في الخارج.",
   },
-  popularTitle: { fr: "Themes populaires", en: "Popular themes" },
-  allThemesTitle: { fr: "Tous les themes", en: "All themes" },
-  articlesCount: { fr: "articles", en: "articles" },
-  discover: { fr: "Decouvrir", en: "Discover" },
-  recentTitle: { fr: "Articles recents par theme", en: "Recent articles by theme" },
-  faqTitle: { fr: "Questions frequentes", en: "Frequently asked questions" },
-  ctaTitle: { fr: "Besoin d'aide personnalisee ?", en: "Need personalized help?" },
+  popularTitle: { fr: "Themes populaires", en: "Popular themes", es: "Temas populares", de: "Beliebte Themen", ru: "Популярные темы", pt: "Temas populares", ch: "热门专题", hi: "लोकप्रिय विषय", ar: "المواضيع الشائعة" },
+  allThemesTitle: { fr: "Tous les themes", en: "All themes", es: "Todos los temas", de: "Alle Themen", ru: "Все темы", pt: "Todos os temas", ch: "所有专题", hi: "सभी विषय", ar: "جميع المواضيع" },
+  articlesCount: { fr: "articles", en: "articles", es: "artículos", de: "Artikel", ru: "статей", pt: "artigos", ch: "篇文章", hi: "लेख", ar: "مقالات" },
+  discover: { fr: "Decouvrir", en: "Discover", es: "Descubrir", de: "Entdecken", ru: "Открыть", pt: "Descobrir", ch: "探索", hi: "खोजें", ar: "اكتشف" },
+  recentTitle: { fr: "Articles recents par theme", en: "Recent articles by theme", es: "Artículos recientes por tema", de: "Neueste Artikel nach Thema", ru: "Свежие статьи по темам", pt: "Artigos recentes por tema", ch: "按主题最新文章", hi: "विषयानुसार हालिया लेख", ar: "أحدث المقالات حسب الموضوع" },
+  faqTitle: { fr: "Questions frequentes", en: "Frequently asked questions", es: "Preguntas frecuentes", de: "Häufig gestellte Fragen", ru: "Часто задаваемые вопросы", pt: "Perguntas frequentes", ch: "常见问题", hi: "अक्सर पूछे जाने वाले प्रश्न", ar: "الأسئلة الشائعة" },
+  ctaTitle: { fr: "Besoin d'aide personnalisee ?", en: "Need personalized help?", es: "¿Necesitas ayuda personalizada?", de: "Persönliche Hilfe benötigt?", ru: "Нужна персональная помощь?", pt: "Precisa de ajuda personalizada?", ch: "需要个性化帮助？", hi: "व्यक्तिगत सहायता चाहिए?", ar: "هل تحتاج إلى مساعدة شخصية؟" },
   ctaSubtitle: {
     fr: "Nos experts expatriation sont disponibles pour repondre a vos questions specifiques par telephone.",
     en: "Our expatriation experts are available to answer your specific questions by phone.",
+    es: "Nuestros expertos en expatriación están disponibles para responder sus preguntas específicas por teléfono.",
+    de: "Unsere Auswanderungsexperten stehen Ihnen telefonisch für Ihre spezifischen Fragen zur Verfügung.",
+    ru: "Наши эксперты по эмиграции готовы ответить на ваши вопросы по телефону.",
+    pt: "Os nossos especialistas em expatriação estão disponíveis para responder às suas questões específicas por telefone.",
+    ch: "我们的移居专家可通过电话解答您的具体问题。",
+    hi: "हमारे प्रवास विशेषज्ञ फोन पर आपके विशिष्ट प्रश्नों का उत्तर देने के लिए उपलब्ध हैं।",
+    ar: "خبراؤنا في الهجرة متاحون للإجابة على أسئلتك المحددة عبر الهاتف.",
   },
-  ctaAnnuaire: { fr: "Consulter l'annuaire", en: "Browse the directory" },
-  ctaFichesPays: { fr: "Voir les fiches pays", en: "See country guides" },
+  ctaAnnuaire: { fr: "Consulter l'annuaire", en: "Browse the directory", es: "Consultar el directorio", de: "Verzeichnis durchsuchen", ru: "Открыть каталог", pt: "Consultar o directório", ch: "浏览目录", hi: "निर्देशिका देखें", ar: "تصفح الدليل" },
+  ctaFichesPays: { fr: "Voir les fiches pays", en: "See country guides", es: "Ver guías por país", de: "Länderprofile ansehen", ru: "Смотреть страновые справки", pt: "Ver fichas de países", ch: "查看国家资料", hi: "देश गाइड देखें", ar: "عرض بطاقات الدول" },
   seoTitle: {
     fr: "Guides thematiques pour expatries | SOS Expat",
     en: "Thematic guides for expats | SOS Expat",
+    es: "Guías temáticas para expatriados | SOS Expat",
+    de: "Thematische Ratgeber für Expats | SOS Expat",
+    ru: "Тематические руководства для экспатов | SOS Expat",
+    pt: "Guias temáticos para expatriados | SOS Expat",
+    ch: "外籍人士专题指南 | SOS Expat",
+    hi: "प्रवासियों के लिए विषयगत गाइड | SOS Expat",
+    ar: "أدلة موضوعية للمغتربين | SOS Expat",
   },
   seoDesc: {
     fr: "Guides thematiques complets pour expatries : visa, fiscalite, sante, scolarite, logement, banque et plus. Ressources organisees par theme pour reussir votre expatriation.",
     en: "Complete thematic guides for expats: visa, taxes, health, education, housing, banking and more. Resources organized by theme for a successful expatriation.",
+    es: "Guías temáticas completas para expatriados: visa, impuestos, salud, educación, vivienda, banca y más. Recursos por tema para una expatriación exitosa.",
+    de: "Umfassende thematische Ratgeber für Expats: Visum, Steuern, Gesundheit, Bildung, Wohnen, Bankwesen und mehr. Ressourcen nach Themen.",
+    ru: "Подробные тематические руководства для экспатов: виза, налоги, здоровье, образование, жильё, банки и многое другое. Ресурсы по темам.",
+    pt: "Guias temáticos completos para expatriados: visto, fiscalidade, saúde, educação, habitação, banca e mais. Recursos por tema.",
+    ch: "外籍人士完整专题指南：签证、税务、医疗、教育、住房、银行等，按主题整理的移居资源。",
+    hi: "प्रवासियों के लिए संपूर्ण विषयगत गाइड: वीज़ा, कर, स्वास्थ्य, शिक्षा, आवास, बैंकिंग और अधिक।",
+    ar: "أدلة موضوعية شاملة للمغتربين: تأشيرة، ضرائب، صحة، تعليم، سكن، مصارف والمزيد. موارد مرتّبة حسب الموضوع.",
   },
-  home: { fr: "Accueil", en: "Home" },
-  breadLabel: { fr: "Guides thematiques", en: "Thematic guides" },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", ru: "Главная", pt: "Início", ch: "首页", hi: "होम", ar: "الرئيسية" },
+  breadLabel: { fr: "Guides thematiques", en: "Thematic guides", es: "Guías temáticas", de: "Thematische Ratgeber", ru: "Тематические руководства", pt: "Guias temáticos", ch: "专题指南", hi: "विषयगत गाइड", ar: "أدلة موضوعية" },
 
   // Featured themes
   "visa.title": { fr: "Visa & Immigration", en: "Visa & Immigration" },
@@ -225,6 +254,10 @@ const FichesThematiques: React.FC = () => {
             : "thematic guides expats, expatriation guides, visa, international taxation, expat healthcare, education abroad"
         }
       />
+      <BreadcrumbSchema items={[
+        { name: t("home", lang), url: `/${localeSlug}` },
+        { name: t("breadLabel", lang) },
+      ]} />
 
       {/* ===== BREADCRUMB ===== */}
       <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">

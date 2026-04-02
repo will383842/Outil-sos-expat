@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useLocaleNavigate } from "../multilingual-system";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import {
@@ -1641,6 +1641,53 @@ const COUNTRY_TRANSLATIONS: Record<
   },
 };
 
+// ─── Labels pour les nouvelles sections (9 langues) ───────────────────────────
+const DETAIL_T: Record<string, Record<string, string>> = {
+  home:              { fr:"Accueil", en:"Home", es:"Inicio", de:"Startseite", ru:"Главная", pt:"Início", ch:"首页", hi:"होम", ar:"الرئيسية" },
+  countryTitle:      { fr:"L'expatriation en", en:"Expat life in", es:"La expatriación en", de:"Das Expat-Leben in", ru:"Эмиграция в", pt:"A expatriação em", ch:"在", hi:"में प्रवास", ar:"الاغتراب في" },
+  countryTitleAfter: { fr:" — ce que vous devez savoir", en:" — what you need to know", es:" — lo que necesitas saber", de:" — was Sie wissen müssen", ru:" — что вам нужно знать", pt:" — o que precisa saber", ch:"的移居生活——您需要了解的一切", hi:" — जो आपको जानना चाहिए", ar:" — ما تحتاج معرفته" },
+  countryDesc:       { fr:"Ce témoignage illustre l'expérience réelle d'un utilisateur SOS-Expat. Notre réseau d'avocats et d'expatriés vérifiés, disponibles 24h/24, vous permet d'obtenir une consultation téléphonique en moins de 5 minutes depuis n'importe quel pays.", en:"This testimonial illustrates a real SOS-Expat user experience. Our network of verified lawyers and expats, available 24/7, allows you to get a phone consultation in under 5 minutes from any country.", es:"Este testimonio ilustra una experiencia real de usuario de SOS-Expat. Nuestra red de abogados y expatriados verificados, disponibles 24/7, le permite obtener una consulta telefónica en menos de 5 minutos.", de:"Dieses Zeugnis illustriert eine echte SOS-Expat-Nutzererfahrung. Unser Netzwerk verifizierter Anwälte und Expats, rund um die Uhr verfügbar, ermöglicht Ihnen eine Telefonberatung in weniger als 5 Minuten.", ru:"Этот отзыв отражает реальный опыт пользователя SOS-Expat. Наша сеть проверенных юристов и экспатов доступна круглосуточно и позволяет получить телефонную консультацию менее чем за 5 минут.", pt:"Este testemunho ilustra uma experiência real de utilizador do SOS-Expat. A nossa rede de advogados e expatriados verificados, disponíveis 24h/24, permite-lhe obter uma consulta telefónica em menos de 5 minutos.", ch:"这份评价反映了SOS-Expat用户的真实经历。我们全球经验证的律师和外籍人士网络全天候可用，让您在不到5分钟内完成电话咨询。", hi:"यह प्रशंसापत्र एक SOS-Expat उपयोगकर्ता के वास्तविक अनुभव को दर्शाता है। हमारा सत्यापित वकीलों और प्रवासियों का नेटवर्क 24/7 उपलब्ध है।", ar:"تعكس هذه الشهادة تجربة حقيقية لمستخدم SOS-Expat. شبكتنا من المحامين والمغتربين الموثوقين، المتاحة على مدار الساعة، تتيح لك استشارة هاتفية في أقل من 5 دقائق." },
+  seeFichesPays:     { fr:"Fiche pays", en:"Country guide", es:"Guía del país", de:"Länderprofil", ru:"Справка по стране", pt:"Ficha do país", ch:"国家资料", hi:"देश गाइड", ar:"دليل الدولة" },
+  findProvider:      { fr:"Trouver un prestataire", en:"Find a provider", es:"Buscar proveedor", de:"Experten finden", ru:"Найти специалиста", pt:"Encontrar prestador", ch:"查找服务提供者", hi:"प्रदाता खोजें", ar:"ابحث عن مزود" },
+  faqTitle:          { fr:"Questions fréquentes sur ce service", en:"Frequently asked questions about this service", es:"Preguntas frecuentes sobre este servicio", de:"Häufige Fragen zu diesem Service", ru:"Часто задаваемые вопросы об этой услуге", pt:"Perguntas frequentes sobre este serviço", ch:"关于本服务的常见问题", hi:"इस सेवा के बारे में अक्सर पूछे जाने वाले प्रश्न", ar:"أسئلة شائعة حول هذه الخدمة" },
+};
+const tDt = (key: string, lang: string) => DETAIL_T[key]?.[lang] ?? DETAIL_T[key]?.fr ?? key;
+
+// ─── FAQ par type de service (9 langues) ──────────────────────────────────────
+type FaqItem = { q: Record<string, string>; a: Record<string, string> };
+const SERVICE_FAQS: Record<string, FaqItem[]> = {
+  lawyer_call: [
+    {
+      q: { fr:"Pourquoi consulter un avocat spécialisé expatriation ?", en:"Why consult a lawyer specialized in expatriation?", es:"¿Por qué consultar a un abogado especializado en expatriación?", de:"Warum einen Auswanderungsanwalt konsultieren?", ru:"Зачем консультироваться с адвокатом по эмиграции?", pt:"Por que consultar um advogado de expatriação?", ch:"为什么需要咨询移居专业律师？", hi:"प्रवास वकील से परामर्श क्यों लें?", ar:"لماذا استشارة محامٍ متخصص في الهجرة؟" },
+      a: { fr:"Un avocat spécialisé expatriation maîtrise les conventions fiscales, les visas, les permis de travail et le droit local dans votre pays de destination. Il évite des erreurs coûteuses et accélère vos démarches administratives.", en:"A specialist lawyer masters tax treaties, visas, work permits and local law in your destination country, preventing costly mistakes and speeding up your paperwork.", es:"Un abogado especializado domina los convenios fiscales, visas, permisos de trabajo y el derecho local en su país de destino.", de:"Ein Expat-Anwalt beherrscht Steuerabkommen, Visa, Arbeitserlaubnisse und lokales Recht in Ihrem Zielland.", ru:"Специалист владеет налоговыми соглашениями, визами, разрешениями на работу и местным законодательством страны назначения.", pt:"Um advogado especializado domina tratados fiscais, vistos, licenças de trabalho e direito local no seu país de destino.", ch:"移居专业律师精通国际税务协定、签证、工作许可及目的地国家法律，帮助您避免代价高昂的错误。", hi:"विशेषज्ञ वकील कर संधियों, वीज़ा, कार्य परमिट और गंतव्य देश के स्थानीय कानूनों में माहिर होता है।", ar:"المحامي المتخصص يتقن المعاهدات الضريبية والتأشيرات وتصاريح العمل والقانون المحلي في بلد المقصد." },
+    },
+    {
+      q: { fr:"Combien coûte une consultation juridique sur SOS-Expat ?", en:"How much does a legal consultation cost on SOS-Expat?", es:"¿Cuánto cuesta una consulta jurídica en SOS-Expat?", de:"Was kostet eine Rechtsberatung bei SOS-Expat?", ru:"Сколько стоит юридическая консультация на SOS-Expat?", pt:"Quanto custa uma consulta jurídica no SOS-Expat?", ch:"SOS-Expat上法律咨询费用是多少？", hi:"SOS-Expat पर कानूनी परामर्श की लागत कितनी है?", ar:"كم تكلف الاستشارة القانونية على SOS-Expat؟" },
+      a: { fr:"Les consultations sont facturées à la minute, sans abonnement ni frais cachés. Vous ne payez que le temps réellement utilisé, avec des avocats vérifiés disponibles dans 197 pays.", en:"Consultations are billed per minute with no subscription or hidden fees. You only pay for time used, with verified lawyers in 197 countries.", es:"Las consultas se facturan por minuto sin suscripción ni cargos ocultos. Solo paga el tiempo utilizado, con abogados verificados en 197 países.", de:"Beratungen werden pro Minute abgerechnet, ohne Abo oder versteckte Gebühren. Verifizierte Anwälte in 197 Ländern.", ru:"Консультации оплачиваются по минутам, без подписки или скрытых сборов. Проверенные адвокаты в 197 странах.", pt:"Consultas faturadas por minuto sem subscrição ou taxas ocultas. Apenas paga o tempo utilizado, com advogados verificados em 197 países.", ch:"咨询按分钟计费，无订阅费或隐藏费用，覆盖197个国家的经验证律师。", hi:"परामर्श प्रति मिनट बिल किया जाता है, बिना सदस्यता या छिपी फीस के। 197 देशों में सत्यापित वकील।", ar:"تُحتسب الاستشارات بالدقيقة بدون اشتراك أو رسوم خفية. محامون موثوقون في 197 دولة." },
+    },
+    {
+      q: { fr:"Quels documents préparer avant une consultation juridique ?", en:"What documents to prepare before a legal consultation?", es:"¿Qué documentos preparar antes de una consulta jurídica?", de:"Welche Dokumente vor der Rechtsberatung vorbereiten?", ru:"Какие документы подготовить перед юридической консультацией?", pt:"Que documentos preparar antes de uma consulta jurídica?", ch:"法律咨询前需要准备哪些文件？", hi:"कानूनी परामर्श से पहले कौन से दस्तावेज तैयार करें?", ar:"ما الوثائق اللازمة قبل استشارة قانونية؟" },
+      a: { fr:"Préparez : passeport, contrat de travail (si applicable), documents de visa existants, justificatifs de revenus et toute correspondance officielle liée à votre situation d'expatriation.", en:"Prepare: passport, employment contract (if applicable), existing visa documents, proof of income and official correspondence related to your expat situation.", es:"Prepare: pasaporte, contrato laboral (si aplica), documentos de visa, justificantes de ingresos y correspondencia oficial.", de:"Bereiten Sie vor: Reisepass, Arbeitsvertrag (falls vorhanden), Visadokumente, Einkommensnachweise und offizielle Korrespondenz.", ru:"Подготовьте: паспорт, трудовой договор (если есть), документы по визе, подтверждение дохода.", pt:"Prepare: passaporte, contrato de trabalho (se aplicável), documentos de visto, comprovativos de rendimento.", ch:"准备：护照、劳动合同（如适用）、现有签证文件、收入证明及与移居情况相关的官方信函。", hi:"तैयार करें: पासपोर्ट, रोजगार अनुबंध, वीज़ा दस्तावेज, आय प्रमाण।", ar:"جهّز: جواز السفر، عقد العمل، وثائق التأشيرة، إثبات الدخل والمراسلات الرسمية." },
+    },
+  ],
+  expat_call: [
+    {
+      q: { fr:"Pourquoi contacter un expatrié d'expérience avant de s'installer à l'étranger ?", en:"Why contact an experienced expat before settling abroad?", es:"¿Por qué contactar a un expatriado experimentado?", de:"Warum einen erfahrenen Expat kontaktieren?", ru:"Зачем обращаться к опытному экспату?", pt:"Por que contactar um expatriado experiente?", ch:"为什么在海外定居前要联系有经验的外籍人士？", hi:"विदेश में बसने से पहले अनुभवी प्रवासी से क्यों संपर्क करें?", ar:"لماذا التواصل مع مغترب ذي خبرة قبل الاستقرار في الخارج؟" },
+      a: { fr:"Un expatrié partage son vécu réel : logement, banque locale, école, sécurité, réseau social. Des informations concrètes, impossibles à trouver dans les guides touristiques, basées sur une expérience authentique de plusieurs années.", en:"An expat shares real-life experience: housing, local banks, schools, safety, social network — concrete information impossible to find in tourist guides, based on years of authentic lived experience.", es:"Un expatriado comparte experiencia real: vivienda, bancos locales, escuelas, seguridad, red social, información concreta imposible de encontrar en guías turísticas.", de:"Ein Expat teilt echte Erfahrungen: Wohnen, lokale Banken, Schulen, Sicherheit, soziales Netzwerk — konkrete Infos, die man in keinem Reiseführer findet.", ru:"Экспат делится реальным опытом: жильё, местные банки, школы, безопасность, социальная сеть — конкретная информация, которую не найти в туристических путеводителях.", pt:"Um expatriado partilha experiência real: habitação, bancos locais, escolas, segurança, rede social — informação concreta impossível de encontrar em guias turísticos.", ch:"外籍人士分享真实生活经验：住房、当地银行、学校、安全、社交网络——这些具体信息在旅游指南中根本找不到。", hi:"प्रवासी वास्तविक अनुभव साझा करता है: आवास, स्थानीय बैंक, स्कूल, सुरक्षा — पर्यटन गाइड में न मिलने वाली ठोस जानकारी।", ar:"المغترب يشارك تجربة حقيقية: السكن والبنوك المحلية والمدارس والأمان والشبكة الاجتماعية، معلومات لا تجدها في أدلة السياحة." },
+    },
+    {
+      q: { fr:"Quelles questions poser lors d'une consultation expat ?", en:"What questions to ask during an expat consultation?", es:"¿Qué preguntas hacer en una consulta con un expatriado?", de:"Welche Fragen in der Expat-Beratung stellen?", ru:"Какие вопросы задать во время консультации с экспатом?", pt:"Que perguntas fazer numa consulta com expatriado?", ch:"外籍人士咨询中应问哪些问题？", hi:"प्रवासी परामर्श में कौन से प्रश्न पूछें?", ar:"ما الأسئلة التي يجب طرحها في استشارة مع مغترب؟" },
+      a: { fr:"Préparez des questions sur : le coût réel de la vie (loyer, courses, transports), les procédures d'installation (banque, numéro fiscal, assurance santé), la sécurité du quartier, les écoles internationales et les erreurs courantes à éviter.", en:"Prepare questions on: real cost of living (rent, groceries, transport), setup procedures (bank, tax number, health insurance), neighborhood safety, international schools and common mistakes to avoid.", es:"Prepare preguntas sobre: coste real de vida, procedimientos de instalación, seguridad, escuelas internacionales y errores comunes.", de:"Bereiten Sie Fragen vor zu: Lebenshaltungskosten, Einrichtungsverfahren, Sicherheit, Schulen und häufigen Fehlern.", ru:"Подготовьте вопросы о реальной стоимости жизни, процедурах обустройства, безопасности, школах и распространённых ошибках.", pt:"Prepare perguntas sobre: custo real de vida, procedimentos de instalação, segurança, escolas internacionais e erros comuns.", ch:"准备关于以下内容的问题：真实生活成本、安置手续（银行、税号、医保）、社区安全、国际学校和常见错误。", hi:"तैयार करें: जीवन यापन लागत, स्थापना प्रक्रियाएं, सुरक्षा, अंतर्राष्ट्रीय स्कूल और सामान्य गलतियां।", ar:"جهّز أسئلة حول: التكلفة الحقيقية للمعيشة، إجراءات التثبيت، الأمن، المدارس الدولية والأخطاء الشائعة." },
+    },
+    {
+      q: { fr:"Comment SOS-Expat vérifie-t-il ses expatriés conseillers ?", en:"How does SOS-Expat verify its expat advisors?", es:"¿Cómo verifica SOS-Expat a sus asesores expatriados?", de:"Wie überprüft SOS-Expat seine Expat-Berater?", ru:"Как SOS-Expat проверяет консультантов-экспатов?", pt:"Como o SOS-Expat verifica os seus consultores expatriados?", ch:"SOS-Expat如何核实其外籍顾问？", hi:"SOS-Expat अपने प्रवासी सलाहकारों को कैसे सत्यापित करता है?", ar:"كيف تتحقق SOS-Expat من مستشاريها المغتربين؟" },
+      a: { fr:"Chaque expatrié conseiller passe par une vérification d'identité, de résidence dans le pays déclaré et d'une durée d'expatriation minimale de 2 ans. Les profils sont notés par les utilisateurs et les avis négatifs sont examinés par notre équipe.", en:"Each advisor undergoes identity verification, proof of residence in the declared country and a minimum 2-year expat experience. Profiles are rated by users and negative reviews are reviewed by our team.", es:"Cada asesor pasa por verificación de identidad, residencia en el país declarado y mínimo 2 años de expatriación.", de:"Jeder Berater durchläuft Identitätsverifikation, Wohnsitznachweis und eine Mindest-Expat-Dauer von 2 Jahren.", ru:"Каждый советник проходит проверку личности, подтверждение проживания и минимальный стаж эмиграции 2 года.", pt:"Cada consultor passa por verificação de identidade, comprovação de residência e expatriação mínima de 2 anos.", ch:"每位顾问均需通过身份验证、在申报国家的居住证明及至少2年的海外生活经历核实。", hi:"प्रत्येक सलाहकार पहचान सत्यापन, निवास प्रमाण और न्यूनतम 2 वर्ष प्रवास अनुभव से गुजरता है।", ar:"يخضع كل مستشار للتحقق من الهوية وإثبات الإقامة وخبرة هجرة لا تقل عن سنتين." },
+    },
+  ],
+};
+const getFaq = (key: string, lang: string, obj: FaqItem): string =>
+  obj[key as 'q' | 'a']?.[lang] ?? obj[key as 'q' | 'a']?.en ?? obj[key as 'q' | 'a']?.fr ?? '';
+
 const TestimonialDetail: React.FC = () => {
   const intl = useIntl();
   // ✅ NEW: Parse URL params
@@ -1652,6 +1699,8 @@ const TestimonialDetail: React.FC = () => {
 
   const navigate = useLocaleNavigate();
   const { language } = useApp();
+  const { pathname } = useLocation();
+  const canonicalUrl = `https://sos-expat.com${pathname}`;
   
   // ✅ Check if current language is RTL
   const isRTL = language === 'ar';
@@ -1688,6 +1737,7 @@ const TestimonialDetail: React.FC = () => {
   // ✅ FIND TESTIMONIAL BY ID - Try Firestore first, fallback to mock
   const [testimonialData, setTestimonialData] = useState<Review | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const loadTestimonial = async () => {
@@ -2231,6 +2281,23 @@ const TestimonialDetail: React.FC = () => {
   const pageDescription = `${t.testimonialPageDescription} ${currentContent.substring(0, 160)}...`;
   const countryName = getCountryName(testimonialData.clientCountry);
 
+  // ─── Thin content + FAQ ────────────────────────────────────────────────────
+  const localeSlug = pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? 'fr-fr';
+  // Thin content = extrait seulement (fullcontent identique au comment court, ou < 150 chars)
+  const isThinContent =
+    (testimonialData.fullcontent?.length ?? 0) < 150 ||
+    (testimonialData.fullcontent === testimonialData.comment && (testimonialData.comment?.length ?? 0) < 300);
+  const faqItems = SERVICE_FAQS[testimonialData.serviceType ?? 'expat_call'] ?? SERVICE_FAQS.expat_call;
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map(item => ({
+      "@type": "Question",
+      name: getFaq("q", language, item),
+      acceptedAnswer: { "@type": "Answer", text: getFaq("a", language, item) },
+    })),
+  };
+
   return (
     <Layout>
       {/* SEO: Helmet déclaratif (rendu immédiat dans <head>, pas useEffect) */}
@@ -2242,12 +2309,17 @@ const TestimonialDetail: React.FC = () => {
           <meta property="og:description" content={seoData.pageDescription} />
           <meta property="og:type" content="article" />
           <meta property="og:image" content={testimonialData?.clientAvatar || ''} />
+          <link rel="canonical" href={canonicalUrl} />
+          {isThinContent && <meta name="robots" content="noindex,follow" />}
           <script type="application/ld+json">{JSON.stringify(seoData.structuredData)}</script>
+          {!isThinContent && (
+            <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+          )}
         </Helmet>
       )}
       <BreadcrumbSchema items={[
-        { name: 'Home', url: '/' },
-        { name: tSeo.testimonialPageTitle || 'Testimonials', url: `/${language}/testimonials` },
+        { name: tDt('home', language), url: `/${localeSlug}` },
+        { name: tSeo.testimonialPageTitle || 'Testimonials', url: `/${localeSlug}/testimonials` },
         { name: testimonialData?.clientName || '' }
       ]} />
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -2586,6 +2658,75 @@ const TestimonialDetail: React.FC = () => {
             </aside>
           </div>
         </main>
+
+        {/* ─── Country Context Section ──────────────────────────────────────── */}
+        {!isThinContent && (
+          <section className="py-12 bg-white border-t border-gray-100">
+            <div className="max-w-4xl mx-auto px-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                {tDt('countryTitle', language)}{' '}
+                <span className="text-red-600">{countryName}</span>
+                {tDt('countryTitleAfter', language)}
+              </h2>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                {tDt('countryDesc', language)}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href={`/${localeSlug}/fiches-pays/${testimonialData.clientCountry}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-medium hover:bg-red-50 hover:text-red-700 transition-colors"
+                >
+                  <Globe size={14} />
+                  {tDt('seeFichesPays', language)}
+                </a>
+                <a
+                  href={`/${localeSlug}/annuaire?country=${testimonialData.clientCountry}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition-colors"
+                >
+                  <User size={14} />
+                  {tDt('findProvider', language)}
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ─── FAQ Section ──────────────────────────────────────────────────── */}
+        {!isThinContent && (
+          <section className="py-12 bg-gray-50 border-t border-gray-100">
+            <div className="max-w-4xl mx-auto px-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">
+                {tDt('faqTitle', language)}
+              </h2>
+              <div className="space-y-3">
+                {faqItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                      className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+                      aria-expanded={openFaq === idx}
+                    >
+                      <span>{getFaq('q', language, item)}</span>
+                      <ChevronRightIcon
+                        size={18}
+                        className={`flex-shrink-0 transition-transform duration-300 text-red-500 ${openFaq === idx ? 'rotate-90' : ''}`}
+                      />
+                    </button>
+                    {openFaq === idx && (
+                      <div className="px-6 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+                        {getFaq('a', language, item)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Related testimonials section with modern design / Section témoignages connexes avec design moderne */}
         <section className="relative py-20 overflow-hidden">

@@ -215,6 +215,7 @@ const FAQ: React.FC = () => {
             : intl.formatMessage({ id: "faq.heroSubtitle", defaultMessage: "Find answers about SOS Expat & Travelers" })
         }
         canonicalUrl={faqPageUrl}
+        ogType="website"
         author="Manon"
         contentType="FAQPage"
         noindex={noIndexEmpty || isNonCanonicalLocale}

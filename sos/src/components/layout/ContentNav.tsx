@@ -237,7 +237,7 @@ const ContentNav: React.FC = () => {
   return (
     <nav
       aria-label="Content navigation"
-      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_8px_rgba(0,0,0,0.06)]"
+      className="hidden lg:block sticky lg:top-20 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_8px_rgba(0,0,0,0.06)]"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="relative max-w-7xl mx-auto px-2 sm:px-4">
@@ -248,7 +248,7 @@ const ContentNav: React.FC = () => {
             style={{
               background: isRTL
                 ? 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.98) 100%)'
-                : 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.98) 100%) no-repeat',
+                : 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.98) 100%)',
             }}
           />
         )}

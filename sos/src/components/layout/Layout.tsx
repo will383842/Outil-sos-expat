@@ -223,7 +223,7 @@ const Layout: React.FC<LayoutProps> = ({
         </nav>
 
         {showHeader && <Header />}
-        <ContentNav />
+        {showHeader && <ContentNav />}
 
       <main
         id="main-content"

@@ -729,6 +729,10 @@ const Footer: React.FC = () => {
             href: surveysBlogUrl,
           },
           {
+            label: intl.formatMessage({ id: "footer.services.surveysResults", defaultMessage: "Résultats des Sondages" }),
+            href: `/${getTranslatedRouteSlug("resultats-sondages", resolvedLang)}`,
+          },
+          {
             label: intl.formatMessage({ id: "footer.services.tools", defaultMessage: "Nos Outils" }),
             href: toolsUrl,
           },

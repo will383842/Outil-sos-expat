@@ -387,6 +387,7 @@ export type RouteKey =
   | "programme-affiliation" // /categories/affiliation -> /categories/affiliate-program, etc.
   | "sondages-listing"   // /categories/sondages -> /categories/surveys, etc.
   | "sondages"           // /sondages -> /surveys, etc.
+  | "resultats-sondages" // /resultats-sondages -> /surveys-results, etc.
   | "outils-listing"     // /categories/outils -> /categories/tools, etc.
   | "outils";            // /outils -> /tools, etc.
 
@@ -1946,6 +1947,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "diaocha",
     hi: "sarvekshan",
     ar: "istiftaat",
+  },
+  "resultats-sondages": {
+    fr: "resultats-sondages",
+    en: "surveys-results",
+    es: "resultados-encuestas",
+    de: "umfragen-ergebnisse",
+    ru: "rezultaty-oprosov",
+    pt: "resultados-pesquisas",
+    ch: "diaocha-jieguo",
+    hi: "sarvekshan-parinam",
+    ar: "natayij-istiftaat",
   },
   "outils-listing": {
     fr: "nos-outils",

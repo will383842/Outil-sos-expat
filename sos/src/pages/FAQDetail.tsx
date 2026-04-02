@@ -681,6 +681,7 @@ const FAQDetail: React.FC = () => {
         keywords={[displayFaq.category, 'FAQ', 'help', ...(displayFaq.tags || [])].join(', ')}
         canonicalUrl={canonicalUrl}
         noindex={noIndex}
+        ogType="article"
         contentType="FAQPage"
         author="SOS Expat & Travelers"
         expertise="Legal Services, Expat Assistance, International Law"

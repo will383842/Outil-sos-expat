@@ -8,7 +8,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { parseLocaleFromPath } from "@/multilingual-system";
+import { parseLocaleFromPath, getTranslatedRouteSlug } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
 import SEOHead from "@/components/layout/SEOHead";
@@ -25,6 +25,7 @@ import {
   FileText,
   ChevronRight,
   Loader2,
+  CheckCircle,
 } from "lucide-react";
 
 // ============================================================
@@ -47,6 +48,8 @@ const T: Record<string, Record<string, string>> = {
   "sidebar.popular": { fr: "Articles populaires", en: "Popular Articles", es: "Artículos populares", de: "Beliebte Artikel", pt: "Artigos populares", ru: "Популярные статьи", ch: "热门文章", hi: "लोकप्रिय लेख", ar: "المقالات الأكثر قراءة" },
   "sidebar.categories": { fr: "Categories", en: "Categories", es: "Categorías", de: "Kategorien", pt: "Categorias", ru: "Категории", ch: "分类", hi: "श्रेणियाँ", ar: "الفئات" },
   "sidebar.tags": { fr: "Tags populaires", en: "Popular Tags", es: "Etiquetas populares", de: "Beliebte Tags", pt: "Tags populares", ru: "Популярные теги", ch: "热门标签", hi: "लोकप्रिय टैग", ar: "الوسوم الشائعة" },
+  "blog.badge": { fr: "Blog SOS-Expat", en: "SOS-Expat Blog", es: "Blog SOS-Expat", de: "SOS-Expat Blog", ru: "Блог SOS-Expat", pt: "Blog SOS-Expat", ch: "SOS-Expat 博客", hi: "SOS-Expat ब्लॉग", ar: "مدونة SOS-Expat" },
+  "newsletter.success": { fr: "Merci ! Vous êtes inscrit(e) à notre newsletter.", en: "Thanks! You're now subscribed to our newsletter.", es: "¡Gracias! Te has suscrito a nuestra newsletter.", de: "Danke! Sie sind jetzt für unseren Newsletter angemeldet.", pt: "Obrigado! Está agora subscrito na nossa newsletter.", ru: "Спасибо! Вы подписались на нашу рассылку.", ch: "谢谢！您已成功订阅我们的新闻通讯。", hi: "धन्यवाद! आप हमारे न्यूज़लेटर के लिए सदस्यता ले चुके हैं।", ar: "شكراً! لقد اشتركت في نشرتنا الإخبارية." },
   "newsletter.title": { fr: "Restez informe ou que vous soyez", en: "Stay informed wherever you are", es: "Mantente informado estés donde estés", de: "Bleiben Sie überall informiert", pt: "Fique informado onde quer que esteja", ru: "Оставайтесь в курсе событий, где бы вы ни были", ch: "无论身在何处，保持信息畅通", hi: "चाहे जहाँ भी हों, सूचित रहें", ar: "ابقَ على اطلاع أينما كنت" },
   "newsletter.subtitle": { fr: "Recevez nos meilleurs articles et guides directement dans votre boite mail", en: "Get our best articles and guides delivered to your inbox", es: "Recibe nuestros mejores artículos y guías directamente en tu correo", de: "Erhalten Sie unsere besten Artikel und Ratgeber direkt in Ihr Postfach", pt: "Receba os nossos melhores artigos e guias diretamente na sua caixa de email", ru: "Получайте наши лучшие статьи и руководства прямо на почту", ch: "将我们最优质的文章和指南直接发送到您的邮箱", hi: "हमारे सर्वश्रेष्ठ लेख और गाइड सीधे अपने इनबॉक्स में पाएं", ar: "احصل على أفضل مقالاتنا وأدلتنا مباشرة في بريدك الإلكتروني" },
   "newsletter.placeholder": { fr: "Votre email", en: "Your email", es: "Tu correo electrónico", de: "Ihre E-Mail-Adresse", pt: "O seu email", ru: "Ваш email", ch: "您的邮箱", hi: "आपका ईमेल", ar: "بريدك الإلكتروني" },
@@ -104,13 +107,14 @@ const GRADIENT_MAP: Record<string, string> = {
 };
 
 // Blog article URL: /{locale}/{articles-segment}/{slug}
+// NOTE: app uses "ch" internally for Chinese, but URL/API uses "zh"
 const LANG_LOCALE: Record<string, string> = {
   fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de",
-  ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", hi: "hi-in", ar: "ar-sa",
+  ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", ch: "zh-cn", hi: "hi-in", ar: "ar-sa",
 };
 const ARTICLES_SEGMENT: Record<string, string> = {
   fr: "articles", en: "articles", es: "articulos", de: "artikel",
-  pt: "artigos", ru: "stati", zh: "wenzhang", hi: "lekh", ar: "maqalat",
+  pt: "artigos", ru: "stati", zh: "wenzhang", ch: "wenzhang", hi: "lekh", ar: "maqalat",
 };
 function articleUrl(lang: string, slug: string): string {
   const locale = LANG_LOCALE[lang] ?? "fr-fr";
@@ -349,7 +353,19 @@ function FeaturedCard({
   );
 }
 
-function Sidebar({ lang, articles }: { lang: string; articles: Article[] }) {
+function Sidebar({
+  lang,
+  articles,
+  activeCategory,
+  onCategoryClick,
+  onTagClick,
+}: {
+  lang: string;
+  articles: Article[];
+  activeCategory: Category;
+  onCategoryClick: (cat: Category) => void;
+  onTagClick: (tag: string) => void;
+}) {
   const popular = articles.slice(0, 4);
 
   return (
@@ -390,22 +406,28 @@ function Sidebar({ lang, articles }: { lang: string; articles: Article[] }) {
           <FileText className="w-4 h-4 text-red-600" />
           {t("sidebar.categories", lang)}
         </h3>
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {CATEGORIES.filter((c) => c.key !== "all").map((cat) => {
             const count = articles.filter((a) => a.category === cat.key).length;
+            const isActive = activeCategory === cat.key;
             return (
-              <li
-                key={cat.key}
-                className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group"
-              >
-                <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                  {t(cat.labelKey, lang)}
-                </span>
-                {count > 0 && (
-                  <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {count}
-                  </span>
-                )}
+              <li key={cat.key}>
+                <button
+                  type="button"
+                  onClick={() => onCategoryClick(cat.key)}
+                  className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-colors text-left ${
+                    isActive
+                      ? "bg-red-50 text-red-700"
+                      : "hover:bg-gray-50 text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{t(cat.labelKey, lang)}</span>
+                  {count > 0 && (
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-400"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
               </li>
             );
           })}
@@ -420,12 +442,14 @@ function Sidebar({ lang, articles }: { lang: string; articles: Article[] }) {
         </h3>
         <div className="flex flex-wrap gap-2">
           {POPULAR_TAGS.map((tag) => (
-            <span
+            <button
               key={tag}
-              className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-50 rounded-full border border-gray-100 hover:bg-red-50 hover:text-red-700 hover:border-red-100 cursor-pointer transition-colors"
+              type="button"
+              onClick={() => onTagClick(tag)}
+              className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-50 rounded-full border border-gray-100 hover:bg-red-50 hover:text-red-700 hover:border-red-100 transition-colors"
             >
               {tag}
-            </span>
+            </button>
           ))}
         </div>
       </div>
@@ -462,11 +486,16 @@ export default function Articles() {
     parseLocaleFromPath(location.pathname)?.lang ||
     "fr") as string;
   const localeSlug = LANG_LOCALE[lang] ?? "fr-fr";
+  const _urlLangA = lang === "ch" ? "zh" : lang;
+  const _regionMapA: Record<string, string> = { fr:"fr", en:"us", es:"es", de:"de", ru:"ru", pt:"pt", ch:"cn", hi:"in", ar:"sa" };
+  const canonicalArticles = `https://sos-expat.com/${_urlLangA}-${_regionMapA[lang] ?? lang}/${getTranslatedRouteSlug("articles" as any, lang as any) || "articles"}`;
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("all");
   const [allArticles, setAllArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterSent, setNewsletterSent] = useState(false);
 
   // Fetch from Blog API
   useEffect(() => {
@@ -509,11 +538,26 @@ export default function Articles() {
   const featured = filteredArticles.find((a) => a.featured);
   const gridArticles = filteredArticles.filter((a) => a !== featured);
 
+  const handleTagClick = (tag: string) => {
+    setSearch(tag);
+    setActiveCategory("all");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim() || !newsletterEmail.includes("@")) return;
+    setNewsletterSent(true);
+    setNewsletterEmail("");
+  };
+
   return (
     <Layout>
       <SEOHead
         title={`${t("page.title", lang)} | SOS-Expat`}
         description={t("page.subtitle", lang)}
+        canonicalUrl={canonicalArticles}
+        ogType="blog"
       />
       <BreadcrumbSchema items={[
         { name: t("home", lang), url: `/${localeSlug}` },
@@ -557,7 +601,7 @@ export default function Articles() {
           >
             <span className="inline-flex items-center gap-1.5 rounded-full border border-red-600/30 bg-red-600/10 px-5 py-1.5 text-sm font-semibold text-red-400 mb-6">
               <BookOpen className="w-3.5 h-3.5" />
-              Blog SOS-Expat
+              {t("blog.badge", lang)}
             </span>
 
             <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-4">
@@ -592,7 +636,8 @@ export default function Articles() {
       </section>
 
       {/* =============== CATEGORY PILLS =============== */}
-      <section className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+      {/* top-0 mobile / lg:top-[132px] = header (80px) + ContentNav (~52px) */}
+      <section className="sticky top-0 lg:top-[132px] z-20 bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
             {CATEGORIES.map((cat) => {
@@ -603,7 +648,7 @@ export default function Articles() {
                   onClick={() => setActiveCategory(cat.key)}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 ${
                     isActive
-                      ? "bg-gray-900 text-white border-gray-900 shadow-sm"
+                      ? "bg-red-600 text-white border-red-600 shadow-sm shadow-red-100"
                       : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
                   }`}
                 >
@@ -653,7 +698,7 @@ export default function Articles() {
               {/* Sidebar mobile: displayed below articles on small screens */}
               {!loading && allArticles.length > 0 && (
                 <div className="lg:hidden">
-                  <Sidebar lang={lang} articles={allArticles} />
+                  <Sidebar lang={lang} articles={allArticles} activeCategory={activeCategory} onCategoryClick={setActiveCategory} onTagClick={handleTagClick} />
                 </div>
               )}
             </div>
@@ -661,7 +706,7 @@ export default function Articles() {
             {/* Sidebar (desktop only) */}
             <div className="hidden lg:block">
               <div className="sticky top-20">
-                <Sidebar lang={lang} articles={allArticles} />
+                <Sidebar lang={lang} articles={allArticles} activeCategory={activeCategory} onCategoryClick={setActiveCategory} onTagClick={handleTagClick} />
               </div>
             </div>
           </div>
@@ -695,22 +740,41 @@ export default function Articles() {
                 {t("newsletter.subtitle", lang)}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder={t("newsletter.placeholder", lang)}
-                  aria-label={t("newsletter.placeholder", lang)}
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 backdrop-blur transition-all"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-sm font-semibold text-white shadow-lg shadow-red-600/25 transition-colors flex items-center justify-center gap-2"
+              {newsletterSent ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center justify-center gap-3 py-3 px-6 rounded-xl bg-green-500/20 border border-green-400/30 text-green-300 max-w-md mx-auto"
                 >
-                  {t("newsletter.cta", lang)}
-                  <ChevronRight className="w-4 h-4" />
-                </motion.button>
-              </div>
+                  <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-medium">{t("newsletter.success", lang)}</span>
+                </motion.div>
+              ) : (
+                <form
+                  onSubmit={handleNewsletterSubmit}
+                  className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+                  noValidate
+                >
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder={t("newsletter.placeholder", lang)}
+                    aria-label={t("newsletter.placeholder", lang)}
+                    required
+                    className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 backdrop-blur transition-all"
+                  />
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-sm font-semibold text-white shadow-lg shadow-red-600/25 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {t("newsletter.cta", lang)}
+                    <ChevronRight className="w-4 h-4" />
+                  </motion.button>
+                </form>
+              )}
             </motion.div>
           </div>
         </div>

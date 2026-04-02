@@ -170,7 +170,7 @@ export default function Outils() {
 
   return (
     <Layout>
-      <SEOHead title={tr("pageTitle", lang)} description={tr("pageDesc", lang)} canonicalUrl={canonical} />
+      <SEOHead title={tr("pageTitle", lang)} description={tr("pageDesc", lang)} canonicalUrl={canonical} ogType="website" />
       <BreadcrumbSchema items={[
         { name: tr("home", lang), url: "https://sos-expat.com" },
         { name: tr("breadTools", lang), url: canonical },
