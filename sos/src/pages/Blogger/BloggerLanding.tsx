@@ -1250,8 +1250,10 @@ const BloggerLanding: React.FC = () => {
                         className="relative overflow-hidden bg-white flex-shrink-0 cursor-pointer" style={{ height: '280px' }}
                         aria-label={title}>
                         {htmlUrl ? (
-                          <iframe src={htmlUrl} title={title} scrolling="no" tabIndex={-1}
-                            style={{ width: '960px', height: '1280px', border: 'none', pointerEvents: 'none', transform: 'scale(0.29)', transformOrigin: 'top left', display: 'block' }} />
+                          <div style={{ position: 'absolute', top: 0, left: '50%', marginLeft: '-480px', width: '960px', height: '1280px', transform: 'scale(0.29)', transformOrigin: 'top center', pointerEvents: 'none' }}>
+                            <iframe src={htmlUrl} title={title} scrolling="no" tabIndex={-1}
+                              style={{ width: '960px', height: '1280px', border: 'none', display: 'block' }} />
+                          </div>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-white/5">
                             <FileText className="w-14 h-14 text-white/15" />

@@ -648,21 +648,15 @@ const Press: React.FC = () => {
                             style={{ height: "300px" }}
                             aria-label={title}>
                             {htmlViewUrl ? (
+                              <div style={{ position: "absolute", top: 0, left: "50%", marginLeft: "-480px", width: "960px", height: "1280px", transform: "scale(0.31)", transformOrigin: "top center", pointerEvents: "none" }}>
                               <iframe
                                 src={htmlViewUrl}
                                 title={title}
                                 scrolling="no"
                                 tabIndex={-1}
-                                style={{
-                                  width: "960px",
-                                  height: "1280px",
-                                  border: "none",
-                                  pointerEvents: "none",
-                                  transform: "scale(0.31)",
-                                  transformOrigin: "top left",
-                                  display: "block",
-                                }}
+                                style={{ width: "960px", height: "1280px", border: "none", display: "block" }}
                               />
+                              </div>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-white/5">
                                 <FileText className="w-14 h-14 text-white/15" />
