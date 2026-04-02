@@ -651,7 +651,39 @@ const PersonalizedKit: React.FC<{
   entries: Record<string, DirectoryEntry[]>;
   lang: string;
 }> = ({ nationality, entries, lang }) => {
-  const myEmbassy = (entries.ambassade ?? []).find(e => e.nationality_code === nationality.code);
+  const allEmbassies = entries.ambassade ?? [];
+
+  // 1. Exact match by nationality_code
+  let myEmbassy = allEmbassies.find(e => e.nationality_code === nationality.code);
+
+  // 2. Fallback: search by nationality name in title (e.g. "Ambassade de France", "French Embassy")
+  if (!myEmbassy && nationality.name) {
+    const natLower = normalize(nationality.name);
+    // Also try common name variants (FR->France/French, DE->Germany/German, etc.)
+    const NATIONALITY_SEARCH: Record<string, string[]> = {
+      FR: ["france", "french", "francais", "francesa"],
+      DE: ["germany", "german", "allemagne", "allemand", "alemania"],
+      GB: ["united kingdom", "british", "royaume-uni", "britannique", "reino unido"],
+      US: ["united states", "american", "etats-unis", "americain", "estados unidos"],
+      IT: ["italy", "italian", "italie", "italien", "italia"],
+      ES: ["spain", "spanish", "espagne", "espagnol", "espana"],
+      NL: ["netherlands", "dutch", "pays-bas", "neerlandais", "paises bajos"],
+      BE: ["belgium", "belgian", "belgique", "belge", "belgica"],
+      CH: ["switzerland", "swiss", "suisse"],
+      CA: ["canada", "canadian", "canadien"],
+      AU: ["australia", "australian", "australie", "australien"],
+      JP: ["japan", "japanese", "japon", "japonais"],
+      BR: ["brazil", "brazilian", "bresil", "bresilien"],
+      PT: ["portugal", "portuguese", "portugais"],
+      MA: ["morocco", "moroccan", "maroc", "marocain", "marruecos"],
+    };
+    const searchTerms = NATIONALITY_SEARCH[nationality.code] || [natLower];
+    myEmbassy = allEmbassies.find(e => {
+      const titleLower = normalize(e.title);
+      return searchTerms.some(term => titleLower.includes(term));
+    });
+  }
+
   const immigLinks = (entries.immigration ?? []).slice(0, 2);
   if (!myEmbassy && immigLinks.length === 0) return null;
 
@@ -878,8 +910,33 @@ const Annuaire: React.FC = () => {
   const embassyEntries = useMemo(() => {
     const all = detail?.entries?.ambassade ?? [];
     if (!userNat || showAllEmbassies) return all;
+    // 1. Exact match by nationality_code
     const mine = all.filter(e => e.nationality_code === userNat.code);
-    return mine.length > 0 ? mine : all;
+    if (mine.length > 0) return mine;
+    // 2. Fallback: search by nationality name in title
+    const NATIONALITY_SEARCH: Record<string, string[]> = {
+      FR: ["france", "french", "francais", "francesa"],
+      DE: ["germany", "german", "allemagne", "allemand"],
+      GB: ["united kingdom", "british", "royaume-uni", "britannique"],
+      US: ["united states", "american", "etats-unis", "americain"],
+      IT: ["italy", "italian", "italie", "italien"],
+      ES: ["spain", "spanish", "espagne", "espagnol"],
+      NL: ["netherlands", "dutch", "pays-bas"],
+      BE: ["belgium", "belgian", "belgique", "belge"],
+      CH: ["switzerland", "swiss", "suisse"],
+      CA: ["canada", "canadian", "canadien"],
+      AU: ["australia", "australian", "australie"],
+      JP: ["japan", "japanese", "japon"],
+      BR: ["brazil", "brazilian", "bresil"],
+      PT: ["portugal", "portuguese", "portugais"],
+      MA: ["morocco", "moroccan", "maroc", "marocain"],
+    };
+    const searchTerms = NATIONALITY_SEARCH[userNat.code] || [normalize(userNat.name)];
+    const byTitle = all.filter(e => {
+      const titleLower = normalize(e.title);
+      return searchTerms.some(term => titleLower.includes(term));
+    });
+    return byTitle.length > 0 ? byTitle : all;
   }, [detail, userNat, showAllEmbassies]);
 
   const currentEntries = useMemo(() => {
