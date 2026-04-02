@@ -1435,6 +1435,7 @@ async function handleRequest(request, env, ctx) {
       const LEGACY_SLUG_ALIASES = {
         'lvshi': 'lushi',                     // Old ZH lawyers listing → canonical
         'aapatkaleen-call': 'aapatkaalin-call', // Old HI emergency call → canonical
+        'diretorio': 'diretorio-expat',       // Old PT annuaire (truncated) → canonical
       };
       if (firstSlug && LEGACY_SLUG_ALIASES[firstSlug]) {
         const canonicalSlug = LEGACY_SLUG_ALIASES[firstSlug];
@@ -1579,6 +1580,8 @@ async function handleRequest(request, env, ctx) {
       'password-reset': { fr:'reinitialisation-mot-de-passe', en:'password-reset', es:'restablecer-contrasena', de:'passwort-zurucksetzen', ru:'sbros-parolya', pt:'redefinir-senha', zh:'chongzhi-mima', hi:'password-reset', ar:'iadat-tayin-kalimat-al-murur' },
       'privacy-policy': { fr:'politique-confidentialite', en:'privacy-policy', es:'politica-privacidad', de:'datenschutzrichtlinie', ru:'politika-konfidentsialnosti', pt:'politica-privacidade', zh:'yinsi-zhengce', hi:'gopaniyata-niti', ar:'siyasat-al-khususiya' },
       'providers':      { fr:'prestataires', en:'providers', es:'proveedores', de:'anbieter', ru:'postavshchiki', pt:'prestadores', zh:'fuwu-tigongzhe', hi:'seva-pradaata', ar:'muqadimi-al-khidmat' },
+      'faq':            { fr:'faq', en:'faq', es:'preguntas-frecuentes', de:'faq', ru:'voprosy-otvety', pt:'perguntas-frequentes', zh:'changjian-wenti', hi:'aksar-puche-jaane-wale-sawal', ar:'al-asila-al-shaiya' },
+      'help-center':    { fr:'centre-aide', en:'help-center', es:'centro-ayuda', de:'hilfezentrum', ru:'tsentr-pomoshchi', pt:'centro-ajuda', zh:'bangzhu-zhongxin', hi:'sahayata-kendra', ar:'markaz-almosaada' },
       'annuaire':       { fr:'annuaire', en:'expat-directory', es:'directorio-expat', de:'expat-verzeichnis', ru:'spravochnik-expat', pt:'diretorio-expat', zh:'zhinan-expat', hi:'nirdeshika-expat', ar:'dalil-expat' },
       'consumers':      { fr:'consommateurs', en:'consumers', es:'consumidores', de:'verbraucher', ru:'potrebiteli', pt:'consumidores', zh:'xiaofeizhe', hi:'upbhokta', ar:'al-mustahlikin' },
       'service-status': { fr:'statut-service', en:'service-status', es:'estado-servicio', de:'dienststatus', ru:'status-servisa', pt:'status-servico', zh:'fuwu-zhuangtai', hi:'seva-sthiti', ar:'halat-al-khidma' },
