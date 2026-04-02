@@ -1,13 +1,11 @@
 /**
- * Outils Interactifs — Premium 2026
- * Palette: Rouge #DC2626 / Noir #0F172A / Blanc
- * UX: App-within-the-app, sidebar desktop, bottom tabs mobile
- * Tools: Checklist demenagement (full), others placeholder
+ * Outils Interactifs — SOS Expat 2026
+ * Listing des 26 outils depuis blog.life-expat.com/api/v1/public/tools
+ * Chaque outil renvoie vers sa page dédiée sur blog.life-expat.com
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { parseLocaleFromPath } from "@/multilingual-system";
 import { useApp } from "@/contexts/AppContext";
 import Layout from "@/components/layout/Layout";
@@ -15,18 +13,19 @@ import SEOHead from "@/components/layout/SEOHead";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import {
   Calculator,
-  BarChart3,
+  Scale,
+  Globe,
+  FileText,
   ClipboardCheck,
-  ArrowRightLeft,
-  ChevronDown,
+  CreditCard,
+  Briefcase,
+  AlertTriangle,
+  Hospital,
+  Compass,
+  ExternalLink,
+  Loader2,
   ChevronRight,
-  RotateCcw,
-  FileDown,
-  Bell,
-  CheckCircle2,
-  Circle,
   Sparkles,
-  ArrowRight,
 } from "lucide-react";
 
 // ============================================================
@@ -34,584 +33,441 @@ import {
 // ============================================================
 
 const T: Record<string, Record<string, string>> = {
-  pageTitle: { fr: "Outils Interactifs pour Expatries", en: "Interactive Tools for Expats", es: "Herramientas Interactivas para Expatriados", de: "Interaktive Tools für Expats", pt: "Ferramentas Interativas para Expatriados", ru: "Интерактивные инструменты для экспатов", ch: "外籍人士互动工具", hi: "प्रवासियों के लिए इंटरैक्टिव टूल्स", ar: "أدوات تفاعلية للمغتربين" },
-  pageDesc: { fr: "Calculateurs, comparateurs et checklists gratuits pour preparer votre expatriation sereinement. Checklist demenagement, convertisseur de devises, comparateur de pays et plus encore.", en: "Free calculators, comparators and checklists to prepare your move abroad with confidence. Moving checklist, currency converter, country comparator and more tools for expats.", es: "Calculadoras, comparadores y checklists gratuitos para preparar tu expatriación con tranquilidad. Lista de mudanza, conversor de divisas, comparador de países y mucho más.", de: "Kostenlose Rechner, Vergleicher und Checklisten für eine entspannte Vorbereitung Ihrer Auswanderung. Umzugscheckliste, Währungsrechner, Ländervergleich und vieles mehr.", pt: "Calculadoras, comparadores e checklists gratuitos para preparar a sua expatriação com tranquilidade. Lista de mudança, conversor de moedas, comparador de países e muito mais.", ru: "Бесплатные калькуляторы, сравнители и чеклисты для подготовки к эмиграции. Чеклист переезда, конвертер валют, сравнение стран и другие инструменты для экспатов.", ch: "免费的计算器、比较工具和清单，帮助您从容准备海外移居。搬家清单、货币换算、国家比较以及更多外籍人士专用工具。", hi: "अपने प्रवास को शांति से तैयार करने के लिए मुफ़्त कैलकुलेटर, तुलनाकर्ता और चेकलिस्ट। स्थानांतरण चेकलिस्ट, मुद्रा परिवर्तक, देश तुलनाकर्ता और प्रवासियों के लिए और भी बहुत कुछ।", ar: "حاسبات ومقارنات وقوائم تحقق مجانية لتحضير هجرتك بكل هدوء. قائمة الانتقال، محوّل العملات، مقارنة الدول والمزيد من الأدوات للمغتربين." },
-  toolCostOfLiving: { fr: "Calculateur cout de vie", en: "Cost of Living Calculator", es: "Calculadora de coste de vida", de: "Lebenshaltungskosten-Rechner", pt: "Calculadora de custo de vida", ru: "Калькулятор стоимости жизни", ch: "生活成本计算器", hi: "जीवन यापन लागत कैलकुलेटर", ar: "حاسبة تكلفة المعيشة" },
-  toolCountryCompare: { fr: "Comparateur de pays", en: "Country Comparator", es: "Comparador de países", de: "Ländervergleich", pt: "Comparador de países", ru: "Сравнение стран", ch: "国家比较工具", hi: "देश तुलनाकर्ता", ar: "مقارنة الدول" },
-  toolChecklist: { fr: "Checklist demenagement", en: "Moving Checklist", es: "Lista de mudanza", de: "Umzugscheckliste", pt: "Lista de mudança", ru: "Чеклист переезда", ch: "搬家清单", hi: "स्थानांतरण चेकलिस्ट", ar: "قائمة الانتقال" },
-  toolCurrency: { fr: "Convertisseur devises", en: "Currency Converter", es: "Conversor de divisas", de: "Währungsrechner", pt: "Conversor de moedas", ru: "Конвертер валют", ch: "货币换算器", hi: "मुद्रा परिवर्तक", ar: "محوّل العملات" },
-  comingSoon: { fr: "Bientot disponible", en: "Coming soon", es: "Próximamente", de: "Demnächst verfügbar", pt: "Em breve disponível", ru: "Скоро будет доступно", ch: "即将推出", hi: "जल्द आ रहा है", ar: "قريباً" },
-  comingSoonDesc: { fr: "Cet outil est en cours de developpement. Soyez notifie des sa sortie !", en: "This tool is under development. Get notified when it launches!", es: "Esta herramienta está en desarrollo. ¡Recibe una notificación cuando esté lista!", de: "Dieses Tool befindet sich in der Entwicklung. Lassen Sie sich bei der Veröffentlichung benachrichtigen!", pt: "Esta ferramenta está em desenvolvimento. Seja notificado assim que for lançada!", ru: "Этот инструмент находится в разработке. Получите уведомление о его запуске!", ch: "此工具正在开发中。上线时立即获得通知！", hi: "यह टूल विकास के अधीन है। लॉन्च होने पर सूचित हों!", ar: "هذه الأداة قيد التطوير. احصل على إشعار فور إطلاقها!" },
-  notifyMe: { fr: "Me notifier", en: "Notify me", es: "Notificarme", de: "Benachrichtigen", pt: "Notificar-me", ru: "Уведомить меня", ch: "通知我", hi: "मुझे सूचित करें", ar: "أبلغني" },
-  notified: { fr: "Vous serez notifie !", en: "You will be notified!", es: "¡Serás notificado!", de: "Sie werden benachrichtigt!", pt: "Você será notificado!", ru: "Вы получите уведомление!", ch: "您将收到通知！", hi: "आपको सूचित किया जाएगा!", ar: "ستتلقى إشعاراً!" },
-  checklistTitle: { fr: "Checklist Demenagement International", en: "International Moving Checklist", es: "Lista de mudanza internacional", de: "Internationale Umzugscheckliste", pt: "Lista de mudança internacional", ru: "Чеклист международного переезда", ch: "国际搬家清单", hi: "अंतर्राष्ट्रीय स्थानांतरण चेकलिस्ट", ar: "قائمة الانتقال الدولي" },
-  checklistDesc: { fr: "Ne rien oublier pour votre expatriation. Cochez chaque etape au fur et a mesure de votre preparation.", en: "Don't forget anything for your move abroad. Check off each step as you prepare.", es: "No olvides nada para tu expatriación. Marca cada paso a medida que te preparas.", de: "Vergessen Sie nichts für Ihren Auslandsumzug. Haken Sie jeden Schritt ab, während Sie sich vorbereiten.", pt: "Não se esqueça de nada para a sua expatriação. Marque cada etapa à medida que se prepara.", ru: "Ничего не забудьте для эмиграции. Отмечайте каждый шаг по мере подготовки.", ch: "海外移居时不要遗漏任何事项。在准备过程中逐步勾选每个步骤。", hi: "प्रवास के लिए कुछ भी न भूलें। तैयारी करते समय प्रत्येक चरण को चेक करें।", ar: "لا تنسَ شيئاً في انتقالك إلى الخارج. ضع علامة على كل خطوة أثناء تحضيرك." },
-  completed: { fr: "termine", en: "completed", es: "completado", de: "erledigt", pt: "concluído", ru: "выполнено", ch: "已完成", hi: "पूर्ण", ar: "مكتمل" },
-  reset: { fr: "Reinitialiser", en: "Reset", es: "Reiniciar", de: "Zurücksetzen", pt: "Redefinir", ru: "Сбросить", ch: "重置", hi: "रीसेट करें", ar: "إعادة تعيين" },
-  exportPdf: { fr: "Exporter PDF", en: "Export PDF", es: "Exportar PDF", de: "PDF exportieren", pt: "Exportar PDF", ru: "Экспорт PDF", ch: "导出PDF", hi: "PDF निर्यात करें", ar: "تصدير PDF" },
-  catBefore: { fr: "Avant le depart", en: "Before departure", es: "Antes de la partida", de: "Vor der Abreise", pt: "Antes da partida", ru: "До отъезда", ch: "出发前", hi: "प्रस्थान से पहले", ar: "قبل المغادرة" },
-  catDocuments: { fr: "Documents", en: "Documents", es: "Documentos", de: "Dokumente", pt: "Documentos", ru: "Документы", ch: "证件文件", hi: "दस्तावेज़", ar: "الوثائق" },
-  catHousing: { fr: "Logement", en: "Housing", es: "Vivienda", de: "Wohnen", pt: "Habitação", ru: "Жильё", ch: "住房", hi: "आवास", ar: "السكن" },
-  catAdmin: { fr: "Administratif", en: "Administrative", es: "Administrativo", de: "Verwaltung", pt: "Administrativo", ru: "Административное", ch: "行政事务", hi: "प्रशासनिक", ar: "إداري" },
-  encourageStart: { fr: "Commencez a cocher les etapes de votre preparation !", en: "Start checking off your preparation steps!", es: "¡Empieza a marcar los pasos de tu preparación!", de: "Beginnen Sie, Ihre Vorbereitungsschritte abzuhaken!", pt: "Comece a marcar as etapas da sua preparação!", ru: "Начните отмечать шаги вашей подготовки!", ch: "开始勾选您的准备步骤！", hi: "अपनी तैयारी के चरणों को चेक करना शुरू करें!", ar: "ابدأ بتحديد خطوات تحضيرك!" },
-  encourageProgress: { fr: "Bien joue ! Vous avancez dans votre preparation.", en: "Well done! You're making progress.", es: "¡Bien hecho! Estás avanzando en tu preparación.", de: "Gut gemacht! Sie machen Fortschritte.", pt: "Muito bem! Está a avançar na sua preparação.", ru: "Отлично! Вы продвигаетесь в подготовке.", ch: "做得好！您的准备工作正在推进中。", hi: "शाबाश! आप अपनी तैयारी में आगे बढ़ रहे हैं।", ar: "أحسنت! أنت تُحرز تقدماً في تحضيرك." },
-  encourageAlmost: { fr: "Presque termine ! Courage, vous y etes presque.", en: "Almost there! Keep going, you're nearly done.", es: "¡Casi listo! Ánimo, ya casi terminas.", de: "Fast geschafft! Weiter so, Sie sind fast fertig.", pt: "Quase pronto! Coragem, está quase a acabar.", ru: "Почти готово! Продолжайте, вы почти закончили.", ch: "快完成了！加油，您即将大功告成。", hi: "लगभग हो गया! हिम्मत रखें, बस थोड़ा ही बाकी है।", ar: "اقتربت من النهاية! تشجع، أنت على وشك الانتهاء." },
-  encourageDone: { fr: "Felicitations ! Vous etes pret pour votre nouvelle aventure !", en: "Congratulations! You're ready for your new adventure!", es: "¡Felicitaciones! ¡Estás listo para tu nueva aventura!", de: "Herzlichen Glückwunsch! Sie sind bereit für Ihr neues Abenteuer!", pt: "Parabéns! Está pronto para a sua nova aventura!", ru: "Поздравляем! Вы готовы к своему новому приключению!", ch: "恭喜！您已准备好迎接全新的冒险！", hi: "बधाई हो! आप अपने नए साहसिक जीवन के लिए तैयार हैं!", ar: "تهانينا! أنت مستعد لمغامرتك الجديدة!" },
-  relatedTitle: { fr: "Explorez aussi", en: "Also explore", es: "Explora también", de: "Entdecken Sie auch", pt: "Explore também", ru: "Также изучите", ch: "还可以探索", hi: "यह भी देखें", ar: "اكتشف أيضاً" },
-  costDesc: { fr: "Estimez votre budget mensuel dans plus de 100 pays.", en: "Estimate your monthly budget in 100+ countries.", es: "Estima tu presupuesto mensual en más de 100 países.", de: "Schätzen Sie Ihr monatliches Budget in über 100 Ländern.", pt: "Estime o seu orçamento mensal em mais de 100 países.", ru: "Оцените свой ежемесячный бюджет в более чем 100 странах.", ch: "估算您在100多个国家的每月生活预算。", hi: "100 से अधिक देशों में अपना मासिक बजट अनुमानित करें।", ar: "قدّر ميزانيتك الشهرية في أكثر من 100 دولة." },
-  compareDesc: { fr: "Comparez qualite de vie, salaires et cout entre deux pays.", en: "Compare quality of life, salaries and cost between two countries.", es: "Compara calidad de vida, salarios y coste entre dos países.", de: "Vergleichen Sie Lebensqualität, Gehälter und Kosten zwischen zwei Ländern.", pt: "Compare qualidade de vida, salários e custo entre dois países.", ru: "Сравните качество жизни, зарплаты и расходы между двумя странами.", ch: "比较两国的生活质量、薪资水平和生活成本。", hi: "दो देशों के बीच जीवन गुणवत्ता, वेतन और लागत की तुलना करें।", ar: "قارن جودة الحياة والرواتب وتكاليف المعيشة بين دولتين." },
-  currencyDesc: { fr: "Convertissez vos devises en temps reel avec les taux du jour.", en: "Convert currencies in real-time with today's rates.", es: "Convierte divisas en tiempo real con los tipos de cambio actuales.", de: "Konvertieren Sie Währungen in Echtzeit mit den aktuellen Kursen.", pt: "Converta moedas em tempo real com as taxas do dia.", ru: "Конвертируйте валюты в режиме реального времени по актуальным курсам.", ch: "以当日汇率实时换算货币。", hi: "आज की दरों के साथ रियल-टाइम में मुद्राएं परिवर्तित करें।", ar: "حوّل عملاتك في الوقت الفعلي بأسعار الصرف اليومية." },
-  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", ch: "首页", hi: "होम", ar: "الرئيسية" },
-  breadcrumbLabel: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Tools", pt: "Ferramentas", ru: "Инструменты", ch: "工具", hi: "टूल्स", ar: "الأدوات" },
+  pageTitle: {
+    fr: "Outils Gratuits pour Expatriés | SOS-Expat",
+    en: "Free Tools for Expats | SOS-Expat",
+    es: "Herramientas Gratuitas para Expatriados | SOS-Expat",
+    de: "Kostenlose Tools für Expats | SOS-Expat",
+    pt: "Ferramentas Gratuitas para Expatriados | SOS-Expat",
+    ru: "Бесплатные инструменты для экспатов | SOS-Expat",
+    zh: "外籍人士免费工具 | SOS-Expat",
+    hi: "प्रवासियों के लिए मुफ्त उपकरण | SOS-Expat",
+    ar: "أدوات مجانية للمغتربين | SOS-Expat",
+  },
+  pageDesc: {
+    fr: "26 outils interactifs gratuits pour préparer votre expatriation : calculateurs, comparateurs, générateurs de documents et guides d'urgence. Disponibles en 9 langues pour 197 pays.",
+    en: "26 free interactive tools for your expat journey: calculators, comparators, document generators and emergency guides. Available in 9 languages for 197 countries.",
+    es: "26 herramientas interactivas gratuitas para tu expatriación: calculadoras, comparadores, generadores de documentos y guías de emergencia. Disponibles en 9 idiomas para 197 países.",
+    de: "26 kostenlose interaktive Tools für Expats: Rechner, Vergleicher, Dokumentengeneratoren und Notfallführer. In 9 Sprachen für 197 Länder verfügbar.",
+    pt: "26 ferramentas interativas gratuitas para a sua expatriação: calculadoras, comparadores, geradores de documentos e guias de emergência. Disponíveis em 9 idiomas para 197 países.",
+    ru: "26 бесплатных интерактивных инструментов для экспатов: калькуляторы, сравнители, генераторы документов и экстренные руководства. Доступны на 9 языках для 197 стран.",
+    zh: "26个免费互动工具，助您准备海外移居：计算器、比较器、文件生成器和紧急指南。提供9种语言，覆盖197个国家。",
+    hi: "26 मुफ्त इंटरैक्टिव उपकरण: कैलकुलेटर, तुलनाकर्ता, दस्तावेज़ जनरेटर और आपातकालीन गाइड। 9 भाषाओं में 197 देशों के लिए उपलब्ध।",
+    ar: "26 أداة تفاعلية مجانية للمغتربين: حاسبات، مقارنات، مولدات وثائق وأدلة طوارئ. متاحة بـ9 لغات لـ197 دولة.",
+  },
+  badge: {
+    fr: "26 outils gratuits",
+    en: "26 free tools",
+    es: "26 herramientas gratuitas",
+    de: "26 kostenlose Tools",
+    pt: "26 ferramentas gratuitas",
+    ru: "26 бесплатных инструментов",
+    zh: "26个免费工具",
+    hi: "26 मुफ्त उपकरण",
+    ar: "26 أداة مجانية",
+  },
+  heading: {
+    fr: "Outils pour expatriés",
+    en: "Tools for expats",
+    es: "Herramientas para expatriados",
+    de: "Tools für Expats",
+    pt: "Ferramentas para expatriados",
+    ru: "Инструменты для экспатов",
+    zh: "外籍人士工具",
+    hi: "प्रवासियों के लिए उपकरण",
+    ar: "أدوات للمغتربين",
+  },
+  subheading: {
+    fr: "Calculateurs, comparateurs, générateurs et guides d'urgence — tout ce dont vous avez besoin pour votre expatriation, gratuits et sans inscription.",
+    en: "Calculators, comparators, generators and emergency guides — everything you need for your expat journey, free and without registration.",
+    es: "Calculadoras, comparadores, generadores y guías de emergencia — todo lo que necesitas para tu expatriación, gratis y sin registro.",
+    de: "Rechner, Vergleicher, Generatoren und Notfallführer — alles für Ihre Auswanderung, kostenlos und ohne Anmeldung.",
+    pt: "Calculadoras, comparadores, geradores e guias de emergência — tudo o que precisa para a sua expatriação, gratuito e sem registo.",
+    ru: "Калькуляторы, сравнители, генераторы и экстренные руководства — всё необходимое для эмиграции, бесплатно без регистрации.",
+    zh: "计算器、比较器、生成器和紧急指南——您海外移居所需的一切，免费且无需注册。",
+    hi: "कैलकुलेटर, तुलनाकर्ता, जनरेटर और आपातकालीन गाइड — प्रवास के लिए आवश्यक सब कुछ, मुफ्त और बिना पंजीकरण।",
+    ar: "حاسبات، مقارنات، مولدات وأدلة طوارئ — كل ما تحتاجه لهجرتك، مجاني وبدون تسجيل.",
+  },
+  catCalculate: {
+    fr: "Calculateurs",
+    en: "Calculators",
+    es: "Calculadoras",
+    de: "Rechner",
+    pt: "Calculadoras",
+    ru: "Калькуляторы",
+    zh: "计算器",
+    hi: "कैलकुलेटर",
+    ar: "حاسبات",
+  },
+  catCompare: {
+    fr: "Comparateurs",
+    en: "Comparators",
+    es: "Comparadores",
+    de: "Vergleicher",
+    pt: "Comparadores",
+    ru: "Сравнители",
+    zh: "比较器",
+    hi: "तुलनाकर्ता",
+    ar: "مقارنات",
+  },
+  catGenerate: {
+    fr: "Générateurs",
+    en: "Generators",
+    es: "Generadores",
+    de: "Generatoren",
+    pt: "Geradores",
+    ru: "Генераторы",
+    zh: "生成器",
+    hi: "जनरेटर",
+    ar: "مولدات",
+  },
+  catEmergency: {
+    fr: "Urgences & Sécurité",
+    en: "Emergency & Safety",
+    es: "Emergencias y Seguridad",
+    de: "Notfall & Sicherheit",
+    pt: "Emergências & Segurança",
+    ru: "Экстренная помощь",
+    zh: "紧急情况与安全",
+    hi: "आपातकाल और सुरक्षा",
+    ar: "الطوارئ والسلامة",
+  },
+  useNow: {
+    fr: "Utiliser maintenant",
+    en: "Use now",
+    es: "Usar ahora",
+    de: "Jetzt nutzen",
+    pt: "Usar agora",
+    ru: "Использовать",
+    zh: "立即使用",
+    hi: "अभी उपयोग करें",
+    ar: "استخدم الآن",
+  },
+  free: { fr: "Gratuit", en: "Free", es: "Gratis", de: "Kostenlos", pt: "Grátis", ru: "Бесплатно", zh: "免费", hi: "मुफ्त", ar: "مجاني" },
+  aiPowered: { fr: "IA", en: "AI", es: "IA", de: "KI", pt: "IA", ru: "ИИ", zh: "AI", hi: "AI", ar: "ذكاء اصطناعي" },
+  loading: {
+    fr: "Chargement des outils…",
+    en: "Loading tools…",
+    es: "Cargando herramientas…",
+    de: "Tools werden geladen…",
+    pt: "Carregando ferramentas…",
+    ru: "Загрузка инструментов…",
+    zh: "正在加载工具…",
+    hi: "उपकरण लोड हो रहे हैं…",
+    ar: "جاري تحميل الأدوات…",
+  },
+  error: {
+    fr: "Impossible de charger les outils. Réessayez.",
+    en: "Unable to load tools. Please try again.",
+    es: "No se pueden cargar las herramientas. Inténtalo de nuevo.",
+    de: "Tools konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    pt: "Não foi possível carregar as ferramentas. Tente novamente.",
+    ru: "Не удалось загрузить инструменты. Попробуйте ещё раз.",
+    zh: "无法加载工具，请重试。",
+    hi: "उपकरण लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
+    ar: "تعذّر تحميل الأدوات. حاول مرة أخرى.",
+  },
+  home: { fr: "Accueil", en: "Home", es: "Inicio", de: "Startseite", pt: "Início", ru: "Главная", zh: "首页", hi: "होम", ar: "الرئيسية" },
+  breadTools: { fr: "Outils", en: "Tools", es: "Herramientas", de: "Tools", pt: "Ferramentas", ru: "Инструменты", zh: "工具", hi: "टूल्स", ar: "الأدوات" },
 };
 
-function t(key: string, lang: string): string {
+function tr(key: string, lang: string): string {
   return T[key]?.[lang] || T[key]?.["fr"] || key;
 }
 
 // ============================================================
-// TOOLS CONFIG
+// ICON MAP — slug_key → Lucide icon
 // ============================================================
-
-type ToolId = "checklist" | "cost" | "compare" | "currency";
-
-interface ToolDef {
-  id: ToolId;
-  icon: React.ElementType;
-  labelKey: string;
-  descKey: string;
-  implemented: boolean;
-}
-
-const TOOLS: ToolDef[] = [
-  { id: "cost", icon: Calculator, labelKey: "toolCostOfLiving", descKey: "costDesc", implemented: false },
-  { id: "compare", icon: BarChart3, labelKey: "toolCountryCompare", descKey: "compareDesc", implemented: false },
-  { id: "checklist", icon: ClipboardCheck, labelKey: "toolChecklist", descKey: "checklistDesc", implemented: true },
-  { id: "currency", icon: ArrowRightLeft, labelKey: "toolCurrency", descKey: "currencyDesc", implemented: false },
-];
-
-// ============================================================
-// CHECKLIST DATA
-// ============================================================
-
-interface CheckItem {
-  id: string;
-  labelFr: string;
-  labelEn: string;
-  noteFr?: string;
-  noteEn?: string;
-}
-
-interface CheckCategory {
-  id: string;
-  titleKey: string;
-  items: CheckItem[];
-}
-
-const CHECKLIST_CATEGORIES: CheckCategory[] = [
-  {
-    id: "before",
-    titleKey: "catBefore",
-    items: [
-      { id: "b1", labelFr: "Rechercher le pays de destination", labelEn: "Research destination country", noteFr: "Culture, climat, cout de vie", noteEn: "Culture, climate, cost of living" },
-      { id: "b2", labelFr: "Etablir un budget previsionnel", labelEn: "Create a budget forecast" },
-      { id: "b3", labelFr: "Souscrire une assurance sante internationale", labelEn: "Get international health insurance" },
-      { id: "b4", labelFr: "Prevenir employeur / ecole des enfants", labelEn: "Notify employer / children's school" },
-      { id: "b5", labelFr: "Ouvrir un compte bancaire a l'etranger", labelEn: "Open a bank account abroad", noteFr: "Wise, N26 ou banque locale", noteEn: "Wise, N26 or local bank" },
-      { id: "b6", labelFr: "Resilier ou transferer les abonnements", labelEn: "Cancel or transfer subscriptions", noteFr: "Internet, telephone, electricite", noteEn: "Internet, phone, electricity" },
-    ],
-  },
-  {
-    id: "documents",
-    titleKey: "catDocuments",
-    items: [
-      { id: "d1", labelFr: "Passeport a jour (6 mois de validite min.)", labelEn: "Valid passport (6 months minimum)" },
-      { id: "d2", labelFr: "Visa / permis de sejour", labelEn: "Visa / residence permit" },
-      { id: "d3", labelFr: "Permis de conduire international", labelEn: "International driving license" },
-      { id: "d4", labelFr: "Copies certifiees des diplomes", labelEn: "Certified copies of degrees", noteFr: "Apostille si necessaire", noteEn: "Apostille if needed" },
-      { id: "d5", labelFr: "Carnet de vaccination a jour", labelEn: "Updated vaccination record" },
-    ],
-  },
-  {
-    id: "housing",
-    titleKey: "catHousing",
-    items: [
-      { id: "h1", labelFr: "Trouver un logement temporaire", labelEn: "Find temporary housing", noteFr: "Airbnb, colocation, hotel", noteEn: "Airbnb, shared housing, hotel" },
-      { id: "h2", labelFr: "Organiser le demenagement des affaires", labelEn: "Organize moving of belongings" },
-      { id: "h3", labelFr: "Souscrire assurance habitation", labelEn: "Get housing insurance" },
-      { id: "h4", labelFr: "Configurer les services (eau, electricite, internet)", labelEn: "Set up utilities (water, electricity, internet)" },
-    ],
-  },
-  {
-    id: "admin",
-    titleKey: "catAdmin",
-    items: [
-      { id: "a1", labelFr: "S'inscrire au consulat / ambassade", labelEn: "Register at consulate / embassy" },
-      { id: "a2", labelFr: "Transferer le courrier postal", labelEn: "Forward postal mail" },
-      { id: "a3", labelFr: "Declaration fiscale de depart", labelEn: "Tax departure declaration" },
-      { id: "a4", labelFr: "Informer la securite sociale / mutuelle", labelEn: "Notify social security / insurance" },
-      { id: "a5", labelFr: "Procuration si necessaire", labelEn: "Power of attorney if needed", noteFr: "Pour gestion de biens restes au pays", noteEn: "For managing assets left behind" },
-    ],
-  },
-];
-
-const ALL_ITEM_IDS = CHECKLIST_CATEGORIES.flatMap((c) => c.items.map((i) => i.id));
-const LS_CHECKED_KEY = "outils_checklist_checked";
-
-// ============================================================
-// ANIMATIONS
-// ============================================================
-
-const fadeSlide = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -16 },
-  transition: { duration: 0.25, ease: "easeOut" },
+const ICON_MAP: Record<string, React.ElementType> = {
+  "visa-calculator": FileText,
+  "cost-of-living": Calculator,
+  "net-salary-expat": CreditCard,
+  "retirement-simulator": Briefcase,
+  "travel-budget": CreditCard,
+  "double-taxation": Scale,
+  "183-day-rule": Scale,
+  "diploma-recognition": ClipboardCheck,
+  "call-planner": Compass,
+  "insurance-comparator": ClipboardCheck,
+  "bank-comparator": CreditCard,
+  "country-recommender": Globe,
+  "legal-status-comparator": Scale,
+  "nomad-country": Compass,
+  "tax-resident-check": Scale,
+  "departure-checklist": ClipboardCheck,
+  "admin-checklist": ClipboardCheck,
+  "packing-list": ClipboardCheck,
+  "visa-letter-ai": FileText,
+  "freelance-contract-ai": FileText,
+  "embassy-finder": Globe,
+  "passport-theft": AlertTriangle,
+  "doctors-directory": Hospital,
+  "risk-map": AlertTriangle,
 };
 
-const stagger = {
-  animate: { transition: { staggerChildren: 0.04 } },
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  calculate: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/20" },
+  compare:   { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/20" },
+  generate:  { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20" },
+  emergency: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20" },
 };
 
 // ============================================================
-// COMPONENT: Placeholder Tool
+// TYPES
 // ============================================================
 
-function PlaceholderTool({ tool, lang }: { tool: ToolDef; lang: string }) {
-  const [notified, setNotified] = useState(false);
-  const Icon = tool.icon;
-
-  return (
-    <motion.div {...fadeSlide} className="flex items-center justify-center min-h-[400px]">
-      <div className="text-center max-w-md mx-auto px-6">
-        <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-6">
-          <Icon className="w-10 h-10 text-gray-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">{t(tool.labelKey, lang)}</h2>
-        <p className="text-gray-500 mb-2 text-lg">{t("comingSoon", lang)}</p>
-        <p className="text-gray-400 mb-8 text-sm leading-relaxed">{t("comingSoonDesc", lang)}</p>
-        <button
-          onClick={() => setNotified(true)}
-          disabled={notified}
-          className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-            notified
-              ? "bg-green-50 text-green-700 cursor-default"
-              : "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/20 hover:shadow-red-600/30"
-          }`}
-        >
-          {notified ? (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              {t("notified", lang)}
-            </>
-          ) : (
-            <>
-              <Bell className="w-4 h-4" />
-              {t("notifyMe", lang)}
-            </>
-          )}
-        </button>
-      </div>
-    </motion.div>
-  );
+interface ToolItem {
+  id: string;
+  slug_key: string;
+  category: string;
+  icon: string;
+  is_ai: boolean;
+  sort_order: number;
+  blog_url: string;
+  translation: {
+    title: string;
+    slug: string;
+    description: string;
+    meta_description: string | null;
+  };
 }
 
 // ============================================================
-// COMPONENT: Checklist Tool
+// COMPONENT
 // ============================================================
 
-function ChecklistTool({ lang }: { lang: string }) {
-  const [checked, setChecked] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(LS_CHECKED_KEY);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
-
-  const [openCategories, setOpenCategories] = useState<Set<string>>(
-    () => new Set(CHECKLIST_CATEGORIES.map((c) => c.id))
-  );
-
-  // Persist to localStorage
-  useEffect(() => {
-    localStorage.setItem(LS_CHECKED_KEY, JSON.stringify(Array.from(checked)));
-  }, [checked]);
-
-  const toggleItem = useCallback((id: string) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleCategory = useCallback((catId: string) => {
-    setOpenCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(catId)) next.delete(catId);
-      else next.add(catId);
-      return next;
-    });
-  }, []);
-
-  const resetAll = useCallback(() => {
-    setChecked(new Set());
-    localStorage.removeItem(LS_CHECKED_KEY);
-  }, []);
-
-  const total = ALL_ITEM_IDS.length;
-  const done = checked.size;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-  const encouragement = useMemo(() => {
-    if (pct === 0) return t("encourageStart", lang);
-    if (pct < 50) return t("encourageProgress", lang);
-    if (pct < 100) return t("encourageAlmost", lang);
-    return t("encourageDone", lang);
-  }, [pct, lang]);
-
-  return (
-    <motion.div {...fadeSlide} className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-          {t("checklistTitle", lang)}
-        </h2>
-        <p className="text-gray-500 leading-relaxed">{t("checklistDesc", lang)}</p>
-      </div>
-
-      {/* Progress */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-slate-700">
-            {done}/{total} {t("completed", lang)}
-          </span>
-          <span className="text-sm font-bold text-red-600">{pct}%</span>
-        </div>
-        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          />
-        </div>
-        <p className="mt-3 text-sm text-gray-500 flex items-center gap-1.5">
-          {pct === 100 && <Sparkles className="w-4 h-4 text-yellow-500" />}
-          {encouragement}
-        </p>
-      </div>
-
-      {/* Categories */}
-      <div className="space-y-3">
-        {CHECKLIST_CATEGORIES.map((cat) => {
-          const isOpen = openCategories.has(cat.id);
-          const catDone = cat.items.filter((i) => checked.has(i.id)).length;
-
-          return (
-            <div
-              key={cat.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-            >
-              {/* Category header */}
-              <button
-                onClick={() => toggleCategory(cat.id)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <motion.div
-                    animate={{ rotate: isOpen ? 0 : -90 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  </motion.div>
-                  <span className="font-semibold text-slate-800">{t(cat.titleKey, lang)}</span>
-                </div>
-                <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
-                  {catDone}/{cat.items.length}
-                </span>
-              </button>
-
-              {/* Items */}
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <motion.ul className="px-5 pb-4 space-y-1" variants={stagger} initial="initial" animate="animate">
-                      {cat.items.map((item) => {
-                        const isChecked = checked.has(item.id);
-                        const label = lang === "en" ? item.labelEn : item.labelFr;
-                        const note = lang === "en" ? item.noteEn : item.noteFr;
-
-                        return (
-                          <motion.li
-                            key={item.id}
-                            variants={fadeSlide}
-                            className="flex items-start gap-3 py-2.5 px-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
-                            onClick={() => toggleItem(item.id)}
-                          >
-                            <motion.div
-                              className="mt-0.5 flex-shrink-0"
-                              whileTap={{ scale: 0.85 }}
-                            >
-                              {isChecked ? (
-                                <CheckCircle2 className="w-5 h-5 text-red-600" />
-                              ) : (
-                                <Circle className="w-5 h-5 text-gray-300 group-hover:text-gray-400 transition-colors" />
-                              )}
-                            </motion.div>
-                            <div className="flex-1 min-w-0">
-                              <span
-                                className={`text-sm leading-snug transition-colors duration-200 ${
-                                  isChecked ? "text-gray-400 line-through" : "text-slate-700"
-                                }`}
-                              >
-                                {label}
-                              </span>
-                              {note && (
-                                <p className="text-xs text-gray-400 mt-0.5">{note}</p>
-                              )}
-                            </div>
-                          </motion.li>
-                        );
-                      })}
-                    </motion.ul>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-wrap gap-3">
-        <button
-          onClick={resetAll}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
-          {t("reset", lang)}
-        </button>
-        <button
-          onClick={() => {
-            // PDF export placeholder
-            alert("PDF export coming soon");
-          }}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
-        >
-          <FileDown className="w-4 h-4" />
-          {t("exportPdf", lang)}
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-// ============================================================
-// COMPONENT: Related Tool Card
-// ============================================================
-
-function RelatedToolCard({
-  tool,
-  lang,
-  onSelect,
-}: {
-  tool: ToolDef;
-  lang: string;
-  onSelect: (id: ToolId) => void;
-}) {
-  const Icon = tool.icon;
-  return (
-    <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => onSelect(tool.id)}
-      className="bg-white rounded-2xl border border-gray-100 p-5 text-left shadow-sm hover:shadow-md transition-shadow w-full group"
-    >
-      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mb-4 group-hover:bg-red-100 transition-colors">
-        <Icon className="w-6 h-6 text-red-600" />
-      </div>
-      <h3 className="font-semibold text-slate-900 mb-1">{t(tool.labelKey, lang)}</h3>
-      <p className="text-sm text-gray-500 leading-relaxed mb-3">{t(tool.descKey, lang)}</p>
-      <span className="inline-flex items-center gap-1 text-sm font-semibold text-red-600">
-        {tool.implemented ? (
-          <>
-            {lang === "en" ? "Open" : "Ouvrir"}
-            <ArrowRight className="w-4 h-4" />
-          </>
-        ) : (
-          <>
-            {t("comingSoon", lang)}
-            <ChevronRight className="w-4 h-4" />
-          </>
-        )}
-      </span>
-    </motion.button>
-  );
-}
-
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
-
-const Outils: React.FC = () => {
+export default function Outils() {
   const location = useLocation();
-  const { language } = useApp();
-  const lang = (language || parseLocaleFromPath(location.pathname)?.lang || "fr") as string;
-  const localeSlug = location.pathname.match(/^\/([a-z]{2}-[a-z]{2})/)?.[1] ?? "fr-fr";
+  const { theme } = useApp();
+  const lang = parseLocaleFromPath(location.pathname)?.lang || "fr";
+  const isDark = theme === "dark";
 
-  const [activeTool, setActiveTool] = useState<ToolId>("checklist");
+  const [tools, setTools] = useState<ToolItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const activeToolDef = TOOLS.find((t) => t.id === activeTool)!;
-  const relatedTools = TOOLS.filter((t) => t.id !== activeTool).slice(0, 3);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(false);
+
+    fetch(`https://blog.life-expat.com/api/v1/public/tools?lang=${lang}`, {
+      signal: controller.signal,
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then((data: ToolItem[]) => {
+        setTools(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setError(true);
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [lang]);
+
+  // Group by category
+  const categories: Record<string, ToolItem[]> = {};
+  for (const tool of tools) {
+    if (!categories[tool.category]) categories[tool.category] = [];
+    categories[tool.category].push(tool);
+  }
+
+  const catOrder = ["calculate", "compare", "generate", "emergency"];
+  const catLabelKeys: Record<string, string> = {
+    calculate: "catCalculate",
+    compare: "catCompare",
+    generate: "catGenerate",
+    emergency: "catEmergency",
+  };
+
+  // SEO
+  const seoTitle = tr("pageTitle", lang);
+  const seoDescription = tr("pageDesc", lang);
+  const canonical = `https://sos-expat.com/${lang}-${lang === "en" ? "us" : lang === "pt" ? "pt" : lang === "zh" ? "cn" : lang === "hi" ? "in" : lang === "ar" ? "sa" : lang}/outils`;
+
+  const breadcrumbs = [
+    { name: tr("home", lang), url: `https://sos-expat.com` },
+    { name: tr("breadTools", lang), url: canonical },
+  ];
 
   return (
     <Layout>
       <SEOHead
-        title={t("pageTitle", lang)}
-        description={t("pageDesc", lang)}
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonical}
+        lang={lang}
+        noindex={false}
       />
-      <BreadcrumbSchema items={[
-        { name: t("home", lang), url: `/${localeSlug}` },
-        { name: t("breadcrumbLabel", lang) },
-      ]} />
+      <BreadcrumbSchema items={breadcrumbs} />
 
-      {/* ── BREADCRUMB VISUEL ── */}
-      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
-            <li>
-              <a href={`/${localeSlug}`} className="hover:text-red-600 transition-colors">
-                {t("home", lang)}
-              </a>
-            </li>
-            <li><ChevronRight size={14} className="text-gray-300 shrink-0" /></li>
-            <li className="text-gray-900 font-medium">{t("breadcrumbLabel", lang)}</li>
-          </ol>
-        </div>
-      </nav>
-
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Desktop layout: sidebar + content */}
-          <div className="flex gap-8">
-            {/* Sidebar - desktop only */}
-            <motion.aside
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              className="hidden md:block w-64 flex-shrink-0"
-            >
-              <div className="sticky top-24">
-                <nav className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  {TOOLS.map((tool) => {
-                    const Icon = tool.icon;
-                    const isActive = activeTool === tool.id;
-                    return (
-                      <button
-                        key={tool.id}
-                        onClick={() => setActiveTool(tool.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-left text-sm font-medium transition-all duration-200 border-l-[3px] ${
-                          isActive
-                            ? "bg-red-50 text-red-600 border-l-red-600"
-                            : "text-slate-600 border-l-transparent hover:bg-gray-50 hover:text-slate-900"
-                        }`}
-                      >
-                        <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-red-600" : "text-gray-400"}`} />
-                        <span className="truncate">{t(tool.labelKey, lang)}</span>
-                        {!tool.implemented && (
-                          <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                            soon
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-            </motion.aside>
-
-            {/* Main content */}
-            <main className="flex-1 min-w-0 pb-24 md:pb-0">
-              <AnimatePresence mode="wait">
-                <motion.div key={activeTool}>
-                  {activeToolDef.implemented ? (
-                    <ChecklistTool lang={lang} />
-                  ) : (
-                    <PlaceholderTool tool={activeToolDef} lang={lang} />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Related tools */}
-              <section className="mt-12">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">
-                  {t("relatedTitle", lang)}
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {relatedTools.map((tool) => (
-                    <RelatedToolCard
-                      key={tool.id}
-                      tool={tool}
-                      lang={lang}
-                      onSelect={setActiveTool}
-                    />
-                  ))}
-                </div>
-              </section>
-            </main>
-          </div>
-        </div>
-
-        {/* Mobile bottom tabs */}
-        <motion.nav
-          initial={{ y: 80 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
-          className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-50"
+      <div
+        className="min-h-screen"
+        style={{ background: "var(--color-bg)" }}
+        dir={lang === "ar" ? "rtl" : "ltr"}
+      >
+        {/* Header */}
+        <header
+          className="border-b"
+          style={{ background: "var(--color-s1)", borderColor: "var(--color-b1)" }}
         >
-          <div className="flex items-stretch">
-            {TOOLS.map((tool) => {
-              const Icon = tool.icon;
-              const isActive = activeTool === tool.id;
-              return (
-                <button
-                  key={tool.id}
-                  onClick={() => setActiveTool(tool.id)}
-                  className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-1 transition-colors duration-200 relative ${
-                    isActive ? "text-red-600" : "text-gray-400"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="mobile-tab-indicator"
-                      className="absolute top-0 inset-x-3 h-[3px] bg-red-600 rounded-b-full"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold truncate max-w-[72px]">
-                    {t(tool.labelKey, lang).split(" ")[0]}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="max-w-6xl mx-auto px-4 lg:px-6 pt-8 pb-10 lg:pt-12 lg:pb-14">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 text-[11px] font-bold uppercase tracking-[1.2px]
+                         bg-red-500/10 text-red-400 border border-red-500/20 rounded mb-5"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {tr("badge", lang)}
+            </div>
+
+            <h1
+              className="font-light leading-[1.1] tracking-[-0.5px] mb-4"
+              style={{
+                fontSize: "clamp(26px, 4.5vw, 44px)",
+                color: "var(--color-t1)",
+              }}
+            >
+              {tr("heading", lang)}
+            </h1>
+
+            <p
+              className="text-base max-w-2xl"
+              style={{ color: "var(--color-t3)" }}
+            >
+              {tr("subheading", lang)}
+            </p>
           </div>
-          {/* Safe area bottom padding for notched phones */}
-          <div className="h-[env(safe-area-inset-bottom)]" />
-        </motion.nav>
+        </header>
+
+        {/* Content */}
+        <main className="max-w-6xl mx-auto px-4 lg:px-6 py-10">
+          {loading && (
+            <div className="flex items-center justify-center py-24 gap-3" style={{ color: "var(--color-t3)" }}>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-base">{tr("loading", lang)}</span>
+            </div>
+          )}
+
+          {error && !loading && (
+            <div className="text-center py-20" style={{ color: "var(--color-t3)" }}>
+              <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-red-400" />
+              <p className="text-base">{tr("error", lang)}</p>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="space-y-14">
+              {catOrder.map((cat) => {
+                const catTools = categories[cat];
+                if (!catTools?.length) return null;
+                const colors = CATEGORY_COLORS[cat] || CATEGORY_COLORS.calculate;
+
+                return (
+                  <section key={cat}>
+                    {/* Category heading */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-[1.2px] border ${colors.bg} ${colors.text} ${colors.border}`}
+                      >
+                        {tr(catLabelKeys[cat] || "catCalculate", lang)}
+                      </span>
+                      <span className="text-sm" style={{ color: "var(--color-t3)" }}>
+                        {catTools.length} {lang === "fr" ? "outils" : lang === "ar" ? "أدوات" : "tools"}
+                      </span>
+                    </div>
+
+                    {/* Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {catTools.map((tool) => {
+                        const Icon = ICON_MAP[tool.slug_key] || Calculator;
+                        const desc = tool.translation.meta_description || tool.translation.description;
+                        const shortDesc = desc ? desc.slice(0, 110) + (desc.length > 110 ? "…" : "") : "";
+
+                        return (
+                          <a
+                            key={tool.id}
+                            href={tool.blog_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex flex-col rounded-xl border p-5 transition-all hover:shadow-lg"
+                            style={{
+                              background: "var(--color-s1)",
+                              borderColor: "var(--color-b1)",
+                            }}
+                            onMouseEnter={(e) => {
+                              const el = e.currentTarget;
+                              el.style.borderColor = colors.text.replace("text-", "").includes("blue")
+                                ? "rgba(96,165,250,0.4)"
+                                : colors.text.includes("purple")
+                                ? "rgba(167,139,250,0.4)"
+                                : colors.text.includes("emerald")
+                                ? "rgba(52,211,153,0.4)"
+                                : "rgba(248,113,113,0.4)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = "var(--color-b1)";
+                            }}
+                          >
+                            {/* Icon + badges */}
+                            <div className="flex items-start justify-between mb-3">
+                              <div
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${colors.bg}`}
+                              >
+                                <Icon className={`w-5 h-5 ${colors.text}`} />
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {tool.is_ai && (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                                    {tr("aiPowered", lang)}
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
+                                  {tr("free", lang)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Title */}
+                            <h2
+                              className={`font-semibold text-base leading-snug mb-2 transition-colors ${colors.text} group-hover:opacity-80`}
+                              style={{ color: "var(--color-t1)" }}
+                            >
+                              {tool.translation.title}
+                            </h2>
+
+                            {/* Description */}
+                            {shortDesc && (
+                              <p
+                                className="text-sm leading-relaxed flex-1 mb-4"
+                                style={{ color: "var(--color-t3)" }}
+                              >
+                                {shortDesc}
+                              </p>
+                            )}
+
+                            {/* CTA */}
+                            <div className={`flex items-center gap-1 text-sm font-semibold mt-auto ${colors.text}`}>
+                              {tr("useNow", lang)}
+                              <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </main>
       </div>
     </Layout>
   );
-};
-
-export default Outils;
+}
