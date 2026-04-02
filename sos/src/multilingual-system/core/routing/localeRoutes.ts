@@ -378,7 +378,17 @@ export type RouteKey =
   | "partner-agreement"   // /partner/accord -> /partner/agreement, etc.
   | "partner-suspended"  // /partner/suspendu -> /partner/suspended, etc.
   | "partner-telegram"   // /partner/telegram -> /partner/telegram, etc.
-  | "press";             // /presse -> /press, /prensa, etc.
+  | "press"              // /presse -> /press, /prensa, etc.
+  // Public content pages (Redesign 2026)
+  | "articles"           // /articles -> /articles, /articulos, etc.
+  | "fiches-pays"        // /categories/fiches-pays -> /categories/country-guides, etc.
+  | "fiches-thematiques" // /categories/fiches-thematiques -> /categories/thematic-guides, etc.
+  | "programme-chatter"  // /categories/programme -> /categories/chatter-program, etc.
+  | "programme-affiliation" // /categories/affiliation -> /categories/affiliate-program, etc.
+  | "sondages-listing"   // /categories/sondages -> /categories/surveys, etc.
+  | "sondages"           // /sondages -> /surveys, etc.
+  | "outils-listing"     // /categories/outils -> /categories/tools, etc.
+  | "outils";            // /outils -> /tools, etc.
 
 const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
   "lawyer": {
@@ -1858,6 +1868,106 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "group-admin/telegram",
     hi: "group-admin/telegram",
     ar: "group-admin/telegram",
+  },
+  // ── Public content pages (Redesign 2026) ──
+  "articles": {
+    fr: "articles",
+    en: "articles",
+    es: "articulos",
+    de: "artikel",
+    ru: "stati",
+    pt: "artigos",
+    ch: "wenzhang",
+    hi: "lekh",
+    ar: "maqalat",
+  },
+  "fiches-pays": {
+    fr: "categories/fiches-pays",
+    en: "categories/country-guides",
+    es: "categorias/guias-paises",
+    de: "kategorien/laenderguides",
+    ru: "kategorii/stranovy-spravochnik",
+    pt: "categorias/guias-paises",
+    ch: "fenlei/guojia-zhinan",
+    hi: "shreniyaan/desh-margdarshika",
+    ar: "al-feaat/adillat-al-buldan",
+  },
+  "fiches-thematiques": {
+    fr: "categories/fiches-thematiques",
+    en: "categories/thematic-guides",
+    es: "categorias/guias-tematicas",
+    de: "kategorien/themenguides",
+    ru: "kategorii/tematicheskie-spravochniki",
+    pt: "categorias/guias-tematicos",
+    ch: "fenlei/zhuti-zhinan",
+    hi: "shreniyaan/vishayak-margdarshika",
+    ar: "al-feaat/adillat-mawduiyya",
+  },
+  "programme-chatter": {
+    fr: "categories/programme",
+    en: "categories/chatter-program",
+    es: "categorias/programa-chatter",
+    de: "kategorien/chatter-programm",
+    ru: "kategorii/programma-chatter",
+    pt: "categorias/programa-chatter",
+    ch: "fenlei/chatter-jihua",
+    hi: "shreniyaan/chatter-karyakram",
+    ar: "al-feaat/barnamaj-chatter",
+  },
+  "programme-affiliation": {
+    fr: "categories/affiliation",
+    en: "categories/affiliate-program",
+    es: "categorias/programa-afiliacion",
+    de: "kategorien/partnerprogramm",
+    ru: "kategorii/partnerskaya-programma",
+    pt: "categorias/programa-afiliacao",
+    ch: "fenlei/lianmeng-jihua",
+    hi: "shreniyaan/sahbaddh-karyakram",
+    ar: "al-feaat/barnamaj-al-intisab",
+  },
+  "sondages-listing": {
+    fr: "categories/sondages",
+    en: "categories/surveys",
+    es: "categorias/encuestas",
+    de: "kategorien/umfragen",
+    ru: "kategorii/oprosy",
+    pt: "categorias/pesquisas",
+    ch: "fenlei/diaocha",
+    hi: "shreniyaan/sarvekshan",
+    ar: "al-feaat/istiftaat",
+  },
+  "sondages": {
+    fr: "sondages",
+    en: "surveys",
+    es: "encuestas",
+    de: "umfragen",
+    ru: "oprosy",
+    pt: "pesquisas",
+    ch: "diaocha",
+    hi: "sarvekshan",
+    ar: "istiftaat",
+  },
+  "outils-listing": {
+    fr: "categories/outils",
+    en: "categories/tools",
+    es: "categorias/herramientas",
+    de: "kategorien/werkzeuge",
+    ru: "kategorii/instrumenty",
+    pt: "categorias/ferramentas",
+    ch: "fenlei/gongju",
+    hi: "shreniyaan/upakaran",
+    ar: "al-feaat/adawat",
+  },
+  "outils": {
+    fr: "outils",
+    en: "tools",
+    es: "herramientas",
+    de: "werkzeuge",
+    ru: "instrumenty",
+    pt: "ferramentas",
+    ch: "gongju",
+    hi: "upakaran",
+    ar: "adawat",
   },
 };
 
