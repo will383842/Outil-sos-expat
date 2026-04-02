@@ -5657,7 +5657,7 @@
   "press.section.pressKitDesc": "Dossier completo, ficha de empresa, presentaciones y decks. PDF listos para usar.",
   "press.section.spokesperson": "Portavoces y Biografias",
   "press.section.spokespersonDesc": "Biografias de ejecutivos, fotos retrato HD y citas autorizadas para publicacion.",
-  "press.seo.description": "Espacio de prensa SOS-Expat. Logos, dossier de prensa, comunicados, fotos HD. Ayuda inmediata para expatriados en 170+ paises, 9 idiomas, 24/7.",
+  "press.seo.description": "Espacio de prensa SOS-Expat. Logos, dossier de prensa, comunicados, fotos HD. Ayuda inmediata para expatriados en 197+ paises, 9 idiomas, 24/7.",
   "press.seo.title": "Espacio de Prensa — SOS-Expat | Ayuda inmediata para expatriados",
   "pricing.badge": "Tarifas fijas • Sin sorpresas • Pago seguro",
   "pricing.benefits.ariaLabel": "Lista de beneficios incluidos",
@@ -12584,5 +12584,7 @@
   "partner.page.seo.description": "Descubra nuestros sitios web de socios de confianza para expatriados en todo el mundo. Recursos, guías y servicios seleccionados para expatriados.",
   "consumers.seo.title": "Derechos del Consumidor y Recursos para Expatriados | SOS Expat",
   "consumers.seo.description": "Acceda a información sobre derechos del consumidor y recursos de expertos para expatriados en todo el mundo. Abogados y expertos locales en 197 países.",
-  "consumers.seo.keywords": "derechos consumidor expatriados, recursos legales expatriación, protección consumidor internacional"
+  "consumers.seo.keywords": "derechos consumidor expatriados, recursos legales expatriación, protección consumidor internacional",
+  "press.seo.keywords": "sala de prensa SOS-Expat, comunicado de prensa expatriados, ayuda juridica extranjero, plataforma expats emergencia, kit de prensa, logos HD, fotos prensa, abogado internacional",
+  "press.releases.viewFull": "Comunicado completo"
 }

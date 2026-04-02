@@ -5649,7 +5649,7 @@
   "press.section.bRollDesc": "视频素材、动画和可播出的现成片段。",
   "press.section.factSheets": "资料页",
   "press.section.factSheetsDesc": "媒体常见问题、产品资料、对比分析和公司大事记。",
-  "press.seo.description": "SOS-Expat新闻专区。标志、新闻资料包、新闻稿、高清照片。为170+国家的外籍人士提供即时帮助，9种语言，全天候服务。",
+  "press.seo.description": "SOS-Expat新闻专区。标志、新闻资料包、新闻稿、高清照片。为197+国家的外籍人士提供即时帮助，9种语言，全天候服务。",
   "press.seo.title": "新闻专区 — SOS-Expat | 外籍人士即时帮助",
   "pricing.badge": "固定价格 • 无意外 • 安全支付",
   "pricing.benefits.ariaLabel": "包含的权益列表",
@@ -12584,5 +12584,7 @@
   "partner.page.seo.description": "发现我们面向全球外籍人士的可信合作伙伴网站。为外籍人士精选的资源、指南和服务。",
   "consumers.seo.title": "消费者权利与外籍人士资源 | SOS Expat",
   "consumers.seo.description": "为全球外籍人士提供消费者权利信息和专家资源。在197个国家找到律师和当地专家。",
-  "consumers.seo.keywords": "外籍人士消费者权利，外籍人士法律资源，国际消费者保护"
+  "consumers.seo.keywords": "外籍人士消费者权利，外籍人士法律资源，国际消费者保护",
+  "press.seo.keywords": "SOS-Expat新闻中心, 海外华人新闻稿, 国际法律援助, 海外紧急援助平台, 新闻工具包, 高清标志, 新闻图片, 国际律师",
+  "press.releases.viewFull": "完整新闻稿"
 }

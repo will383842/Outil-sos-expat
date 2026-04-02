@@ -5657,7 +5657,7 @@
   "press.section.pressKitDesc": "Vollstaendige Mappe, Unternehmensprofil, Praesentationen und Decks. Fertige PDFs.",
   "press.section.spokesperson": "Sprecher & Biografien",
   "press.section.spokespersonDesc": "Biografien der Fuhrungskrafte, HD-Portatfotos und genehmigte Zitate fur Veroffentlichungen.",
-  "press.seo.description": "Pressebereich SOS-Expat. Logos, Pressemappe, Mitteilungen, HD-Fotos. Sofortige Hilfe fuer Expatriates in 170+ Laendern, 9 Sprachen, 24/7.",
+  "press.seo.description": "Pressebereich SOS-Expat. Logos, Pressemappe, Mitteilungen, HD-Fotos. Sofortige Hilfe fuer Expatriates in 197+ Laendern, 9 Sprachen, 24/7.",
   "press.seo.title": "Pressebereich — SOS-Expat | Sofortige Hilfe fuer Expatriates",
   "pricing.badge": "Feste Preise • Keine Überraschungen • Sichere Zahlung",
   "pricing.benefits.ariaLabel": "Liste der enthaltenen Vorteile",
@@ -12584,5 +12584,7 @@
   "partner.page.seo.description": "Entdecken Sie unsere vertrauenswürdigen Partnerseiten für Expats weltweit. Ausgewählte Ressourcen, Ratgeber und Dienste für Auswanderer.",
   "consumers.seo.title": "Verbraucherrechte & Expat-Ressourcen | SOS Expat",
   "consumers.seo.description": "Zugang zu Verbraucherrechtsinformationen und Expertenressourcen für Expats weltweit. Anwälte und lokale Experten in 197 Ländern.",
-  "consumers.seo.keywords": "Expat Verbraucherrechte, Expatriierten Rechtsressourcen, internationaler Verbraucherschutz"
+  "consumers.seo.keywords": "Expat Verbraucherrechte, Expatriierten Rechtsressourcen, internationaler Verbraucherschutz",
+  "press.seo.keywords": "SOS-Expat Pressebereich, Pressemitteilung Expatriates, Rechtshilfe Ausland, Expat Notfallplattform, Pressemappe, HD-Logos, Pressefotos, internationaler Anwalt",
+  "press.releases.viewFull": "Vollstandige Pressemitteilung"
 }

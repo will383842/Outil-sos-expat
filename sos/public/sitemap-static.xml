@@ -4127,7 +4127,7 @@
 
   <url>
     <loc>https://sos-expat.com/fr-fr/presse</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4139,12 +4139,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/en-us/press</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4156,12 +4156,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/es-es/prensa</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4173,12 +4173,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/de-de/presse</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4190,12 +4190,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/pt-pt/imprensa</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4207,12 +4207,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/ru-ru/pressa</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4224,12 +4224,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/zh-cn/xinwen</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4241,12 +4241,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/ar-sa/sahafa</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4258,12 +4258,12 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://sos-expat.com/hi-in/press</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-04-05</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="https://sos-expat.com/fr-fr/presse"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://sos-expat.com/en-us/press"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://sos-expat.com/es-es/prensa"/>
@@ -4275,7 +4275,7 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://sos-expat.com/hi-in/press"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://sos-expat.com/fr-fr/presse"/>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>

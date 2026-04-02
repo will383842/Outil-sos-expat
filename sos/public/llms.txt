@@ -234,5 +234,33 @@ A: No limit. Your earnings depend on your activity and team size.
 - Country-specific legal frameworks referenced
 - International law conventions applied
 
+## Press Room (Espace Presse)
+
+SOS-Expat maintains a full public press room at https://sos-expat.com/fr-fr/presse (all 9 languages).
+
+### Press Releases (Communiqués de presse) — Published 2026-04-05
+
+**CP1 — SOS-Expat: Emergency Global Service for All Expatriates**
+Audience: General public & media. Announces the launch of SOS-Expat: 197 countries, 9 languages, connection in under 5 minutes with a local lawyer or expat helper. Free registration, prepaid call model.
+
+**CP2 — Economic & Innovation Model**
+Audience: Investors, economists, tech media. Describes the commission-per-call model, no subscription, transparent fees, 0% fixed costs for providers. Disrupts the legal services market for expatriates.
+
+**CP3 — Partner Program: Lawyers & Expat Helpers**
+Audience: Lawyers, jurists, notaries, accountants, expat helpers worldwide. Free registration, immediate payment, 100% client ownership after first call. 197 countries of potential clients.
+
+All releases available in: FR, EN, ES, DE, PT, RU, ZH, HI, AR.
+Press kit, HD logos, photos: https://sos-expat.com/fr-fr/presse#identity
+Press contact: williamsjullin@sos-expat.com — Response within 24h.
+
+### Press Room Structure
+- Visual identity (logos HD, brand guidelines)
+- Press kit (complete dossier, fact sheets)
+- Press releases (HTML + PDF, 9 languages)
+- Image bank (royalty-free HD photos)
+- Key figures & data
+- Spokespeople & bios (Williams Jullin, Founder & CEO)
+- Press contact form
+
 ## Last Updated
-2026-03-17
+2026-04-05

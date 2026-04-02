@@ -10551,7 +10551,7 @@
   "press.section.pressKitDesc": "Complete press kit, company fact sheets, presentations and decks. Ready-to-use PDFs.",
   "press.section.spokesperson": "Spokespeople & Bios",
   "press.section.spokespersonDesc": "Executive biographies, HD portrait photos and approved quotes for publication.",
-  "press.seo.description": "SOS-Expat Press Room. Logos, press kit, releases, HD photos. Instant help for expatriates in 170+ countries, 9 languages, 24/7.",
+  "press.seo.description": "SOS-Expat Press Room. Logos, press kit, releases, HD photos. Instant help for expatriates in 197+ countries, 9 languages, 24/7.",
   "press.seo.title": "Press Room — SOS-Expat | Instant Help for Expatriates",
   "pricing.badge": "Fixed rates • No surprises • Secure payment",
   "pricing.benefits.ariaLabel": "List of included benefits",
@@ -12581,5 +12581,7 @@
   "wizard.step3.lawyer": "A lawyer",
   "wizard.step3.lawyer.desc": "Professional legal advice",
   "wizard.step3.subtitle": "Select the type of expert",
-  "wizard.step3.title": "Who would you like to contact?"
+  "wizard.step3.title": "Who would you like to contact?",
+  "press.seo.keywords": "SOS-Expat press room, press release expatriates, legal help abroad, expat emergency platform, press kit, HD logos, press photos, international lawyer",
+  "press.releases.viewFull": "Full press release"
 }

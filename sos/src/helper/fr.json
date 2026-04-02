@@ -10557,7 +10557,7 @@
   "press.section.pressKitDesc": "Dossier complet, fiche entreprise, presentations et decks. PDF prets a utiliser.",
   "press.section.spokesperson": "Porte-parole & Biographies",
   "press.section.spokespersonDesc": "Biographies des dirigeants, photos portraits HD et citations autorisees pour publication.",
-  "press.seo.description": "Espace presse SOS-Expat. Logos, dossier de presse, communiques, photos HD. Aide immediate pour expatries dans 170+ pays, 9 langues, 24/7.",
+  "press.seo.description": "Espace presse SOS-Expat. Logos, dossier de presse, communiques, photos HD. Aide immediate pour expatries dans 197+ pays, 9 langues, 24/7.",
   "press.seo.title": "Espace Presse — SOS-Expat | Aide immediate pour expatries",
   "pricing.badge": "Tarifs fixes • Pas de surprise • Paiement sécurisé",
   "pricing.benefits.ariaLabel": "Liste des bénéfices inclus",
@@ -12587,5 +12587,7 @@
   "wizard.step3.lawyer": "Un avocat",
   "wizard.step3.lawyer.desc": "Conseil juridique professionnel",
   "wizard.step3.subtitle": "Sélectionnez le type d'expert",
-  "wizard.step3.title": "Qui souhaitez-vous contacter ?"
+  "wizard.step3.title": "Qui souhaitez-vous contacter ?",
+  "press.seo.keywords": "espace presse SOS-Expat, communique de presse expatries, aide juridique etranger, plateforme expatries urgence, dossier de presse, logos HD, photos presse, avocat international",
+  "press.releases.viewFull": "Communique complet"
 }
