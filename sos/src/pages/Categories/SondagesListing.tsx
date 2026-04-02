@@ -64,17 +64,18 @@ const BLOG_API = "https://sos-expat.com/api/v1/public";
 
 const SONDAGE_SEGMENT: Record<string, string> = {
   fr: "sondages", en: "surveys", es: "encuestas", de: "umfragen",
-  pt: "pesquisas", ru: "oprosy", zh: "diaocha", hi: "sarvekshan", ar: "istitalaat",
+  pt: "pesquisas", ru: "oprosy", zh: "diaocha", ch: "diaocha", hi: "sarvekshan", ar: "istitalaat",
 };
 const LANG_LOCALE: Record<string, string> = {
   fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de",
-  ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", hi: "hi-in", ar: "ar-sa",
+  ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", ch: "zh-cn", hi: "hi-in", ar: "ar-sa",
 };
 
 function sondageUrl(lang: string, slug: string): string {
   return `/sondages/${slug}`;  // SPA route (Cloudflare Pages)
 }
 
+// Flat interface used internally
 interface Sondage {
   id: number;
   external_id: string;
@@ -85,6 +86,36 @@ interface Sondage {
   closes_at: string | null;
   published_at: string | null;
   responses_count: number;
+}
+
+// Raw shape returned by the API (fields nested under translation)
+interface RawSondage {
+  id: number;
+  external_id: string;
+  type?: string;
+  status: "active" | "closed";
+  closes_at: string | null;
+  published_at: string | null;
+  responses_count: number;
+  translation?: { title: string; slug: string; description: string };
+  // legacy flat fallback fields
+  title?: string;
+  slug?: string;
+  description?: string;
+}
+
+function normalizeSondage(raw: RawSondage): Sondage {
+  return {
+    id:              raw.id,
+    external_id:     raw.external_id,
+    slug:            raw.translation?.slug        ?? raw.slug        ?? "",
+    title:           raw.translation?.title       ?? raw.title       ?? "",
+    description:     raw.translation?.description ?? raw.description ?? "",
+    status:          raw.status,
+    closes_at:       raw.closes_at    ?? null,
+    published_at:    raw.published_at ?? null,
+    responses_count: raw.responses_count ?? 0,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -134,8 +165,11 @@ const SondagesListing: React.FC = () => {
       fetch(`${BLOG_API}/sondages?lang=${lang}&status=closed`,  { signal: ctrl.signal }).then(r => r.json()),
     ])
       .then(([activeRes, closedRes]) => {
-        setActiveSurveys(activeRes.data ?? []);
-        setCompletedSurveys(closedRes.data ?? []);
+        // API returns a raw array [], not { data: [] } — handle both shapes
+        const activeRaw: RawSondage[]  = Array.isArray(activeRes)  ? activeRes  : (activeRes.data  ?? []);
+        const closedRaw: RawSondage[]  = Array.isArray(closedRes)  ? closedRes  : (closedRes.data  ?? []);
+        setActiveSurveys(activeRaw.map(normalizeSondage));
+        setCompletedSurveys(closedRaw.map(normalizeSondage));
       })
       .catch(() => {/* network error → empty state */})
       .finally(() => setLoading(false));
