@@ -1436,6 +1436,15 @@ async function handleRequest(request, env, ctx) {
         'lvshi': 'lushi',                     // Old ZH lawyers listing → canonical
         'aapatkaleen-call': 'aapatkaalin-call', // Old HI emergency call → canonical
         'diretorio': 'diretorio-expat',       // Old PT annuaire (truncated) → canonical
+        'dalil': 'dalil-expat',               // Old AR annuaire (truncated) → canonical
+        'spravochnik': 'spravochnik-expat',   // Old RU annuaire (truncated) → canonical
+        'nirdeshika': 'nirdeshika-expat',     // Old HI annuaire (truncated) → canonical
+        'minglu': 'zhinan-expat',             // Old ZH annuaire (wrong slug) → canonical
+        'directory': 'expat-directory',       // Old EN annuaire (truncated) → canonical
+        'terms_affiliate': 'terms-affiliate', // Underscore → hyphen
+        'terms_expats': 'terms-expats',       // Underscore → hyphen
+        'terms_lawyers': 'terms-lawyers',     // Underscore → hyphen
+        'haeufige-fragen': 'faq',             // Old DE FAQ slug → canonical
       };
       if (firstSlug && LEGACY_SLUG_ALIASES[firstSlug]) {
         const canonicalSlug = LEGACY_SLUG_ALIASES[firstSlug];
