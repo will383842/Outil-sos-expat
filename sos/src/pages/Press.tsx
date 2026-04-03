@@ -214,6 +214,7 @@ const Press: React.FC = () => {
   const [contactSent, setContactSent] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [logosExpanded, setLogosExpanded] = useState(false);
 
   const t = (id: string, defaultMessage?: string) => intl.formatMessage({ id, defaultMessage: defaultMessage || id });
 
@@ -584,7 +585,65 @@ const Press: React.FC = () => {
               <section className="py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="identity" icon={Palette} title={t("press.section.identity")} subtitle={t("press.section.identityDesc")} />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">{logos.map((r) => <LogoCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+
+                  {/* Collapsed summary — click to expand */}
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setLogosExpanded((v) => !v)}
+                      className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
+                      aria-expanded={logosExpanded}
+                    >
+                      {/* Thumbnail strip — first 5 logos */}
+                      <div className="flex -space-x-2 flex-shrink-0">
+                        {logos.slice(0, 5).map((r) => (
+                          <div key={r.id} className="w-10 h-10 rounded-lg border-2 border-white bg-gray-100 overflow-hidden flex items-center justify-center shadow-sm"
+                            style={{
+                              backgroundImage: "linear-gradient(45deg,#e5e7eb 25%,transparent 25%),linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e7eb 75%),linear-gradient(-45deg,transparent 75%,#e5e7eb 75%)",
+                              backgroundSize: "8px 8px",
+                              backgroundPosition: "0 0,0 4px,4px -4px,-4px 0",
+                            }}>
+                            {r.file_url && isImageFormat(r.file_format) && (
+                              <img src={r.file_url} alt="" className="w-full h-full object-contain p-1" loading="lazy" />
+                            )}
+                          </div>
+                        ))}
+                        {logos.length > 5 && (
+                          <div className="w-10 h-10 rounded-lg border-2 border-white bg-gray-200 flex items-center justify-center shadow-sm">
+                            <span className="text-[10px] font-bold text-gray-500">+{logos.length - 5}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Label */}
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">
+                          {logos.length} {lang === "fr" ? "logos disponibles" : lang === "en" ? "logos available" : lang === "es" ? "logos disponibles" : lang === "de" ? "Logos verfügbar" : lang === "pt" ? "logos disponíveis" : "logos available"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">PNG · SVG · Transparent · Fond blanc · Plat · Horizontal</p>
+                      </div>
+
+                      {/* Download all + chevron */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">
+                          <Download className="w-3.5 h-3.5" />
+                          {logosExpanded
+                            ? (lang === "fr" ? "Réduire" : "Collapse")
+                            : (lang === "fr" ? "Voir tous les logos" : lang === "en" ? "View all logos" : lang === "de" ? "Alle Logos anzeigen" : lang === "es" ? "Ver todos los logos" : "View all logos")}
+                        </span>
+                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${logosExpanded ? "rotate-180" : ""}`} />
+                      </div>
+                    </button>
+
+                    {/* Expanded grid */}
+                    {logosExpanded && (
+                      <div className="border-t border-gray-100 p-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                          {logos.map((r) => <LogoCard key={r.id} resource={r} onDownload={trackDownload} />)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </section>
             )}
