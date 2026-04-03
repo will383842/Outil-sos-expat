@@ -145,18 +145,6 @@ function SectionTitle({ icon: Icon, title, subtitle, id, dark = false }: { icon:
   );
 }
 
-function EmptySection({ icon: Icon, label, btnLabel, onRequest, dark = false }: { icon: React.ElementType; label: string; btnLabel: string; onRequest: () => void; dark?: boolean }) {
-  return (
-    <div className={`rounded-2xl border-2 border-dashed p-16 text-center ${dark ? "border-white/10 bg-white/[0.04]" : "border-gray-200 bg-gray-50"}`}>
-      <Icon className={`w-14 h-14 mx-auto mb-4 ${dark ? "text-white/10" : "text-gray-300"}`} />
-      <p className={`font-medium mb-4 ${dark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
-      <button onClick={onRequest}
-        className="px-6 min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all inline-flex items-center gap-2 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-        <Mail className="w-4 h-4" />{btnLabel}
-      </button>
-    </div>
-  );
-}
 
 // ══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -544,16 +532,14 @@ const Press: React.FC = () => {
         ) : (
           <>
             {/* IDENTITY / LOGOS */}
-            <section className="py-20 sm:py-24 bg-white">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <SectionTitle id="identity" icon={Palette} title={t("press.section.identity")} subtitle={t("press.section.identityDesc")} />
-                {logos.length > 0 ? (
+            {logos.length > 0 && (
+              <section className="py-20 sm:py-24 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="identity" icon={Palette} title={t("press.section.identity")} subtitle={t("press.section.identityDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">{logos.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
-                ) : (
-                  <EmptySection icon={Palette} label={t("press.label.comingSoon")} btnLabel={t("press.label.requestLogos")} onRequest={openContact} />
-                )}
-              </div>
-            </section>
+                </div>
+              </section>
+            )}
 
             {/* BRAND GUIDELINES */}
             {brandGuidelines.length > 0 && (
@@ -566,18 +552,17 @@ const Press: React.FC = () => {
             )}
 
             {/* PRESS KIT */}
-            <section className="py-20 sm:py-24 bg-white">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <SectionTitle id="press-kit" icon={FolderOpen} title={t("press.section.pressKit")} subtitle={t("press.section.pressKitDesc")} />
-                {kits.length > 0 ? (
+            {kits.length > 0 && (
+              <section className="py-20 sm:py-24 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="press-kit" icon={FolderOpen} title={t("press.section.pressKit")} subtitle={t("press.section.pressKitDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{kits.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
-                ) : (
-                  <EmptySection icon={FolderOpen} label={t("press.label.comingSoon")} btnLabel={t("press.label.requestPressKit")} onRequest={openContact} />
-                )}
-              </div>
-            </section>
+                </div>
+              </section>
+            )}
 
             {/* PRESS RELEASES */}
+            {(loadingReleases || releases.length > 0) && (
             <section id="releases" className="scroll-mt-16 py-20 sm:py-24 bg-slate-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-start justify-between gap-4 mb-12 flex-wrap">
@@ -604,11 +589,6 @@ const Press: React.FC = () => {
                 </div>
                 {loadingReleases ? (
                   <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-red-500 animate-spin" /></div>
-                ) : releases.length === 0 ? (
-                  <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-16 text-center">
-                    <Newspaper className="w-14 h-14 text-gray-200 mx-auto mb-4" />
-                    <p className="text-gray-400 font-medium">{t("press.releases.empty")}</p>
-                  </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
                     {releases.map((release) => {
@@ -680,6 +660,7 @@ const Press: React.FC = () => {
                 )}
               </div>
             </section>
+            )}
 
             {/* SPOKESPERSON & BIOS */}
             {spokespersons.length > 0 && (
@@ -712,16 +693,14 @@ const Press: React.FC = () => {
             )}
 
             {/* DATA & KEY FIGURES */}
-            <section className={`py-20 sm:py-24 ${bRoll.length > 0 ? "bg-slate-50" : "bg-white"}`}>
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <SectionTitle id="data" icon={BarChart3} title={t("press.section.data")} subtitle={t("press.section.dataDesc")} />
-                {dataRes.length > 0 ? (
+            {dataRes.length > 0 && (
+              <section className={`py-20 sm:py-24 ${bRoll.length > 0 ? "bg-slate-50" : "bg-white"}`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <SectionTitle id="data" icon={BarChart3} title={t("press.section.data")} subtitle={t("press.section.dataDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{dataRes.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
-                ) : (
-                  <EmptySection icon={BarChart3} label={t("press.label.comingSoon")} btnLabel={t("press.label.comingSoon")} onRequest={openContact} />
-                )}
-              </div>
-            </section>
+                </div>
+              </section>
+            )}
 
             {/* FACT SHEETS */}
             {factSheets.length > 0 && (
