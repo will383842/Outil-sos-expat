@@ -222,10 +222,13 @@ const Press: React.FC = () => {
   const seoTitle = t("press.seo.title");
   const seoDescription = t("press.seo.description");
 
-  const localeMap: Record<string, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", de: "de-DE", pt: "pt-PT", ru: "ru-RU", zh: "zh-CN", hi: "hi-IN", ar: "ar-SA" };
-  const canonicalLocaleMap: Record<string, string> = { fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de", pt: "pt-pt", ru: "ru-ru", zh: "zh-cn", hi: "hi-in", ar: "ar-sa" };
-  const canonicalPageUrl = `https://sos-expat.com/${canonicalLocaleMap[lang] || lang}/presse`;
-  const geoRegionMap: Record<string, string> = { fr: "FR", en: "US", es: "ES", de: "DE", pt: "PT", ru: "RU", zh: "CN", hi: "IN", ar: "SA" };
+  const localeMap: Record<string, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", de: "de-DE", pt: "pt-PT", ru: "ru-RU", ch: "zh-CN", zh: "zh-CN", hi: "hi-IN", ar: "ar-SA" };
+  // ch = internal code for Chinese; zh-cn = canonical URL prefix (ISO 639-1)
+  const canonicalLocaleMap: Record<string, string> = { fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de", pt: "pt-pt", ru: "ru-ru", ch: "zh-cn", zh: "zh-cn", hi: "hi-in", ar: "ar-sa" };
+  // Translated press slugs — must match sitemap-static.xml and localeRoutes.ts
+  const pressSlugMap: Record<string, string> = { fr: "presse", en: "press", es: "prensa", de: "presse", pt: "imprensa", ru: "pressa", ch: "xinwen", zh: "xinwen", hi: "press", ar: "sahafa" };
+  const canonicalPageUrl = `https://sos-expat.com/${canonicalLocaleMap[lang] || lang}/${pressSlugMap[lang] || "press"}`;
+  const geoRegionMap: Record<string, string> = { fr: "FR", en: "US", es: "ES", de: "DE", pt: "PT", ru: "RU", ch: "CN", zh: "CN", hi: "IN", ar: "SA" };
   const formatDate = (date: Date) => new Intl.DateTimeFormat(localeMap[lang] || "fr-FR", { year: "numeric", month: "long", day: "numeric" }).format(date);
 
   const faqs = useMemo(() => [
