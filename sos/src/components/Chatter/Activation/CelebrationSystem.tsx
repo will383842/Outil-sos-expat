@@ -95,27 +95,6 @@ export function useCelebrations() {
       celebrate('first_commission', `Felicitations ! Votre premier gain de $${amount} !`, 'heavy');
     }
 
-    // Level up (2-5)
-    if (chatter.level && prev?.level && chatter.level > prev.level) {
-      const levelNames: Record<number, string> = {
-        2: 'Intermediaire',
-        3: 'Avance',
-        4: 'Expert',
-        5: 'Elite',
-      };
-      const bonuses: Record<number, string> = {
-        2: '+10%',
-        3: '+20%',
-        4: '+35%',
-        5: '+50%',
-      };
-      celebrate(
-        `level_${chatter.level}`,
-        `Niveau ${levelNames[chatter.level] || chatter.level} atteint ! ${bonuses[chatter.level] || ''} de bonus sur vos commissions`,
-        'heavy'
-      );
-    }
-
     // First referral — dynamic N1 amount from config
     const n1Amt = ((config?.commissionN1CallAmount ?? 100) / 100).toFixed(2).replace(/\.00$/, '');
     if ((chatter.totalRecruits || 0) >= 1 && (prev?.totalRecruits || 0) === 0) {

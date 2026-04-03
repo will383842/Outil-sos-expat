@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Target, ArrowRight, DollarSign, Users, Trophy, Send } from 'lucide-react';
+import { Target, ArrowRight, DollarSign, Users, Send } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { UI } from '@/components/Chatter/designTokens';
 
@@ -54,13 +54,6 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     return m ? `$${(m.bonus / 100).toLocaleString()}` : `$${count}`;
   };
 
-  // Level thresholds from config
-  const levelThresholds = {
-    2: (config?.levelThresholds?.level2 ?? 10000) / 100,
-    3: (config?.levelThresholds?.level3 ?? 50000) / 100,
-    4: (config?.levelThresholds?.level4 ?? 200000) / 100,
-    5: (config?.levelThresholds?.level5 ?? 500000) / 100,
-  };
 
   const objective = useMemo((): Objective | null => {
     if (!chatter) return null;
@@ -70,7 +63,6 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
     const totalRecruits = chatter.totalRecruits || 0;
     const qualifiedReferrals = chatter.qualifiedReferralsCount || 0;
     const telegramLinked = chatter.telegramOnboardingCompleted === true;
-    const level = chatter.level || 1;
     const hasWithdrawn = (chatter as any).totalWithdrawn > 0 || false;
 
     // 1. First withdrawal possible
@@ -133,22 +125,7 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
       };
     }
 
-    // 5. Level 2
-    if (level < 2) {
-      return {
-        id: 'level_2',
-        title: intl.formatMessage({ id: 'chatter.objective.level2.title', defaultMessage: 'Level 2 (+10% bonus)' }),
-        current: totalEarned,
-        target: levelThresholds[2],
-        unit: '$',
-        ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareToEarn', defaultMessage: 'Share to earn' }),
-        ctaAction: 'share',
-        icon: <Trophy className="w-5 h-5" />,
-        color: 'text-blue-500',
-      };
-    }
-
-    // 6. Telegram link
+    // 5. Telegram link
     if (!telegramLinked) {
       return {
         id: 'telegram_bonus',
@@ -178,22 +155,7 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
       };
     }
 
-    // 8. Level 3
-    if (level < 3) {
-      return {
-        id: 'level_3',
-        title: intl.formatMessage({ id: 'chatter.objective.level3.title', defaultMessage: 'Level 3 Advanced (+20% bonus)' }),
-        current: totalEarned,
-        target: levelThresholds[3],
-        unit: '$',
-        ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareToEarn', defaultMessage: 'Share to earn' }),
-        ctaAction: 'share',
-        icon: <Trophy className="w-5 h-5" />,
-        color: 'text-violet-500',
-      };
-    }
-
-    // 9. 20 qualified referrals
+    // 8. 20 qualified referrals
     if (qualifiedReferrals < 20) {
       return {
         id: 'tier_20',
@@ -208,34 +170,19 @@ const MicroObjectiveCard: React.FC<MicroObjectiveCardProps> = ({
       };
     }
 
-    // 10. Level 4
-    if (level < 4) {
-      return {
-        id: 'level_4',
-        title: intl.formatMessage({ id: 'chatter.objective.level4.title', defaultMessage: 'Level 4 Expert (+35% bonus)' }),
-        current: totalEarned,
-        target: levelThresholds[4],
-        unit: '$',
-        ctaLabel: intl.formatMessage({ id: 'chatter.objective.keepEarning', defaultMessage: 'Keep earning' }),
-        ctaAction: 'share',
-        icon: <Trophy className="w-5 h-5" />,
-        color: 'text-indigo-500',
-      };
-    }
-
     // Default: keep sharing
     return {
       id: 'keep_going',
       title: intl.formatMessage({ id: 'chatter.objective.keepGoing.title', defaultMessage: 'Keep earning!' }),
       current: totalEarned,
-      target: levelThresholds[5],
+      target: 500,
       unit: '$',
       ctaLabel: intl.formatMessage({ id: 'chatter.objective.shareMyLink', defaultMessage: 'Share my link' }),
       ctaAction: 'share',
       icon: <Target className="w-5 h-5" />,
       color: 'text-violet-500',
     };
-  }, [chatter, intl, minWithdrawalDollars, telegramBonusAmount, levelThresholds, milestones]);
+  }, [chatter, intl, minWithdrawalDollars, telegramBonusAmount, milestones]);
 
   if (!objective) return null;
 

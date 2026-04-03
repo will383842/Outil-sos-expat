@@ -6,9 +6,8 @@
 
 import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { TrendingUp, Star } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
-import { LEVEL_COLORS } from '@/components/Chatter/designTokens';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 
 interface HeroEarningsCardProps {
@@ -50,8 +49,6 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
   }, [commissions]);
 
   // Level info
-  const level = chatter?.level || 1;
-  const levelColor = LEVEL_COLORS[level as keyof typeof LEVEL_COLORS] || LEVEL_COLORS[1];
 
   // First withdrawal progress (if below minimum)
   const showWithdrawalProgress = totalEarned > 0 && totalEarned < minWithdrawalDollars;
@@ -84,14 +81,10 @@ const HeroEarningsCard: React.FC<HeroEarningsCardProps> = ({ className = '' }) =
       />
 
       <div className="relative z-10 p-4 sm:p-5">
-        {/* Top row: label + level badge */}
+        {/* Top row: label */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
             <FormattedMessage id="chatter.hero.totalEarned" defaultMessage="Total gagne" />
-          </span>
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${levelColor.bg} ${levelColor.text}`}>
-            <Star className="w-3 h-3" />
-            Lv.{level}
           </span>
         </div>
 

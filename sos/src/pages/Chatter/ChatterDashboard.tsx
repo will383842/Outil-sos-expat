@@ -25,7 +25,6 @@ import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboard
 import HeroEarningsCard from '@/components/Chatter/Cards/HeroEarningsCard';
 import BalanceCards from '@/components/Chatter/Cards/BalanceCards';
 import NextActionCard from '@/components/Chatter/Cards/NextActionCard';
-import LevelProgressCard from '@/components/Chatter/Cards/LevelProgressCard';
 import RecentActivityFeed from '@/components/Chatter/Cards/RecentActivityFeed';
 import NewChatterDashboard from '@/components/Chatter/Activation/NewChatterDashboard';
 import MicroObjectiveCard from '@/components/Chatter/Activation/MicroObjectiveCard';
@@ -238,9 +237,6 @@ const ChatterDashboardContent: React.FC = () => {
           onNavigateToRecruit={() => navigate(referralsRoute)}
           onNavigateToTelegram={() => navigate(telegramRoute)}
         />
-
-        {/* Level Progress + Streak */}
-        <LevelProgressCard />
 
         {/* Desktop: 2-column layout for secondary cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

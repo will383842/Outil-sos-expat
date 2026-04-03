@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Copy, Users, Send, Trophy, TrendingUp, Sparkles, Share2 } from 'lucide-react';
+import { Copy, Users, Send, Trophy, Sparkles, Share2 } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { UI } from '@/components/Chatter/designTokens';
 
@@ -36,7 +36,6 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
     const totalRecruits = chatter.totalRecruits || 0;
     const qualifiedReferrals = chatter.qualifiedReferralsCount || 0;
     const telegramLinked = chatter.telegramOnboardingCompleted === true;
-    const level = chatter.level || 1;
     const totalEarned = (chatter.totalEarned || 0) / 100;
     const isCaptain = chatter.role === 'captainChatter';
 
@@ -115,30 +114,6 @@ const NextActionCard: React.FC<NextActionCardProps> = ({
         borderColor: 'border-l-indigo-500',
         iconColor: 'text-indigo-500',
         glowColor: 'shadow-indigo-500/20',
-      };
-    }
-
-    // Level progression (thresholds from config, in cents → dollars)
-    const lt = config?.levelThresholds ?? { level2: 10000, level3: 50000, level4: 200000, level5: 500000 };
-    const levelThresholds: Record<number, { target: number; name: string; bonus: string }> = {
-      1: { target: lt.level2 / 100, name: 'Intermediaire', bonus: '+10%' },
-      2: { target: lt.level3 / 100, name: 'Avance', bonus: '+20%' },
-      3: { target: lt.level4 / 100, name: 'Expert', bonus: '+35%' },
-      4: { target: lt.level5 / 100, name: 'Elite', bonus: '+50%' },
-    };
-
-    const nextLevel = levelThresholds[level];
-    if (nextLevel && totalEarned < nextLevel.target) {
-      const remaining = (nextLevel.target - totalEarned).toFixed(0);
-      return {
-        icon: <TrendingUp className="w-5 h-5" />,
-        title: intl.formatMessage({ id: 'chatter.nextAction.levelUp', defaultMessage: 'Encore {amount} pour {level}' }, { amount: `$${remaining}`, level: nextLevel.name }),
-        subtitle: intl.formatMessage({ id: 'chatter.nextAction.levelUpSub', defaultMessage: 'Débloquez {bonus} de bonus sur vos commissions !' }, { bonus: nextLevel.bonus }),
-        ctaLabel: intl.formatMessage({ id: 'chatter.nextAction.shareToEarn', defaultMessage: 'Partager pour gagner' }),
-        ctaAction: onShareLink,
-        borderColor: 'border-l-violet-500',
-        iconColor: 'text-violet-500',
-        glowColor: 'shadow-violet-500/20',
       };
     }
 

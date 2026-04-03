@@ -437,7 +437,7 @@ const AchievementBadgesCard = memo(function AchievementBadgesCard({
       case 'earnings':
         return Math.min(100, ((chatter.totalEarned || 0) / badge.requirement.target) * 100);
       case 'level':
-        return Math.min(100, ((chatter.level || 1) / badge.requirement.target) * 100);
+        return 0; // level is never calculated by backend
       case 'rank':
         if (!chatter.bestRank) return 0;
         return chatter.bestRank <= badge.requirement.target ? 100 : 0;

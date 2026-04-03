@@ -12,11 +12,10 @@ import { useChatterData } from '@/contexts/ChatterDataContext';
 import { useLocaleNavigate } from '@/multilingual-system';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
-import StreakDisplay from '@/components/Chatter/Activation/StreakDisplay';
-import { UI, LEVEL_COLORS, SPACING } from '@/components/Chatter/designTokens';
+import { UI, SPACING } from '@/components/Chatter/designTokens';
 import {
   Trophy, Star, Clock, Calendar, Crown, Medal, ArrowRight,
-  ChevronLeft, ChevronRight, Loader2, Flame,
+  ChevronLeft, ChevronRight, Loader2,
 } from 'lucide-react';
 import type { ChatterLeaderboardEntry } from '@/types/chatter';
 
@@ -251,55 +250,6 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
   // Tab 2: Ma Progression
   const progressionTab = (
     <div className="space-y-4">
-      {/* Current level card — only shown if level data exists */}
-      {chatter?.level != null && (
-        <div className={`${UI.card} p-5`}>
-          <div className="flex items-center gap-4 mb-4">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-              LEVEL_COLORS[(chatter.level || 1) as keyof typeof LEVEL_COLORS]?.bg || 'bg-gray-100'
-            }`}>
-              <div className="flex gap-0.5">
-                {Array.from({ length: chatter.level || 1 }, (_, i) => (
-                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">
-                <FormattedMessage id="chatter.progression.currentLevel" defaultMessage="Niveau actuel" />
-              </p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">
-                {LEVEL_COLORS[(chatter.level || 1) as keyof typeof LEVEL_COLORS]?.name || `Level ${chatter.level}`}
-              </p>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          {(chatter.level || 1) < 5 && (
-            <div>
-              <div className="h-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
-                  style={{ width: `${chatter?.levelProgress || 0}%` }}
-                />
-              </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                {chatter?.levelProgress || 0}% — <FormattedMessage id="chatter.progression.nextLevel" defaultMessage="vers le prochain niveau" />
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Streak */}
-      <div className={`${UI.card} p-4`}>
-        <StreakDisplay
-          currentStreak={chatter?.currentStreak || 0}
-          bestStreak={chatter?.bestStreak || 0}
-          lastActivityDate={chatter?.lastActivityDate}
-        />
-      </div>
-
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
@@ -332,74 +282,6 @@ const ChatterLeaderboardContent = React.memo(function ChatterLeaderboardContent(
           </div>
         </div>
       )}
-
-      {/* Roadmap to $5000/month */}
-      <div className={`${UI.card} p-5`}>
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
-          <FormattedMessage id="chatter.progression.roadmap.title" defaultMessage="Roadmap vers $5000/mois" />
-        </h3>
-        <div className="relative">
-          {[
-            { level: 1, threshold: 0, name: 'Rookie' },
-            { level: 2, threshold: 100, name: 'Challenger' },
-            { level: 3, threshold: 500, name: 'Pro' },
-            { level: 4, threshold: 2000, name: 'Expert' },
-            { level: 5, threshold: 5000, name: 'Légende' },
-          ].map((step, index, arr) => {
-            const currentLevel = chatter?.level || 1;
-            const isPast = step.level < currentLevel;
-            const isCurrent = step.level === currentLevel;
-            const isFuture = step.level > currentLevel;
-            const isLast = index === arr.length - 1;
-
-            return (
-              <div key={step.level} className="flex items-start gap-4 relative">
-                {/* Vertical line */}
-                {!isLast && (
-                  <div
-                    className={`absolute left-[15px] top-[32px] w-0.5 h-[calc(100%-8px)] ${
-                      isPast ? 'bg-green-400' : isCurrent ? 'bg-gradient-to-b from-indigo-500 to-slate-300 dark:to-slate-600' : 'border-l-2 border-dashed border-slate-300 dark:border-slate-600'
-                    }`}
-                    style={isFuture ? { width: 0 } : {}}
-                  />
-                )}
-
-                {/* Circle */}
-                <div className="flex-shrink-0 relative z-10">
-                  <div
-                    className={`w-[30px] h-[30px] rounded-full flex items-center justify-center text-xs font-bold border-2 ${
-                      isPast
-                        ? 'bg-green-500 border-green-400 text-white'
-                        : isCurrent
-                        ? 'bg-indigo-500 border-indigo-400 text-white animate-pulse'
-                        : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-400'
-                    }`}
-                  >
-                    {step.level}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className={`pb-6 flex-1 ${isCurrent ? '' : ''}`}>
-                  <div className={`flex items-center gap-2 ${isCurrent ? 'text-indigo-600 dark:text-indigo-400' : isPast ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
-                    <span className="text-sm font-bold">{step.name}</span>
-                    {isCurrent && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full font-medium">
-                        <FormattedMessage id="chatter.progression.roadmap.current" defaultMessage="Vous" />
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <span className={`text-xs ${isCurrent ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'}`}>
-                      ${step.threshold.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Captain Teaser */}
       {chatter?.role !== 'captainChatter' ? (

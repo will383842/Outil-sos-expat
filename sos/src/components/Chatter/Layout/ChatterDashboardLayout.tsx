@@ -30,7 +30,6 @@ import {
   Copy,
   Check,
   PiggyBank,
-  TrendingUp,
   ArrowUpRight,
   Clock,
 } from 'lucide-react';
@@ -43,7 +42,7 @@ import { CelebrationProvider } from '@/components/Chatter/Activation/Celebration
 import StickyAffiliateBar from './StickyAffiliateBar';
 import WithdrawalBottomSheet from '@/components/Chatter/WithdrawalBottomSheet';
 import { ShareHub } from '@/components/Chatter/ViralKit/ShareHub';
-import { UI, CHATTER_THEME, LEVEL_COLORS } from '@/components/Chatter/designTokens';
+import { UI, CHATTER_THEME } from '@/components/Chatter/designTokens';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
 import { lockScroll, unlockScroll, forceUnlockScroll } from '@/utils/scrollLockManager';
@@ -73,8 +72,6 @@ interface SidebarContentProps {
   photo: string | undefined;
   fullName: string;
   firstName: string;
-  level: number;
-  levelProgress: number;
   availableBalance: number;
   canWithdraw: boolean;
   minimumWithdrawal: number;
@@ -98,14 +95,13 @@ interface SidebarContentProps {
 type NavItem = { key: string; icon: React.ReactNode; route: string; labels: Record<string, string> };
 
 const SidebarContentInner: React.FC<SidebarContentProps> = ({
-  photo, fullName, firstName, level, levelProgress,
+  photo, fullName, firstName,
   availableBalance, canWithdraw, minimumWithdrawal, pendingWithdrawalId,
   piggyBank, affiliateCode, shareUrl,
   commissionClientCall, commissionN1Call, commissionProviderCall,
   drawerItems, currentKey, language, loggingOut,
   onNavigate, onLogout, onWithdraw, intl,
 }) => {
-  const levelConfig = LEVEL_COLORS[level as keyof typeof LEVEL_COLORS] || LEVEL_COLORS[1];
   const balanceInDollars = formatAmount(availableBalance);
   const minimumInDollars = formatAmount(minimumWithdrawal);
   const remaining = minimumWithdrawal - availableBalance;
@@ -149,13 +145,6 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
           )}
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-bold text-white truncate">{fullName}</h2>
-            <span
-              className={`inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${levelConfig.bg} ${levelConfig.text}`}
-              style={{ boxShadow: `0 0 12px ${level >= 4 ? 'rgba(251,191,36,0.3)' : level >= 3 ? 'rgba(139,92,246,0.3)' : 'transparent'}` }}
-            >
-              <FormattedMessage id="chatter.sidebar.level" defaultMessage="Niveau {level}" values={{ level }} />
-              {' '}&middot;{' '}{levelConfig.name}
-            </span>
           </div>
         </div>
       </div>
@@ -348,29 +337,7 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
         </ul>
       </nav>
 
-      {/* ── 6. Level Progression ── */}
-      <div className="px-4 py-3 border-t border-white/[0.06]">
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-[11px] font-medium text-slate-300">
-              <FormattedMessage id="chatter.sidebar.progression" defaultMessage="Progression" />
-            </span>
-          </div>
-          <span className="text-[11px] font-bold text-indigo-300">{Math.round(levelProgress)}%</span>
-        </div>
-        <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-700"
-            style={{ width: `${Math.min(levelProgress, 100)}%` }}
-          />
-        </div>
-        {level < 5 && (
-          <p className="text-[10px] text-slate-500 mt-1">
-            <FormattedMessage id="chatter.sidebar.level" defaultMessage="Niveau {level}" values={{ level: level + 1 }} />
-          </p>
-        )}
-      </div>
+
 
       {/* ── 7. Logout ── */}
       <div className="px-3 pb-4 pt-1">
@@ -555,8 +522,6 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     photo,
     fullName,
     firstName,
-    level: chatter?.level || 1,
-    levelProgress: chatter?.levelProgress || 0,
     availableBalance: chatter?.availableBalance || 0,
     canWithdraw,
     minimumWithdrawal,

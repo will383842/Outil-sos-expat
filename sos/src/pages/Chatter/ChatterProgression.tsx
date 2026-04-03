@@ -40,25 +40,6 @@ const UI = {
   card: "bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg",
 };
 
-// ============================================================================
-// LEVEL CONFIG
-// ============================================================================
-
-const LEVEL_NAMES: Record<number, { fr: string; en: string }> = {
-  1: { fr: 'Débutant', en: 'Beginner' },
-  2: { fr: 'Amateur', en: 'Amateur' },
-  3: { fr: 'Confirmé', en: 'Confirmed' },
-  4: { fr: 'Expert', en: 'Expert' },
-  5: { fr: 'Élite', en: 'Elite' },
-};
-
-const LEVEL_COLORS: Record<number, { bg: string; text: string; gradient: string }> = {
-  1: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-400', gradient: 'from-gray-400 to-gray-500' },
-  2: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', gradient: 'from-green-400 to-green-600' },
-  3: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', gradient: 'from-blue-400 to-blue-600' },
-  4: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400', gradient: 'from-purple-400 to-purple-600' },
-  5: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400', gradient: 'from-yellow-400 to-yellow-500' },
-};
 
 // ============================================================================
 // RECRUITMENT TIER CONFIG
@@ -197,114 +178,6 @@ function ProgressionSkeleton() {
 // SECTION COMPONENTS
 // ============================================================================
 
-/** Level Progression Section — gauge + 5 levels in a row */
-function LevelProgressionSection({
-  level,
-  levelProgress,
-  config,
-  forecast,
-  lang,
-}: {
-  level: number;
-  levelProgress: number;
-  config: { levelThresholds: Record<string, number> } | null;
-  forecast: { estimatedNextLevel: string | null } | null;
-  lang: string;
-}) {
-  const intl = useIntl();
-  const isMax = level >= 5;
-  const currentColors = LEVEL_COLORS[level] || LEVEL_COLORS[1];
-
-  // Estimate days from forecast string (e.g., "2 weeks" → 14)
-  const forecastDays = useMemo(() => {
-    if (!forecast?.estimatedNextLevel) return null;
-    const str = forecast.estimatedNextLevel.toLowerCase();
-    const weekMatch = str.match(/(\d+)\s*week/);
-    if (weekMatch) return parseInt(weekMatch[1]) * 7;
-    const dayMatch = str.match(/(\d+)\s*day/);
-    if (dayMatch) return parseInt(dayMatch[1]);
-    const monthMatch = str.match(/(\d+)\s*month/);
-    if (monthMatch) return parseInt(monthMatch[1]) * 30;
-    return null;
-  }, [forecast?.estimatedNextLevel]);
-
-  return (
-    <div className={`${UI.card} p-4 sm:p-6`}>
-      <div className="flex items-center gap-2 mb-5">
-        <TrendingUp className="h-5 w-5 text-indigo-500" />
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-          <FormattedMessage id="chatter.progression.level.title" defaultMessage="Mon Niveau" />
-        </h2>
-      </div>
-
-      {/* 5 level badges in a row */}
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-5">
-        {[1, 2, 3, 4, 5].map((l) => {
-          const colors = LEVEL_COLORS[l];
-          const isActive = l === level;
-          const isPast = l < level;
-          const name = LEVEL_NAMES[l]?.[lang === 'fr' ? 'fr' : 'en'] ?? `Lv.${l}`;
-
-          return (
-            <div
-              key={l}
-              className={`text-center py-2 sm:py-2.5 px-0.5 sm:px-1 rounded-xl border-2 transition-all ${
-                isActive
-                  ? `${colors.bg} border-current ${colors.text} ring-2 ring-offset-2 ring-current dark:ring-offset-gray-900`
-                  : isPast
-                    ? `${colors.bg} border-transparent ${colors.text} opacity-70`
-                    : 'bg-gray-50 dark:bg-white/5 border-transparent text-gray-400 dark:text-gray-600'
-              }`}
-            >
-              <div className={`text-lg font-black ${isActive ? '' : ''}`}>{l}</div>
-              <div className="text-[10px] font-medium truncate">{name}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Progress bar to next level */}
-      {!isMax ? (
-        <>
-          <div className="relative h-3 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
-            <div
-              className={`absolute inset-y-0 left-0 bg-gradient-to-r ${currentColors.gradient} rounded-full transition-all duration-700 ease-out`}
-              style={{ width: `${Math.min(100, levelProgress)}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>{Math.round(levelProgress)}%</span>
-            <span>
-              <FormattedMessage
-                id="chatter.progression.level.next"
-                defaultMessage="Prochain niveau"
-              />
-              {': '}
-              {LEVEL_NAMES[level + 1]?.[lang === 'fr' ? 'fr' : 'en'] ?? `Lv.${level + 1}`}
-            </span>
-          </div>
-          {forecastDays && (
-            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 italic">
-              <FormattedMessage
-                id="chatter.progression.level.forecast"
-                defaultMessage="Estimation : {level} dans ~{days} jours"
-                values={{
-                  level: LEVEL_NAMES[level + 1]?.[lang === 'fr' ? 'fr' : 'en'] ?? `Lv.${level + 1}`,
-                  days: forecastDays,
-                }}
-              />
-            </p>
-          )}
-        </>
-      ) : (
-        <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 text-sm font-semibold">
-          <Sparkles className="h-4 w-4" />
-          <FormattedMessage id="chatter.progression.level.maxReached" defaultMessage="Niveau maximum atteint !" />
-        </div>
-      )}
-    </div>
-  );
-}
 
 /** Recruitment Tier Section — progress bar with milestones */
 function RecruitmentTierSection({
@@ -724,9 +597,7 @@ function ChatterProgression() {
   // Extract data
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config ?? null;
-  const forecast = dashboardData?.forecast ?? null;
   const piggyBank = dashboardData?.piggyBank ?? null;
-  const lang = intl.locale?.split('-')[0] || 'en';
 
   // Loading state
   if (isLoading && !dashboardData) {
@@ -749,18 +620,7 @@ function ChatterProgression() {
         </p>
       </div>
 
-      {/* 1. Level Progression — only shown if level data exists */}
-      {chatter.level != null && (
-        <LevelProgressionSection
-          level={chatter.level}
-          levelProgress={chatter.levelProgress ?? 0}
-          config={config}
-          forecast={forecast}
-          lang={lang}
-        />
-      )}
-
-      {/* 2. Recruitment Tiers */}
+      {/* 1. Recruitment Tiers */}
       <RecruitmentTierSection
         qualifiedCount={dashboardData?.referralStats?.qualifiedFilleulsN1 ?? 0}
         paidTierBonuses={tierProgress?.paidTierBonuses ?? []}
