@@ -12626,5 +12626,6 @@
   "chatter.new.jobIntroDesc": "تربط SOS-Expat المغتربين بالمحامين والمساعدين عبر الهاتف. شارك رابطك في مجموعات المغتربين — كل مكالمة عبر هذا الرابط = {amount} في محفظتك.",
   "chatter.new.copyLinkNow": "انسخ رابطي الآن",
   "chatter.new.revenueNote": "معظم الـ Chatters الجدد يكسبون $30-80 في شهرهم الأول",
-  "chatter.activation.step3.waitTime": "عادةً تصل المكالمة الأولى خلال 24-48 ساعة إذا شاركت في 3+ مجموعات نشطة"
+  "chatter.activation.step3.waitTime": "عادةً تصل المكالمة الأولى خلال 24-48 ساعة إذا شاركت في 3+ مجموعات نشطة",
+  "chatter.new.yourLink": "رابطك الفريد"
 }

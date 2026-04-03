@@ -12626,5 +12626,6 @@
   "chatter.new.jobIntroDesc": "SOS-Expat प्रवासियों को फ़ोन पर वकीलों और सहायकों से जोड़ता है। अपना लिंक प्रवासी समूहों में शेयर करें — इस लिंक के ज़रिए हर कॉल = {amount} आपके वॉलेट में।",
   "chatter.new.copyLinkNow": "अभी मेरा लिंक कॉपी करें",
   "chatter.new.revenueNote": "अधिकतर नए Chatter पहले महीने $30-80 कमाते हैं",
-  "chatter.activation.step3.waitTime": "आमतौर पर, 3+ सक्रिय समूहों में शेयर करने के 24-48 घंटे के भीतर पहली कॉल आती है"
+  "chatter.activation.step3.waitTime": "आमतौर पर, 3+ सक्रिय समूहों में शेयर करने के 24-48 घंटे के भीतर पहली कॉल आती है",
+  "chatter.new.yourLink": "आपका विशेष लिंक"
 }

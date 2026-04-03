@@ -146,30 +146,39 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
       {/* Job intro — explains the Chatter role for anyone arriving cold (no landing page) */}
       <div className={`${UI.card} overflow-hidden`}>
-        <div className="p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 dark:bg-indigo-500/20 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-                <FormattedMessage id="chatter.new.jobIntroTitle" defaultMessage="Votre mission de Chatter" />
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                <FormattedMessage
-                  id="chatter.new.jobIntroDesc"
-                  defaultMessage="SOS-Expat connecte des expatriés avec des avocats et helpers par téléphone. Partagez votre lien dans des groupes d'expats — chaque appel via ce lien = {amount} versé dans votre portefeuille."
-                  values={{ amount: <span className="font-bold text-indigo-600 dark:text-indigo-400">{callAmountRange}</span> }}
-                />
-              </p>
-              <button
-                onClick={handleCopyLink}
-                className="mt-3 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-semibold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2 transition-all duration-200 active:scale-[0.97] shadow-md shadow-indigo-500/25"
-              >
-                <Copy className="w-4 h-4" />
-                <FormattedMessage id="chatter.new.copyLinkNow" defaultMessage="Copier mon lien maintenant" />
-              </button>
-            </div>
+        {/* Header band */}
+        <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5 bg-gradient-to-r from-indigo-500/5 to-violet-500/5 dark:from-indigo-500/10 dark:to-violet-500/10 border-b border-slate-100 dark:border-white/5">
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="w-4 h-4 text-indigo-500" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              <FormattedMessage id="chatter.new.jobIntroTitle" defaultMessage="Votre mission de Chatter" />
+            </h2>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            <FormattedMessage
+              id="chatter.new.jobIntroDesc"
+              defaultMessage="SOS-Expat connecte des expatriés avec des avocats et helpers par téléphone. Partagez votre lien dans des groupes d'expats — chaque appel via ce lien = {amount} versé dans votre portefeuille."
+              values={{ amount: <span className="font-bold text-indigo-600 dark:text-indigo-400">{callAmountRange}</span> }}
+            />
+          </p>
+        </div>
+
+        {/* Your unique link — visible, copyable */}
+        <div className="px-4 py-3 sm:px-5">
+          <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">
+            <FormattedMessage id="chatter.new.yourLink" defaultMessage="Votre lien unique" />
+          </p>
+          <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-xl px-3 py-2.5">
+            <span className="flex-1 text-sm font-mono text-indigo-700 dark:text-indigo-300 truncate min-w-0">
+              {clientShareUrl || '…'}
+            </span>
+            <button
+              onClick={handleCopyLink}
+              className="flex-shrink-0 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-semibold rounded-lg px-3 py-1.5 text-xs inline-flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] shadow-sm shadow-indigo-500/25"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <FormattedMessage id="chatter.new.copyLinkNow" defaultMessage="Copier" />
+            </button>
           </div>
         </div>
       </div>

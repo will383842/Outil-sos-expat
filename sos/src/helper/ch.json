@@ -12626,5 +12626,6 @@
   "chatter.new.jobIntroDesc": "SOS-Expat通过电话将海外华人与律师和助手连接起来。在海外华人群组中分享您的链接——每次通过该链接的通话 = {amount}存入您的钱包。",
   "chatter.new.copyLinkNow": "立即复制我的链接",
   "chatter.new.revenueNote": "大多数新Chatter第一个月赚取$30-80",
-  "chatter.activation.step3.waitTime": "通常，如果您在3个以上活跃群组中分享，第一次通话会在24-48小时内到来"
+  "chatter.activation.step3.waitTime": "通常，如果您在3个以上活跃群组中分享，第一次通话会在24-48小时内到来",
+  "chatter.new.yourLink": "您的专属链接"
 }

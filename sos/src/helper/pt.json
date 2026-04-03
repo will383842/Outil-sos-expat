@@ -12626,5 +12626,6 @@
   "chatter.new.jobIntroDesc": "O SOS-Expat conecta expatriados com advogados e helpers por telefone. Partilhe o seu link em grupos de expats — cada chamada via esse link = {amount} na sua carteira.",
   "chatter.new.copyLinkNow": "Copiar o meu link agora",
   "chatter.new.revenueNote": "A maioria dos novos chatters ganha $30-80 no primeiro mês",
-  "chatter.activation.step3.waitTime": "Normalmente, uma primeira chamada chega em 24-48h se partilhado em 3+ grupos ativos"
+  "chatter.activation.step3.waitTime": "Normalmente, uma primeira chamada chega em 24-48h se partilhado em 3+ grupos ativos",
+  "chatter.new.yourLink": "O seu link único"
 }
