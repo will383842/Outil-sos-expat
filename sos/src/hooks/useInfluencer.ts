@@ -66,6 +66,7 @@ interface UseInfluencerReturn {
   markAllNotificationsRead: () => Promise<void>;
 
   // Computed
+  shareUrl: string;
   clientShareUrl: string;
   unreadNotificationsCount: number;
   recruitmentShareUrl: string;

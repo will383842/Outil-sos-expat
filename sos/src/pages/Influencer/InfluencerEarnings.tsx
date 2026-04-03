@@ -41,7 +41,7 @@ const InfluencerEarnings: React.FC = () => {
   // Use allCommissions from subscription if available, otherwise fall back to dashboard
   const commissions: InfluencerCommission[] = allCommissions.length > 0
     ? allCommissions
-    : dashboard?.recentCommissions || [];
+    : (dashboard?.recentCommissions || []) as unknown as InfluencerCommission[];
 
   // Apply filters
   const filteredCommissions = useMemo(() => {

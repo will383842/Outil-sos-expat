@@ -29,7 +29,7 @@ import { useApp } from "../contexts/AppContext";
 import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { useIntl } from "react-intl";
 import {
-  collection, query, where, orderBy, getDocs,
+  collection, query, where, orderBy, getDocs, addDoc, serverTimestamp,
 } from "firebase/firestore";
 import { db, getCloudRunUrl } from "../config/firebase";
 import {

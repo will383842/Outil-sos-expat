@@ -212,6 +212,10 @@ export interface User {
   fbc?: string;
   metaEventId?: string;
 
+  // Referral tracking
+  pendingReferralCode?: string;
+  referralCapturedAt?: string;
+
   // Motivation (pour expatriés)
   motivation?: string;
 }
