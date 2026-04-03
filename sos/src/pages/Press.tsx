@@ -29,9 +29,9 @@ import { useApp } from "../contexts/AppContext";
 import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { useIntl } from "react-intl";
 import {
-  collection, query, where, orderBy, getDocs, addDoc, serverTimestamp,
+  collection, query, where, orderBy, getDocs,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, getCloudRunUrl } from "../config/firebase";
 import {
   getPublicPressResources, trackPressDownload, type PublicPressResource,
 } from "../services/marketingResourcesApi";
@@ -214,19 +214,19 @@ const Press: React.FC = () => {
     }
     setContactSending(true); setContactError(null);
     try {
-      await addDoc(collection(db, "contact_messages"), {
-        name: contactForm.name.trim(),
-        firstName: contactForm.name.split(" ")[0] || contactForm.name,
-        lastName: contactForm.name.split(" ").slice(1).join(" ") || "",
-        email: contactForm.email.trim().toLowerCase(),
-        message: contactForm.message.trim(),
-        subject: contactForm.subject.trim() || t("press.contact.form.defaultSubject", "Demande presse"),
-        category: "press", type: "contact_message", source: "press_contact_form",
-        status: "new", isRead: false, responded: false, priority: "high",
-        adminNotified: false, adminTags: ["press"], adminNotes: "",
-        createdAt: serverTimestamp(),
-        metadata: { mediaName: contactForm.media.trim() || null, language: lang, formVersion: "1.0", source: "press_landing_page" },
+      const url = getCloudRunUrl("createcontactmessage", "europe-west1");
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contactForm.name.trim(),
+          email: contactForm.email.trim().toLowerCase(),
+          message: contactForm.message.trim(),
+          subject: contactForm.subject.trim() || t("press.contact.form.defaultSubject", "Demande presse"),
+          metadata: { mediaName: contactForm.media.trim() || null, language: lang, source: "press_landing_page" },
+        }),
       });
+      if (!res.ok) throw new Error("server_error");
       setContactSent(true);
     } catch {
       setContactError(t("press.contact.form.error.generic", "Error, please try again"));
