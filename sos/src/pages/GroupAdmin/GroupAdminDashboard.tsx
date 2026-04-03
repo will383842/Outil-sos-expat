@@ -408,7 +408,7 @@ const GroupAdminDashboard: React.FC = () => {
           )}
 
         {/* Image Bank */}
-        <ImageBankSection accent="blue" />
+        <ImageBankSection accent="blue" showDownload />
       </div>
     </GroupAdminDashboardLayout>
   );

@@ -379,9 +379,9 @@ const GroupAdminProfile: React.FC = () => {
               <FormattedMessage id="groupAdmin.profile.affiliateLink" defaultMessage="Mon lien affilié" />
             </h2>
           </div>
-          {profile?.affiliateCodeClient ? (
+          {(profile?.affiliateCode || profile?.affiliateCodeClient) ? (
             <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
-              <UnifiedAffiliateLink code={profile.affiliateCodeClient} />
+              <UnifiedAffiliateLink code={profile.affiliateCode || profile.affiliateCodeClient || ''} />
             </Suspense>
           ) : (
             <p className="text-gray-500 dark:text-gray-400">-</p>

@@ -209,9 +209,9 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           </h3>
           <div className="space-y-4">
             {[
-              { icon: <Share2 className="w-4 h-4" />, num: '1', title: intl.formatMessage({ id: 'chatter.new.step1', defaultMessage: 'Share your link' }), color: 'bg-indigo-500' },
-              { icon: <Phone className="w-4 h-4" />, num: '2', title: intl.formatMessage({ id: 'chatter.new.step2', defaultMessage: 'Someone calls a lawyer' }), color: 'bg-violet-500' },
-              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: intl.formatMessage({ id: 'chatter.new.step3', defaultMessage: 'You earn {amount} automatically' }, { amount: callAmountRange }), color: 'bg-indigo-600' },
+              { icon: <Share2 className="w-4 h-4" />, num: '1', title: intl.formatMessage({ id: 'chatter.new.step1', defaultMessage: 'You share your SOS-Expat link' }), color: 'bg-indigo-500' },
+              { icon: <Phone className="w-4 h-4" />, num: '2', title: intl.formatMessage({ id: 'chatter.new.step2', defaultMessage: 'An expat clicks and calls a professional' }), color: 'bg-violet-500' },
+              { icon: <DollarSign className="w-4 h-4" />, num: '3', title: intl.formatMessage({ id: 'chatter.new.step3', defaultMessage: 'You receive {amount} automatically' }, { amount: callAmountRange }), color: 'bg-indigo-600' },
             ].map((step) => (
               <div key={step.num} className="flex items-center gap-3">
                 <div className={`flex-shrink-0 w-8 h-8 ${step.color} text-white rounded-full flex items-center justify-center text-sm font-bold`}>

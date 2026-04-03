@@ -113,9 +113,9 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
   };
 
   return (
-    <div className={`${UI.card} border-2 border-red-200 dark:border-red-500/30 overflow-hidden`}>
+    <div className={`${UI.card} overflow-hidden`}>
       {/* Header */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-red-500/5 to-orange-500/5 dark:from-red-500/10 dark:to-orange-500/10 border-b border-slate-100 dark:border-white/5">
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-500/5 to-violet-500/5 dark:from-indigo-500/10 dark:to-violet-500/10 border-b border-slate-100 dark:border-white/5">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white">
           <FormattedMessage id="chatter.activation.title" defaultMessage="Vos premiers dollars en 4 etapes" />
         </h2>
@@ -123,7 +123,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
         <div className="mt-3 flex items-center gap-3">
           <div className="flex-1 h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -170,9 +170,9 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                     <FormattedMessage
                       id={`chatter.activation.step${index + 1}.title`}
                       defaultMessage={
-                        index === 0 ? 'Copy your client link' :
+                        index === 0 ? 'Copy your link' :
                         index === 1 ? 'Share it (WhatsApp, Telegram...)' :
-                        index === 2 ? 'A client calls via your link' :
+                        index === 2 ? 'An expat calls via your link' :
                         'You receive your commission!'
                       }
                     />

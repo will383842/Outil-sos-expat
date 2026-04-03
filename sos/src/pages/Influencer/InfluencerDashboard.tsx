@@ -49,7 +49,6 @@ const InfluencerLiveActivityFeed = lazy(() =>
 const InfluencerEarningsBreakdownCard = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerEarningsBreakdownCard').then(m => ({ default: m.InfluencerEarningsBreakdownCard }))
 );
-const UnifiedAffiliateDashboard = lazy(() => import('@/components/unified/UnifiedAffiliateDashboard'));
 const InfluencerTeamCard = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerTeamCard').then(m => ({ default: m.InfluencerTeamCard }))
 );
@@ -521,13 +520,6 @@ const InfluencerDashboard: React.FC = () => {
         </Suspense>
 
         {/* ================================================================ */}
-        {/* UNIFIED AFFILIATE (Phase 8) */}
-        {/* ================================================================ */}
-        <Suspense fallback={null}>
-          <UnifiedAffiliateDashboard compact showBalance={false} showHistory={false} />
-        </Suspense>
-
-        {/* ================================================================ */}
         {/* BALANCE CARDS - 4 columns */}
         {/* ================================================================ */}
         <div className="grid lg:grid-cols-4 gap-3 sm:gap-4">
@@ -746,7 +738,7 @@ const InfluencerDashboard: React.FC = () => {
         </div>
 
         {/* Image Bank */}
-        <ImageBankSection accent="pink" />
+        <ImageBankSection accent="pink" showDownload />
 
       </div>
     </InfluencerDashboardLayout>

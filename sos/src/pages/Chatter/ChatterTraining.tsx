@@ -14,7 +14,7 @@ import {
   X, ChevronRight, Lock, ImageIcon, FileText, Video,
   Calculator, Users, UserPlus, MessageCircle,
   TrendingUp, Target, Globe, Zap, Gift,
-  Copy, CheckCheck, ExternalLink, AlertTriangle,
+  Copy, CheckCheck, ExternalLink, AlertTriangle, Link2,
 } from 'lucide-react';
 import ChatterDashboardLayout from '@/components/Chatter/Layout/ChatterDashboardLayout';
 import SwipeTabContainer from '@/components/Chatter/Layout/SwipeTabContainer';
@@ -55,7 +55,7 @@ export default function ChatterTraining() {
 function ChatterTrainingContent() {
   const intl = useIntl();
   const { language } = useApp();
-  const { dashboardData, clientShareUrl, recruitmentShareUrl, providerShareUrl } = useChatterData();
+  const { dashboardData, clientShareUrl } = useChatterData();
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config;
 
@@ -75,9 +75,7 @@ function ChatterTrainingContent() {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizResult, setQuizResult] = useState<SubmitTrainingQuizResult | null>(null);
   const [revenueSlider, setRevenueSlider] = useState(2);
-  const [copiedClient, setCopiedClient] = useState(false);
-  const [copiedRecruitment, setCopiedRecruitment] = useState(false);
-  const [copiedProvider, setCopiedProvider] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Commission amounts from config
   const clientCallLawyer = (config?.commissionClientCallAmountLawyer ?? config?.commissionClientCallAmount ?? 500) / 100;
@@ -91,23 +89,11 @@ function ChatterTrainingContent() {
   const maxCall = Math.max(clientCallLawyer, clientCallExpat);
   const callRange = minCall === maxCall ? `$${minCall}` : `$${minCall}-$${maxCall}`;
 
-  const handleCopyClient = useCallback(async () => {
+  const handleCopyLink = useCallback(async () => {
     if (!clientShareUrl) return;
     const success = await copyToClipboard(clientShareUrl);
-    if (success) { setCopiedClient(true); setTimeout(() => setCopiedClient(false), 2000); toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Link copied!' })); }
+    if (success) { setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Link copied!' })); }
   }, [clientShareUrl, intl]);
-
-  const handleCopyRecruitment = useCallback(async () => {
-    if (!recruitmentShareUrl) return;
-    const success = await copyToClipboard(recruitmentShareUrl);
-    if (success) { setCopiedRecruitment(true); setTimeout(() => setCopiedRecruitment(false), 2000); toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Link copied!' })); }
-  }, [recruitmentShareUrl, intl]);
-
-  const handleCopyProvider = useCallback(async () => {
-    if (!providerShareUrl) return;
-    const success = await copyToClipboard(providerShareUrl);
-    if (success) { setCopiedProvider(true); setTimeout(() => setCopiedProvider(false), 2000); toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Link copied!' })); }
-  }, [providerShareUrl, intl]);
 
   const handleOpenModule = useCallback(async (moduleId: string) => {
     setViewingModule(moduleId);
@@ -138,88 +124,34 @@ function ChatterTrainingContent() {
         </p>
       </div>
 
-      {/* Your 2 links explained */}
+      {/* Your unified link */}
       <div className={`${UI.card} p-4`}>
         <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
-          <FormattedMessage id="chatter.training.links.title" defaultMessage="Your 3 links explained" />
+          <FormattedMessage id="chatter.training.links.title" defaultMessage="Your link" />
         </h3>
 
-        {/* Client link */}
-        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 mb-3">
+        {/* Single unified link */}
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
           <div className="flex items-center gap-2 mb-1">
-            <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Link2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-              <FormattedMessage id="chatter.training.links.client" defaultMessage="Client link" />
+              <FormattedMessage id="chatter.training.links.unified" defaultMessage="Your unique link" />
             </span>
             <span className="ml-auto text-sm font-black text-emerald-600 dark:text-emerald-400">{callRange}<span className="text-xs font-medium opacity-70"><FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" /></span></span>
           </div>
           <p className="text-xs text-emerald-600 dark:text-emerald-400/80 leading-relaxed">
             <FormattedMessage
-              id="chatter.training.links.clientDesc"
-              defaultMessage="Share this with people who need help (expatriates, immigrants). When they call a lawyer or expert through your link, you earn {amount} per call."
-              values={{ amount: callRange }}
+              id="chatter.training.links.unifiedDesc"
+              defaultMessage="One link for everything. Share it with anyone — clients, chatters, or providers. Your earnings depend on what your referral does: client calls ({clientAmount}), team calls (${n1}/call), provider calls (${provider}/call)."
+              values={{ clientAmount: callRange, n1: n1CallAmount, provider: providerCallAmount }}
             />
           </p>
           {clientShareUrl && (
             <div className="mt-2 flex items-center gap-2">
               <code className="flex-1 text-[11px] font-mono text-emerald-700 dark:text-emerald-300 truncate bg-white/50 dark:bg-white/5 px-2 py-1.5 rounded-lg">{clientShareUrl}</code>
-              <button onClick={handleCopyClient} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold flex items-center gap-1">
-                {copiedClient ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedClient ? intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }) : intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copy' })}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Recruitment link */}
-        <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 mb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <UserPlus className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-            <span className="text-sm font-bold text-violet-700 dark:text-violet-300">
-              <FormattedMessage id="chatter.training.links.recruitment" defaultMessage="Team recruitment link" />
-            </span>
-            <span className="ml-auto text-sm font-black text-violet-600 dark:text-violet-400">${n1CallAmount}<span className="text-xs font-medium opacity-70"><FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" /></span></span>
-          </div>
-          <p className="text-xs text-violet-600 dark:text-violet-400/80 leading-relaxed">
-            <FormattedMessage
-              id="chatter.training.links.recruitDesc"
-              defaultMessage="Share this with other chatters. When they generate paid calls, you earn ${n1} per call."
-              values={{ n1: n1CallAmount }}
-            />
-          </p>
-          {recruitmentShareUrl && (
-            <div className="mt-2 flex items-center gap-2">
-              <code className="flex-1 text-[11px] font-mono text-violet-700 dark:text-violet-300 truncate bg-white/50 dark:bg-white/5 px-2 py-1.5 rounded-lg">{recruitmentShareUrl}</code>
-              <button onClick={handleCopyRecruitment} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-violet-500 text-white text-xs font-bold flex items-center gap-1">
-                {copiedRecruitment ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedRecruitment ? intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }) : intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copy' })}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Provider link */}
-        <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Briefcase className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-            <span className="text-sm font-bold text-teal-700 dark:text-teal-300">
-              <FormattedMessage id="chatter.training.links.provider" defaultMessage="Provider link" />
-            </span>
-            <span className="ml-auto text-sm font-black text-teal-600 dark:text-teal-400">${providerCallAmount}<span className="text-xs font-medium opacity-70"><FormattedMessage id="chatter.bar.perCall" defaultMessage="/call" /></span></span>
-          </div>
-          <p className="text-xs text-teal-600 dark:text-teal-400/80 leading-relaxed">
-            <FormattedMessage
-              id="chatter.training.links.providerDesc"
-              defaultMessage="Share this with lawyers or expat helpers who want to join the platform. When their clients call, you earn ${amount} per call (for 6 months)."
-              values={{ amount: providerCallAmount }}
-            />
-          </p>
-          {providerShareUrl && (
-            <div className="mt-2 flex items-center gap-2">
-              <code className="flex-1 text-[11px] font-mono text-teal-700 dark:text-teal-300 truncate bg-white/50 dark:bg-white/5 px-2 py-1.5 rounded-lg">{providerShareUrl}</code>
-              <button onClick={handleCopyProvider} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-teal-500 text-white text-xs font-bold flex items-center gap-1">
-                {copiedProvider ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedProvider ? intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }) : intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copy' })}
+              <button onClick={handleCopyLink} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold flex items-center gap-1">
+                {copiedLink ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedLink ? intl.formatMessage({ id: 'common.copied', defaultMessage: 'Copied!' }) : intl.formatMessage({ id: 'common.copy', defaultMessage: 'Copy' })}
               </button>
             </div>
           )}

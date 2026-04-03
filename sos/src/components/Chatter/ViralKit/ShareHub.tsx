@@ -3,7 +3,7 @@
  *
  * Central sharing interface accessible from FAB, sidebar, sticky bar.
  * Features:
- * - Toggle client/recruitment/provider link
+ * - Single unified /r/CODE link
  * - 10 platforms (2 rows × 4 + 2)
  * - 5 message categories
  * - Editable message preview
@@ -11,8 +11,8 @@
  * - Drag to dismiss (mobile)
  */
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useIntl } from "react-intl";
 import {
   X,
   Copy,
@@ -22,15 +22,10 @@ import {
   Download,
   Pencil,
   ChevronDown,
-  Users,
-  UserPlus,
-  Briefcase,
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
-import { useViralKit, type ShareLinkType, type MessageCategory } from "@/hooks/useViralKit";
-import { useChatterData } from "@/contexts/ChatterDataContext";
+import { useViralKit, type MessageCategory } from "@/hooks/useViralKit";
 import { lockScroll, unlockScroll } from "@/utils/scrollLockManager";
-import { UI, ANIMATION } from "@/components/Chatter/designTokens";
 import { FacebookShareGuide } from "./FacebookShareGuide";
 
 // ============================================================================
@@ -65,10 +60,6 @@ const PlatformIcon: React.FC<{ id: string; className?: string; style?: React.CSS
   }
 };
 
-// ============================================================================
-// LINK TYPE CONFIG — built dynamically inside component from admin config
-// ============================================================================
-
 // Category config
 const CATEGORY_CONFIG: Record<MessageCategory | "all", { emoji: string; labelId: string; defaultLabel: string }> = {
   all: { emoji: "", labelId: "chatter.share.category.all", defaultLabel: "Tous" },
@@ -86,36 +77,18 @@ const CATEGORY_CONFIG: Record<MessageCategory | "all", { emoji: string; labelId:
 interface ShareHubProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Initial link type to show */
-  initialLinkType?: ShareLinkType;
 }
 
-export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLinkType }) => {
+export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose }) => {
   const intl = useIntl();
   const t = (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage });
-  const { dashboardData } = useChatterData();
-  const cfg = dashboardData?.config;
-
-  // Build LINK_TYPES dynamically from admin config (never hardcoded)
-  const clientAmt = ((cfg?.commissionClientCallAmount ?? 300) / 100).toFixed(0);
-  const n1Amt = ((cfg?.commissionN1CallAmount ?? 100) / 100).toFixed(0);
-  const providerAmt = ((cfg?.commissionProviderCallAmount ?? 500) / 100).toFixed(0);
-
-  const LINK_TYPES = useMemo(() => [
-    { type: "client" as ShareLinkType, icon: <Users className="w-4 h-4" />, labelId: "chatter.share.hub.clientLink", defaultLabel: "Client", earningsId: "chatter.share.hub.clientEarnings", defaultEarnings: `$${clientAmt}/appel`, earningsAmount: clientAmt },
-    { type: "recruitment" as ShareLinkType, icon: <UserPlus className="w-4 h-4" />, labelId: "chatter.share.hub.recruitmentLink", defaultLabel: "Recrutement equipe", earningsId: "chatter.share.hub.recruitmentEarnings", defaultEarnings: `$${n1Amt}/appel`, earningsAmount: n1Amt },
-    { type: "provider" as ShareLinkType, icon: <Briefcase className="w-4 h-4" />, labelId: "chatter.share.hub.providerLink", defaultLabel: "Prestataire", earningsId: "chatter.share.hub.providerEarnings", defaultEarnings: `$${providerAmt}/appel`, earningsAmount: providerAmt },
-  ], [clientAmt, n1Amt, providerAmt]);
 
   const {
-    activeLinkType,
-    setActiveLinkType,
     activeLink,
     activeCode,
     copied,
     copyLink,
     shareOn,
-    shareMessages,
     filteredMessages,
     selectedCategory,
     setSelectedCategory,
@@ -134,13 +107,6 @@ export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLink
   const [showFacebookGuide, setShowFacebookGuide] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<HTMLDivElement>(null);
-
-  // Set initial link type
-  useEffect(() => {
-    if (initialLinkType && isOpen) {
-      setActiveLinkType(initialLinkType);
-    }
-  }, [initialLinkType, isOpen, setActiveLinkType]);
 
   // Lock scroll when open
   useEffect(() => {
@@ -180,11 +146,11 @@ export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLink
     const url = canvas.toDataURL("image/png");
     const link = document.createElement("a");
     link.href = url;
-    link.download = `sos-expat-${activeLinkType}-${activeCode}.png`;
+    link.download = `sos-expat-${activeCode}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [activeLinkType, activeCode]);
+  }, [activeCode]);
 
   const currentMessage = editingMessage ? editedText : selectedMessage;
 
@@ -244,30 +210,6 @@ export const ShareHub: React.FC<ShareHubProps> = ({ isOpen, onClose, initialLink
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? t("common.copied", "Copié !") : t("common.copy", "Copier")}
             </button>
-          </div>
-
-          {/* ── Link Type Toggle ──────────────────────────────── */}
-          <div>
-            <p className="text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">
-              {t("chatter.share.hub.whichLink", "Quel lien partager ?")}
-            </p>
-            <div className="flex gap-1 p-1 bg-white/[0.04] rounded-xl">
-              {LINK_TYPES.map((lt) => (
-                <button
-                  key={lt.type}
-                  onClick={() => setActiveLinkType(lt.type)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium rounded-lg transition-all ${ANIMATION.fast} ${
-                    activeLinkType === lt.type
-                      ? "bg-indigo-500/20 text-indigo-300 shadow-sm"
-                      : "text-white/40 hover:text-white/60"
-                  }`}
-                >
-                  {lt.icon}
-                  <span className="hidden sm:inline">{t(lt.labelId, lt.defaultLabel)}</span>
-                  <span className="sm:hidden">{intl.formatMessage({ id: lt.earningsId, defaultMessage: lt.defaultEarnings }, { amount: lt.earningsAmount })}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* ── Platforms ─────────────────────────────────────── */}

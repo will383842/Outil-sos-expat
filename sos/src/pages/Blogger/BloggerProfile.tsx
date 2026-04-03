@@ -277,9 +277,9 @@ const BloggerProfile: React.FC = () => {
               <FormattedMessage id="blogger.profile.affiliateLink" defaultMessage="Mon lien affilié" />
             </h2>
           </div>
-          {blogger.affiliateCodeClient && (
+          {(blogger.affiliateCode || blogger.affiliateCodeClient) && (
             <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
-              <UnifiedAffiliateLink code={blogger.affiliateCodeClient} />
+              <UnifiedAffiliateLink code={blogger.affiliateCode || blogger.affiliateCodeClient || ''} />
             </Suspense>
           )}
         </div>

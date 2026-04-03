@@ -581,9 +581,9 @@ const ChatterProfileContent: React.FC = () => {
           icon={<Copy className="w-5 h-5 text-indigo-500" />}
           defaultOpen={false}
         >
-          {chatter?.affiliateCodeClient && (
+          {(chatter?.affiliateCode || chatter?.affiliateCodeClient) && (
             <React.Suspense fallback={<div className="h-20 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
-              <UnifiedAffiliateLink code={chatter.affiliateCodeClient} />
+              <UnifiedAffiliateLink code={chatter.affiliateCode || chatter.affiliateCodeClient || ''} />
             </React.Suspense>
           )}
         </CollapsibleSection>

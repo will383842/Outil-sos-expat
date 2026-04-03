@@ -63,8 +63,8 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
   const steps = [
     {
       targetId: 'sticky-affiliate-bar',
-      title: intl.formatMessage({ id: 'chatter.onboarding.step1.title', defaultMessage: 'Here are your referral links!' }),
-      description: intl.formatMessage({ id: 'chatter.onboarding.step1.description', defaultMessage: 'Each person who calls via this link = {amount} for you. Copy it and share it everywhere.' }, { amount: callAmountRange }),
+      title: intl.formatMessage({ id: 'chatter.onboarding.step1.title', defaultMessage: 'Here is your Chatter link!' }),
+      description: intl.formatMessage({ id: 'chatter.onboarding.step1.description', defaultMessage: 'SOS-Expat helps expats reach a lawyer or helper by phone. Every call made via your link = {amount} for you. Copy it now!' }, { amount: callAmountRange }),
       action: (
         <button
           onClick={() => { onCopyLink(); handleNext(); }}
@@ -77,8 +77,8 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
     },
     {
       targetId: 'activation-checklist',
-      title: intl.formatMessage({ id: 'chatter.onboarding.step2.title', defaultMessage: 'Follow these 4 steps to earn!' }),
-      description: intl.formatMessage({ id: 'chatter.onboarding.step2.description', defaultMessage: "It's simple and fast! Each step brings you closer to your first earning." }),
+      title: intl.formatMessage({ id: 'chatter.onboarding.step2.title', defaultMessage: 'Your plan for the first commission' }),
+      description: intl.formatMessage({ id: 'chatter.onboarding.step2.description', defaultMessage: '4 simple steps to earn your first commission. Each step takes 1 click.' }),
       action: (
         <button
           onClick={handleNext}
@@ -91,8 +91,8 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
     },
     {
       targetId: 'share-buttons-section',
-      title: intl.formatMessage({ id: 'chatter.onboarding.step3.title', defaultMessage: 'Share your link now!' }),
-      description: intl.formatMessage({ id: 'chatter.onboarding.step3.description', defaultMessage: 'WhatsApp, Telegram, Facebook groups, expat forums, Reddit, Quora... The more you share, the more you earn.' }),
+      title: intl.formatMessage({ id: 'chatter.onboarding.step3.title', defaultMessage: 'Who to share your link with?' }),
+      description: intl.formatMessage({ id: 'chatter.onboarding.step3.description', defaultMessage: 'Target expats: WhatsApp/Telegram/Facebook groups for expats, expat forums, communities of people living abroad. The more targeted, the better it converts.' }),
       action: (
         <button
           onClick={() => { onShareLink(); handleClose(); }}

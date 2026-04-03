@@ -390,8 +390,21 @@ const ChatterLanding: React.FC = () => {
                 <FormattedMessage id="chatter.landing.hero.new.amount" defaultMessage="3000$+/mois" />
               </span>
               <br />
-              <span className="text-gray-200"><FormattedMessage id="chatter.landing.hero.new.line2" defaultMessage="en aidant les voyageurs" /></span>
+              <span className="text-gray-200"><FormattedMessage id="chatter.landing.hero.new.line2" defaultMessage="en recommandant SOS-Expat" /></span>
             </h1>
+
+            {/* What is a Chatter — explication claire avant les montants */}
+            <div className="bg-white/[0.06] border border-white/10 rounded-2xl px-5 py-4 mb-5 sm:mb-6 max-w-2xl mx-auto text-left">
+              <p className="text-sm sm:text-base text-white/90 leading-relaxed">
+                <FormattedMessage
+                  id="chatter.landing.hero.whatIs"
+                  defaultMessage="SOS-Expat connects expats with lawyers and helpers by phone. A Chatter shares their unique link in expat groups. Every call made through the link = {amount}$ earned automatically."
+                  values={{
+                    amount: <span className="font-bold text-amber-400">{rates.clientCallRange}</span>,
+                  }}
+                />
+              </p>
+            </div>
 
             <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 max-w-4xl mx-auto">
               <p className="text-center sm:text-base mb-4">

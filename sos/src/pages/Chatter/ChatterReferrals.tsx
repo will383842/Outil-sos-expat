@@ -47,7 +47,7 @@ export default function ChatterReferrals() {
 
 function ChatterReferralsContent() {
   const intl = useIntl();
-  const { dashboardData: chatterDashboard, recruitmentShareUrl, clientShareUrl } = useChatterData();
+  const { dashboardData: chatterDashboard, clientShareUrl } = useChatterData();
   const {
     stats,
     filleulsN1,
@@ -72,28 +72,28 @@ function ChatterReferralsContent() {
   const hasParrain = !!chatter?.recruitedBy;
 
   const handleCopyRecruitLink = useCallback(async () => {
-    if (!recruitmentShareUrl) return;
-    const success = await copyToClipboard(recruitmentShareUrl);
+    if (!clientShareUrl) return;
+    const success = await copyToClipboard(clientShareUrl);
     if (success) {
       navigator.vibrate?.(50);
       toast.success(intl.formatMessage({ id: 'chatter.linkCopied', defaultMessage: 'Lien de recrutement copie !' }));
     }
-  }, [recruitmentShareUrl, intl]);
+  }, [clientShareUrl, intl]);
 
   const handleShareRecruitLink = useCallback(async () => {
-    if (!recruitmentShareUrl) return;
+    if (!clientShareUrl) return;
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'SOS Expat - Devenir Chatter',
           text: intl.formatMessage({ id: 'chatter.referrals.shareText', defaultMessage: 'Gagnez de l\'argent en partageant des liens ! Inscrivez-vous :' }),
-          url: recruitmentShareUrl,
+          url: clientShareUrl,
         });
       } catch { /* cancelled */ }
     } else {
       handleCopyRecruitLink();
     }
-  }, [recruitmentShareUrl, intl, handleCopyRecruitLink]);
+  }, [clientShareUrl, intl, handleCopyRecruitLink]);
 
   // Next tier info
   const nextTier = useMemo(

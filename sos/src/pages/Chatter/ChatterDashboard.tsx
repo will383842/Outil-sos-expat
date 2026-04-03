@@ -361,7 +361,7 @@ const BelowFoldSection: React.FC = () => {
       </Suspense>
 
       {/* Image Bank */}
-      <ImageBankSection accent="emerald" />
+      <ImageBankSection accent="emerald" showDownload />
     </div>
   );
 };

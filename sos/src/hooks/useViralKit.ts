@@ -2,7 +2,7 @@
  * useViralKit Hook — Refonte 2026
  *
  * Viral marketing tools for chatters:
- * - 3 referral links (client, recruitment, provider)
+ * - Single unified /r/CODE link (replaces legacy 3-link pattern)
  * - Platform-optimized share messages via i18n
  * - 10 platforms: WhatsApp, Messenger, Telegram, SMS, Facebook, Twitter/X, LinkedIn, Email, Instagram, TikTok
  * - Client-side QR code (qrcode.react)
@@ -23,6 +23,7 @@ import { copyToClipboard as clipboardCopy } from "@/utils/clipboard";
 // TYPES
 // ============================================================================
 
+/** @deprecated Legacy type kept for backward compat — always resolves to unified link */
 export type ShareLinkType = "client" | "recruitment" | "provider";
 
 export type MessageCategory = "urgent" | "earnings" | "help" | "personal" | "professional";
@@ -223,33 +224,23 @@ export function useViralKit(): UseViralKitReturn {
   const [selectedCategory, setSelectedCategory] = useState<MessageCategory | "all">("all");
   const [selectedLanguage, setSelectedLanguage] = useState<"fr" | "en">("fr");
 
-  // ── Links ──────────────────────────────────────────────────────────────
+  // ── Unified Link (single /r/CODE for all purposes) ─────────────────
 
-  const clientLink = clientShareUrl || "";
-  const recruitmentLink = recruitmentShareUrl || "";
-  const providerLink = providerShareUrl || "";
-
-  const activeLink = useMemo(() => {
-    switch (activeLinkType) {
-      case "client": return clientLink;
-      case "recruitment": return recruitmentLink;
-      case "provider": return providerLink;
-    }
-  }, [activeLinkType, clientLink, recruitmentLink, providerLink]);
+  const unifiedLink = clientShareUrl || "";
+  const activeLink = unifiedLink;
 
   const activeCode = useMemo(() => {
     const chatter = dashboardData?.chatter;
     if (!chatter) return "";
-    switch (activeLinkType) {
-      case "client": return chatter.affiliateCodeClient || "";
-      case "recruitment": return chatter.affiliateCodeRecruitment || "";
-      case "provider": return chatter.affiliateCodeProvider || "";
-    }
-  }, [activeLinkType, dashboardData]);
+    return chatter.affiliateCode || chatter.affiliateCodeClient || chatter.affiliateCodeRecruitment || "";
+  }, [dashboardData]);
 
-  // Legacy compat
-  const referralCode = dashboardData?.chatter?.affiliateCodeRecruitment || "";
-  const referralLink = recruitmentLink;
+  // Legacy compat — all point to the same unified link
+  const clientLink = unifiedLink;
+  const recruitmentLink = unifiedLink;
+  const providerLink = unifiedLink;
+  const referralCode = activeCode;
+  const referralLink = unifiedLink;
 
   // ── Messages (i18n) ────────────────────────────────────────────────────
 

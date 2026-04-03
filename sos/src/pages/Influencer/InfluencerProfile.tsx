@@ -230,9 +230,9 @@ const InfluencerProfile: React.FC = () => {
               <FormattedMessage id="influencer.profile.affiliateLink" defaultMessage="Mon lien affilié" />
             </h2>
           </div>
-          {influencer?.affiliateCodeClient && (
+          {(influencer?.affiliateCode || influencer?.affiliateCodeClient) && (
             <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
-              <UnifiedAffiliateLink code={influencer.affiliateCodeClient} />
+              <UnifiedAffiliateLink code={influencer.affiliateCode || influencer.affiliateCodeClient || ''} />
             </Suspense>
           )}
         </div>

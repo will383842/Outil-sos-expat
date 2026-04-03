@@ -574,7 +574,7 @@ function CaptainTierProgress({
 function ChatterHowToEarn() {
   const intl = useIntl();
   const { user } = useAuth();
-  const { dashboardData, isLoading, clientShareUrl, recruitmentShareUrl } = useChatterData();
+  const { dashboardData, isLoading, clientShareUrl } = useChatterData();
   const [copied, setCopied] = useState(false);
 
   // Captain state
@@ -701,7 +701,7 @@ function ChatterHowToEarn() {
           />
 
           {/* Step 4: Optional - recruit provider */}
-          {recruitmentShareUrl && (
+          {clientShareUrl && (
             <Step
               number={4}
               icon={<Briefcase className="h-4 w-4" />}
@@ -858,7 +858,7 @@ function ChatterHowToEarn() {
       {/* ============================================================ */}
       {/* SECTION 4: PROVIDER RECRUITMENT */}
       {/* ============================================================ */}
-      <ProviderRecruitmentSection recruitmentShareUrl={recruitmentShareUrl} providerCallAmount={providerCallAmount} />
+      <ProviderRecruitmentSection recruitmentShareUrl={clientShareUrl} providerCallAmount={providerCallAmount} />
 
       {/* ============================================================ */}
       {/* SECTION 5: MONTHLY COMPETITION */}

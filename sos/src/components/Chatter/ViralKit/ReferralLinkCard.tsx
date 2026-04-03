@@ -1,13 +1,13 @@
 /**
  * ReferralLinkCard — 2026 Refonte
  *
- * Displays active referral link with toggle between client/recruitment/provider.
+ * Displays single unified /r/CODE referral link.
  * Gradient card with glassmorphism and indigo/violet accents.
  */
 
 import React from "react";
-import { Link, Copy, Check, ExternalLink, Users, UserPlus, Briefcase } from "lucide-react";
-import { useViralKit, formatReferralLink, type ShareLinkType } from "@/hooks/useViralKit";
+import { Link, Copy, Check, ExternalLink } from "lucide-react";
+import { useViralKit, formatReferralLink } from "@/hooks/useViralKit";
 import { useIntl } from "react-intl";
 import { UI, ANIMATION, SPACING } from "@/components/Chatter/designTokens";
 
@@ -15,20 +15,12 @@ interface ReferralLinkCardProps {
   variant?: "full" | "compact";
 }
 
-const LINK_OPTIONS: { type: ShareLinkType; icon: React.ElementType; labelId: string; defaultLabel: string }[] = [
-  { type: "client", icon: Users, labelId: "chatter.share.hub.clientLink", defaultLabel: "Client" },
-  { type: "recruitment", icon: UserPlus, labelId: "chatter.share.hub.recruitmentLink", defaultLabel: "Recrutement" },
-  { type: "provider", icon: Briefcase, labelId: "chatter.share.hub.providerLink", defaultLabel: "Provider" },
-];
-
 export const ReferralLinkCard = React.memo(function ReferralLinkCard({ variant = "full" }: ReferralLinkCardProps) {
   const intl = useIntl();
   const t = (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage });
   const {
     activeLink,
     activeCode,
-    activeLinkType,
-    setActiveLinkType,
     copied,
     copyLink,
     copyCode,
@@ -62,28 +54,6 @@ export const ReferralLinkCard = React.memo(function ReferralLinkCard({ variant =
         <span className="font-bold text-lg">
           {t("chatter.referrals.yourReferralLink", "Votre lien")}
         </span>
-      </div>
-
-      {/* Link type toggle */}
-      <div className="flex gap-1 p-1 bg-white/10 backdrop-blur-sm rounded-xl mb-4">
-        {LINK_OPTIONS.map((opt) => {
-          const Icon = opt.icon;
-          const isActive = activeLinkType === opt.type;
-          return (
-            <button
-              key={opt.type}
-              onClick={() => setActiveLinkType(opt.type)}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium rounded-lg transition-all ${ANIMATION.fast} ${
-                isActive
-                  ? "bg-white/20 text-white shadow-sm"
-                  : "text-white/50 hover:text-white/70"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {t(opt.labelId, opt.defaultLabel)}
-            </button>
-          );
-        })}
       </div>
 
       {/* Link input with copy */}

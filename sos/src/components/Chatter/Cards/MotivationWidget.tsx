@@ -56,8 +56,9 @@ interface MotivationWidgetProps {
   totalChatters?: number;
   bestDayOfWeek?: string;
   currentStreak?: number;
-  // Share URLs
+  // Share URL (unified)
   clientShareUrl?: string;
+  /** @deprecated Use clientShareUrl — kept for backward compat */
   recruitmentShareUrl?: string;
   // Event handlers
   onCopyLink?: (url: string) => void;

@@ -366,7 +366,7 @@ const BloggerDashboard: React.FC = () => {
         </div>
 
         {/* Image Bank */}
-        <ImageBankSection accent="purple" />
+        <ImageBankSection accent="purple" showDownload />
       </div>
     </BloggerDashboardLayout>
   );
