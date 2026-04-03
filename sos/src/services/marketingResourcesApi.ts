@@ -81,6 +81,7 @@ async function apiCall<T>(
 export interface PublicPressResource {
   id: string;
   category: string;
+  language: string | null;
   type: string;
   name: string;
   description: string | null;

@@ -43,6 +43,7 @@ import {
 interface PressResource {
   id: string; type: string; name: string; description: string | null;
   file_url: string | null; file_format: string | null; file_size: number | null; category: string;
+  language: string | null;
 }
 
 interface PressRelease {
@@ -313,28 +314,46 @@ const Press: React.FC = () => {
   const brandGuidelines = resources.filter((r) => r.category === "press_brand_guidelines");
   const kits = resources.filter((r) => r.category === "press_kit");
 
-  // Group press_kit resources by document (pair PDF + HTML by base URL)
+  // Group press_kit resources by document for the selected language, with FR fallback
+  // Each "group" = one document (paired HTML + PDF if available)
   const kitGroups = useMemo(() => {
-    const groups: Record<string, { title: string; description: string | null; htmlRes?: PressResource; pdfRes?: PressResource }> = {};
+    const targetLang = resourceLang;
+    // Build a map: baseKey → { html, pdf } for target lang, then fallback to FR
+    const byLang: Record<string, { htmlRes?: PressResource; pdfRes?: PressResource; title: string; description: string | null }> = {};
+
+    // Pass 1: collect all kits by language + base key
+    const byLangAll: Record<string, Record<string, { htmlRes?: PressResource; pdfRes?: PressResource }>> = {};
     kits.forEach((r) => {
-      const baseKey = (r.file_url ?? r.id).replace(/\.(pdf|html?)$/i, "");
-      if (!groups[baseKey]) {
-        groups[baseKey] = {
-          title: r.name.replace(/\s*—\s*Version web\s*/i, " — ").replace(/\s*—\s*Web version\s*/i, " — ").trim(),
-          description: r.description,
-        };
-      }
+      const lang = r.language ?? "fr";
+      const baseKey = (r.file_url ?? r.id).replace(/\.(pdf|html?)$/i, "").replace(/-[a-z]{2}$/, "");
+      if (!byLangAll[lang]) byLangAll[lang] = {};
+      if (!byLangAll[lang][baseKey]) byLangAll[lang][baseKey] = {};
       const fmt = (r.file_format ?? "").toLowerCase();
-      if (fmt === "html") groups[baseKey].htmlRes = r;
-      else if (fmt === "pdf") {
-        groups[baseKey].pdfRes = r;
-        // prefer PDF title/description as canonical (no "web" qualifier)
-        groups[baseKey].title = r.name;
-        groups[baseKey].description = r.description;
-      }
+      if (fmt === "html") byLangAll[lang][baseKey].htmlRes = r;
+      else if (fmt === "pdf") byLangAll[lang][baseKey].pdfRes = r;
     });
-    return Object.values(groups);
-  }, [kits]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Pass 2: for each base document, pick target lang → fallback EN → fallback FR
+    const allBaseKeys = new Set<string>();
+    Object.values(byLangAll).forEach((langMap) => Object.keys(langMap).forEach((k) => allBaseKeys.add(k)));
+
+    allBaseKeys.forEach((baseKey) => {
+      const chosen =
+        byLangAll[targetLang]?.[baseKey] ??
+        byLangAll["en"]?.[baseKey] ??
+        byLangAll["fr"]?.[baseKey] ??
+        {};
+      const canonical = chosen.pdfRes ?? chosen.htmlRes;
+      if (!canonical) return;
+      byLang[baseKey] = {
+        ...chosen,
+        title: canonical.name,
+        description: canonical.description,
+      };
+    });
+
+    return Object.values(byLang);
+  }, [kits, resourceLang]); // eslint-disable-line react-hooks/exhaustive-deps
   const spokespersons = resources.filter((r) => r.category === "press_spokesperson");
   const bRoll = resources.filter((r) => r.category === "press_b_roll");
   const dataRes = resources.filter((r) => r.category === "press_data");
@@ -685,7 +704,28 @@ const Press: React.FC = () => {
             {kitGroups.length > 0 && (
               <section className="py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <SectionTitle id="press-kit" icon={FolderOpen} title={t("press.section.pressKit")} subtitle={t("press.section.pressKitDesc")} />
+                  <div className="flex items-start justify-between gap-4 mb-12 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-red-100">
+                          <FolderOpen className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h2 id="press-kit" className="scroll-mt-24 text-2xl sm:text-3xl font-bold text-gray-900">{t("press.section.pressKit")}</h2>
+                      </div>
+                      <p className="ml-16 text-base text-gray-500">{t("press.section.pressKitDesc")}</p>
+                    </div>
+                    {/* Language switcher — same as press releases */}
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {LANG_OPTIONS.map((opt) => (
+                        <button key={opt.code} onClick={() => setResourceLang(opt.code)}
+                          title={opt.label}
+                          className={`inline-flex items-center gap-1.5 px-2.5 min-h-[44px] rounded-lg text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${resourceLang === opt.code ? "bg-red-600 border-red-500 text-white" : "bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300"}`}>
+                          <span>{opt.flag}</span>
+                          <span className="hidden sm:inline">{opt.code.toUpperCase()}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
                     {kitGroups.map((group, idx) => {
                       const htmlUrl = group.htmlRes?.file_url ?? null;
