@@ -110,7 +110,13 @@ function LogoCard({ resource, onDownload }: { resource: PressResource; onDownloa
   return (
     <div className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
       <div className="relative h-24 flex items-center justify-center overflow-hidden" style={checkerStyle}>
-        <img src={resource.file_url!} alt={resource.name} className="h-full w-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        {resource.file_url && isImageFormat(resource.file_format) ? (
+          <img src={resource.file_url} alt={resource.name} className="h-full w-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        ) : (
+          <div className="w-12 h-12 rounded-xl bg-white/60 flex items-center justify-center">
+            <FileText className="w-6 h-6 text-gray-400" />
+          </div>
+        )}
         {resource.file_format && (
           <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded uppercase tracking-wide">
             {resource.file_format}

@@ -120,7 +120,7 @@ const TEXTS: Record<string, { title: string; desc: string; cta: string; download
 };
 
 // 8 preview images — thumb.webp for display, original.webp for download
-// Images served from blog.life-expat.com with CORS headers for sos-expat.com
+// Images served from sos-expat.com with CORS headers
 const PREVIEW_IMAGES = [
   { id: 1, src: "https://sos-expat.com/storage/image-bank/ea7e67d5-404c-4dd1-bee1-61ef70a0c7b9/thumb.webp" },
   { id: 2, src: "https://sos-expat.com/storage/image-bank/1f7b33b2-618e-40ed-9e47-878e5ec1ac13/thumb.webp" },
