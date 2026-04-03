@@ -13,6 +13,7 @@ import { useGroupAdmin } from '@/hooks/useGroupAdmin';
 import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdminDashboardLayout';
 import { WhatsAppBanner } from '@/whatsapp-groups';
 import SEOHead from '@/components/layout/SEOHead';
+import ImageBankSection from '@/components/ImageBankSection';
 import {
   DollarSign,
   Users,
@@ -252,7 +253,7 @@ const GroupAdminDashboard: React.FC = () => {
                 <FormattedMessage id="groupAdmin.dashboard.affiliateLinks" defaultMessage="Your Affiliate Links" />
               </h2>
               <UnifiedLinkWithEarnings
-                code={(profile as any).affiliateCode || profile.affiliateCodeClient || ''}
+                code={profile.affiliateCode || profile.affiliateCodeClient || ''}
                 role="groupAdmin"
                 config={config}
               />
@@ -405,6 +406,9 @@ const GroupAdminDashboard: React.FC = () => {
               </div>
             </div>
           )}
+
+        {/* Image Bank */}
+        <ImageBankSection accent="blue" />
       </div>
     </GroupAdminDashboardLayout>
   );

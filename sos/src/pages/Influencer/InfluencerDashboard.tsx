@@ -24,6 +24,7 @@ import { useInfluencer } from '@/hooks/useInfluencer';
 import type { InfluencerCommission } from '@/types/influencer';
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import { WhatsAppBanner } from '@/whatsapp-groups';
+import ImageBankSection from '@/components/ImageBankSection';
 
 // ============================================================================
 // CRITICAL ABOVE-FOLD COMPONENTS - Loaded synchronously
@@ -551,7 +552,7 @@ const InfluencerDashboard: React.FC = () => {
               <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
             </h2>
             <UnifiedLinkWithEarnings
-              code={(influencer as any)?.affiliateCode || influencer?.affiliateCodeClient || ''}
+              code={influencer?.affiliateCode || influencer?.affiliateCodeClient || ''}
               role="influencer"
               config={config}
             />
@@ -714,6 +715,9 @@ const InfluencerDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Image Bank */}
+        <ImageBankSection accent="pink" />
 
       </div>
     </InfluencerDashboardLayout>

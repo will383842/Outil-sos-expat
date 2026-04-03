@@ -197,7 +197,7 @@ export function useGroupAdmin(): UseGroupAdminReturn {
 
   // Unified share URL — single /r/CODE link for all purposes
   const shareUrl = useMemo(() => {
-    const code = (profile as any)?.affiliateCode || profile?.affiliateCodeClient;
+    const code = profile?.affiliateCode || profile?.affiliateCodeClient;
     if (!code) return '';
     return `${window.location.origin}/r/${code}`;
   }, [profile]);

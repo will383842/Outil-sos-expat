@@ -21,7 +21,7 @@ const StickyAffiliateBar: React.FC = () => {
 
   const chatter = dashboardData?.chatter;
   const config = dashboardData?.config;
-  const affiliateCode = (chatter as any)?.affiliateCode || chatter?.affiliateCodeClient || '';
+  const affiliateCode = chatter?.affiliateCode || chatter?.affiliateCodeClient || '';
   const shareUrl = affiliateCode ? `${window.location.origin}/r/${affiliateCode}` : '';
   const isCaptain = !!(chatter as any)?.isCaptain;
 

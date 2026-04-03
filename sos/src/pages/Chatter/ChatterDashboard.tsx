@@ -35,6 +35,7 @@ import DashboardSkeleton from '@/components/Chatter/Cards/DashboardSkeleton';
 import { WhatsAppBanner } from '@/whatsapp-groups';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '@/utils/clipboard';
+import ImageBankSection from '@/components/ImageBankSection';
 
 // Unified affiliate dashboard (Phase 8)
 const UnifiedAffiliateDashboard = lazy(() => import('@/components/unified/UnifiedAffiliateDashboard'));
@@ -358,6 +359,9 @@ const BelowFoldSection: React.FC = () => {
       <Suspense fallback={null}>
         <LazyMotivation />
       </Suspense>
+
+      {/* Image Bank */}
+      <ImageBankSection accent="emerald" />
     </div>
   );
 };

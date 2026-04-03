@@ -193,7 +193,7 @@ function ChatterReferralsContent() {
         <div className="mb-4">
           <Suspense fallback={<div className="h-32 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />}>
             <UnifiedLinkWithEarnings
-              code={(chatter as any)?.affiliateCode || chatter?.affiliateCodeClient || ''}
+              code={chatter?.affiliateCode || chatter?.affiliateCodeClient || ''}
               role={(chatter as any)?.isCaptain ? 'captainChatter' : 'chatter'}
               config={config}
               compact

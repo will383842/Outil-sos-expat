@@ -31,6 +31,7 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 import { snapshotLockedRates } from "../../lib/planResolver";
 import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
+import { resolveCode } from "../../unified/codeResolver";
 
 // ============================================================================
 // VALIDATION
@@ -289,16 +290,40 @@ export const registerBlogger = onCall(
         }
 
         if (!referralExpired) {
-          const recruiterQuery = await db
-            .collection("bloggers")
-            .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
-            .where("status", "==", "active")
-            .limit(1)
-            .get();
+          // Resolve code via unified resolver (searches all collections & code formats)
+          const codeResolution = await resolveCode(recruitmentCode);
 
-          if (!recruiterQuery.empty) {
-            recruitedBy = recruiterQuery.docs[0].id;
-            recruitedByCode = recruitmentCode.toUpperCase();
+          if (codeResolution) {
+            const recruiterId = codeResolution.userId;
+
+            // Verify recruiter is still active
+            const recruiterDoc = await db.collection("bloggers").doc(recruiterId).get();
+            const recruiterData = recruiterDoc.data();
+            const isRecruiterActive = recruiterDoc.exists && recruiterData?.status === "active";
+
+            // Also check users collection if not found in bloggers (cross-role recruitment)
+            let isCrossRoleActive = false;
+            if (!isRecruiterActive) {
+              const recruiterUserDoc = await db.collection("users").doc(recruiterId).get();
+              isCrossRoleActive = recruiterUserDoc.exists && recruiterUserDoc.data()?.status !== "suspended" && recruiterUserDoc.data()?.status !== "banned";
+            }
+
+            if (!isRecruiterActive && !isCrossRoleActive) {
+              logger.warn("[registerBlogger] Recruiter found but not active", {
+                uid,
+                recruiterId,
+                resolvedVia: codeResolution.resolvedVia,
+              });
+            } else {
+              recruitedBy = recruiterId;
+              recruitedByCode = recruitmentCode.toUpperCase();
+              logger.info("[registerBlogger] Recruiter resolved via unified system", {
+                uid,
+                recruiterId,
+                resolvedVia: codeResolution.resolvedVia,
+                codeType: codeResolution.codeType,
+              });
+            }
           }
         }
       }

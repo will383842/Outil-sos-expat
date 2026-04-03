@@ -472,7 +472,7 @@ const InfluencerReferrals: React.FC = () => {
             {/* Unified Affiliate Link */}
             <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
               <UnifiedLinkWithEarnings
-                code={(dashboardData?.influencer as any)?.affiliateCode || dashboardData?.influencer?.affiliateCodeClient || ''}
+                code={dashboardData?.influencer?.affiliateCode || dashboardData?.influencer?.affiliateCodeClient || ''}
                 role="influencer"
                 config={dashboardData?.config}
                 compact

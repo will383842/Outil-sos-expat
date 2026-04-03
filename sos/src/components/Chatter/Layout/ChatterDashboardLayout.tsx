@@ -3,7 +3,7 @@
  * - Profile + Level badge with glow
  * - Available Balance widget (orange/green/blue states)
  * - Piggy Bank mini progress
- * - 3 Affiliate links (client + recruitment + provider)
+ * - Unified affiliate link (single /r/CODE link)
  * - 7-tab navigation (+ captain conditional)
  * - Level progression bar
  * - Logout
@@ -80,12 +80,8 @@ interface SidebarContentProps {
   minimumWithdrawal: number;
   pendingWithdrawalId: string | null;
   piggyBank: { totalPending: number; unlockThreshold: number; progressPercent: number; isUnlocked?: boolean; amountToUnlock?: number } | null;
-  clientCode: string;
-  recruitmentCode: string;
-  providerCode: string;
-  clientShareUrl: string;
-  recruitmentShareUrl: string;
-  providerShareUrl: string;
+  affiliateCode: string;
+  shareUrl: string;
   commissionClientCall: number;
   commissionN1Call: number;
   commissionProviderCall: number;
@@ -104,7 +100,7 @@ type NavItem = { key: string; icon: React.ReactNode; route: string; labels: Reco
 const SidebarContentInner: React.FC<SidebarContentProps> = ({
   photo, fullName, firstName, level, levelProgress,
   availableBalance, canWithdraw, minimumWithdrawal, pendingWithdrawalId,
-  piggyBank, clientCode, recruitmentCode, providerCode, clientShareUrl, recruitmentShareUrl, providerShareUrl,
+  piggyBank, affiliateCode, shareUrl,
   commissionClientCall, commissionN1Call, commissionProviderCall,
   drawerItems, currentKey, language, loggingOut,
   onNavigate, onLogout, onWithdraw, intl,
@@ -119,26 +115,25 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
   const hasPendingWithdrawal = !!pendingWithdrawalId;
   const belowThreshold = !canWithdraw && !hasPendingWithdrawal;
 
-  const [copiedType, setCopiedType] = useState<'client' | 'recruitment' | 'provider' | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const handleCopy = useCallback(async (url: string, type: 'client' | 'recruitment' | 'provider') => {
-    if (!url?.trim()) return;
-    const ok = await copyToClipboard(url);
+  const handleCopy = useCallback(async () => {
+    if (!shareUrl?.trim()) return;
+    const ok = await copyToClipboard(shareUrl);
     if (ok) {
-      setCopiedType(type);
-      setTimeout(() => setCopiedType(null), 2000);
-      toast.success('Lien copié !');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success(intl.formatMessage({ id: 'unified.link.copied', defaultMessage: 'Lien copié !' }));
     }
-  }, []);
+  }, [shareUrl, intl]);
 
-  const handleShare = useCallback(async (url: string) => {
+  const handleShare = useCallback(async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: 'SOS Expat', url }); } catch { /* cancelled */ }
+      try { await navigator.share({ title: 'SOS Expat', url: shareUrl }); } catch { /* cancelled */ }
     } else {
-      const ok = await copyToClipboard(url);
-      if (ok) toast.success('Lien copié !');
+      await handleCopy();
     }
-  }, []);
+  }, [shareUrl, handleCopy]);
 
   return (
     <div className="flex flex-col h-full">
@@ -270,129 +265,62 @@ const SidebarContentInner: React.FC<SidebarContentProps> = ({
         </div>
       )}
 
-      {/* ── 4. Affiliate Links ── */}
-      <div className="px-4 pb-3 space-y-2">
-        {/* Client link */}
+      {/* ── 4. Unified Affiliate Link ── */}
+      <div className="px-4 pb-3">
         <div className="rounded-xl p-3 bg-emerald-500/15 border border-emerald-500/25">
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-2 mb-2">
+            <Share2 className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
-              <FormattedMessage id="chatter.sidebar.clientLink" defaultMessage="Lien client" />
+              <FormattedMessage id="chatter.sidebar.affiliateLink" defaultMessage="Ton lien unique" />
             </span>
-            {commissionClientCall > 0 && (
-              <span className="text-[11px] font-bold text-emerald-400">
-                <FormattedMessage
-                  id="chatter.sidebar.perCall"
-                  defaultMessage="{amount}/appel"
-                  values={{ amount: `$${formatAmount(commissionClientCall)}` }}
-                />
-              </span>
-            )}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 mb-2.5">
             <code className="flex-1 text-xs font-mono font-semibold text-emerald-200 truncate bg-emerald-500/10 px-2.5 py-1.5 rounded-lg">
-              {clientCode || '---'}
+              {affiliateCode || '---'}
             </code>
             <button
-              onClick={() => handleCopy(clientShareUrl, 'client')}
+              onClick={handleCopy}
               className={`p-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
-                copiedType === 'client'
+                copied
                   ? 'bg-emerald-500/30 text-emerald-200 scale-110'
                   : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 active:scale-95'
               }`}
-              aria-label={copiedType === 'client' ? 'Copied' : 'Copy'}
+              aria-label={copied ? 'Copied' : 'Copy'}
             >
-              {copiedType === 'client' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
             <button
-              onClick={() => handleShare(clientShareUrl)}
+              onClick={handleShare}
               className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
               aria-label="Share"
             >
               <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
-
-        {/* Recruitment link */}
-        <div className="rounded-xl p-3 bg-violet-500/15 border border-violet-500/25">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold text-violet-300 uppercase tracking-wider">
-              <FormattedMessage id="chatter.sidebar.recruitLink" defaultMessage="Lien recrutement équipe" />
-            </span>
-            {commissionN1Call > 0 && (
-              <span className="text-[11px] font-bold text-violet-400">
-                <FormattedMessage
-                  id="chatter.sidebar.perCall"
-                  defaultMessage="{amount}/appel"
-                  values={{ amount: `$${formatAmount(commissionN1Call)}` }}
-                />
-              </span>
+          {/* Earnings breakdown */}
+          <div className="space-y-1">
+            {commissionClientCall > 0 && (
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-emerald-300/70"><FormattedMessage id="chatter.sidebar.earnClient" defaultMessage="Appel client" /></span>
+                <span className="font-bold text-emerald-300">${formatAmount(commissionClientCall)}</span>
+              </div>
             )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <code className="flex-1 text-xs font-mono font-semibold text-violet-200 truncate bg-violet-500/10 px-2.5 py-1.5 rounded-lg">
-              {recruitmentCode || '---'}
-            </code>
-            <button
-              onClick={() => handleCopy(recruitmentShareUrl, 'recruitment')}
-              className={`p-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
-                copiedType === 'recruitment'
-                  ? 'bg-violet-500/30 text-violet-200 scale-110'
-                  : 'bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 active:scale-95'
-              }`}
-              aria-label={copiedType === 'recruitment' ? 'Copied' : 'Copy'}
-            >
-              {copiedType === 'recruitment' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-            <button
-              onClick={() => handleShare(recruitmentShareUrl)}
-              className="p-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-              aria-label="Share"
-            >
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Provider link */}
-        <div className="rounded-xl p-3 bg-teal-500/15 border border-teal-500/25">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold text-teal-300 uppercase tracking-wider">
-              <FormattedMessage id="chatter.sidebar.providerLink" defaultMessage="Lien prestataire" />
-            </span>
             {commissionProviderCall > 0 && (
-              <span className="text-[11px] font-bold text-teal-400">
-                <FormattedMessage
-                  id="chatter.sidebar.perCall"
-                  defaultMessage="{amount}/appel"
-                  values={{ amount: `$${formatAmount(commissionProviderCall)}` }}
-                />
-              </span>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-emerald-300/70"><FormattedMessage id="chatter.sidebar.earnProvider" defaultMessage="Prestataire recruté" /></span>
+                <span className="font-bold text-emerald-300">${formatAmount(commissionProviderCall)}</span>
+              </div>
+            )}
+            {commissionN1Call > 0 && (
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-emerald-300/70"><FormattedMessage id="chatter.sidebar.earnTeam" defaultMessage="Appel équipe N1" /></span>
+                <span className="font-bold text-emerald-300">${formatAmount(commissionN1Call)}</span>
+              </div>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <code className="flex-1 text-xs font-mono font-semibold text-teal-200 truncate bg-teal-500/10 px-2.5 py-1.5 rounded-lg">
-              {providerCode || '---'}
-            </code>
-            <button
-              onClick={() => handleCopy(providerShareUrl, 'provider')}
-              className={`p-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center ${
-                copiedType === 'provider'
-                  ? 'bg-teal-500/30 text-teal-200 scale-110'
-                  : 'bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 active:scale-95'
-              }`}
-              aria-label={copiedType === 'provider' ? 'Copied' : 'Copy'}
-            >
-              {copiedType === 'provider' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-            <button
-              onClick={() => handleShare(providerShareUrl)}
-              className="p-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
-              aria-label="Share"
-            >
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <p className="text-[9px] text-emerald-400/50 mt-2">
+            <FormattedMessage id="chatter.sidebar.oneLinkInfo" defaultMessage="Un seul lien pour tout : clients, recrutement, prestataires" />
+          </p>
         </div>
       </div>
 
@@ -479,7 +407,7 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
   const [showShareHub, setShowShareHub] = useState(false);
 
   // Captain status from Context (no more getDoc!)
-  const { dashboardData, clientShareUrl, recruitmentShareUrl, providerShareUrl, canWithdraw, minimumWithdrawal, refreshDashboard } = useChatterData();
+  const { dashboardData, clientShareUrl, canWithdraw, minimumWithdrawal, refreshDashboard } = useChatterData();
   const isCaptain = dashboardData?.chatter?.role === 'captainChatter';
 
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
@@ -634,12 +562,8 @@ const LayoutInner: React.FC<ChatterDashboardLayoutProps> = ({ children, activeKe
     minimumWithdrawal,
     pendingWithdrawalId: chatter?.pendingWithdrawalId || null,
     piggyBank: dashboardData?.piggyBank || null,
-    clientCode: chatter?.affiliateCodeClient || '',
-    recruitmentCode: chatter?.affiliateCodeRecruitment || '',
-    providerCode: chatter?.affiliateCodeProvider || '',
-    clientShareUrl,
-    recruitmentShareUrl,
-    providerShareUrl,
+    affiliateCode: chatter?.affiliateCode || chatter?.affiliateCodeClient || '',
+    shareUrl: clientShareUrl,
     commissionClientCall: dashboardData?.config?.commissionClientCallAmount || 0,
     commissionN1Call: dashboardData?.config?.commissionN1CallAmount || 0,
     commissionProviderCall: dashboardData?.config?.commissionProviderCallAmount || 0,

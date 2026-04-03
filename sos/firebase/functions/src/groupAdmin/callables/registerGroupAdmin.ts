@@ -27,6 +27,7 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 import { snapshotLockedRates } from "../../lib/planResolver";
 import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
+import { resolveCode } from "../../unified/codeResolver";
 
 // Supported languages validation (must match app navigation languages)
 const VALID_LANGUAGES: SupportedGroupAdminLanguage[] = [
@@ -324,16 +325,40 @@ export const registerGroupAdmin = onCall(
         }
 
         if (!referralExpired) {
-          const recruiterQuery = await db
-            .collection("group_admins")
-            .where("affiliateCodeRecruitment", "==", input.recruitmentCode.toUpperCase())
-            .where("status", "==", "active")
-            .limit(1)
-            .get();
+          // Resolve code via unified resolver (searches all collections & code formats)
+          const codeResolution = await resolveCode(input.recruitmentCode);
 
-          if (!recruiterQuery.empty) {
-            recruitedBy = recruiterQuery.docs[0].id;
-            recruitedByCode = input.recruitmentCode.toUpperCase();
+          if (codeResolution) {
+            const recruiterId = codeResolution.userId;
+
+            // Verify recruiter is still active
+            const recruiterDoc = await db.collection("group_admins").doc(recruiterId).get();
+            const recruiterData = recruiterDoc.data();
+            const isRecruiterActive = recruiterDoc.exists && recruiterData?.status === "active";
+
+            // Also check users collection if not found in group_admins (cross-role recruitment)
+            let isCrossRoleActive = false;
+            if (!isRecruiterActive) {
+              const recruiterUserDoc = await db.collection("users").doc(recruiterId).get();
+              isCrossRoleActive = recruiterUserDoc.exists && recruiterUserDoc.data()?.status !== "suspended" && recruiterUserDoc.data()?.status !== "banned";
+            }
+
+            if (!isRecruiterActive && !isCrossRoleActive) {
+              logger.warn("[registerGroupAdmin] Recruiter found but not active", {
+                userId,
+                recruiterId,
+                resolvedVia: codeResolution.resolvedVia,
+              });
+            } else {
+              recruitedBy = recruiterId;
+              recruitedByCode = input.recruitmentCode.toUpperCase();
+              logger.info("[registerGroupAdmin] Recruiter resolved via unified system", {
+                userId,
+                recruiterId,
+                resolvedVia: codeResolution.resolvedVia,
+                codeType: codeResolution.codeType,
+              });
+            }
           }
         }
       }

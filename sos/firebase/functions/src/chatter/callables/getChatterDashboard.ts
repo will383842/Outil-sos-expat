@@ -387,6 +387,7 @@ export const getChatterDashboard = onCall(
           platforms: chatter.platforms,
           bio: chatter.bio,
           status: chatter.status,
+          affiliateCode: chatter.affiliateCode || chatter.affiliateCodeClient,
           affiliateCodeClient: chatter.affiliateCodeClient,
           affiliateCodeRecruitment: chatter.affiliateCodeRecruitment,
           affiliateCodeProvider: affiliateCodeProvider,

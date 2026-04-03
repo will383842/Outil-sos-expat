@@ -33,6 +33,7 @@ import { ALLOWED_ORIGINS } from "../../lib/functionConfigs";
 import { snapshotLockedRates } from "../../lib/planResolver";
 import { checkRateLimit, RATE_LIMITS } from "../../lib/rateLimiter";
 import { generateUnifiedAffiliateCode } from "../../unified/codeGenerator";
+import { resolveCode } from "../../unified/codeResolver";
 
 // Supported languages validation
 const VALID_LANGUAGES: SupportedChatterLanguage[] = [
@@ -354,23 +355,37 @@ export const registerChatter = onCall(
         }
 
         if (!referralExpired) {
-          const recruiterQuery = await db
-            .collection("chatters")
-            .where("affiliateCodeRecruitment", "==", input.recruitmentCode.toUpperCase())
-            .where("status", "==", "active")
-            .limit(1)
-            .get();
+          // Resolve code via unified resolver (searches all collections & code formats)
+          const codeResolution = await resolveCode(input.recruitmentCode);
 
-          if (!recruiterQuery.empty) {
-            const recruiterId = recruiterQuery.docs[0].id;
+          if (codeResolution) {
+            const recruiterId = codeResolution.userId;
 
-            // SECURITY: Block self-referral to prevent fraudulent commission generation
-            if (recruiterId === userId) {
+            // Verify recruiter is still active
+            const recruiterDoc = await db.collection("chatters").doc(recruiterId).get();
+            const recruiterData = recruiterDoc.data();
+            const isRecruiterActive = recruiterDoc.exists && recruiterData?.status === "active";
+
+            // Also check users collection if not found in chatters (cross-role recruitment)
+            let isCrossRoleActive = false;
+            if (!isRecruiterActive) {
+              const recruiterUserDoc = await db.collection("users").doc(recruiterId).get();
+              isCrossRoleActive = recruiterUserDoc.exists && recruiterUserDoc.data()?.status !== "suspended" && recruiterUserDoc.data()?.status !== "banned";
+            }
+
+            if (!isRecruiterActive && !isCrossRoleActive) {
+              logger.warn("[registerChatter] Recruiter found but not active", {
+                userId,
+                recruiterId,
+                resolvedVia: codeResolution.resolvedVia,
+              });
+              referralWarnings.push("REFERRAL_CODE_INVALID");
+            } else if (recruiterId === userId) {
+              // SECURITY: Block self-referral to prevent fraudulent commission generation
               logger.warn("[registerChatter] Self-recruitment attempt blocked", {
                 userId,
                 code: input.recruitmentCode,
               });
-              // P1-6 FIX: Inform user about self-referral
               referralWarnings.push("SELF_REFERRAL");
             } else {
               // P2-02 FIX: Check for circular referral chain before accepting
@@ -382,11 +397,16 @@ export const registerChatter = onCall(
                     recruiterId,
                     chain: circularCheck.chain,
                   });
-                  // P1-6 FIX: Inform user about circular referral
                   referralWarnings.push("CIRCULAR_REFERRAL");
                 } else {
                   recruitedBy = recruiterId;
                   recruitedByCode = input.recruitmentCode.toUpperCase();
+                  logger.info("[registerChatter] Recruiter resolved via unified system", {
+                    userId,
+                    recruiterId,
+                    resolvedVia: codeResolution.resolvedVia,
+                    codeType: codeResolution.codeType,
+                  });
                 }
               } catch (circularError) {
                 // If circular check fails, still accept the referral (don't block registration)
@@ -398,7 +418,7 @@ export const registerChatter = onCall(
               }
             }
           } else {
-            // P1-6 FIX: Code not found or recruiter inactive
+            // Code not found in any collection
             referralWarnings.push("REFERRAL_CODE_INVALID");
           }
         }

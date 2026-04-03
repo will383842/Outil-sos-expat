@@ -401,7 +401,7 @@ export function useInfluencer(): UseInfluencerReturn {
 
   // Unified share URL — single /r/CODE link for all purposes
   const shareUrl = useMemo(() => {
-    const code = (dashboardData?.influencer as any)?.affiliateCode || dashboardData?.influencer?.affiliateCodeClient;
+    const code = dashboardData?.influencer?.affiliateCode || dashboardData?.influencer?.affiliateCodeClient;
     if (!code) return "";
     return `${window.location.origin}/r/${code}`;
   }, [dashboardData]);

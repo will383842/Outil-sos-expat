@@ -394,7 +394,7 @@ export function useChatter(): UseChatterReturn {
 
   // Unified share URL — single /r/CODE link for all purposes
   const shareUrl = useMemo(() => {
-    const code = (dashboardData?.chatter as any)?.affiliateCode || dashboardData?.chatter?.affiliateCodeClient;
+    const code = dashboardData?.chatter?.affiliateCode || dashboardData?.chatter?.affiliateCodeClient;
     if (!code) return "";
     return `${window.location.origin}/r/${code}`;
   }, [dashboardData]);

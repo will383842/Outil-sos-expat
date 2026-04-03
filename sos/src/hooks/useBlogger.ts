@@ -414,7 +414,7 @@ export function useBlogger(): UseBloggerReturn {
 
   // Unified share URL — single /r/CODE link for all purposes
   const shareUrl = useMemo(() => {
-    const code = (blogger as any)?.affiliateCode || blogger?.affiliateCodeClient;
+    const code = blogger?.affiliateCode || blogger?.affiliateCodeClient;
     if (!code) return '';
     return `${window.location.origin}/r/${code}`;
   }, [blogger]);

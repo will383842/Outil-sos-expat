@@ -101,7 +101,7 @@ const BloggerWidgets: React.FC = () => {
     if (!blogger?.affiliateCode && !blogger?.affiliateCodeClient) return;
 
     // Replace {{AFFILIATE_LINK}} with actual affiliate link (unified /r/ format)
-    const code = (blogger as any)?.affiliateCode || blogger?.affiliateCodeClient;
+    const code = blogger?.affiliateCode || blogger?.affiliateCodeClient;
     const affiliateLink = `https://sos-expat.com/r/${code}`;
     const htmlCode = widget.htmlTemplate.replace(/\{\{AFFILIATE_LINK\}\}/g, affiliateLink);
 
@@ -258,7 +258,7 @@ const BloggerWidgets: React.FC = () => {
                           dangerouslySetInnerHTML={{
                             __html: widget.htmlTemplate.replace(
                               /\{\{AFFILIATE_LINK\}\}/g,
-                              `https://sos-expat.com/r/${(blogger as any)?.affiliateCode || blogger?.affiliateCodeClient || 'YOUR_CODE'}`
+                              `https://sos-expat.com/r/${blogger?.affiliateCode || blogger?.affiliateCodeClient || 'YOUR_CODE'}`
                             ),
                           }}
                         />
@@ -339,7 +339,7 @@ const BloggerWidgets: React.FC = () => {
                     dangerouslySetInnerHTML={{
                       __html: previewWidget.htmlTemplate.replace(
                         /\{\{AFFILIATE_LINK\}\}/g,
-                        `https://sos-expat.com/r/${(blogger as any)?.affiliateCode || blogger?.affiliateCodeClient || 'YOUR_CODE'}`
+                        `https://sos-expat.com/r/${blogger?.affiliateCode || blogger?.affiliateCodeClient || 'YOUR_CODE'}`
                       ),
                     }}
                   />

@@ -14,6 +14,7 @@ import { useBlogger } from '@/hooks/useBlogger';
 import { WhatsAppBanner } from '@/whatsapp-groups';
 import toast from 'react-hot-toast';
 import { copyToClipboard as clipboardCopy } from '@/utils/clipboard';
+import ImageBankSection from '@/components/ImageBankSection';
 import {
   DollarSign,
   Users,
@@ -260,7 +261,7 @@ const BloggerDashboard: React.FC = () => {
               <FormattedMessage id="blogger.dashboard.affiliateLinks" defaultMessage="Vos liens d'affiliation" />
             </h2>
             <UnifiedLinkWithEarnings
-              code={(blogger as any).affiliateCode || blogger.affiliateCodeClient || ''}
+              code={blogger.affiliateCode || blogger.affiliateCodeClient || ''}
               role="blogger"
               config={dashboardData?.config}
             />
@@ -363,6 +364,9 @@ const BloggerDashboard: React.FC = () => {
             </p>
           </button>
         </div>
+
+        {/* Image Bank */}
+        <ImageBankSection accent="purple" />
       </div>
     </BloggerDashboardLayout>
   );
