@@ -196,7 +196,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                       {index === 0 && (
                         <button
                           onClick={onCopyLink}
-                          className={`${UI.button.primary} px-4 py-2 text-sm inline-flex items-center gap-2`}
+                          className={`${UI.button.primary} min-h-[44px] px-4 py-2.5 text-sm inline-flex items-center gap-2`}
                         >
                           <Copy className="w-4 h-4" />
                           <FormattedMessage id="chatter.activation.copyLink" defaultMessage="Copier mon lien" />
@@ -205,7 +205,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                       {index === 1 && (
                         <button
                           onClick={onShareLink}
-                          className={`${UI.button.primary} px-4 py-2 text-sm inline-flex items-center gap-2`}
+                          className={`${UI.button.primary} min-h-[44px] px-4 py-2.5 text-sm inline-flex items-center gap-2`}
                         >
                           <Share2 className="w-4 h-4" />
                           <FormattedMessage id="chatter.activation.shareLink" defaultMessage="Partager mon lien" />
@@ -221,7 +221,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                           </p>
                           <button
                             onClick={onShareLink}
-                            className={`${UI.button.secondary} px-4 py-2 text-sm inline-flex items-center gap-2`}
+                            className={`${UI.button.secondary} min-h-[44px] px-4 py-2.5 text-sm inline-flex items-center gap-2`}
                           >
                             <Share2 className="w-4 h-4" />
                             <FormattedMessage id="chatter.activation.reshare" defaultMessage="Repartager mon lien" />
@@ -238,7 +238,7 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           <FormattedMessage
                             id="chatter.activation.step4.subtitle"
-                            defaultMessage="{amount} versé dans votre portefeuille"
+                            defaultMessage="Vous allez recevoir {amount} dans votre portefeuille"
                             values={{ amount: callAmountRange }}
                           />
                         </p>

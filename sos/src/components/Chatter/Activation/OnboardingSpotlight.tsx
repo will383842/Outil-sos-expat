@@ -68,7 +68,7 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
       action: (
         <button
           onClick={() => { onCopyLink(); handleNext(); }}
-          className={`${UI.button.primary} px-4 py-2.5 text-sm inline-flex items-center gap-2`}
+          className={`${UI.button.primary} min-h-[44px] px-4 py-2.5 text-sm inline-flex items-center gap-2`}
         >
           <Copy className="w-4 h-4" />
           <FormattedMessage id="chatter.onboarding.copyLink" defaultMessage="Copier mon lien" />
@@ -82,7 +82,7 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
       action: (
         <button
           onClick={handleNext}
-          className={`${UI.button.primary} px-4 py-2.5 text-sm inline-flex items-center gap-2`}
+          className={`${UI.button.primary} min-h-[44px] px-4 py-2.5 text-sm inline-flex items-center gap-2`}
         >
           <FormattedMessage id="chatter.onboarding.understood" defaultMessage="Compris !" />
           <ArrowRight className="w-4 h-4" />
@@ -96,7 +96,7 @@ const OnboardingSpotlight: React.FC<OnboardingSpotlightProps> = ({
       action: (
         <button
           onClick={() => { onShareLink(); handleClose(); }}
-          className={`${UI.button.primary} px-4 py-2.5 text-sm inline-flex items-center gap-2`}
+          className={`${UI.button.primary} min-h-[44px] px-4 py-2.5 text-sm inline-flex items-center gap-2`}
         >
           <FormattedMessage id="chatter.onboarding.shareNow" defaultMessage="Partager sur WhatsApp" />
         </button>

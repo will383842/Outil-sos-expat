@@ -4,9 +4,9 @@
  * Replaces the normal dashboard until first commission is earned.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Copy, Share2, DollarSign, Send, Calculator, ArrowRight } from 'lucide-react';
+import { Copy, DollarSign, Send, Calculator, ArrowRight } from 'lucide-react';
 import { useChatterData } from '@/contexts/ChatterDataContext';
 import { UI, SPACING } from '@/components/Chatter/designTokens';
 import ActivationChecklist from './ActivationChecklist';
@@ -34,6 +34,16 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
     return minAmt === maxAmt ? `$${minAmt}` : `$${minAmt}-${maxAmt}`;
   }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
 
+  // Dynamic realistic earnings range for the note (3-7 calls/week × 4 weeks)
+  const realisticRange = useMemo(() => {
+    const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
+    const lawyerAmt = (config?.commissionClientCallAmountLawyer ?? 500) / 100;
+    const avgAmount = (expatAmt + lawyerAmt) / 2;
+    const min = Math.round(3 * 4 * avgAmount);
+    const max = Math.round(7 * 4 * avgAmount);
+    return `$${min}-${max}`;
+  }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
+
   // Dynamic revenue examples based on average commission
   const revenueExamples = useMemo(() => {
     const expatAmt = (config?.commissionClientCallAmountExpat ?? 300) / 100;
@@ -45,6 +55,17 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
       { calls: 20, monthly: Math.round(20 * 4 * avgAmount) },
     ];
   }, [config?.commissionClientCallAmountExpat, config?.commissionClientCallAmountLawyer]);
+
+  // Read previous visit timestamp ONCE at mount (before updating it)
+  const [prevVisitTimestamp] = useState<number | null>(() => {
+    const stored = localStorage.getItem('chatter_last_activation_visit');
+    return stored ? parseInt(stored, 10) : null;
+  });
+
+  // Update timestamp for next visit — runs ONCE on mount, after state is captured
+  useEffect(() => {
+    localStorage.setItem('chatter_last_activation_visit', Date.now().toString());
+  }, []);
 
   const handleCopyLink = useCallback(async () => {
     if (!clientShareUrl) return;
@@ -82,17 +103,11 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
     }
   }, [clientShareUrl, callAmountRange, intl]);
 
-  // Reactivation message (if chatter returns without progress)
+  // Reactivation message based on days since PREVIOUS visit (not current)
   const reactivationMessage = useMemo(() => {
-    const lastVisit = localStorage.getItem('chatter_last_activation_visit');
-    if (!lastVisit) {
-      localStorage.setItem('chatter_last_activation_visit', Date.now().toString());
-      return null;
-    }
+    if (prevVisitTimestamp === null) return null; // First ever visit
 
-    const daysSince = (Date.now() - parseInt(lastVisit, 10)) / (1000 * 60 * 60 * 24);
-    localStorage.setItem('chatter_last_activation_visit', Date.now().toString());
-
+    const daysSince = (Date.now() - prevVisitTimestamp) / (1000 * 60 * 60 * 24);
     const linkCopied = !!localStorage.getItem('chatter_link_copied');
     const linkShared = !!localStorage.getItem('chatter_link_shared');
 
@@ -116,7 +131,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
     }
 
     return null;
-  }, [callAmountRange, intl]);
+  }, [prevVisitTimestamp, callAmountRange, intl]);
 
   return (
     <div className={`space-y-4 ${SPACING.pagePadding} py-4`}>
@@ -131,13 +146,13 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
 
       {/* Reactivation message */}
       {reactivationMessage && (
-        <div className="backdrop-blur-xl border border-indigo-200 dark:border-indigo-500/30 rounded-2xl bg-indigo-50/50 dark:bg-indigo-500/5 p-4 border-l-4 border-l-indigo-400">
-          <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+        <div className="border border-indigo-200 dark:border-indigo-500/30 rounded-2xl bg-indigo-50/50 dark:bg-indigo-500/5 p-4 border-l-4 border-l-indigo-400">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
             {reactivationMessage.text}
           </p>
           <button
             onClick={handleShareLink}
-            className="bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.97] shadow-md shadow-indigo-500/25 px-4 py-2 text-sm"
+            className="min-h-[44px] bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all duration-200 active:scale-[0.97] shadow-md shadow-indigo-500/25 px-4 py-2.5 text-sm"
           >
             {reactivationMessage.cta}
           </button>
@@ -157,7 +172,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
             <FormattedMessage
               id="chatter.new.jobIntroDesc"
-              defaultMessage="SOS-Expat connecte des expatriés avec des avocats et helpers par téléphone. Partagez votre lien dans des groupes d'expats — chaque appel via ce lien = {amount} versé dans votre portefeuille."
+              defaultMessage="SOS-Expat connecte des expatriés avec des avocats et des expatriés aidants par téléphone. Partagez votre lien dans des groupes d'expats — chaque appel via ce lien = {amount} versé dans votre portefeuille."
               values={{ amount: <span className="font-bold text-indigo-600 dark:text-indigo-400">{callAmountRange}</span> }}
             />
           </p>
@@ -168,13 +183,18 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
           <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">
             <FormattedMessage id="chatter.new.yourLink" defaultMessage="Votre lien unique" />
           </p>
-          <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-xl px-3 py-2.5">
+          <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-xl px-3 py-2">
             <span className="flex-1 text-sm font-mono text-indigo-700 dark:text-indigo-300 truncate min-w-0">
-              {clientShareUrl || '…'}
+              {clientShareUrl || (
+                <span className="text-slate-400 italic">
+                  <FormattedMessage id="chatter.new.linkLoading" defaultMessage="Chargement de votre lien..." />
+                </span>
+              )}
             </span>
             <button
               onClick={handleCopyLink}
-              className="flex-shrink-0 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-semibold rounded-lg px-3 py-1.5 text-xs inline-flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] shadow-sm shadow-indigo-500/25"
+              disabled={!clientShareUrl}
+              className="flex-shrink-0 min-h-[44px] bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-3 py-2 text-xs inline-flex items-center gap-1.5 transition-all duration-200 active:scale-[0.97] shadow-sm shadow-indigo-500/25"
             >
               <Copy className="w-3.5 h-3.5" />
               <FormattedMessage id="chatter.new.copyLinkNow" defaultMessage="Copier" />
@@ -202,7 +222,11 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
             </h3>
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
-            <FormattedMessage id="chatter.new.revenueNote" defaultMessage="La plupart des nouveaux chatters gagnent $30-80 leur 1er mois" />
+            <FormattedMessage
+              id="chatter.new.revenueNote"
+              defaultMessage="La plupart des nouveaux chatters gagnent {range} leur 1er mois"
+              values={{ range: <span className="font-semibold text-slate-500 dark:text-slate-400">{realisticRange}</span> }}
+            />
           </p>
           <div className="space-y-2">
             {revenueExamples.map((ex) => (
@@ -240,7 +264,7 @@ const NewChatterDashboard: React.FC<NewChatterDashboardProps> = ({ onNavigateToT
             </p>
             <button
               onClick={onNavigateToTelegram}
-              className={`${UI.button.primary} px-6 py-2.5 text-sm inline-flex items-center gap-2`}
+              className={`${UI.button.primary} min-h-[44px] px-6 py-2.5 text-sm inline-flex items-center gap-2`}
             >
               <Send className="w-4 h-4" />
               <FormattedMessage id="chatter.new.linkTelegram" defaultMessage="Lier Telegram" />
