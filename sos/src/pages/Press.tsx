@@ -312,6 +312,29 @@ const Press: React.FC = () => {
   const logos = resources.filter((r) => r.category === "press_logos");
   const brandGuidelines = resources.filter((r) => r.category === "press_brand_guidelines");
   const kits = resources.filter((r) => r.category === "press_kit");
+
+  // Group press_kit resources by document (pair PDF + HTML by base URL)
+  const kitGroups = useMemo(() => {
+    const groups: Record<string, { title: string; description: string | null; htmlRes?: PressResource; pdfRes?: PressResource }> = {};
+    kits.forEach((r) => {
+      const baseKey = (r.file_url ?? r.id).replace(/\.(pdf|html?)$/i, "");
+      if (!groups[baseKey]) {
+        groups[baseKey] = {
+          title: r.name.replace(/\s*—\s*Version web\s*/i, " — ").replace(/\s*—\s*Web version\s*/i, " — ").trim(),
+          description: r.description,
+        };
+      }
+      const fmt = (r.file_format ?? "").toLowerCase();
+      if (fmt === "html") groups[baseKey].htmlRes = r;
+      else if (fmt === "pdf") {
+        groups[baseKey].pdfRes = r;
+        // prefer PDF title/description as canonical (no "web" qualifier)
+        groups[baseKey].title = r.name;
+        groups[baseKey].description = r.description;
+      }
+    });
+    return Object.values(groups);
+  }, [kits]); // eslint-disable-line react-hooks/exhaustive-deps
   const spokespersons = resources.filter((r) => r.category === "press_spokesperson");
   const bRoll = resources.filter((r) => r.category === "press_b_roll");
   const dataRes = resources.filter((r) => r.category === "press_data");
@@ -658,12 +681,76 @@ const Press: React.FC = () => {
               </section>
             )}
 
-            {/* PRESS KIT */}
-            {kits.length > 0 && (
+            {/* PRESS KIT — same card style as press releases */}
+            {kitGroups.length > 0 && (
               <section className="py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="press-kit" icon={FolderOpen} title={t("press.section.pressKit")} subtitle={t("press.section.pressKitDesc")} />
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{kits.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
+                    {kitGroups.map((group, idx) => {
+                      const htmlUrl = group.htmlRes?.file_url ?? null;
+                      const pdfUrl = group.pdfRes?.file_url ?? null;
+                      return (
+                        <article key={idx} className="group flex flex-col rounded-2xl overflow-hidden border border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-300 bg-white">
+                          {/* Document thumbnail — same iframe miniature as press releases */}
+                          <a href={htmlUrl || pdfUrl || "#"} target="_blank" rel="noopener noreferrer"
+                            className="relative overflow-hidden bg-white flex-shrink-0 cursor-pointer"
+                            style={{ height: "300px" }}
+                            aria-label={group.title}>
+                            {htmlUrl ? (
+                              <div style={{ position: "absolute", top: 0, left: "50%", marginLeft: "-480px", width: "960px", height: "1280px", transform: "scale(0.31)", transformOrigin: "top center", pointerEvents: "none" }}>
+                                <iframe
+                                  src={htmlUrl}
+                                  title={group.title}
+                                  scrolling="no"
+                                  tabIndex={-1}
+                                  style={{ width: "960px", height: "1280px", border: "none", display: "block" }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                <FileText className="w-14 h-14 text-gray-200" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
+                              <span className="text-white text-xs font-bold bg-red-600 px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                {t("press.kit.view", "Voir le dossier")}
+                              </span>
+                            </div>
+                          </a>
+                          {/* Card footer */}
+                          <div className="p-4 flex flex-col gap-2 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] rounded-full font-semibold">
+                                {t("press.kit.badge", "Dossier de presse")}
+                              </span>
+                            </div>
+                            <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 flex-1">{group.title}</h3>
+                            {group.description && (
+                              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{group.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 pt-1">
+                              {htmlUrl && (
+                                <a href={htmlUrl} target="_blank" rel="noopener noreferrer"
+                                  onClick={() => group.htmlRes && trackDownload(group.htmlRes)}
+                                  className="flex-1 text-center text-xs font-semibold text-white bg-red-600 hover:bg-red-700 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                                  <FileText className="w-3.5 h-3.5" />HTML
+                                </a>
+                              )}
+                              {pdfUrl && (
+                                <a href={pdfUrl} download target="_blank" rel="noopener noreferrer"
+                                  onClick={() => group.pdfRes && trackDownload(group.pdfRes)}
+                                  className="flex-1 text-center text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                                  <Download className="w-3.5 h-3.5" />PDF
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
                 </div>
               </section>
             )}
