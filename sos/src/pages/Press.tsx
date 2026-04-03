@@ -377,7 +377,7 @@ const Press: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        canonicalUrl={`/${lang}/presse`}
+        canonicalUrl={`/${canonicalLocaleMap[lang] || lang}/${pressSlugMap[lang] || "press"}`}
         ogType="website"
         locale={localeMap[lang] || "fr-FR"}
         contentType="WebPage"
@@ -393,12 +393,14 @@ const Press: React.FC = () => {
         twitterSite="@sosexpat"
         citations={["https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm", "https://data.worldbank.org/indicator/SM.POP.TOTL"]}
       />
-      <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t("press.hero.badge") }]} />
+      <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t("press.breadcrumb.press"), url: canonicalPageUrl }]} />
       <OrganizationSchema aggregateRating={{ ratingValue: aggregateRating.ratingValue, ratingCount: aggregateRating.ratingCount, reviewCount: aggregateRating.reviewCount }} />
       <FAQPageSchema faqs={faqs} pageTitle={seoTitle} pageUrl={canonicalPageUrl} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <Helmet>
+        {/* Max snippet + large image preview — eligibility for Google Discover & rich snippets */}
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         {/* WebPage + NewsroomPage schema with speakable for AEO/voice search */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -444,9 +446,9 @@ const Press: React.FC = () => {
           "description": seoDescription,
           "url": canonicalPageUrl,
           "step": [
-            { "@type": "HowToStep", "position": 1, "name": lang === "fr" ? "Visitez l\u2019espace presse" : "Visit the press room", "url": `${canonicalPageUrl}#about`, "text": lang === "fr" ? "Acc\u00e9dez \u00e0 notre salle de presse en ligne, disponible 24h/24 en 9 langues." : "Access our online press room, available 24/7 in 9 languages." },
-            { "@type": "HowToStep", "position": 2, "name": lang === "fr" ? "T\u00e9l\u00e9chargez le kit presse" : "Download the press kit", "url": `${canonicalPageUrl}#press-kit`, "text": lang === "fr" ? "T\u00e9l\u00e9chargez logos, dossiers de presse et visuels HD librement." : "Download logos, press kits and HD visuals freely." },
-            { "@type": "HowToStep", "position": 3, "name": lang === "fr" ? "Contactez notre \u00e9quipe presse" : "Contact our press team", "url": `${canonicalPageUrl}#contact`, "text": lang === "fr" ? "Envoyez votre demande d\u2019interview ou d\u2019information via le formulaire de contact presse." : "Send your interview or information request via the press contact form." },
+            { "@type": "HowToStep", "position": 1, "name": lang === "fr" ? "Visitez l\u2019espace presse" : "Visit the press room", "url": `${canonicalPageUrl}#about`, "text": lang === "fr" ? "Acc\u00e9dez \u00e0 notre salle de presse en ligne, disponible 24h/24 en 9 langues." : "Access our online press room, available 24/7 in 9 languages.", "tool": [{ "@type": "HowToTool", "name": "Web browser" }] },
+            { "@type": "HowToStep", "position": 2, "name": lang === "fr" ? "T\u00e9l\u00e9chargez le kit presse" : "Download the press kit", "url": `${canonicalPageUrl}#press-kit`, "text": lang === "fr" ? "T\u00e9l\u00e9chargez logos, dossiers de presse et visuels HD librement." : "Download logos, press kits and HD visuals freely.", "tool": [{ "@type": "HowToTool", "name": lang === "fr" ? "Navigateur web" : "Web browser" }] },
+            { "@type": "HowToStep", "position": 3, "name": lang === "fr" ? "Contactez notre \u00e9quipe presse" : "Contact our press team", "url": `${canonicalPageUrl}#contact`, "text": lang === "fr" ? "Envoyez votre demande d\u2019interview ou d\u2019information via le formulaire de contact presse." : "Send your interview or information request via the press contact form.", "tool": [{ "@type": "HowToTool", "name": lang === "fr" ? "Formulaire de contact" : "Contact form" }] },
           ],
         })}</script>
         {/* ItemList schema for press releases — AEO/snippet 0 eligible */}
@@ -477,6 +479,7 @@ const Press: React.FC = () => {
                 },
                 "author": { "@type": "Person", "name": "Williams Jullin", "jobTitle": "Founder & CEO" },
                 "keywords": r.tags?.join(", "),
+                ...(r.imageUrl ? { "image": { "@type": "ImageObject", "url": r.imageUrl } } : { "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.webp" } }),
                 ...(r.htmlUrl?.[toFirestoreLang(lang)] ? { "url": r.htmlUrl[toFirestoreLang(lang)] } : {}),
               },
             })),
@@ -719,7 +722,7 @@ const Press: React.FC = () => {
                               backgroundPosition: "0 0,0 4px,4px -4px,-4px 0",
                             }}>
                             {r.file_url && isImageFormat(r.file_format) && (
-                              <img src={r.file_url} alt="" className="w-full h-full object-contain p-1" loading="lazy" />
+                              <img src={r.file_url} alt={r.name} className="w-full h-full object-contain p-1" loading="lazy" />
                             )}
                           </div>
                         ))}
