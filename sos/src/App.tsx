@@ -253,16 +253,18 @@ const GaleriePage = lazy(() => import('./pages/Galerie/Galerie'));
 // Language config — chargement dynamique des traductions
 // EN est statique (fallback universel), les 8 autres langues sont chargées à la demande
 // -------------------------------------------
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const translationLoaders: Record<string, () => Promise<any>> = {
-  fr: () => import("./helper/fr.json"),
-  es: () => import("./helper/es.json"),
-  ru: () => import("./helper/ru.json"),
-  de: () => import("./helper/de.json"),
-  hi: () => import("./helper/hi.json"),
-  pt: () => import("./helper/pt.json"),
-  ch: () => import("./helper/ch.json"),
-  ar: () => import("./helper/ar.json"),
+// Traductions chargées via fetch() depuis /public/helper/ pour permettre le preload HTML.
+// EN reste statique (bundlé). Les autres langues sont servies comme fichiers statiques.
+// Note : si un fichier src/helper/*.json est modifié, copier aussi dans public/helper/.
+const translationLoaders: Record<string, () => Promise<Record<string, string>>> = {
+  fr: () => fetch('/helper/fr.json').then(r => r.json()),
+  es: () => fetch('/helper/es.json').then(r => r.json()),
+  ru: () => fetch('/helper/ru.json').then(r => r.json()),
+  de: () => fetch('/helper/de.json').then(r => r.json()),
+  hi: () => fetch('/helper/hi.json').then(r => r.json()),
+  pt: () => fetch('/helper/pt.json').then(r => r.json()),
+  ch: () => fetch('/helper/ch.json').then(r => r.json()),
+  ar: () => fetch('/helper/ar.json').then(r => r.json()),
 };
 
 // Cache en mémoire pour éviter de re-charger les traductions déjà téléchargées
@@ -280,8 +282,8 @@ export async function preloadTranslations(locale: string): Promise<void> {
   const loader = translationLoaders[locale];
   if (loader) {
     try {
-      const mod = await loader();
-      loadedMessages[locale] = mod.default as unknown as Record<string, string>;
+      const msgs = await loader();
+      loadedMessages[locale] = msgs;
     } catch {
       // Fallback silencieux vers EN (statique)
     }
@@ -317,8 +319,7 @@ function useDynamicMessages(locale: Locale): Record<string, string> {
     const loader = translationLoaders[locale];
     if (loader) {
       loader()
-        .then((mod) => {
-          const msgs = mod.default as unknown as Record<string, string>;
+        .then((msgs) => {
           loadedMessages[locale] = msgs; // Cache pour les futures navigations
           // Merge with EN as fallback: EN keys fill gaps in incomplete translations
           setMessages({ ...loadedMessages.en, ...msgs });

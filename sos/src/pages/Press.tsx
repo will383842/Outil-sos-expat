@@ -223,6 +223,9 @@ const Press: React.FC = () => {
   const seoDescription = t("press.seo.description");
 
   const localeMap: Record<string, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", de: "de-DE", pt: "pt-PT", ru: "ru-RU", zh: "zh-CN", hi: "hi-IN", ar: "ar-SA" };
+  const canonicalLocaleMap: Record<string, string> = { fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de", pt: "pt-pt", ru: "ru-ru", zh: "zh-cn", hi: "hi-in", ar: "ar-sa" };
+  const canonicalPageUrl = `https://sos-expat.com/${canonicalLocaleMap[lang] || lang}/presse`;
+  const geoRegionMap: Record<string, string> = { fr: "FR", en: "US", es: "ES", de: "DE", pt: "PT", ru: "RU", zh: "CN", hi: "IN", ar: "SA" };
   const formatDate = (date: Date) => new Intl.DateTimeFormat(localeMap[lang] || "fr-FR", { year: "numeric", month: "long", day: "numeric" }).format(date);
 
   const faqs = useMemo(() => [
@@ -230,6 +233,10 @@ const Press: React.FC = () => {
     { question: t("press.faq.q2"), answer: t("press.faq.a2") },
     { question: t("press.faq.q3"), answer: t("press.faq.a3") },
     { question: t("press.faq.q4"), answer: t("press.faq.a4") },
+    { question: t("press.faq.q5"), answer: t("press.faq.a5") },
+    { question: t("press.faq.q6"), answer: t("press.faq.a6") },
+    { question: t("press.faq.q7"), answer: t("press.faq.a7") },
+    { question: t("press.faq.q8"), answer: t("press.faq.a8") },
   ], [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sectionLabels = useMemo(() => ({
@@ -375,25 +382,41 @@ const Press: React.FC = () => {
         contentQuality="high"
         trustworthiness="high"
         keywords={t("press.seo.keywords", "press room, press release, expatriates, press kit, logos, media")}
+        publishedTime="2025-08-01T00:00:00Z"
+        modifiedTime="2026-04-01T00:00:00Z"
+        lastReviewed="2026-04-01T00:00:00Z"
+        author="Williams Jullin"
+        geoRegion={geoRegionMap[lang] || "FR"}
+        twitterSite="@sosexpat"
+        citations={["https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm", "https://data.worldbank.org/indicator/SM.POP.TOTL"]}
       />
       <BreadcrumbSchema items={[{ name: intl.formatMessage({ id: "breadcrumb.home" }), url: `/${lang}` }, { name: t("press.hero.badge") }]} />
       <OrganizationSchema aggregateRating={{ ratingValue: aggregateRating.ratingValue, ratingCount: aggregateRating.ratingCount, reviewCount: aggregateRating.reviewCount }} />
-      <FAQPageSchema faqs={faqs} pageTitle={seoTitle} pageUrl={`https://sos-expat.com/${lang}/presse`} />
+      <FAQPageSchema faqs={faqs} pageTitle={seoTitle} pageUrl={canonicalPageUrl} />
       {/* HreflangLinks removed: handled globally in App.tsx L1086 */}
 
       <Helmet>
-        {/* WebPage schema with speakable for AEO/voice search */}
+        {/* WebPage + NewsroomPage schema with speakable for AEO/voice search */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "WebPage",
+          "@type": ["WebPage", "NewsroomPage"],
           "name": seoTitle,
           "description": seoDescription,
-          "url": `https://sos-expat.com/${lang}/presse`,
+          "url": canonicalPageUrl,
           "inLanguage": localeMap[lang] || "fr-FR",
+          "datePublished": "2025-08-01T00:00:00Z",
+          "dateModified": "2026-04-01T00:00:00Z",
           "isPartOf": { "@type": "WebSite", "url": "https://sos-expat.com" },
+          "author": { "@type": "Person", "name": "Williams Jullin", "jobTitle": "Founder & CEO", "url": "https://sos-expat.com" },
+          "publisher": {
+            "@type": "Organization",
+            "name": "SOS-Expat",
+            "url": "https://sos-expat.com",
+            "logo": { "@type": "ImageObject", "url": "https://sos-expat.com/sos-logo.webp" },
+          },
           "speakable": {
             "@type": "SpeakableSpecification",
-            "cssSelector": ["#press-boilerplate", "#press-facts", "#releases-title"],
+            "cssSelector": ["#press-boilerplate", "#press-facts", "#releases-title", "#press-faq", "#press-about-text"],
           },
           "mainEntity": {
             "@type": "NewsMediaOrganization",
@@ -401,7 +424,7 @@ const Press: React.FC = () => {
             "url": "https://sos-expat.com",
             "foundingDate": "2025-08",
             "areaServed": "Worldwide",
-            "publishingPrinciples": `https://sos-expat.com/${lang}/presse`,
+            "publishingPrinciples": canonicalPageUrl,
             "pressContact": {
               "@type": "ContactPoint",
               "contactType": "press",
@@ -410,6 +433,19 @@ const Press: React.FC = () => {
             },
           },
         })}</script>
+        {/* HowTo schema — guide journalists through the press room */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          "name": lang === "fr" ? "Comment utiliser l\u2019espace presse SOS-Expat" : lang === "de" ? "So nutzen Sie den SOS-Expat Pressebereich" : lang === "es" ? "C\u00f3mo usar la sala de prensa SOS-Expat" : "How to use the SOS-Expat press room",
+          "description": seoDescription,
+          "url": canonicalPageUrl,
+          "step": [
+            { "@type": "HowToStep", "position": 1, "name": lang === "fr" ? "Visitez l\u2019espace presse" : "Visit the press room", "url": `${canonicalPageUrl}#about`, "text": lang === "fr" ? "Acc\u00e9dez \u00e0 notre salle de presse en ligne, disponible 24h/24 en 9 langues." : "Access our online press room, available 24/7 in 9 languages." },
+            { "@type": "HowToStep", "position": 2, "name": lang === "fr" ? "T\u00e9l\u00e9chargez le kit presse" : "Download the press kit", "url": `${canonicalPageUrl}#press-kit`, "text": lang === "fr" ? "T\u00e9l\u00e9chargez logos, dossiers de presse et visuels HD librement." : "Download logos, press kits and HD visuals freely." },
+            { "@type": "HowToStep", "position": 3, "name": lang === "fr" ? "Contactez notre \u00e9quipe presse" : "Contact our press team", "url": `${canonicalPageUrl}#contact`, "text": lang === "fr" ? "Envoyez votre demande d\u2019interview ou d\u2019information via le formulaire de contact presse." : "Send your interview or information request via the press contact form." },
+          ],
+        })}</script>
         {/* ItemList schema for press releases — AEO/snippet 0 eligible */}
         {releases.length > 0 && (
           <script type="application/ld+json">{JSON.stringify({
@@ -417,14 +453,14 @@ const Press: React.FC = () => {
             "@type": "ItemList",
             "name": t("press.releases.title"),
             "description": t("press.releases.subtitle"),
-            "url": `https://sos-expat.com/${lang}/presse#releases`,
+            "url": `${canonicalPageUrl}#releases`,
             "numberOfItems": releases.length,
             "itemListElement": releases.map((r, i) => ({
               "@type": "ListItem",
               "position": i + 1,
               "item": {
                 "@type": "NewsArticle",
-                "@id": `https://sos-expat.com/${lang}/presse#release-${r.id}`,
+                "@id": `${canonicalPageUrl}#release-${r.id}`,
                 "headline": getLocalizedText(r.title, lang),
                 "description": getLocalizedText(r.summary, lang),
                 "datePublished": r.publishedAt.toISOString(),
@@ -462,9 +498,12 @@ const Press: React.FC = () => {
                 <span className="text-sm font-semibold text-white uppercase tracking-widest">{t("press.hero.badge")}</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-8 tracking-tight leading-[1.05]">
-                {t("press.hero.subtitle")}
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight leading-[1.05]">
+                {t("press.hero.title")}
               </h1>
+              <p className="text-xl sm:text-2xl font-light text-white/90 mb-6 leading-snug">
+                {t("press.hero.subtitle")}
+              </p>
 
               <p id="press-boilerplate" className="text-lg sm:text-xl text-white/80 leading-relaxed mb-10 max-w-3xl">
                 {t("press.boilerplate.short")}
@@ -506,6 +545,26 @@ const Press: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* ══════════════ BREADCRUMB ══════════════ */}
+        <nav aria-label="Breadcrumb" className="bg-white border-b border-gray-100 py-2.5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ol className="flex items-center gap-1.5 text-sm text-gray-500 flex-wrap" itemScope itemType="https://schema.org/BreadcrumbList">
+              <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <a href={`/${lang}`} itemProp="item" className="hover:text-red-600 transition-colors inline-flex items-center gap-1">
+                  <span itemProp="name">{t("press.breadcrumb.home", "Accueil")}</span>
+                </a>
+                <meta itemProp="position" content="1" />
+              </li>
+              <li className="text-gray-300" aria-hidden="true">/</li>
+              <li className="font-medium text-gray-900" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <span itemProp="name">{t("press.breadcrumb.press", "Espace Presse")}</span>
+                <meta itemProp="item" content={canonicalPageUrl} />
+                <meta itemProp="position" content="2" />
+              </li>
+            </ol>
+          </div>
+        </nav>
 
         {/* ══════════════ STICKY NAV ══════════════ */}
         <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm" aria-label="Press sections">
@@ -575,7 +634,18 @@ const Press: React.FC = () => {
             <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
               <div className="lg:col-span-3">
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">{t("press.about.title")}</h2>
-                <p className="text-gray-600 leading-relaxed mb-10 text-lg">{t("press.about.description")}</p>
+                <p id="press-about-text" className="text-gray-600 leading-relaxed mb-6 text-lg">{t("press.about.description")}</p>
+                {/* External trust signals — ILO & World Bank context */}
+                <p className="text-sm text-gray-500 leading-relaxed mb-8">
+                  {lang === "fr"
+                    ? <>Selon l&apos;<a href="https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">Organisation Internationale du Travail (OIT)</a>, plus de 169 millions de personnes vivent en dehors de leur pays d&apos;origine. La <a href="https://data.worldbank.org/indicator/SM.POP.TOTL" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">Banque Mondiale</a> estime que ce chiffre continue de croître chaque année. SOS-Expat apporte une réponse concrète à leurs besoins juridiques et administratifs.</>
+                    : lang === "de"
+                    ? <>Laut der <a href="https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">Internationalen Arbeitsorganisation (ILO)</a> leben über 169 Millionen Menschen außerhalb ihres Heimatlandes. SOS-Expat bietet ihnen sofortige rechtliche und administrative Unterstützung.</>
+                    : lang === "es"
+                    ? <>Según la <a href="https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">Organización Internacional del Trabajo (OIT)</a>, más de 169 millones de personas viven fuera de su país de origen. SOS-Expat les proporciona asistencia jurídica y administrativa inmediata.</>
+                    : <>According to the <a href="https://www.ilo.org/global/topics/labour-migration/lang--en/index.htm" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">International Labour Organization (ILO)</a>, over 169 million people live outside their home country. The <a href="https://data.worldbank.org/indicator/SM.POP.TOTL" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline">World Bank</a> estimates this number continues to grow. SOS-Expat provides them with immediate legal and administrative assistance.</>
+                  }
+                </p>
                 <div className="bg-red-50 border-l-4 border-red-500 rounded-r-2xl p-6">
                   <div className="flex items-start gap-4">
                     <Quote className="w-7 h-7 text-red-500 flex-shrink-0 mt-1" />
@@ -949,7 +1019,7 @@ const Press: React.FC = () => {
         )}
 
         {/* ══════════════ FAQ ══════════════ */}
-        <section className="py-20 sm:py-24 bg-slate-50">
+        <section id="press-faq" className="py-20 sm:py-24 bg-slate-50">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-12">{t("press.faq.title")}</h2>
             <div className="space-y-3">
@@ -963,6 +1033,33 @@ const Press: React.FC = () => {
                   </summary>
                   <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-gray-600 leading-relaxed -mt-1">{faq.answer}</div>
                 </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════ MAILLAGE INTERNE — Découvrez aussi ══════════════ */}
+        <section className="py-16 sm:py-20 bg-white border-t border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-8">
+              {t("press.nav.seeAlso", "D\u00e9couvrez aussi")}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[
+                { href: `/${lang}`, icon: Zap, label: t("press.nav.home", "Comment \u00e7a marche"), color: "text-red-500" },
+                { href: `/${lang}/how-it-works`, icon: Globe, label: t("press.nav.howItWorks", "Le service"), color: "text-blue-500" },
+                { href: `/${lang}/faq`, icon: FileText, label: t("press.nav.faq", "FAQ"), color: "text-emerald-500" },
+                { href: `/${lang}/testimonials`, icon: Quote, label: t("press.nav.testimonials", "T\u00e9moignages"), color: "text-purple-500" },
+                { href: `/${lang}/tarifs`, icon: BarChart3, label: t("press.nav.pricing", "Tarifs"), color: "text-orange-500" },
+                { href: `/${lang}/contact`, icon: Mail, label: t("press.nav.contact", "Nous contacter"), color: "text-gray-500" },
+              ].map((link) => (
+                <a key={link.href} href={link.href}
+                  className="group flex flex-col items-center gap-2.5 p-4 rounded-2xl border border-gray-200 hover:border-red-300 hover:shadow-md bg-white hover:bg-red-50/30 transition-all text-center focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                  <div className={`w-10 h-10 rounded-xl bg-gray-50 group-hover:bg-white flex items-center justify-center transition-colors ${link.color}`}>
+                    <link.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-gray-700 group-hover:text-gray-900 leading-tight">{link.label}</span>
+                </a>
               ))}
             </div>
           </div>

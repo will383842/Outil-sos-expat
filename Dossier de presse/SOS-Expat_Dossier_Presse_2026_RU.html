@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS-Expat.com — Пресс-кит 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:        #B91C1C;
+    --red-mid:    #DC2626;
+    --red-dim:    rgba(185,28,28,0.08);
+    --red-border: rgba(185,28,28,0.20);
+    --black:      #111111;
+    --dark:       #1C1C1C;
+    --white:      #FFFFFF;
+    --cream:      #FAFAF9;
+    --off:        #F4F3F0;
+    --grey-dark:  #444444;
+    --grey:       #777777;
+    --grey-light: #AAAAAA;
+    --rule:       #E5E3DE;
+    --rule-dark:  #CCCCCC;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--black);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ══ NAV ══ */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,250,249,0.97);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center;
+    padding: 0 32px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900; font-size: 14px;
+    color: var(--black); white-space: nowrap;
+    padding: 13px 16px 13px 0;
+    border-right: 1px solid var(--rule);
+    margin-right: 8px; flex-shrink: 0;
+  }
+  .nav-logo span { color: var(--red); }
+  .nav a {
+    font-size: 10px; font-weight: 500;
+    color: var(--grey); text-decoration: none;
+    white-space: nowrap; padding: 13px 11px;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    flex-shrink: 0; transition: color 0.15s;
+  }
+  .nav a:hover { color: var(--black); }
+
+  /* ══ COUVERTURE ══ */
+  .cover {
+    background: var(--black);
+    color: var(--white);
+    padding: 64px 32px 52px;
+    position: relative; overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 50%; height: 100%;
+    background: linear-gradient(135deg, transparent 40%, rgba(185,28,28,0.15));
+    pointer-events: none;
+  }
+  .cover-inner { max-width: 820px; margin: 0 auto; position: relative; z-index: 1; }
+  .cover-top {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 48px; padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .cover-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900; font-size: 28px; color: var(--white);
+  }
+  .cover-logo span { color: var(--red); }
+  .cover-logo-sub {
+    font-size: 10px; color: rgba(255,255,255,0.45);
+    letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px;
+  }
+  .cover-badge {
+    background: var(--red); color: var(--white);
+    font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+    text-transform: uppercase; padding: 6px 14px; border-radius: 1px;
+    display: inline-block; align-self: flex-start;
+  }
+  .cover-eyebrow {
+    font-size: 10px; font-weight: 600; color: var(--red);
+    letter-spacing: 4px; text-transform: uppercase;
+    margin-bottom: 22px; display: flex; align-items: center; gap: 12px;
+  }
+  .cover-eyebrow::before { content: ''; display: inline-block; width: 28px; height: 2px; background: var(--red); }
+  .cover h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px; font-weight: 900; line-height: 1.06;
+    color: var(--white); letter-spacing: -1.5px; margin-bottom: 28px;
+  }
+  .cover h1 em { font-style: italic; color: var(--red); }
+  .cover-tagline {
+    font-size: 17px; font-weight: 300; color: rgba(255,255,255,0.75);
+    line-height: 1.7; max-width: 620px;
+    border-left: 3px solid var(--red); padding-left: 20px;
+    margin-bottom: 44px;
+  }
+  .cover-tagline strong { color: var(--white); font-weight: 600; }
+  .cover-chips {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 44px;
+  }
+  .chip {
+    font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.65);
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 100px; padding: 5px 14px; white-space: nowrap;
+  }
+  .cover-contact {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.10);
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+  }
+  .cover-contact a { color: rgba(255,255,255,0.75); text-decoration: none; }
+  .cover-contact strong { color: var(--white); }
+
+  /* ══ WRAP ══ */
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 32px; }
+
+  /* ══ SECTION HEADER ══ */
+  .s-anchor { display: block; height: 72px; margin-top: -72px; visibility: hidden; }
+  .s-top {
+    display: flex; align-items: center; gap: 14px;
+    padding: 48px 0 24px;
+  }
+  .s-num {
+    font-size: 10px; font-weight: 700; color: var(--red);
+    letter-spacing: 3px; text-transform: uppercase; white-space: nowrap;
+  }
+  .s-line { flex: 1; height: 1px; background: var(--rule); }
+  .s-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 900; color: var(--black);
+    letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 20px;
+  }
+  .s-title em { font-style: italic; color: var(--red); }
+  .s-sep { height: 1px; background: var(--rule); margin: 0; }
+
+  /* ══ TEXTE ══ */
+  .body-text {
+    font-size: 15px; color: var(--dark); font-weight: 300;
+    line-height: 1.8; margin-bottom: 16px; max-width: 700px;
+  }
+  .body-text strong { color: var(--black); font-weight: 600; }
+  .body-text + .s-top { padding-top: 32px; }
+
+  /* ══ FACT SHEET ══ */
+  .fact-table {
+    width: 100%; border: 1px solid var(--rule);
+    border-radius: 6px; overflow: hidden;
+    background: var(--white); margin: 24px 0;
+  }
+  .fact-row {
+    display: flex; flex-direction: column;
+    padding: 14px 18px; border-bottom: 1px solid var(--rule);
+  }
+  .fact-row:last-child { border-bottom: none; }
+  .fact-row:nth-child(even) { background: var(--off); }
+  .f-label {
+    font-size: 9px; font-weight: 700; color: var(--red);
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px;
+  }
+  .f-val {
+    font-size: 14px; color: var(--dark); font-weight: 300; line-height: 1.5;
+  }
+  .f-val strong { color: var(--black); font-weight: 600; }
+  .f-val a { color: var(--dark); text-decoration: none; }
+
+  /* ══ STATS ══ */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--rule);
+    border: 1px solid var(--rule); border-radius: 6px;
+    overflow: hidden; margin: 24px 0;
+  }
+  .stat-box {
+    background: var(--white); padding: 22px 18px; text-align: center;
+  }
+  .stat-box.red { background: var(--red); }
+  .stat-n {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px; font-weight: 900; color: var(--red);
+    line-height: 1; margin-bottom: 6px;
+  }
+  .stat-box.red .stat-n { color: var(--white); }
+  .stat-l {
+    font-size: 10px; color: var(--grey); font-weight: 400;
+    line-height: 1.4; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .stat-box.red .stat-l { color: rgba(255,255,255,0.75); }
+
+  /* ══ COMPARATIF ══ */
+  .compare-table {
+    width: 100%; border: 1px solid var(--rule);
+    border-radius: 6px; overflow: hidden;
+    background: var(--white); margin: 24px 0;
+  }
+  .compare-head {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr;
+    background: var(--black); padding: 10px 16px; gap: 8px;
+  }
+  .compare-head span {
+    font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.6);
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .compare-head span:last-child { color: var(--red); }
+  .compare-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr;
+    padding: 12px 16px; gap: 8px;
+    border-bottom: 1px solid var(--rule); align-items: center;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row:nth-child(even) { background: var(--off); }
+  .compare-row span { font-size: 13px; color: var(--dark); font-weight: 300; }
+  .compare-row span:first-child { font-weight: 500; color: var(--black); }
+  .compare-row span.yes { color: #16A34A; font-weight: 600; }
+  .compare-row span.no  { color: var(--grey-light); }
+  .compare-row span.sos { color: var(--red); font-weight: 700; }
+
+  /* ══ TIMELINE ══ */
+  .timeline { margin: 24px 0; }
+  .tl-item {
+    display: flex; gap: 20px; padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-year {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; font-weight: 700; color: var(--red);
+    flex-shrink: 0; width: 60px; padding-top: 2px;
+  }
+  .tl-bar {
+    width: 2px; background: var(--rule); flex-shrink: 0; border-radius: 2px;
+    position: relative;
+  }
+  .tl-bar::before {
+    content: ''; position: absolute; top: 4px; left: -3px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red); border: 2px solid var(--cream);
+  }
+  .tl-content { padding-left: 4px; }
+  .tl-content h4 { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
+  .tl-content p  { font-size: 13px; color: var(--grey-dark); font-weight: 300; line-height: 1.6; }
+
+  /* ══ VISION CARDS ══ */
+  .vision-grid { display: flex; flex-direction: column; gap: 10px; margin: 24px 0; }
+  .vision-card {
+    background: var(--white); border: 1px solid var(--rule);
+    border-left: 3px solid var(--red);
+    border-radius: 4px; padding: 16px 18px;
+  }
+  .vision-card h4 { font-size: 14px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
+  .vision-card p  { font-size: 13px; color: var(--grey-dark); font-weight: 300; line-height: 1.55; margin: 0; }
+
+  /* ══ SECTEURS ══ */
+  .secteurs-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0;
+  }
+  .secteur-chip {
+    font-size: 12px; color: var(--dark); font-weight: 400;
+    background: var(--white); border: 1px solid var(--rule);
+    border-radius: 100px; padding: 6px 14px;
+  }
+  .secteur-chip.highlight {
+    background: var(--red-dim); border-color: var(--red-border);
+    color: var(--red); font-weight: 500;
+  }
+
+  /* ══ FAQ ══ */
+  .faq { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+  .faq-item {
+    background: var(--white); border: 1px solid var(--rule);
+    border-radius: 6px; padding: 20px;
+  }
+  .faq-q {
+    font-size: 14px; font-weight: 600; color: var(--black);
+    margin-bottom: 10px; line-height: 1.4;
+  }
+  .faq-q::before { content: 'В — '; color: var(--red); }
+  .faq-a { font-size: 13px; color: var(--grey-dark); font-weight: 300; line-height: 1.7; }
+  .faq-a strong { color: var(--black); font-weight: 600; }
+
+  /* ══ VISUELS ══ */
+  .media-grid { display: flex; flex-direction: column; gap: 8px; margin: 24px 0; }
+  .media-item {
+    background: var(--white); border: 1px solid var(--rule);
+    border-radius: 6px; padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .media-icon { font-size: 24px; flex-shrink: 0; }
+  .media-info h4 { font-size: 13px; font-weight: 600; color: var(--black); margin-bottom: 2px; }
+  .media-info p  { font-size: 12px; color: var(--grey); font-weight: 300; margin: 0; }
+  .media-tag {
+    margin-left: auto; font-size: 9px; font-weight: 700;
+    color: var(--red); text-transform: uppercase; letter-spacing: 1.5px;
+    background: var(--red-dim); border: 1px solid var(--red-border);
+    border-radius: 3px; padding: 3px 8px; flex-shrink: 0;
+  }
+
+  /* ══ CONTACT FINAL ══ */
+  .contact-final {
+    background: var(--black); color: var(--white);
+    border-radius: 8px; padding: 32px 24px; margin: 32px 0;
+  }
+  .contact-final h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: var(--white);
+    margin-bottom: 22px; padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .contact-rows { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+  .c-lbl { font-size: 9px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }
+  .c-val { font-size: 14px; color: var(--white); }
+  .c-val a { color: rgba(255,255,255,0.8); text-decoration: none; }
+  .kit-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.10);
+  }
+  .kit-chip {
+    font-size: 11px; color: rgba(255,255,255,0.65);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    padding: 4px 12px; border-radius: 100px;
+  }
+
+  /* ══ FOOTER ══ */
+  .footer {
+    max-width: 820px; margin: 0 auto;
+    padding: 20px 32px 40px;
+    border-top: 2px solid var(--black);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .footer .legal { font-size: 11px; color: var(--grey); font-weight: 300; }
+  .footer .end { font-family: 'Playfair Display', serif; font-size: 12px; color: var(--grey-light); letter-spacing: 4px; }
+
+  /* ══ QUOTE ══ */
+  .quote-pull {
+    border-left: 4px solid var(--red);
+    padding: 4px 0 4px 22px; margin: 28px 0;
+  }
+  .quote-pull blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-style: italic;
+    color: var(--dark); line-height: 1.65;
+  }
+  .quote-pull .attr { font-size: 12px; color: var(--grey); margin-top: 10px; font-style: normal; font-family: 'DM Sans', sans-serif; }
+
+  /* ══ PRINT A4 ══ */
+  @media print {
+    @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .nav { display: none !important; }
+    body { font-size: 10pt; background: var(--cream); }
+    .cover { padding: 36px 0 28px; page-break-after: always; }
+    .cover h1 { font-size: 30pt; }
+    .cover-tagline { font-size: 11pt; margin-bottom: 24px; }
+    .s-top { padding: 28px 0 18px; }
+    .s-title { font-size: 18pt; margin-bottom: 14px; }
+    .body-text { font-size: 10pt; }
+    .fact-row { flex-direction: row; gap: 16px; align-items: baseline; }
+    .f-label { min-width: 150px; flex-shrink: 0; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    .stat-n { font-size: 20pt; }
+    .vision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .contact-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .faq-item, .tl-item, .vision-card, .media-item, .fact-row { page-break-inside: avoid; }
+    .contact-final { page-break-inside: avoid; }
+    .s-top { page-break-after: avoid; }
+    .s-anchor { display: none; }
+    .compare-head span, .compare-row span { font-size: 9pt; }
+    .secteur-chip { font-size: 9pt; padding: 4px 10px; }
+    .footer { padding: 14px 0 20px; }
+    .footer .legal { font-size: 8pt; }
+  }
+
+  /* ══ DESKTOP ══ */
+  @media (min-width: 640px) {
+    .nav { padding: 0 56px; }
+    .wrap { padding: 0 56px; }
+    .cover { padding: 80px 56px 64px; }
+    .cover h1 { font-size: 58px; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    .fact-row { flex-direction: row; gap: 20px; align-items: baseline; }
+    .f-label { min-width: 180px; flex-shrink: 0; }
+    .vision-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .media-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .contact-rows { display: grid; grid-template-columns: 1fr 1fr; }
+    .footer { flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 56px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">SOS-Expat<span>.com</span></div>
+  <a href="#couverture">Презентация</a>
+  <a href="#fiche">Листок продукта</a>
+  <a href="#marche">Рынок</a>
+  <a href="#solution">Решение</a>
+  <a href="#historique">История</a>
+  <a href="#faq">ЧАВО</a>
+  <a href="#medias">СМИ</a>
+  <a href="#contact">Контакт</a>
+</nav>
+
+<!-- ══════════ COUVERTURE ══════════ -->
+<span class="s-anchor" id="couverture"></span>
+<section class="cover">
+  <div class="cover-inner">
+    <div class="cover-top">
+      <div>
+        <div class="cover-logo">SOS-Expat<span>.com</span></div>
+        <div class="cover-logo-sub">Мировой сервис · 197 стран · 24/7</div>
+      </div>
+      <span class="cover-badge">Пресс-кит 2026</span>
+    </div>
+
+    <div class="cover-eyebrow">Мировая премьера</div>
+    <h1>Сервис, который никто<br>ещё не создал —<br><em>для тех, кто далеко<br>от дома.</em></h1>
+    <p class="cover-tagline">
+      SOS-Expat.com — первая в мире платформа прямого соединения между любым человеком за рубежом и доступным специалистом — видимым онлайн, выбранным по предпочтениям, специализации и отзывам. <strong>Перезвон за менее чем 5 минут. 197 стран. Все языки. 24/7.</strong> При чрезвычайной ситуации, консультации или любой другой потребности за рубежом.
+    </p>
+    <div class="cover-chips">
+      <span class="chip">🌍 197 стран охвачено</span>
+      <span class="chip">⏱ Перезвон гарантирован &lt; 5 мин</span>
+      <span class="chip">🌐 Все национальности</span>
+      <span class="chip">💬 Все языки</span>
+      <span class="chip"></span>
+      <span class="chip">📅 Запуск 2026</span>
+      <span class="chip">🔓 Экстренные ситуации &amp; консультации</span>
+    </div>
+    <div class="cover-contact">
+      <span>Контакт для прессы: <a href="https://sos-expat.com/presse"><strong>sos-expat.com/presse</strong></a></span>
+      <span><a href="https://sos-expat.com"><strong>sos-expat.com</strong></a></span>
+      <span>Немедленное распространение — Апрель 2026</span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- ══════════ FICHE PRODUIT ══════════ -->
+<span class="s-anchor" id="fiche"></span>
+<div class="s-top"><span class="s-num">01 — Листок продукта</span><div class="s-line"></div></div>
+<h2 class="s-title">SOS-Expat.com<br><em>с первого взгляда</em></h2>
+
+<div class="fact-table">
+  <div class="fact-row"><div class="f-label">Название</div><div class="f-val"><strong>SOS-Expat.com</strong></div></div>
+  <div class="fact-row"><div class="f-label">Характер</div><div class="f-val">Платформа прямого соединения между клиентами и специалистами — в мировом масштабе</div></div>
+  <div class="fact-row"><div class="f-label">Ценностное предложение</div><div class="f-val">Клиент видит доступных специалистов онлайн, выбирает по предпочтениям, языку, специализации и отзывам — <strong>перезвон гарантирован за менее чем 5 минут</strong></div></div>
+  <div class="fact-row"><div class="f-label">Сценарии использования</div><div class="f-val">Экстренные ситуации <strong>и</strong> консультации — юридические, медицинские, налоговые, жилищные, переводческие, образовательные, ремонтные и любые другие</div></div>
+  <div class="fact-row"><div class="f-label">Целевая аудитория</div><div class="f-val">Экспаты, путешественники, туристы, цифровые кочевники, студенты, предприниматели — <strong>все национальности, все языки</strong></div></div>
+  <div class="fact-row"><div class="f-label">Сеть специалистов</div><div class="f-val">Эксперты и помощники, доступные онлайн — отфильтрованные по стране, языку, специализации и отзывам клиентов</div></div>
+  <div class="fact-row"><div class="f-label">Охват</div><div class="f-val"><strong>197 стран</strong> — 24/7, все языки</div></div>
+  <div class="fact-row"><div class="f-label">Бизнес-модель</div><div class="f-val">Комиссия за соединение — прозрачная, отображается до любого соединения</div></div>
+  <div class="fact-row"><div class="f-label">Технология</div><div class="f-val">Laravel / React / Firebase — 9 языков нативно — Stripe Connect</div></div>
+  <div class="fact-row"><div class="f-label">Штаб-квартира</div><div class="f-val"></div></div>
+  <div class="fact-row"><div class="f-label">Веб-сайт</div><div class="f-val"><a href="https://sos-expat.com">sos-expat.com</a></div></div>
+</div>
+
+<div class="s-sep"></div>
+
+<!-- ══════════ MARCHÉ ══════════ -->
+<span class="s-anchor" id="marche"></span>
+<div class="s-top"><span class="s-num">02 — Рынок &amp; ключевые показатели</span><div class="s-line"></div></div>
+<h2 class="s-title">304 миллиона человек —<br><em>без решения до сегодняшнего дня</em></h2>
+
+<p class="body-text">Рынок помощи людям за рубежом охватывает сотни миллионов человек, ежедневно сталкивающихся с ситуациями без немедленного решения: юридические, медицинские, административные чрезвычайные ситуации или просто потребность в экспертном совете в незнакомой стране.</p>
+
+<div class="stats-grid">
+  <div class="stat-box"><div class="stat-n">304M</div><div class="stat-l">Экспатов в мире (ООН 2024)</div></div>
+  <div class="stat-box"><div class="stat-n">1,6Md</div><div class="stat-l">Международных путешественников / год</div></div>
+  <div class="stat-box"><div class="stat-n">+40%</div><div class="stat-l">Инцидентов за рубежом за 3 года (ООН)</div></div>
+  <div class="stat-box"><div class="stat-n">35M</div><div class="stat-l">Цифровых кочевников в мире</div></div>
+  <div class="stat-box red"><div class="stat-n" style="color:#fff;">0</div><div class="stat-l">Аналогичных сервисов до SOS-Expat.com</div></div>
+  <div class="stat-box"><div class="stat-n">197</div><div class="stat-l">Стран охвачено с момента запуска</div></div>
+  <div class="stat-box"><div class="stat-n">&lt;5min</div><div class="stat-l">Гарантированное время перезвона</div></div>
+  <div class="stat-box"><div class="stat-n">24/7</div><div class="stat-l">Доступность — включая праздники</div></div>
+</div>
+
+<p class="body-text">Существующие альтернативы не удовлетворяют потребность:</p>
+
+<div class="compare-table">
+  <div class="compare-head">
+    <span>Критерий</span>
+    <span>Посольства</span>
+    <span>Страховые</span>
+    <span>SOS-Expat.com</span>
+  </div>
+  <div class="compare-row">
+    <span>Доступен 24/7</span>
+    <span class="no">✗ Нет</span>
+    <span class="no">Частично</span>
+    <span class="sos">✓ Да</span>
+  </div>
+  <div class="compare-row">
+    <span>Перезвон &lt; 5 минут</span>
+    <span class="no">✗ Нет</span>
+    <span class="no">✗ Нет</span>
+    <span class="sos">✓ Гарантировано</span>
+  </div>
+  <div class="compare-row">
+    <span>Клиент выбирает специалиста</span>
+    <span class="no">✗ Нет</span>
+    <span class="no">✗ Нет</span>
+    <span class="sos">✓ В реальном времени</span>
+  </div>
+  <div class="compare-row">
+    <span>Все языки</span>
+    <span class="no">Частично</span>
+    <span class="no">Частично</span>
+    <span class="sos">✓ Нативно</span>
+  </div>
+  <div class="compare-row">
+    <span>Экстренные ситуации И консультации</span>
+    <span class="no">Только экстренные</span>
+    <span class="no">Только экстренные</span>
+    <span class="sos">✓ Все сценарии</span>
+  </div>
+  <div class="compare-row">
+    <span>197 стран</span>
+    <span class="no">Переменно</span>
+    <span class="no">Переменно</span>
+    <span class="sos">✓ С момента запуска</span>
+  </div>
+</div>
+
+<div class="s-sep"></div>
+
+<!-- ══════════ LA SOLUTION ══════════ -->
+<span class="s-anchor" id="solution"></span>
+<div class="s-top"><span class="s-num">03 — Решение</span><div class="s-line"></div></div>
+<h2 class="s-title">Как это работает —<br><em>за 3 шага</em></h2>
+
+<p class="body-text">SOS-Expat.com прост в использовании, даже в стрессовой ситуации, даже без знания страны или местного языка:</p>
+
+<div class="fact-table">
+  <div class="fact-row">
+    <div class="f-label" style="font-size:22px;font-family:'Playfair Display',serif;color:#E5E3DE;font-weight:900;min-width:44px;">01</div>
+    <div class="f-val"><strong>Описать потребность</strong> — Страна, язык, тип ситуации или консультации, сфера. За несколько секунд через приложение или сайт, 24/7.</div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label" style="font-size:22px;font-family:'Playfair Display',serif;color:#E5E3DE;font-weight:900;min-width:44px;">02</div>
+    <div class="f-val"><strong>Просмотреть и выбрать специалиста</strong> — Доступные профили появляются в режиме реального времени, отфильтрованные по стране работы, языку, специализации и отзывам клиентов. Выбор полностью принадлежит клиенту.</div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label" style="font-size:22px;font-family:'Playfair Display',serif;color:#E5E3DE;font-weight:900;min-width:44px;">03</div>
+    <div class="f-val"><strong>Получить перезвон за менее чем 5 минут</strong> — На вашем языке. В любой точке мира. Комиссия за соединение, прозрачная и отображаемая до любого соединения, взимается SOS-Expat.com.</div>
+  </div>
+</div>
+
+<p class="body-text" style="margin-top:24px;">SOS-Expat.com охватывает <strong>все возможные сферы</strong> — не только экстренные ситуации:</p>
+
+<div class="secteurs-grid">
+  <span class="secteur-chip highlight">⚖️ Юридическое</span>
+  <span class="secteur-chip highlight">🏥 Медицинское</span>
+  <span class="secteur-chip highlight">💰 Налоговое</span>
+  <span class="secteur-chip highlight">🏠 Жильё</span>
+  <span class="secteur-chip">🌐 Перевод</span>
+  <span class="secteur-chip">🎓 Образование</span>
+  <span class="secteur-chip">🏦 Банки &amp; Финансы</span>
+  <span class="secteur-chip">🔧 Ремонт</span>
+  <span class="secteur-chip">📋 Административное</span>
+  <span class="secteur-chip">🛂 Виза &amp; Иммиграция</span>
+  <span class="secteur-chip">👨‍💼 Бизнес-консалтинг</span>
+  <span class="secteur-chip">🤝 Сопровождение</span>
+  <span class="secteur-chip">+ Любая другая сфера</span>
+</div>
+
+<div class="quote-pull">
+  <blockquote>Я создал сервис, который хотел бы иметь сам — для себя и для 304 миллионов людей, которые каждый день живут вдали от дома без страховочной сети.</blockquote>
+  <div class="attr">Команда SOS-Expat.com — </div>
+</div>
+
+<div class="s-sep"></div>
+
+<!-- ══════════ HISTORIQUE & VISION ══════════ -->
+<span class="s-anchor" id="historique"></span>
+<div class="s-top"><span class="s-num">04 — История &amp; Видение</span><div class="s-line"></div></div>
+<h2 class="s-title">От личного опыта<br><em>к глобальному решению</em></h2>
+
+<p class="body-text">SOS-Expat.com родился из простого наблюдения: оказаться одному за рубежом перед экстренной ситуацией или потребностью в консультации, не зная, к кому обратиться, без гарантии быстрого ответа на родном языке — это ежедневная реальность для сотен миллионов людей. <strong>Не существовало ни одного сервиса, который решал бы эту проблему универсально, немедленно и надёжно.</strong></p>
+
+<div class="timeline">
+  <div class="tl-item">
+    <div class="tl-year">Конец 2024</div>
+    <div class="tl-bar"></div>
+    <div class="tl-content"><h4>Зарождение &amp; запуск проекта</h4><p>Определение мировой пробоины: ни один сервис не гарантирует немедленную помощь или консультацию за рубежом, на нужном языке, с нужным экспертом. Начинается разработка.</p></div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2025</div>
+    <div class="tl-bar"></div>
+    <div class="tl-content"><h4>Разработка &amp; структурирование</h4><p>Архитектура Laravel/React/Firebase. Интеграция первых специалистов. Платёжная система Stripe Connect. 9 языков нативно. Расширение до 197 стран.</p></div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2026</div>
+    <div class="tl-bar"></div>
+    <div class="tl-content"><h4>Глобальный публичный запуск</h4><p>SOS-Expat.com открывается для широкой публики. Международная коммуникационная кампания. Цель: стать мировым ориентиром для любого человека за рубежом.</p></div>
+  </div>
+</div>
+
+<p class="body-text" style="margin-top:8px;"><strong>Видение 2027</strong> — Стать мировым эталонным стандартом, рекомендуемым перед любой поездкой за рубеж, интегрированным в предложения страховых компаний, международных работодателей и учреждений высшего образования.</p>
+
+<div class="vision-grid">
+  <div class="vision-card"><h4>Более 10 000 активных специалистов</h4><p>Глобальная сеть, охватывающая все страны и все специализации.</p></div>
+  <div class="vision-card"><h4>Институциональные партнёрства</h4><p>Страховые компании, работодатели, университеты — SOS-Expat.com, интегрированный в их предложения.</p></div>
+  <div class="vision-card"><h4>Полная экосистема</h4><p>SOS-Expat.com + Ulixai.com (сервисы для экспатов) + Frienble.ai (ИИ-путешествия) — взаимосвязаны.</p></div>
+  <div class="vision-card"><h4>Мировой стандарт безопасности</h4><p>Систематически рекомендуется перед любым отъездом, наравне с действующим паспортом.</p></div>
+</div>
+
+<div class="s-sep"></div>
+
+<!-- ══════════ FAQ ══════════ -->
+<span class="s-anchor" id="faq"></span>
+<div class="s-top"><span class="s-num">05 — ЧАВО для журналистов</span><div class="s-line"></div></div>
+<h2 class="s-title">Наиболее часто<br><em>задаваемые вопросы</em></h2>
+
+<div class="faq">
+  <div class="faq-item">
+    <div class="faq-q">Как гарантируется перезвон за менее чем 5 минут?</div>
+    <div class="faq-a">Платформа отображает только специалистов, <strong>доступных в режиме реального времени</strong>. Как только клиент делает выбор, специалист получает немедленное уведомление и по контракту обязан перезвонить за менее чем 5 минут. Профили, не соблюдающие этот срок, блокируются.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">SOS-Expat.com предназначен только для экстренных ситуаций?</div>
+    <div class="faq-a">Нет. <strong>SOS-Expat.com охватывает все сценарии использования</strong> — экстренные ситуации, конечно, но также консультации, мнения, сопровождение во всех мыслимых сферах: юридической, медицинской, налоговой, жилищной, переводческой, образовательной, банковской, ремонтной и многих других.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Как работает бизнес-модель?</div>
+    <div class="faq-a">SOS-Expat.com взимает <strong>комиссию за соединение</strong>, прозрачно отображаемую до любого соединения. Без подписки, без скрытых сборов, без комиссии с гонорара специалиста.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Сервис предназначен только для французских экспатов?</div>
+    <div class="faq-a"><strong>Нет — сервис универсален.</strong> SOS-Expat.com доступен для всех национальностей на всех языках. Японец в Париже, бразилец в Дубае или американец в Бангкоке могут пользоваться платформой на родном языке.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Какие типы специалистов представлены на платформе?</div>
+    <div class="faq-a">Эксперты во всех областях: <strong>юридической, медицинской, налоговой, жилищной, переводческой, образовательной, банковской, ремонтной</strong> — и любой другой. Специалисты видны онлайн со своими специализациями, языками, странами работы и отзывами клиентов.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Платформа доступна на нескольких языках?</div>
+    <div class="faq-a">Да — <strong>9 языков нативно</strong>: французский, английский, испанский, немецкий, португальский, арабский, упрощённый китайский, хинди и русский. Сеть специалистов охватывает многие другие языки в зависимости от страны.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Как стать специалистом на SOS-Expat.com?</div>
+    <div class="faq-a">Эксперты и помощники регистрируются на sos-expat.com. После проверки профиля они определяют свою доступность, страны работы, языки, специализации и тарифы. <strong>Комиссия за соединение взимается только при фактическом соединении.</strong></div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">В чём отличие от туристической страховки?</div>
+    <div class="faq-a">Туристическая страховка возмещает <em>после</em>. SOS-Expat.com действует <strong>во время</strong> — за менее чем 5 минут, со специалистом, которого клиент выбрал сам. Оба сервиса дополняют друг друга.</div>
+  </div>
+</div>
+
+<div class="s-sep"></div>
+
+<!-- ══════════ MÉDIAS ══════════ -->
+<span class="s-anchor" id="medias"></span>
+<div class="s-top"><span class="s-num">06 — Медиакит</span><div class="s-line"></div></div>
+<h2 class="s-title">Ресурсы, доступные<br><em>для прессы</em></h2>
+
+<p class="body-text">Все ресурсы доступны на <a href="https://sos-expat.com/presse" style="color:var(--dark);font-weight:600;">sos-expat.com/presse</a></p>
+
+<div class="media-grid">
+  <div class="media-item"><div class="media-icon">🔴</div><div class="media-info"><h4>Логотип SOS-Expat.com</h4><p>SVG / PNG прозрачный фон — белая, красная, цветная версии</p></div><div class="media-tag">HD</div></div>
+  <div class="media-item"><div class="media-icon">🖥</div><div class="media-info"><h4>Скриншоты платформы</h4><p>Интерфейс десктоп &amp; мобильный — полный поток</p></div><div class="media-tag">HD</div></div>
+</div>
+
+<!-- CHARTE GRAPHIQUE -->
+<div class="s-top" style="padding-top:36px;"><span class="s-num">Фирменный стиль</span><div class="s-line"></div></div>
+
+<div class="fact-table">
+  <div class="fact-row">
+    <div class="f-label">Основной цвет</div>
+    <div class="f-val" style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-block;width:20px;height:20px;border-radius:3px;background:#B91C1C;flex-shrink:0;"></span>
+      <strong>#B91C1C</strong> — Красный SOS-Expat
+    </div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Вторичный цвет</div>
+    <div class="f-val" style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-block;width:20px;height:20px;border-radius:3px;background:#111111;flex-shrink:0;border:1px solid #ddd;"></span>
+      <strong>#111111</strong> — Глубокий чёрный
+    </div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Светлый фон</div>
+    <div class="f-val" style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-block;width:20px;height:20px;border-radius:3px;background:#FAFAF9;flex-shrink:0;border:1px solid #ddd;"></span>
+      <strong>#FAFAF9</strong> — Кремовый
+    </div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Белый</div>
+    <div class="f-val" style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-block;width:20px;height:20px;border-radius:3px;background:#FFFFFF;flex-shrink:0;border:1px solid #ddd;"></span>
+      <strong>#FFFFFF</strong> — Чистый белый
+    </div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Серый текст</div>
+    <div class="f-val" style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-block;width:20px;height:20px;border-radius:3px;background:#444444;flex-shrink:0;"></span>
+      <strong>#444444</strong> — Вторичный текст
+    </div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Шрифт заголовков</div>
+    <div class="f-val"><strong>Playfair Display</strong> — Serif, начертания 400 / 700 / 900 — Google Fonts</div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Шрифт текста</div>
+    <div class="f-val"><strong>DM Sans</strong> — Sans-serif, начертания 300 / 400 / 500 / 600 — Google Fonts</div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Использование красного</div>
+    <div class="f-val">Акценты, ключевые заголовки, рамки, бейджи — никогда в качестве сплошного фона на больших светлых поверхностях</div>
+  </div>
+  <div class="fact-row">
+    <div class="f-label">Использование логотипа</div>
+    <div class="f-val">Всегда "SOS-Expat" чёрным или белым + ".com" красным — никогда не изменять пропорции и цвета</div>
+  </div>
+</div>
+
+<!-- APERÇU PALETTE -->
+<div style="display:flex;gap:0;border-radius:6px;overflow:hidden;margin:16px 0;height:48px;">
+  <div style="flex:1;background:#B91C1C;" title="#B91C1C"></div>
+  <div style="flex:1;background:#DC2626;" title="#DC2626"></div>
+  <div style="flex:1;background:#111111;" title="#111111"></div>
+  <div style="flex:1;background:#1C1C1C;" title="#1C1C1C"></div>
+  <div style="flex:1;background:#444444;" title="#444444"></div>
+  <div style="flex:1;background:#AAAAAA;" title="#AAAAAA"></div>
+  <div style="flex:1;background:#FAFAF9;border:1px solid #E5E3DE;" title="#FAFAF9"></div>
+  <div style="flex:1;background:#FFFFFF;border:1px solid #E5E3DE;" title="#FFFFFF"></div>
+</div>
+<p style="font-size:11px;color:var(--grey);margin-bottom:0;">Слева направо: Основной красный · Яркий красный · Глубокий чёрный · Мягкий чёрный · Тёмно-серый · Светло-серый · Кремовый · Белый</p>
+
+<div class="s-sep"></div>
+
+<!-- ══════════ CONTACT ══════════ -->
+<span class="s-anchor" id="contact"></span>
+<div class="s-top"><span class="s-num">07 — Контакт для прессы</span><div class="s-line"></div></div>
+<h2 class="s-title">Свяжитесь с нами —<br><em>через страницу для прессы</em></h2>
+
+<div class="contact-final">
+  <h3>Контакт для прессы &amp; партнёрств</h3>
+  <div class="contact-rows">
+    <div><div class="c-lbl">Страница для прессы</div><div class="c-val"><a href="https://sos-expat.com/presse">sos-expat.com/presse</a></div></div>
+    <div><div class="c-lbl">Контакт</div><div class="c-val">Через контактную форму на странице для прессы</div></div>
+    <div><div class="c-lbl">Веб-сайт</div><div class="c-val"><a href="https://sos-expat.com">sos-expat.com</a></div></div>
+    <div><div class="c-lbl">Языки</div><div class="c-val">Французский, Английский</div></div>
+    <div><div class="c-lbl">Штаб-квартира</div><div class="c-val"></div></div>
+    <div><div class="c-lbl">Форматы интервью</div><div class="c-val">Печатная пресса, подкаст, видео, радио</div></div>
+  </div>
+  <div class="kit-row">
+    <span class="kit-chip">🔴 Логотип HD</span>
+    <span class="kit-chip">🖥 Скриншоты платформы</span>
+    <span class="kit-chip">🎨 Фирменный стиль</span>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>
