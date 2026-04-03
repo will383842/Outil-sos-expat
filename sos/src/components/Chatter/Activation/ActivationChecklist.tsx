@@ -226,13 +226,20 @@ const ActivationChecklist: React.FC<ActivationChecklistProps> = ({
                             <Share2 className="w-4 h-4" />
                             <FormattedMessage id="chatter.activation.reshare" defaultMessage="Repartager mon lien" />
                           </button>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+                            <FormattedMessage
+                              id="chatter.activation.step3.waitTime"
+                              defaultMessage="En général, un premier appel arrive sous 24-48h si vous partagez dans 3+ groupes actifs"
+                            />
+                          </p>
                         </div>
                       )}
                       {index === 3 && (
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           <FormattedMessage
                             id="chatter.activation.step4.subtitle"
-                            defaultMessage={`${callAmountRange} credites automatiquement`}
+                            defaultMessage="{amount} versé dans votre portefeuille"
+                            values={{ amount: callAmountRange }}
                           />
                         </p>
                       )}

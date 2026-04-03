@@ -347,7 +347,7 @@ const ImageBankSection: React.FC<ImageBankSectionProps> = ({ accent = "emerald",
             <p className="text-xs sm:text-sm opacity-70 line-clamp-2">
               {t.desc}
               {showDownload && (
-                <span className="ml-1 opacity-90 font-medium">
+                <span className="ml-1 opacity-90 font-medium hidden sm:inline">
                   {" "}— {lang === "fr" ? "Survolez une image pour la télécharger en HD (WebP, ~220 Ko)." : "Hover an image to download it in HD (WebP, ~220 KB)."}
                 </span>
               )}
