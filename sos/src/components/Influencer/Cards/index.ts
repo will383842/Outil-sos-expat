@@ -8,7 +8,6 @@ export { default as InfluencerBalanceCard } from './InfluencerBalanceCard';
 export { default as InfluencerStatsCard } from './InfluencerStatsCard';
 
 // New Premium Cards
-export { InfluencerLevelCard } from './InfluencerLevelCard';
 export { InfluencerMotivationWidget } from './InfluencerMotivationWidget';
 export { InfluencerLiveActivityFeed } from './InfluencerLiveActivityFeed';
 export { InfluencerEarningsBreakdownCard } from './InfluencerEarningsBreakdownCard';
