@@ -185,8 +185,10 @@ export const createContactMessage = onRequest(
 
       // Créer le message de contact
       // FIX: Ajouter isRead: false pour compatibilité avec AdminContactMessages
-      const messageDoc = await db.collection("contact_messages").add({
-        ...validation.data,
+      // FIX: Exclure les champs undefined (phone, name, subject) — Firestore les rejette
+      const { phone, name, subject, ...requiredData } = validation.data;
+      const messagePayload: Record<string, unknown> = {
+        ...requiredData,
         status: "unread",
         isRead: false, // AdminContactMessages utilise ce champ
         createdAt: Timestamp.now(),
@@ -196,7 +198,11 @@ export const createContactMessage = onRequest(
           userAgent: req.headers["user-agent"]?.slice(0, 200),
           referer: req.headers["referer"]?.slice(0, 200),
         },
-      });
+      };
+      if (phone !== undefined) messagePayload.phone = phone;
+      if (name !== undefined) messagePayload.name = name;
+      if (subject !== undefined) messagePayload.subject = subject;
+      const messageDoc = await db.collection("contact_messages").add(messagePayload);
 
       console.log(`[createContactMessage] Message created: ${messageDoc.id}`);
 

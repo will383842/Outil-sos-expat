@@ -100,9 +100,19 @@ function isImageFormat(format: string | null): boolean {
 
 function ResourceCard({ resource, onDownload }: { resource: PressResource; onDownload?: (r: PressResource) => void }) {
   const isImg = resource.file_url && isImageFormat(resource.file_format);
+  // Checkered background for transparent assets (logos, SVG, PNG) — industry standard (Figma/Photoshop style)
+  const isTransparentAsset = isImg && ["png", "svg"].includes((resource.file_format ?? "").toLowerCase());
   return (
     <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-      <div className="relative h-44 bg-gray-50 flex items-center justify-center overflow-hidden">
+      <div
+        className="relative h-44 flex items-center justify-center overflow-hidden"
+        style={isTransparentAsset ? {
+          backgroundColor: "#f3f4f6",
+          backgroundImage: "linear-gradient(45deg,#e5e7eb 25%,transparent 25%),linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e7eb 75%),linear-gradient(-45deg,transparent 75%,#e5e7eb 75%)",
+          backgroundSize: "16px 16px",
+          backgroundPosition: "0 0,0 8px,8px -8px,-8px 0"
+        } : { backgroundColor: "#f9fafb" }}
+      >
         {isImg ? (
           <img src={resource.file_url!} alt={resource.name} className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
         ) : (
