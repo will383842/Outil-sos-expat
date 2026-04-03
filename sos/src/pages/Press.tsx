@@ -302,7 +302,7 @@ const Press: React.FC = () => {
         const result = await getPublicPressResources(resourceLang);
         setResources((result.resources || []).map((r: PublicPressResource) => ({
           id: r.id, type: r.type, name: r.name, description: r.description,
-          file_url: r.file_url, file_format: r.file_format, file_size: r.file_size, category: r.category,
+          file_url: r.file_url, file_format: r.file_format, file_size: r.file_size, category: r.category, language: r.language ?? null,
         })));
       } catch { /* silent */ }
       setLoadingResources(false);
