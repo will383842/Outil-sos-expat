@@ -14,7 +14,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   Newspaper, Download, Mail, Clock, Globe, Languages, Shield,
-  ChevronDown, ChevronUp, FileText, FolderOpen, Camera,
+  ChevronDown, FileText, FolderOpen, Camera,
   BarChart3, Users, Calendar, X, Send, MessageSquare,
   Loader2, CheckCircle, Palette, MapPin, Zap,
   Quote, ArrowRight, Sparkles, ExternalLink,
@@ -25,11 +25,9 @@ import ImageBankSection from "../components/ImageBankSection";
 import BreadcrumbSchema from "../components/seo/BreadcrumbSchema";
 import OrganizationSchema from "../components/seo/OrganizationSchema";
 import FAQPageSchema from "../components/seo/FAQPageSchema";
-import HreflangLinks from "@/multilingual-system/components/HrefLang/HreflangLinks";
 import { useApp } from "../contexts/AppContext";
 import { useAggregateRatingWithDefault } from "../hooks/useAggregateRating";
 import { useIntl } from "react-intl";
-import { useLocation } from "react-router-dom";
 import {
   collection, query, where, orderBy, getDocs, addDoc, serverTimestamp,
 } from "firebase/firestore";
@@ -103,13 +101,13 @@ function isImageFormat(format: string | null): boolean {
 function ResourceCard({ resource, onDownload }: { resource: PressResource; onDownload?: (r: PressResource) => void }) {
   const isImg = resource.file_url && isImageFormat(resource.file_format);
   return (
-    <div className="group relative bg-white/[0.05] backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-red-500/30 hover:bg-white/[0.06] transition-all duration-300">
-      <div className="relative h-44 bg-gradient-to-br from-white/5 to-white/[0.02] flex items-center justify-center overflow-hidden">
+    <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div className="relative h-44 bg-gray-50 flex items-center justify-center overflow-hidden">
         {isImg ? (
           <img src={resource.file_url!} alt={resource.name} className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
         ) : (
-          <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-            <FileText className="w-8 h-8 text-white/20" />
+          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
+            <FileText className="w-8 h-8 text-gray-300" />
           </div>
         )}
         {resource.file_format && (
@@ -119,11 +117,11 @@ function ResourceCard({ resource, onDownload }: { resource: PressResource; onDow
         )}
       </div>
       <div className="p-5">
-        <h3 className="font-semibold text-white text-sm mb-1.5 line-clamp-1">{resource.name}</h3>
-        {resource.description && <p className="text-xs text-white/60 mb-4 line-clamp-2 leading-relaxed">{resource.description}</p>}
+        <h3 className="font-semibold text-gray-900 text-sm mb-1.5 line-clamp-1">{resource.name}</h3>
+        {resource.description && <p className="text-xs text-gray-500 mb-4 line-clamp-2 leading-relaxed">{resource.description}</p>}
         {resource.file_url && (
           <a href={resource.file_url} target="_blank" rel="noopener noreferrer" onClick={() => onDownload?.(resource)}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-red-600 text-white text-xs font-semibold rounded-xl transition-all duration-300 border border-white/10 hover:border-red-600">
+            className="w-full inline-flex items-center justify-center gap-2 px-4 min-h-[44px] bg-gray-100 hover:bg-red-600 text-gray-700 hover:text-white text-xs font-semibold rounded-xl transition-all duration-300 border border-gray-200 hover:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
             <Download className="w-3.5 h-3.5" />
             {resource.file_format?.toUpperCase()} {formatFileSize(resource.file_size) && `\u2014 ${formatFileSize(resource.file_size)}`}
           </a>
@@ -133,7 +131,7 @@ function ResourceCard({ resource, onDownload }: { resource: PressResource; onDow
   );
 }
 
-function SectionTitle({ icon: Icon, title, subtitle, id, dark = true }: { icon: React.ElementType; title: string; subtitle: string; id: string; dark?: boolean }) {
+function SectionTitle({ icon: Icon, title, subtitle, id, dark = false }: { icon: React.ElementType; title: string; subtitle: string; id: string; dark?: boolean }) {
   return (
     <div id={id} className="scroll-mt-24 mb-12">
       <div className="flex items-center gap-4 mb-3">
@@ -147,13 +145,13 @@ function SectionTitle({ icon: Icon, title, subtitle, id, dark = true }: { icon: 
   );
 }
 
-function EmptySection({ icon: Icon, label, btnLabel, onRequest, dark = true }: { icon: React.ElementType; label: string; btnLabel: string; onRequest: () => void; dark?: boolean }) {
+function EmptySection({ icon: Icon, label, btnLabel, onRequest, dark = false }: { icon: React.ElementType; label: string; btnLabel: string; onRequest: () => void; dark?: boolean }) {
   return (
     <div className={`rounded-2xl border-2 border-dashed p-16 text-center ${dark ? "border-white/10 bg-white/[0.04]" : "border-gray-200 bg-gray-50"}`}>
       <Icon className={`w-14 h-14 mx-auto mb-4 ${dark ? "text-white/10" : "text-gray-300"}`} />
       <p className={`font-medium mb-4 ${dark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
       <button onClick={onRequest}
-        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all inline-flex items-center gap-2 active:scale-[0.98]">
+        className="px-6 min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all inline-flex items-center gap-2 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
         <Mail className="w-4 h-4" />{btnLabel}
       </button>
     </div>
@@ -167,16 +165,13 @@ function EmptySection({ icon: Icon, label, btnLabel, onRequest, dark = true }: {
 const Press: React.FC = () => {
   const intl = useIntl();
   const { language } = useApp();
-  const location = useLocation();
   const lang = (language as string) || "fr";
   const aggregateRating = useAggregateRatingWithDefault({ minRating: 4 });
-
   const [resourceLang, setResourceLang] = useState(lang);
   const [resources, setResources] = useState<PressResource[]>([]);
   const [releases, setReleases] = useState<PressRelease[]>([]);
   const [loadingResources, setLoadingResources] = useState(true);
   const [loadingReleases, setLoadingReleases] = useState(true);
-  const [expandedRelease, setExpandedRelease] = useState<string | null>(null);
   const [showContact, setShowContact] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", email: "", media: "", subject: "", message: "" });
   const [contactSending, setContactSending] = useState(false);
@@ -281,7 +276,6 @@ const Press: React.FC = () => {
   const brandGuidelines = resources.filter((r) => r.category === "press_brand_guidelines");
   const kits = resources.filter((r) => r.category === "press_kit");
   const spokespersons = resources.filter((r) => r.category === "press_spokesperson");
-  const photos = resources.filter((r) => r.category === "press_photos");
   const bRoll = resources.filter((r) => r.category === "press_b_roll");
   const dataRes = resources.filter((r) => r.category === "press_data");
   const factSheets = resources.filter((r) => r.category === "press_fact_sheets");
@@ -372,68 +366,53 @@ const Press: React.FC = () => {
         )}
       </Helmet>
 
-      {/* Custom styles */}
-      <style>{`
-        .press-page .no-scrollbar::-webkit-scrollbar { display: none; }
-        .press-page .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes press-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @keyframes press-glow { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.7; } }
-        .press-float { animation: press-float 6s ease-in-out infinite; }
-        .press-glow { animation: press-glow 4s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .press-float, .press-glow { animation: none; } }
-      `}</style>
-
-      <div className="press-page bg-black min-h-screen">
+      <div className="press-page min-h-screen">
 
         {/* ══════════════ HERO ══════════════ */}
-        <section className="relative overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0">
-            <div className="absolute top-[-20%] right-[-10%] w-[700px] h-[700px] bg-red-600/10 rounded-full blur-[150px] press-glow" />
-            <div className="absolute bottom-[-30%] left-[-15%] w-[600px] h-[600px] bg-orange-500/8 rounded-full blur-[130px] press-glow" style={{ animationDelay: "2s" }} />
-            <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] bg-red-500/5 rounded-full blur-[100px] press-float" />
-          </div>
-          {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        <section className="relative overflow-hidden bg-gradient-to-br from-red-700 to-red-800">
+          {/* Subtle texture overlay */}
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-500/20 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-36 pb-16 sm:pb-24 lg:pb-32">
             <div className="max-w-4xl">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2.5 bg-red-600/10 border border-red-500/20 rounded-full px-5 py-2.5 mb-8 backdrop-blur-sm">
-                <Sparkles className="w-4 h-4 text-red-400" />
-                <span className="text-sm font-semibold text-red-400 uppercase tracking-widest">{t("press.hero.badge")}</span>
+              <div className="inline-flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-5 py-2.5 mb-8 backdrop-blur-sm">
+                <Sparkles className="w-4 h-4 text-white" />
+                <span className="text-sm font-semibold text-white uppercase tracking-widest">{t("press.hero.badge")}</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-8 tracking-tight leading-[1.05]">
                 {t("press.hero.subtitle")}
               </h1>
 
-              <p id="press-boilerplate" className="text-lg sm:text-xl text-white/60 leading-relaxed mb-10 max-w-3xl">
+              <p id="press-boilerplate" className="text-lg sm:text-xl text-white/80 leading-relaxed mb-10 max-w-3xl">
                 {t("press.boilerplate.short")}
               </p>
 
               {/* Mission cards */}
               <div className="grid sm:grid-cols-2 gap-4 mb-12 max-w-2xl">
-                <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5 backdrop-blur-sm hover:border-red-500/30 transition-colors">
-                  <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2">{t("press.mission1.title")}</p>
-                  <p className="text-sm font-medium text-white/80">{t("press.mission1.desc")}</p>
+                <div className="bg-white/10 border border-white/20 rounded-2xl p-5 backdrop-blur-sm hover:bg-white/15 transition-colors">
+                  <p className="text-xs font-bold text-red-200 uppercase tracking-widest mb-2">{t("press.mission1.title")}</p>
+                  <p className="text-sm font-medium text-white/90">{t("press.mission1.desc")}</p>
                 </div>
-                <div className="bg-white/[0.06] border border-white/10 rounded-2xl p-5 backdrop-blur-sm hover:border-orange-500/30 transition-colors">
-                  <p className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2">{t("press.mission2.title")}</p>
-                  <p className="text-sm font-medium text-white/80">{t("press.mission2.desc")}</p>
+                <div className="bg-white/10 border border-white/20 rounded-2xl p-5 backdrop-blur-sm hover:bg-white/15 transition-colors">
+                  <p className="text-xs font-bold text-orange-200 uppercase tracking-widest mb-2">{t("press.mission2.title")}</p>
+                  <p className="text-sm font-medium text-white/90">{t("press.mission2.desc")}</p>
                 </div>
               </div>
 
               {/* CTAs */}
               <div className="flex flex-wrap gap-4">
                 <a href="#identity"
-                  className="group px-7 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-2xl transition-all flex items-center gap-3 shadow-lg shadow-red-600/25 active:scale-[0.98]">
+                  className="group px-7 py-4 bg-white text-red-700 hover:bg-red-50 font-bold rounded-2xl transition-all flex items-center gap-3 shadow-lg active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-red-700">
                   <Download className="w-5 h-5" />
                   {t("press.label.downloadMediaKit")}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </a>
                 <button onClick={openContact}
-                  className="px-7 py-4 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-2xl transition-all flex items-center gap-3 border border-white/10 hover:border-white/20 backdrop-blur-sm active:scale-[0.98]">
+                  className="px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-2xl transition-all flex items-center gap-3 border border-white/20 hover:border-white/30 backdrop-blur-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-red-700">
                   <MessageSquare className="w-5 h-5" />
                   {t("press.contact.cta")}
                 </button>
@@ -442,7 +421,7 @@ const Press: React.FC = () => {
 
             {/* Scroll indicator */}
             <div className="hidden lg:flex justify-center mt-16">
-              <a href="#about" className="flex flex-col items-center gap-2 text-white/20 hover:text-white/40 transition-colors">
+              <a href="#about" className="flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors">
                 <ChevronDown className="w-6 h-6 animate-bounce" />
               </a>
             </div>
@@ -450,12 +429,12 @@ const Press: React.FC = () => {
         </section>
 
         {/* ══════════════ STICKY NAV ══════════════ */}
-        <nav className="sticky top-0 z-30 bg-black/90 backdrop-blur-xl border-b border-white/10" aria-label="Press sections">
+        <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm" aria-label="Press sections">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-1 overflow-x-auto py-3 no-scrollbar">
+            <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide">
               {SECTION_IDS.map((id) => (
                 <a key={id} href={`#${id}`}
-                  className="px-4 py-2 text-xs font-medium text-white/40 hover:text-white hover:bg-white/10 rounded-xl whitespace-nowrap transition-all">
+                  className="inline-flex items-center min-h-[44px] px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl whitespace-nowrap transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                   {(sectionLabels as Record<string, string>)[id] || id}
                 </a>
               ))}
@@ -464,24 +443,24 @@ const Press: React.FC = () => {
               <div className="ml-auto flex-shrink-0 relative">
                 <button
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-white text-xs font-medium transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl text-gray-700 text-xs font-medium transition-all"
                   title={t("press.label.resourceLanguage")}
                 >
-                  <Globe className="w-3.5 h-3.5 text-red-400" />
+                  <Globe className="w-3.5 h-3.5 text-red-500" />
                   <span>{currentLang.flag} {currentLang.code.toUpperCase()}</span>
-                  <ChevronDown className={`w-3 h-3 text-white/40 transition-transform ${showLangDropdown ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showLangDropdown ? "rotate-180" : ""}`} />
                 </button>
                 {showLangDropdown && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
-                    <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 py-1.5 min-w-[180px] overflow-hidden">
-                      <p className="px-4 py-2 text-[10px] font-bold text-white/40 uppercase tracking-widest">{t("press.label.resourceLanguage")}</p>
+                    <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[180px] overflow-hidden">
+                      <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("press.label.resourceLanguage")}</p>
                       {LANG_OPTIONS.map((opt) => (
                         <button key={opt.code} onClick={() => { setResourceLang(opt.code); setShowLangDropdown(false); }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${resourceLang === opt.code ? "bg-red-600/20 text-red-400" : "text-white/70 hover:bg-white/5 hover:text-white"}`}>
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${resourceLang === opt.code ? "bg-red-50 text-red-600" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"}`}>
                           <span className="text-base">{opt.flag}</span>
                           <span className="font-medium">{opt.label}</span>
-                          {resourceLang === opt.code && <CheckCircle className="w-3.5 h-3.5 ml-auto text-red-400" />}
+                          {resourceLang === opt.code && <CheckCircle className="w-3.5 h-3.5 ml-auto text-red-500" />}
                         </button>
                       ))}
                     </div>
@@ -493,21 +472,18 @@ const Press: React.FC = () => {
         </nav>
 
         {/* ══════════════ KEY STATS ══════════════ */}
-        <section className="py-6 border-b border-white/[0.08] bg-gray-950/60">
+        <section className="py-8 border-b border-gray-100 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { value: t("press.facts.countries"), label: t("press.label.countries"), gradient: "from-red-600 to-red-500" },
-                { value: t("press.facts.languages"), label: t("press.label.languages"), gradient: "from-blue-600 to-blue-500" },
-                { value: t("press.facts.availability"), label: t("press.label.availability"), gradient: "from-emerald-600 to-emerald-500" },
-                { value: t("press.facts.clientsHelped"), label: t("press.label.helped"), gradient: "from-purple-600 to-purple-500" },
+                { value: t("press.facts.countries"), label: t("press.label.countries"), bg: "bg-red-50", text: "text-red-600" },
+                { value: t("press.facts.languages"), label: t("press.label.languages"), bg: "bg-blue-50", text: "text-blue-600" },
+                { value: t("press.facts.availability"), label: t("press.label.availability"), bg: "bg-emerald-50", text: "text-emerald-600" },
+                { value: t("press.facts.clientsHelped"), label: t("press.label.helped"), bg: "bg-purple-50", text: "text-purple-600" },
               ].map((s) => (
-                <div key={s.label} className="relative overflow-hidden rounded-2xl p-5 text-center">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient} opacity-10`} />
-                  <div className="relative">
-                    <p className="text-2xl sm:text-3xl font-extrabold text-white">{s.value}</p>
-                    <p className="text-xs text-white/40 mt-1 font-medium uppercase tracking-wider">{s.label}</p>
-                  </div>
+                <div key={s.label} className={`rounded-2xl p-5 text-center ${s.bg}`}>
+                  <p className={`text-2xl sm:text-3xl font-extrabold ${s.text}`}>{s.value}</p>
+                  <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -515,24 +491,24 @@ const Press: React.FC = () => {
         </section>
 
         {/* ══════════════ ABOUT + FACTS ══════════════ */}
-        <section id="about" className="scroll-mt-16 py-20 sm:py-28 bg-gradient-to-b from-black to-gray-950">
+        <section id="about" className="scroll-mt-16 py-20 sm:py-28 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
               <div className="lg:col-span-3">
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-8">{t("press.about.title")}</h2>
-                <p className="text-white/60 leading-relaxed mb-10 text-lg">{t("press.about.description")}</p>
-                <div className="bg-gradient-to-r from-red-600/10 to-orange-600/10 border-l-4 border-red-500 rounded-r-2xl p-6">
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">{t("press.about.title")}</h2>
+                <p className="text-gray-600 leading-relaxed mb-10 text-lg">{t("press.about.description")}</p>
+                <div className="bg-red-50 border-l-4 border-red-500 rounded-r-2xl p-6">
                   <div className="flex items-start gap-4">
-                    <Quote className="w-7 h-7 text-red-400 flex-shrink-0 mt-1" />
-                    <p className="text-white/80 font-medium italic text-lg leading-relaxed">
+                    <Quote className="w-7 h-7 text-red-500 flex-shrink-0 mt-1" />
+                    <p className="text-gray-700 font-medium italic text-lg leading-relaxed">
                       {t("press.about.mission")}
                     </p>
                   </div>
                 </div>
               </div>
               <div id="press-facts" className="lg:col-span-2">
-                <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-red-400 mb-6">{t("press.facts.title")}</h3>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-red-500 mb-6">{t("press.facts.title")}</h3>
                   <div className="space-y-4">
                     {[
                       { icon: Calendar, label: t("press.label.founded"), value: t("press.facts.founded") },
@@ -542,12 +518,12 @@ const Press: React.FC = () => {
                       { icon: Zap, label: t("press.label.availability"), value: t("press.facts.availability") },
                       { icon: Users, label: t("press.label.providers"), value: t("press.facts.providers") },
                     ].map((item) => (
-                      <div key={item.label} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                        <div className="flex items-center gap-3 text-white/40">
-                          <item.icon className="w-4 h-4" />
+                      <div key={item.label} className="flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                        <div className="flex items-center gap-3 text-gray-500">
+                          <item.icon className="w-4 h-4 text-red-400" />
                           <span className="text-sm">{item.label}</span>
                         </div>
-                        <span className="text-white font-bold text-sm">{item.value}</span>
+                        <span className="text-gray-900 font-bold text-sm">{item.value}</span>
                       </div>
                     ))}
                   </div>
@@ -559,16 +535,16 @@ const Press: React.FC = () => {
 
         {/* ══════════════ RESOURCES SECTIONS ══════════════ */}
         {loadingResources ? (
-          <div className="flex justify-center py-24">
+          <div className="flex justify-center py-24 bg-white">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
-              <p className="text-white/40 text-sm font-medium">{t("press.label.resourceLanguage")}...</p>
+              <p className="text-gray-400 text-sm font-medium">{t("press.label.resourceLanguage")}...</p>
             </div>
           </div>
         ) : (
           <>
             {/* IDENTITY / LOGOS */}
-            <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+            <section className="py-20 sm:py-24 bg-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="identity" icon={Palette} title={t("press.section.identity")} subtitle={t("press.section.identityDesc")} />
                 {logos.length > 0 ? (
@@ -581,7 +557,7 @@ const Press: React.FC = () => {
 
             {/* BRAND GUIDELINES */}
             {brandGuidelines.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+              <section className="py-20 sm:py-24 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="brand-guidelines" icon={Shield} title={t("press.section.brandGuidelines")} subtitle={t("press.section.brandGuidelinesDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{brandGuidelines.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -590,7 +566,7 @@ const Press: React.FC = () => {
             )}
 
             {/* PRESS KIT */}
-            <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+            <section className="py-20 sm:py-24 bg-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="press-kit" icon={FolderOpen} title={t("press.section.pressKit")} subtitle={t("press.section.pressKitDesc")} />
                 {kits.length > 0 ? (
@@ -602,24 +578,24 @@ const Press: React.FC = () => {
             </section>
 
             {/* PRESS RELEASES */}
-            <section id="releases" className="scroll-mt-16 py-20 sm:py-24 border-t border-white/[0.08]">
+            <section id="releases" className="scroll-mt-16 py-20 sm:py-24 bg-slate-50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-start justify-between gap-4 mb-12 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-red-600/20">
-                        <Newspaper className="w-6 h-6 text-red-400" />
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-red-100">
+                        <Newspaper className="w-6 h-6 text-red-600" />
                       </div>
-                      <h2 id="releases-title" className="scroll-mt-24 text-2xl sm:text-3xl font-bold text-white">{t("press.releases.title")}</h2>
+                      <h2 id="releases-title" className="scroll-mt-24 text-2xl sm:text-3xl font-bold text-gray-900">{t("press.releases.title")}</h2>
                     </div>
-                    <p className="ml-16 text-base text-white/60">{t("press.releases.subtitle")}</p>
+                    <p className="ml-16 text-base text-gray-500">{t("press.releases.subtitle")}</p>
                   </div>
                   {/* Per-section language switcher — quick pill buttons */}
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {LANG_OPTIONS.map((opt) => (
                       <button key={opt.code} onClick={() => setResourceLang(opt.code)}
                         title={opt.label}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${resourceLang === opt.code ? "bg-red-600 border-red-500 text-white" : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/20"}`}>
+                        className={`inline-flex items-center gap-1.5 px-2.5 min-h-[44px] rounded-lg text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${resourceLang === opt.code ? "bg-red-600 border-red-500 text-white" : "bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300"}`}>
                         <span>{opt.flag}</span>
                         <span className="hidden sm:inline">{opt.code.toUpperCase()}</span>
                       </button>
@@ -629,9 +605,9 @@ const Press: React.FC = () => {
                 {loadingReleases ? (
                   <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-red-500 animate-spin" /></div>
                 ) : releases.length === 0 ? (
-                  <div className="rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.04] p-16 text-center">
-                    <Newspaper className="w-14 h-14 text-white/10 mx-auto mb-4" />
-                    <p className="text-white/40 font-medium">{t("press.releases.empty")}</p>
+                  <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-16 text-center">
+                    <Newspaper className="w-14 h-14 text-gray-200 mx-auto mb-4" />
+                    <p className="text-gray-400 font-medium">{t("press.releases.empty")}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
@@ -642,7 +618,7 @@ const Press: React.FC = () => {
                       const pdfUrl = release.pdfUrl?.[fsLang] || release.pdfUrl?.[relLang] || release.pdfUrl?.["en"] || release.pdfUrl?.["fr"];
                       const htmlViewUrl = release.htmlUrl?.[fsLang] || release.htmlUrl?.[relLang] || release.htmlUrl?.["en"] || release.htmlUrl?.["fr"];
                       return (
-                        <article key={release.id} className="group flex flex-col rounded-2xl overflow-hidden border border-white/10 hover:border-red-500/40 transition-all duration-300 bg-white/[0.03] hover:bg-white/[0.05]">
+                        <article key={release.id} className="group flex flex-col rounded-2xl overflow-hidden border border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-300 bg-white">
                           {/* Document thumbnail — miniature iframe scaled down */}
                           <a href={htmlViewUrl || "#"} target="_blank" rel="noopener noreferrer"
                             className="relative overflow-hidden bg-white flex-shrink-0 cursor-pointer"
@@ -659,12 +635,12 @@ const Press: React.FC = () => {
                               />
                               </div>
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                <FileText className="w-14 h-14 text-white/15" />
+                              <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                <FileText className="w-14 h-14 text-gray-200" />
                               </div>
                             )}
                             {/* Overlay — always visible on mobile (no hover on touch), hover-only on sm+ */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
                               <span className="text-white text-xs font-bold bg-red-600 px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
                                 <ExternalLink className="w-3.5 h-3.5" />
                                 {t("press.releases.viewFull", "Voir le communiqué")}
@@ -674,24 +650,24 @@ const Press: React.FC = () => {
                           {/* Card footer */}
                           <div className="p-4 flex flex-col gap-2 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="flex items-center gap-1 text-[11px] text-white/40">
+                              <span className="flex items-center gap-1 text-[11px] text-gray-400">
                                 <Calendar className="w-3 h-3" />{formatDate(release.publishedAt)}
                               </span>
                               {release.tags?.slice(0, 2).map((tag) => (
-                                <span key={tag} className="px-2 py-0.5 bg-red-600/15 text-red-400 text-[10px] rounded-full font-semibold">{tag}</span>
+                                <span key={tag} className="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] rounded-full font-semibold">{tag}</span>
                               ))}
                             </div>
-                            <h3 className="text-sm font-bold text-white leading-snug line-clamp-2 flex-1">{title}</h3>
+                            <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 flex-1">{title}</h3>
                             <div className="flex items-center gap-2 pt-1">
                               {htmlViewUrl && (
                                 <a href={htmlViewUrl} target="_blank" rel="noopener noreferrer"
-                                  className="flex-1 text-center text-xs font-semibold text-white bg-red-600/80 hover:bg-red-600 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                                  className="flex-1 text-center text-xs font-semibold text-white bg-red-600 hover:bg-red-700 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
                                   <FileText className="w-3.5 h-3.5" />HTML
                                 </a>
                               )}
                               {pdfUrl && (
                                 <a href={pdfUrl} download target="_blank" rel="noopener noreferrer"
-                                  className="flex-1 text-center text-xs font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/30 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                                  className="flex-1 text-center text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-1.5 active:scale-[0.97]">
                                   <Download className="w-3.5 h-3.5" />PDF
                                 </a>
                               )}
@@ -707,7 +683,7 @@ const Press: React.FC = () => {
 
             {/* SPOKESPERSON & BIOS */}
             {spokespersons.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+              <section className="py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="spokesperson" icon={Users} title={t("press.section.spokesperson")} subtitle={t("press.section.spokespersonDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{spokespersons.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -716,7 +692,7 @@ const Press: React.FC = () => {
             )}
 
             {/* IMAGE BANK — carousel with thumbnails */}
-            <section className="py-20 sm:py-24 border-t border-white/[0.08]" id="images">
+            <section className="scroll-mt-16 py-20 sm:py-24 bg-slate-50" id="images">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="images-title" icon={Camera} title={t("press.section.images")} subtitle={t("press.section.imagesDesc")} />
                 <div className="mt-8">
@@ -727,7 +703,7 @@ const Press: React.FC = () => {
 
             {/* B-ROLL & VIDEOS */}
             {bRoll.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+              <section className="py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="b-roll" icon={Camera} title={t("press.section.bRoll")} subtitle={t("press.section.bRollDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{bRoll.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -736,7 +712,7 @@ const Press: React.FC = () => {
             )}
 
             {/* DATA & KEY FIGURES */}
-            <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+            <section className={`py-20 sm:py-24 ${bRoll.length > 0 ? "bg-slate-50" : "bg-white"}`}>
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <SectionTitle id="data" icon={BarChart3} title={t("press.section.data")} subtitle={t("press.section.dataDesc")} />
                 {dataRes.length > 0 ? (
@@ -749,7 +725,7 @@ const Press: React.FC = () => {
 
             {/* FACT SHEETS */}
             {factSheets.length > 0 && (
-              <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+              <section className="py-20 sm:py-24 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="fact-sheets" icon={FileText} title={t("press.section.factSheets")} subtitle={t("press.section.factSheetsDesc")} />
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{factSheets.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
@@ -760,19 +736,19 @@ const Press: React.FC = () => {
         )}
 
         {/* ══════════════ FAQ ══════════════ */}
-        <section className="py-20 sm:py-24 border-t border-white/[0.08]">
+        <section className="py-20 sm:py-24 bg-slate-50">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-12">{t("press.faq.title")}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-12">{t("press.faq.title")}</h2>
             <div className="space-y-3">
               {faqs.map((faq, i) => (
-                <details key={i} className="group bg-white/[0.05] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
+                <details key={i} className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-300 transition-colors shadow-sm">
                   <summary className="flex items-center justify-between p-5 sm:p-6 cursor-pointer transition-colors">
-                    <span className="text-sm font-semibold text-white/90 pr-4">{faq.question}</span>
-                    <div className="w-8 h-8 rounded-xl bg-white/5 group-open:bg-red-600/20 flex items-center justify-center flex-shrink-0 transition-colors">
-                      <ChevronDown className="w-4 h-4 text-white/40 group-open:text-red-400 group-open:rotate-180 transition-all" />
+                    <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
+                    <div className="w-8 h-8 rounded-xl bg-gray-100 group-open:bg-red-100 flex items-center justify-center flex-shrink-0 transition-colors">
+                      <ChevronDown className="w-4 h-4 text-gray-400 group-open:text-red-500 group-open:rotate-180 transition-all" />
                     </div>
                   </summary>
-                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-white/60 leading-relaxed -mt-1">{faq.answer}</div>
+                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-gray-600 leading-relaxed -mt-1">{faq.answer}</div>
                 </details>
               ))}
             </div>
@@ -780,24 +756,20 @@ const Press: React.FC = () => {
         </section>
 
         {/* ══════════════ CONTACT CTA ══════════════ */}
-        <section id="contact" className="scroll-mt-16 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-red-950/30 to-gray-950" />
-          <div className="absolute inset-0">
-            <div className="absolute top-[20%] left-[30%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[150px]" />
-          </div>
-          <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-red-600/30">
+        <section id="contact" className="scroll-mt-16 bg-gradient-to-br from-red-700 to-red-800 py-24 sm:py-32">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="w-20 h-20 bg-white/10 border border-white/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
               <Mail className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-6 tracking-tight">{t("press.contact.title")}</h2>
-            <p className="text-white/60 text-lg sm:text-xl mb-10 max-w-xl mx-auto leading-relaxed">{t("press.contact.description")}</p>
+            <p className="text-white/80 text-lg sm:text-xl mb-10 max-w-xl mx-auto leading-relaxed">{t("press.contact.description")}</p>
             <button onClick={openContact}
-              className="group px-10 py-5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-2xl transition-all flex items-center gap-3 shadow-xl shadow-red-600/25 text-lg mx-auto active:scale-[0.98]">
+              className="group px-10 py-5 bg-white text-red-700 hover:bg-red-50 font-bold rounded-2xl transition-all flex items-center gap-3 shadow-xl text-lg mx-auto active:scale-[0.98]">
               <MessageSquare className="w-6 h-6" />
               {t("press.contact.cta")}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <p className="text-white/40 text-sm mt-8 flex items-center justify-center gap-2">
+            <p className="text-white/60 text-sm mt-8 flex items-center justify-center gap-2">
               <Clock className="w-4 h-4" />{t("press.contact.response")}
             </p>
           </div>
@@ -806,8 +778,8 @@ const Press: React.FC = () => {
 
       {/* ══════════════ CONTACT MODAL ══════════════ */}
       {showContact && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setShowContact(false)}>
-          <div className="bg-gray-900 border border-white/10 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setShowContact(false)}>
+          <div className="bg-white border border-gray-200 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-5 flex items-center justify-between">
               <h3 className="text-lg font-bold text-white flex items-center gap-2.5">
                 <MessageSquare className="w-5 h-5 text-white/80" />{t("press.contact.cta")}
@@ -818,46 +790,46 @@ const Press: React.FC = () => {
             </div>
             {contactSent ? (
               <div className="p-10 text-center">
-                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5">
-                  <CheckCircle className="w-10 h-10 text-emerald-400" />
+                <div className="w-20 h-20 bg-emerald-50 border border-emerald-200 rounded-3xl flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle className="w-10 h-10 text-emerald-500" />
                 </div>
-                <h4 className="text-xl font-bold text-white mb-3">{t("press.contact.sent")}</h4>
-                <p className="text-white/60 text-sm mb-8">{t("press.contact.sentDesc")}</p>
+                <h4 className="text-xl font-bold text-gray-900 mb-3">{t("press.contact.sent")}</h4>
+                <p className="text-gray-500 text-sm mb-8">{t("press.contact.sentDesc")}</p>
                 <button onClick={() => setShowContact(false)}
-                  className="px-8 py-3 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl text-sm border border-white/10 transition-colors">
+                  className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm border border-gray-200 transition-colors">
                   {t("press.label.close")}
                 </button>
               </div>
             ) : (
               <div className="p-6 space-y-4">
-                {contactError && <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-sm text-red-400">{contactError}</div>}
+                {contactError && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600">{contactError}</div>}
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.name")} *</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">{t("press.contact.form.name")} *</label>
                   <input type="text" value={contactForm.name} onChange={(e) => setContactForm((p) => ({ ...p, name: e.target.value }))}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" />
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.email")} *</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">{t("press.contact.form.email")} *</label>
                     <input type="email" value={contactForm.email} onChange={(e) => setContactForm((p) => ({ ...p, email: e.target.value }))}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" />
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.media")}</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">{t("press.contact.form.media")}</label>
                     <input type="text" value={contactForm.media} onChange={(e) => setContactForm((p) => ({ ...p, media: e.target.value }))}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" placeholder="Le Monde..." />
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors" placeholder="Le Monde..." />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.subject")}</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">{t("press.contact.form.subject")}</label>
                   <input type="text" value={contactForm.subject} onChange={(e) => setContactForm((p) => ({ ...p, subject: e.target.value }))}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
                     placeholder={t("press.contact.form.subjectPlaceholder")} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-1.5">{t("press.contact.form.message")} *</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">{t("press.contact.form.message")} *</label>
                   <textarea value={contactForm.message} onChange={(e) => setContactForm((p) => ({ ...p, message: e.target.value }))}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-white/20 focus:ring-2 focus:ring-red-500 focus:border-transparent min-h-[120px] transition-colors" rows={4} />
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent min-h-[120px] transition-colors" rows={4} />
                 </div>
                 <button onClick={handleContactSubmit} disabled={contactSending}
                   className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2.5 disabled:opacity-60 active:scale-[0.98] shadow-lg shadow-red-600/20">
