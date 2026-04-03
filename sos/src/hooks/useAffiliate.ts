@@ -260,7 +260,7 @@ export function useAffiliate(): UseAffiliateReturn {
 
   // Computed values
   const shareUrl = affiliateData?.affiliateCode
-    ? `${window.location.origin}?ref=${affiliateData.affiliateCode}`
+    ? `${window.location.origin}/r/${affiliateData.affiliateCode}`
     : "";
 
   const minimumWithdrawal = 3000; // 30€ in cents (from default config)
