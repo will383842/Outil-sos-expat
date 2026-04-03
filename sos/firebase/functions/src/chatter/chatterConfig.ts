@@ -683,61 +683,80 @@ export const adminUpdateChatterConfigSettings = onCall(
         };
       }
 
-      // Perform update (writes to chatter_config/settings)
-      const updatedConfig = await updateChatterConfig(updates, request.auth!.uid);
+      // ── Atomic batch write: settings + current in a single transaction ──
+      // Both succeed or both fail — no silent divergence between the two docs.
+      const uid = request.auth!.uid;
+      const now = Timestamp.now();
+      const newVersion = currentConfig.version + 1;
 
-      // ── Dual-write to chatter_config/current (used by commission services) ──
-      try {
-        const db = getDb();
-        const g = updatedConfig.gains;
-        const cap = updatedConfig.captain;
-        const comp = updatedConfig.competitionPrizes;
-        const currentDocUpdates: Record<string, unknown> = {
-          // Map gains → flat ChatterConfig fields
-          commissionClientCallAmount: g.clientCall,
-          commissionClientCallAmountLawyer: g.clientCallLawyer,
-          commissionClientCallAmountExpat: g.clientCallExpat,
-          commissionN1CallAmount: g.n1Call,
-          commissionN2CallAmount: g.n2Call,
-          commissionActivationBonusAmount: g.activationBonus,
-          commissionN1RecruitBonusAmount: g.n1RecruitBonus,
-          commissionProviderCallAmount: g.providerCall,
-          commissionProviderCallAmountLawyer: g.providerCallLawyer,
-          commissionProviderCallAmountExpat: g.providerCallExpat,
-          activationCallsRequired: g.activationCallsRequired,
-          recruitmentWindowMonths: g.recruitmentWindowMonths,
-          // Captain
-          commissionCaptainCallAmountLawyer: cap?.callAmountLawyer,
-          commissionCaptainCallAmountExpat: cap?.callAmountExpat,
-          captainTiers: cap?.tiers,
-          captainQualityBonusAmount: cap?.qualityBonusAmount,
-          captainQualityBonusMinRecruits: cap?.qualityBonusMinRecruits,
-          captainQualityBonusMinCommissions: cap?.qualityBonusMinCommissions,
-          // Competition prizes
-          monthlyCompetitionPrizes: comp ? { first: comp.first, second: comp.second, third: comp.third } : undefined,
-          competitionEligibilityMinimum: updatedConfig.competitionPrizes?.eligibilityMinimum,
-          // Telegram bonus
-          telegramBonusAmount: updatedConfig.telegramBonus?.amount,
-          piggyBankUnlockThreshold: updatedConfig.telegramBonus?.unlockThreshold,
-          // Top multipliers
-          top1BonusMultiplier: updatedConfig.monthlyTop[1],
-          top2BonusMultiplier: updatedConfig.monthlyTop[2],
-          top3BonusMultiplier: updatedConfig.monthlyTop[3],
-          // Meta
-          updatedAt: Timestamp.now(),
-          updatedBy: request.auth!.uid,
-        };
-        // Remove undefined values
-        Object.keys(currentDocUpdates).forEach((k) => {
-          if (currentDocUpdates[k] === undefined) delete currentDocUpdates[k];
-        });
-        await db.collection("chatter_config").doc("current").set(currentDocUpdates, { merge: true });
-        // Invalidate the commission service cache so it picks up new values immediately
-        invalidateChatterConfigCache();
-        logger.info("[adminUpdateChatterConfigSettings] Dual-write to chatter_config/current OK");
-      } catch (dualWriteErr) {
-        logger.error("[adminUpdateChatterConfigSettings] Dual-write to current failed (settings updated OK):", dualWriteErr);
-      }
+      // Build merged config (what settings will look like after save)
+      const updatedConfig: ChatterConfigSettings = {
+        ...currentConfig,
+        ...updates,
+        version: newVersion,
+        updatedAt: now,
+        updatedBy: uid,
+      };
+
+      // Build flat fields for chatter_config/current (used by commission services + landing pages)
+      const g = updatedConfig.gains;
+      const cap = updatedConfig.captain;
+      const comp = updatedConfig.competitionPrizes;
+      const currentDocUpdates: Record<string, unknown> = {
+        // Map gains → flat ChatterConfig fields
+        commissionClientCallAmount: g.clientCall,
+        commissionClientCallAmountLawyer: g.clientCallLawyer,
+        commissionClientCallAmountExpat: g.clientCallExpat,
+        commissionN1CallAmount: g.n1Call,
+        commissionN2CallAmount: g.n2Call,
+        commissionActivationBonusAmount: g.activationBonus,
+        commissionN1RecruitBonusAmount: g.n1RecruitBonus,
+        commissionProviderCallAmount: g.providerCall,
+        commissionProviderCallAmountLawyer: g.providerCallLawyer,
+        commissionProviderCallAmountExpat: g.providerCallExpat,
+        activationCallsRequired: g.activationCallsRequired,
+        recruitmentWindowMonths: g.recruitmentWindowMonths,
+        // Captain
+        commissionCaptainCallAmountLawyer: cap?.callAmountLawyer,
+        commissionCaptainCallAmountExpat: cap?.callAmountExpat,
+        captainTiers: cap?.tiers,
+        captainQualityBonusAmount: cap?.qualityBonusAmount,
+        captainQualityBonusMinRecruits: cap?.qualityBonusMinRecruits,
+        captainQualityBonusMinCommissions: cap?.qualityBonusMinCommissions,
+        // Competition prizes
+        monthlyCompetitionPrizes: comp ? { first: comp.first, second: comp.second, third: comp.third } : undefined,
+        competitionEligibilityMinimum: updatedConfig.competitionPrizes?.eligibilityMinimum,
+        // Telegram bonus
+        telegramBonusAmount: updatedConfig.telegramBonus?.amount,
+        piggyBankUnlockThreshold: updatedConfig.telegramBonus?.unlockThreshold,
+        // Top multipliers
+        top1BonusMultiplier: updatedConfig.monthlyTop[1],
+        top2BonusMultiplier: updatedConfig.monthlyTop[2],
+        top3BonusMultiplier: updatedConfig.monthlyTop[3],
+        // Meta
+        updatedAt: now,
+        updatedBy: uid,
+      };
+      // Remove undefined values
+      Object.keys(currentDocUpdates).forEach((k) => {
+        if (currentDocUpdates[k] === undefined) delete currentDocUpdates[k];
+      });
+
+      const db = getDb();
+      const batch = db.batch();
+      batch.update(
+        db.collection("chatter_config").doc("settings"),
+        { ...updates, version: newVersion, updatedAt: now, updatedBy: uid }
+      );
+      batch.set(
+        db.collection("chatter_config").doc("current"),
+        currentDocUpdates,
+        { merge: true }
+      );
+      await batch.commit(); // throws if either write fails — no silent divergence
+
+      invalidateChatterConfigSettingsCache();
+      invalidateChatterConfigCache();
 
       logger.info("[adminUpdateChatterConfigSettings] Config updated", {
         updatedBy: request.auth!.uid,

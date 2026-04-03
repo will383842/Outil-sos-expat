@@ -474,28 +474,33 @@ const ChatterAdminConfig: React.FC = () => {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            Section 2: COMMISSIONS CLIENT (by provider type)
+            Section 2: COMMISSIONS CLIENT — géré dans CommissionsHub
            ═══════════════════════════════════════════════════════════════════ */}
         <div className={UI.card}>
           <div className={UI.cardHeader}>
             <SectionHeader
               title="Commissions — Client Calls"
               icon={<DollarSign className="w-5 h-5" />}
-              description="Commission earned when a client calls through the chatter's link"
+              description="Taux affichés sur la landing page et utilisés par le backend pour calculer les commissions réelles"
               gradient="from-emerald-500 to-green-600"
             />
           </div>
           <div className={UI.cardBody}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <NumberInput label="Client call — Lawyer" value={config.gains.clientCallLawyer}
-                onChange={(v) => updateConfig('gains', { clientCallLawyer: v })}
-                suffix="$" isCents hint={`= ${formatCents(config.gains.clientCallLawyer)} per call with a lawyer`} />
-              <NumberInput label="Client call — Expat helper" value={config.gains.clientCallExpat}
-                onChange={(v) => updateConfig('gains', { clientCallExpat: v })}
-                suffix="$" isCents hint={`= ${formatCents(config.gains.clientCallExpat)} per call with an expat`} />
-              <NumberInput label="Client call — Generic fallback" value={config.gains.clientCall}
-                onChange={(v) => updateConfig('gains', { clientCall: v })}
-                suffix="$" isCents hint={`= ${formatCents(config.gains.clientCall)} (used if provider type unknown)`} />
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+              <DollarSign className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold mb-1">Modifiez ces taux dans CommissionsHub</p>
+                <p className="text-amber-700 mb-3">
+                  Les taux client (Lawyer / Expat / Fallback) sont la <strong>source de vérité unique</strong> pour la landing page et les commissions réelles.
+                  Modifiez-les uniquement dans <strong>/admin/commissions → onglet Chatter</strong> pour éviter toute désynchronisation.
+                </p>
+                <p className="text-amber-600 text-xs">
+                  Actuels&nbsp;: Lawyer&nbsp;=&nbsp;{formatCents(config.gains.clientCallLawyer)} &nbsp;|&nbsp;
+                  Expat&nbsp;=&nbsp;{formatCents(config.gains.clientCallExpat)} &nbsp;|&nbsp;
+                  Fallback&nbsp;=&nbsp;{formatCents(config.gains.clientCall)}
+                  &nbsp;(lecture seule — source&nbsp;: chatter_config/settings)
+                </p>
+              </div>
             </div>
           </div>
         </div>
