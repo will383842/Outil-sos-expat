@@ -221,7 +221,7 @@ export const ShareAppButton: React.FC<{
       data={{
         title: intl.formatMessage({ id: 'share.app.title' }),
         text: intl.formatMessage({ id: 'share.app.text' }),
-        url: referralCode ? `${baseUrl}/?ref=${referralCode}` : baseUrl,
+        url: referralCode ? `${baseUrl}/r/${referralCode}` : baseUrl,
       }}
       variant={variant}
       size={size}

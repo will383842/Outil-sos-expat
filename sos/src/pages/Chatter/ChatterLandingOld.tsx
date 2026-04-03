@@ -1536,7 +1536,7 @@ const ChatterLanding: React.FC = () => {
                   <div className="text-xs mb-1">
                     <FormattedMessage id="chatter.provider.link2.label" defaultMessage="Link 2: For Providers" />
                   </div>
-                  <code className="text-sm">sos-expat.com/become-provider?ref=<span className="text-emerald-300">CODE</span></code>
+                  <code className="text-sm">sos-expat.com/r/<span className="text-emerald-300">CODE</span></code>
                   <div className="text-xs mt-2">$5/call × 6 mo</div>
                 </div>
               </div>

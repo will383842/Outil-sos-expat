@@ -512,7 +512,7 @@ const AdminPartnerCreate: React.FC = () => {
               {form.affiliateCode.length >= 3 && codeAvailable === true && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   <FormattedMessage id="admin.partners.create.linkPreview" defaultMessage="Link:" />{' '}
-                  <code className="text-cyan-400">https://sos-expat.com/?ref={form.affiliateCode}</code>
+                  <code className="text-cyan-400">https://sos-expat.com/r/{form.affiliateCode}</code>
                 </p>
               )}
             </div>

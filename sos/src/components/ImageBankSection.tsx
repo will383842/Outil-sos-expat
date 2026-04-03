@@ -253,16 +253,16 @@ const Thumbnail = React.memo(function Thumbnail({
   const content = (
     <div
       className="relative flex-shrink-0 snap-start rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all hover:scale-[1.03] active:scale-[0.98] group/thumb"
-      style={{ width: "120px" }}
+      style={{ width: "clamp(130px, 28vw, 160px)" }}
     >
-      {/* Thumbnail image */}
-      <div className="aspect-[4/3] bg-white/5">
+      {/* Thumbnail image — eager (lazy ne fonctionne pas dans overflow-x-auto) */}
+      <div className="aspect-[4/3] bg-white/10">
         <img
           src={img.src}
           alt={`SOS Expat image ${img.id}`}
-          width={120}
-          height={90}
-          loading="lazy"
+          width={160}
+          height={120}
+          loading="eager"
           decoding="async"
           className="w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}

@@ -212,14 +212,14 @@ ${style.shadow ? `box-shadow:${style.shadow};` : ''}
 transition:all 0.2s ease;
       `.replace(/\n/g, '').replace(/\s+/g, ' ').trim();
 
-      return `<a href="{{affiliateUrl}}?utm_source={{utmSource}}&utm_medium={{utmMedium}}&utm_campaign={{utmCampaign}}&utm_content={{widgetId}}&ref={{affiliateCode}}" target="_blank" rel="noopener noreferrer" style="${cssStyle}">${data.buttonText}</a>`;
+      return `<a href="{{affiliateUrl}}?utm_source={{utmSource}}&utm_medium={{utmMedium}}&utm_campaign={{utmCampaign}}&utm_content={{widgetId}}" target="_blank" rel="noopener noreferrer" style="${cssStyle}">${data.buttonText}</a>`;
     } else {
       // Banner
       const dim = PROMO_WIDGET_DIMENSIONS.find(d => d.value === data.dimension);
       const width = data.dimension === 'custom' ? data.customWidth : dim?.width || 300;
       const height = data.dimension === 'custom' ? data.customHeight : dim?.height || 250;
 
-      return `<a href="{{affiliateUrl}}?utm_source={{utmSource}}&utm_medium={{utmMedium}}&utm_campaign={{utmCampaign}}&utm_content={{widgetId}}&ref={{affiliateCode}}" target="_blank" rel="noopener noreferrer">
+      return `<a href="{{affiliateUrl}}?utm_source={{utmSource}}&utm_medium={{utmMedium}}&utm_campaign={{utmCampaign}}&utm_content={{widgetId}}" target="_blank" rel="noopener noreferrer">
   <img src="${data.imageUrl}" alt="${data.altText}" width="${width}" height="${height}" style="max-width:100%;height:auto;border-radius:8px;display:block;" />
 </a>`;
     }
@@ -393,12 +393,11 @@ transition:all 0.2s ease;
 
   const copyWidgetCode = (widget: PromoWidget) => {
     const code = widget.htmlTemplate
-      .replace(/\{\{affiliateUrl\}\}/g, 'https://sos-expat.com/call')
+      .replace(/\{\{affiliateUrl\}\}/g, 'https://sos-expat.com/r/VOTRE_CODE')
       .replace(/\{\{utmSource\}\}/g, widget.utmSource)
       .replace(/\{\{utmMedium\}\}/g, widget.utmMedium)
       .replace(/\{\{utmCampaign\}\}/g, widget.utmCampaign)
-      .replace(/\{\{widgetId\}\}/g, widget.trackingId)
-      .replace(/\{\{affiliateCode\}\}/g, 'VOTRE_CODE');
+      .replace(/\{\{widgetId\}\}/g, widget.trackingId);
 
     copyToClipboard(code);
     setCopiedId(widget.id);

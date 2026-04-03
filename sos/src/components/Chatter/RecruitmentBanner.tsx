@@ -577,7 +577,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
   }, []);
 
   const handleCopyLink = useCallback(async () => {
-    const linkToCopy = referralLink || `https://sos-expat.com/devenir-chatter?ref=${referralCode || 'DEMO'}`;
+    const linkToCopy = referralLink || `https://sos-expat.com/r/${referralCode || 'DEMO'}`;
     const success = await copyToClipboard(linkToCopy);
     if (success) {
       setCopied(true);
@@ -711,7 +711,7 @@ export const RecruitmentBanner: React.FC<RecruitmentBannerProps> = ({
             <div className="flex items-center justify-center gap-2 mb-6">
               <div className="flex-1 max-w-md bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border">
                 <code className="text-white/90 truncate block">
-                  {referralLink || `sos-expat.com/devenir-chatter?ref=${referralCode}`}
+                  {referralLink || `sos-expat.com/r/${referralCode}`}
                 </code>
               </div>
               <Button

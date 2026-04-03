@@ -151,7 +151,7 @@ export function useWebShare(): UseWebShareReturn {
   const shareApp = useCallback(
     async (referralCode?: string): Promise<ShareResult> => {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sos-expat.com';
-      const url = referralCode ? `${baseUrl}/?ref=${referralCode}` : baseUrl;
+      const url = referralCode ? `${baseUrl}/r/${referralCode}` : baseUrl;
 
       return share({
         title: 'SOS Expat - Assistance Urgente pour Expatriés',

@@ -436,5 +436,5 @@ export function getStatusColor(status: CommissionStatus | PayoutStatus): string 
  */
 export function getAffiliateShareUrl(code: string, baseUrl?: string): string {
   const base = baseUrl || typeof window !== "undefined" ? window.location.origin : "https://sos-expat.com";
-  return `${base}?ref=${code}`;
+  return `${base}/r/${code}`;
 }
