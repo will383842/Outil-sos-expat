@@ -42,7 +42,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   title,
   description,
   canonicalUrl,
-  ogImage = '/og-image.png',
+  ogImage = '/og-image.webp',
   ogType = 'website',
   twitterCard = 'summary_large_image',
   structuredData,

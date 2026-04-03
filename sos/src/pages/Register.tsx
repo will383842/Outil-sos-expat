@@ -425,7 +425,7 @@ const Register: React.FC = () => {
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:site_name" content="SOS Expats" />
         <meta property="og:locale" content={language === "en" ? "en_US" : "fr_FR"} />
-        <meta property="og:image" content={`${SEO_BASE_URL}/og-image.png`} />
+        <meta property="og:image" content={`${SEO_BASE_URL}/og-image.webp`} />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />

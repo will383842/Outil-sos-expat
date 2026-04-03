@@ -87,9 +87,7 @@
   <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
 
   <!-- ⚡ PERFORMANCE: Preconnect pour les ressources critiques -->
-  <link rel="preconnect" href="https://storage.googleapis.com">
-  <link rel="preconnect" href="https://firestore.googleapis.com">
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://storage.googleapis.com" />
 
   <!-- 🔍 SEO -->
   <!-- SEO: French default (x-default = fr-fr) — React Helmet overrides with correct language per locale.
@@ -277,13 +275,15 @@
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+  <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
   <link rel="dns-prefetch" href="https://www.google-analytics.com" />
 
   <!-- ⚡ PRELOADS -->
+  <link rel="preload" href="/hero-home.webp" as="image" type="image/webp" />
   <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="prefetch" href="/icons/icon-512x512.png" />
+  <link rel="preload" href="/fonts/Inter-roman.var.woff2" as="font" type="font/woff2" crossorigin />
 
   <!-- 🌐 MULTILINGUAL FONTS (chargées uniquement pour les langues qui en ont besoin) -->
   <!-- ⚡ PERF: preconnect supprimé ici (déjà couvert par dns-prefetch line 267) — Lighthouse flag >4 preconnects -->
@@ -325,7 +325,7 @@
   <meta property="og:title" content="SOS Expat - Lawyer & Local Expert in Under 5 Min | 24/7 Assistance" />
   <meta property="og:description"
     content="Talk to a lawyer or local expert in your language in under 5 min. 197 countries, all languages. For expats, travelers, vacationers." />
-  <meta property="og:image" content="https://sos-expat.com/og-image.png" />
+  <meta property="og:image" content="https://sos-expat.com/og-image.webp" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="SOS-Expat.com - Talk to an expert anywhere in the world in under 5 minutes" />
@@ -338,7 +338,7 @@
   <meta name="twitter:title" content="SOS Expat - Lawyer & Local Expert in Under 5 Min" />
   <meta name="twitter:description"
     content="24/7 mobile assistance for expats. Lawyers, local experts, emergencies. Talk to an expert in under 5 minutes." />
-  <meta name="twitter:image" content="https://sos-expat.com/twitter-image.png" />
+  <meta name="twitter:image" content="https://sos-expat.com/twitter-image.webp" />
   <meta name="twitter:creator" content="@sosexpat" />
   <meta name="twitter:site" content="@sosexpat" />
 

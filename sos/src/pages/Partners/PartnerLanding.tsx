@@ -152,7 +152,7 @@ const SEO_CONSTANTS = {
   SITE_NAME: 'SOS Expat',
   BASE_URL: 'https://sos-expat.com',
   LOGO_URL: 'https://sos-expat.com/sos-logo.webp',
-  OG_IMAGE_URL: 'https://sos-expat.com/og-image.png',
+  OG_IMAGE_URL: 'https://sos-expat.com/og-image.webp',
   TWITTER_HANDLE: '@sosexpat',
   SOCIAL: {
     facebook: 'https://facebook.com/sosexpat',
@@ -813,7 +813,7 @@ const PartnerLanding: React.FC = () => {
     '@type': 'HowTo',
     'name': intl.formatMessage({ id: 'partner.landing.v2.hero.badge', defaultMessage: 'Programme Partenaire Premium' }),
     'description': seoData.description,
-    'image': 'https://sos-expat.com/og-image.png',
+    'image': 'https://sos-expat.com/og-image.webp',
     'totalTime': 'PT10M',
     'step': [
       {
@@ -821,28 +821,28 @@ const PartnerLanding: React.FC = () => {
         'position': 1,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.apply.title', defaultMessage: 'Échangeons' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.apply.desc', defaultMessage: 'Contactez-nous pour nous parler de votre organisation.' }),
-        'image': 'https://sos-expat.com/og-image.png',
+        'image': 'https://sos-expat.com/og-image.webp',
       },
       {
         '@type': 'HowToStep',
         'position': 2,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.negotiate.title', defaultMessage: 'Construisons ensemble' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.negotiate.desc', defaultMessage: 'Nous définissons ensemble les termes de votre partenariat.' }),
-        'image': 'https://sos-expat.com/og-image.png',
+        'image': 'https://sos-expat.com/og-image.webp',
       },
       {
         '@type': 'HowToStep',
         'position': 3,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.integrate.title', defaultMessage: 'Intégrez' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.integrate.desc', defaultMessage: 'Partagez votre lien, QR code ou intégrez notre widget.' }),
-        'image': 'https://sos-expat.com/og-image.png',
+        'image': 'https://sos-expat.com/og-image.webp',
       },
       {
         '@type': 'HowToStep',
         'position': 4,
         'name': intl.formatMessage({ id: 'partner.landing.v2.steps.earn.title', defaultMessage: 'Profitez' }),
         'text': intl.formatMessage({ id: 'partner.landing.v2.steps.earn.desc', defaultMessage: 'Vos clients accèdent à un service d\'exception et vous profitez des avantages négociés.' }),
-        'image': 'https://sos-expat.com/og-image.png',
+        'image': 'https://sos-expat.com/og-image.webp',
       },
     ],
   }), [intl, seoData.description]);

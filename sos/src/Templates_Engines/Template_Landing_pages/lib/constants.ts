@@ -157,7 +157,7 @@ export const SEO = {
   siteName: 'SOS Expat',
   baseUrl: 'https://sos-expat.com',
   logoUrl: 'https://sos-expat.com/sos-logo.webp',
-  ogImageUrl: 'https://sos-expat.com/og-image.png',
+  ogImageUrl: 'https://sos-expat.com/og-image.webp',
   twitterHandle: '@sosexpat',
 } as const;
 

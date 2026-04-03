@@ -499,7 +499,7 @@ const CaptainLanding: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDesc}
-        ogImage="/og-image.png"
+        ogImage="/og-image.webp"
         ogType="website"
         contentType="LandingPage"
         keywords={intl.formatMessage({ id: 'captain.landing.seo.keywords', defaultMessage: 'capitaine chatter, recrutement, SOS Expat, startup, remote, equipe, leader, revenus, commission, WhatsApp, Telegram' })}

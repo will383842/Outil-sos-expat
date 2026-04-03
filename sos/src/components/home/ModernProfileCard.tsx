@@ -450,7 +450,8 @@ export const ModernProfileCard = React.memo<ModernProfileCardProps>(
               data-hovered={isHovered ? "true" : "false"}
               onLoad={() => setImageLoaded(true)}
               onError={handleImageError}
-              loading="lazy"
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
               decoding="async"
               width={CARD_DIMENSIONS.width}
               height={CARD_DIMENSIONS.imageHeight}

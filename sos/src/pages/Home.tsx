@@ -56,7 +56,7 @@ const SEO_EXPAT = {
   SITE_NAME: "SOS Expat",
   BASE_URL: "https://sos-expat.com",
   LOGO_URL: "https://sos-expat.com/sos-logo.webp",
-  OG_IMAGE_URL: "https://sos-expat.com/og-image.png",
+  OG_IMAGE_URL: "https://sos-expat.com/og-image.webp",
   TWITTER_HANDLE: "@sosexpat",
   SOCIAL: {
     facebook: "https://facebook.com/sosexpat",
@@ -351,6 +351,7 @@ function ReviewsSlider({ theme = "dark", holidaysMode = false, resolveFn }: { th
                         alt={intl.formatMessage({ id: "aria.portraitOf" }, { name: reviewerName })}
                         className="w-full h-full rounded-full object-cover"
                         loading={idx < 3 ? "eager" : "lazy"}
+                        fetchPriority={idx === 0 ? "high" : "auto"}
                         decoding="async"
                         referrerPolicy="no-referrer"
                         onError={(e) => onImgError(e, r.fallback)}
@@ -1318,9 +1319,11 @@ const OptimizedHomePage: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-evenly md:justify-center py-4 md:py-0">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-evenly md:flex-row md:items-center md:justify-between md:gap-12 py-4 md:py-0">
+            {/* Colonne gauche : texte + CTA + stats */}
+            <div className="flex flex-col justify-evenly md:justify-center flex-1">
             {/* Contenu principal - espacé uniformément sur mobile */}
-            <div className="text-center md:mb-12 lg:mb-16 xl:mb-20">
+            <div className="text-center md:mb-0">
               <h1
                 id="main-heading"
                 className="text-5xl sm:text-5xl md:text-5xl lg:text-7xl xl:text-8xl font-black mb-4 sm:mb-8 leading-none break-words"
@@ -1390,6 +1393,19 @@ const OptimizedHomePage: React.FC = () => {
               </ActionLink>
             </nav>
 
+            {/* Hero image — mobile uniquement, dans le viewport initial pour LCP */}
+            <div className="md:hidden w-full">
+              <img
+                src="/hero-home.webp"
+                alt={intl.formatMessage({ id: "hero.image.alt" })}
+                className="w-full h-44 object-cover object-top rounded-2xl shadow-xl ring-1 ring-white/20"
+                fetchPriority="high"
+                decoding="async"
+                width={750}
+                height={500}
+              />
+            </div>
+
             {/* Stats - Masqués sur mobile pour garder le bouton en bas */}
             <section
               className="hidden md:grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-8"
@@ -1415,6 +1431,20 @@ const OptimizedHomePage: React.FC = () => {
                 </div>
               ))}
             </section>
+            </div>{/* fin colonne gauche */}
+
+            {/* Colonne droite : image hero LCP — desktop seulement */}
+            <div className="hidden md:flex items-center justify-center w-5/12 xl:w-1/2 flex-shrink-0">
+              <img
+                src="/hero-home.webp"
+                alt={intl.formatMessage({ id: "hero.image.alt" })}
+                className="w-full rounded-2xl shadow-2xl ring-2 ring-white/10"
+                fetchPriority="high"
+                decoding="async"
+                width={750}
+                height={500}
+              />
+            </div>
           </div>
         </header>
 

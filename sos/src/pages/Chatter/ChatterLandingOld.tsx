@@ -416,7 +416,7 @@ const ChatterLanding: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        ogImage="/og-image.png"
+        ogImage="/og-image.webp"
         ogType="website"
         contentType="LandingPage"
         keywords={seoKeywords}

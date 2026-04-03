@@ -255,7 +255,7 @@ const ChatterLanding: React.FC = () => {
     operatingSystem: 'Windows, MacOS, Linux, Android, iOS',
     inLanguage: htmlLang,
     availableLanguage: ['fr', 'en', 'es', 'de', 'ru', 'pt', 'zh', 'hi', 'ar'],
-    screenshot: { '@type': 'ImageObject', 'url': `${BASE_URL}/og-image.png`, 'width': 1200, 'height': 630 },
+    screenshot: { '@type': 'ImageObject', 'url': `${BASE_URL}/og-image.webp`, 'width': 1200, 'height': 630 },
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -266,7 +266,7 @@ const ChatterLanding: React.FC = () => {
       '@type': 'Organization',
       name: 'SOS-Expat',
       url: 'https://www.sos-expat.com',
-      logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.png`, width: 1200, height: 630 },
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.webp`, width: 1200, height: 630 },
     },
     description: intl.formatMessage({ id: 'chatter.landing.seo.description' }),
   }), [intl, canonicalUrl, htmlLang]);
@@ -277,7 +277,7 @@ const ChatterLanding: React.FC = () => {
     '@type': 'Organization',
     name: 'SOS-Expat',
     url: 'https://www.sos-expat.com',
-    logo: `${BASE_URL}/og-image.png`,
+    logo: `${BASE_URL}/og-image.webp`,
     sameAs: [],
     description: intl.formatMessage({ id: 'chatter.landing.seo.description' }),
   }), [intl]);
@@ -343,7 +343,7 @@ const ChatterLanding: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        ogImage="/og-image.png"
+        ogImage="/og-image.webp"
         ogType="website"
         contentType="LandingPage"
         locale={ogLocale}

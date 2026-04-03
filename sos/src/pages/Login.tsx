@@ -365,7 +365,7 @@ const Login: React.FC = () => {
       keywords: intl.formatMessage({ id: "seo.login.meta_keywords" }),
       ogTitle: intl.formatMessage({ id: "seo.login.og_title" }),
       ogDescription: intl.formatMessage({ id: "seo.login.og_description" }),
-      ogImage: `${baseUrl}/og-image.png`,
+      ogImage: `${baseUrl}/og-image.webp`,
       ogImageAlt: intl.formatMessage({ id: "seo.login.og_image_alt" }),
       twitterTitle: intl.formatMessage({ id: "seo.login.twitter_title" }),
       twitterDescription: intl.formatMessage({ id: "seo.login.twitter_description" }),

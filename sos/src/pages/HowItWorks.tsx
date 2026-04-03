@@ -23,7 +23,7 @@ const HowItWorksPage: React.FC = () => {
     "@type": "HowTo",
     "name": pageTitle,
     "description": pageDescription,
-    "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.png", "width": 1200, "height": 630 },
+    "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.webp", "width": 1200, "height": 630 },
     "totalTime": "PT5M",
     "step": [
       {
@@ -31,21 +31,21 @@ const HowItWorksPage: React.FC = () => {
         "position": 1,
         "name": intl.formatMessage({ id: "howItWorks.step1Title" }),
         "text": intl.formatMessage({ id: "howItWorks.step1Desc" }),
-        "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.png", "width": 1200, "height": 630 }
+        "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.webp", "width": 1200, "height": 630 }
       },
       {
         "@type": "HowToStep",
         "position": 2,
         "name": intl.formatMessage({ id: "howItWorks.step2Title" }),
         "text": intl.formatMessage({ id: "howItWorks.step2Desc" }),
-        "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.png", "width": 1200, "height": 630 }
+        "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.webp", "width": 1200, "height": 630 }
       },
       {
         "@type": "HowToStep",
         "position": 3,
         "name": intl.formatMessage({ id: "howItWorks.step3Title" }),
         "text": intl.formatMessage({ id: "howItWorks.step3Desc" }),
-        "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.png", "width": 1200, "height": 630 }
+        "image": { "@type": "ImageObject", "url": "https://sos-expat.com/og-image.webp", "width": 1200, "height": 630 }
       }
     ]
   };
