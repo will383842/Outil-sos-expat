@@ -12647,9 +12647,13 @@
   "press.kit.view": "查看新闻资料包",
   "press.nav.about": "关于 SOS-Expat",
   "press.nav.contact": "联系我们",
+  "press.nav.faq": "常见问题",
   "press.nav.home": "使用方法",
+  "press.nav.howItWorks": "服务介绍",
   "press.nav.pricing": "价格与服务",
   "press.nav.provider": "成为服务提供者",
   "press.nav.releases": "新闻稿",
+  "press.nav.seeAlso": "了解更多",
+  "press.nav.testimonials": "用户评价",
   "press.nav.title": "了解更多"
 }

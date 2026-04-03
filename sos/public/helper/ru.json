@@ -12647,9 +12647,13 @@
   "press.kit.view": "Открыть",
   "press.nav.about": "О SOS-Expat",
   "press.nav.contact": "Связаться",
+  "press.nav.faq": "Вопросы и ответы",
   "press.nav.home": "Как это работает",
+  "press.nav.howItWorks": "Сервис",
   "press.nav.pricing": "Цены",
   "press.nav.provider": "Стать провайдером",
   "press.nav.releases": "Пресс-релизы",
+  "press.nav.seeAlso": "Узнайте больше",
+  "press.nav.testimonials": "Отзывы",
   "press.nav.title": "Узнайте больше"
 }
