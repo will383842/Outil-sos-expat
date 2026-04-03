@@ -41,8 +41,9 @@ export function setAffiliateRef(ref: string): void {
   try {
     if (typeof window === "undefined") return;
     sessionStorage.setItem(AFFILIATE_STORAGE_KEY, ref);
-  } catch {
-    // sessionStorage not available
+  } catch (e) {
+    // QuotaExceeded or sessionStorage unavailable — ref will still be in localStorage
+    console.warn("[AffiliateTracking] sessionStorage write failed, localStorage fallback active:", e);
   }
 }
 
@@ -123,7 +124,18 @@ export function AffiliateRefSync(): null {
   const lastInjectedPath = useRef<string>("");
 
   useEffect(() => {
-    const ref = getAffiliateRef();
+    let ref = getAffiliateRef();
+
+    // Safety net: if sessionStorage was cleared mid-session (storage pressure, privacy mode),
+    // restore from localStorage so the affiliate code isn't lost
+    if (!ref) {
+      const stored = getStoredReferralCode("client") || getBestAvailableReferralCode("client");
+      if (stored) {
+        setAffiliateRef(stored);
+        ref = stored;
+      }
+    }
+
     if (!ref) return;
 
     // Skip admin/marketing routes

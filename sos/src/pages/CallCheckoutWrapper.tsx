@@ -6,6 +6,7 @@ import CallCheckout from './CallCheckout';
 import { PayPalProvider } from '../contexts/PayPalContext';
 import { AlertCircle } from 'lucide-react';
 import { Provider, normalizeProvider, createDefaultProvider } from '../types/provider';
+import { smartNormalizePhone } from '../utils/phone';
 
 import {
   calculateServiceAmounts,
@@ -74,6 +75,8 @@ const useTranslation = () => {
       'cta.home': 'callCheckoutWrapper.cta.home',
       'cta.back': 'callCheckoutWrapper.cta.back',
       'cta.clear_cache': 'callCheckoutWrapper.cta.clearCache',
+      'error.noPhone': 'callCheckoutWrapper.error.noPhone',
+      'error.noProviderData': 'callCheckoutWrapper.error.noProviderData',
     };
     const intlKey = keyMap[key] || key;
     try {
@@ -89,40 +92,31 @@ const useTranslation = () => {
 // Helpers
 // —————————————————————————————————————————————————————
 
-// ✅ CORRECTION: Fonction pour normaliser un numéro de téléphone
-const normalizePhoneNumber = (phone?: string): string => {
+// Normalise un numéro de téléphone en E.164 via libphonenumber-js (country-aware)
+const normalizePhoneNumber = (phone?: string, country?: string): string => {
   if (!phone) return '';
-  
-  // Nettoyer le numéro
+
+  // Si déjà au format international valide, retourner tel quel
   const cleaned = phone.replace(/[^\d+]/g, '');
-  
-  // Si c'est déjà au format international, le retourner
-  if (cleaned.startsWith('+')) {
+  if (cleaned.startsWith('+') && cleaned.length >= 9) {
     return cleaned;
   }
-  
-  // Si c'est un numéro français commençant par 0, le convertir
-  if (cleaned.startsWith('0') && cleaned.length === 10) {
-    return `+33${cleaned.substring(1)}`;
+
+  // Utiliser smartNormalizePhone avec le pays du provider
+  const countryCode = (country || 'FR').toUpperCase().substring(0, 2);
+  const result = smartNormalizePhone(phone, countryCode as any);
+  if (result.ok && result.e164) {
+    return result.e164;
   }
-  
-  // Si c'est un numéro français sans le 0, ajouter +33
-  if (cleaned.length === 9) {
-    return `+33${cleaned}`;
-  }
-  
-  // Pour les autres cas, essayer d'ajouter +33 par défaut
-  if (cleaned.length >= 8) {
-    return `+33${cleaned}`;
-  }
-  
-  return cleaned;
+
+  // Fallback : retourner le numéro nettoyé avec + si nécessaire
+  return cleaned.startsWith('+') ? cleaned : cleaned;
 };
 
 // ✅ CORRECTION: Fonction améliorée pour reconstruire un provider depuis BookingData
 const reconstructProviderFromBooking = (bookingData: BookingData): Provider => {
-  // Normaliser le numéro de téléphone
-  const normalizedPhone = normalizePhoneNumber(bookingData.providerPhone);
+  // Normaliser le numéro de téléphone avec le pays du provider
+  const normalizedPhone = normalizePhoneNumber(bookingData.providerPhone, bookingData.providerCountry);
   
   // P1-3 FIX: Ne plus générer de faux numéro — garder vide pour que la validation bloque
   const phoneToUse = normalizedPhone || '';
@@ -294,7 +288,7 @@ const CallCheckoutWrapper: React.FC = () => {
           // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
           if (!normalized.phone && !normalized.phoneNumber) {
             console.error('❌ Provider sans numéro de téléphone — booking impossible');
-            setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+            setState({ isLoading: false, error: t('error.noPhone'), provider: null });
             return;
           }
 
@@ -314,7 +308,7 @@ const CallCheckoutWrapper: React.FC = () => {
               // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
               if (!normalized.phone && !normalized.phoneNumber) {
                 console.error('❌ Provider sans numéro de téléphone — booking impossible');
-                setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+                setState({ isLoading: false, error: t('error.noPhone'), provider: null });
                 return;
               }
 
@@ -337,7 +331,7 @@ const CallCheckoutWrapper: React.FC = () => {
               // P1-3 FIX: Bloquer si le provider reconstruit n'a pas de numéro de téléphone
               if (!reconstructedProvider.phone && !reconstructedProvider.phoneNumber) {
                 console.error('❌ Provider reconstruit sans numéro de téléphone — booking impossible');
-                setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+                setState({ isLoading: false, error: t('error.noPhone'), provider: null });
                 return;
               }
 
@@ -360,7 +354,7 @@ const CallCheckoutWrapper: React.FC = () => {
               // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
               if (!normalized.phone && !normalized.phoneNumber) {
                 console.error('❌ Provider sans numéro de téléphone — booking impossible');
-                setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+                setState({ isLoading: false, error: t('error.noPhone'), provider: null });
                 return;
               }
 
@@ -385,7 +379,7 @@ const CallCheckoutWrapper: React.FC = () => {
                 // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
                 if (!normalized.phone && !normalized.phoneNumber) {
                   console.error('❌ Provider sans numéro de téléphone — booking impossible');
-                  setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+                  setState({ isLoading: false, error: t('error.noPhone'), provider: null });
                   return;
                 }
 
@@ -408,7 +402,7 @@ const CallCheckoutWrapper: React.FC = () => {
             // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
             if (!normalized.phone && !normalized.phoneNumber) {
               console.error('❌ Provider sans numéro de téléphone — booking impossible');
-              setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+              setState({ isLoading: false, error: t('error.noPhone'), provider: null });
               return;
             }
 
@@ -432,7 +426,7 @@ const CallCheckoutWrapper: React.FC = () => {
                 // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
                 if (!normalized.phone && !normalized.phoneNumber) {
                   console.error('❌ Provider sans numéro de téléphone — booking impossible');
-                  setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+                  setState({ isLoading: false, error: t('error.noPhone'), provider: null });
                   return;
                 }
 
@@ -460,7 +454,7 @@ const CallCheckoutWrapper: React.FC = () => {
               // P1-3 FIX: Bloquer si le provider n'a pas de numéro de téléphone
               if (!normalized.phone && !normalized.phoneNumber) {
                 console.error('❌ Provider sans numéro de téléphone — booking impossible');
-                setState({ isLoading: false, error: 'Ce prestataire n\'a pas de numéro de téléphone enregistré. Veuillez contacter le support.', provider: null });
+                setState({ isLoading: false, error: t('error.noPhone'), provider: null });
                 return;
               }
 
@@ -477,7 +471,7 @@ const CallCheckoutWrapper: React.FC = () => {
           console.error('❌ [Wrapper] Fallback provider sans données réelles — booking impossible');
           setState({
             isLoading: false,
-            error: 'Impossible de charger les informations du prestataire. Veuillez retourner à la page précédente et réessayer.',
+            error: t('error.noProviderData'),
             provider: null,
           });
           return;
@@ -589,11 +583,11 @@ const CallCheckoutWrapper: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 px-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 sm:p-8 text-center w-full max-w-lg">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Données manquantes</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{t('error.title')}</h2>
           <p className="text-gray-600 text-sm mb-5">
             {pricingError ||
               state.error ||
-              'Les informations de consultation sont manquantes. Veuillez sélectionner à nouveau un expert.'}
+              t('error.body')}
           </p>
 
           <div className="space-y-2">

@@ -34,7 +34,7 @@ export const getReferralDashboard = onCall(
     memory: "512MiB",  // FIX: 256MiB caused OOM at startup
     cpu: 0.5,  // FIX: memory > 256MiB requires cpu >= 0.5
     timeoutSeconds: 60,
-    maxInstances: 1,
+    maxInstances: 5,  // 0.5 vCPU each → 2.5 vCPU max, safe for us-central1 quota
     cors: ALLOWED_ORIGINS,
   },
   async (request): Promise<GetReferralDashboardResponse> => {

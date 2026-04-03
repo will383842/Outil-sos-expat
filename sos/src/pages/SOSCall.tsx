@@ -2164,6 +2164,7 @@ const SOSCall: React.FC = () => {
   const [isLoadingProviders, setIsLoadingProviders] = useState<boolean>(true);
   const [realProviders, setRealProviders] = useState<Provider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
+  const [isUsingFallback, setIsUsingFallback] = useState<boolean>(false);
 
   // FAQ Data
   const [faqData, setFaqData] = useState<FAQItem[]>([]);
@@ -2505,6 +2506,7 @@ const SOSCall: React.FC = () => {
         console.warn("⚠️ [SOSCall] Aucun provider valide, utilisation du fallback");
         setRealProviders(FALLBACK_PROVIDERS);
         setFilteredProviders(FALLBACK_PROVIDERS);
+        setIsUsingFallback(true);
         setIsLoadingProviders(false);
 
       } catch (restError) {
@@ -2559,6 +2561,7 @@ const SOSCall: React.FC = () => {
           console.log("🆘 [SOSCall] Utilisation des providers de démonstration");
           setRealProviders(FALLBACK_PROVIDERS);
           setFilteredProviders(FALLBACK_PROVIDERS);
+          setIsUsingFallback(true);
           setIsLoadingProviders(false);
         }
       }
@@ -3013,6 +3016,9 @@ const SOSCall: React.FC = () => {
   const handleProviderClick = useCallback((provider: Provider) => {
     // Protection contre le double-clic
     if (isNavigatingRef.current) return;
+
+    // Bloquer la navigation vers les providers de démonstration
+    if (provider.id.startsWith("demo-")) return;
 
     // Track Meta Pixel + CAPI Lead - utilisateur a selectionne un provider
     trackLead({
@@ -3916,6 +3922,21 @@ const SOSCall: React.FC = () => {
               </>
             ) : filteredProviders.length > 0 ? (
               <>
+                {/* Banner fallback démo */}
+                {isUsingFallback && (
+                  <div className="w-full mb-4 px-4 py-3 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-sm text-center" role="alert">
+                    <FormattedMessage
+                      id="sosCall.fallbackWarning"
+                      defaultMessage="Connexion temporairement instable — profils de démonstration affichés. Veuillez rafraîchir la page."
+                    />
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="ml-3 underline font-semibold hover:text-amber-100 transition-colors"
+                    >
+                      <FormattedMessage id="sosCall.refresh" defaultMessage="Rafraîchir" />
+                    </button>
+                  </div>
+                )}
                 {/* ========================================
                     📱 Version Mobile - Grille verticale 1 colonne
                 ======================================== */}

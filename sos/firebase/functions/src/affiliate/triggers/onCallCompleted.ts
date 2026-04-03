@@ -263,8 +263,8 @@ export async function handleCallCompleted(
           lifetimeCommissions,
         },
         description: isFirstCall
-          ? `Premier appel de ${clientData.email} (${Math.round(callDuration / 60)} min)`
-          : `Appel de ${clientData.email} (${Math.round(callDuration / 60)} min)`,
+          ? `Premier appel de ${clientData.firstName || clientData.displayName?.split(" ")[0] || "client"} (${Math.round(callDuration / 60)} min)`
+          : `Appel de ${clientData.firstName || clientData.displayName?.split(" ")[0] || "client"} (${Math.round(callDuration / 60)} min)`,
       });
 
       if (commissionResult.success) {
@@ -278,6 +278,8 @@ export async function handleCallCompleted(
         // Create commission notification (i18n: 9 languages, English fallback)
         const notifRef = db.collection("affiliate_notifications").doc();
         const amountDollars = ((commissionResult.amount || 0) / 100).toFixed(2);
+        // Privacy: show client first name only (not full email) in affiliate-facing notifications
+        const clientFirstName = clientData.firstName || clientData.displayName?.split(" ")[0] || "un client";
         await notifRef.set({
           id: notifRef.id,
           affiliateId: referredByUserId,
@@ -306,17 +308,17 @@ export async function handleCallCompleted(
                 zh: "通话佣金已收到！",
                 ar: "تم استلام عمولة المكالمة!",
               },
-          message: `Vous avez gagné $${amountDollars} pour l'appel de ${clientData.email}.`,
+          message: `Vous avez gagné $${amountDollars} pour l'appel de ${clientFirstName}.`,
           messageTranslations: {
-            fr: `Vous avez gagné $${amountDollars} pour l'appel de ${clientData.email}.`,
-            en: `You earned $${amountDollars} for the call from ${clientData.email}.`,
-            es: `Has ganado $${amountDollars} por la llamada de ${clientData.email}.`,
-            de: `Sie haben $${amountDollars} für den Anruf von ${clientData.email} verdient.`,
-            pt: `Você ganhou $${amountDollars} pela chamada de ${clientData.email}.`,
-            ru: `Вы заработали $${amountDollars} за звонок от ${clientData.email}.`,
-            hi: `आपने ${clientData.email} की कॉल के लिए $${amountDollars} कमाए।`,
-            zh: `您因 ${clientData.email} 的通话赚取了 $${amountDollars}。`,
-            ar: `لقد ربحت $${amountDollars} مقابل مكالمة ${clientData.email}.`,
+            fr: `Vous avez gagné $${amountDollars} pour l'appel de ${clientFirstName}.`,
+            en: `You earned $${amountDollars} for the call from ${clientFirstName}.`,
+            es: `Has ganado $${amountDollars} por la llamada de ${clientFirstName}.`,
+            de: `Sie haben $${amountDollars} für den Anruf von ${clientFirstName} verdient.`,
+            pt: `Você ganhou $${amountDollars} pela chamada de ${clientFirstName}.`,
+            ru: `Вы заработали $${amountDollars} за звонок от ${clientFirstName}.`,
+            hi: `आपने ${clientFirstName} की कॉल के लिए $${amountDollars} कमाए।`,
+            zh: `您因 ${clientFirstName} 的通话赚取了 $${amountDollars}。`,
+            ar: `لقد ربحت $${amountDollars} مقابل مكالمة ${clientFirstName}.`,
           },
           isRead: false,
           emailSent: false,
@@ -419,33 +421,42 @@ export async function handleCallCompleted(
                 ?? recruiter.lockedRates?.commissionActivationBonusAmount
                 ?? 500; // $5
 
-              // Create activation bonus commission + update balance atomically
-              const actBatch = db.batch();
-              const actRef = db.collection("affiliate_commissions").doc();
-              actBatch.set(actRef, {
-                id: actRef.id,
-                referrerId: recruiterId,
-                type: "activation_bonus",
-                amount: activationAmount,
-                status: holdPeriodHours > 0 ? "pending" : "available",
-                availableAt,
-                source: {
-                  type: "activation",
-                  details: {
-                    activatedUserId: referredByUserId,
-                    totalClientCalls: totalCalls,
+              // P1-5 FIX: Transaction atomique pour éviter double bonus en cas de race condition
+              const referredUserRef = db.collection("users").doc(referredByUserId);
+              const recruiterRef = db.collection("users").doc(recruiterId);
+              await db.runTransaction(async (tx) => {
+                // Re-lire le flag DANS la transaction pour isolation
+                const txUserDoc = await tx.get(referredUserRef);
+                if (txUserDoc.data()?.activationBonusPaid) {
+                  logger.info("[affiliateOnCallCompleted] Activation bonus already paid (concurrent), skipping");
+                  return;
+                }
+
+                const actRef = db.collection("affiliate_commissions").doc();
+                tx.set(actRef, {
+                  id: actRef.id,
+                  referrerId: recruiterId,
+                  type: "activation_bonus",
+                  amount: activationAmount,
+                  status: holdPeriodHours > 0 ? "pending" : "available",
+                  availableAt,
+                  source: {
+                    type: "activation",
+                    details: {
+                      activatedUserId: referredByUserId,
+                      totalClientCalls: totalCalls,
+                    },
                   },
-                },
-                description: `Bonus activation: filleul activé`,
-                createdAt: Timestamp.now(),
+                  description: `Bonus activation: filleul activé`,
+                  createdAt: Timestamp.now(),
+                });
+                tx.update(recruiterRef, {
+                  pendingBalance: FieldValue.increment(activationAmount),
+                  totalEarned: FieldValue.increment(activationAmount),
+                  totalCommissions: FieldValue.increment(1),
+                });
+                tx.update(referredUserRef, { activationBonusPaid: true });
               });
-              actBatch.update(db.collection("users").doc(recruiterId), {
-                pendingBalance: FieldValue.increment(activationAmount),
-                totalEarned: FieldValue.increment(activationAmount),
-                totalCommissions: FieldValue.increment(1),
-              });
-              actBatch.update(db.collection("users").doc(referredByUserId), { activationBonusPaid: true });
-              await actBatch.commit();
 
               logger.info("[affiliateOnCallCompleted] Activation bonus paid", {
                 recruiterId,

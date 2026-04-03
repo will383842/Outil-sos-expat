@@ -409,6 +409,9 @@ const AdminWhatsAppGroups = lazy(
 const AdminWhatsAppSupervision = lazy(
   () => import("../../whatsapp-groups/AdminWhatsAppSupervision")
 );
+const AdminWhatsAppAnalytics = lazy(
+  () => import("../../whatsapp-groups/AdminWhatsAppAnalytics")
+);
 
 // ===== LAZY IMPORTS - INFLUENCER =====
 const AdminInfluencersList = lazy(
@@ -1430,6 +1433,14 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminWhatsAppSupervision />
+          </Suspense>
+        }
+      />
+      <Route
+        path="marketing/whatsapp-analytics"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminWhatsAppAnalytics />
           </Suspense>
         }
       />

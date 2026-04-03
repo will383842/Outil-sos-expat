@@ -21,7 +21,10 @@ import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/cor
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInfluencer } from '@/hooks/useInfluencer';
-import type { InfluencerCommission } from '@/types/influencer';
+import type { InfluencerDashboardData } from '@/types/influencer';
+
+/** Simplified commission type from dashboard callable */
+type DashboardCommission = InfluencerDashboardData['recentCommissions'][number];
 import InfluencerDashboardLayout from '@/components/Influencer/Layout/InfluencerDashboardLayout';
 import { WhatsAppBanner } from '@/whatsapp-groups';
 import ImageBankSection from '@/components/ImageBankSection';
@@ -35,6 +38,8 @@ import InfluencerStatsCard from '@/components/Influencer/Cards/InfluencerStatsCa
 // ============================================================================
 // LAZY-LOADED BELOW-FOLD COMPONENTS - Code splitting
 // ============================================================================
+const InfluencerQRCodeCard = lazy(() => import('@/components/Influencer/Cards/InfluencerQRCodeCard'));
+const InfluencerTelegramBanner = lazy(() => import('@/components/Influencer/Cards/InfluencerTelegramBanner'));
 const InfluencerMotivationWidget = lazy(() =>
   import('@/components/Influencer/Cards/InfluencerMotivationWidget').then(m => ({ default: m.InfluencerMotivationWidget }))
 );
@@ -110,7 +115,7 @@ FullSkeleton.displayName = 'FullSkeleton';
 // MEMOIZED SUB-COMPONENTS
 // ============================================================================
 interface CommissionItemProps {
-  commission: InfluencerCommission;
+  commission: DashboardCommission;
   formatAmount: (cents: number) => string;
   intl: ReturnType<typeof useIntl>;
   index: number;
@@ -154,7 +159,7 @@ const CommissionItem = memo<CommissionItemProps>(({ commission, formatAmount, in
     </div>
     <div className="text-right">
       <p className="text-sm dark:text-green-400 font-bold">
-        +{formatAmount(commission.amount ?? commission.finalAmount)}
+        +{formatAmount(commission.amount)}
       </p>
       <span className={`text-xs px-2 py-0.5 rounded-full ${
         commission.status === 'available'
@@ -202,6 +207,7 @@ const InfluencerDashboard: React.FC = () => {
     isLoading: loading,
     error,
     refreshDashboard,
+    shareUrl,
     notifications,
     markNotificationRead,
     markAllNotificationsRead,
@@ -266,17 +272,17 @@ const InfluencerDashboard: React.FC = () => {
   const earningsBreakdown = useMemo(() => ({
     clientReferrals: thisMonthCommissions
       .filter(c => c.type === 'client_referral')
-      .reduce((sum, c) => sum + (c.amount ?? c.finalAmount), 0),
+      .reduce((sum, c) => sum + c.amount, 0),
     recruitmentCommissions: thisMonthCommissions
       .filter(c => c.type === 'recruitment')
-      .reduce((sum, c) => sum + (c.amount ?? c.finalAmount), 0),
+      .reduce((sum, c) => sum + c.amount, 0),
   }), [thisMonthCommissions]);
 
   const activityFeedItems = useMemo(() =>
     recentCommissions.map(c => ({
       id: c.id,
       type: c.type as 'client_referral' | 'recruitment' | 'withdrawal' | 'badge_earned',
-      amount: c.amount ?? c.finalAmount,
+      amount: c.amount,
       createdAt: c.createdAt,
     })),
     [recentCommissions]
@@ -496,6 +502,16 @@ const InfluencerDashboard: React.FC = () => {
         />
 
         {/* ================================================================ */}
+        {/* TELEGRAM BANNER */}
+        {/* ================================================================ */}
+        <Suspense fallback={null}>
+          <InfluencerTelegramBanner
+            telegramLinked={!!influencer?.telegramOnboardingCompleted}
+            onNavigateToTelegram={() => navigate(routes.telegram)}
+          />
+        </Suspense>
+
+        {/* ================================================================ */}
         {/* MOTIVATION WIDGET */}
         {/* ================================================================ */}
         <Suspense fallback={<CardSkeleton height="h-24" />}>
@@ -543,21 +559,34 @@ const InfluencerDashboard: React.FC = () => {
         )}
 
         {/* ================================================================ */}
-        {/* UNIFIED AFFILIATE LINK + EARNINGS */}
+        {/* UNIFIED AFFILIATE LINK + QR CODE */}
         {/* ================================================================ */}
-        <Suspense fallback={<CardSkeleton height="h-48" />}>
-          <div className={`${UI.card} p-4 sm:p-6 animate-fade-in-up`} style={{ animationDelay: '350ms' }}>
-            <h2 className="text-lg dark:text-white font-bold mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-500" />
-              <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
-            </h2>
-            <UnifiedLinkWithEarnings
-              code={influencer?.affiliateCode || influencer?.affiliateCodeClient || ''}
-              role="influencer"
-              config={config}
-            />
-          </div>
-        </Suspense>
+        <div className="grid lg:grid-cols-3 gap-4 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
+          {/* Lien + gains (2/3) */}
+          <Suspense fallback={<CardSkeleton height="h-48" className="lg:col-span-2" />}>
+            <div className={`${UI.card} p-4 sm:p-6 lg:col-span-2`}>
+              <h2 className="text-lg dark:text-white font-bold mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-yellow-500" />
+                <FormattedMessage id="influencer.dashboard.links.title" defaultMessage="Vos liens de parrainage" />
+              </h2>
+              <UnifiedLinkWithEarnings
+                code={influencer?.affiliateCode || influencer?.affiliateCodeClient || ''}
+                role="influencer"
+                config={config}
+              />
+            </div>
+          </Suspense>
+
+          {/* QR Code (1/3) */}
+          {shareUrl && (
+            <Suspense fallback={<CardSkeleton height="h-48" />}>
+              <InfluencerQRCodeCard
+                shareUrl={shareUrl}
+                affiliateCode={influencer?.affiliateCode || influencer?.affiliateCodeClient || ''}
+              />
+            </Suspense>
+          )}
+        </div>
 
         {/* ================================================================ */}
         {/* STATS ROW */}
@@ -702,13 +731,13 @@ const InfluencerDashboard: React.FC = () => {
 
           <div className="grid sm:grid-cols-2 gap-4 text-center">
             <div className="p-4 rounded-xl bg-gradient-to-br from-red-50 dark:from-red-900/20 to-orange-50 dark:to-orange-900/20 border dark:border-red-800">
-              <p className="text-3xl dark:text-red-400 font-black">${((config?.commissionClientAmountLawyer ?? config?.clientReferralCommission ?? 1000) / 100).toFixed(0)}</p>
+              <p className="text-3xl dark:text-red-400 font-black">${((config?.commissionClientAmountLawyer ?? config?.commissionClientAmount ?? 1000) / 100).toFixed(0)}</p>
               <p className="text-sm dark:text-gray-600 mt-1">
                 <FormattedMessage id="influencer.dashboard.info.client" defaultMessage="par client référé" />
               </p>
             </div>
             <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 dark:from-purple-900/20 to-pink-50 dark:to-pink-900/20 border dark:border-purple-800">
-              <p className="text-3xl dark:text-purple-400 font-black">${((config?.commissionRecruitmentAmountLawyer ?? config?.providerRecruitmentCommission ?? 500) / 100).toFixed(0)}<span className="text-lg">/call</span></p>
+              <p className="text-3xl dark:text-purple-400 font-black">${((config?.commissionRecruitmentAmount ?? 500) / 100).toFixed(0)}<span className="text-lg">/call</span></p>
               <p className="text-sm dark:text-gray-600 mt-1">
                 <FormattedMessage id="influencer.dashboard.info.partner" defaultMessage="par appel de vos partenaires (6 mois)" />
               </p>

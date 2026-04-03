@@ -21,6 +21,7 @@ export { default as WhatsAppGroupScreen, WhatsAppIcon } from './WhatsAppGroupScr
 export { default as WhatsAppBanner } from './WhatsAppBanner';
 export { default as AdminWhatsAppGroups } from './AdminWhatsAppGroups';
 export { default as AdminWhatsAppSupervision } from './AdminWhatsAppSupervision';
+export { default as AdminWhatsAppAnalytics } from './AdminWhatsAppAnalytics';
 export {
   getWhatsAppGroupsConfig,
   findGroupForUser,

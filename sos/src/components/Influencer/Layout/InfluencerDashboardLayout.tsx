@@ -9,6 +9,7 @@ import { useLocaleNavigate } from '@/multilingual-system';
 import { getTranslatedRouteSlug, type RouteKey } from '@/multilingual-system/core/routing/localeRoutes';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useInfluencer } from '@/hooks/useInfluencer';
 import Layout from '@/components/layout/Layout';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import {
@@ -24,6 +25,8 @@ import {
   Menu,
   X,
   Megaphone,
+  Copy,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface InfluencerDashboardLayoutProps {
@@ -36,9 +39,25 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
   const location = useLocation();
   const { language } = useApp();
   const { logout, user } = useAuth();
+  const { dashboardData, shareUrl } = useInfluencer();
   const langCode = (language || 'en') as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const influencer = dashboardData?.influencer;
+  const availableBalance = influencer?.availableBalance ?? null;
+
+  const handleCopyLink = useCallback(async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // silent
+    }
+  }, [shareUrl]);
 
   const menuItems = [
     {
@@ -146,6 +165,41 @@ const InfluencerDashboardLayout: React.FC<InfluencerDashboardLayoutProps> = ({ c
                 </div>
 
                 <div className="p-4">
+
+                {/* Balance disponible */}
+                {availableBalance !== null && (
+                  <div className="mb-4 p-3 rounded-xl bg-gradient-to-br from-green-50 dark:from-green-900/20 to-emerald-50 dark:to-emerald-900/20 border border-green-200/60 dark:border-green-800/60">
+                    <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-0.5">
+                      <FormattedMessage id="influencer.sidebar.balance" defaultMessage="Disponible" />
+                    </p>
+                    <p className="text-xl font-black text-green-700 dark:text-green-300">
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(availableBalance / 100)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Lien affilié copiable */}
+                {shareUrl && (
+                  <button
+                    onClick={handleCopyLink}
+                    title={shareUrl}
+                    className="mb-4 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-800/60 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-left group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-red-500 dark:text-red-400 font-medium">
+                        <FormattedMessage id="influencer.sidebar.myLink" defaultMessage="Mon lien" />
+                      </p>
+                      <p className="text-xs font-mono text-slate-700 dark:text-slate-300 truncate">
+                        {shareUrl.replace('https://', '')}
+                      </p>
+                    </div>
+                    {linkCopied
+                      ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      : <Copy className="w-4 h-4 text-red-400 flex-shrink-0 group-hover:text-red-600 transition-colors" />
+                    }
+                  </button>
+                )}
+
                 <nav className="space-y-1">
                   {menuItems.map((item) => {
                     const translatedPath = `/${getTranslatedRouteSlug(item.routeKey, langCode)}`;

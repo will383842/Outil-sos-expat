@@ -202,10 +202,11 @@ export function useBlogger(): UseBloggerReturn {
       console.error('[useBlogger] Commissions subscription error:', err);
     });
 
-    // Subscribe to withdrawals
+    // Subscribe to withdrawals (centralized payment_withdrawals collection)
     const withdrawalsQuery = query(
-      collection(db, 'blogger_withdrawals'),
-      where('bloggerId', '==', targetUid),
+      collection(db, 'payment_withdrawals'),
+      where('userId', '==', targetUid),
+      where('userType', '==', 'blogger'),
       orderBy('requestedAt', 'desc'),
       limit(20)
     );
@@ -216,6 +217,7 @@ export function useBlogger(): UseBloggerReturn {
         return {
           ...d,
           id: doc.id,
+          bloggerId: d.userId || targetUid,
           requestedAt: d.requestedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
           processedAt: d.processedAt?.toDate?.()?.toISOString() || null,
           completedAt: d.completedAt?.toDate?.()?.toISOString() || null,

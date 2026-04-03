@@ -527,6 +527,13 @@ export const adminMenuTree: AdminMenuItem[] = [
                 icon: ClipboardList,
                 descriptionKey: "admin.menu.whatsappSupervision.description",
               },
+              {
+                id: "whatsapp-analytics",
+                labelKey: "admin.menu.whatsappAnalytics",
+                path: "/admin/marketing/whatsapp-analytics",
+                icon: BarChart3,
+                descriptionKey: "admin.menu.whatsappAnalytics.description",
+              },
             ],
           },
           {

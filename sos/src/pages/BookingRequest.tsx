@@ -2292,6 +2292,53 @@ const BookingRequest: React.FC = () => {
       : "border-gray-200 hover:border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
   }`;
 
+  // P1-7 FIX: Auto-save formulaire dans sessionStorage (restauration après refresh/crash)
+  const BOOKING_AUTOSAVE_KEY = 'sos_booking_form_autosave';
+
+  // Restaurer les données sauvegardées au mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(BOOKING_AUTOSAVE_KEY);
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      // Vérifier que c'est pour le même provider
+      if (parsed._providerId && parsed._providerId !== providerId) return;
+      // Restaurer les champs non vides
+      if (parsed.firstName) setValue('firstName', parsed.firstName);
+      if (parsed.nationality) setValue('nationality', parsed.nationality);
+      if (parsed.currentCountry) setValue('currentCountry', parsed.currentCountry);
+      if (parsed.autrePays) setValue('autrePays', parsed.autrePays);
+      if (parsed.description) setValue('description', parsed.description);
+      if (parsed.clientPhone) setValue('clientPhone', parsed.clientPhone);
+      if (parsed.clientLanguages?.length) setValue('clientLanguages', parsed.clientLanguages);
+    } catch {
+      // Ignore restore errors
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Mount uniquement
+
+  // Sauvegarder les champs à chaque changement (debounced via useWatch)
+  useEffect(() => {
+    if (!watched) return;
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem(BOOKING_AUTOSAVE_KEY, JSON.stringify({
+          _providerId: providerId,
+          firstName: watched.firstName || '',
+          nationality: watched.nationality || '',
+          currentCountry: watched.currentCountry || '',
+          autrePays: watched.autrePays || '',
+          description: watched.description || '',
+          clientPhone: watched.clientPhone || '',
+          clientLanguages: watched.clientLanguages || [],
+        }));
+      } catch {
+        // Storage full or unavailable
+      }
+    }, 500); // Debounce 500ms
+    return () => clearTimeout(timer);
+  }, [watched, providerId]);
+
   // Rediriger vers login si non connecté
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -3157,6 +3204,9 @@ const BookingRequest: React.FC = () => {
         sessionStorage.removeItem('wizardFilters');
         console.log('🔵 [BookingRequest] wizardFilters cleaned after successful submit');
 
+        // P1-7: Nettoyer l'autosave après soumission réussie
+        try { sessionStorage.removeItem(BOOKING_AUTOSAVE_KEY); } catch {}
+
         // Navigate only after successful write and verification
         navigate(`/call-checkout/${providerId}`);
       } catch (error) {
@@ -3509,6 +3559,8 @@ const BookingRequest: React.FC = () => {
         }
 
         sessionStorage.removeItem('wizardFilters');
+        // P1-7: Nettoyer l'autosave après soumission réussie
+        try { sessionStorage.removeItem(BOOKING_AUTOSAVE_KEY); } catch {}
         console.log('✅ [BookingRequest] Mobile submit success, navigating to checkout');
 
         // Navigate to checkout

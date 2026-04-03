@@ -493,6 +493,8 @@ interface CreateUserDocumentData {
   yearsOfExperience?: number;
   hourlyRate?: number;
   profilePhoto?: string;
+  pendingReferralCode?: string;
+  referralCapturedAt?: string;
 }
 
 interface CreateUserDocumentResponse {
@@ -546,6 +548,8 @@ const createUserDocumentViaCloudFunction = async (
     ...(additionalData.bio && { bio: additionalData.bio }),
     ...(additionalData.specialties && { specialties: additionalData.specialties }),
     ...(additionalData.languages && { languages: additionalData.languages }),
+    ...(additionalData.pendingReferralCode && { pendingReferralCode: additionalData.pendingReferralCode }),
+    ...(additionalData.referralCapturedAt && { referralCapturedAt: additionalData.referralCapturedAt }),
   };
 
   // ✅ Retry avec backoff exponentiel (3 tentatives max)
@@ -1745,6 +1749,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           const MAX_RETRIES = 3;
           let lastError: Error | null = null;
 
+          // Read pending referral code from sessionStorage so it's included in the Cloud Function call
+          const pendingRefForCF = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
+
           for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
               const result = await createUserDocumentViaCloudFunction(googleUser, {
@@ -1753,6 +1760,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 preferredLanguage: 'fr' as SupportedLanguage,
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+                ...(pendingRefForCF && { pendingReferralCode: pendingRefForCF, referralCapturedAt: new Date().toISOString() }),
               });
               devLog("[DEBUG] " + "✅ GOOGLE POPUP: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
               lastError = null; // Succès, pas d'erreur
@@ -2037,6 +2045,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           const MAX_RETRIES = 3;
           let lastError: Error | null = null;
 
+          // Read pending referral code from sessionStorage so it's included in the Cloud Function call
+          const pendingRefForCF = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('pendingReferralCode') : null;
+
           for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
               const result = await createUserDocumentViaCloudFunction(googleUser, {
@@ -2045,6 +2056,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 preferredLanguage: 'fr' as SupportedLanguage,
                 provider: 'google.com',
                 ...(googleUser.photoURL && { profilePhoto: googleUser.photoURL, photoURL: googleUser.photoURL }),
+                ...(pendingRefForCF && { pendingReferralCode: pendingRefForCF, referralCapturedAt: new Date().toISOString() }),
               });
               devLog("[DEBUG] " + "✅ GOOGLE REDIRECT: Document " + result.action + " via Cloud Function (tentative " + attempt + ")");
               lastError = null;

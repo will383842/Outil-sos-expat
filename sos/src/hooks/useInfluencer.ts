@@ -286,13 +286,14 @@ export function useInfluencer(): UseInfluencerReturn {
     return () => unsubscribe();
   }, [targetUid, isInfluencer, db]);
 
-  // Subscribe to withdrawals
+  // Subscribe to withdrawals (centralized payment_withdrawals collection)
   useEffect(() => {
     if (!targetUid || !isInfluencer) return;
 
     const withdrawalsQuery = query(
-      collection(db, "influencer_withdrawals"),
-      where("influencerId", "==", targetUid),
+      collection(db, "payment_withdrawals"),
+      where("userId", "==", targetUid),
+      where("userType", "==", "influencer"),
       orderBy("requestedAt", "desc"),
       limit(20)
     );
@@ -305,6 +306,8 @@ export function useInfluencer(): UseInfluencerReturn {
           return {
             ...data,
             id: doc.id,
+            // Map centralized field names to legacy InfluencerWithdrawal shape
+            influencerId: data.userId || targetUid,
             requestedAt: data.requestedAt?.toDate?.()?.toISOString() || "",
             processedAt: data.processedAt?.toDate?.()?.toISOString() || undefined,
             completedAt: data.completedAt?.toDate?.()?.toISOString() || undefined,
@@ -452,6 +455,7 @@ export function useInfluencer(): UseInfluencerReturn {
     markNotificationRead,
     markAllNotificationsRead,
     unreadNotificationsCount,
+    shareUrl: clientShareUrl,
     clientShareUrl,
     recruitmentShareUrl,
     providerShareUrl,

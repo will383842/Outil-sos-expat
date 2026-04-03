@@ -3,21 +3,18 @@
  * Design sombre harmonise avec les pages d'inscription, mobile-first
  * Scalable : fonctionne pour tous les roles (chatter, influencer, blogger, groupAdmin, client, lawyer, expat)
  *
- * Corrections 2026-03-14 :
- * - P0: <a href> natif au lieu de window.open() (deep link mobile)
- * - P1: Fond sombre harmonise avec les pages d'inscription
- * - P1: Taille tactile 44px minimum sur tous les boutons
- * - P1: Hover/active/focus sur le CTA
- * - P1: Auto-redirect 8s apres clic
- * - P2: Animation d'entree fade-in + slide-up
- * - P2: Overflow-y-auto pour petits ecrans
- * - P2: safe-area-inset pour iPhone notch
- * - P2: Etats visuels differencies (invitation vs succes)
+ * v2 — Audit 2026-04 :
+ * - Etape de confirmation post-clic ("Avez-vous rejoint ?")
+ * - Pas d'auto-redirect (l'utilisateur doit interagir)
+ * - Bouton "Plus tard" cache pendant 15s
+ * - Detection mobile/desktop pour adapter le message
+ * - Messaging incitatif (bonus communaute, contenu exclusif)
+ * - Deep link natif <a href> conserve
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { ArrowRight, Loader2, MessageCircle, Shield, Zap, Users, Globe, Briefcase } from 'lucide-react';
+import { ArrowRight, Loader2, MessageCircle, Shield, Zap, Users, Globe, Briefcase, CheckCircle2, Smartphone, Monitor } from 'lucide-react';
 import { getWhatsAppGroupsConfig, findGroupForUser, trackWhatsAppGroupClick } from './whatsappGroupsService';
 import type { WhatsAppGroup, WhatsAppRole } from './types';
 
@@ -60,19 +57,14 @@ const ROLE_ICONS: Record<WhatsAppRole, [React.ReactNode, React.ReactNode, React.
   ],
 };
 
-/** Duree auto-redirect apres clic (ms) */
-const AUTO_REDIRECT_DELAY = 8000;
+/** Delai avant d'afficher le bouton "Plus tard" (ms) */
+const SKIP_DELAY = 15000;
 
 interface WhatsAppGroupScreenProps {
-  /** UID de l'utilisateur */
   userId: string;
-  /** Role de l'affilie */
   role: WhatsAppRole;
-  /** Langue de l'utilisateur (ex: "fr", "en") */
   language: string;
-  /** Pays de l'utilisateur (code ISO, ex: "FR", "CM") */
   country: string;
-  /** Callback quand le user continue vers le dashboard */
   onContinue: () => void;
 }
 
@@ -82,6 +74,12 @@ export const WhatsAppIcon: React.FC<{ className?: string }> = ({ className = 'w-
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
   </svg>
 );
+
+/** Detecte si on est sur mobile */
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 
 /** CSS keyframes pour les animations */
 const animationStyles = `
@@ -93,18 +91,16 @@ const animationStyles = `
   from { stroke-dashoffset: 30; }
   to { stroke-dashoffset: 0; }
 }
-@keyframes wa-countdown-bar {
-  from { width: 100%; }
-  to { width: 0%; }
-}
 .wa-animate-in { animation: wa-fade-in-up 0.5s ease-out both; }
 .wa-animate-in-delay { animation: wa-fade-in-up 0.5s ease-out 0.15s both; }
 .wa-checkmark-animated { stroke-dasharray: 30; animation: wa-checkmark-draw 0.6s ease-out 0.2s both; }
-.wa-countdown-bar { animation: wa-countdown-bar ${AUTO_REDIRECT_DELAY}ms linear both; }
 @media (prefers-reduced-motion: reduce) {
   .wa-animate-in, .wa-animate-in-delay, .wa-checkmark-animated { animation: none !important; opacity: 1; }
 }
 `;
+
+/** 3 etapes du flow */
+type ScreenStep = 'invite' | 'confirm' | 'success';
 
 const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
   userId,
@@ -116,10 +112,11 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
   const intl = useIntl();
   const [group, setGroup] = useState<WhatsAppGroup | null>(null);
   const [loading, setLoading] = useState(true);
-  const [clicked, setClicked] = useState(false);
-  const [countdown, setCountdown] = useState(Math.ceil(AUTO_REDIRECT_DELAY / 1000));
+  const [step, setStep] = useState<ScreenStep>('invite');
+  const [showSkip, setShowSkip] = useState(false);
   const hasSkipped = useRef(false);
   const linkRef = useRef<HTMLAnchorElement>(null);
+  const isMobile = useRef(isMobileDevice());
 
   // Charger la config et trouver le bon groupe
   useEffect(() => {
@@ -144,30 +141,31 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
     }
   }, [loading, group, onContinue]);
 
-  // Auto-redirect apres clic avec countdown
+  // Timer pour afficher le bouton "Plus tard" apres SKIP_DELAY
   useEffect(() => {
-    if (!clicked) return;
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          onContinue();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [clicked, onContinue]);
+    if (loading || !group) return;
+    const timer = setTimeout(() => setShowSkip(true), SKIP_DELAY);
+    return () => clearTimeout(timer);
+  }, [loading, group]);
 
-  // Handler clic: tracker en fire-and-forget, le lien <a> gere l'ouverture
+  // Handler clic: tracker en fire-and-forget, passer a l'etape confirmation
   const handleJoinClick = () => {
     if (!group || !group.link) return;
-    setClicked(true);
+    setStep('confirm');
     // Fire-and-forget — ne pas await pour ne pas bloquer le contexte de clic
     trackWhatsAppGroupClick(role, userId, group.id, country).catch((err) => {
       console.error('[WhatsApp Groups] Tracking click failed:', err);
     });
+  };
+
+  // L'utilisateur confirme qu'il a rejoint
+  const handleConfirmJoined = () => {
+    setStep('success');
+  };
+
+  // L'utilisateur dit qu'il n'a pas encore rejoint → re-afficher le lien
+  const handleNotYet = () => {
+    setStep('invite');
   };
 
   // Inject animation styles
@@ -195,47 +193,79 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
               <FormattedMessage id="whatsapp.loading" defaultMessage="Chargement..." />
             </p>
           </div>
-        ) : clicked ? (
-          /* ===== ETAT APRES CLIC — Design differencie ===== */
+        ) : step === 'success' ? (
+          /* ===== ETAPE 3 — SUCCES CONFIRME ===== */
           <div className="text-center wa-animate-in">
-            {/* Grand logo WhatsApp anime */}
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#25D366]/20 flex items-center justify-center">
+              <CheckCircle2 className="w-10 h-10 text-[#25D366]" />
+            </div>
+
+            <h2 className="text-2xl font-bold text-white mb-2">
+              <FormattedMessage id="whatsapp.confirmed.title" defaultMessage="Bienvenue dans la communaute !" />
+            </h2>
+            <p className="text-gray-400 text-base mb-8 leading-relaxed max-w-xs mx-auto">
+              <FormattedMessage
+                id="whatsapp.confirmed.subtitle"
+                defaultMessage="Vous faites maintenant partie de notre communaute WhatsApp. Vous y recevrez des astuces exclusives et du support."
+              />
+            </p>
+
+            <button
+              onClick={onContinue}
+              className="w-full py-4 min-h-[48px] bg-white text-gray-900 font-semibold rounded-xl flex items-center justify-center gap-2 text-base hover:bg-gray-100 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+            >
+              <FormattedMessage id="whatsapp.confirmed.continue" defaultMessage="Acceder a mon tableau de bord" />
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        ) : step === 'confirm' ? (
+          /* ===== ETAPE 2 — CONFIRMATION "Avez-vous rejoint ?" ===== */
+          <div className="text-center wa-animate-in">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#25D366]/20 flex items-center justify-center">
               <WhatsAppIcon className="w-10 h-10 text-[#25D366]" />
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-2">
-              <FormattedMessage id="whatsapp.success.title" defaultMessage="Inscription terminée !" />
+              <FormattedMessage id="whatsapp.confirm.title" defaultMessage="Avez-vous rejoint le groupe ?" />
             </h2>
             <p className="text-gray-400 text-base mb-8 leading-relaxed max-w-xs mx-auto">
               <FormattedMessage
-                id="whatsapp.success.subtitle"
-                defaultMessage="WhatsApp s'est ouvert. Rejoignez le groupe puis revenez ici."
+                id="whatsapp.confirm.subtitle"
+                defaultMessage="WhatsApp s'est ouvert. Confirmez que vous avez bien rejoint le groupe."
               />
             </p>
 
-            {/* Barre de countdown */}
-            <div className="w-full h-1 bg-white/10 rounded-full mb-2 overflow-hidden">
-              <div className="h-full bg-[#25D366] rounded-full wa-countdown-bar" />
-            </div>
-            <p className="text-gray-500 text-xs mb-6">
-              <FormattedMessage
-                id="whatsapp.success.redirect"
-                defaultMessage="Redirection automatique dans {seconds}s..."
-                values={{ seconds: countdown }}
-              />
-            </p>
+            {/* Bouton "Oui, j'ai rejoint" */}
+            <button
+              onClick={handleConfirmJoined}
+              className="w-full py-4 min-h-[48px] bg-[#25D366] hover:bg-[#1fba59] active:scale-[0.98] text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-base transition-all mb-3"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              <FormattedMessage id="whatsapp.confirm.yes" defaultMessage="Oui, j'ai rejoint !" />
+            </button>
 
-            {/* CTA vers dashboard */}
+            {/* Bouton "Pas encore" — re-ouvre le lien dans un nouvel onglet */}
+            <a
+              href={group?.link || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleNotYet}
+              className="w-full py-4 min-h-[48px] bg-white/10 hover:bg-white/15 active:scale-[0.98] text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-base transition-all"
+            >
+              <FormattedMessage id="whatsapp.confirm.notyet" defaultMessage="Pas encore, ouvrir WhatsApp" />
+            </a>
+
+            {/* Lien passer discret */}
             <button
               onClick={onContinue}
-              className="w-full py-4 min-h-[48px] bg-white text-gray-900 font-semibold rounded-xl flex items-center justify-center gap-2 text-base hover:bg-gray-100 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+              className="mt-5 py-2 min-h-[44px] px-4 text-gray-600 hover:text-gray-400 text-sm inline-flex items-center gap-1 transition-colors"
             >
-              <FormattedMessage id="whatsapp.success.continue" defaultMessage="Mon tableau de bord" />
-              <ArrowRight className="w-5 h-5" />
+              <FormattedMessage id="whatsapp.confirm.skip" defaultMessage="Je rejoindrai plus tard" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         ) : (
-          /* ===== ETAT PRINCIPAL — INVITATION ===== */
+          /* ===== ETAPE 1 — INVITATION ===== */
           <div className="text-center wa-animate-in">
             {/* Grand logo WhatsApp */}
             <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-[#25D366]/20 flex items-center justify-center wa-animate-in">
@@ -244,12 +274,12 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
 
             {/* Badge discret */}
             <span className="inline-block px-3 py-1 rounded-full bg-green-500/10 text-[#25D366] text-xs font-medium mb-6 wa-animate-in-delay">
-              <FormattedMessage id="whatsapp.badge.registered" defaultMessage="Compte créé avec succès" />
+              <FormattedMessage id="whatsapp.badge.registered" defaultMessage="Compte cree avec succes" />
             </span>
 
             {/* Titre */}
             <h2 className="text-2xl font-bold text-white mb-2">
-              <FormattedMessage id="whatsapp.join.title" defaultMessage="Dernière étape !" />
+              <FormattedMessage id="whatsapp.join.title" defaultMessage="Derniere etape !" />
             </h2>
 
             {/* Sous-titre */}
@@ -263,6 +293,21 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
               />
             </p>
 
+            {/* Indicateur device */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-gray-500 text-xs mb-6">
+              {isMobile.current ? (
+                <>
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <FormattedMessage id="whatsapp.device.mobile" defaultMessage="WhatsApp s'ouvrira sur votre telephone" />
+                </>
+              ) : (
+                <>
+                  <Monitor className="w-3.5 h-3.5" />
+                  <FormattedMessage id="whatsapp.device.desktop" defaultMessage="WhatsApp Web s'ouvrira dans votre navigateur" />
+                </>
+              )}
+            </div>
+
             {/* Separateur */}
             <div className="w-full h-px bg-white/10 mb-6" />
 
@@ -270,7 +315,7 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
             {(() => {
               const icons = ROLE_ICONS[role];
               return (
-                <ul className="space-y-4 mb-8 text-left">
+                <ul className="space-y-4 mb-6 text-left">
                   {[0, 1, 2].map((i) => (
                     <li key={i} className="flex items-start gap-3">
                       <span className="flex-shrink-0 mt-0.5">{icons[i]}</span>
@@ -288,10 +333,32 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
               );
             })()}
 
-            {/* Bouton rejoindre — <a href> natif pour deep link mobile */}
+            {/* Incentive banner */}
+            <div className="bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl p-3 mb-6 text-left">
+              <p className="text-[#25D366] text-sm font-semibold mb-1">
+                <FormattedMessage id="whatsapp.incentive.title" defaultMessage="Pourquoi rejoindre ?" />
+              </p>
+              <ul className="space-y-1">
+                <li className="text-gray-400 text-xs flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#25D366] mt-0.5 flex-shrink-0" />
+                  <FormattedMessage id="whatsapp.incentive.tip1" defaultMessage="Astuces exclusives pour maximiser vos gains" />
+                </li>
+                <li className="text-gray-400 text-xs flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#25D366] mt-0.5 flex-shrink-0" />
+                  <FormattedMessage id="whatsapp.incentive.tip2" defaultMessage="Support prioritaire de l'equipe" />
+                </li>
+                <li className="text-gray-400 text-xs flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#25D366] mt-0.5 flex-shrink-0" />
+                  <FormattedMessage id="whatsapp.incentive.tip3" defaultMessage="Annonces et opportunites en avant-premiere" />
+                </li>
+              </ul>
+            </div>
+
+            {/* Bouton rejoindre — <a href target="_blank"> pour deep link mobile ET desktop */}
             <a
               ref={linkRef}
               href={group?.link || '#'}
+              target="_blank"
               rel="noopener noreferrer"
               onClick={handleJoinClick}
               className="w-full py-4 min-h-[48px] bg-[#25D366] hover:bg-[#1fba59] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#25D366]/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-base transition-all"
@@ -300,14 +367,19 @@ const WhatsAppGroupScreen: React.FC<WhatsAppGroupScreenProps> = ({
               <FormattedMessage id="whatsapp.join.button" defaultMessage="Rejoindre le groupe WhatsApp" />
             </a>
 
-            {/* Lien passer discret — taille tactile 44px */}
-            <button
-              onClick={onContinue}
-              className="mt-5 py-2 min-h-[44px] px-4 text-gray-500 hover:text-gray-300 text-sm inline-flex items-center gap-1 transition-colors"
-            >
-              <FormattedMessage id="whatsapp.join.skip" defaultMessage="Passer cette étape" />
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            {/* Lien passer discret — cache pendant 15s */}
+            {showSkip ? (
+              <button
+                onClick={onContinue}
+                className="mt-5 py-2 min-h-[44px] px-4 text-gray-600 hover:text-gray-400 text-sm inline-flex items-center gap-1 transition-colors wa-animate-in"
+              >
+                <FormattedMessage id="whatsapp.join.skip" defaultMessage="Passer cette etape" />
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              /* Spacer invisible pour eviter le saut de layout quand le bouton apparait */
+              <div className="mt-5 py-2 min-h-[44px]" />
+            )}
           </div>
         )}
       </div>

@@ -2620,6 +2620,8 @@ interface CreateUserDocumentData {
   yearsOfExperience?: number;
   hourlyRate?: number;
   profilePhoto?: string;
+  pendingReferralCode?: string;
+  referralCapturedAt?: string;
 }
 
 export const createUserDocument = onCall(
@@ -2721,6 +2723,9 @@ export const createUserDocument = onCall(
           updatedAt: now,
           lastLoginAt: now,
           ...approvalFields,
+          // Affiliate tracking: pass referral code through so onUserCreated trigger can process it
+          ...(request.data.pendingReferralCode && { pendingReferralCode: request.data.pendingReferralCode }),
+          ...(request.data.referralCapturedAt && { referralCapturedAt: request.data.referralCapturedAt }),
         };
 
         // Create user document

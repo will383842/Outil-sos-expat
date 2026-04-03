@@ -59,8 +59,14 @@ export type InfluencerPlatform =
   | 'tiktok'
   | 'twitter'
   | 'linkedin'
+  | 'whatsapp'
+  | 'telegram'
+  | 'snapchat'
+  | 'reddit'
+  | 'discord'
   | 'blog'
   | 'website'
+  | 'forum'
   | 'podcast'
   | 'newsletter'
   | 'other';
@@ -510,8 +516,9 @@ export interface InfluencerConfig {
   levelThresholds?: number[];
   levelBonuses?: number[];
 
-  // Unified commission config fields
+  // Unified commission config fields (aligned with backend)
   commissionClientAmount?: number;
+  commissionRecruitmentAmount?: number;
 
   // Version
   version?: number;
@@ -525,15 +532,39 @@ export interface InfluencerConfig {
 // DASHBOARD DATA
 // ============================================================================
 
+/**
+ * Dashboard response — aligned with backend GetInfluencerDashboardResponse.
+ *
+ * recentCommissions: simplified subset (id, type, amount, status, description, createdAt).
+ * Full InfluencerCommission objects come from the Firestore real-time subscription.
+ */
 export interface InfluencerDashboardData {
   influencer: Influencer;
-  recentCommissions: InfluencerCommission[];
-  recentNotifications: InfluencerNotification[];
-  config: InfluencerConfig;
-  monthlyRank?: {
-    rank: number;
-    totalParticipants: number;
+  recentCommissions: Array<{
+    id: string;
+    type: InfluencerCommissionType;
+    amount: number;
+    status: InfluencerCommissionStatus;
+    description: string;
+    createdAt: string;
+  }>;
+  monthlyStats: {
     earnings: number;
+    clients: number;
+    recruits: number;
+    rank: number | null;
+  };
+  unreadNotifications: number;
+  config: Pick<InfluencerConfig,
+    | 'commissionClientAmount'
+    | 'commissionRecruitmentAmount'
+    | 'clientDiscountType'
+    | 'clientDiscountPercent'
+    | 'clientDiscountAmount'
+    | 'minimumWithdrawalAmount'
+  > & {
+    commissionClientAmountLawyer?: number;
+    commissionClientAmountExpat?: number;
   };
   commissionPlan?: {
     id: string;
@@ -541,6 +572,7 @@ export interface InfluencerDashboardData {
     rateLockDate?: string;
     isLifetimeLock?: boolean;
   } | null;
+  isAdminView?: boolean;
 }
 
 // ============================================================================
