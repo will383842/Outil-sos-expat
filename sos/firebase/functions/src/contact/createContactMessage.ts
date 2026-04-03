@@ -29,7 +29,6 @@ interface ContactMessageData {
   name?: string;
   subject?: string;
   message: string;
-  phone?: string;
 }
 
 /**
@@ -68,15 +67,6 @@ function validateContactData(data: unknown): { valid: boolean; error?: string; d
     name = `${firstName} ${lastName}`.trim() || undefined;
   }
 
-  // FIX: Accepter 'phone' OU 'phoneCountryCode'+'phoneNumber' du formulaire
-  let phone: string | undefined;
-  if (typeof body.phone === "string" && body.phone.trim()) {
-    phone = body.phone.trim();
-  } else if (typeof body.phoneNumber === "string" && body.phoneNumber.trim()) {
-    const countryCode = typeof body.phoneCountryCode === "string" ? body.phoneCountryCode : "";
-    phone = `${countryCode}${body.phoneNumber.trim()}`.trim() || undefined;
-  }
-
   return {
     valid: true,
     data: {
@@ -84,7 +74,6 @@ function validateContactData(data: unknown): { valid: boolean; error?: string; d
       name,
       subject: typeof body.subject === "string" ? body.subject.trim() : undefined,
       message: body.message.trim(),
-      phone,
     },
   };
 }
@@ -186,7 +175,7 @@ export const createContactMessage = onRequest(
       // Créer le message de contact
       // FIX: Ajouter isRead: false pour compatibilité avec AdminContactMessages
       // FIX: Exclure les champs undefined (phone, name, subject) — Firestore les rejette
-      const { phone, name, subject, ...requiredData } = validation.data;
+      const { name, subject, ...requiredData } = validation.data;
       const messagePayload: Record<string, unknown> = {
         ...requiredData,
         status: "unread",
@@ -199,7 +188,6 @@ export const createContactMessage = onRequest(
           referer: req.headers["referer"]?.slice(0, 200),
         },
       };
-      if (phone !== undefined) messagePayload.phone = phone;
       if (name !== undefined) messagePayload.name = name;
       if (subject !== undefined) messagePayload.subject = subject;
       const messageDoc = await db.collection("contact_messages").add(messagePayload);
@@ -220,11 +208,6 @@ export const createContactMessage = onRequest(
           const nameParts = validation.data.name.split(" ");
           if (nameParts.length > 0) userData.fn = nameParts[0].toLowerCase().trim();
           if (nameParts.length > 1) userData.ln = nameParts.slice(1).join(" ").toLowerCase().trim();
-        }
-
-        // Extract phone if provided
-        if (validation.data.phone) {
-          userData.ph = validation.data.phone.replace(/[^0-9+]/g, "");
         }
 
         // Extract fbp/fbc from request body if sent from frontend
