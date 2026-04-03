@@ -77,6 +77,7 @@ const useTranslation = () => {
       'cta.clear_cache': 'callCheckoutWrapper.cta.clearCache',
       'error.noPhone': 'callCheckoutWrapper.error.noPhone',
       'error.noProviderData': 'callCheckoutWrapper.error.noProviderData',
+      'error.pricing': 'callCheckoutWrapper.error.pricing',
     };
     const intlKey = keyMap[key] || key;
     try {
@@ -522,7 +523,7 @@ const CallCheckoutWrapper: React.FC = () => {
         }
         setPricingError(null);
       } catch (e) {
-        const msg = `Configuration tarifaire manquante pour le rôle « ${role} » en ${selectedCurrency.toUpperCase()}. Contactez un administrateur.`;
+        const msg = t('error.pricing');
         if (import.meta.env.DEV) console.error('[CallCheckoutWrapper] Admin pricing error:', e);
         setPricingError(msg);
       }
