@@ -122,14 +122,14 @@ const TEXTS: Record<string, { title: string; desc: string; cta: string; download
 // 8 preview images — thumb.webp for display, original.webp for download
 // Images served from blog.life-expat.com with CORS headers for sos-expat.com
 const PREVIEW_IMAGES = [
-  { id: 1, src: "https://blog.life-expat.com/storage/image-bank/ea7e67d5-404c-4dd1-bee1-61ef70a0c7b9/thumb.webp" },
-  { id: 2, src: "https://blog.life-expat.com/storage/image-bank/1f7b33b2-618e-40ed-9e47-878e5ec1ac13/thumb.webp" },
-  { id: 3, src: "https://blog.life-expat.com/storage/image-bank/b1a4fe2d-e1e6-482c-9daf-8e7e6fb8e5ba/thumb.webp" },
-  { id: 4, src: "https://blog.life-expat.com/storage/image-bank/1fa35ff2-9ee1-4983-8dbc-bcb2f83ca97d/thumb.webp" },
-  { id: 5, src: "https://blog.life-expat.com/storage/image-bank/5172d6c0-6dd1-4fd1-b80b-8093e778ef77/thumb.webp" },
-  { id: 6, src: "https://blog.life-expat.com/storage/image-bank/e28243cf-2074-4950-b50b-2ad8eb02d112/thumb.webp" },
-  { id: 7, src: "https://blog.life-expat.com/storage/image-bank/48cb78d9-f56b-4375-a076-17a223913853/thumb.webp" },
-  { id: 8, src: "https://blog.life-expat.com/storage/image-bank/afe72e67-f177-4e3a-b6a2-8e652d62e213/thumb.webp" },
+  { id: 1, src: "https://sos-expat.com/storage/image-bank/ea7e67d5-404c-4dd1-bee1-61ef70a0c7b9/thumb.webp" },
+  { id: 2, src: "https://sos-expat.com/storage/image-bank/1f7b33b2-618e-40ed-9e47-878e5ec1ac13/thumb.webp" },
+  { id: 3, src: "https://sos-expat.com/storage/image-bank/b1a4fe2d-e1e6-482c-9daf-8e7e6fb8e5ba/thumb.webp" },
+  { id: 4, src: "https://sos-expat.com/storage/image-bank/1fa35ff2-9ee1-4983-8dbc-bcb2f83ca97d/thumb.webp" },
+  { id: 5, src: "https://sos-expat.com/storage/image-bank/5172d6c0-6dd1-4fd1-b80b-8093e778ef77/thumb.webp" },
+  { id: 6, src: "https://sos-expat.com/storage/image-bank/e28243cf-2074-4950-b50b-2ad8eb02d112/thumb.webp" },
+  { id: 7, src: "https://sos-expat.com/storage/image-bank/48cb78d9-f56b-4375-a076-17a223913853/thumb.webp" },
+  { id: 8, src: "https://sos-expat.com/storage/image-bank/afe72e67-f177-4e3a-b6a2-8e652d62e213/thumb.webp" },
 ];
 
 type AccentColor = "emerald" | "pink" | "blue" | "amber" | "purple" | "red";
