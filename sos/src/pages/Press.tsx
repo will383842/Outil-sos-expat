@@ -98,9 +98,41 @@ function isImageFormat(format: string | null): boolean {
 // SUB-COMPONENTS
 // ══════════════════════════════════════════════════════════════
 
+// Compact logo tile — used exclusively for press_logos category
+// Industry standard: small preview, name, format badge, single download icon
+function LogoCard({ resource, onDownload }: { resource: PressResource; onDownload?: (r: PressResource) => void }) {
+  const checkerStyle = {
+    backgroundColor: "#f3f4f6",
+    backgroundImage: "linear-gradient(45deg,#e5e7eb 25%,transparent 25%),linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e7eb 75%),linear-gradient(-45deg,transparent 75%,#e5e7eb 75%)",
+    backgroundSize: "12px 12px",
+    backgroundPosition: "0 0,0 6px,6px -6px,-6px 0",
+  };
+  return (
+    <div className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      <div className="relative h-24 flex items-center justify-center overflow-hidden" style={checkerStyle}>
+        <img src={resource.file_url!} alt={resource.name} className="h-full w-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        {resource.file_format && (
+          <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded uppercase tracking-wide">
+            {resource.file_format}
+          </span>
+        )}
+      </div>
+      <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-gray-700 truncate leading-tight">{resource.name}</p>
+        {resource.file_url && (
+          <a href={resource.file_url} target="_blank" rel="noopener noreferrer" onClick={() => onDownload?.(resource)}
+            title={`${resource.file_format?.toUpperCase()} — ${formatFileSize(resource.file_size)}`}
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-red-600 text-gray-500 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <Download className="w-3.5 h-3.5" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ResourceCard({ resource, onDownload }: { resource: PressResource; onDownload?: (r: PressResource) => void }) {
   const isImg = resource.file_url && isImageFormat(resource.file_format);
-  // Checkered background for transparent assets (logos, SVG, PNG) — industry standard (Figma/Photoshop style)
   const isTransparentAsset = isImg && ["png", "svg"].includes((resource.file_format ?? "").toLowerCase());
   return (
     <div className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
@@ -546,7 +578,7 @@ const Press: React.FC = () => {
               <section className="py-20 sm:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <SectionTitle id="identity" icon={Palette} title={t("press.section.identity")} subtitle={t("press.section.identityDesc")} />
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">{logos.map((r) => <ResourceCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">{logos.map((r) => <LogoCard key={r.id} resource={r} onDownload={trackDownload} />)}</div>
                 </div>
               </section>
             )}
