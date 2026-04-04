@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { useLocaleNavigate } from "../multilingual-system";
+import { useLocaleNavigate, parseLocaleFromPath, getTranslatedRouteSlug } from "../multilingual-system";
 import { Helmet } from "react-helmet-async";
 import {
   Phone,
@@ -1656,11 +1656,12 @@ ModernProfileCard.displayName = "ModernProfileCard";
 /* =========================
    FAQ Section Component
 ========================= */
-const FAQSection: React.FC<{ 
+const FAQSection: React.FC<{
   intl: ReturnType<typeof useIntl>;
   faqs: FAQItem[];
   isLoading: boolean;
-}> = React.memo(({ intl, faqs, isLoading }) => {
+  faqPageUrl?: string;
+}> = React.memo(({ intl, faqs, isLoading, faqPageUrl }) => {
   const [openIndex, setOpenIndex] = useState<string | null>(null);
 
   return (
@@ -1753,6 +1754,19 @@ const FAQSection: React.FC<{
                 </article>
               );
             })}
+          </div>
+        )}
+
+        {/* Lien "Voir toutes les FAQs" */}
+        {!isLoading && faqPageUrl && (
+          <div className="text-center mt-6 sm:mt-8">
+            <a
+              href={faqPageUrl}
+              className="inline-flex items-center gap-2 text-red-400 hover:text-red-300 font-semibold text-sm sm:text-base transition-colors border border-red-400/30 hover:border-red-300/50 rounded-full px-5 py-2.5"
+            >
+              <FormattedMessage id="sosCall.faq.viewAll" defaultMessage="Voir toutes les FAQ" />
+              <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
         )}
 
@@ -2175,6 +2189,10 @@ const SOSCall: React.FC = () => {
 
   const lang = (language as "fr" | "en" | "es" | "de" | "pt" | "ch" | "ar" | "hi" | "ru") || "fr";
   const langCode = language?.split('-')[0] || 'fr';
+
+  // URL de la page FAQ complète (traduite selon la langue courante)
+  const { locale: urlLocale } = parseLocaleFromPath(location.pathname);
+  const faqPageUrl = `/${urlLocale || `${langCode}-fr`}/${getTranslatedRouteSlug('faq', langCode as any) || 'faq'}`;
 
   // Listes traduites dynamiquement - filtrées par pays activés dans l'admin
   const countryOptions = useMemo(() => {
@@ -4045,8 +4063,8 @@ const SOSCall: React.FC = () => {
           </div>
         </main>
 
-        {/* FAQ Section */}
-        <FAQSection intl={intl} faqs={faqData} isLoading={isLoadingFAQs} />
+        {/* FAQ Section — 5 questions max, lien vers page FAQ complète */}
+        <FAQSection intl={intl} faqs={faqData.slice(0, 5)} isLoading={isLoadingFAQs} faqPageUrl={faqPageUrl} />
       </div>
 
       {/* Global Styles */}
