@@ -124,6 +124,16 @@ export function AffiliateRefSync(): null {
   const lastInjectedPath = useRef<string>("");
 
   useEffect(() => {
+    // Clean Google Analytics cross-domain params (_gl, _ga_*) — already captured by GA, purely visual noise
+    const rawParams = new URLSearchParams(window.location.search);
+    const gaParamsToRemove = [...rawParams.keys()].filter(k => k === '_gl' || k.startsWith('_ga'));
+    if (gaParamsToRemove.length > 0) {
+      gaParamsToRemove.forEach(k => rawParams.delete(k));
+      const cleanedSearch = rawParams.toString();
+      const newUrl = `${window.location.pathname}${cleanedSearch ? `?${cleanedSearch}` : ''}${window.location.hash}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+
     let ref = getAffiliateRef();
 
     // Safety net: if sessionStorage was cleared mid-session (storage pressure, privacy mode),
