@@ -24,4 +24,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: fe7c0b2676e091898d565b8eba1544ad
           workingDirectory: sos/cloudflare-worker
-          command: deploy --env=""
+          command: deploy
