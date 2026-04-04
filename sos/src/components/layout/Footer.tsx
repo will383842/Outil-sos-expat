@@ -89,6 +89,18 @@ const BLOG_SURVEYS_SEGMENTS: Record<string, { locale: string; slug: string }> = 
   ar: { locale: "ar-sa", slug: "istitalaat" },
 };
 
+const BLOG_NEWS_SEGMENTS: Record<string, { locale: string; slug: string }> = {
+  fr: { locale: "fr-fr", slug: "actualites-expats" },
+  en: { locale: "en-us", slug: "expat-news" },
+  es: { locale: "es-es", slug: "noticias-expatriados" },
+  de: { locale: "de-de", slug: "expat-nachrichten" },
+  pt: { locale: "pt-pt", slug: "noticias-expatriados" },
+  ru: { locale: "ru-ru", slug: "novosti-expatov" },
+  ch: { locale: "zh-cn", slug: "expat-xinwen" },
+  hi: { locale: "hi-in", slug: "expat-samachar" },
+  ar: { locale: "ar-sa", slug: "akhbar-mughtaribeen" },
+};
+
 const BLOG_LIVING_ABROAD_SEGMENTS: Record<string, { locale: string; slug: string }> = {
   fr: { locale: "fr-fr", slug: "vie-a-letranger" },
   en: { locale: "en-us", slug: "living-abroad" },
@@ -703,6 +715,8 @@ const Footer: React.FC = () => {
   const galerieUrl = `/${surveysSegment.locale}/${galerieSlug}`;
   const livingAbroadSegment = BLOG_LIVING_ABROAD_SEGMENTS[resolvedLang] ?? BLOG_LIVING_ABROAD_SEGMENTS.fr;
   const livingAbroadUrl = `https://sos-expat.com/${livingAbroadSegment.locale}/${livingAbroadSegment.slug}`;
+  const newsSegment = BLOG_NEWS_SEGMENTS[resolvedLang] ?? BLOG_NEWS_SEGMENTS.fr;
+  const newsUrl = `https://sos-expat.com/${newsSegment.locale}/${newsSegment.slug}`;
 
   // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
@@ -741,6 +755,11 @@ const Footer: React.FC = () => {
           {
             label: intl.formatMessage({ id: "footer.services.directory", defaultMessage: "Annuaire Mondial" }),
             href: `/${getTranslatedRouteSlug("annuaire", resolvedLang)}`,
+          },
+          {
+            label: intl.formatMessage({ id: "footer.services.news", defaultMessage: "Actualités Expats" }),
+            href: newsUrl,
+            isExternal: true,
           },
           {
             label: intl.formatMessage({ id: "footer.services.livingAbroad", defaultMessage: "Vie à l'Étranger" }),
