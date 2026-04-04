@@ -1393,7 +1393,7 @@ const OptimizedHomePage: React.FC = () => {
 
               {/* Bouton "Voir les experts" - masqué sur mobile, visible sur desktop */}
               <ActionLink
-                to={resolveLink("/sos-appel")}
+                to={resolveLink("/prestataires")}
                 className="group hidden md:flex items-center space-x-3 px-10 py-6 rounded-3xl bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105 backdrop-blur-sm font-bold text-lg touch-manipulation"
                 aria-label={intl.formatMessage({ id: "aria.viewExperts" })}
               >
