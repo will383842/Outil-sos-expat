@@ -436,8 +436,7 @@ export const sitemapHelp = onRequest(
 
       console.log('📥 Récupération des help_articles...');
       // ✅ Optional pagination: ?page=1
-      const helpPageParam = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : null;
-      const helpPageNum = helpPageParam && helpPageParam >= 1 ? helpPageParam : null;
+      // pagination parameter reserved for future use
 
       const snapshot = await db.collection('help_articles')
         .where('isPublished', '==', true)
@@ -776,8 +775,8 @@ export const sitemapFaq = onRequest(
     <loc>${escapeXml(url)}</loc>
 ${hreflangs}
     <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${SITE_URL}/${defaultLocale}/faq/${getSlug('fr')}`)}"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
     <lastmod>${faq.updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || today}</lastmod>
   </url>`);
         });

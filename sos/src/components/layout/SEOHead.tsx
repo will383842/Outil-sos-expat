@@ -217,11 +217,11 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       )}
       
       {/* Robots */}
-      <meta 
-        name="robots" 
-        content={noindex ? "noindex, nofollow" : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"} 
+      <meta
+        name="robots"
+        content={noindex ? "noindex, follow" : "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"}
       />
-      <meta name="googlebot" content={noindex ? "noindex, nofollow" : "index, follow"} />
+      <meta name="googlebot" content={noindex ? "noindex, follow" : "index, follow"} />
       
       {/* URL canonique */}
       {fullCanonicalUrl && <link rel="canonical" href={fullCanonicalUrl} />}

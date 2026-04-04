@@ -3,7 +3,7 @@ import { useIntl } from 'react-intl';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useLocaleNavigate } from '../multilingual-system';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, increment, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Layout from '../components/layout/Layout';
 import SEOHead from '../components/layout/SEOHead';
@@ -614,13 +614,12 @@ const FAQDetail: React.FC = () => {
   const question = displayFaq.question?.[langCode] || displayFaq.question?.['fr'] || displayFaq.question?.['en'] || 'Untitled FAQ';
   const answer = displayFaq.answer?.[langCode] || displayFaq.answer?.['fr'] || displayFaq.answer?.['en'] || 'No answer available';
 
-  // Format answer with line breaks
-  const formattedAnswer = answer.split('\n').map((line, i) => (
-    <React.Fragment key={i}>
-      {line}
-      {i < answer.split('\n').length - 1 && <br />}
-    </React.Fragment>
-  ));
+  // Strip HTML for plain-text uses (JSON-LD, meta description, TL;DR)
+  const plainAnswer = answer.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // First sentence for TL;DR / featured snippet (snippet 0)
+  const firstSentenceRaw = plainAnswer.split(/(?<=[.!?])\s+/)[0] || plainAnswer.substring(0, 200);
+  const firstSentence = firstSentenceRaw.length > 280 ? firstSentenceRaw.substring(0, 277) + '…' : firstSentenceRaw;
 
   // Build canonical URL with locale prefix
   const CANONICAL_LOCALES: Record<string, string> = {
@@ -639,10 +638,9 @@ const FAQDetail: React.FC = () => {
   const canonicalUrl = `https://sos-expat.com/${defaultLocale}/${faqRouteSlug}/${currentSlug}`;
 
   // Meta description: truncate at last "." before 160 chars for clean sentences
-  const rawDesc = answer.replace(/\n/g, ' ');
-  const metaDescription = rawDesc.length <= 160
-    ? rawDesc
-    : (rawDesc.substring(0, 160).replace(/\.[^.]*$/, '') || rawDesc.substring(0, 157)) + (rawDesc.length > 160 ? '…' : '');
+  const metaDescription = plainAnswer.length <= 160
+    ? plainAnswer
+    : (plainAnswer.substring(0, 160).replace(/\.[^.]*$/, '') || plainAnswer.substring(0, 157)) + '…';
 
   // Detect untranslated FAQ: if langCode has no own content and falls back to FR/EN → noindex
   const hasOwnTranslation = !!(displayFaq.question?.[langCode] && displayFaq.answer?.[langCode]);
@@ -667,18 +665,86 @@ const FAQDetail: React.FC = () => {
 
   return (
     <Layout>
-      {/* Per-article hreflang with correct translated slugs + noindex for untranslated content */}
+      {/* Per-article hreflang + noindex + QAPage + Speakable + Article JSON-LD */}
       <Helmet>
         {faqHreflang.map(alt => (
           <link key={alt.lang} rel="alternate" hrefLang={alt.lang} href={alt.url} />
         ))}
         <link rel="alternate" hrefLang="x-default" href={`https://sos-expat.com/fr-fr/faq/${displayFaq.slug?.['fr'] || displayFaq.id}`} />
-        {noIndex && <meta name="robots" content="noindex,follow" />}
+        {/* robots géré exclusivement par SEOHead (noindex={noIndex}) — pas de doublon ici */}
+
+        {/* QAPage JSON-LD — plus précis que FAQPage pour une page détail unique */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "QAPage",
+          "url": canonicalUrl,
+          "inLanguage": langCode === 'ch' ? 'zh' : langCode,
+          "mainEntity": {
+            "@type": "Question",
+            "name": question,
+            "text": question,
+            "answerCount": 1,
+            "dateCreated": (displayFaq as any).createdAt?.toDate?.()?.toISOString?.() || "2024-01-01T00:00:00.000Z",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": plainAnswer,
+              "url": canonicalUrl,
+              "upvoteCount": (displayFaq.views || 0),
+              "author": {
+                "@type": "Organization",
+                "name": "SOS Expat & Travelers",
+                "url": "https://sos-expat.com"
+              }
+            }
+          }
+        })}</script>
+
+        {/* Article JSON-LD — signaux E-E-A-T pour Google + LLM crawlers */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": question,
+          "description": metaDescription,
+          "articleBody": plainAnswer,
+          "inLanguage": langCode === 'ch' ? 'zh' : langCode,
+          "url": canonicalUrl,
+          "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl },
+          "datePublished": (displayFaq as any).createdAt?.toDate?.()?.toISOString?.() || "2024-01-01T00:00:00.000Z",
+          "dateModified": (displayFaq as any).updatedAt?.toDate?.()?.toISOString?.() || new Date().toISOString(),
+          "author": {
+            "@type": "Organization",
+            "name": "SOS Expat & Travelers",
+            "url": "https://sos-expat.com",
+            "sameAs": ["https://sos-expat.com"]
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "SOS Expat",
+            "url": "https://sos-expat.com",
+            "logo": { "@type": "ImageObject", "url": "https://sos-expat.com/logo.png", "width": 250, "height": 60 }
+          },
+          "keywords": [question, displayFaq.category, ...(displayFaq.tags || [])].join(', '),
+          "about": { "@type": "Thing", "name": "Expatriation, droit international, assistance aux expatriés" },
+          "isPartOf": { "@type": "WebSite", "@id": "https://sos-expat.com", "name": "SOS Expat" }
+        })}</script>
+
+        {/* Speakable JSON-LD — Google Assistant + AEO (LLMs) */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+          "url": canonicalUrl,
+          "name": question,
+          "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": ["h1", ".faq-tldr", ".faq-answer"]
+          }
+        })}</script>
       </Helmet>
       <SEOHead
-        title={`${question} - FAQ | SOS Expat`}
+        title={`${question} | SOS Expat`}
         description={metaDescription}
-        keywords={[displayFaq.category, 'FAQ', 'help', ...(displayFaq.tags || [])].join(', ')}
+        keywords={[question.split(' ').slice(0, 6).join(' '), displayFaq.category, 'FAQ', 'SOS Expat', ...(displayFaq.tags || [])].join(', ')}
         canonicalUrl={canonicalUrl}
         noindex={noIndex}
         ogType="article"
@@ -689,7 +755,7 @@ const FAQDetail: React.FC = () => {
         contentQuality={hasOwnTranslation ? 'high' : 'medium'}
         lastReviewed={new Date().toISOString().split('T')[0]}
         readingTime={`${Math.max(1, Math.ceil(answer.split(/\s+/).length / 200))} min`}
-        aiSummary={answer.substring(0, 300).replace(/\n/g, ' ')}
+        aiSummary={plainAnswer.substring(0, 300)}
         locale={currentLang === 'fr' ? 'fr_FR' :
                 currentLang === 'en' ? 'en_US' :
                 currentLang === 'es' ? 'es_ES' :
@@ -753,58 +819,125 @@ const FAQDetail: React.FC = () => {
           >
             {question}
           </h1>
-          {/* E-E-A-T : auteur + date visible = signal fort pour Google */}
-          <p className="text-sm text-gray-500 mt-2" itemProp="author" itemScope itemType="https://schema.org/Person">
-            <span itemProp="name">SOS Expat & Travelers</span>
-            {' · '}
-            <time dateTime={new Date().toISOString().split('T')[0]} itemProp="dateModified">
-              {new Date().toLocaleDateString(langCode === 'fr' ? 'fr-FR' : langCode === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          {/* E-E-A-T : auteur + date + organisation visible = signal fort pour Google */}
+          <p className="text-sm text-gray-500 mt-2 flex flex-wrap gap-x-3 gap-y-1 items-center">
+            <span itemProp="author" itemScope itemType="https://schema.org/Organization">
+              <span itemProp="name" className="font-medium text-gray-700">SOS Expat & Travelers</span>
+            </span>
+            <span aria-hidden="true">·</span>
+            <time
+              dateTime={(displayFaq as any).updatedAt?.toDate?.()?.toISOString?.()?.split('T')[0] || new Date().toISOString().split('T')[0]}
+              itemProp="dateModified"
+            >
+              {((displayFaq as any).updatedAt?.toDate?.() || new Date()).toLocaleDateString(
+                langCode === 'fr' ? 'fr-FR' : langCode === 'ar' ? 'ar-SA' : langCode === 'de' ? 'de-DE' : langCode === 'es' ? 'es-ES' : langCode === 'pt' ? 'pt-PT' : 'en-US',
+                { year: 'numeric', month: 'long', day: 'numeric' }
+              )}
             </time>
+            <span aria-hidden="true">·</span>
+            <span className="text-blue-600">
+              {Math.max(1, Math.ceil(plainAnswer.split(/\s+/).length / 200))} min
+            </span>
           </p>
         </header>
 
-        <div 
-          className="prose prose-lg max-w-none mb-12"
-          itemProp="text"
-        >
-          <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-            {formattedAnswer}
+        {/* TL;DR / Snippet 0 — première phrase mise en avant pour featured snippet Google */}
+        {firstSentence && (
+          <div className="faq-tldr bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-r-lg" role="note" aria-label="Résumé">
+            <p className="font-semibold text-red-800 text-sm uppercase mb-1 tracking-wide">
+              {intl.formatMessage({ id: 'faq.detail.summary', defaultMessage: 'En résumé' })}
+            </p>
+            <p className="text-red-900 font-medium leading-snug">{firstSentence}</p>
           </div>
-        </div>
+        )}
 
-        {/* Related FAQs */}
-        {relatedFAQs.length > 0 && (
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">{intl.formatMessage({ id: 'faq.detail.relatedQuestions', defaultMessage: 'Related Questions' })}</h2>
-            <div className="space-y-4">
-              {relatedFAQs.map(relatedFaq => {
-                const relatedQuestion = relatedFaq.question?.[langCode] || relatedFaq.question?.['fr'] || relatedFaq.question?.['en'];
-                const relatedSlug = relatedFaq.slug?.[langCode] || relatedFaq.slug?.['fr'] || relatedFaq.slug?.['en'] || relatedFaq.id;
-                return (
-                  <Link
-                    key={relatedFaq.id}
-                    to={`/${currentLocale}/${faqRouteSlug}/${relatedSlug}`}
-                    className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
-                  >
-                    <h3 className="font-semibold text-gray-900 mb-2">{relatedQuestion}</h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {relatedFaq.answer?.[langCode] || relatedFaq.answer?.['fr'] || relatedFaq.answer?.['en']}
-                    </p>
-                  </Link>
-                );
-              })}
+        {/* Réponse complète — HTML rendu nativement (ul, li, strong, a) */}
+        <div
+          className="faq-answer prose prose-lg max-w-none mb-10 prose-ul:pl-6 prose-li:my-1 prose-strong:font-semibold prose-a:text-red-600 prose-a:underline"
+          itemProp="text"
+          dangerouslySetInnerHTML={{ __html: answer }}
+        />
+
+        {/* Tags — maillage sémantique interne */}
+        {displayFaq.tags && displayFaq.tags.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              {intl.formatMessage({ id: 'faq.detail.tags', defaultMessage: 'Sujets liés' })}
+            </h2>
+            <div className="flex flex-wrap gap-2" aria-label="Tags">
+              {displayFaq.tags.map(tag => (
+                <Link
+                  key={tag}
+                  to={`/${currentLocale}/${faqRouteSlug}?tag=${encodeURIComponent(tag)}`}
+                  className="px-3 py-1 bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-700 rounded-full text-sm border border-gray-200 transition-colors"
+                  rel="tag"
+                >
+                  #{tag}
+                </Link>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Back to FAQ Link */}
+        {/* CTA — conversion appel */}
+        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 sm:p-8 mb-12 text-white">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
+            {intl.formatMessage({ id: 'faq.detail.cta.title', defaultMessage: 'Besoin d\'aide immédiate ?' })}
+          </h2>
+          <p className="text-red-100 mb-4 text-sm sm:text-base">
+            {intl.formatMessage({ id: 'faq.detail.cta.subtitle', defaultMessage: 'Un expert local vous rappelle en moins de 5 minutes. 197 pays, 24h/24, 7j/7.' })}
+          </p>
+          <Link
+            to={`/${currentLocale}`}
+            className="inline-flex items-center gap-2 bg-white text-red-700 font-semibold px-6 py-3 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            {intl.formatMessage({ id: 'faq.detail.cta.button', defaultMessage: 'Trouver un expert' })}
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Questions liées — maillage interne */}
+        {relatedFAQs.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {intl.formatMessage({ id: 'faq.detail.relatedQuestions', defaultMessage: 'Questions fréquentes liées' })}
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {intl.formatMessage({ id: 'faq.detail.relatedSubtitle', defaultMessage: 'Ces questions peuvent aussi vous intéresser' })}
+            </p>
+            <ul className="space-y-3" aria-label="FAQ liées">
+              {relatedFAQs.map(relatedFaq => {
+                const relatedQuestion = relatedFaq.question?.[langCode] || relatedFaq.question?.['fr'] || relatedFaq.question?.['en'];
+                const relatedSlug = relatedFaq.slug?.[langCode] || relatedFaq.slug?.['fr'] || relatedFaq.slug?.['en'] || relatedFaq.id;
+                const relatedAnswerPlain = (relatedFaq.answer?.[langCode] || relatedFaq.answer?.['fr'] || relatedFaq.answer?.['en'] || '')
+                  .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                return (
+                  <li key={relatedFaq.id}>
+                    <Link
+                      to={`/${currentLocale}/${faqRouteSlug}/${relatedSlug}`}
+                      className="block p-4 bg-gray-50 rounded-lg hover:bg-red-50 hover:border-red-200 transition-colors border border-gray-200 group"
+                    >
+                      <h3 className="font-semibold text-gray-900 group-hover:text-red-700 mb-1 flex items-start gap-2">
+                        <ChevronRight className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
+                        {relatedQuestion}
+                      </h3>
+                      <p className="text-sm text-gray-500 line-clamp-2 ml-6">{relatedAnswerPlain.substring(0, 120)}…</p>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* Retour */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <Link
             to={`/${currentLocale}/${faqRouteSlug}`}
             className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
-            {intl.formatMessage({ id: 'faq.detail.backToAll', defaultMessage: 'Back to all FAQs' })}
+            {intl.formatMessage({ id: 'faq.detail.backToAll', defaultMessage: 'Toutes les FAQ' })}
           </Link>
         </div>
 
