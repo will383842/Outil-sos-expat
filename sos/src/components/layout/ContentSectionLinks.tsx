@@ -13,6 +13,20 @@ import { getTranslatedRouteSlug } from '../../multilingual-system/core/routing/l
 
 type Language = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
 
+// Blog Q/R slugs — these pages are served by blog SSR, NOT the SPA
+// Must use <a href> (full page nav) so the Cloudflare Worker proxies to blog
+const BLOG_QR_SLUGS: Record<Language, string> = {
+  fr: 'vie-a-letranger',
+  en: 'living-abroad',
+  es: 'vivir-en-el-extranjero',
+  de: 'leben-im-ausland',
+  ru: 'zhizn-za-rubezhom',
+  pt: 'viver-no-estrangeiro',
+  ch: 'haiwai-shenghuo',
+  hi: 'videsh-mein-jeevan',
+  ar: 'alhayat-fi-alkhaarij',
+};
+
 type SectionKey =
   | 'annuaire'
   | 'articles'
@@ -92,15 +106,15 @@ const SECTION_LABELS: Record<SectionKey, Record<Language, string>> = {
     ar: 'أدلة موضوعية',
   },
   faq: {
-    fr: 'FAQ & Aide',
-    en: 'FAQ & Help',
-    es: 'FAQ y Ayuda',
-    de: 'FAQ & Hilfe',
-    ru: 'Вопросы и ответы',
-    pt: 'FAQ e Ajuda',
-    ch: '常见问题',
-    hi: 'सामान्य प्रश्न',
-    ar: 'الأسئلة الشائعة',
+    fr: 'Q/R & Aide',
+    en: 'Q&A & Help',
+    es: 'P/R y Ayuda',
+    de: 'F/A & Hilfe',
+    ru: 'В/О и помощь',
+    pt: 'P/R e Ajuda',
+    ch: '问答与帮助',
+    hi: 'प्र/उ और सहायता',
+    ar: 'س/ج والمساعدة',
   },
 };
 
@@ -250,16 +264,37 @@ const ContentSectionLinks: React.FC<ContentSectionLinksProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {sections.map((key) => {
             const Icon = SECTION_ICONS[key];
-            const slug = getTranslatedRouteSlug(key as any, language as any) || key;
-            const href = `/${locale}/${slug}`;
             const label = SECTION_LABELS[key][language] || SECTION_LABELS[key].fr;
             const desc = SECTION_DESCRIPTIONS[key][language] || SECTION_DESCRIPTIONS[key].fr;
+            const cardClass = "group flex items-start gap-3 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-red-100 transition-all duration-200";
+
+            // Q/R (faq) links to blog SSR — must use <a href> for full-page nav
+            // so the Cloudflare Worker routes it to the blog instead of the SPA
+            if (key === 'faq') {
+              const qrSlug = BLOG_QR_SLUGS[language] || BLOG_QR_SLUGS.fr;
+              const href = `/${locale}/${qrSlug}/`;
+              return (
+                <a key={key} href={href} className={cardClass}>
+                  <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-red-50 group-hover:bg-red-100 transition-colors">
+                    <Icon className="h-5 w-5 text-red-500" strokeWidth={1.8} />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">{label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">{desc}</p>
+                  </div>
+                  <ArrowRight className="flex-shrink-0 h-4 w-4 text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-3" />
+                </a>
+              );
+            }
+
+            const slug = getTranslatedRouteSlug(key as any, language as any) || key;
+            const href = `/${locale}/${slug}`;
 
             return (
               <Link
                 key={key}
                 to={href}
-                className="group flex items-start gap-3 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-red-100 transition-all duration-200"
+                className={cardClass}
               >
                 <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-red-50 group-hover:bg-red-100 transition-colors">
                   <Icon className="h-5 w-5 text-red-500" strokeWidth={1.8} />

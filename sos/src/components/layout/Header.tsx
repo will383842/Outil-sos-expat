@@ -1956,7 +1956,7 @@ const Header: React.FC = () => {
                     { key: 'sondages-listing',   icon: '📊', labels: { fr: 'Sondages',     en: 'Surveys',      es: 'Encuestas',     de: 'Umfragen',    ru: 'Опросы',       pt: 'Pesquisas',    ch: '调查',   hi: 'सर्वेक्षण',  ar: 'استطلاعات'  } },
                     { key: 'fiches-pays',        icon: '🗺️', labels: { fr: 'Pays',         en: 'Countries',    es: 'Países',        de: 'Länder',      ru: 'Страны',       pt: 'Países',       ch: '国家',   hi: 'देश',        ar: 'بلدان'      } },
                     { key: 'fiches-thematiques', icon: '🗂️', labels: { fr: 'Thématiques',  en: 'Themes',       es: 'Temáticas',     de: 'Themen',      ru: 'Темы',         pt: 'Temáticas',    ch: '专题',   hi: 'विषयवस्तु',  ar: 'مواضيع'     } },
-                    { key: 'faq',                icon: '❓', labels: { fr: 'FAQ',          en: 'FAQ',          es: 'FAQ',           de: 'FAQ',         ru: 'ЧаВо',         pt: 'FAQ',          ch: 'FAQ',    hi: 'FAQ',        ar: 'أسئلة'      } },
+                    { key: 'faq',                icon: '❓', labels: { fr: 'Q/R',          en: 'Q&A',          es: 'P/R',           de: 'F/A',         ru: 'В/О',          pt: 'P/R',          ch: '问答',   hi: 'प्र/उ',      ar: 'س/ج'        } },
                     { key: 'galerie',            icon: '🖼️', labels: { fr: 'Images',       en: 'Images',       es: 'Imágenes',      de: 'Bilder',      ru: 'Галерея',      pt: 'Imagens',      ch: '图片',   hi: 'चित्र',      ar: 'صور'        } },
                   ];
                   const LOCALE_REGION_MAP: Record<string, string> = {
@@ -1974,14 +1974,33 @@ const Header: React.FC = () => {
                       </p>
                       <ul className="space-y-1" role="list">
                         {CONTENT_MOBILE_ITEMS.map((item) => {
+                          const label = item.labels[language] || item.labels.fr;
+                          const linkClass = "flex items-center space-x-3 p-3 rounded-xl text-gray-300 hover:bg-white/10 transition-colors";
+                          // Q/R → blog SSR: must use <a href> so Cloudflare Worker routes to blog
+                          if (item.key === 'faq') {
+                            const BLOG_QR_M: Record<string, string> = {
+                              fr: 'vie-a-letranger', en: 'living-abroad', es: 'vivir-en-el-extranjero',
+                              de: 'leben-im-ausland', ru: 'zhizn-za-rubezhom', pt: 'viver-no-estrangeiro',
+                              zh: 'haiwai-shenghuo', hi: 'videsh-mein-jeevan', ar: 'alhayat-fi-alkhaarij',
+                            };
+                            const qrLang = urlLang === 'ch' ? 'zh' : urlLang;
+                            const qrSlug = BLOG_QR_M[qrLang] || BLOG_QR_M.fr;
+                            return (
+                              <li key={item.key}>
+                                <a href={`/${localeSlug}/${qrSlug}/`} className={linkClass} onClick={() => setIsMenuOpen(false)}>
+                                  <span className="text-lg" aria-hidden="true">{item.icon}</span>
+                                  <span className="font-medium text-sm">{label}</span>
+                                </a>
+                              </li>
+                            );
+                          }
                           const slug = getTranslatedRouteSlug(item.key as Parameters<typeof getTranslatedRouteSlug>[0], language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
                           const href = `/${localeSlug}/${slug}`;
-                          const label = item.labels[language] || item.labels.fr;
                           return (
                             <li key={item.key}>
                               <Link
                                 to={href}
-                                className="flex items-center space-x-3 p-3 rounded-xl text-gray-300 hover:bg-white/10 transition-colors"
+                                className={linkClass}
                                 onClick={() => setIsMenuOpen(false)}
                               >
                                 <span className="text-lg" aria-hidden="true">{item.icon}</span>
