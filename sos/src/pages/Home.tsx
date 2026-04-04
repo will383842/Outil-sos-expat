@@ -1311,7 +1311,18 @@ const OptimizedHomePage: React.FC = () => {
           role="banner"
           aria-labelledby="main-heading"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" aria-hidden="true" />
+          {/* Hero image — fond absolu pour LCP sans dénaturer le design */}
+          <img
+            src="/hero-home.webp"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+            fetchPriority="high"
+            decoding="async"
+            width={750}
+            height={500}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 pointer-events-none" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" aria-hidden="true" />
           {/* ✅ PERF: blur-3xl + animate-pulse masqués sur mobile (très coûteux en GPU) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block" aria-hidden="true">
@@ -1319,9 +1330,9 @@ const OptimizedHomePage: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-evenly md:flex-row md:items-center md:justify-between md:gap-12 py-4 md:py-0">
-            {/* Colonne gauche : texte + CTA + stats */}
-            <div className="flex flex-col justify-evenly md:justify-center flex-1">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-evenly py-4 md:py-0">
+            {/* Contenu hero centré */}
+            <div className="flex flex-col justify-evenly md:justify-center">
             {/* Contenu principal - espacé uniformément sur mobile */}
             <div className="text-center md:mb-0">
               <h1
@@ -1393,19 +1404,6 @@ const OptimizedHomePage: React.FC = () => {
               </ActionLink>
             </nav>
 
-            {/* Hero image — mobile uniquement, dans le viewport initial pour LCP */}
-            <div className="md:hidden w-full">
-              <img
-                src="/hero-home.webp"
-                alt={intl.formatMessage({ id: "hero.image.alt" })}
-                className="w-full h-44 object-cover object-top rounded-2xl shadow-xl ring-1 ring-white/20"
-                fetchPriority="high"
-                decoding="async"
-                width={750}
-                height={500}
-              />
-            </div>
-
             {/* Stats - Masqués sur mobile pour garder le bouton en bas */}
             <section
               className="hidden md:grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-8"
@@ -1433,18 +1431,6 @@ const OptimizedHomePage: React.FC = () => {
             </section>
             </div>{/* fin colonne gauche */}
 
-            {/* Colonne droite : image hero LCP — desktop seulement */}
-            <div className="hidden md:flex items-center justify-center w-5/12 xl:w-1/2 flex-shrink-0">
-              <img
-                src="/hero-home.webp"
-                alt={intl.formatMessage({ id: "hero.image.alt" })}
-                className="w-full rounded-2xl shadow-2xl ring-2 ring-white/10"
-                fetchPriority="high"
-                decoding="async"
-                width={750}
-                height={500}
-              />
-            </div>
           </div>
         </header>
 
