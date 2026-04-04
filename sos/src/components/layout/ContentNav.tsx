@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Globe, BookOpen, Wrench, BarChart3, MapPin, Layers, HelpCircle, Image } from 'lucide-react';
+import { Globe, BookOpen, Wrench, BarChart3, MapPin, Layers, HelpCircle, Image, Newspaper } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import {
   getTranslatedRouteSlug,
@@ -11,7 +11,7 @@ import {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Language = 'fr' | 'en' | 'es' | 'de' | 'ru' | 'pt' | 'ch' | 'hi' | 'ar';
-type RouteKey = 'annuaire' | 'articles' | 'outils' | 'sondages-listing' | 'fiches-pays' | 'fiches-thematiques' | 'faq' | 'galerie';
+type RouteKey = 'annuaire' | 'articles' | 'news' | 'outils' | 'sondages-listing' | 'fiches-pays' | 'fiches-thematiques' | 'faq' | 'galerie';
 
 // ─── Nav items definition ─────────────────────────────────────────────────────
 
@@ -52,6 +52,32 @@ const NAV_ITEMS: NavItem[] = [
       ch: '文章',
       hi: 'लेख',
       ar: 'مقالات',
+    },
+  },
+  {
+    key: 'news',
+    icon: Newspaper,
+    labels: {
+      fr: 'Actualités',
+      en: 'News',
+      es: 'Noticias',
+      de: 'Nachrichten',
+      ru: 'Новости',
+      pt: 'Notícias',
+      ch: '新闻',
+      hi: 'समाचार',
+      ar: 'أخبار',
+    },
+    blogQrSlugs: {
+      fr: 'actualites-expats',
+      en: 'expat-news',
+      es: 'noticias-expatriados',
+      de: 'expat-nachrichten',
+      ru: 'novosti-expatov',
+      pt: 'noticias-expatriados',
+      ch: 'expat-xinwen',
+      hi: 'expat-samachar',
+      ar: 'akhbar-mughtaribeen',
     },
   },
   {

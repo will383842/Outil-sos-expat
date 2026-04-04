@@ -1952,6 +1952,7 @@ const Header: React.FC = () => {
                   }> = [
                     { key: 'annuaire',           icon: '🌐', labels: { fr: 'Annuaire',     en: 'Directory',    es: 'Directorio',    de: 'Verzeichnis', ru: 'Каталог',      pt: 'Diretório',    ch: '目录',   hi: 'निर्देशिका', ar: 'دليل'       } },
                     { key: 'articles',           icon: '📖', labels: { fr: 'Articles',     en: 'Articles',     es: 'Artículos',     de: 'Artikel',     ru: 'Статьи',       pt: 'Artigos',      ch: '文章',   hi: 'लेख',        ar: 'مقالات'     } },
+                    { key: 'news',               icon: '📰', labels: { fr: 'Actualités',   en: 'News',         es: 'Noticias',      de: 'Nachrichten', ru: 'Новости',      pt: 'Notícias',     ch: '新闻',   hi: 'समाचार',     ar: 'أخبار'      } },
                     { key: 'outils',             icon: '🔧', labels: { fr: 'Outils',       en: 'Tools',        es: 'Herramientas',  de: 'Werkzeuge',   ru: 'Инструменты',  pt: 'Ferramentas',  ch: '工具',   hi: 'उपकरण',      ar: 'أدوات'      } },
                     { key: 'sondages-listing',   icon: '📊', labels: { fr: 'Sondages',     en: 'Surveys',      es: 'Encuestas',     de: 'Umfragen',    ru: 'Опросы',       pt: 'Pesquisas',    ch: '调查',   hi: 'सर्वेक्षण',  ar: 'استطلاعات'  } },
                     { key: 'fiches-pays',        icon: '🗺️', labels: { fr: 'Pays',         en: 'Countries',    es: 'Países',        de: 'Länder',      ru: 'Страны',       pt: 'Países',       ch: '国家',   hi: 'देश',        ar: 'بلدان'      } },
@@ -1976,18 +1977,17 @@ const Header: React.FC = () => {
                         {CONTENT_MOBILE_ITEMS.map((item) => {
                           const label = item.labels[language] || item.labels.fr;
                           const linkClass = "flex items-center space-x-3 p-3 rounded-xl text-gray-300 hover:bg-white/10 transition-colors";
-                          // Q/R → blog SSR: must use <a href> so Cloudflare Worker routes to blog
-                          if (item.key === 'faq') {
-                            const BLOG_QR_M: Record<string, string> = {
-                              fr: 'vie-a-letranger', en: 'living-abroad', es: 'vivir-en-el-extranjero',
-                              de: 'leben-im-ausland', ru: 'zhizn-za-rubezhom', pt: 'viver-no-estrangeiro',
-                              zh: 'haiwai-shenghuo', hi: 'videsh-mein-jeevan', ar: 'alhayat-fi-alkhaarij',
-                            };
-                            const qrLang = urlLang === 'ch' ? 'zh' : urlLang;
-                            const qrSlug = BLOG_QR_M[qrLang] || BLOG_QR_M.fr;
+                          // Blog SSR sections: must use <a href> so Cloudflare Worker routes correctly
+                          const BLOG_SSR_SLUGS: Record<string, Record<string, string>> = {
+                            faq: { fr: 'vie-a-letranger', en: 'living-abroad', es: 'vivir-en-el-extranjero', de: 'leben-im-ausland', ru: 'zhizn-za-rubezhom', pt: 'viver-no-estrangeiro', zh: 'haiwai-shenghuo', hi: 'videsh-mein-jeevan', ar: 'alhayat-fi-alkhaarij' },
+                            news: { fr: 'actualites-expats', en: 'expat-news', es: 'noticias-expatriados', de: 'expat-nachrichten', ru: 'novosti-expatov', pt: 'noticias-expatriados', zh: 'expat-xinwen', hi: 'expat-samachar', ar: 'akhbar-mughtaribeen' },
+                          };
+                          if (BLOG_SSR_SLUGS[item.key]) {
+                            const ssrLang = urlLang === 'ch' ? 'zh' : urlLang;
+                            const ssrSlug = BLOG_SSR_SLUGS[item.key][ssrLang] || BLOG_SSR_SLUGS[item.key].fr;
                             return (
                               <li key={item.key}>
-                                <a href={`/${localeSlug}/${qrSlug}/`} className={linkClass} onClick={() => setIsMenuOpen(false)}>
+                                <a href={`/${localeSlug}/${ssrSlug}/`} className={linkClass} onClick={() => setIsMenuOpen(false)}>
                                   <span className="text-lg" aria-hidden="true">{item.icon}</span>
                                   <span className="font-medium text-sm">{label}</span>
                                 </a>
