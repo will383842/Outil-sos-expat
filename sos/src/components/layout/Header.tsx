@@ -1983,8 +1983,7 @@ const Header: React.FC = () => {
                             news: { fr: 'actualites-expats', en: 'expat-news', es: 'noticias-expatriados', de: 'expat-nachrichten', ru: 'novosti-expatov', pt: 'noticias-expatriados', zh: 'expat-xinwen', hi: 'expat-samachar', ar: 'akhbar-mughtaribeen' },
                           };
                           if (BLOG_SSR_SLUGS[item.key]) {
-                            const ssrLang = urlLang === 'ch' ? 'zh' : urlLang;
-                            const ssrSlug = BLOG_SSR_SLUGS[item.key][ssrLang] || BLOG_SSR_SLUGS[item.key].fr;
+                            const ssrSlug = BLOG_SSR_SLUGS[item.key][urlLang] || BLOG_SSR_SLUGS[item.key].fr;
                             return (
                               <li key={item.key}>
                                 <a href={`/${localeSlug}/${ssrSlug}/`} className={linkClass} onClick={() => setIsMenuOpen(false)}>

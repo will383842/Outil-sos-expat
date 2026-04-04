@@ -188,7 +188,10 @@ const NAV_ITEMS: NavItem[] = [
 // All slugs for each route key (pre-computed for active detection)
 const ALL_SLUGS_BY_KEY: Partial<Record<RouteKey, string[]>> = {};
 for (const item of NAV_ITEMS) {
-  ALL_SLUGS_BY_KEY[item.key] = getAllTranslatedSlugs(item.key);
+  // Blog SSR items (faq, news) have blogQrSlugs — not in localeRoutes, skip getAllTranslatedSlugs
+  ALL_SLUGS_BY_KEY[item.key] = item.blogQrSlugs
+    ? Object.values(item.blogQrSlugs)
+    : getAllTranslatedSlugs(item.key as Parameters<typeof getAllTranslatedSlugs>[0]);
 }
 
 // Extra route keys whose pages also display ContentNav (sub-sections of content areas)
@@ -266,7 +269,7 @@ const ContentNav: React.FC = () => {
       const qrSlug = item.blogQrSlugs[lang] || item.blogQrSlugs.fr;
       return `/${localeSlug}/${qrSlug}/`;
     }
-    const slug = getTranslatedRouteSlug(item.key, lang);
+    const slug = getTranslatedRouteSlug(item.key as Parameters<typeof getTranslatedRouteSlug>[0], lang);
     return `/${localeSlug}/${slug}`;
   }
 
