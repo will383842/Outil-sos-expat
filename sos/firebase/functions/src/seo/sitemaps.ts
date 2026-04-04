@@ -696,8 +696,8 @@ export const sitemapFaq = onRequest(
 
       const db = admin.firestore();
 
-      // Récupère les FAQ actives
-      const snapshot = await db.collection('faqs')
+      // Récupère les FAQ actives (collection app_faq, même que la SPA FAQ.tsx)
+      const snapshot = await db.collection('app_faq')
         .where('isActive', '==', true)
         .limit(500)
         .get();
