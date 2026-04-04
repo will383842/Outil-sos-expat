@@ -1075,7 +1075,7 @@ async function handleRequest(request, env, ctx) {
   //   /sitemaps/*.xml             -- blog sitemaps
   //   /admin/*                    -- blog admin panel
   //   /api/v1/tool-*              -- tool APIs
-  // NOT proxied (SPA pages): /articles listing, /outils, /tools, /sondages, /surveys, /annuaire
+  // NOT proxied (SPA pages): /articles listing
   // ==========================================================================
   const BLOG_ORIGIN = 'https://blog.life-expat.com';
 
@@ -1095,10 +1095,6 @@ async function handleRequest(request, env, ctx) {
     'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
     // countries
     'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
-    // gallery: moved to SPA React page (layout + sélecteur langue cohérents)
-    // 'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitravali', 'maarad',
-    // NOTE: annuaire/directory = SPA React page (NOT blog) -- ne pas ajouter ici
-    // NOTE: outils/tools and sondages/surveys = SPA React listing pages -- ne pas ajouter ici
     // special
     'feed.xml',
   ]);
@@ -1108,7 +1104,28 @@ async function handleRequest(request, env, ctx) {
     'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
   ]);
 
-  // Sondage segments (all 9 languages) -- listing page (/fr-fr/sondages) = SPA, detail pages = Blog
+  // Tools segments (all 9 languages) -- listing + detail → Blog SSR
+  // Source: Blog config/route-segments.php 'tools'
+  const OUTILS_SEGMENTS = new Set([
+    'outils', 'tools', 'herramientas', 'werkzeuge', 'ferramentas',
+    'instrumenty', 'gongju', 'upkaran', 'adawat',
+  ]);
+
+  // Directory segments (all 9 languages) -- listing + detail → Blog SSR
+  // Source: Blog config/route-segments.php 'directory'
+  const ANNUAIRE_SEGMENTS = new Set([
+    'annuaire', 'directory', 'directorio', 'verzeichnis',
+    'diretorio', 'spravochnik', 'minglu', 'nirdeshika', 'dalil',
+  ]);
+
+  // Gallery segments (all 9 languages) -- listing + detail → Blog SSR
+  // Source: Blog config/route-segments.php 'gallery'
+  const GALERIE_SEGMENTS = new Set([
+    'galerie', 'gallery', 'galeria', 'bildergalerie',
+    'galereya', 'tuku', 'chitravali', 'maarad',
+  ]);
+
+  // Sondage segments (all 9 languages) -- listing + detail → Blog SSR
   // Expat surveys
   const SONDAGES_SEGMENTS = new Set([
     'sondages-expatries', 'expat-surveys', 'encuestas-expatriados', 'expat-umfragen',
@@ -1151,6 +1168,9 @@ async function handleRequest(request, env, ctx) {
     // Tool API endpoints
     if (path.startsWith('/api/v1/tool-')) return true;
 
+    // Gallery API (used by SPA React component)
+    if (path.startsWith('/api/v1/public/gallery')) return true;
+
     // Locale-prefixed paths: /{xx-yy}/{segment}[/{slug}]
     const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?(?:\/([^\/]+))?/);
     if (match) {
@@ -1162,9 +1182,17 @@ async function handleRequest(request, env, ctx) {
       // Articles: listing (/en-us/articles) = SPA, detail (/en-us/articles/slug) = Blog
       if (ARTICLES_SEGMENTS.has(segment)) return !!slug;
 
-      // Sondages: detail pages (/fr-fr/sondages-expatries/slug) = Blog
-      // Listing pages (/fr-fr/sondages-vacanciers) also proxied so category pages work
+      // Sondages: listing + detail → Blog SSR
       if (SONDAGES_SEGMENTS.has(segment)) return true;
+
+      // Tools: listing + detail → Blog SSR
+      if (OUTILS_SEGMENTS.has(segment)) return true;
+
+      // Directory: listing + detail → Blog SSR
+      if (ANNUAIRE_SEGMENTS.has(segment)) return true;
+
+      // Gallery: detail pages only → Blog SSR ; listing = SPA React
+      if (GALERIE_SEGMENTS.has(segment)) return !!slug;
 
       // /{locale}/{translated-segment} = blog content (categories, tags, countries, vie-a-letranger)
       if (BLOG_SEGMENTS.has(segment)) return true;

@@ -233,10 +233,8 @@ Disallow: /
 # ===========================================
 # SITEMAPS
 # ===========================================
-# sitemap.xml = index principal (SPA Firebase + blog) — soumis dans GSC
+# sitemap.xml = index principal dynamique (Blog Laravel via Worker) — soumis dans GSC
 Sitemap: https://sos-expat.com/sitemap.xml
-# sitemap-index.xml = index Firebase per-langue (profiles-fr, help-fr, listings-fr…)
-Sitemap: https://sos-expat.com/sitemap-index.xml
 
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA
