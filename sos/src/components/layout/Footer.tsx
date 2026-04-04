@@ -699,7 +699,8 @@ const Footer: React.FC = () => {
   const surveysSegment = BLOG_SURVEYS_SEGMENTS[resolvedLang] ?? BLOG_SURVEYS_SEGMENTS.fr;
   const surveysBlogUrl = `https://sos-expat.com/blog/${surveysSegment.locale}/${surveysSegment.slug}`;
   const toolsUrl = `https://sos-expat.com/${surveysSegment.locale}/outils`;
-  const galerieUrl = `https://sos-expat.com/${surveysSegment.locale}/galerie`;
+  const galerieSlug = getTranslatedRouteSlug('galerie' as any, resolvedLang as any) || 'galerie';
+  const galerieUrl = `/${surveysSegment.locale}/${galerieSlug}`;
   const livingAbroadSegment = BLOG_LIVING_ABROAD_SEGMENTS[resolvedLang] ?? BLOG_LIVING_ABROAD_SEGMENTS.fr;
   const livingAbroadUrl = `https://sos-expat.com/${livingAbroadSegment.locale}/${livingAbroadSegment.slug}`;
 

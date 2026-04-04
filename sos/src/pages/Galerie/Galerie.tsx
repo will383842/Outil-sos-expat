@@ -5,7 +5,7 @@ import Layout from '../../components/layout/Layout';
 import SEOHead from '../../components/layout/SEOHead';
 import { BreadcrumbSchema } from '../../components/seo';
 import { useApp } from '../../contexts/AppContext';
-import { parseLocaleFromPath, getLocaleString } from '../../multilingual-system';
+import { parseLocaleFromPath, getLocaleString, getTranslatedRouteSlug } from '../../multilingual-system';
 import { useLocation } from 'react-router-dom';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -199,7 +199,8 @@ const Galerie: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const canonicalUrl = `https://sos-expat.com/${localeSlug}/galerie`;
+  const galerieSlug = getTranslatedRouteSlug('galerie' as any, lang as any) || 'galerie';
+  const canonicalUrl = `https://sos-expat.com/${localeSlug}/${galerieSlug}`;
 
   return (
     <Layout>

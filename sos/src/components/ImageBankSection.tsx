@@ -13,8 +13,8 @@ import { ImageIcon, Shield, ExternalLink, ChevronLeft, ChevronRight, Download, L
 
 const GALLERY_SEGMENTS: Record<string, string> = {
   fr: "fr-fr/galerie", en: "en-us/gallery", es: "es-es/galeria",
-  de: "de-de/bildergalerie", pt: "pt-pt/galeria", ru: "ru-ru/galereya",
-  zh: "zh-cn/tuku", hi: "hi-in/chitravali", ar: "ar-sa/maarad",
+  de: "de-de/galerie", pt: "pt-pt/galeria", ru: "ru-ru/gallery",
+  zh: "zh-cn/gallery", hi: "hi-in/gallery", ar: "ar-sa/gallery",
 };
 
 const TEXTS: Record<string, { title: string; desc: string; cta: string; download: string; downloading: string; downloaded: string; viewAll: string; iosHint: string; iosSaved: string }> = {
