@@ -169,14 +169,14 @@ const BLOG_PATTERNS = [
   // Blog articles - ALL LANGUAGES
   /^\/[a-z]{2}(-[a-z]{2})?\/blog\/[^\/]+$/i,                  // Generic /blog/
   /^\/[a-z]{2}(-[a-z]{2})?\/articles\/[^\/]+$/i,              // /articles/
-  /^\/[a-z]{2}(-[a-z]{2})?\/actualites\/[^\/]+$/i,            // French news
-  /^\/[a-z]{2}(-[a-z]{2})?\/news\/[^\/]+$/i,                  // English news
-  /^\/[a-z]{2}(-[a-z]{2})?\/noticias\/[^\/]+$/i,              // Spanish/Portuguese news
-  /^\/[a-z]{2}(-[a-z]{2})?\/nachrichten\/[^\/]+$/i,           // German news
-  /^\/[a-z]{2}(-[a-z]{2})?\/novosti\/[^\/]+$/i,               // Russian news
-  /^\/[a-z]{2}(-[a-z]{2})?\/xinwen\/[^\/]+$/i,                // Chinese news (pinyin)
-  /^\/[a-z]{2}(-[a-z]{2})?\/samachar\/[^\/]+$/i,              // Hindi news
-  /^\/[a-z]{2}(-[a-z]{2})?\/akhbar\/[^\/]+$/i,                // Arabic news (romanized)
+  /^\/[a-z]{2}-[a-z]{2}\/actualites-expats(\/[^\/]+)?$/i,      // French news (listing + detail)
+  /^\/[a-z]{2}-[a-z]{2}\/expat-news(\/[^\/]+)?$/i,            // English news
+  /^\/[a-z]{2}-[a-z]{2}\/noticias-expatriados(\/[^\/]+)?$/i,  // Spanish/Portuguese news
+  /^\/[a-z]{2}-[a-z]{2}\/expat-nachrichten(\/[^\/]+)?$/i,     // German news
+  /^\/[a-z]{2}-[a-z]{2}\/novosti-expatov(\/[^\/]+)?$/i,       // Russian news
+  /^\/[a-z]{2}-[a-z]{2}\/expat-xinwen(\/[^\/]+)?$/i,          // Chinese news
+  /^\/[a-z]{2}-[a-z]{2}\/expat-samachar(\/[^\/]+)?$/i,        // Hindi news
+  /^\/[a-z]{2}-[a-z]{2}\/akhbar-mughtaribeen(\/[^\/]+)?$/i,   // Arabic news
 
   // Guides and resources - ALL LANGUAGES
   /^\/[a-z]{2}(-[a-z]{2})?\/guides\/[^\/]+$/i,                // Guides
@@ -1132,6 +1132,19 @@ async function handleRequest(request, env, ctx) {
     'istitalaat-ijaza',
   ]);
 
+  // News segments (all 9 languages) -- listing + detail → Blog SSR
+  // Source: Blog config/route-segments.php 'news'
+  const NEWS_SEGMENTS = new Set([
+    'actualites-expats',       // fr
+    'expat-news',              // en
+    'noticias-expatriados',    // es + pt
+    'expat-nachrichten',       // de
+    'novosti-expatov',         // ru
+    'expat-xinwen',            // zh
+    'expat-samachar',          // hi
+    'akhbar-mughtaribeen',     // ar
+  ]);
+
   // Check if the path should be proxied to the blog backend
   function isBlogPath(path) {
     // Legacy /blog/* prefix — proxy as-is (Laravel will handle)
@@ -1185,6 +1198,9 @@ async function handleRequest(request, env, ctx) {
 
       // Gallery: listing + detail → Blog SSR
       if (GALERIE_SEGMENTS.has(segment)) return true;
+
+      // News: listing + detail → Blog SSR
+      if (NEWS_SEGMENTS.has(segment)) return true;
 
       // /{locale}/{translated-segment} = blog content (categories, tags, countries, vie-a-letranger)
       if (BLOG_SEGMENTS.has(segment)) return true;
