@@ -19,6 +19,8 @@ interface NavItem {
   key: RouteKey;
   icon: React.ElementType;
   labels: Record<Language, string>;
+  /** When set, clicking links to the blog SSR (full page nav) instead of the SPA */
+  blogQrSlugs?: Record<Language, string>;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -116,15 +118,26 @@ const NAV_ITEMS: NavItem[] = [
     key: 'faq',
     icon: HelpCircle,
     labels: {
-      fr: 'FAQ',
-      en: 'FAQ',
-      es: 'FAQ',
-      de: 'FAQ',
-      ru: 'ЧаВо',
-      pt: 'FAQ',
-      ch: 'FAQ',
-      hi: 'FAQ',
-      ar: 'أسئلة',
+      fr: 'Q/R',
+      en: 'Q&A',
+      es: 'P/R',
+      de: 'F/A',
+      ru: 'В/О',
+      pt: 'P/R',
+      ch: '问答',
+      hi: 'प्र/उ',
+      ar: 'س/ج',
+    },
+    blogQrSlugs: {
+      fr: 'vie-a-letranger',
+      en: 'living-abroad',
+      es: 'vivir-en-el-extranjero',
+      de: 'leben-im-ausland',
+      ru: 'zhizn-za-rubezhom',
+      pt: 'viver-no-estrangeiro',
+      ch: 'haiwai-shenghuo',
+      hi: 'videsh-mein-jeevan',
+      ar: 'alhayat-fi-alkhaarij',
     },
   },
   {
@@ -203,6 +216,8 @@ const ContentNav: React.FC = () => {
 
   // Determine which item is active
   function isActive(item: NavItem): boolean {
+    // Blog Q/R items are served by the blog SSR — never "active" inside the SPA
+    if (item.blogQrSlugs) return false;
     const slugs = ALL_SLUGS_BY_KEY[item.key] || [];
     const pathWithoutLocale = location.pathname.replace(/^\/[a-z]{2}-[a-z]{2}/, '');
     // Direct match or starts-with for nested pages
@@ -221,6 +236,10 @@ const ContentNav: React.FC = () => {
 
   // Build href for nav item
   function buildHref(item: NavItem): string {
+    if (item.blogQrSlugs) {
+      const qrSlug = item.blogQrSlugs[lang] || item.blogQrSlugs.fr;
+      return `/${localeSlug}/${qrSlug}/`;
+    }
     const slug = getTranslatedRouteSlug(item.key, lang);
     return `/${localeSlug}/${slug}`;
   }
@@ -285,18 +304,33 @@ const ContentNav: React.FC = () => {
             const Icon = item.icon;
             const label = item.labels[lang] || item.labels.fr;
             const href = buildHref(item);
+            const linkClass = [
+              'flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 outline-none',
+              active
+                ? 'bg-red-600 text-white shadow-sm shadow-red-200'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200',
+            ].join(' ');
+
+            // Blog Q/R items need a full page navigation (blog is SSR, not SPA)
+            if (item.blogQrSlugs) {
+              return (
+                <a
+                  key={item.key}
+                  href={href}
+                  className={linkClass}
+                >
+                  <Icon size={15} strokeWidth={2} className="text-gray-400" aria-hidden="true" />
+                  <span>{label}</span>
+                </a>
+              );
+            }
 
             return (
               <NavLink
                 key={item.key}
                 to={href}
                 ref={active ? (activeRef as React.RefObject<HTMLAnchorElement>) : undefined}
-                className={[
-                  'flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 outline-none',
-                  active
-                    ? 'bg-red-600 text-white shadow-sm shadow-red-200'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200',
-                ].join(' ')}
+                className={linkClass}
                 aria-current={active ? 'page' : undefined}
               >
                 <Icon

@@ -776,7 +776,7 @@ const Footer: React.FC = () => {
         links: [
           {
             label: intl.formatMessage({ id: "footer.support.faq" }),
-            href: `/${getTranslatedRouteSlug("faq", resolvedLang)}`,
+            href: livingAbroadUrl,
           },
           {
             label: intl.formatMessage({ id: "footer.support.contact" }),
