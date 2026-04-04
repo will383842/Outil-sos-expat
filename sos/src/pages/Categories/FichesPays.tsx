@@ -99,16 +99,16 @@ const CONTINENT_FILTER_KEYS: Record<Continent, string> = {
 
 interface CountrySheet {
   code: string;
-  name: string;  // title from blog article in requested lang
-  slug: string;  // article slug for linking
+  name: string;
+  slug: string;
   continent: Continent;
-  readingTime: number;
-  publishedAt?: string;
+  articleCount: number;
+  flagEmoji?: string;
 }
 
 const BLOG_API = "https://blog.life-expat.com/api/v1/public";
 
-// Blog article URL helpers (same as in Articles.tsx)
+// Country page URL: link to articles listing filtered by country code
 const LANG_LOCALE: Record<string, string> = {
   fr: "fr-fr", en: "en-us", es: "es-es", de: "de-de",
   ru: "ru-ru", pt: "pt-pt", zh: "zh-cn", hi: "hi-in", ar: "ar-sa",
@@ -117,9 +117,17 @@ const ARTICLES_SEGMENT: Record<string, string> = {
   fr: "articles", en: "articles", es: "articulos", de: "artikel",
   pt: "artigos", ru: "stati", zh: "wenzhang", hi: "lekh", ar: "maqalat",
 };
-function articleUrl(lang: string, slug: string): string {
-  return `/${LANG_LOCALE[lang] ?? "fr-fr"}/${ARTICLES_SEGMENT[lang] ?? "articles"}/${slug}`;
+function countryArticlesUrl(lang: string, countryCode: string): string {
+  return `/${LANG_LOCALE[lang] ?? "fr-fr"}/${ARTICLES_SEGMENT[lang] ?? "articles"}?country=${countryCode}`;
 }
+
+// Map DB region (English) to SPA Continent type (French keys)
+const REGION_TO_CONTINENT: Record<string, Continent> = {
+  Europe: "Europe", Africa: "Afrique", Asia: "Asie",
+  Americas: "Ameriques", "Middle East": "Moyen-Orient", Oceania: "Oceanie",
+  // Fallbacks
+  "Afrique": "Afrique", "Asie": "Asie", "Amérique": "Ameriques", "Moyen-Orient": "Moyen-Orient",
+};
 
 // Continent lookup by country code (comprehensive for expat destinations)
 const COUNTRY_CONTINENT: Record<string, Continent> = {
@@ -205,42 +213,34 @@ const FichesPays: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Fetch from Blog API: fiches-pays category, 1 article per country
+  // Fetch from Blog API: countries table (PostgreSQL via /api/v1/public/countries)
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
+    const apiLang = lang === "ch" ? "zh" : lang;
 
-    fetch(`${BLOG_API}/articles?category=fiches-pays&lang=${lang}&per_page=100`, {
-      signal: controller.signal,
-    })
+    fetch(`${BLOG_API}/countries?lang=${apiLang}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((json) => {
         const raw: Array<{
-          id: string;
+          code: string;
+          name: string;
           slug: string;
-          title: string;
-          reading_time_minutes: number;
-          published_at: string;
-          countries: string[];
+          region: string;
+          flag_emoji: string;
+          article_count: number;
         }> = json.data ?? [];
 
-        // Map each article to a CountrySheet using its first country code
-        const seen = new Set<string>();
-        const sheets: CountrySheet[] = [];
-
-        for (const article of raw) {
-          const code = (article.countries?.[0] ?? "").toUpperCase();
-          if (!code || seen.has(code)) continue;
-          seen.add(code);
-          sheets.push({
-            code,
-            name:       article.title,
-            slug:       article.slug,
-            continent:  COUNTRY_CONTINENT[code] ?? "Europe",
-            readingTime: article.reading_time_minutes,
-            publishedAt: article.published_at,
-          });
-        }
+        const sheets: CountrySheet[] = raw
+          .filter((c) => c.code && c.name)
+          .map((c) => ({
+            code:         c.code.toUpperCase(),
+            name:         c.name,
+            slug:         c.slug,
+            continent:    REGION_TO_CONTINENT[c.region] ?? COUNTRY_CONTINENT[c.code.toUpperCase()] ?? "Europe",
+            articleCount: c.article_count,
+            flagEmoji:    c.flag_emoji,
+          }));
         setCountries(sheets);
       })
       .catch(() => {/* network error: show empty state */})
@@ -481,7 +481,7 @@ const FichesPays: React.FC = () => {
                       whileHover={{ y: -4, scale: 1.01 }}
                       className="group relative bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-xl hover:border-red-100 transition-all duration-300"
                     >
-                      <a href={articleUrl(lang, country.slug)} className="flex items-start gap-4" aria-label={country.name}>
+                      <a href={countryArticlesUrl(lang, country.code)} className="flex items-start gap-4" aria-label={country.name}>
                         {/* Flag */}
                         <div className="flex-shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-gray-100">
                           <img
@@ -501,16 +501,11 @@ const FichesPays: React.FC = () => {
                             {t(CONTINENT_FILTER_KEYS[country.continent], lang)}
                           </span>
 
-                          <p className="mt-2.5 text-sm text-gray-500 flex items-center gap-1.5">
-                            <BookOpen className="h-3.5 w-3.5 text-gray-400" />
-                            {country.readingTime} {t("rubriques", lang)}
-                          </p>
-
-                          {country.publishedAt && (
-                            <span className="inline-flex items-center gap-1 mt-2 text-xs text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5 font-medium">
-                              <Clock className="h-3 w-3" />
-                              {t("updatedOn", lang)} {formatDate(country.publishedAt, lang)}
-                            </span>
+                          {country.articleCount > 0 && (
+                            <p className="mt-2.5 text-sm text-gray-500 flex items-center gap-1.5">
+                              <BookOpen className="h-3.5 w-3.5 text-gray-400" />
+                              {country.articleCount} {t("rubriques", lang)}
+                            </p>
                           )}
                         </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Plane,
@@ -215,6 +215,16 @@ const recentArticles: RecentArticle[] = [
   { id: 8, theme: "bank", titleFr: "Ouvrir un compte bancaire aux USA en tant qu'expat", titleEn: "Opening a bank account in the USA as an expat", date: "2026-03-10" },
 ];
 
+const BLOG_API = "https://blog.life-expat.com/api/v1/public";
+
+interface ApiArticle {
+  id: number;
+  title: string;
+  slug: string;
+  category_slug: string;
+  published_at: string;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
 /* ------------------------------------------------------------------ */
@@ -242,6 +252,24 @@ const FichesThematiques: React.FC = () => {
   const canonicalFT = `https://sos-expat.com/${_urlLangFT}-${_localeRegionFT[lang] ?? lang}/${getTranslatedRouteSlug("fiches-thematiques" as any, lang as any) || "fiches-thematiques"}`;
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [apiArticles, setApiArticles] = useState<ApiArticle[]>([]);
+
+  useEffect(() => {
+    const apiLang = lang === "ch" ? "zh" : lang;
+    const ctrl = new AbortController();
+    fetch(`${BLOG_API}/categories?lang=${apiLang}&with_recent=1`, { signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        if (Array.isArray(json.recent_articles)) setApiArticles(json.recent_articles);
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [lang]);
+
+  // Unify API articles and static fallback into a common shape
+  const displayArticles = apiArticles.length > 0
+    ? apiArticles.map((a) => ({ id: a.id, theme: a.category_slug, title: a.title, date: a.published_at }))
+    : recentArticles.map((a) => ({ id: a.id, theme: a.theme, title: lang === "en" ? a.titleEn : a.titleFr, date: a.date }));
 
   return (
     <Layout>
@@ -439,7 +467,7 @@ const FichesThematiques: React.FC = () => {
           </motion.h2>
 
           <div className="mt-12 -mx-4 flex gap-5 overflow-x-auto px-4 pb-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent snap-x snap-mandatory">
-            {recentArticles.map((article) => {
+            {displayArticles.map((article) => {
               const theme = [...featuredThemes, ...allThemes].find((th) => th.key === article.theme);
               const Icon = theme?.icon || BookOpen;
               return (
@@ -461,7 +489,7 @@ const FichesThematiques: React.FC = () => {
                     </span>
                   </div>
                   <h3 className="mt-3 line-clamp-2 text-sm font-semibold text-slate-900">
-                    {lang === "en" ? article.titleEn : article.titleFr}
+                    {article.title}
                   </h3>
                   <p className="mt-2 text-xs text-slate-400">{article.date}</p>
                 </motion.div>
