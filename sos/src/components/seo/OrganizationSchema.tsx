@@ -95,7 +95,7 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
       areaServed: ['Worldwide']
     }
   ],
-  foundingDate = '2024',
+  foundingDate = '2026',
   areaServed = ['Worldwide'],
   serviceTypes = [
     'Legal Assistance',
