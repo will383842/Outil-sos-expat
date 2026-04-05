@@ -72,7 +72,10 @@ const RegisterClient: React.FC = () => {
   const rawRedirect = redirectFromStorage || redirectFromParams || '/dashboard';
   const redirect = isAllowedRedirect(rawRedirect) ? rawRedirect : '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
-  const referralCode = searchParams.get('ref') || getUnifiedReferralCode() || '';
+  // FIX: Also read window.location.search (replaceState from AffiliateRefSync + iOS Safari)
+  const referralCode = searchParams.get('ref')
+    || (() => { try { return new URLSearchParams(window.location.search).get('ref'); } catch { return null; } })()
+    || getUnifiedReferralCode() || '';
   const partnerInviteToken = searchParams.get('partnerInviteToken') || '';
 
   const { register, loginWithGoogle, isLoading, error, user, isFullyReady } = useAuth();

@@ -32,7 +32,10 @@ const RegisterExpat: React.FC = () => {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
   const prefillEmail = searchParams.get('email') || '';
-  const referralCode = searchParams.get('ref') || getStoredReferralCode('client') || getBestAvailableReferralCode('client') || '';
+  // FIX: Also read window.location.search (replaceState from AffiliateRefSync + iOS Safari)
+  const referralCode = searchParams.get('ref')
+    || (() => { try { return new URLSearchParams(window.location.search).get('ref'); } catch { return null; } })()
+    || getStoredReferralCode('client') || getBestAvailableReferralCode('client') || '';
   const { register, isLoading, user } = useAuth();
   const { language } = useApp();
   const lang = language as 'fr' | 'en' | 'es' | 'de' | 'ru' | 'hi' | 'pt' | 'ch' | 'ar';
