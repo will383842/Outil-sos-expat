@@ -73,6 +73,16 @@ export async function handleCallCompleted(
     return;
   }
 
+  // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
+  const MIN_CALL_DURATION_FOR_COMMISSION = 30;
+  if ((afterData.duration ?? 0) < MIN_CALL_DURATION_FOR_COMMISSION) {
+    logger.info("[groupAdminOnCallCompleted] Call too short for commission, skipping", {
+      sessionId: event.params.sessionId,
+      duration: afterData.duration,
+    });
+    return;
+  }
+
   // Quick idempotence check (non-transactional, just to avoid unnecessary work)
   if (afterData.groupAdminCommissionPaid) {
     return;
@@ -300,6 +310,9 @@ export async function handleProviderRecruitmentCommission(
   const isNowPaid = afterData.status === "completed" && afterData.isPaid === true;
 
   if (!wasNotPaid || !isNowPaid) return;
+
+  // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
+  if ((afterData.duration ?? 0) < 30) return;
 
   const sessionId = event.params.sessionId;
 

@@ -276,6 +276,9 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
       return;
     }
 
+    // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
+    if ((callData.duration ?? 0) < 30) return;
+
     const providerId = callData.providerId;
     if (!providerId) {
       return;

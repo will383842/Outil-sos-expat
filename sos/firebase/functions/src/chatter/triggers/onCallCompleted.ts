@@ -100,6 +100,18 @@ export async function handleCallCompleted(
   const sessionId = event.params.sessionId;
   const session = afterData;
 
+  // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
+  // Prevents commission fraud from calls that never truly connected
+  const MIN_CALL_DURATION_FOR_COMMISSION = 30; // seconds
+  if ((session.duration ?? 0) < MIN_CALL_DURATION_FOR_COMMISSION) {
+    logger.info("[chatterOnCallCompleted] Call too short for commission, skipping", {
+      sessionId,
+      duration: session.duration,
+      minRequired: MIN_CALL_DURATION_FOR_COMMISSION,
+    });
+    return;
+  }
+
     logger.info("[chatterOnCallCompleted] Processing completed call", {
       sessionId,
       clientId: session.clientId,

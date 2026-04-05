@@ -56,6 +56,17 @@ export async function handleCallCompleted(
     return;
   }
 
+  // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
+  const MIN_CALL_DURATION_FOR_COMMISSION = 30;
+  const callDuration = after.duration ?? after.metadata?.duration ?? 0;
+  if (callDuration < MIN_CALL_DURATION_FOR_COMMISSION) {
+    logger.info("[affiliateOnCallCompleted] Call too short for commission, skipping", {
+      sessionId: event.params.sessionId,
+      duration: callDuration,
+    });
+    return;
+  }
+
   const sessionId = event.params.sessionId;
   const clientId = after.metadata?.clientId || after.clientId;
   const providerId = after.metadata?.providerId || after.providerId;

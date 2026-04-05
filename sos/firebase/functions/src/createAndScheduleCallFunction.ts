@@ -427,7 +427,7 @@ export const createAndScheduleCallHTTPS = onCall(
       }
 
       // ========================================
-      // 7. VALIDATION DU PAYMENT INTENT
+      // 7. VALIDATION DU PAYMENT INTENT (format + vérification Stripe)
       // ========================================
       if (!paymentIntentId || !paymentIntentId.startsWith('pi_')) {
         console.error(`❌ [${requestId}] PaymentIntent ID invalide:`, paymentIntentId);
@@ -437,7 +437,41 @@ export const createAndScheduleCallHTTPS = onCall(
         );
       }
 
-      console.log(`✅ [${requestId}] PaymentIntent validé: ${paymentIntentId}`);
+      // P0-3 AUDIT FIX: Verify PaymentIntent exists in Stripe and matches expected amount
+      // Without this check, an attacker could send a fabricated paymentIntentId and get a free call
+      try {
+        const pi = await stripeManager.retrievePaymentIntent(paymentIntentId);
+        const piStatus = pi.status;
+        const piAmount = pi.amount; // in cents
+
+        // Payment must be authorized (succeeded or requires_capture)
+        if (!['succeeded', 'requires_capture', 'processing'].includes(piStatus)) {
+          console.error(`❌ [${requestId}] PaymentIntent not authorized: status=${piStatus}`);
+          throw new HttpsError(
+            'failed-precondition',
+            'Le paiement n\'a pas été autorisé. Veuillez réessayer.'
+          );
+        }
+
+        // Verify amount matches (convert amount from euros to cents for comparison)
+        const expectedCents = Math.round(amount * 100);
+        if (Math.abs(piAmount - expectedCents) > 100) { // 1€ tolerance for rounding
+          console.error(`❌ [${requestId}] PaymentIntent amount mismatch: stripe=${piAmount} vs expected=${expectedCents}`);
+          throw new HttpsError(
+            'invalid-argument',
+            'Le montant du paiement ne correspond pas.'
+          );
+        }
+
+        console.log(`✅ [${requestId}] PaymentIntent vérifié via Stripe: status=${piStatus}, amount=${piAmount}`);
+      } catch (stripeError) {
+        if (stripeError instanceof HttpsError) throw stripeError;
+        console.error(`❌ [${requestId}] Stripe PaymentIntent verification failed:`, stripeError);
+        throw new HttpsError(
+          'failed-precondition',
+          'Impossible de vérifier le paiement. Veuillez réessayer.'
+        );
+      }
 
       // ========================================
       // 8. RÉSERVER LE PROVIDER (ATOMIQUE — ANTI DOUBLE-BOOKING)

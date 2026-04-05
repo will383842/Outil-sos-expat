@@ -449,6 +449,16 @@ export class StripeManager {
    * Public API
    * ------------------------------------------------------------------- */
 
+  /**
+   * P0-3 AUDIT FIX: Retrieve a PaymentIntent from Stripe to verify it exists and check its status/amount.
+   * Used by createAndScheduleCallHTTPS to prevent fraud (fabricated paymentIntentId).
+   */
+  async retrievePaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+    this.validateConfiguration();
+    if (!this.stripe) throw new HttpsError('internal', 'Stripe non initialisé');
+    return this.stripe.paymentIntents.retrieve(paymentIntentId);
+  }
+
   async createPaymentIntent(
     data: StripePaymentData,
     secretKey?: string

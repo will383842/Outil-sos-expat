@@ -391,6 +391,17 @@ export async function handleCallCompleted(
   const isNowPaid = after.status === "completed" && after.isPaid === true;
 
   if (wasNotPaid && isNowPaid) {
+    // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
+    const MIN_CALL_DURATION_FOR_COMMISSION = 30;
+    const callDurationRaw = after.duration || after.callDuration || 0;
+    if (callDurationRaw < MIN_CALL_DURATION_FOR_COMMISSION) {
+      logger.info("[bloggerOnCallSessionCompleted] Call too short for commission, skipping", {
+        sessionId,
+        duration: callDurationRaw,
+      });
+      return;
+    }
+
     const clientId = after.clientId || after.userId;
     const clientEmail = after.clientEmail || after.userEmail || "";
     const duration = after.duration || after.callDuration || 0;
