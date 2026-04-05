@@ -878,12 +878,15 @@ const AffiliatePathCapture: React.FC<{
   }
 
   const locale = getLocaleString(language);
-  const search = window.location.search || '';
-  const destination = (redirectPath === '/'
-    ? `/${locale}`
-    : `/${locale}${redirectPath}`) + search;
-
-  return <Navigate to={destination} replace />;
+  // CRITICAL: Include ?ref=CODE in redirect URL so the code survives
+  // in-app browser → Safari transitions (localStorage is lost, URL is kept)
+  const existingSearch = new URLSearchParams(window.location.search || '');
+  if (code && !existingSearch.has('ref')) {
+    existingSearch.set('ref', code.toUpperCase());
+  }
+  const searchStr = existingSearch.toString();
+  const basePath = redirectPath === '/' ? `/${locale}` : `/${locale}${redirectPath}`;
+  return <Navigate to={`${basePath}${searchStr ? `?${searchStr}` : ''}`} replace />;
 };
 
 /**
@@ -905,8 +908,14 @@ const UnifiedAffiliateCapture: React.FC = () => {
   }
 
   const locale = getLocaleString(language);
-  const search = window.location.search || '';
-  return <Navigate to={`/${locale}${search}`} replace />;
+  // CRITICAL: Include ?ref=CODE in redirect URL so the code survives
+  // in-app browser → Safari transitions (localStorage is lost, URL is kept)
+  const existingSearch = new URLSearchParams(window.location.search || '');
+  if (code && !existingSearch.has('ref')) {
+    existingSearch.set('ref', code.toUpperCase());
+  }
+  const searchStr = existingSearch.toString();
+  return <Navigate to={`/${locale}${searchStr ? `?${searchStr}` : ''}`} replace />;
 };
 
 // --------------------------------------------
