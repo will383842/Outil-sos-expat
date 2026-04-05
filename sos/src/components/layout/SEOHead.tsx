@@ -149,14 +149,10 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   const ogBaseDomain = isHolidaysDomain() ? 'https://sos-holidays.com' : 'https://sos-expat.com';
   const fullOgImage = ogImage?.startsWith('http') ? ogImage : `${ogBaseDomain}${ogImage}`;
   
-  // Génération automatique de données structurées enrichies pour les IA
+  // Génération du schema WebPage enrichi pour les IA.
+  // IMPORTANT: Ne JAMAIS merger structuredData ici via spread — ça écraserait @type: 'WebPage'
+  // par @type: 'FAQPage' (ou autre). Les schemas spécialisés sont injectés séparément ci-dessous.
   const generateEnrichedStructuredData = () => {
-    const baseData = structuredData || {};
-
-    // IMPORTANT: On utilise toujours @type: WebPage ici.
-    // Les types spécialisés (FAQPage, etc.) sont gérés par leurs propres composants dédiés.
-    // Ne JAMAIS générer mainEntity ici — ça crée des conflits avec les schemas FAQPage
-    // qui ont leur propre mainEntity (Question[]) et Google les confond.
     const enrichedData = {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
@@ -182,7 +178,6 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         '@type': 'ReadAction',
         'target': fullCanonicalUrl
       },
-      ...baseData
     };
 
     // Nettoyage des valeurs undefined
@@ -277,11 +272,18 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         return xDefaultUrl ? <link rel="alternate" hrefLang="x-default" href={xDefaultUrl} /> : null;
       })()}
 
-      {/* Schema.org Structured Data enrichi pour IA */}
+      {/* Schema.org WebPage — toujours @type: WebPage, jamais écrasé */}
       <script type="application/ld+json">
         {JSON.stringify(generateEnrichedStructuredData(), null, 0)}
       </script>
-      
+
+      {/* Schema spécialisé (FAQPage, Article, etc.) — script séparé pour éviter tout conflit de @type */}
+      {structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData, null, 0)}
+        </script>
+      )}
+
       {/* Données supplémentaires pour l'IA en JSON-LD */}
       <script type="application/ld+json">
         {JSON.stringify({
