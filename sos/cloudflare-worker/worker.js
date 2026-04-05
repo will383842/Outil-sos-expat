@@ -1459,31 +1459,10 @@ async function handleRequest(request, env, ctx) {
         firstSlug = restPath.split('/').filter(Boolean)[0];
       }
 
-      // 0. Old FAQ SPA → New blog Q/R 301 redirects
-      // Legacy /faq, /preguntas-frecuentes, etc. → blog /vie-a-letranger, etc.
-      // These old pages used Firestore (SPA React); Q/R is now served by blog Laravel.
-      const LANG_TO_QR_SLUG = {
-        fr: 'vie-a-letranger', en: 'living-abroad', es: 'vivir-en-el-extranjero',
-        de: 'leben-im-ausland', ru: 'zhizn-za-rubezhom', pt: 'viver-no-estrangeiro',
-        zh: 'haiwai-shenghuo', hi: 'videsh-mein-jeevan', ar: 'alhayat-fi-alkhaarij',
-      };
-      const OLD_FAQ_SLUGS = new Set([
-        'faq', 'preguntas-frecuentes', 'perguntas-frequentes',
-        'voprosy-otvety', 'changjian-wenti', 'aksar-puche-jaane-wale-sawal',
-        'al-asila-al-shaiya',
-      ]);
-      if (firstSlug && OLD_FAQ_SLUGS.has(firstSlug)) {
-        const qrLang = urlLang === 'ch' ? 'zh' : urlLang;
-        const qrSlug = LANG_TO_QR_SLUG[qrLang];
-        if (qrSlug) {
-          const redirectUrl = `${url.origin}/${urlLang}-${urlCountry}/${qrSlug}/`;
-          console.log(`[WORKER] Old FAQ → blog Q/R redirect: ${pathname} -> /${urlLang}-${urlCountry}/${qrSlug}/`);
-          return new Response(null, {
-            status: 301,
-            headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
-          });
-        }
-      }
+      // FAQ SPA (Firestore) et Q/R Blog (Laravel) sont deux systèmes distincts :
+      // - /faq, /preguntas-frecuentes, etc. → SPA React (Firestore app_faq) — footer FAQ
+      // - /vie-a-letranger, /living-abroad, etc. → Blog Laravel (PostgreSQL qa_entries) — contenu éditorial
+      // Aucune redirection entre les deux.
 
       // 1. Exact match on route slugs (help center, FAQ)
       if (firstSlug && SLUG_TO_LANG[firstSlug] !== undefined) {
