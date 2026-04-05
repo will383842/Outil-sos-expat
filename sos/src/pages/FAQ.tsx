@@ -253,60 +253,30 @@ const FAQ: React.FC = () => {
         )}
       />
 
-      {/* ── BREADCRUMB VISUEL ── */}
-      <nav aria-label="breadcrumb" className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
-            <li>
-              <a href={`/${language}`} className="hover:text-red-600 transition-colors">
-                {intl.formatMessage({ id: "breadcrumb.home", defaultMessage: "Accueil" })}
-              </a>
-            </li>
-            <li><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 shrink-0"><polyline points="9 18 15 12 9 6"/></svg></li>
-            <li className="text-gray-900 font-medium">{intl.formatMessage({ id: "faq.title", defaultMessage: "FAQ" })}</li>
-          </ol>
-        </div>
-      </nav>
+      {/* HERO sombre, effet verre + dégradés */}
+      <div className="min-h-screen bg-gray-950">
+        <section className="relative py-20 md:py-28 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-transparent to-blue-500/10 pointer-events-none" />
+          <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" />
 
-      {/* HERO dark slate standard SOS Expat */}
-      <div className="min-h-screen bg-white">
-        <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16 pb-12 sm:pt-28 sm:pb-20">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
-          <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-600/5 rounded-full blur-3xl" />
-
-          <div className="relative mx-auto max-w-6xl px-4 text-center">
-            <span className="inline-flex items-center gap-2 border border-red-600/30 bg-red-600/10 text-red-400 rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
-              <HelpCircle className="w-4 h-4" />
-              {intl.formatMessage({ id: "faq.title" })}
+          <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <span className="inline-flex rounded-full p-[1px] bg-gradient-to-r from-red-500 to-orange-500 mb-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 border border-white/15 backdrop-blur text-white">
+                <HelpCircle className="w-4 h-4" />
+                <strong className="font-semibold">
+                  {intl.formatMessage({ id: "faq.title" })}
+                </strong>
+              </span>
             </span>
 
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl md:text-6xl font-black leading-tight text-white">
               {intl.formatMessage({ id: "faq.heroTitle" })}
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-slate-400">
+            <p className="mt-3 md:mt-4 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
               {intl.formatMessage({ id: "faq.heroSubtitle" })}
             </p>
-
-            {/* Stats visibles = signal E-E-A-T + contenu de valeur pour Google */}
-            {!loading && faqData.length > 0 && (
-              <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <HelpCircle className="w-4 h-4 text-red-400" />
-                  <strong className="text-white">{faqData.length}</strong>
-                  {' '}{intl.formatMessage({ id: "faq.title", defaultMessage: "FAQ" })}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Globe className="w-4 h-4 text-red-400" />
-                  <strong className="text-white">197</strong>
-                  {' '}countries
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-red-400" />
-                  <strong className="text-white">9</strong>
-                  {' '}languages
-                </span>
-              </div>
-            )}
 
             {/* Barre de recherche */}
             <div className="mt-8 max-w-2xl mx-auto">
@@ -322,17 +292,21 @@ const FAQ: React.FC = () => {
                   })}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-800/60 text-white placeholder-slate-400 border border-slate-700/50 focus:outline-none focus:ring-2 focus:ring-red-500/40 backdrop-blur-sm shadow-xl"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/10 text-white placeholder-gray-300 border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/40 backdrop-blur-sm shadow-xl"
                 />
-                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-slate-700/30 group-focus-within:ring-red-500/30" />
+                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10 group-focus-within:ring-white/30" />
               </div>
             </div>
           </div>
         </section>
 
         {/* CONTENU */}
-        <section className="bg-white">
-          <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+        <section className="relative bg-gradient-to-b from-white to-gray-50">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-3xl" />
+          </div>
+          <div className="relative max-w-7xl mx-auto px-6 py-12 md:py-16">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* SIDEBAR catégories */}
               <aside className="lg:col-span-1">
