@@ -458,6 +458,9 @@ export interface GroupAdminDashboardResponse {
     rateLockDate?: string;
     isLifetimeLock?: boolean;
   } | null;
+  // Recruiter info (parrain) — cross-collection resolved
+  recruiterName?: string | null;
+  recruiterPhoto?: string | null;
 }
 
 export interface GroupAdminLeaderboardResponse {

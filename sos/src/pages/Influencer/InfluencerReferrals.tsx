@@ -408,6 +408,12 @@ const InfluencerReferrals: React.FC = () => {
   const { referrals, recruitmentShareUrl, isLoading, error, dashboardData } = useInfluencer();
   const [copied, setCopied] = React.useState(false);
 
+  // Recruited influencers (filleuls) + recruiter info from dashboard
+  const recruitedInfluencers = dashboardData?.recruitedInfluencers || [];
+  const recruiterName = dashboardData?.recruiterName || null;
+  const recruiterPhoto = dashboardData?.recruiterPhoto || null;
+  const hasParrain = !!dashboardData?.influencer?.recruitedBy;
+
   // Calculate summary stats
   const summaryStats = useMemo(() => {
     const now = Date.now();
@@ -466,8 +472,31 @@ const InfluencerReferrals: React.FC = () => {
           <EmptyState recruitmentShareUrl={recruitmentShareUrl} />
         ) : (
           <>
+            {/* Mon Parrain */}
+            {hasParrain && (
+              <div className={`${UI.card} p-4`}>
+                <div className="flex items-center gap-3">
+                  {recruiterPhoto ? (
+                    <img src={recruiterPhoto} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-purple-500/30" />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">
+                      <FormattedMessage id="influencer.referrals.myRecruiter" defaultMessage="Mon Parrain" />
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                      {recruiterName || intl.formatMessage({ id: 'influencer.referrals.recruiterAnonymous', defaultMessage: 'Influenceur' })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Summary stats */}
-            <SummaryStats {...summaryStats} />
+            <SummaryStats {...{...summaryStats, totalReferrals: summaryStats.totalReferrals + recruitedInfluencers.length}} />
 
             {/* Unified Affiliate Link */}
             <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 dark:bg-white/5 rounded-xl" />}>
@@ -478,6 +507,33 @@ const InfluencerReferrals: React.FC = () => {
                 compact
               />
             </Suspense>
+
+            {/* Recruited Influencers (filleuls) */}
+            {recruitedInfluencers.length > 0 && (
+              <div className={`${UI.card} overflow-hidden`}>
+                <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border-b dark:border-purple-800">
+                  <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                    <FormattedMessage id="influencer.referrals.recruitedInfluencers" defaultMessage="Influenceurs recrutés" />
+                  </h3>
+                </div>
+                <div className="divide-y dark:divide-gray-700">
+                  {recruitedInfluencers.map((recruit) => (
+                    <div key={recruit.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                      <div>
+                        <p className="text-sm dark:text-white font-medium">{recruit.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-600">{recruit.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">{formatCurrency(recruit.totalEarned)}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-600">
+                          {recruit.joinedAt ? formatDate(recruit.joinedAt, locale) : '-'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Referrals list */}
             <div className="space-y-4">

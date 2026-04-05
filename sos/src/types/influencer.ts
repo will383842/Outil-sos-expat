@@ -573,6 +573,18 @@ export interface InfluencerDashboardData {
     isLifetimeLock?: boolean;
   } | null;
   isAdminView?: boolean;
+  // Recruited influencers (filleuls) — returned by getInfluencerDashboard
+  recruitedInfluencers?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    totalEarned: number;
+    isActive: boolean;
+    joinedAt: string;
+  }>;
+  // Recruiter info (parrain) — cross-collection resolved
+  recruiterName?: string | null;
+  recruiterPhoto?: string | null;
 }
 
 // ============================================================================

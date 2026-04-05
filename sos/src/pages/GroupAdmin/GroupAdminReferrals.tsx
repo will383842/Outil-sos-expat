@@ -10,7 +10,7 @@ import GroupAdminDashboardLayout from '@/components/GroupAdmin/Layout/GroupAdmin
 import SEOHead from '@/components/layout/SEOHead';
 import {  httpsCallable  } from 'firebase/functions';
 import { functionsAffiliate } from '@/config/firebase';
-import { Users, CheckCircle, Loader2, DollarSign, Clock, AlertTriangle, Info } from 'lucide-react';
+import { Users, CheckCircle, Loader2, DollarSign, Clock, AlertTriangle, Info, Crown } from 'lucide-react';
 import { GroupAdminRecruit, formatGroupAdminAmount, FirebaseDate } from '@/types/groupAdmin';
 
 /**
@@ -38,6 +38,9 @@ const GroupAdminReferrals: React.FC = () => {
   const [recruits, setRecruits] = useState<GroupAdminRecruit[]>([]);
   const [unifiedCode, setUnifiedCode] = useState('');
   const [activationBonusAmount, setActivationBonusAmount] = useState(500);
+  const [recruiterName, setRecruiterName] = useState<string | null>(null);
+  const [recruiterPhoto, setRecruiterPhoto] = useState<string | null>(null);
+  const [hasParrain, setHasParrain] = useState(false);
   const [gaConfig, setGaConfig] = useState<{ commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } | undefined>(undefined);
 
   useEffect(() => {
@@ -49,9 +52,12 @@ const GroupAdminReferrals: React.FC = () => {
       setLoading(true);
       const getDashboard = httpsCallable(functionsAffiliate, 'getGroupAdminDashboard');
       const result = await getDashboard({});
-      const data = result.data as { profile: { affiliateCodeRecruitment: string; affiliateCode?: string; affiliateCodeClient?: string }; recentRecruits: GroupAdminRecruit[]; config?: { commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } };
+      const data = result.data as { profile: { affiliateCodeRecruitment: string; affiliateCode?: string; affiliateCodeClient?: string; recruitedBy?: string | null }; recentRecruits: GroupAdminRecruit[]; recruiterName?: string | null; recruiterPhoto?: string | null; config?: { commissionActivationBonusAmount?: number; commissionClientAmountLawyer?: number; commissionClientAmountExpat?: number; commissionN1CallAmount?: number; commissionN2CallAmount?: number; commissionN1RecruitBonusAmount?: number; commissionClientCallAmount?: number } };
       setUnifiedCode(data.profile.affiliateCode || data.profile.affiliateCodeClient || data.profile.affiliateCodeRecruitment);
       setRecruits(data.recentRecruits);
+      setRecruiterName(data.recruiterName || null);
+      setRecruiterPhoto(data.recruiterPhoto || null);
+      setHasParrain(!!data.profile.recruitedBy);
       if (data.config) {
         setGaConfig(data.config as Record<string, unknown>);
         if (data.config.commissionActivationBonusAmount) {
@@ -87,6 +93,29 @@ const GroupAdminReferrals: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-600 mb-8">
             <FormattedMessage id="groupAdmin.referrals.subtitle" defaultMessage="Earn $5 activation bonus + $1 per call from their members" />
           </p>
+
+          {/* Mon Parrain */}
+          {hasParrain && (
+            <div className="bg-white dark:bg-white/5 rounded-xl p-4 shadow-sm dark:shadow-none mb-8">
+              <div className="flex items-center gap-3">
+                {recruiterPhoto ? (
+                  <img src={recruiterPhoto} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-500/30" />
+                ) : (
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Crown className="h-5 w-5 text-white" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">
+                    <FormattedMessage id="groupAdmin.referrals.myRecruiter" defaultMessage="Mon Parrain" />
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                    {recruiterName || intl.formatMessage({ id: 'groupAdmin.referrals.recruiterAnonymous', defaultMessage: 'Group Admin' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Unified Affiliate Link */}
           <div className="mb-8">
