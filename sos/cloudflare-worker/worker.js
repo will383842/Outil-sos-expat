@@ -1435,7 +1435,8 @@ async function handleRequest(request, env, ctx) {
       'changjian-wenti': 'zh', 'preguntas-frecuentes': 'es',
       'perguntas-frequentes': 'pt', 'voprosy-otvety': 'ru',
       'aksar-puche-jaane-wale-sawal': 'hi',
-      '\u0627\u0644\u0623\u0633\u0626\u0644\u0629-\u0627\u0644\u0634\u0627\u0626\u0639\u0629': 'ar', // الأسئلة-الشائعة
+      'al-asila-al-shaiya': 'ar', // Arabic FAQ (romanized)
+      '\u0627\u0644\u0623\u0633\u0626\u0644\u0629-\u0627\u0644\u0634\u0627\u0626\u0639\u0629': 'ar', // الأسئلة-الشائعة (Arabic native)
     };
 
     // Provider role slug prefixes (e.g., "anwalt-ee" starts with "anwalt" → German)
@@ -1561,7 +1562,7 @@ async function handleRequest(request, env, ctx) {
             };
             // Determine the correct section slug for the target language
             const isHelpCenter = SLUG_TO_LANG[firstSlug] !== undefined && firstSlug !== 'faq';
-            const isFaq = firstSlug === 'faq' || (SLUG_TO_LANG[firstSlug] === undefined && /faq|preguntas|perguntas|voprosy|changjian|aksar/i.test(firstSlug));
+            const isFaq = firstSlug === 'faq' || firstSlug === 'al-asila-al-shaiya' || (SLUG_TO_LANG[firstSlug] === undefined && /faq|preguntas|perguntas|voprosy|changjian|aksar-puche/i.test(firstSlug));
             let correctSectionSlug = firstSlug;
             if (isHelpCenter) {
               correctSectionSlug = HELP_CENTER_TRANSLATIONS[articleLang] || firstSlug;
