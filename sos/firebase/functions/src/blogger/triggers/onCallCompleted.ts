@@ -393,7 +393,7 @@ export async function handleCallCompleted(
   if (wasNotPaid && isNowPaid) {
     // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
     const MIN_CALL_DURATION_FOR_COMMISSION = 30;
-    const callDurationRaw = after.duration || after.callDuration || 0;
+    const callDurationRaw = after.duration ?? after.callDuration ?? 0;
     if (callDurationRaw < MIN_CALL_DURATION_FOR_COMMISSION) {
       logger.info("[bloggerOnCallSessionCompleted] Call too short for commission, skipping", {
         sessionId,
