@@ -1097,6 +1097,11 @@ async function handleRequest(request, env, ctx) {
     'tags', 'etiquetas', 'tegi', 'biaoqian', 'tag', 'alwusum',
     // countries
     'pays', 'countries', 'paises', 'laender', 'strany', 'guojia', 'desh', 'alduwl',
+    // guides pratiques (all 9 languages) — Blog SSR
+    'guides-pratiques', 'practical-guides', 'guias-practicas', 'praktische-ratgeber',
+    'guias-praticos', 'prakticheskie-rukovodstva', 'shiyong-zhinan', 'vyavaharik-margadarshika', 'adillat-amaliyyat',
+    // programme (partner/affiliate programs) — Blog SSR
+    'programme', 'program', 'programa', 'programm', 'programma', 'jihua', 'karyakram', 'barnamaj',
     // special
     'feed.xml',
   ]);
@@ -1107,8 +1112,6 @@ async function handleRequest(request, env, ctx) {
   ]);
 
   // Tools, Gallery, Sondages → SPA React (NOT blog SSR)
-  // These sections are served by the SPA with the correct header.
-  // The blog has views for them but they must NOT be proxied to avoid the dual-design problem.
   const OUTILS_SEGMENTS = new Set([]); // SPA handles /outils
   const GALERIE_SEGMENTS = new Set([]); // SPA handles /galerie (React component)
   const SONDAGES_SEGMENTS = new Set([]); // SPA handles /sondages-listing
