@@ -21,7 +21,9 @@ const admin = require("firebase-admin");
 const path = require("path");
 
 // Initialize Firebase Admin
-const serviceAccountPath = path.join(__dirname, "..", "firebase", "service-account.json");
+const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+  ? path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  : path.join(__dirname, "..", "..", "serviceAccount.json");
 
 try {
   admin.initializeApp({

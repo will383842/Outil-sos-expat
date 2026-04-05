@@ -66,28 +66,14 @@ const ChatterRegister: React.FC = () => {
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string>('');
 
-  // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
-  // If found in URL, persist to localStorage with 30-day expiration
-  // Otherwise, fallback to stored code
+  // Get referral code from multiple sources with proper timing.
   //
-  // FIX: Also read window.location.search directly because AffiliateRefSync
-  // uses replaceState() which does NOT update React Router's useSearchParams.
-  // Also critical for iOS Safari where in-app browser → Safari transition
-  // may lose localStorage but keep URL params.
-  const referralCodeFromUrl = useMemo(() => {
-    // 1. React Router params (works if user navigated with ?ref= in React)
-    const fromRouter = searchParams.get('ref')
-      || searchParams.get('referralCode')
-      || searchParams.get('code')
-      || searchParams.get('sponsor')
-      || '';
-
-    if (fromRouter) {
-      storeReferralCode(fromRouter, 'chatter', 'recruitment');
-      return fromRouter;
-    }
-
-    // 2. Direct browser URL (catches replaceState injections from AffiliateRefSync)
+  // CRITICAL BUG FIX: AffiliateRefSync injects ?ref= via replaceState() AFTER
+  // the first render. useMemo with [searchParams] never recalculates because
+  // replaceState doesn't trigger React Router. We use useState + useEffect
+  // to capture the code at the right time, including after AffiliateRefSync acts.
+  const [referralCodeFromUrl, setReferralCodeFromUrl] = useState(() => {
+    // Immediate sync read (covers: direct URL with ?ref=, localStorage)
     try {
       const browserParams = new URLSearchParams(window.location.search);
       const fromBrowser = browserParams.get('ref')
@@ -99,13 +85,29 @@ const ChatterRegister: React.FC = () => {
         storeReferralCode(fromBrowser, 'chatter', 'recruitment');
         return fromBrowser;
       }
-    } catch {
-      // SSR safety
-    }
-
-    // 3. Unified fallback: unified key → legacy role-specific → sessionStorage
+    } catch { /* SSR safety */ }
     return getUnifiedReferralCode() || '';
-  }, [searchParams]);
+  });
+
+  // Re-check after mount (covers: AffiliateRefSync replaceState timing)
+  useEffect(() => {
+    // Small delay to let AffiliateRefSync inject ?ref= via replaceState
+    const timer = setTimeout(() => {
+      try {
+        const browserParams = new URLSearchParams(window.location.search);
+        const fromBrowser = browserParams.get('ref')
+          || browserParams.get('referralCode')
+          || browserParams.get('code')
+          || browserParams.get('sponsor')
+          || '';
+        if (fromBrowser && fromBrowser !== referralCodeFromUrl) {
+          storeReferralCode(fromBrowser, 'chatter', 'recruitment');
+          setReferralCodeFromUrl(fromBrowser);
+        }
+      } catch { /* ignore */ }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []); // Run once after mount
 
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('chatter-landing' as RouteKey, langCode)}`;

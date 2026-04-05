@@ -46,36 +46,29 @@ const GroupAdminRegister: React.FC = () => {
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [registrationData, setRegistrationData] = useState<{language: string; country: string} | null>(null);
 
-  // Referral code handling
-  // FIX: Also read window.location.search because AffiliateRefSync uses replaceState
-  // which does NOT update React Router's useSearchParams (critical on iOS Safari)
-  const referralCodeFromUrl = useMemo(() => {
-    const fromRouter = searchParams.get('ref')
-      || searchParams.get('referralCode')
-      || searchParams.get('code')
-      || searchParams.get('sponsor')
-      || '';
-
-    if (fromRouter) {
-      storeReferralCode(fromRouter, 'groupAdmin', 'recruitment');
-      return fromRouter;
-    }
-
+  // Referral code handling — useState + useEffect to handle AffiliateRefSync timing
+  const [referralCodeFromUrl, setReferralCodeFromUrl] = useState(() => {
     try {
-      const browserParams = new URLSearchParams(window.location.search);
-      const fromBrowser = browserParams.get('ref')
-        || browserParams.get('referralCode')
-        || browserParams.get('code')
-        || browserParams.get('sponsor')
-        || '';
-      if (fromBrowser) {
-        storeReferralCode(fromBrowser, 'groupAdmin', 'recruitment');
-        return fromBrowser;
-      }
-    } catch { /* SSR safety */ }
-
+      const bp = new URLSearchParams(window.location.search);
+      const code = bp.get('ref') || bp.get('referralCode') || bp.get('code') || bp.get('sponsor') || '';
+      if (code) { storeReferralCode(code, 'groupAdmin', 'recruitment'); return code; }
+    } catch { /* SSR */ }
     return getUnifiedReferralCode() || '';
-  }, [searchParams]);
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const bp = new URLSearchParams(window.location.search);
+        const code = bp.get('ref') || bp.get('referralCode') || bp.get('code') || bp.get('sponsor') || '';
+        if (code && code !== referralCodeFromUrl) {
+          storeReferralCode(code, 'groupAdmin', 'recruitment');
+          setReferralCodeFromUrl(code);
+        }
+      } catch { /* ignore */ }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Routes
   const landingRoute = `/${getTranslatedRouteSlug('groupadmin-landing' as RouteKey, langCode)}`;

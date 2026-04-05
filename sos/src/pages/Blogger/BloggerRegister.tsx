@@ -197,35 +197,29 @@ const BloggerRegister: React.FC = () => {
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState('');
 
-  // FIX: Also read window.location.search because AffiliateRefSync uses replaceState
-  // which does NOT update React Router's useSearchParams (critical on iOS Safari)
-  const referralCodeFromUrl = useMemo(() => {
-    const fromRouter = searchParams.get('ref')
-      || searchParams.get('referralCode')
-      || searchParams.get('code')
-      || searchParams.get('sponsor')
-      || '';
-
-    if (fromRouter) {
-      storeReferralCode(fromRouter, 'blogger', 'recruitment');
-      return fromRouter;
-    }
-
+  // Referral code handling — useState + useEffect to handle AffiliateRefSync timing
+  const [referralCodeFromUrl, setReferralCodeFromUrl] = useState(() => {
     try {
-      const browserParams = new URLSearchParams(window.location.search);
-      const fromBrowser = browserParams.get('ref')
-        || browserParams.get('referralCode')
-        || browserParams.get('code')
-        || browserParams.get('sponsor')
-        || '';
-      if (fromBrowser) {
-        storeReferralCode(fromBrowser, 'blogger', 'recruitment');
-        return fromBrowser;
-      }
-    } catch { /* SSR safety */ }
-
+      const bp = new URLSearchParams(window.location.search);
+      const code = bp.get('ref') || bp.get('referralCode') || bp.get('code') || bp.get('sponsor') || '';
+      if (code) { storeReferralCode(code, 'blogger', 'recruitment'); return code; }
+    } catch { /* SSR */ }
     return getUnifiedReferralCode() || '';
-  }, [searchParams]);
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const bp = new URLSearchParams(window.location.search);
+        const code = bp.get('ref') || bp.get('referralCode') || bp.get('code') || bp.get('sponsor') || '';
+        if (code && code !== referralCodeFromUrl) {
+          storeReferralCode(code, 'blogger', 'recruitment');
+          setReferralCodeFromUrl(code);
+        }
+      } catch { /* ignore */ }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const landingRoute = `/${getTranslatedRouteSlug('blogger-landing' as RouteKey, langCode)}`;
   const telegramRoute = `/${getTranslatedRouteSlug('blogger-telegram' as RouteKey, langCode)}`;
