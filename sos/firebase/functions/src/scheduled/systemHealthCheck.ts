@@ -408,51 +408,60 @@ function formatTelegramReport(results: CheckResult[], executionMs: number): stri
   const warnings = results.filter((r) => r.status === "warning");
   const oks = results.filter((r) => r.status === "ok");
 
-  const statusIcon = errors.length > 0 ? "🔴" : warnings.length > 0 ? "🟡" : "🟢";
-  const statusText =
-    errors.length > 0
-      ? "PROBLEME DETECTE"
-      : warnings.length > 0
-        ? "ATTENTION REQUISE"
-        : "TOUT EST OK";
-
   const now = new Date();
   const parisTime = now.toLocaleString("fr-FR", { timeZone: "Europe/Paris" });
 
-  let msg = `${statusIcon} *SOS Expat — Health Check*\n`;
-  msg += `${parisTime}\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `*${statusText}*\n\n`;
+  let msg = "";
 
-  // Errors first
   if (errors.length > 0) {
-    msg += `🔴 *ERREURS (${errors.length})*\n`;
+    // ──────────────── ALERTE ROUGE ────────────────
+    msg += `🚨🚨🚨 *ALERTE SYSTÈME* 🚨🚨🚨\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `🔴🔴🔴 *PROBLÈME DÉTECTÉ* 🔴🔴🔴\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
     for (const r of errors) {
-      msg += `  ❌ *${r.name}*: ${r.message}\n`;
-      if (r.details) msg += `     ${r.details}\n`;
+      msg += `❌ *${r.name}*\n`;
+      msg += `   ${r.message}\n`;
+      if (r.details) msg += `   📋 ${r.details}\n`;
+      msg += `\n`;
     }
-    msg += `\n`;
-  }
 
-  // Warnings
-  if (warnings.length > 0) {
-    msg += `🟡 *ALERTES (${warnings.length})*\n`;
+    if (warnings.length > 0) {
+      msg += `⚠️ *ALERTES (${warnings.length})*\n`;
+      for (const r of warnings) {
+        msg += `  ⚠️ ${r.name}: ${r.message}\n`;
+      }
+      msg += `\n`;
+    }
+
+    msg += `✅ ${oks.length}/${results.length} services OK\n`;
+    msg += `\n📅 ${parisTime}\n⏱ ${executionMs}ms`;
+
+  } else if (warnings.length > 0) {
+    // ──────────────── ATTENTION JAUNE ────────────────
+    msg += `⚠️ *SOS Expat — Attention requise*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
     for (const r of warnings) {
-      msg += `  ⚠️ *${r.name}*: ${r.message}\n`;
-      if (r.details) msg += `     ${r.details}\n`;
+      msg += `⚠️ *${r.name}*: ${r.message}\n`;
+      if (r.details) msg += `   📋 ${r.details}\n`;
     }
-    msg += `\n`;
-  }
 
-  // OKs
-  if (oks.length > 0) {
-    msg += `🟢 *OK (${oks.length})*\n`;
+    msg += `\n✅ ${oks.length}/${results.length} services OK\n`;
+    msg += `\n📅 ${parisTime}\n⏱ ${executionMs}ms`;
+
+  } else {
+    // ──────────────── TOUT VA BIEN ────────────────
+    msg += `✅ *SOS Expat — Système opérationnel*\n`;
+    msg += `📅 ${parisTime}\n\n`;
+
     for (const r of oks) {
-      msg += `  ✅ ${r.name}: ${r.message}\n`;
+      msg += `✅ ${r.name}: ${r.message}\n`;
     }
-  }
 
-  msg += `\n⏱ Exécution: ${executionMs}ms`;
+    msg += `\n⏱ ${executionMs}ms`;
+  }
 
   return msg;
 }
