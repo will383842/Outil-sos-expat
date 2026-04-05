@@ -1153,6 +1153,9 @@ async function handleRequest(request, env, ctx) {
     // Image Bank storage files (served by VPS nginx, needed for Google Images)
     if (path.startsWith('/storage/image-bank/')) return true;
 
+    // Blog static assets: flags, images used in article pages (countries, etc.)
+    if (path.startsWith('/images/flags/')) return true;
+
     // Admin panel
     if (path.startsWith('/admin')) return true;
 
