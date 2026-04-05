@@ -83,10 +83,10 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
   url = 'https://sos-expat.com',
   aggregateRating,
   sameAs = [
-    'https://facebook.com/sosexpat',
-    'https://twitter.com/sosexpat',
-    'https://linkedin.com/company/sosexpat',
-    'https://www.instagram.com/sosexpat'
+    'https://www.facebook.com/profile.php?id=61586372244009',
+    'https://www.instagram.com/sosexpat/',
+    'https://x.com/SOS_Expat',
+    'https://www.linkedin.com/company/110811210',
   ],
   contactPoints = [
     {
