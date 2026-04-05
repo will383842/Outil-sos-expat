@@ -990,7 +990,7 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
-        minCallDuration: 120, // 2 minutes
+        minCallDuration: 60, // 1 minute (harmonisé avec CALL_CONFIG.MIN_CALL_DURATION)
         providerTypes: ["lawyer", "expat"],
       },
       description: "50% des frais de connexion du 1er appel",
@@ -1005,7 +1005,7 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
-        minCallDuration: 120,
+        minCallDuration: 60, // 1 minute (harmonisé avec CALL_CONFIG.MIN_CALL_DURATION)
         providerTypes: ["lawyer", "expat"],
         maxCallsPerMonth: 0, // unlimited
         lifetimeLimit: 0, // unlimited

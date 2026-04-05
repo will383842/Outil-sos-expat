@@ -7,6 +7,8 @@ import { PayPalProvider } from '../contexts/PayPalContext';
 import { AlertCircle } from 'lucide-react';
 import { Provider, normalizeProvider, createDefaultProvider } from '../types/provider';
 import { smartNormalizePhone } from '../utils/phone';
+import { query, where, orderBy, limit as firestoreLimit, getDocs, collection } from 'firebase/firestore';
+import { db, auth } from '../config/firebase';
 
 import {
   calculateServiceAmounts,
@@ -467,7 +469,63 @@ const CallCheckoutWrapper: React.FC = () => {
           if (import.meta.env.DEV) console.error('[Wrapper] parse URL params error', err);
         }
 
-        // 9) fallback avec providerId — P1-3 FIX: bloquer car pas de données réelles
+        // 9) P0-3 FIX: Firestore fallback — récupérer depuis booking_requests si sessionStorage vide
+        if (providerId && auth.currentUser) {
+          try {
+            console.log('🔎 [Wrapper] Firestore fallback: recherche booking_requests…');
+            const bookingQuery = query(
+              collection(db, 'booking_requests'),
+              where('clientId', '==', auth.currentUser.uid),
+              where('providerId', '==', providerId),
+              where('status', '==', 'pending'),
+              orderBy('createdAt', 'desc'),
+              firestoreLimit(1)
+            );
+            const snapshot = await getDocs(bookingQuery);
+            if (!snapshot.empty) {
+              const bookingDoc = snapshot.docs[0].data();
+              const reconstructedProvider = reconstructProviderFromBooking(bookingDoc as BookingData);
+
+              if (reconstructedProvider.phone || reconstructedProvider.phoneNumber) {
+                // Restaurer aussi serviceData et bookingMeta dans sessionStorage
+                if (bookingDoc.checkoutServiceData) {
+                  const svcData = {
+                    providerId: bookingDoc.providerId,
+                    serviceType: bookingDoc.serviceType,
+                    providerRole: bookingDoc.providerType || 'expat',
+                    amount: bookingDoc.checkoutServiceData.amount,
+                    duration: bookingDoc.duration,
+                    clientPhone: bookingDoc.clientPhone || '',
+                    commissionAmount: bookingDoc.checkoutServiceData.commissionAmount,
+                    providerAmount: bookingDoc.checkoutServiceData.providerAmount,
+                    currency: bookingDoc.checkoutServiceData.currency,
+                  };
+                  try {
+                    sessionStorage.setItem('serviceData', JSON.stringify(svcData));
+                    sessionStorage.setItem('selectedProvider', JSON.stringify(reconstructedProvider));
+                    sessionStorage.setItem('clientPhone', bookingDoc.clientPhone || '');
+                    sessionStorage.setItem('bookingMeta', JSON.stringify({
+                      title: bookingDoc.title || '',
+                      description: bookingDoc.description || '',
+                      country: bookingDoc.clientCurrentCountry || '',
+                      clientFirstName: bookingDoc.clientFirstName || '',
+                      clientNationality: bookingDoc.clientNationality || '',
+                      clientLanguages: bookingDoc.clientLanguages || [],
+                    }));
+                  } catch { /* sessionStorage still unavailable, checkout will use fallbacks */ }
+                }
+
+                console.log('✅ [Wrapper] Provider récupéré depuis Firestore booking_requests');
+                setState({ isLoading: false, error: null, provider: reconstructedProvider });
+                return;
+              }
+            }
+          } catch (err) {
+            if (import.meta.env.DEV) console.error('[Wrapper] Firestore fallback error', err);
+          }
+        }
+
+        // 10) fallback avec providerId — P1-3 FIX: bloquer car pas de données réelles
         if (providerId) {
           console.error('❌ [Wrapper] Fallback provider sans données réelles — booking impossible');
           setState({

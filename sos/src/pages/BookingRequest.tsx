@@ -3081,9 +3081,42 @@ const BookingRequest: React.FC = () => {
         providerType: isLawyer ? 'lawyer' : 'expat',
       });
 
+      // P0-3 FIX: Calcul serviceData AVANT createBookingRequest pour le persister dans Firestore
+      const selectedCurrency: Currency = detectUserCurrency();
+      const roleForPricing: ServiceType = role;
+
+      let svcAmount = 0;
+      let svcDurationNumber: number = FALLBACK_TOTALS[roleForPricing].duration;
+      let svcCommission = 0;
+      let svcProviderAmount = 0;
+
+      try {
+        const p = await calculateServiceAmounts(
+          roleForPricing,
+          selectedCurrency
+        );
+        svcAmount = p.totalAmount;
+        svcDurationNumber = p.duration;
+        svcCommission = p.connectionFeeAmount;
+        svcProviderAmount = p.providerAmount;
+      } catch {
+        const total =
+          selectedCurrency === "usd"
+            ? FALLBACK_TOTALS[roleForPricing].usd
+            : FALLBACK_TOTALS[roleForPricing].eur;
+        const fee =
+          selectedCurrency === "usd"
+            ? DEFAULT_SERVICE_FEES[roleForPricing].usd
+            : DEFAULT_SERVICE_FEES[roleForPricing].eur;
+        svcAmount = total;
+        svcCommission = fee;
+        svcProviderAmount = Math.max(0, Math.round((total - fee) * 100) / 100);
+      }
+
       // Création du booking centralisée (sans clientId, avec svcDuration)
       // Include Meta identifiers for CAPI deduplication
-      await createBookingRequest({
+      // P0-3 FIX: checkoutServiceData persisted to Firestore as fallback for sessionStorage
+      const bookingRequestId = await createBookingRequest({
         // clientId retiré : dérivé côté service
         providerId: selectedProvider.id,
         serviceType: isLawyer ? "lawyer_call" : "expat_call",
@@ -3119,43 +3152,23 @@ const BookingRequest: React.FC = () => {
         ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
         ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         clientEmail: user?.email || undefined,
+        // P0-3 FIX: Persist service data to Firestore for checkout fallback
+        checkoutServiceData: {
+          amount: svcAmount,
+          commissionAmount: svcCommission,
+          providerAmount: svcProviderAmount,
+          currency: selectedCurrency,
+        },
       });
-
-      // Calcul serviceData pour checkout
-      const selectedCurrency: Currency = detectUserCurrency();
-      const roleForPricing: ServiceType = role;
-
-      let svcAmount = 0;
-      let svcDurationNumber: number = FALLBACK_TOTALS[roleForPricing].duration;
-      let svcCommission = 0;
-      let svcProviderAmount = 0;
-
-      try {
-        const p = await calculateServiceAmounts(
-          roleForPricing,
-          selectedCurrency
-        );
-        svcAmount = p.totalAmount;
-        svcDurationNumber = p.duration;
-        svcCommission = p.connectionFeeAmount;
-        svcProviderAmount = p.providerAmount;
-      } catch {
-        const total =
-          selectedCurrency === "usd"
-            ? FALLBACK_TOTALS[roleForPricing].usd
-            : FALLBACK_TOTALS[roleForPricing].eur;
-        const fee =
-          selectedCurrency === "usd"
-            ? DEFAULT_SERVICE_FEES[roleForPricing].usd
-            : DEFAULT_SERVICE_FEES[roleForPricing].eur;
-        svcAmount = total;
-        svcCommission = fee;
-        svcProviderAmount = Math.max(0, Math.round((total - fee) * 100) / 100);
-      }
 
       // ✅ P0 UX FIX: Ensure sessionStorage writes complete successfully before navigation
       // Stockage session pour CallCheckout (provider, phone, serviceData + bookingMeta)
       try {
+        // P0-3 FIX: Store bookingRequestId for Firestore fallback recovery
+        if (bookingRequestId) {
+          sessionStorage.setItem("bookingRequestId", bookingRequestId);
+        }
+
         sessionStorage.setItem(
           "selectedProvider",
           JSON.stringify(selectedProvider)
@@ -3465,8 +3478,31 @@ const BookingRequest: React.FC = () => {
           providerType: isLawyer ? 'lawyer' : 'expat',
         });
 
-        // Create booking in Firestore
-        await createBookingRequest({
+        // P0-3 FIX: Calculate service data BEFORE createBookingRequest to persist in Firestore
+        const selectedCurrency: Currency = detectUserCurrency();
+        const roleForPricing: ServiceType = role;
+
+        let svcAmount = 0;
+        let svcDurationNumber: number = FALLBACK_TOTALS[roleForPricing].duration;
+        let svcCommission = 0;
+        let svcProviderAmount = 0;
+
+        try {
+          const p = await calculateServiceAmounts(roleForPricing, selectedCurrency);
+          svcAmount = p.totalAmount;
+          svcDurationNumber = p.duration;
+          svcCommission = p.connectionFeeAmount;
+          svcProviderAmount = p.providerAmount;
+        } catch {
+          const total = selectedCurrency === "usd" ? FALLBACK_TOTALS[roleForPricing].usd : FALLBACK_TOTALS[roleForPricing].eur;
+          const fee = selectedCurrency === "usd" ? DEFAULT_SERVICE_FEES[roleForPricing].usd : DEFAULT_SERVICE_FEES[roleForPricing].eur;
+          svcAmount = total;
+          svcCommission = fee;
+          svcProviderAmount = Math.max(0, Math.round((total - fee) * 100) / 100);
+        }
+
+        // Create booking in Firestore with checkout service data for fallback
+        const mobileBookingRequestId = await createBookingRequest({
           providerId: selectedProvider.id,
           serviceType: isLawyer ? "lawyer_call" : "expat_call",
           status: "pending",
@@ -3498,32 +3534,19 @@ const BookingRequest: React.FC = () => {
           fbp: metaIds.fbp,
           fbc: metaIds.fbc,
           clientEmail: user?.email || undefined,
+          // P0-3 FIX: Persist service data to Firestore for checkout fallback
+          checkoutServiceData: {
+            amount: svcAmount,
+            commissionAmount: svcCommission,
+            providerAmount: svcProviderAmount,
+            currency: selectedCurrency,
+          },
         });
 
-        // Calculate service data for checkout
-        const selectedCurrency: Currency = detectUserCurrency();
-        const roleForPricing: ServiceType = role;
-
-        let svcAmount = 0;
-        let svcDurationNumber: number = FALLBACK_TOTALS[roleForPricing].duration;
-        let svcCommission = 0;
-        let svcProviderAmount = 0;
-
-        try {
-          const p = await calculateServiceAmounts(roleForPricing, selectedCurrency);
-          svcAmount = p.totalAmount;
-          svcDurationNumber = p.duration;
-          svcCommission = p.connectionFeeAmount;
-          svcProviderAmount = p.providerAmount;
-        } catch {
-          const total = selectedCurrency === "usd" ? FALLBACK_TOTALS[roleForPricing].usd : FALLBACK_TOTALS[roleForPricing].eur;
-          const fee = selectedCurrency === "usd" ? DEFAULT_SERVICE_FEES[roleForPricing].usd : DEFAULT_SERVICE_FEES[roleForPricing].eur;
-          svcAmount = total;
-          svcCommission = fee;
-          svcProviderAmount = Math.max(0, Math.round((total - fee) * 100) / 100);
-        }
-
         // Save to sessionStorage
+        if (mobileBookingRequestId) {
+          sessionStorage.setItem("bookingRequestId", mobileBookingRequestId);
+        }
         sessionStorage.setItem("selectedProvider", JSON.stringify(selectedProvider));
         sessionStorage.setItem("clientPhone", bookingRequest.clientPhone);
         sessionStorage.setItem("bookingRequest", JSON.stringify(bookingRequest));

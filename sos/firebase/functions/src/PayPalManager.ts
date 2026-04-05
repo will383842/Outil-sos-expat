@@ -718,7 +718,7 @@ export class PayPalManager {
 
     // Ordre simple: l'argent va à SOS-Expat, pas de split automatique
     // AUTHORIZE flow: comme Stripe, on prend seulement une autorisation
-    // La capture se fait après 2 minutes d'appel, sinon on void l'autorisation
+    // La capture se fait après 1 minute d'appel (60s), sinon on void l'autorisation
     const orderData = {
       intent: "AUTHORIZE",
       purchase_units: [
@@ -783,7 +783,7 @@ export class PayPalManager {
         providerGrossAmount: data.providerAmount,
         providerNetAmount,
       },
-      intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 2 min
+      intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 1 min (60s)
       payoutStatus: "pending", // En attente du payout
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
@@ -924,7 +924,7 @@ export class PayPalManager {
     console.log(`📦 [PAYPAL] Platform Merchant ID: ${platformMerchantId}`);
 
     // AUTHORIZE flow: comme Stripe, on prend seulement une autorisation
-    // La capture se fait après 2 minutes d'appel, sinon on void l'autorisation
+    // La capture se fait après 1 minute d'appel (60s), sinon on void l'autorisation
     const orderData = {
       intent: "AUTHORIZE",
       purchase_units: [
@@ -1002,7 +1002,7 @@ export class PayPalManager {
       currency: data.currency,
       status: response.status,
       approvalUrl,
-      intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 2 min
+      intent: "AUTHORIZE", // AUTHORIZE flow: comme Stripe, capture après 1 min (60s)
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -1084,8 +1084,8 @@ export class PayPalManager {
    * 2. Client approuve sur PayPal
    * 3. Cette méthode est appelée pour créer l'autorisation
    * 4. L'autorisation peut être:
-   *    - Capturée (après 2 min d'appel) via captureOrder()
-   *    - Annulée (appel < 2 min) via voidAuthorization()
+   *    - Capturée (après 1 min d'appel / 60s) via captureOrder()
+   *    - Annulée (appel < 1 min / 60s) via voidAuthorization()
    *
    * L'autorisation est valide 29 jours.
    *
@@ -1217,7 +1217,7 @@ export class PayPalManager {
     // ========================================
     // P0 FIX: PLANIFIER L'APPEL TWILIO APRÈS AUTORISATION PAYPAL
     // Comme Stripe avec capture_method: 'manual', l'appel démarre après autorisation
-    // La capture se fait après 2 minutes d'appel
+    // La capture se fait après 1 minute d'appel (60s)
     // ========================================
     if (orderData.callSessionId) {
       try {
@@ -3119,8 +3119,8 @@ export const capturePayPalOrderHttp = onRequest(
  * 2. Le client approuve sur PayPal
  * 3. Le client appelle cette fonction pour créer l'autorisation (bloquer les fonds)
  * 4. L'appel commence - les fonds sont réservés mais pas encore capturés
- * 5. Après 2 minutes d'appel: le serveur capture les fonds
- * 6. Si appel < 2 min: le serveur void l'autorisation (fonds libérés)
+ * 5. Après 1 minute d'appel (60s): le serveur capture les fonds
+ * 6. Si appel < 1 min (60s): le serveur void l'autorisation (fonds libérés)
  *
  * C'est exactement le même comportement que Stripe avec capture_method: 'manual'
  */

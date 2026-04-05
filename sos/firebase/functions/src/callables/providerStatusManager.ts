@@ -197,14 +197,28 @@ export async function setProviderBusy(
           // P0 FIX: Permettre upgrade de pending_call vers in_call
           console.log(`🔶 [${logId}] Provider upgrading from pending_call to in_call - will update`);
           // Continue pour mettre à jour avec in_call
-        } else {
-          console.log(`🔶 [${logId}] Provider already busy (own call) - skipping update`);
+        } else if (userData?.currentCallSessionId === callSessionId) {
+          // P0 FIX: Idempotent — provider already reserved for THIS session (retry safe)
+          console.log(`✅ [${logId}] Provider already reserved for this session (${callSessionId}) - idempotent success`);
           return {
             success: true,
             providerId,
             previousStatus: 'busy' as AvailabilityStatus,
             newStatus: 'busy' as AvailabilityStatus,
             timestamp: now.toMillis(),
+            message: 'Provider already reserved for this session',
+            skipPropagation: true,
+          };
+        } else {
+          // Provider is busy for a DIFFERENT session — reject
+          console.log(`❌ [${logId}] Provider already busy for different session (current: ${userData?.currentCallSessionId}, requested: ${callSessionId})`);
+          return {
+            success: false,
+            providerId,
+            previousStatus: 'busy' as AvailabilityStatus,
+            newStatus: 'busy' as AvailabilityStatus,
+            timestamp: now.toMillis(),
+            error: 'Provider is busy with another call',
             message: 'Provider already busy',
             skipPropagation: true,
           };

@@ -305,6 +305,10 @@ export const createAndScheduleCallHTTPS = onCall(
         );
       }
       // m2 AUDIT FIX: Check provider online/availability status before scheduling call
+      // P0 FIX: Only reject for offline status here. The 'busy' check is handled atomically
+      // by setProviderBusy() via Firestore transaction (prevents race conditions).
+      // Previously, this pre-check rejected 'busy' providers which caused false rejections
+      // when the same client's booking flow had already reserved the provider.
       if (providerData?.isOnline === false) {
         console.error(`❌ [${requestId}] Provider is offline: ${providerId.substring(0, 8)}...`);
         throw new HttpsError(
@@ -312,12 +316,16 @@ export const createAndScheduleCallHTTPS = onCall(
           'Le prestataire n\'est pas disponible actuellement. Veuillez réessayer plus tard.'
         );
       }
-      if (providerData?.availability === 'offline' || providerData?.availability === 'busy') {
-        console.error(`❌ [${requestId}] Provider unavailable (${providerData.availability}): ${providerId.substring(0, 8)}...`);
+      if (providerData?.availability === 'offline') {
+        console.error(`❌ [${requestId}] Provider unavailable (offline): ${providerId.substring(0, 8)}...`);
         throw new HttpsError(
           'failed-precondition',
-          'Le prestataire est actuellement occupé ou hors ligne.'
+          'Le prestataire est actuellement hors ligne.'
         );
+      }
+      if (providerData?.availability === 'busy') {
+        // Log but don't reject — setProviderBusy() transaction handles this atomically
+        console.warn(`⚠️ [${requestId}] Provider appears busy (${providerData.busyReason || 'unknown'}), deferring to atomic reservation`);
       }
       console.log(`✅ [${requestId}] Provider exists and is active`);
 

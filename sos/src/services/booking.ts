@@ -46,6 +46,13 @@ export type BookingRequestOptional = {
   fbp?: string;
   fbc?: string;
   clientEmail?: string;
+  // P0-3 FIX: Service data for Firestore fallback when sessionStorage is unavailable
+  checkoutServiceData?: {
+    amount: number;
+    commissionAmount: number;
+    providerAmount: number;
+    currency: string;
+  };
 };
 
 export type BookingRequestCreate = BookingRequestMinimal & BookingRequestOptional;
@@ -108,6 +115,9 @@ export async function createBookingRequest(data: BookingRequestCreate) {
     fbp: data.fbp ?? null,
     fbc: data.fbc ?? null,
     clientEmail: data.clientEmail ?? null,
+
+    // P0-3 FIX: Service data persisted to Firestore as fallback when sessionStorage is unavailable
+    checkoutServiceData: data.checkoutServiceData ?? null,
 
     createdAt: serverTimestamp(),
   };

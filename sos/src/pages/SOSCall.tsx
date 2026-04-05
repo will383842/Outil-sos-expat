@@ -2520,10 +2520,10 @@ const SOSCall: React.FC = () => {
           return;
         }
 
-        // Si aucun provider valide, utiliser le fallback
-        console.warn("⚠️ [SOSCall] Aucun provider valide, utilisation du fallback");
-        setRealProviders(FALLBACK_PROVIDERS);
-        setFilteredProviders(FALLBACK_PROVIDERS);
+        // P2-2 FIX: Ne plus afficher de providers mockés — montrer un état vide avec message d'erreur
+        console.warn("⚠️ [SOSCall] Aucun provider valide, affichage état vide");
+        setRealProviders([]);
+        setFilteredProviders([]);
         setIsUsingFallback(true);
         setIsLoadingProviders(false);
 
@@ -2575,10 +2575,10 @@ const SOSCall: React.FC = () => {
         } catch (sdkError) {
           console.error("❌ [SOSCall] SDK aussi échoué:", sdkError);
 
-          // Tentative 3: Fallback providers de démonstration
-          console.log("🆘 [SOSCall] Utilisation des providers de démonstration");
-          setRealProviders(FALLBACK_PROVIDERS);
-          setFilteredProviders(FALLBACK_PROVIDERS);
+          // P2-2 FIX: Ne plus afficher de providers mockés — montrer un état vide avec message d'erreur
+          console.log("🆘 [SOSCall] REST + SDK échoués, affichage état vide avec message d'erreur");
+          setRealProviders([]);
+          setFilteredProviders([]);
           setIsUsingFallback(true);
           setIsLoadingProviders(false);
         }
@@ -3945,7 +3945,7 @@ const SOSCall: React.FC = () => {
                   <div className="w-full mb-4 px-4 py-3 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-sm text-center" role="alert">
                     <FormattedMessage
                       id="sosCall.fallbackWarning"
-                      defaultMessage="Connexion temporairement instable — profils de démonstration affichés. Veuillez rafraîchir la page."
+                      defaultMessage="Connexion temporairement instable. Veuillez rafraîchir la page pour voir les prestataires disponibles."
                     />
                     <button
                       onClick={() => window.location.reload()}

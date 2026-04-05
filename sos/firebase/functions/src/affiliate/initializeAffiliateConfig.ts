@@ -90,7 +90,7 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
-        minCallDuration: 120, // 2 minutes minimum
+        minCallDuration: 60, // 1 minute minimum (harmonisé avec CALL_CONFIG.MIN_CALL_DURATION)
         providerTypes: ["lawyer", "expat"],
       },
       description: "10$ par appel",
@@ -105,7 +105,7 @@ const DEFAULT_AFFILIATE_CONFIG: Omit<AffiliateConfig, "updatedAt" | "updatedBy" 
       baseAmount: null,
       applyTo: "connection_fee",
       conditions: {
-        minCallDuration: 120,
+        minCallDuration: 60, // 1 minute minimum (harmonisé avec CALL_CONFIG.MIN_CALL_DURATION)
         providerTypes: ["lawyer", "expat"],
         maxCallsPerMonth: 0, // illimité
         lifetimeLimit: 0, // illimité

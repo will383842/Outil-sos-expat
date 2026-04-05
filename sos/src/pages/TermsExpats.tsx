@@ -771,15 +771,23 @@ const TermsExpats: React.FC = () => {
 
 7.2. **Paiement unique & répartition.** L'Utilisateur effectue **un paiement unique** via la Plateforme couvrant (i) la **rémunération de l'Aidant** (telle que convenue) et (ii) les **Frais de Mise en relation** d'SOS Expat. SOS Expat (ou son Prestataire) encaisse, **déduit** ses frais, puis **reverse** le solde à l'Aidant. L'Aidant **autorise** ces déductions et répartitions.
 
-7.3. **Exigibilité & non-remboursement.** Les Frais de Mise en relation sont **dus dès** la Mise en relation et sont **non remboursables** (sauf geste commercial discrétionnaire d'SOS Expat en cas d'échec exclusivement imputable à la Plateforme et **dans la mesure permise par la loi**).
+7.3. **Frais bancaires du Prestataire de paiement.** Le Prestataire de paiement (Stripe, PayPal ou équivalent) prélève des frais de traitement sur chaque transaction. **Ces frais bancaires sont intégralement à la charge de l'Aidant** et sont automatiquement déduits du montant qui lui est reversé. Le détail de ces frais est disponible dans les conditions du Prestataire de paiement et dans le tableau de bord de l'Aidant pour chaque transaction.
 
-7.4. **Remboursements Utilisateur.** Si un remboursement est accordé à l'Utilisateur, il est **imputé sur la part de l'Aidant** : SOS Expat peut **retenir/compenser** le montant correspondant sur les versements futurs de l'Aidant ou en demander le remboursement si aucun versement n'est à venir. **Aucun remboursement** des Frais de Mise en relation n'est dû, sauf décision discrétionnaire d'SOS Expat.
+7.4. **Frais de change et conversion de devises.** Lorsque la devise de paiement de l'Utilisateur diffère de la devise du compte bancaire de l'Aidant, des **frais de conversion de devises** sont appliqués par le Prestataire de paiement. **Ces frais de change sont intégralement à la charge de l'Aidant** et sont déduits du montant qui lui est reversé.
 
-7.5. **Devises & conversion.** Plusieurs devises peuvent être proposées ; des taux/frais de conversion du Prestataire peuvent s'appliquer.
+7.5. **Calcul du montant net reversé.** Le montant net reversé à l'Aidant est calculé selon la formule : **Montant payé par l'Utilisateur − Frais de Mise en relation − Frais bancaires du Prestataire − Frais de change (le cas échéant)**. Le montant exact varie selon les frais en vigueur au moment de la transaction.
 
-7.6. **Taxes.** L'Aidant demeure responsable de **toutes taxes** applicables (TVA, impôt sur le revenu, sécurité sociale, etc.). SOS Expat collecte/reverse, lorsque requis, la TVA/équivalent local sur les Frais de Mise en relation.
+7.6. **Durée minimale d'appel et paiement.** **Aucun paiement n'est dû ni effectué** lorsque la durée effective de l'appel entre l'Utilisateur et l'Aidant est **inférieure à soixante (60) secondes**. Dans ce cas, l'autorisation de paiement est automatiquement annulée, l'Utilisateur n'est pas débité, et aucune rémunération n'est versée à l'Aidant. Cette règle s'applique quels que soient les motifs de la brièveté de l'appel (déconnexion technique, raccrochage anticipé, indisponibilité, etc.).
 
-7.7. **Compensation.** SOS Expat peut compenser toute somme due par l'Aidant avec toute somme payable à l'Aidant.
+7.7. **Exigibilité & non-remboursement.** Les Frais de Mise en relation sont **dus dès** la Mise en relation et sont **non remboursables** (sauf geste commercial discrétionnaire d'SOS Expat en cas d'échec exclusivement imputable à la Plateforme et **dans la mesure permise par la loi**).
+
+7.8. **Remboursements Utilisateur.** Si un remboursement est accordé à l'Utilisateur, il est **imputé sur la part de l'Aidant** : SOS Expat peut **retenir/compenser** le montant correspondant sur les versements futurs de l'Aidant ou en demander le remboursement si aucun versement n'est à venir. **Aucun remboursement** des Frais de Mise en relation n'est dû, sauf décision discrétionnaire d'SOS Expat.
+
+7.9. **Devises & conversion.** Plusieurs devises peuvent être proposées ; des taux/frais de conversion du Prestataire peuvent s'appliquer.
+
+7.10. **Taxes.** L'Aidant demeure responsable de **toutes taxes** applicables (TVA, impôt sur le revenu, sécurité sociale, etc.). SOS Expat collecte/reverse, lorsque requis, la TVA/équivalent local sur les Frais de Mise en relation.
+
+7.11. **Compensation.** SOS Expat peut compenser toute somme due par l'Aidant avec toute somme payable à l'Aidant.
 
 ---
 
