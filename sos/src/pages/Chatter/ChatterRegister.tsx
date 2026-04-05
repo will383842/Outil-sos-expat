@@ -69,19 +69,41 @@ const ChatterRegister: React.FC = () => {
   // Get referral code from URL params (supports: ref, referralCode, code, sponsor)
   // If found in URL, persist to localStorage with 30-day expiration
   // Otherwise, fallback to stored code
+  //
+  // FIX: Also read window.location.search directly because AffiliateRefSync
+  // uses replaceState() which does NOT update React Router's useSearchParams.
+  // Also critical for iOS Safari where in-app browser → Safari transition
+  // may lose localStorage but keep URL params.
   const referralCodeFromUrl = useMemo(() => {
-    const fromUrl = searchParams.get('ref')
+    // 1. React Router params (works if user navigated with ?ref= in React)
+    const fromRouter = searchParams.get('ref')
       || searchParams.get('referralCode')
       || searchParams.get('code')
       || searchParams.get('sponsor')
       || '';
 
-    if (fromUrl) {
-      storeReferralCode(fromUrl, 'chatter', 'recruitment');
-      return fromUrl;
+    if (fromRouter) {
+      storeReferralCode(fromRouter, 'chatter', 'recruitment');
+      return fromRouter;
     }
 
-    // Unified fallback: unified key → legacy role-specific → sessionStorage
+    // 2. Direct browser URL (catches replaceState injections from AffiliateRefSync)
+    try {
+      const browserParams = new URLSearchParams(window.location.search);
+      const fromBrowser = browserParams.get('ref')
+        || browserParams.get('referralCode')
+        || browserParams.get('code')
+        || browserParams.get('sponsor')
+        || '';
+      if (fromBrowser) {
+        storeReferralCode(fromBrowser, 'chatter', 'recruitment');
+        return fromBrowser;
+      }
+    } catch {
+      // SSR safety
+    }
+
+    // 3. Unified fallback: unified key → legacy role-specific → sessionStorage
     return getUnifiedReferralCode() || '';
   }, [searchParams]);
 

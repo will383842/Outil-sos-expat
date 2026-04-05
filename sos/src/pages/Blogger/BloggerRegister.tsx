@@ -197,17 +197,32 @@ const BloggerRegister: React.FC = () => {
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [existingEmail, setExistingEmail] = useState('');
 
+  // FIX: Also read window.location.search because AffiliateRefSync uses replaceState
+  // which does NOT update React Router's useSearchParams (critical on iOS Safari)
   const referralCodeFromUrl = useMemo(() => {
-    const fromUrl = searchParams.get('ref')
+    const fromRouter = searchParams.get('ref')
       || searchParams.get('referralCode')
       || searchParams.get('code')
       || searchParams.get('sponsor')
       || '';
 
-    if (fromUrl) {
-      storeReferralCode(fromUrl, 'blogger', 'recruitment');
-      return fromUrl;
+    if (fromRouter) {
+      storeReferralCode(fromRouter, 'blogger', 'recruitment');
+      return fromRouter;
     }
+
+    try {
+      const browserParams = new URLSearchParams(window.location.search);
+      const fromBrowser = browserParams.get('ref')
+        || browserParams.get('referralCode')
+        || browserParams.get('code')
+        || browserParams.get('sponsor')
+        || '';
+      if (fromBrowser) {
+        storeReferralCode(fromBrowser, 'blogger', 'recruitment');
+        return fromBrowser;
+      }
+    } catch { /* SSR safety */ }
 
     return getUnifiedReferralCode() || '';
   }, [searchParams]);

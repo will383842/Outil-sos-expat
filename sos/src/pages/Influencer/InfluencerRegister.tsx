@@ -41,17 +41,32 @@ const InfluencerRegister: React.FC = () => {
   const [registrationData, setRegistrationData] = useState<{ language: string; country: string } | null>(null);
 
   // Referral code handling
+  // FIX: Also read window.location.search because AffiliateRefSync uses replaceState
+  // which does NOT update React Router's useSearchParams (critical on iOS Safari)
   const referralCodeFromUrl = useMemo(() => {
-    const fromUrl = searchParams.get('ref')
+    const fromRouter = searchParams.get('ref')
       || searchParams.get('referralCode')
       || searchParams.get('code')
       || searchParams.get('sponsor')
       || '';
 
-    if (fromUrl) {
-      storeReferralCode(fromUrl, 'influencer', 'recruitment');
-      return fromUrl;
+    if (fromRouter) {
+      storeReferralCode(fromRouter, 'influencer', 'recruitment');
+      return fromRouter;
     }
+
+    try {
+      const browserParams = new URLSearchParams(window.location.search);
+      const fromBrowser = browserParams.get('ref')
+        || browserParams.get('referralCode')
+        || browserParams.get('code')
+        || browserParams.get('sponsor')
+        || '';
+      if (fromBrowser) {
+        storeReferralCode(fromBrowser, 'influencer', 'recruitment');
+        return fromBrowser;
+      }
+    } catch { /* SSR safety */ }
 
     return getUnifiedReferralCode() || '';
   }, [searchParams]);
