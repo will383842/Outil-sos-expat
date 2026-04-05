@@ -3388,6 +3388,7 @@ export { consolidatedDailyMonitoring } from './scheduled/consolidatedDailyMonito
 export { consolidatedWeeklyCleanup } from './scheduled/consolidatedWeeklyCleanup';
 export { consolidatedDailyEmails } from './scheduled/consolidatedDailyEmails';
 export { consolidatedSecurityDaily } from './scheduled/consolidatedSecurityDaily';
+export { systemHealthCheck } from './scheduled/systemHealthCheck';
 
 // --- TWILIO : twilioRecordingWebhook manquant ---
 export { twilioRecordingWebhook } from './Webhooks/twilioWebhooks';
