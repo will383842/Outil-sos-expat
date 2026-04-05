@@ -2829,6 +2829,13 @@ const ProviderProfile: React.FC = () => {
             "license": "https://sos-expat.com/terms",
             "acquireLicensePage": "https://sos-expat.com/terms",
             "creditText": "SOS Expat & Travelers",
+            "copyrightNotice": `© ${new Date().getFullYear()} SOS Expat & Travelers. All rights reserved — sos-expat.com`,
+            "copyrightHolder": {
+              "@type": "Organization",
+              "name": "SOS Expat & Travelers",
+              "url": "https://sos-expat.com"
+            },
+            "copyrightYear": new Date().getFullYear(),
           })}</script>
           {/* Preload LCP image — critical for Core Web Vitals */}
           <link
