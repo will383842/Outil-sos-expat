@@ -638,6 +638,13 @@ export const registerChatter = onCall(
         // Now do all writes
         transaction.set(chatterRef, chatter);
 
+        // FIX: Sync referredByUserId to users collection for unified affiliate tracking
+        const referralFields = recruitedBy ? {
+          referredByUserId: recruitedBy,
+          referredBy: recruitedByCode,
+          referredAt: now,
+        } : {};
+
         if (userDoc.exists) {
           // This should only happen if user passed all role checks above
           // Update to chatter role - ACTIVE immediately
@@ -652,6 +659,7 @@ export const registerChatter = onCall(
             telegramOnboardingCompleted: false,
             ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
             country: input.country.toUpperCase(),
+            ...referralFields,
             updatedAt: now,
           });
         } else {
@@ -670,6 +678,7 @@ export const registerChatter = onCall(
             telegramOnboardingCompleted: false,
             ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
             country: input.country.toUpperCase(),
+            ...referralFields,
             createdAt: now,
             updatedAt: now,
           });

@@ -1383,6 +1383,9 @@ export interface GroupAdminDashboardResponse {
     groupAdminName: string;
     earnings: number;
   }[];
+  /** Recruiter info (parrain) — cross-collection resolved */
+  recruiterName?: string | null;
+  recruiterPhoto?: string | null;
   /** Commission rates (with lockedRates override) */
   config?: {
     commissionClientCallAmount?: number;

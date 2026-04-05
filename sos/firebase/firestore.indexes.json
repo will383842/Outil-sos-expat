@@ -3965,6 +3965,34 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "recruitedBy",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "influencers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recruitedBy",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "bloggers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "affiliateCodeRecruitment",
           "order": "ASCENDING"
         },

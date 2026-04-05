@@ -185,6 +185,21 @@ export const getGroupAdminDashboard = onCall(
         });
       }
 
+      // FIX: Fetch recruiter info (parrain) — cross-collection fallback
+      let recruiterName: string | null = null;
+      let recruiterPhoto: string | null = null;
+      if (profile.recruitedBy) {
+        let recruiterDoc = await db.collection("group_admins").doc(profile.recruitedBy).get();
+        if (!recruiterDoc.exists) {
+          recruiterDoc = await db.collection("users").doc(profile.recruitedBy).get();
+        }
+        if (recruiterDoc.exists) {
+          const recruiterData = recruiterDoc.data();
+          recruiterName = [recruiterData?.firstName, recruiterData?.lastName].filter(Boolean).join(" ") || recruiterData?.email || null;
+          recruiterPhoto = recruiterData?.profilePhoto || recruiterData?.photoURL || null;
+        }
+      }
+
       // Get global config and apply lockedRates override (Lifetime Rate Lock)
       const gaConfig = await getGroupAdminConfig();
 
@@ -196,6 +211,9 @@ export const getGroupAdminDashboard = onCall(
         notifications,
         leaderboard,
         isAdminView,
+        // FIX: Include recruiter info
+        recruiterName,
+        recruiterPhoto,
         config: {
           commissionClientCallAmount: profile.lockedRates?.commissionClientCallAmount ?? gaConfig.commissionClientCallAmount,
           commissionClientAmountLawyer: profile.lockedRates?.commissionClientAmountLawyer ?? gaConfig.commissionClientAmountLawyer,

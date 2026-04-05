@@ -121,7 +121,42 @@ export const getBloggerDashboard = onCall(
         });
       }
 
-      // 8. Build response (exclude sensitive fields)
+      // 8. FIX: Fetch recruited bloggers (filleuls) — was missing
+      const recruitsQuery = await db
+        .collection("bloggers")
+        .where("recruitedBy", "==", uid)
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get();
+
+      const recruitedBloggers = recruitsQuery.docs.map(doc => {
+        const data = doc.data() as Blogger;
+        return {
+          id: doc.id,
+          name: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "Unknown",
+          email: data.email || "",
+          totalEarned: data.totalEarned || 0,
+          isActive: (data.totalEarned || 0) > 0,
+          joinedAt: data.createdAt?.toDate?.()?.toISOString?.() || "",
+        };
+      });
+
+      // 8b. FIX: Fetch recruiter info (parrain) — cross-collection fallback
+      let recruiterName: string | null = null;
+      let recruiterPhoto: string | null = null;
+      if (blogger.recruitedBy) {
+        let recruiterDoc = await db.collection("bloggers").doc(blogger.recruitedBy).get();
+        if (!recruiterDoc.exists) {
+          recruiterDoc = await db.collection("users").doc(blogger.recruitedBy).get();
+        }
+        if (recruiterDoc.exists) {
+          const recruiterData = recruiterDoc.data();
+          recruiterName = [recruiterData?.firstName, recruiterData?.lastName].filter(Boolean).join(" ") || recruiterData?.email || null;
+          recruiterPhoto = recruiterData?.profilePhoto || recruiterData?.photoURL || null;
+        }
+      }
+
+      // 9. Build response (exclude sensitive fields)
       const { paymentDetails, adminNotes, ...bloggerPublic } = blogger;
 
       // Convert Timestamps to strings for JSON serialization
@@ -136,6 +171,7 @@ export const getBloggerDashboard = onCall(
       logger.info("[getBloggerDashboard] Dashboard retrieved", {
         bloggerId: uid,
         commissionsCount: recentCommissions.length,
+        recruitsCount: recruitedBloggers.length,
       });
 
       return {
@@ -144,6 +180,10 @@ export const getBloggerDashboard = onCall(
         monthlyStats,
         unreadNotifications,
         isAdminView,
+        // FIX: Include recruited bloggers and recruiter info
+        recruitedBloggers,
+        recruiterName,
+        recruiterPhoto,
         config: {
           // Use lockedRates (lifetime rate lock) when available, fallback to global config
           commissionClientAmount: blogger.lockedRates?.commissionClientAmount ?? config.commissionClientAmount,

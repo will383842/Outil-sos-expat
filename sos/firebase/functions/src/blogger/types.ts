@@ -1541,6 +1541,18 @@ export interface GetBloggerDashboardResponse {
     rank: number | null;
   };
   unreadNotifications: number;
+  /** Recruited bloggers (filleuls) */
+  recruitedBloggers?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    totalEarned: number;
+    isActive: boolean;
+    joinedAt: string;
+  }>;
+  /** Recruiter info (parrain) — cross-collection resolved */
+  recruiterName?: string | null;
+  recruiterPhoto?: string | null;
   config: Pick<BloggerConfig,
     | "commissionClientAmount"
     | "commissionRecruitmentAmount"

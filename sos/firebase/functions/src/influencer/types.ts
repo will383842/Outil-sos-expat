@@ -1616,6 +1616,18 @@ export interface GetInfluencerDashboardResponse {
     rank: number | null;
   };
   unreadNotifications: number;
+  /** Recruited influencers (filleuls) */
+  recruitedInfluencers?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    totalEarned: number;
+    isActive: boolean;
+    joinedAt: string;
+  }>;
+  /** Recruiter info (parrain) — cross-collection resolved */
+  recruiterName?: string | null;
+  recruiterPhoto?: string | null;
   config: Pick<InfluencerConfig,
     | "commissionClientAmount"
     | "commissionRecruitmentAmount"

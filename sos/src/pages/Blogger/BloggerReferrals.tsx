@@ -29,6 +29,7 @@ const BloggerReferrals: React.FC = () => {
   }
 
   const recruits = dashboardData?.recruitedProviders || [];
+  const recruitedBloggers = dashboardData?.recruitedBloggers || [];
 
   return (
     <BloggerDashboardLayout>
@@ -39,7 +40,7 @@ const BloggerReferrals: React.FC = () => {
             <FormattedMessage id="blogger.referrals.title" defaultMessage="Mes filleuls" />
           </h1>
           <p className="text-gray-700 dark:text-gray-700">
-            <FormattedMessage id="blogger.referrals.subtitle" defaultMessage="Prestataires recrutés via votre lien" />
+            <FormattedMessage id="blogger.referrals.subtitle" defaultMessage="Blogueurs et prestataires recrutés via votre lien" />
           </p>
         </div>
 
@@ -53,18 +54,18 @@ const BloggerReferrals: React.FC = () => {
               <Users className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-2xl dark:text-white font-bold">
-              {blogger?.totalRecruits || 0}
+              {(blogger?.totalRecruits || 0) + recruitedBloggers.length}
             </p>
           </div>
           <div className={`${UI.card} p-5`}>
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-700 dark:text-gray-700">
-                <FormattedMessage id="blogger.referrals.activeRecruits" defaultMessage="Actifs (6 mois)" />
+                <FormattedMessage id="blogger.referrals.activeRecruits" defaultMessage="Actifs" />
               </span>
               <CheckCircle className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-2xl dark:text-green-400 font-bold">
-              {recruits.filter(r => r.isActive).length}
+              {recruits.filter(r => r.isActive).length + recruitedBloggers.filter(r => r.isActive).length}
             </p>
           </div>
           <div className={`${UI.card} p-5`}>
@@ -79,6 +80,33 @@ const BloggerReferrals: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Recruited Bloggers (filleuls) */}
+        {recruitedBloggers.length > 0 && (
+          <div className={`${UI.card} overflow-hidden`}>
+            <div className="px-6 py-3 bg-purple-50 dark:bg-purple-900/20 border-b dark:border-purple-800">
+              <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                <FormattedMessage id="blogger.referrals.recruitedBloggers" defaultMessage="Blogueurs recrutés" />
+              </h3>
+            </div>
+            <div className="divide-y dark:divide-gray-700">
+              {recruitedBloggers.map((recruit) => (
+                <div key={recruit.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                  <div>
+                    <p className="text-sm dark:text-white font-medium">{recruit.name}</p>
+                    <p className="text-xs dark:text-gray-600">{recruit.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm dark:text-green-400 font-medium">{formatCurrency(recruit.totalEarned)}</p>
+                    <p className="text-xs dark:text-gray-600">
+                      {recruit.joinedAt ? new Date(recruit.joinedAt).toLocaleDateString() : '-'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Commission Explanation */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border dark:border-blue-800 rounded-xl p-4">

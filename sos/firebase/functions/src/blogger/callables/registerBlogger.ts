@@ -524,6 +524,13 @@ export const registerBlogger = onCall(
         // Now do all writes
         transaction.set(bloggerRef, blogger);
 
+        // FIX: Sync referredByUserId to users collection for unified affiliate tracking
+        const referralFields = recruitedBy ? {
+          referredByUserId: recruitedBy,
+          referredBy: recruitedByCode,
+          referredAt: now,
+        } : {};
+
         if (userDoc.exists) {
           transaction.update(userRef, {
             role: "blogger",
@@ -534,6 +541,7 @@ export const registerBlogger = onCall(
             affiliateCodeRecruitment,
             affiliateCodeProvider,
             telegramOnboardingCompleted: false,
+            ...referralFields,
             updatedAt: now,
           });
         } else {
@@ -549,6 +557,7 @@ export const registerBlogger = onCall(
             affiliateCodeRecruitment,
             affiliateCodeProvider,
             telegramOnboardingCompleted: false,
+            ...referralFields,
             createdAt: now,
             updatedAt: now,
           });

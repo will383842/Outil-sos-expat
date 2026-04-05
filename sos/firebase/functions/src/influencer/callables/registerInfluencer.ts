@@ -527,6 +527,13 @@ export const registerInfluencer = onCall(
         // Now do all writes
         transaction.set(influencerRef, influencer);
 
+        // FIX: Sync referredByUserId to users collection for unified affiliate tracking
+        const referralFields = recruitedBy ? {
+          referredByUserId: recruitedBy,
+          referredBy: recruitedByCode,
+          referredAt: now,
+        } : {};
+
         if (userDoc.exists) {
           // Update to influencer role
           transaction.update(userRef, {
@@ -538,6 +545,7 @@ export const registerInfluencer = onCall(
             affiliateCodeRecruitment,
             affiliateCodeProvider,
             telegramOnboardingCompleted: false,
+            ...referralFields,
             updatedAt: now,
           });
         } else {
@@ -554,6 +562,7 @@ export const registerInfluencer = onCall(
             affiliateCodeRecruitment,
             affiliateCodeProvider,
             telegramOnboardingCompleted: false,
+            ...referralFields,
             createdAt: now,
             updatedAt: now,
           });

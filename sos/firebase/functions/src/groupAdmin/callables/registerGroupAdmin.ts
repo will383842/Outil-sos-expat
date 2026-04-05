@@ -549,6 +549,13 @@ export const registerGroupAdmin = onCall(
         // Now do all writes
         transaction.set(groupAdminRef, groupAdmin);
 
+        // FIX: Sync referredByUserId to users collection for unified affiliate tracking
+        const referralFields = recruitedBy ? {
+          referredByUserId: recruitedBy,
+          referredBy: recruitedByCode,
+          referredAt: now,
+        } : {};
+
         if (userDoc.exists) {
           transaction.update(userRef, {
             role: "groupAdmin",
@@ -559,6 +566,7 @@ export const registerGroupAdmin = onCall(
             affiliateCodeRecruitment,
             affiliateCodeProvider,
             telegramOnboardingCompleted: false,
+            ...referralFields,
             updatedAt: now,
           });
         } else {
@@ -574,6 +582,7 @@ export const registerGroupAdmin = onCall(
             affiliateCodeRecruitment,
             affiliateCodeProvider,
             telegramOnboardingCompleted: false,
+            ...referralFields,
             createdAt: now,
             updatedAt: now,
           });

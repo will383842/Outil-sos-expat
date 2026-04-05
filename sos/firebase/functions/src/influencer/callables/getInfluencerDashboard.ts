@@ -162,7 +162,42 @@ export const getInfluencerDashboard = onCall(
         });
       }
 
-      // 9. Build response (exclude sensitive fields)
+      // 9. FIX: Fetch recruited influencers (filleuls) — was missing from response
+      const recruitsQuery = await db
+        .collection("influencers")
+        .where("recruitedBy", "==", userId)
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get();
+
+      const recruitedInfluencers = recruitsQuery.docs.map(doc => {
+        const data = doc.data() as Influencer;
+        return {
+          id: doc.id,
+          name: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "Unknown",
+          email: data.email || "",
+          totalEarned: data.totalEarned || 0,
+          isActive: (data.totalEarned || 0) > 0,
+          joinedAt: data.createdAt?.toDate?.()?.toISOString?.() || "",
+        };
+      });
+
+      // 9b. FIX: Fetch recruiter info (parrain) — cross-collection fallback
+      let recruiterName: string | null = null;
+      let recruiterPhoto: string | null = null;
+      if (influencer.recruitedBy) {
+        let recruiterDoc = await db.collection("influencers").doc(influencer.recruitedBy).get();
+        if (!recruiterDoc.exists) {
+          recruiterDoc = await db.collection("users").doc(influencer.recruitedBy).get();
+        }
+        if (recruiterDoc.exists) {
+          const recruiterData = recruiterDoc.data();
+          recruiterName = [recruiterData?.firstName, recruiterData?.lastName].filter(Boolean).join(" ") || recruiterData?.email || null;
+          recruiterPhoto = recruiterData?.profilePhoto || recruiterData?.photoURL || null;
+        }
+      }
+
+      // 10. Build response (exclude sensitive fields)
       const {
         paymentDetails: _paymentDetails,
         adminNotes: _adminNotes,
@@ -175,6 +210,10 @@ export const getInfluencerDashboard = onCall(
         monthlyStats,
         unreadNotifications,
         isAdminView,
+        // FIX: Include recruited influencers and recruiter info
+        recruitedInfluencers,
+        recruiterName,
+        recruiterPhoto,
         config: {
           // Use lockedRates (lifetime rate lock) when available, fallback to global config
           commissionClientAmount: influencer.lockedRates?.commissionClientAmount ?? config.commissionClientAmount,

@@ -170,9 +170,13 @@ export const getChatterDashboard = onCall(
           .get(),
         // Withdrawal fee
         getWithdrawalFee().then(f => f.fixedFee * 100).catch(() => 300),
-        // Recruiter info (if recruited)
+        // Recruiter info (if recruited) — cross-collection fallback
         chatter.recruitedBy
-          ? db.collection("chatters").doc(chatter.recruitedBy).get()
+          ? db.collection("chatters").doc(chatter.recruitedBy).get().then(async (doc) => {
+              if (doc.exists) return doc;
+              // Fallback: recruiter may be influencer/blogger/groupAdmin/affiliate — check users
+              return db.collection("users").doc(chatter.recruitedBy!).get();
+            })
           : Promise.resolve(null),
       ]);
 
