@@ -10,7 +10,7 @@ import { useWebVitals } from './hooks/useWebVitals';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminRoutesV2 from '@/components/admin/AdminRoutesV2';
+const AdminRoutesV2 = lazy(() => import('@/components/admin/AdminRoutesV2'));
 import { trackEvent, setUserId, setUserProperties } from './utils/ga4';
 import MetaPageViewTracker from './components/common/MetaPageViewTracker';
 import InternationalTracker from './components/analytics/InternationalTracker';
@@ -1162,6 +1162,7 @@ const App: React.FC = () => {
         </Suspense>
       ) : showAdminLayout ? (
         /* Render admin routes only when current path is admin (no site layout/navbar) */
+        <Suspense fallback={<LoadingSpinner size="large" color="red" fullPage />}>
         <Routes>
           {/* Catch locale-prefixed admin paths and strip locale (preserve subpath & query) */}
           <Route path="/:locale/admin" element={<AdminLocaleStrip />} />
@@ -1184,6 +1185,7 @@ const App: React.FC = () => {
           {/* If someone hits another path under admin detection that isn't handled, fallback to admin root */}
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
+        </Suspense>
       ) : (
         <LocaleRouter>
           {/* P1-1 FIX: Track page views for GA4 analytics */}
