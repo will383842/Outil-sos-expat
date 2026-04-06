@@ -2658,8 +2658,7 @@ const ProviderProfile: React.FC = () => {
             "@type": "Offer",
             "price": isLawyer ? "49" : "19",
             "priceCurrency": "EUR",
-            "availability": "https://schema.org/OnlineOnly",
-            "validFrom": new Date().toISOString().split('T')[0],
+            "availability": "https://schema.org/InStock",
             "priceSpecification": {
               "@type": "UnitPriceSpecification",
               "price": isLawyer ? "49" : "19",
@@ -3901,7 +3900,7 @@ const ProviderProfile: React.FC = () => {
                       <div className="mt-6">
                         <Reviews
                           mode="list"
-                          reviews={reviews}
+                          reviews={reviews.filter(r => r.rating >= 3.5)}
                           showControls={!!user}
                           onHelpfulClick={handleHelpfulClick}
                           onReportClick={handleReportClick}
