@@ -94,6 +94,11 @@ interface AppProviderProps {
   children: ReactNode;
 }
 
+// ✅ PERF P1: Constantes hors du composant — pas de re-déclaration à chaque render
+// country_settings change rarement (màj admin) → TTL 1h. Fallback gracieux si localStorage indisponible.
+const COUNTRIES_CACHE_KEY = 'sos_countries_v1';
+const COUNTRIES_CACHE_TTL = 60 * 60 * 1000; // 1 heure
+
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -108,10 +113,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
     return 'fr';
   });
-  // ✅ PERF P1: Initialisation synchrone depuis localStorage pour éviter le re-render de cache
-  // country_settings change rarement (màj admin) → TTL 1h. Fallback gracieux si localStorage indisponible.
-  const COUNTRIES_CACHE_KEY = 'sos_countries_v1';
-  const COUNTRIES_CACHE_TTL = 60 * 60 * 1000; // 1 heure
 
   const [supportedCountries, setSupportedCountries] = useState<string[]>(() => {
     try {
