@@ -778,6 +778,17 @@ const OptimizedHomePage: React.FC = () => {
     ],
   }), [intl, tk]);
 
+  // ✅ PERF INP: Pre-stringify JSON-LD pour éviter JSON.stringify dans le rendu JSX
+  const jsonLdStrings = useMemo(() => ({
+    organization: JSON.stringify(jsonLdOrganization),
+    webSite: JSON.stringify(jsonLdWebSite),
+    service: JSON.stringify(jsonLdService),
+    faq: JSON.stringify(jsonLdFAQ),
+    breadcrumb: JSON.stringify(jsonLdBreadcrumb),
+    speakable: JSON.stringify(jsonLdSpeakable),
+    howTo: JSON.stringify(jsonLdHowTo),
+  }), [jsonLdOrganization, jsonLdWebSite, jsonLdService, jsonLdFAQ, jsonLdBreadcrumb, jsonLdSpeakable, jsonLdHowTo]);
+
   // ======= Pricing dynamique =======
   const {
     pricing,
@@ -1281,27 +1292,13 @@ const OptimizedHomePage: React.FC = () => {
         <link rel="dns-prefetch" href="https://i.pravatar.cc" />
 
         {/* JSON-LD Schema.org */}
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdOrganization)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdWebSite)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdService)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdFAQ)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdBreadcrumb)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdSpeakable)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLdHowTo)}
-        </script>
+        <script type="application/ld+json">{jsonLdStrings.organization}</script>
+        <script type="application/ld+json">{jsonLdStrings.webSite}</script>
+        <script type="application/ld+json">{jsonLdStrings.service}</script>
+        <script type="application/ld+json">{jsonLdStrings.faq}</script>
+        <script type="application/ld+json">{jsonLdStrings.breadcrumb}</script>
+        <script type="application/ld+json">{jsonLdStrings.speakable}</script>
+        <script type="application/ld+json">{jsonLdStrings.howTo}</script>
       </Helmet>
 
       <div className="min-h-screen bg-gray-950 overflow-x-hidden max-w-full">
@@ -1441,9 +1438,9 @@ const OptimizedHomePage: React.FC = () => {
           aria-labelledby="experts-heading"
         >
           {/* Éléments décoratifs dans leur propre conteneur avec overflow-hidden */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-            <div className="absolute top-1/4 right-1/4 w-40 sm:w-80 h-40 sm:h-80 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-1/4 left-1/4 w-40 sm:w-80 h-40 sm:h-80 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-2xl" />
+          <div className="absolute inset-0 pointer-events-none overflow-hidden hidden md:block" aria-hidden="true">
+            <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-2xl" />
+            <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-2xl" />
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto">

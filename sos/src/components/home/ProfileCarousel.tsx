@@ -12,9 +12,9 @@ import { runQueryRest } from '../../utils/firestoreRestApi';
 import ModernProfileCard from './ModernProfileCard';
 import type { Provider } from '@/types/provider';
 
-// ✅ PERF: Timeout réduit de 8s à 3s pour un affichage plus rapide
+// ✅ PERF: Timeout réduit à 800ms pour un INP optimal
 // Le fallback (skeleton ou cache) s'affichera si Firestore est lent
-const FIRESTORE_TIMEOUT_MS = 3000;
+const FIRESTORE_TIMEOUT_MS = 800;
 
 const DEFAULT_AVATAR = '/default-avatar.webp';
 
@@ -481,7 +481,7 @@ const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
           0% { transform: translateX(0); }
           100% { transform: translateX(-33.333%); }
         }
-        .animate-infinite-scroll { animation: infinite-scroll 60s linear infinite; }
+        .animate-infinite-scroll { animation: infinite-scroll 60s linear infinite; will-change: transform; }
         .animate-infinite-scroll:hover { animation-play-state: paused; }
         .scrollbar-hide {
           scrollbar-width: none;
