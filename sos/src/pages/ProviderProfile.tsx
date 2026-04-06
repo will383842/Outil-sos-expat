@@ -2577,14 +2577,8 @@ const ProviderProfile: React.FC = () => {
   })();
 
   // Pre-compute noindex outside JSX to avoid TS inference issues
-  const shouldNoindex: boolean = (() => {
-    const rc: number = providerStats.realReviewsCount ?? 0;
-    const ar: number = Number(providerStats.averageRating ?? 0);
-    const dl: number = String(provider?.description ?? '').length;
-    // Noindex only if truly empty profile: no description + no reviews + not verified
-    // OR if profile has many reviews but very bad rating (likely spam/quality issue)
-    return (rc === 0 && dl < 100 && !provider?.isVerified) || (rc > 5 && ar < 3.0);
-  })();
+  // Only noindex profiles that are completely broken (not approved or not visible)
+  const shouldNoindex: boolean = !provider?.isApproved || !provider?.isVisible;
 
   const OG_LOCALE_MAP: Record<string, string> = {
     fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE', pt: 'pt_PT',
