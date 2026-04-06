@@ -887,12 +887,9 @@ const ProviderProfile: React.FC = () => {
 
   const [isOnCall, setIsOnCall] = useState(false);
 
-  // P0-4 FIX: Vérifier que le provider a un numéro de téléphone valide pour la réservation
-  const hasValidPhone = useMemo(() => {
-    if (!provider) return false;
-    const phone = (provider as any)?.phone || (provider as any)?.phoneNumber || (provider as any)?.telephone || '';
-    return /^\+[1-9]\d{6,14}$/.test(phone);
-  }, [provider]);
+  // Phone validation removed from frontend — backend (createAndScheduleCall) validates phone
+  // via Admin SDK with full access to provider data. Frontend sos_profiles queries don't
+  // include phone for security reasons, so the check always failed here.
 
   const [activePromo, setActivePromo] = useState<{
     code: string;
@@ -1899,10 +1896,6 @@ const ProviderProfile: React.FC = () => {
       return;
     }
 
-    // P0-4 FIX: Bloquer si le provider n'a pas de numéro de téléphone valide
-    if (!hasValidPhone) {
-      return;
-    }
 
     const gtag = (window as Window & { gtag?: (...args: unknown[]) => void })
       .gtag;
@@ -1968,7 +1961,7 @@ const ProviderProfile: React.FC = () => {
       sessionStorage.setItem('loginRedirect', `/booking-request/${providerIdentifier}`);
       setShowAuthWizard(true);
     }
-  }, [provider, user, authInitialized, navigate, onlineStatus, hasValidPhone]);
+  }, [provider, user, authInitialized, navigate, onlineStatus]);
 
   // Callback quand l'authentification réussit via le wizard
   const handleAuthSuccess = useCallback(() => {
@@ -3122,9 +3115,9 @@ const ProviderProfile: React.FC = () => {
                     <div ref={heroCTARef} className="mt-5 lg:hidden" data-speakable="availability">
                       <button
                         onClick={handleBookCall}
-                        disabled={!authInitialized || !hasValidPhone}
+                        disabled={!authInitialized}
                         className={`w-full py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 min-h-[56px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 touch-manipulation ${
-                          onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone
+                          onlineStatus.isOnline && !isOnCall && authInitialized
                             ? "bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/40 hover:from-green-500 hover:to-green-400 active:scale-[0.98] focus:ring-green-500"
                             : isOnCall
                             ? "bg-amber-500/80 text-white border border-amber-400 focus:ring-amber-500"
@@ -3156,7 +3149,7 @@ const ProviderProfile: React.FC = () => {
                                   ? intl.formatMessage({ id: "providerProfile.bookNow" })
                                   : intl.formatMessage({ id: "providerProfile.callButton", defaultMessage: "Appeler maintenant" })}
                             </span>
-                            {onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone && (
+                            {onlineStatus.isOnline && !isOnCall && authInitialized && (
                               <span className="flex gap-1" aria-hidden="true">
                                 <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-white/80" />
                                 <span className="w-1.5 h-1.5 rounded-full animate-pulse delay-75 bg-white/80" />
@@ -3348,9 +3341,9 @@ const ProviderProfile: React.FC = () => {
                     {/* CTA Button - Desktop only (mobile has fixed bottom) */}
                     <button
                       onClick={handleBookCall}
-                      disabled={!onlineStatus.isOnline || isOnCall || !authInitialized || !hasValidPhone}
+                      disabled={!onlineStatus.isOnline || isOnCall || !authInitialized}
                       className={`hidden lg:flex w-full py-4 px-4 rounded-2xl font-bold text-lg transition-all duration-300 items-center justify-center gap-3 min-h-[56px] focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone
+                        onlineStatus.isOnline && !isOnCall && authInitialized
                           ? "bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 hover:scale-[1.02] shadow-lg shadow-green-500/30 focus:ring-green-500"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       }`}
@@ -3381,7 +3374,7 @@ const ProviderProfile: React.FC = () => {
                           </span>
                         </>
                       )}
-                      {onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone && (
+                      {onlineStatus.isOnline && !isOnCall && authInitialized && (
                         <div className="flex gap-1" aria-hidden="true">
                           <div className="w-2 h-2 rounded-full animate-pulse bg-white/80"></div>
                           <div className="w-2 h-2 rounded-full animate-pulse delay-75 bg-white/80"></div>
@@ -3973,9 +3966,9 @@ const ProviderProfile: React.FC = () => {
                     {/* Bouton appeler */}
                     <button
                       onClick={handleBookCall}
-                      disabled={!onlineStatus.isOnline || isOnCall || !authInitialized || !hasValidPhone}
+                      disabled={!onlineStatus.isOnline || isOnCall || !authInitialized}
                       className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 min-h-[52px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone
+                        onlineStatus.isOnline && !isOnCall && authInitialized
                           ? "bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 shadow-md shadow-green-500/25 focus:ring-green-500"
                           : isOnCall
                           ? "bg-amber-100 text-amber-800 cursor-not-allowed border border-amber-300"
@@ -3995,7 +3988,7 @@ const ProviderProfile: React.FC = () => {
                             ? intl.formatMessage({ id: "providerProfile.bookNow" })
                             : intl.formatMessage({ id: "providerProfile.unavailable" })}
                       </span>
-                      {onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone && (
+                      {onlineStatus.isOnline && !isOnCall && authInitialized && (
                         <span className="flex gap-0.5" aria-hidden="true">
                           <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-white/80" />
                           <span className="w-1.5 h-1.5 rounded-full animate-pulse delay-75 bg-white/80" />
@@ -4006,9 +3999,7 @@ const ProviderProfile: React.FC = () => {
 
                     {/* Statut */}
                     <div className="mt-3 text-center text-xs">
-                      {!hasValidPhone ? (
-                        <span className="text-red-500 font-medium"><FormattedMessage id="providerProfile.noPhone" defaultMessage="Réservation indisponible" /></span>
-                      ) : isOnCall ? (
+                      {isOnCall ? (
                         <span className="text-amber-600 font-medium">📞 <FormattedMessage id="providerProfile.onCallMessage" /></span>
                       ) : onlineStatus.isOnline ? (
                         <span className="text-green-600 font-medium">✅ <FormattedMessage id="providerProfile.availableNow" /></span>
@@ -4180,9 +4171,9 @@ const ProviderProfile: React.FC = () => {
           {/* Bouton CTA */}
           <button
             onClick={handleBookCall}
-            disabled={!onlineStatus.isOnline || isOnCall || !authInitialized || !hasValidPhone}
+            disabled={!onlineStatus.isOnline || isOnCall || !authInitialized}
             className={`w-full py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
-              onlineStatus.isOnline && !isOnCall && authInitialized && hasValidPhone
+              onlineStatus.isOnline && !isOnCall && authInitialized
                 ? "bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg shadow-green-500/30 active:scale-[0.98]"
                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
             }`}
