@@ -34,9 +34,8 @@ import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
 import { captureAffiliateRef, setAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
-// ✅ PERF: Seul EN est importé statiquement (fallback universel pour site international)
-// Les 8 autres langues (fr, es, de, ru, pt, ch, hi, ar) sont chargées dynamiquement à la demande
-import enMessages from "./helper/en.json";
+// ✅ PERF: Toutes les langues chargées via fetch() depuis /public/helper/ (aucun JSON bundlé)
+// EN n'est plus statique — utilise fetch comme les autres pour éviter 779KB dans le bundle
 import { useApp } from "./contexts/AppContext";
 import {
   LocaleRouter,
@@ -253,10 +252,10 @@ const GaleriePage = lazy(() => import('./pages/Galerie/Galerie'));
 // Language config — chargement dynamique des traductions
 // EN est statique (fallback universel), les 8 autres langues sont chargées à la demande
 // -------------------------------------------
-// Traductions chargées via fetch() depuis /public/helper/ pour permettre le preload HTML.
-// EN reste statique (bundlé). Les autres langues sont servies comme fichiers statiques.
+// Toutes les langues chargées via fetch() depuis /public/helper/ — aucun JSON bundlé.
 // Note : si un fichier src/helper/*.json est modifié, copier aussi dans public/helper/.
 const translationLoaders: Record<string, () => Promise<Record<string, string>>> = {
+  en: () => fetch('/helper/en.json').then(r => r.json()),
   fr: () => fetch('/helper/fr.json').then(r => r.json()),
   es: () => fetch('/helper/es.json').then(r => r.json()),
   ru: () => fetch('/helper/ru.json').then(r => r.json()),
@@ -269,23 +268,21 @@ const translationLoaders: Record<string, () => Promise<Record<string, string>>> 
 
 // Cache en mémoire pour éviter de re-charger les traductions déjà téléchargées
 // Exporté pour que main.tsx puisse pré-charger les traductions AVANT le rendu React
-export const loadedMessages: Record<string, Record<string, string>> = {
-  en: enMessages as unknown as Record<string, string>,
-};
+export const loadedMessages: Record<string, Record<string, string>> = {};
 
 /**
  * Pré-charge les traductions pour une langue donnée.
  * Appelé par main.tsx AVANT hydrateRoot/createRoot pour éviter le flash de EN.
  */
 export async function preloadTranslations(locale: string): Promise<void> {
-  if (locale === 'en' || loadedMessages[locale]) return;
+  if (loadedMessages[locale]) return;
   const loader = translationLoaders[locale];
   if (loader) {
     try {
       const msgs = await loader();
       loadedMessages[locale] = msgs;
     } catch {
-      // Fallback silencieux vers EN (statique)
+      // Fallback silencieux — IntlProvider utilisera les defaultMessage
     }
   }
 }
@@ -296,22 +293,13 @@ export async function preloadTranslations(locale: string): Promise<void> {
  */
 function useDynamicMessages(locale: Locale): Record<string, string> {
   const [messages, setMessages] = useState<Record<string, string>>(
-    loadedMessages[locale]
-      ? { ...loadedMessages.en, ...loadedMessages[locale] }
-      : loadedMessages.en
+    loadedMessages[locale] ?? loadedMessages['en'] ?? {}
   );
 
   useEffect(() => {
-    // EN est déjà chargé statiquement
-    if (locale === 'en') {
-      setMessages(loadedMessages.en);
-      return;
-    }
-
     // Déjà en cache mémoire
     if (loadedMessages[locale]) {
-      // Merge with EN as fallback: EN keys fill gaps in incomplete translations
-      setMessages({ ...loadedMessages.en, ...loadedMessages[locale] });
+      setMessages({ ...(loadedMessages['en'] ?? {}), ...loadedMessages[locale] });
       return;
     }
 
@@ -320,16 +308,15 @@ function useDynamicMessages(locale: Locale): Record<string, string> {
     if (loader) {
       loader()
         .then((msgs) => {
-          loadedMessages[locale] = msgs; // Cache pour les futures navigations
-          // Merge with EN as fallback: EN keys fill gaps in incomplete translations
-          setMessages({ ...loadedMessages.en, ...msgs });
+          loadedMessages[locale] = msgs;
+          setMessages({ ...(loadedMessages['en'] ?? {}), ...msgs });
         })
         .catch((err) => {
-          console.error(`[i18n] Failed to load ${locale} translations, falling back to EN:`, err);
-          setMessages(loadedMessages.en);
+          console.error(`[i18n] Failed to load ${locale} translations:`, err);
+          setMessages(loadedMessages['en'] ?? {});
         });
     } else {
-      setMessages(loadedMessages.en);
+      setMessages(loadedMessages['en'] ?? {});
     }
   }, [locale]);
 
