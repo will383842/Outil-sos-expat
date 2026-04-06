@@ -225,6 +225,7 @@ interface SosProfile {
   isActive: boolean;
   isApproved: boolean;
   isVerified: boolean;
+  isVisible?: boolean;
   isVisibleOnMap?: boolean;
   isFeatured?: boolean;
   education?: Education | Education[] | LocalizedText;
