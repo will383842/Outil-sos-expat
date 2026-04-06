@@ -108,12 +108,45 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
     return 'fr';
   });
-  const [supportedCountries, setSupportedCountries] = useState<string[]>([]);
-  const [countriesLoading, setCountriesLoading] = useState(true);
+  // ✅ PERF P1: Initialisation synchrone depuis localStorage pour éviter le re-render de cache
+  // country_settings change rarement (màj admin) → TTL 1h. Fallback gracieux si localStorage indisponible.
+  const COUNTRIES_CACHE_KEY = 'sos_countries_v1';
+  const COUNTRIES_CACHE_TTL = 60 * 60 * 1000; // 1 heure
+
+  const [supportedCountries, setSupportedCountries] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(COUNTRIES_CACHE_KEY);
+      if (raw) {
+        const { countries, ts } = JSON.parse(raw);
+        if (Array.isArray(countries) && Date.now() - ts < COUNTRIES_CACHE_TTL) return countries;
+      }
+    } catch { /* localStorage indisponible (mode privé, quota) */ }
+    return [];
+  });
+
+  const [countriesLoading, setCountriesLoading] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem(COUNTRIES_CACHE_KEY);
+      if (raw) {
+        const { ts } = JSON.parse(raw);
+        if (Date.now() - ts < COUNTRIES_CACHE_TTL) return false; // Cache frais → pas de loading
+      }
+    } catch { /* ignore */ }
+    return true;
+  });
 
   // Load enabled countries from Firestore on app startup
   // Uses 'country_settings' collection (same as admin dashboard AdminCountries.tsx)
   useEffect(() => {
+    // Cache frais : pas besoin de fetcher Firestore
+    try {
+      const raw = localStorage.getItem(COUNTRIES_CACHE_KEY);
+      if (raw) {
+        const { ts } = JSON.parse(raw);
+        if (Date.now() - ts < COUNTRIES_CACHE_TTL) return;
+      }
+    } catch { /* ignore */ }
+
     const loadEnabledCountries = async () => {
       try {
         setCountriesLoading(true);
@@ -122,23 +155,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         console.log(`[AppContext] country_settings: ${snapshot.size} documents trouvés`);
 
-        if (snapshot.empty) {
-          // No countries in Firestore = show ALL countries (fallback)
-          console.log("[AppContext] Collection vide, affichage de tous les pays");
-          setSupportedCountries([]);
-        } else {
-          const enabledCountries: string[] = [];
-          snapshot.docs.forEach((docSnap) => {
-            const data = docSnap.data();
-            // Only include countries with isActive === true
-            if (data.isActive === true) {
-              enabledCountries.push(data.code?.toUpperCase() || docSnap.id.toUpperCase());
-            }
-          });
+        const enabledCountries: string[] = snapshot.empty ? [] : snapshot.docs
+          .filter(docSnap => docSnap.data().isActive === true)
+          .map(docSnap => docSnap.data().code?.toUpperCase() || docSnap.id.toUpperCase());
 
+        if (snapshot.empty) {
+          console.log("[AppContext] Collection vide, affichage de tous les pays");
+        } else {
           console.log(`[AppContext] ${enabledCountries.length} pays actifs chargés:`, enabledCountries.slice(0, 10), '...');
-          setSupportedCountries(enabledCountries);
         }
+
+        setSupportedCountries(enabledCountries);
+        try {
+          localStorage.setItem(COUNTRIES_CACHE_KEY, JSON.stringify({ countries: enabledCountries, ts: Date.now() }));
+        } catch { /* quota exceeded */ }
       } catch (error) {
         console.error("[AppContext] Error loading country_settings:", error);
         // Fallback: empty array = show ALL countries (see SOSCall.tsx countryOptions logic)

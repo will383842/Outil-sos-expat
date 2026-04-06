@@ -1145,7 +1145,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       }
 
       const elapsed = Date.now() - listenerStartTime;
-      devWarn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] onSnapshot n'a pas répondu en 5s, tentative getDoc directe...`);
+      devWarn(`🔐 [AuthContext] ⚠️ [${elapsed}ms] onSnapshot n'a pas répondu en 1.5s, tentative getDoc directe...`);
 
       try {
         devLog("🔐 [AuthContext] 📥 Exécution getDoc(users/" + uid + ")...");
@@ -1183,7 +1183,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         devError(`❌ [AuthContext] [${errorElapsed}ms] getDoc fallback échoué:`, e);
         // Ne pas annuler les autres fallbacks - laisser le REST API essayer
       }
-    }, 5000);
+    }, 1500);
 
     // Fallback 2: REST API après 10s si tout le SDK Firestore est bloqué
     restFallbackTimeoutId = setTimeout(async () => {
