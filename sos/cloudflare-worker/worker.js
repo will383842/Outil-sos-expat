@@ -1141,6 +1141,7 @@ async function handleRequest(request, env, ctx) {
     // (articles, categories, countries, tools, sondages, AND image bank).
     // This is scalable: any new content added via admin auto-appears in sitemap.
     if (path === '/sitemap.xml') return true;
+    if (path === '/sitemap-news.xml') return true;
     if (path === '/robots.txt') return true;
     if (path === '/llms.txt') return true;
     if (path === '/ai.txt') return true;
