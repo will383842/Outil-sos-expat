@@ -1168,11 +1168,12 @@ async function handleRequest(request, env, ctx) {
     // Gallery API (used by SPA React component)
     if (path.startsWith('/api/v1/public/gallery')) return true;
 
-    // Locale-prefixed paths: /{xx-yy}/{segment}[/{slug}]
-    const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?(?:\/([^\/]+))?/);
+    // Locale-prefixed paths: /{xx-yy}/{segment}[/{slug}[/{sub}]]
+    const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?(?:\/([^\/]+))?(?:\/([^\/]+))?/);
     if (match) {
       const segment = match[2];
       const slug = match[3];
+      const sub = match[4]; // 4th segment: expatriation, vacances, etc.
       // /{locale} alone = app homepage (not blog)
       if (!segment) return false;
 
@@ -1192,6 +1193,8 @@ async function handleRequest(request, env, ctx) {
       if (NEWS_SEGMENTS.has(segment)) return true;
 
       // /{locale}/{translated-segment} = blog content (categories, tags, countries, vie-a-letranger)
+      // This also handles 4-segment paths like /fr-fr/pays/thailande/expatriation
+      // because segment='pays' is in BLOG_SEGMENTS and the full path is proxied
       if (BLOG_SEGMENTS.has(segment)) return true;
 
       // FAQ — toujours SPA React (Firestore, géré depuis la console admin SOS Expat)
