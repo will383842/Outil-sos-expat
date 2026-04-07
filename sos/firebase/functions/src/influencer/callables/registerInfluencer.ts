@@ -580,7 +580,7 @@ export const registerInfluencer = onCall(
           ipHash: hashIP(ip),
           converted: true,
           conversionId: userId,
-          conversionType: "signup",
+          conversionType: "influencer_signup",
           clickedAt: now,
           convertedAt: now,
           // Server-side tracking enrichment (post-cookie 2026)

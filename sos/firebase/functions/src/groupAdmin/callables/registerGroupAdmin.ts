@@ -598,6 +598,7 @@ export const registerGroupAdmin = onCall(
           ipHash: hashIP(request.rawRequest?.ip || "unknown"),
           converted: true,
           conversionId: userId,
+          conversionType: "group_admin_signup",
           createdAt: now,
           // Server-side tracking enrichment (post-cookie 2026)
           ...(input.trafficSource && {

@@ -2767,7 +2767,7 @@ service cloud.firestore {
     }
 
     // Tracking clics affiliés GroupAdmins
-    match /group_admin_clicks/{clickId} {
+    match /group_admin_affiliate_clicks/{clickId} {
       // Lecture: admin uniquement (données sensibles)
       allow read: if isAdmin();
       // Écriture: Cloud Functions uniquement

@@ -3771,7 +3771,7 @@
       ]
     },
     {
-      "collectionGroup": "group_admin_clicks",
+      "collectionGroup": "group_admin_affiliate_clicks",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -5733,6 +5733,14 @@
     },
     {
       "collectionGroup": "group_admin_affiliate_clicks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sessionId", "order": "ASCENDING" },
+        { "fieldPath": "converted", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "partner_affiliate_clicks",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "sessionId", "order": "ASCENDING" },

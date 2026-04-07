@@ -767,7 +767,7 @@ export interface GroupAdminRecruitedProvider {
 
 /**
  * Click tracking document
- * Collection: group_admin_clicks/{id}
+ * Collection: group_admin_affiliate_clicks/{id}
  */
 export interface GroupAdminClick {
   id: string;
