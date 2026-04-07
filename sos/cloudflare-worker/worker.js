@@ -50,9 +50,11 @@ function checkWorkerRateLimit(ip) {
 // Scrapers agressifs connus (bloqués immédiatement)
 const BLOCKED_SCRAPER_UAS = [
   'scrapy', 'python-requests', 'go-http-client', 'java/', 'httpclient',
-  'wget/', 'libwww-perl', 'mechanize', 'phantom', 'httrack', 'harvest',
+  'wget/', 'libwww-perl', 'mechanize', 'phantom', 'headlesschrome',
+  'httrack', 'harvest', 'extract', 'sucker',
   'nikto', 'sqlmap', 'nmap', 'masscan', 'zgrab', 'seekport',
   'megaindex', 'linkfluence', 'dotbot', 'blexbot', 'dataforseobot',
+  'ahrefsbot', 'mj12bot', 'serpstatbot', 'bytespider', 'rogerbot', 'semanticbot',
 ];
 
 /**
