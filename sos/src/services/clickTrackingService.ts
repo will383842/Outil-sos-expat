@@ -73,6 +73,8 @@ export function getTrafficSourceForRegistration(): {
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
   fbclid?: string;
   fbp?: string;
   fbc?: string;
@@ -90,6 +92,8 @@ export function getTrafficSourceForRegistration(): {
     utmSource: ts?.utm_source,
     utmMedium: ts?.utm_medium,
     utmCampaign: ts?.utm_campaign,
+    utmContent: ts?.utm_content,
+    utmTerm: ts?.utm_term,
     fbclid: ts?.fbclid,
     fbp: meta.fbp || ts?.fbp,
     fbc: meta.fbc || ts?.fbc,
