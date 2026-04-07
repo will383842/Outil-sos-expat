@@ -29,9 +29,15 @@ import {
 } from "../utils/configService";
 import { checkReferralFraud } from "../utils/fraudDetection";
 import { createCommission } from "../services/commissionService";
+import { createHash } from "crypto";
 import { CapturedRates, UserAffiliateFields } from "../types";
 import { notifyBacklinkEngineUserRegistered } from "../../Webhooks/notifyBacklinkEngine";
 import { snapshotLockedRates } from "../../lib/planResolver";
+
+/** Hash IP for server-side fallback attribution matching */
+function hashIP(ip: string): string {
+  return createHash("sha256").update(ip).digest("hex").substring(0, 16);
+}
 
 // Lazy initialization
 function ensureInitialized() {
@@ -203,6 +209,73 @@ export async function handleAffiliateUserCreated(event: any) {
           });
         }
         } // end if (!referralExpired)
+      }
+
+      // 6b. SERVER-SIDE FALLBACK ATTRIBUTION (post-cookie 2026)
+      // When localStorage was empty (private browsing, device switch, data cleared),
+      // try to match the user's IP against recent unconverted affiliate clicks.
+      if (!referredBy && !pendingReferralCode && userData.signupIP) {
+        const ipHashValue = hashIP(userData.signupIP);
+        const windowMs = (config.attribution?.windowDays ?? 30) * 24 * 60 * 60 * 1000;
+        const windowStart = Timestamp.fromMillis(Date.now() - windowMs);
+
+        const clickCollections = [
+          "chatter_affiliate_clicks",
+          "influencer_affiliate_clicks",
+          "blogger_affiliate_clicks",
+          "group_admin_affiliate_clicks",
+          "partner_affiliate_clicks",
+        ];
+
+        for (const collection of clickCollections) {
+          try {
+            const clickSnap = await db.collection(collection)
+              .where("ipHash", "==", ipHashValue)
+              .where("converted", "==", false)
+              .where("clickedAt", ">=", windowStart)
+              .orderBy("clickedAt", "desc")
+              .limit(1)
+              .get();
+
+            if (!clickSnap.empty) {
+              const clickData = clickSnap.docs[0].data();
+              const code = clickData.affiliateCode || clickData.chatterCode || clickData.influencerCode || clickData.bloggerCode || clickData.partnerCode;
+              if (code) {
+                const resolved = await resolveAffiliateCode(normalizeAffiliateCode(code));
+                if (resolved && resolved.userId !== userId) {
+                  referredBy = code;
+                  referredByUserId = resolved.userId;
+                  referrerEmail = resolved.email;
+                  createSignupCommission = true;
+                  (userData as any)._referrerActorType = resolved.actorType;
+
+                  // Mark click as converted
+                  await clickSnap.docs[0].ref.update({
+                    converted: true,
+                    convertedAt: Timestamp.now(),
+                    conversionId: userId,
+                    conversionType: "server_fallback",
+                  });
+
+                  logger.info("[affiliateOnUserCreated] Server-side fallback attribution matched", {
+                    userId,
+                    collection,
+                    clickId: clickSnap.docs[0].id,
+                    affiliateCode: code,
+                    affiliateId: resolved.userId,
+                  });
+                  break; // First match wins
+                }
+              }
+            }
+          } catch (err) {
+            // Index may not exist yet for this collection — skip gracefully
+            logger.warn("[affiliateOnUserCreated] Fallback query failed for collection", {
+              collection,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
       }
 
       // 7. Prepare affiliate fields

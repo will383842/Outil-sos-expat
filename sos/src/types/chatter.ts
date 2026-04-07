@@ -670,6 +670,19 @@ export interface RegisterChatterInput {
   termsType?: string;
   termsAffiliateVersion?: string;
   termsAffiliateType?: string;
+  /** Server-side tracking data (post-cookie 2026) */
+  trafficSource?: {
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    fbclid?: string;
+    fbp?: string;
+    fbc?: string;
+    gclid?: string;
+    ttclid?: string;
+    sessionId?: string;
+    userCountry?: string;
+  };
 }
 
 /**

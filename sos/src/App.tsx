@@ -33,6 +33,7 @@ import { migrateFromLegacyStorage, storeReferralCode, storeUnifiedReferral, init
 import type { ActorType, ReferralCodeType } from './utils/referralStorage';
 // AFFILIATE: URL persistence — keeps ?ref= visible across ALL navigation
 import { captureAffiliateRef, setAffiliateRef, AffiliateRefSync } from './hooks/useAffiliateTracking';
+import { trackAffiliateClickServer } from './services/clickTrackingService';
 // Marketing routes moved to AdminRoutesV2 (accessible via /admin/marketing/*)
 // ✅ PERF: Toutes les langues chargées via fetch() depuis /public/helper/ (aucun JSON bundlé)
 // EN n'est plus statique — utilise fetch comme les autres pour éviter 779KB dans le bundle
@@ -862,6 +863,11 @@ const AffiliatePathCapture: React.FC<{
     });
     // Update sessionStorage so AffiliateRefSync uses the LATEST clicked link
     setAffiliateRef(upperCode);
+    // Server-side click tracking (fire-and-forget, non-blocking)
+    const serverActorType = (['chatter', 'influencer', 'blogger', 'groupAdmin'] as const).includes(actorType as any)
+      ? (actorType as 'chatter' | 'influencer' | 'blogger' | 'groupAdmin')
+      : 'chatter'; // default for 'client'/'partner' — backend resolves via code
+    trackAffiliateClickServer(upperCode, serverActorType, codeType as 'client' | 'recruitment' | 'provider').catch(() => {});
   }
 
   const locale = getLocaleString(language);
@@ -892,6 +898,9 @@ const UnifiedAffiliateCapture: React.FC = () => {
       landingPage: window.location.pathname,
     });
     setAffiliateRef(upperCode);
+    // Server-side click tracking (fire-and-forget, non-blocking)
+    // Unified = role-agnostic, send 'chatter' as default — backend resolves via code
+    trackAffiliateClickServer(upperCode, 'chatter', 'client').catch(() => {});
   }
 
   const locale = getLocaleString(language);

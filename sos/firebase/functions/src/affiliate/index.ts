@@ -14,6 +14,12 @@ export { affiliateOnSubscriptionCreated } from "./triggers/onSubscriptionCreated
 export { affiliateOnSubscriptionRenewed } from "./triggers/onSubscriptionRenewed";
 
 // ============================================================================
+// PUBLIC CALLABLES
+// ============================================================================
+
+export { trackAffiliateClick } from "./callables/trackAffiliateClick";
+
+// ============================================================================
 // USER CALLABLES
 // ============================================================================
 
@@ -82,4 +88,9 @@ export type {
   RequestWithdrawalInput,
   RequestWithdrawalResponse,
   AdminGetGlobalStatsResponse,
+  TrackAffiliateClickInput,
+  AffiliateClick,
+  AffiliateClickActorType,
+  RegistrationTrafficSource,
+  AFFILIATE_CLICK_COLLECTIONS,
 } from "./types";

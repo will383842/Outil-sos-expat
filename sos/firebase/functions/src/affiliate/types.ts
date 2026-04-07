@@ -1083,3 +1083,99 @@ export const DEFAULT_AFFILIATE_CONFIG: Omit<
 
   version: 1,
 };
+
+// ============================================================================
+// SERVER-SIDE CLICK TRACKING (Post-Cookie 2026)
+// ============================================================================
+
+/** Valid actor types for affiliate click tracking */
+export type AffiliateClickActorType = 'chatter' | 'influencer' | 'blogger' | 'groupAdmin';
+
+/** Input payload for the trackAffiliateClick callable */
+export interface TrackAffiliateClickInput {
+  affiliateCode: string;
+  actorType: AffiliateClickActorType;
+  codeType: 'client' | 'recruitment' | 'provider';
+  // Browser data (server enriches with IP/UA from request headers)
+  userAgent?: string;
+  referrerUrl?: string;
+  landingPage?: string;
+  sessionId?: string;
+  // UTM params
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+  // Ad platform identifiers
+  fbclid?: string;
+  fbp?: string;
+  fbc?: string;
+  gclid?: string;
+  gadSource?: string;
+  ttclid?: string;
+  // Geo
+  userCountry?: string;
+  userTimezone?: string;
+  userLanguage?: string;
+  // Meta CAPI deduplication
+  eventId?: string;
+}
+
+/** Firestore document stored in {role}_affiliate_clicks */
+export interface AffiliateClick {
+  id: string;
+  affiliateId: string;
+  affiliateCode: string;
+  actorType: string;
+  codeType: string;
+  clickedAt: FirebaseFirestore.Timestamp;
+  converted: boolean;
+  convertedAt?: FirebaseFirestore.Timestamp;
+  conversionId?: string;
+  conversionType?: string;
+  // Browser & server data
+  userAgent?: string;
+  referrerUrl?: string;
+  landingPage?: string;
+  ipHash?: string;
+  sessionId?: string;
+  // UTM
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+  // Ad platform IDs
+  metaIds?: { fbclid?: string; fbp?: string; fbc?: string };
+  googleIds?: { gclid?: string; gadSource?: string };
+  tiktokIds?: { ttclid?: string };
+  // Geo
+  userCountry?: string;
+  userTimezone?: string;
+  userLanguage?: string;
+  // CAPI deduplication
+  eventId?: string;
+}
+
+/** Traffic source data passed from frontend during registration */
+export interface RegistrationTrafficSource {
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  fbclid?: string;
+  fbp?: string;
+  fbc?: string;
+  gclid?: string;
+  ttclid?: string;
+  sessionId?: string;
+  userCountry?: string;
+}
+
+/** Map actorType to its Firestore click collection name */
+export const AFFILIATE_CLICK_COLLECTIONS: Record<AffiliateClickActorType, string> = {
+  chatter: 'chatter_affiliate_clicks',
+  influencer: 'influencer_affiliate_clicks',
+  blogger: 'blogger_affiliate_clicks',
+  groupAdmin: 'group_admin_affiliate_clicks',
+};

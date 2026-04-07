@@ -57,6 +57,7 @@ import {
 import { WhatsAppGroupScreen } from '@/whatsapp-groups';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
+import { getTrafficSourceForRegistration } from '@/services/clickTrackingService';
 import { getCountryNameFromEntry as getCountryName, getFlag } from '@/utils/phoneCodeHelpers';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
@@ -508,6 +509,7 @@ const BloggerRegister: React.FC = () => {
           definitiveRoleAcknowledged: formData.definitiveRoleAcknowledged,
           recruitmentCode: formData.referralCode || undefined,
           referralCapturedAt: getStoredReferral('blogger')?.capturedAt || new Date().toISOString(),
+          trafficSource: getTrafficSourceForRegistration(),
           termsAcceptedAt: new Date().toISOString(),
           termsVersion: "3.0",
           termsType: "terms_bloggers",

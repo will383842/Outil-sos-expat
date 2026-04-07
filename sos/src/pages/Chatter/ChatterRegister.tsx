@@ -18,6 +18,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { Star, ArrowLeft, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
+import { getTrafficSourceForRegistration } from '@/services/clickTrackingService';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
@@ -240,6 +241,7 @@ const ChatterRegister: React.FC = () => {
           additionalLanguages: data.additionalLanguages,
           recruitmentCode: data.referralCode || undefined,
           referralCapturedAt: getStoredReferral('chatter')?.capturedAt || new Date().toISOString(),
+          trafficSource: getTrafficSourceForRegistration(),
           // ✅ TRACKING CGU - Preuve légale d'acceptation (eIDAS/RGPD)
           acceptTerms: data.acceptTerms,
           termsAcceptedAt: data.termsAcceptedAt,

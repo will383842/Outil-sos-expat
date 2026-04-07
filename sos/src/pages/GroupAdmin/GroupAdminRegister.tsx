@@ -20,6 +20,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functionsAffiliate, auth } from '@/config/firebase';
 import { Users, ArrowLeft, ArrowRight, CheckCircle, Gift, LogIn, Mail } from 'lucide-react';
 import { storeReferralCode, getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
+import { getTrafficSourceForRegistration } from '@/services/clickTrackingService';
 import { trackMetaCompleteRegistration, trackMetaStartRegistration, getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { trackAdRegistration } from '@/services/adAttributionService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
@@ -193,6 +194,7 @@ const GroupAdminRegister: React.FC = () => {
           groupDescription: data.groupDescription || undefined,
           recruitmentCode: data.referralCode || referralCodeFromUrl || undefined,
           referralCapturedAt: getStoredReferral('groupAdmin')?.capturedAt || new Date().toISOString(),
+          trafficSource: getTrafficSourceForRegistration(),
           acceptTerms: data.acceptTerms,
           termsAcceptedAt: data.termsAcceptedAt,
           termsVersion: data.termsVersion,

@@ -2837,6 +2837,8 @@ export {
   // affiliateOnCallCompleted,  // → consolidatedOnCallCompleted
   affiliateOnSubscriptionCreated,
   affiliateOnSubscriptionRenewed,
+  // Public callables
+  trackAffiliateClick,
   // User callables
   getMyAffiliateData,
   updateBankDetails,

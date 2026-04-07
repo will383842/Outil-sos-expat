@@ -698,6 +698,21 @@ export const registerChatter = onCall(
           conversionType: "chatter_signup",
           clickedAt: now,
           convertedAt: now,
+          // Server-side tracking enrichment (post-cookie 2026)
+          ...(input.trafficSource && {
+            utmSource: input.trafficSource.utmSource?.substring(0, 200),
+            utmMedium: input.trafficSource.utmMedium?.substring(0, 200),
+            utmCampaign: input.trafficSource.utmCampaign?.substring(0, 200),
+            metaIds: {
+              fbclid: input.trafficSource.fbclid,
+              fbp: input.trafficSource.fbp,
+              fbc: input.trafficSource.fbc,
+            },
+            googleIds: { gclid: input.trafficSource.gclid },
+            tiktokIds: { ttclid: input.trafficSource.ttclid },
+            sessionId: input.trafficSource.sessionId,
+            userCountry: input.trafficSource.userCountry,
+          }),
         });
 
         // Create recruitment tracking document (for harmonized $5 commission system)
@@ -722,6 +737,26 @@ export const registerChatter = onCall(
       });
 
       console.log("[registerChatter] STEP 12b: Transaction SUCCESS, elapsed:", Date.now() - startTime);
+
+      // Link pre-registration server-side click to this conversion (non-blocking, fire-and-forget)
+      if (input.trafficSource?.sessionId) {
+        db.collection("chatter_affiliate_clicks")
+          .where("sessionId", "==", input.trafficSource.sessionId)
+          .where("converted", "==", false)
+          .limit(1)
+          .get()
+          .then((snap) => {
+            if (!snap.empty) {
+              snap.docs[0].ref.update({
+                converted: true,
+                convertedAt: now,
+                conversionId: userId,
+                conversionType: "chatter_signup",
+              });
+            }
+          })
+          .catch((err) => logger.warn("[registerChatter] Pre-click link failed", { error: err }));
+      }
 
       // P2-03 FIX: Run comprehensive fraud check post-registration (non-blocking)
       if (recruitedBy) {
