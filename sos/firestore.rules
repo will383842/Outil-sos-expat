@@ -2774,6 +2774,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Tracking clics affiliés Bloggers
+    match /blogger_affiliate_clicks/{clickId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Tracking clics affiliés Partners
+    match /partner_affiliate_clicks/{clickId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // Notifications GroupAdmins
     match /group_admin_notifications/{notificationId} {
       // Lecture: le propriétaire ou admin
