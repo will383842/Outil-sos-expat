@@ -34,6 +34,7 @@ import { LocaleLink } from '../../../multilingual-system';
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 import { getStoredReferral, clearStoredReferral, getUnifiedReferralCode, clearUnifiedReferral } from '@/utils/referralStorage';
+import { getTrafficSourceForRegistration } from '@/services/clickTrackingService';
 
 import '@/styles/registration-dark.css';
 import '@/styles/multi-language-select.css';
@@ -466,6 +467,11 @@ const ExpatRegisterForm: React.FC<ExpatRegisterFormProps> = ({
         ...(metaIds.fbp ? { fbp: metaIds.fbp } : {}),
         ...(metaIds.fbc ? { fbc: metaIds.fbc } : {}),
         metaEventId,
+        // Server-side tracking data (post-cookie 2026)
+        ...(() => {
+          const ts = getTrafficSourceForRegistration();
+          return ts ? { trafficSource: ts } : {};
+        })(),
         createdAt: new Date(),
         updatedAt: new Date(),
       };

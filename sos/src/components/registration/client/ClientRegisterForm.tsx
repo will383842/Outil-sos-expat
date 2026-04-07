@@ -16,6 +16,7 @@ import DarkCheckbox from '../shared/DarkCheckbox';
 import { FieldError, FieldSuccess } from '../shared/FieldFeedback';
 
 import { getMetaIdentifiers, setMetaPixelUserData } from '@/utils/metaPixel';
+import { getTrafficSourceForRegistration } from '@/services/clickTrackingService';
 import { trackGoogleAdsSignUp, setGoogleAdsUserData } from '@/utils/googleAds';
 import { generateEventIdForType } from '@/utils/sharedEventId';
 
@@ -373,6 +374,12 @@ const ClientRegisterForm: React.FC<ClientRegisterFormProps> = ({
         userData.referralCapturedAt = tracking.capturedAt;
       } else if (referralCode) {
         userData.referralCapturedAt = new Date().toISOString();
+      }
+
+      // Server-side tracking data (post-cookie 2026)
+      const ts = getTrafficSourceForRegistration();
+      if (ts) {
+        userData.trafficSource = ts;
       }
 
       console.log('[ClientRegisterForm] 📤 Calling onRegister()', {
