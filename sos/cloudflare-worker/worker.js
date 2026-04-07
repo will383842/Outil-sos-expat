@@ -7,6 +7,63 @@
  * 3. For regular users, passes the request through to the origin (Digital Ocean)
  */
 
+// =========================================================================
+// ANTI-SCRAPING: Rate limiting in-memory par IP (edge-level)
+// Map<ip, { count, resetAt }> — reset toutes les 60s, max 120 req/min
+// Note: chaque instance Worker a son propre Map (pas partagé entre edges),
+// mais c'est suffisant pour bloquer les scrapers agressifs mono-IP.
+// =========================================================================
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 120;     // 120 req/min par IP (généreux pour les vrais users)
+const ipRateMap = new Map();
+
+let lastCleanup = 0;
+
+/**
+ * Vérifie le rate limit pour une IP. Retourne true si la requête est autorisée.
+ */
+function checkWorkerRateLimit(ip) {
+  const now = Date.now();
+
+  // Nettoyage des entrées expirées toutes les 60s (à chaque requête, pas setInterval)
+  if (now - lastCleanup > 60000) {
+    lastCleanup = now;
+    for (const [key, entry] of ipRateMap) {
+      if (now > entry.resetAt) ipRateMap.delete(key);
+    }
+  }
+
+  const entry = ipRateMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    ipRateMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  return true;
+}
+
+// Scrapers agressifs connus (bloqués immédiatement)
+const BLOCKED_SCRAPER_UAS = [
+  'scrapy', 'python-requests', 'go-http-client', 'java/', 'httpclient',
+  'wget/', 'libwww-perl', 'mechanize', 'phantom', 'httrack', 'harvest',
+  'nikto', 'sqlmap', 'nmap', 'masscan', 'zgrab', 'seekport',
+  'megaindex', 'linkfluence', 'dotbot', 'blexbot', 'dataforseobot',
+];
+
+/**
+ * Vérifie si le user-agent est un scraper bloqué.
+ */
+function isBlockedScraper(ua) {
+  if (!ua) return false;
+  const lower = ua.toLowerCase();
+  return BLOCKED_SCRAPER_UAS.some(blocked => lower.includes(blocked));
+}
+
 // Firebase Cloud Function URL for server-side rendering
 const SSR_FUNCTION_URL = 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
 
@@ -921,6 +978,27 @@ async function handleRequest(request, env, ctx) {
   const pathname = url.pathname;
 
   console.log(`[WORKER DEBUG] UA: ${userAgent.substring(0, 50)}, Path: ${pathname}`);
+
+  // =========================================================================
+  // ANTI-SCRAPING CHECKS (early exit)
+  // =========================================================================
+  // 1. Bloquer les scrapers connus
+  if (isBlockedScraper(userAgent)) {
+    console.log(`[WORKER BLOCKED] Scraper UA: ${userAgent.substring(0, 80)}`);
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  // 2. Rate limiting par IP (skip les assets statiques)
+  if (!pathname.match(/\.(js|css|png|jpg|jpeg|webp|svg|ico|woff|woff2|map|json)$/)) {
+    const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    if (!checkWorkerRateLimit(clientIp)) {
+      console.log(`[WORKER RATE-LIMITED] IP: ${clientIp}, Path: ${pathname}`);
+      return new Response('Too Many Requests', {
+        status: 429,
+        headers: { 'Retry-After': '60', 'Content-Type': 'text/plain' },
+      });
+    }
+  }
 
   // =========================================================================
   // Firebase Auth handler proxy (custom authDomain for iOS Safari ITP fix)

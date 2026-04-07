@@ -240,6 +240,24 @@ export const partnerAdminConfig = {
 };
 
 // ============================================================================
+// APP CHECK CONFIGURATION
+// ============================================================================
+
+/**
+ * Merge config with App Check enforcement.
+ * Phase 1 (current): consumeAppCheckToken — logs invalid tokens but allows requests
+ * Phase 2 (later):   enforceAppCheck: true — blocks requests without valid token
+ *
+ * To activate Phase 2, change consumeAppCheckToken to enforceAppCheck: true
+ * and remove consumeAppCheckToken.
+ */
+export function withAppCheck<T extends object>(
+  config: T
+): T & { consumeAppCheckToken: boolean } {
+  return { ...config, consumeAppCheckToken: true };
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 

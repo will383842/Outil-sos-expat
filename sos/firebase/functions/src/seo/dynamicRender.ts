@@ -13,6 +13,7 @@ import * as logger from 'firebase-functions/logger';
 import * as admin from 'firebase-admin';
 import type { Request, Response } from 'express';
 import { CACHE_INVALIDATION_KEY } from '../lib/secrets';
+import { withAntiScraping } from '../lib/antiScraping';
 
 // Secret for cache invalidation authentication
 // Imported from lib/secrets.ts
@@ -442,7 +443,7 @@ export const renderForBotsV2 = onRequest(
     minInstances: 1,  // Avoid 8-12s Puppeteer cold start for bots
     maxInstances: 10,
   },
-  async (req: Request, res: Response) => {
+  withAntiScraping(async (req: Request, res: Response) => {
     // Helper to get first value from header (can be string or string[])
     const getHeader = (name: string): string => {
       const val = req.headers[name];
@@ -602,7 +603,7 @@ export const renderForBotsV2 = onRequest(
       // Bots will see the JS-rendered version which is better than nothing
       res.redirect(302, fullUrl);
     }
-  });
+  }, 'SSR_RENDER'));
 
 /**
  * Invalidate cache for specific paths or patterns (L1 + L2).

@@ -27,6 +27,10 @@ import {
   // ⚠️ ne pas importer 'Functions' ici (pas exporté selon les versions)
   // type HttpsCallable est exporté sur la plupart des versions, mais on n'en a pas besoin
 } from "firebase/functions";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from "firebase/app-check";
 
 /** ----------------------------------------
  *  Configuration Firebase (variables .env)
@@ -76,6 +80,34 @@ if (!firebaseConfig.storageBucket) {
  *  Initialisation app (HMR-safe) + services Firebase
  * ---------------------------------------------------- */
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// =========================================================================
+// App Check — Anti-scraping protection
+// Valide que les requêtes Firestore/Functions viennent de l'app légitime.
+// Requiert: VITE_RECAPTCHA_ENTERPRISE_SITE_KEY dans .env.production
+// Setup: Firebase Console → App Check → Register app with reCAPTCHA Enterprise
+// =========================================================================
+const RECAPTCHA_SITE_KEY = (import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY ?? "").toString();
+
+if (typeof window !== 'undefined') {
+  if (RECAPTCHA_SITE_KEY) {
+    try {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
+      console.log("🛡️ [Firebase] App Check initialisé (reCAPTCHA Enterprise)");
+    } catch (e) {
+      console.warn("⚠️ [Firebase] App Check init failed:", e);
+    }
+  } else if (import.meta.env.DEV) {
+    // En dev, App Check debug token (auto-approuvé par Firebase emulator)
+    // Pour activer: self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; dans la console browser
+    console.log("🔧 [Firebase] App Check non configuré (dev mode, pas de VITE_RECAPTCHA_ENTERPRISE_SITE_KEY)");
+  } else {
+    console.warn("⚠️ [Firebase] VITE_RECAPTCHA_ENTERPRISE_SITE_KEY manquant — App Check désactivé en production");
+  }
+}
 
 // Auth / Storage / Firestore
 export const auth: Auth = getAuth(app);
