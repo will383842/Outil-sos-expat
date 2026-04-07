@@ -2839,6 +2839,7 @@ export {
   affiliateOnSubscriptionRenewed,
   // Public callables
   trackAffiliateClick,
+  captureSignupIP,
   // User callables
   getMyAffiliateData,
   updateBankDetails,

@@ -45,7 +45,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
-import { auth, db, storage, functions } from '../config/firebase';
+import { auth, db, storage, functions, functionsAffiliate } from '../config/firebase';
 import type { User, SupportedLanguage } from './types';
 import type { AuthContextType } from './AuthContextBase';
 import { AuthContext as BaseAuthContext } from './AuthContextBase';
@@ -2283,6 +2283,16 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         timestamp: new Date().toISOString()
       });
 
+      // Capture signup IP for server-side fallback attribution (non-blocking)
+      let signupIP: string | null = null;
+      try {
+        const captureIP = httpsCallable<Record<string, never>, { ip: string | null }>(functionsAffiliate, 'captureSignupIP');
+        const ipResult = await captureIP({});
+        signupIP = ipResult.data.ip;
+      } catch (ipErr) {
+        devLog("[DEBUG] " + "⚠️ REGISTER: IP capture failed (non-critical)", ipErr);
+      }
+
       try {
         await createUserDocumentInFirestore(cred.user, {
           ...userData,
@@ -2293,6 +2303,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           avatar: finalProfilePhotoURL,
           provider: 'password',
           ...approvalData,
+          ...(signupIP && { signupIP }),
         });
         devLog("[DEBUG] " + "✅ REGISTER: User document created successfully");
       } catch (docErr) {

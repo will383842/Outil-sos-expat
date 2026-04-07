@@ -168,6 +168,7 @@ export interface User {
   isGroupAdmin?: boolean;
   groupAdminStatus?: 'active' | 'suspended' | 'blocked';
   registrationIP?: string;
+  signupIP?: string;
   userAgent?: string;
   deviceInfo?: {
     type?: string;

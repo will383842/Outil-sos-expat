@@ -18,6 +18,7 @@ export { affiliateOnSubscriptionRenewed } from "./triggers/onSubscriptionRenewed
 // ============================================================================
 
 export { trackAffiliateClick } from "./callables/trackAffiliateClick";
+export { captureSignupIP } from "./callables/captureSignupIP";
 
 // ============================================================================
 // USER CALLABLES
