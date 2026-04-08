@@ -26,7 +26,7 @@ Object.assign(_CR, {
 });
 // Countries missing from country-slug-translations.ts but found in GSC — add inline
 _CS['BA'] = ['bosnie-herzegovine','bosnia-and-herzegovina','bosnia-y-herzegovina','bosnien-herzegowina','bosnia-herzegovina','bosniya','bosniya','al-busna','bosnia'];
-_CR['ba'] = 'BA'; _CR['bosnie-herzegovine'] = 'BA'; _CR['bosnia-and-herzegovina'] = 'BA'; _CR['bosnia-y-herzegovina'] = 'BA'; _CR['bosnien-herzegowina'] = 'BA'; _CR['bosnia-herzegovina'] = 'BA'; _CR['bosniya'] = 'BA'; _CR['al-busna'] = 'BA'; _CR['bosnia'] = 'BA';
+for (const s of _CS['BA']) _CR[s] = 'BA'; _CR['ba'] = 'BA'; _CR['bosnia-and-herzegovina'] = 'BA';
 const _LI = { fr:0, en:1, es:2, de:3, pt:4, ru:5, zh:6, ar:7, hi:8 };
 
 // =========================================================================
