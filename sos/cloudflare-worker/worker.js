@@ -1358,6 +1358,8 @@ async function handleRequest(request, env, ctx) {
     'living-abroad': { fr:'vie-a-letranger', en:'living-abroad', es:'vivir-en-el-extranjero', de:'leben-im-ausland', ru:'zhizn-za-rubezhom', pt:'viver-no-estrangeiro', zh:'haiwai-shenghuo', hi:'videsh-mein-jeevan', ar:'alhayat-fi-alkhaarij' },
     'search':        { fr:'recherche', en:'search', es:'buscar', de:'suche', ru:'poisk', pt:'pesquisa', zh:'sousuo', hi:'khoj', ar:'bahth' },
     'news':          { fr:'actualites-expats', en:'expat-news', es:'noticias-expatriados', de:'expat-nachrichten', ru:'novosti-expatov', pt:'noticias-expatriados', zh:'expat-xinwen', hi:'expat-samachar', ar:'akhbar-mughtaribeen' },
+    'countries':     { fr:'pays', en:'countries', es:'paises', de:'laender', ru:'strany', pt:'paises', zh:'guojia', hi:'desh', ar:'alduwl' },
+    'categories':    { fr:'categories', en:'categories', es:'categorias', de:'kategorien', ru:'kategorii', pt:'categorias', zh:'fenlei', hi:'varg', ar:'alfiat' },
   };
 
   // Build reverse map: slug → { langs: [...], route, translations }
@@ -1408,6 +1410,8 @@ async function handleRequest(request, env, ctx) {
     'avocats','lawyers','abogados','anwaelte','advokaty','advogados',
     // Expat forms
     'expatries','expats','expatriados','expaty','haiwai','videshi','mughtaribun',
+    // Blog country page paths (/{locale}/pays/{country}, /{locale}/countries/{country}, etc.)
+    'pays','countries','paises','laender','strany','guojia','desh','alduwl',
   ]);
   const countryNormMatch = pathname.match(/^\/([a-z]{2})-([a-z]{2})\/([^\/]+)\/([^\/]+)\/?$/);
   if (countryNormMatch) {
@@ -1432,6 +1436,41 @@ async function handleRequest(request, env, ctx) {
           }
         }
       }
+    }
+  }
+
+  // ==========================================================================
+  // DEEP CROSS-LOCALE SUB-PATH NORMALIZATION (4-segment blog paths)
+  // Handles: /{locale}/{section}/{wrong-lang-subsection}/{wrong-lang-country}
+  // e.g., /fr-fr/vie-a-letranger/guojia/meiguo → /fr-fr/vie-a-letranger/pays/etats-unis
+  // ==========================================================================
+  const COUNTRY_SECTION_TRANSLATIONS = {
+    fr:'pays', en:'countries', es:'paises', de:'laender', ru:'strany', pt:'paises', zh:'guojia', hi:'desh', ar:'alduwl',
+  };
+  const deepMatch = pathname.match(/^\/([a-z]{2})-([a-z]{2})\/([^\/]+)\/([^\/]+)\/([^\/]+)\/?$/);
+  if (deepMatch) {
+    const dmLang = deepMatch[1], dmCountry = deepMatch[2];
+    const dmSec = deepMatch[3], dmSubSec = deepMatch[4], dmSlug = deepMatch[5].toLowerCase();
+    const dmELang = dmLang === 'zh' ? 'zh' : dmLang;
+    // Check if sub-section is a country section slug from another language
+    const correctSubSec = COUNTRY_SECTION_TRANSLATIONS[dmELang];
+    let subSecNeedsTranslation = false;
+    if (correctSubSec && dmSubSec !== correctSubSec) {
+      // Check if dmSubSec belongs to another language's country section
+      for (const [, s] of Object.entries(COUNTRY_SECTION_TRANSLATIONS)) {
+        if (s === dmSubSec) { subSecNeedsTranslation = true; break; }
+      }
+    }
+    if (subSecNeedsTranslation) {
+      // Also translate the country slug
+      const iso = _CR[dmSlug];
+      const correctCountry = iso ? (_CS[iso]?.[_LI[dmELang]] || dmSlug) : dmSlug;
+      const redirectUrl = `${url.origin}/${dmLang}-${dmCountry}/${dmSec}/${correctSubSec}/${correctCountry}${url.search}`;
+      console.log(`[WORKER] Deep sub-path fix: ${pathname} -> /${dmLang}-${dmCountry}/${dmSec}/${correctSubSec}/${correctCountry}`);
+      return new Response(null, {
+        status: 301,
+        headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+      });
     }
   }
 
