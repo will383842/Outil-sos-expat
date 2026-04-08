@@ -1238,9 +1238,11 @@ async function handleRequest(request, env, ctx) {
     'nossos-pesquisas', 'nashi-oprosy', 'women-diaocha', 'hamare-sarvekshan', 'istiftaatuna',
   ]);
 
-  // Annuaire/Directory → SPA React (Blog DirectoryController redirects to SPA, causes loop)
-  // Keep on SPA — do NOT proxy to blog
-  const ANNUAIRE_SEGMENTS = new Set([]);
+  // Annuaire/Directory (all 9 languages) — Blog SSR (redirect removed from DirectoryController)
+  const ANNUAIRE_SEGMENTS = new Set([
+    'annuaire', 'expat-directory', 'directorio-expat', 'expat-verzeichnis',
+    'diretorio-expat', 'spravochnik-expat', 'zhinan-expat', 'nirdeshika-expat', 'dalil-expat',
+  ]);
 
   // Search (all 9 languages) → Blog SSR
   const SEARCH_SEGMENTS = new Set([
