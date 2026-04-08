@@ -1025,6 +1025,20 @@ async function handleRequest(request, env, ctx) {
   }
 
   // =========================================================================
+  // BLOCK AAA TEST PROFILES from search engines
+  // AAA profiles (uid starts with aaa_) are test/demo accounts that must not be indexed.
+  // Returns noindex for bots, passes through for regular users (needed for QA testing).
+  // =========================================================================
+  if (/\/aaa_/i.test(pathname)) {
+    if (isBot(userAgent)) {
+      return new Response('<html><head><meta name="robots" content="noindex,nofollow"></head><body>Not available</body></html>', {
+        status: 404,
+        headers: { 'Content-Type': 'text/html', 'X-Robots-Tag': 'noindex, nofollow', 'X-Worker-Active': 'true' },
+      });
+    }
+  }
+
+  // =========================================================================
   // Firebase Auth handler proxy (custom authDomain for iOS Safari ITP fix)
   // Proxies /__/auth/* requests to Firebase so OAuth stays on the same domain.
   // =========================================================================
