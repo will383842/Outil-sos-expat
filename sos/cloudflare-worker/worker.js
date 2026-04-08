@@ -1701,7 +1701,7 @@ async function handleRequest(request, env, ctx) {
     const SLUG_TO_LANG = {
       // Help Center slugs
       'centre-aide': 'fr', 'help-center': 'en', 'centro-ayuda': 'es',
-      'hilfezentrum': 'de', 'tsentr-pomoshchi': 'ru', 'centr-pomoshi': 'ru',
+      'hilfezentrum': 'de', 'hilfe-center': 'de', 'tsentr-pomoshchi': 'ru', 'centr-pomoshi': 'ru',
       'centro-ajuda': 'pt', 'bangzhu-zhongxin': 'zh', 'sahayata-kendra': 'hi',
       '\u0645\u0631\u0643\u0632-\u0627\u0644\u0645\u0633\u0627\u0639\u062F\u0629': 'ar', // مركز-المساعدة
       'markaz-almusaeada': 'ar', // romanized Arabic help center
@@ -1904,6 +1904,10 @@ async function handleRequest(request, env, ctx) {
           '\u0643\u0646-\u0642\u0627\u0626\u062F\u0627': 'kun-qaidan',               // كن-قائدا → become-captain
           '\u0645\u0643\u0627\u0644\u0645\u0629-\u0637\u0648\u0627\u0631\u0626': 'mukalama-tawariy', // مكالمة-طوارئ → emergency-call
           '\u0643\u0646-\u0645\u0633\u0624\u0648\u0644-\u0645\u062C\u0645\u0648\u0639\u0629': 'kun-masul-majmuaa', // كن-مسؤول-مجموعة → become-group-admin
+          '\u0645\u062F\u0648\u0646\u0627\u062A\u0646\u0627': 'mudawwanatuna',           // مدوناتنا → our-bloggers
+          '\u062A\u0633\u062C\u064A\u0644': 'al-tasjil',                                 // تسجيل (without ال) → register
+          '\u0645\u063A\u062A\u0631\u0628': 'mugtarib',                                   // مغترب → expat (register sub-path)
+          '\u0645\u0624\u062B\u0631\u0648\u0646\u0627': 'muathiruna',                    // مؤثرونا → our-influencers
         };
         const decodedFirstSlug = (() => { try { return decodeURIComponent(firstSlug); } catch (_e) { return firstSlug; } })();
         if (ARABIC_UNICODE_TO_ASCII[decodedFirstSlug]) {
