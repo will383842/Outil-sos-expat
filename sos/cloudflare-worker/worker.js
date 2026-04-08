@@ -1531,12 +1531,36 @@ async function handleRequest(request, env, ctx) {
       }
 
       const blogUrl = new URL(pathname + url.search, BLOG_ORIGIN);
-      const blogResponse = await fetch(blogUrl.toString(), {
-        method: request.method,
-        headers: request.headers,
-        body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
-        redirect: 'manual',
-      });
+
+      // Explicit timeout: abort after 15s to prevent 30s Cloudflare default timeout → 5xx
+      const blogAbort = new AbortController();
+      const blogTimer = setTimeout(() => blogAbort.abort(), 15000);
+
+      let blogResponse;
+      try {
+        blogResponse = await fetch(blogUrl.toString(), {
+          method: request.method,
+          headers: request.headers,
+          body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+          redirect: 'manual',
+          signal: blogAbort.signal,
+        });
+      } finally {
+        clearTimeout(blogTimer);
+      }
+
+      // If blog returns 5xx, fall back to SPA instead of propagating the error to Google
+      if (blogResponse.status >= 500) {
+        console.warn(`[WORKER] Blog returned ${blogResponse.status} for ${pathname}, falling back to SPA`);
+        const spaFallback = new URL(pathname, PAGES_ORIGIN);
+        spaFallback.search = url.search;
+        const spaResp = await fetch(spaFallback.toString(), { method: request.method, headers: request.headers });
+        const spaHeaders = new Headers(spaResp.headers);
+        spaHeaders.set('X-Worker-Active', 'true');
+        spaHeaders.set('X-Worker-Blog-Fallback', 'true');
+        spaHeaders.set('X-Blog-Original-Status', String(blogResponse.status));
+        return new Response(spaResp.body, { status: 200, statusText: 'OK', headers: spaHeaders });
+      }
 
       const blogHeaders = new Headers(blogResponse.headers);
       blogHeaders.set('X-Worker-Active', 'true');
@@ -1553,11 +1577,24 @@ async function handleRequest(request, env, ctx) {
         headers: blogHeaders,
       });
     } catch (error) {
-      console.error(`[WORKER] Blog proxy error: ${error.message}`);
-      return new Response('Blog temporarily unavailable', {
-        status: 503,
-        headers: { 'Content-Type': 'text/plain' },
-      });
+      // Blog timeout or network error → fall back to SPA (Cloudflare Pages)
+      // instead of returning 503 which Google penalizes
+      console.error(`[WORKER] Blog proxy error for ${pathname}: ${error.message}, falling back to SPA`);
+      try {
+        const spaFallback = new URL(pathname, PAGES_ORIGIN);
+        spaFallback.search = url.search;
+        const spaResp = await fetch(spaFallback.toString(), { method: request.method, headers: request.headers });
+        const spaHeaders = new Headers(spaResp.headers);
+        spaHeaders.set('X-Worker-Active', 'true');
+        spaHeaders.set('X-Worker-Blog-Fallback', 'error');
+        return new Response(spaResp.body, { status: 200, statusText: 'OK', headers: spaHeaders });
+      } catch (spaError) {
+        // Both blog AND SPA failed — only then return 503
+        return new Response('Service temporarily unavailable', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain', 'Retry-After': '30' },
+        });
+      }
     }
   }
 
