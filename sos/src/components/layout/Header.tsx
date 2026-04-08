@@ -1977,22 +1977,31 @@ const Header: React.FC = () => {
                         {CONTENT_MOBILE_ITEMS.map((item) => {
                           const label = item.labels[language] || item.labels.fr;
                           const linkClass = "flex items-center space-x-3 p-3 rounded-xl text-gray-300 hover:bg-white/10 transition-colors";
-                          // Blog SSR sections: must use <a href> so Cloudflare Worker routes correctly
-                          const BLOG_SSR_SLUGS: Record<string, Record<string, string>> = {
+                          // Blog SSR sections: must use <a href> so Cloudflare Worker routes to blog Laravel
+                          // Keys with custom blog slugs (different from SPA translated slugs)
+                          const BLOG_CUSTOM_SLUGS: Record<string, Record<string, string>> = {
                             faq: { fr: 'vie-a-letranger', en: 'living-abroad', es: 'vivir-en-el-extranjero', de: 'leben-im-ausland', ru: 'zhizn-za-rubezhom', pt: 'viver-no-estrangeiro', zh: 'haiwai-shenghuo', hi: 'videsh-mein-jeevan', ar: 'alhayat-fi-alkhaarij' },
                             news: { fr: 'actualites-expats', en: 'expat-news', es: 'noticias-expatriados', de: 'expat-nachrichten', ru: 'novosti-expatov', pt: 'noticias-expatriados', zh: 'expat-xinwen', hi: 'expat-samachar', ar: 'akhbar-mughtaribeen' },
                           };
-                          if (BLOG_SSR_SLUGS[item.key]) {
-                            const ssrSlug = BLOG_SSR_SLUGS[item.key][urlLang] || BLOG_SSR_SLUGS[item.key].fr;
+                          // All keys that are served by blog Laravel (full page reload needed)
+                          const BLOG_SSR_KEYS = new Set(['articles', 'outils', 'sondages-listing', 'fiches-pays', 'fiches-thematiques', 'galerie', 'news', 'faq']);
+                          if (BLOG_SSR_KEYS.has(item.key)) {
+                            let ssrSlug: string;
+                            if (BLOG_CUSTOM_SLUGS[item.key]) {
+                              ssrSlug = BLOG_CUSTOM_SLUGS[item.key][urlLang] || BLOG_CUSTOM_SLUGS[item.key].fr;
+                            } else {
+                              ssrSlug = getTranslatedRouteSlug(item.key as Parameters<typeof getTranslatedRouteSlug>[0], language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
+                            }
                             return (
                               <li key={item.key}>
-                                <a href={`/${localeSlug}/${ssrSlug}/`} className={linkClass} onClick={() => setIsMenuOpen(false)}>
+                                <a href={`/${localeSlug}/${ssrSlug}`} className={linkClass} onClick={() => setIsMenuOpen(false)}>
                                   <span className="text-lg" aria-hidden="true">{item.icon}</span>
                                   <span className="font-medium text-sm">{label}</span>
                                 </a>
                               </li>
                             );
                           }
+                          // SPA routes (annuaire) use React Router Link
                           const slug = getTranslatedRouteSlug(item.key as Parameters<typeof getTranslatedRouteSlug>[0], language as "fr" | "en" | "es" | "de" | "ru" | "pt" | "ch" | "hi" | "ar");
                           const href = `/${localeSlug}/${slug}`;
                           return (

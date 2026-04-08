@@ -325,6 +325,21 @@ function useDynamicMessages(locale: Locale): Record<string, string> {
 }
 
 // --------------------------------------------
+// BlogRedirect — Hard redirect for pages now served by blog Laravel
+// The Cloudflare Worker intercepts these paths and proxies to the blog.
+// We do window.location.href to force a full page reload (exits SPA).
+// --------------------------------------------
+const BlogRedirect: React.FC = () => {
+  useEffect(() => {
+    // Current URL is already correct (e.g. /fr-fr/articles) —
+    // just force a full-page reload so the Cloudflare Worker serves the blog.
+    // Using replace() to avoid adding a duplicate entry in browser history.
+    window.location.replace(window.location.pathname + window.location.search);
+  }, []);
+  return <LoadingSpinner />;
+};
+
+// --------------------------------------------
 // Routes config
 // --------------------------------------------
 
@@ -392,18 +407,36 @@ const routeConfigs: RouteConfig[] = [
   // Annuaire expatriés — ressources officielles par pays (CountryDirectory depuis Mission Control)
   { path: "/annuaire", component: Annuaire, translated: "annuaire" },
 
-  // Public content pages (Redesign 2026) — slugs à la racine pour éviter interception blog Laravel /categories/*
-  { path: "/articles", component: Articles, translated: "articles" },
-  { path: "/fiches-pays", component: FichesPays, translated: "fiches-pays" },
-  { path: "/fiches-thematiques", component: FichesThematiques, translated: "fiches-thematiques" },
+  // ─── Blog content pages — COMMENTED OUT 2026-04-08 ───────────────────────────
+  // These pages are now served by the blog Laravel via Cloudflare Worker.
+  // The SPA routes are replaced by BlogRedirect components that do a hard
+  // window.location.href redirect so the Worker intercepts and proxies to blog.
+  // Original components are kept for reference (lazy imports above still exist).
+  //
+  // { path: "/articles", component: Articles, translated: "articles" },
+  // { path: "/fiches-pays", component: FichesPays, translated: "fiches-pays" },
+  // { path: "/fiches-thematiques", component: FichesThematiques, translated: "fiches-thematiques" },
+  // { path: "/nos-sondages", component: SondagesListing, translated: "sondages-listing" },
+  // { path: "/sondages", component: SondagesPage, translated: "sondages" },
+  // { path: "/resultats-sondages", component: SondagesResultats, translated: "resultats-sondages" },
+  // { path: "/nos-outils", component: OutilsListing, translated: "outils-listing" },
+  // { path: "/outils", component: OutilsPage, translated: "outils" },
+  // { path: "/galerie", component: GaleriePage, translated: "galerie" },
+  //
+  // Hard redirects to blog Laravel (Cloudflare Worker intercepts these paths):
+  { path: "/articles", component: BlogRedirect, translated: "articles" },
+  { path: "/fiches-pays", component: BlogRedirect, translated: "fiches-pays" },
+  { path: "/fiches-thematiques", component: BlogRedirect, translated: "fiches-thematiques" },
+  { path: "/nos-sondages", component: BlogRedirect, translated: "sondages-listing" },
+  { path: "/sondages", component: BlogRedirect, translated: "sondages" },
+  { path: "/resultats-sondages", component: BlogRedirect, translated: "resultats-sondages" },
+  { path: "/nos-outils", component: BlogRedirect, translated: "outils-listing" },
+  { path: "/outils", component: BlogRedirect, translated: "outils" },
+  { path: "/galerie", component: BlogRedirect, translated: "galerie" },
+
+  // These SPA routes are KEPT (not blog content):
   { path: "/programme-chatter", component: ProgrammeChatter, translated: "programme-chatter" },
   { path: "/programme-affiliation", component: AffiliationPage, translated: "programme-affiliation" },
-  { path: "/nos-sondages", component: SondagesListing, translated: "sondages-listing" },
-  { path: "/sondages", component: SondagesPage, translated: "sondages" },
-  { path: "/resultats-sondages", component: SondagesResultats, translated: "resultats-sondages" },
-  { path: "/nos-outils", component: OutilsListing, translated: "outils-listing" },
-  { path: "/outils", component: OutilsPage, translated: "outils" },
-  { path: "/galerie", component: GaleriePage, translated: "galerie" },
 
   // Fournisseurs publics (utilise SOSCall sans wizard)
   { path: "/providers", component: SOSCall, alias: "/nos-experts", translated: "providers" },

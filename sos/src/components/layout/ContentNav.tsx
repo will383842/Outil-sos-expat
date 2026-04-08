@@ -15,11 +15,19 @@ type RouteKey = 'annuaire' | 'articles' | 'news' | 'outils' | 'sondages-listing'
 
 // ─── Nav items definition ─────────────────────────────────────────────────────
 
+/** Keys of sections served by blog Laravel (Cloudflare Worker).
+ *  These MUST use <a href> (full page reload) so the Worker proxies to blog. */
+const BLOG_SSR_KEYS = new Set<RouteKey>([
+  'articles', 'outils', 'sondages-listing', 'fiches-pays', 'fiches-thematiques', 'galerie',
+  'news', 'faq',
+]);
+
 interface NavItem {
   key: RouteKey;
   icon: React.ElementType;
   labels: Record<Language, string>;
-  /** When set, clicking links to the blog SSR (full page nav) instead of the SPA */
+  /** When set, clicking links to the blog SSR (full page nav) instead of the SPA.
+   *  Used when the blog slug differs from the SPA translated slug (e.g. news, faq). */
   blogQrSlugs?: Record<Language, string>;
 }
 
@@ -340,8 +348,9 @@ const ContentNav: React.FC = () => {
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200',
             ].join(' ');
 
-            // Blog Q/R items need a full page navigation (blog is SSR, not SPA)
-            if (item.blogQrSlugs) {
+            // Blog SSR items need a full page navigation so Cloudflare Worker
+            // proxies to the blog Laravel (not the SPA).
+            if (BLOG_SSR_KEYS.has(item.key)) {
               return (
                 <a
                   key={item.key}
@@ -354,6 +363,7 @@ const ContentNav: React.FC = () => {
               );
             }
 
+            // SPA routes (annuaire, etc.) use NavLink for client-side navigation
             return (
               <NavLink
                 key={item.key}

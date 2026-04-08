@@ -707,16 +707,20 @@ const Footer: React.FC = () => {
     [intl, resolvedLang]
   );
 
-  // Blog surveys URL per language
+  // Blog URLs per language — served by blog Laravel via Cloudflare Worker on same domain.
+  // Use absolute URLs so FooterLink renders <a href> (full page reload) instead of LocaleLink (SPA nav).
   const surveysSegment = BLOG_SURVEYS_SEGMENTS[resolvedLang] ?? BLOG_SURVEYS_SEGMENTS.fr;
-  const surveysBlogUrl = `https://sos-expat.com/blog/${surveysSegment.locale}/${surveysSegment.slug}`;
-  const toolsUrl = `https://sos-expat.com/${surveysSegment.locale}/outils`;
+  const surveysBlogUrl = `https://sos-expat.com/${surveysSegment.locale}/${surveysSegment.slug}`;
+  const toolsSlug = getTranslatedRouteSlug('outils' as any, resolvedLang as any) || 'outils';
+  const toolsUrl = `https://sos-expat.com/${surveysSegment.locale}/${toolsSlug}`;
   const galerieSlug = getTranslatedRouteSlug('galerie' as any, resolvedLang as any) || 'galerie';
-  const galerieUrl = `/${surveysSegment.locale}/${galerieSlug}`;
+  const galerieUrl = `https://sos-expat.com/${surveysSegment.locale}/${galerieSlug}`;
   const livingAbroadSegment = BLOG_LIVING_ABROAD_SEGMENTS[resolvedLang] ?? BLOG_LIVING_ABROAD_SEGMENTS.fr;
   const livingAbroadUrl = `https://sos-expat.com/${livingAbroadSegment.locale}/${livingAbroadSegment.slug}`;
   const newsSegment = BLOG_NEWS_SEGMENTS[resolvedLang] ?? BLOG_NEWS_SEGMENTS.fr;
   const newsUrl = `https://sos-expat.com/${newsSegment.locale}/${newsSegment.slug}`;
+  const resultsSondagesSlug = getTranslatedRouteSlug('resultats-sondages' as any, resolvedLang as any) || 'resultats-sondages';
+  const resultsSondagesUrl = `https://sos-expat.com/${surveysSegment.locale}/${resultsSondagesSlug}`;
 
   // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
@@ -746,7 +750,7 @@ const Footer: React.FC = () => {
           },
           {
             label: intl.formatMessage({ id: "footer.services.surveysResults", defaultMessage: "Résultats des Sondages" }),
-            href: `/${getTranslatedRouteSlug("resultats-sondages", resolvedLang)}`,
+            href: resultsSondagesUrl,
           },
           {
             label: intl.formatMessage({ id: "footer.services.tools", defaultMessage: "Nos Outils" }),
@@ -801,7 +805,7 @@ const Footer: React.FC = () => {
         ],
       },
     }),
-    [intl, resolvedLang, surveysBlogUrl, livingAbroadUrl]
+    [intl, resolvedLang, surveysBlogUrl, toolsUrl, galerieUrl, livingAbroadUrl, newsUrl, resultsSondagesUrl]
   );
 
   // Contact info - avec routes traduites

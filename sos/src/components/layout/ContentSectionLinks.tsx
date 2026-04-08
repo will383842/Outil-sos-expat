@@ -36,6 +36,12 @@ type SectionKey =
   | 'fiches-thematiques'
   | 'faq';
 
+/** Sections served by blog Laravel (Cloudflare Worker).
+ *  Must use <a href> (full page reload) instead of React Router <Link>. */
+const BLOG_SSR_SECTIONS = new Set<SectionKey>([
+  'articles', 'outils', 'sondages-listing', 'fiches-pays', 'fiches-thematiques', 'faq',
+]);
+
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 
 const SECTION_LABELS: Record<SectionKey, Record<Language, string>> = {
@@ -268,25 +274,35 @@ const ContentSectionLinks: React.FC<ContentSectionLinksProps> = ({
             const desc = SECTION_DESCRIPTIONS[key][language] || SECTION_DESCRIPTIONS[key].fr;
             const cardClass = "group flex items-start gap-3 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-red-100 transition-all duration-200";
 
-            // Q/R (faq) links to blog SSR — must use <a href> for full-page nav
-            // so the Cloudflare Worker routes it to the blog instead of the SPA
-            if (key === 'faq') {
-              const qrSlug = BLOG_QR_SLUGS[language] || BLOG_QR_SLUGS.fr;
-              const href = `/${locale}/${qrSlug}/`;
+            const cardContent = (
+              <>
+                <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-red-50 group-hover:bg-red-100 transition-colors">
+                  <Icon className="h-5 w-5 text-red-500" strokeWidth={1.8} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">{label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">{desc}</p>
+                </div>
+                <ArrowRight className="flex-shrink-0 h-4 w-4 text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-3" />
+              </>
+            );
+
+            // Blog SSR sections — must use <a href> for full-page nav
+            // so the Cloudflare Worker routes to blog Laravel instead of the SPA
+            if (BLOG_SSR_SECTIONS.has(key)) {
+              // FAQ uses special blog slugs (vie-a-letranger etc.)
+              const slug = key === 'faq'
+                ? (BLOG_QR_SLUGS[language] || BLOG_QR_SLUGS.fr)
+                : (getTranslatedRouteSlug(key as any, language as any) || key);
+              const href = `/${locale}/${slug}`;
               return (
                 <a key={key} href={href} className={cardClass}>
-                  <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-red-50 group-hover:bg-red-100 transition-colors">
-                    <Icon className="h-5 w-5 text-red-500" strokeWidth={1.8} />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">{label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">{desc}</p>
-                  </div>
-                  <ArrowRight className="flex-shrink-0 h-4 w-4 text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-3" />
+                  {cardContent}
                 </a>
               );
             }
 
+            // SPA sections (annuaire) — use React Router <Link>
             const slug = getTranslatedRouteSlug(key as any, language as any) || key;
             const href = `/${locale}/${slug}`;
 
@@ -296,18 +312,7 @@ const ContentSectionLinks: React.FC<ContentSectionLinksProps> = ({
                 to={href}
                 className={cardClass}
               >
-                <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-red-50 group-hover:bg-red-100 transition-colors">
-                  <Icon className="h-5 w-5 text-red-500" strokeWidth={1.8} />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
-                    {label}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">
-                    {desc}
-                  </p>
-                </div>
-                <ArrowRight className="flex-shrink-0 h-4 w-4 text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5 transition-all mt-3" />
+                {cardContent}
               </Link>
             );
           })}

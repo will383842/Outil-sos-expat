@@ -1186,17 +1186,39 @@ async function handleRequest(request, env, ctx) {
     'feed.xml',
   ]);
 
-  // Article segments (all 9 languages) -- listing page (/en-us/articles) is SPA, detail pages (/en-us/articles/slug) go to Blog
+  // Article segments (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
   const ARTICLES_SEGMENTS = new Set([
     'articles', 'articulos', 'artikel', 'artigos', 'stati', 'wenzhang', 'lekh', 'maqalat',
   ]);
 
-  // Tools, Gallery, Sondages → SPA React (NOT blog SSR)
-  const OUTILS_SEGMENTS = new Set([]); // SPA handles /outils
-  const GALERIE_SEGMENTS = new Set([]); // SPA handles /galerie (React component)
-  const SONDAGES_SEGMENTS = new Set([]); // SPA handles /sondages-listing
+  // Tools (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
+  const OUTILS_SEGMENTS = new Set([
+    'outils', 'tools', 'herramientas', 'werkzeuge', 'ferramentas', 'instrumenty', 'gongju', 'upkaran', 'adawat',
+  ]);
 
-  // NOTE: annuaire/directory = SPA React page (Blog DirectoryController redirects to SPA)
+  // Gallery (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
+  const GALERIE_SEGMENTS = new Set([
+    'galerie', 'gallery', 'galeria', 'galereya', 'chitralaya', 'chitravali', 'maarad',
+  ]);
+
+  // Sondages (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
+  const SONDAGES_SEGMENTS = new Set([
+    'sondages-expatries', 'expat-surveys', 'encuestas-expatriados', 'expat-umfragen',
+    'pesquisas-expatriados', 'oprosy-expatov', 'expat-diaocha', 'expat-sarvekshan', 'istiftaat-mughtaribeen',
+    'sondages-vacanciers', 'vacationer-surveys', 'encuestas-vacacionistas', 'urlauber-umfragen',
+    'pesquisas-turistas', 'oprosy-otdykhayushchikh', 'dujia-diaocha', 'chhutti-sarvekshan', 'istiftaat-saaihin',
+    'nos-sondages', 'our-surveys', 'nuestras-encuestas', 'unsere-umfragen',
+    'nossos-pesquisas', 'nashi-oprosy', 'women-diaocha', 'hamare-sarvekshan', 'istiftaatuna',
+  ]);
+
+  // Annuaire/Directory → SPA React (Blog DirectoryController redirects to SPA, causes loop)
+  // Keep on SPA — do NOT proxy to blog
+  const ANNUAIRE_SEGMENTS = new Set([]);
+
+  // Search (all 9 languages) → Blog SSR
+  const SEARCH_SEGMENTS = new Set([
+    'recherche', 'search', 'buscar', 'suche', 'pesquisa', 'poisk', 'sousuo', 'khoj', 'bahth',
+  ]);
 
   // News segments (all 9 languages) -- listing + detail → Blog SSR
   // Source: Blog config/route-segments.php 'news'
@@ -1258,8 +1280,8 @@ async function handleRequest(request, env, ctx) {
       // /{locale} alone = app homepage (not blog)
       if (!segment) return false;
 
-      // Articles: listing (/en-us/articles) = SPA, detail (/en-us/articles/slug) = Blog
-      if (ARTICLES_SEGMENTS.has(segment)) return !!slug;
+      // Articles: listing + detail → Blog SSR (redesign 2026-04)
+      if (ARTICLES_SEGMENTS.has(segment)) return true;
 
       // Sondages: listing + detail → Blog SSR
       if (SONDAGES_SEGMENTS.has(segment)) return true;
@@ -1269,6 +1291,12 @@ async function handleRequest(request, env, ctx) {
 
       // Gallery: listing + detail → Blog SSR
       if (GALERIE_SEGMENTS.has(segment)) return true;
+
+      // Annuaire/Directory: listing + detail → Blog SSR
+      if (ANNUAIRE_SEGMENTS.has(segment)) return true;
+
+      // Search → Blog SSR
+      if (SEARCH_SEGMENTS.has(segment)) return true;
 
       // News: listing + detail → Blog SSR
       if (NEWS_SEGMENTS.has(segment)) return true;
@@ -1537,6 +1565,8 @@ async function handleRequest(request, env, ctx) {
       'advogado': 'pt', 'advokat': 'ru', 'lushi': 'zh', 'vakil': 'hi',
       // Arabic lawyer (محام) — handled via Unicode below
       '\u0645\u062D\u0627\u0645': 'ar',
+      // Arabic romanized lawyer variants (for profile URLs like /muhami-gf/name)
+      'muhami': 'ar',
       // Expat/helper role translations
       'expatrie': 'fr', 'expat': null, // 'expat' used by multiple langs, skip
       'expatriado': null, // used by both es and pt, skip
@@ -1777,6 +1807,11 @@ async function handleRequest(request, env, ctx) {
       'blogger-dir':        { fr:'nos-blogueurs', en:'our-bloggers', es:'nuestros-bloggers', de:'unsere-blogger', ru:'nashi-blogery', pt:'nossos-bloggers', zh:'women-de-boke', hi:'hamare-blogger', ar:'mudawwanatuna' },
       'chatter-dir':        { fr:'nos-chatters', en:'our-chatters', es:'nuestros-chatters', de:'unsere-chatters', ru:'nashi-chattery', pt:'nossos-chatters', zh:'women-de-chatters', hi:'hamare-chatters', ar:'muhadithuna' },
       'press':              { fr:'presse', en:'press', es:'prensa', de:'presse', ru:'pressa', pt:'imprensa', zh:'xinwen', hi:'press', ar:'sahafa' },
+      // SEO FIX: Gallery, Tools, Surveys, Lawyer-listing translations (fixes cross-locale GSC duplicates)
+      'gallery':            { fr:'galerie', en:'gallery', es:'galeria', de:'bildergalerie', ru:'galereya', pt:'galeria', zh:'tuku', hi:'chitravali', ar:'maarad' },
+      'tools':              { fr:'outils', en:'tools', es:'herramientas', de:'werkzeuge', ru:'instrumenty', pt:'ferramentas', zh:'gongju', hi:'upkaran', ar:'adawat' },
+      'surveys':            { fr:'sondages', en:'surveys', es:'encuestas', de:'umfragen', ru:'oprosy', pt:'pesquisas', zh:'diaocha', hi:'sarvekshan', ar:'istiftaat' },
+      'lawyer-listing':     { fr:'avocat', en:'lawyer', es:'abogado', de:'anwalt', ru:'advokat', pt:'advogado', zh:'lushi', hi:'vakil', ar:'muhamin' },
     };
 
     // Build reverse map: slug → { langs: [languages that use this slug], route }
