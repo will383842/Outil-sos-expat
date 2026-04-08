@@ -1198,11 +1198,14 @@ async function handleRequest(request, env, ctx) {
 
   // Gallery (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
   const GALERIE_SEGMENTS = new Set([
-    'galerie', 'gallery', 'galeria', 'galereya', 'chitralaya', 'chitravali', 'maarad',
+    'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitralaya', 'chitravali', 'maarad',
   ]);
 
   // Sondages (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
   const SONDAGES_SEGMENTS = new Set([
+    // Plain survey forms (generic listing + detail: /surveys/slug)
+    'sondages', 'surveys', 'encuestas', 'umfragen', 'oprosy', 'pesquisas', 'diaocha', 'sarvekshan', 'istiftaat',
+    // Compound survey forms (expat/vacationer/listing)
     'sondages-expatries', 'expat-surveys', 'encuestas-expatriados', 'expat-umfragen',
     'pesquisas-expatriados', 'oprosy-expatov', 'expat-diaocha', 'expat-sarvekshan', 'istiftaat-mughtaribeen',
     'sondages-vacanciers', 'vacationer-surveys', 'encuestas-vacacionistas', 'urlauber-umfragen',
@@ -1271,6 +1274,9 @@ async function handleRequest(request, env, ctx) {
     // Gallery API (used by SPA React component)
     if (path.startsWith('/api/v1/public/gallery')) return true;
 
+    // Search autocomplete API (blog Laravel)
+    if (path.startsWith('/api/search/suggest')) return true;
+
     // Locale-prefixed paths: /{xx-yy}/{segment}[/{slug}[/{sub}]]
     const match = path.match(/^\/([a-z]{2}-[a-z]{2})(?:\/([^\/]+))?(?:\/([^\/]+))?(?:\/([^\/]+))?/);
     if (match) {
@@ -1311,6 +1317,57 @@ async function handleRequest(request, env, ctx) {
     }
 
     return false;
+  }
+
+  // ==========================================================================
+  // CROSS-LOCALE BLOG SLUG REDIRECT (must run BEFORE blog proxy)
+  // Detects when a blog content slug (gallery, tools, surveys, articles)
+  // uses a translation from a different language than the URL locale.
+  // e.g., /en-us/galereya/... (Russian gallery slug under English) → /en-us/gallery/...
+  // Without this, the blog proxy would serve the page as-is, creating duplicates.
+  // ==========================================================================
+  const BLOG_CROSS_LOCALE_SLUGS = {
+    'gallery':       { fr:'galerie', en:'gallery', es:'galeria', de:'bildergalerie', ru:'galereya', pt:'galeria', zh:'tuku', hi:'chitravali', ar:'maarad' },
+    'tools':         { fr:'outils', en:'tools', es:'herramientas', de:'werkzeuge', ru:'instrumenty', pt:'ferramentas', zh:'gongju', hi:'upkaran', ar:'adawat' },
+    'surveys':       { fr:'sondages', en:'surveys', es:'encuestas', de:'umfragen', ru:'oprosy', pt:'pesquisas', zh:'diaocha', hi:'sarvekshan', ar:'istiftaat' },
+    'articles':      { fr:'articles', en:'articles', es:'articulos', de:'artikel', ru:'stati', pt:'artigos', zh:'wenzhang', hi:'lekh', ar:'maqalat' },
+    'living-abroad': { fr:'vie-a-letranger', en:'living-abroad', es:'vivir-en-el-extranjero', de:'leben-im-ausland', ru:'zhizn-za-rubezhom', pt:'viver-no-estrangeiro', zh:'haiwai-shenghuo', hi:'videsh-mein-jeevan', ar:'alhayat-fi-alkhaarij' },
+    'search':        { fr:'recherche', en:'search', es:'buscar', de:'suche', ru:'poisk', pt:'pesquisa', zh:'sousuo', hi:'khoj', ar:'bahth' },
+    'news':          { fr:'actualites-expats', en:'expat-news', es:'noticias-expatriados', de:'expat-nachrichten', ru:'novosti-expatov', pt:'noticias-expatriados', zh:'expat-xinwen', hi:'expat-samachar', ar:'akhbar-mughtaribeen' },
+  };
+
+  // Build reverse map: slug → { langs: [...], route, translations }
+  const _blogSlugToRoute = {};
+  for (const [route, translations] of Object.entries(BLOG_CROSS_LOCALE_SLUGS)) {
+    for (const [lang, slug] of Object.entries(translations)) {
+      if (!_blogSlugToRoute[slug]) {
+        _blogSlugToRoute[slug] = { langs: [lang], route, translations };
+      } else if (!_blogSlugToRoute[slug].langs.includes(lang)) {
+        _blogSlugToRoute[slug].langs.push(lang);
+      }
+    }
+  }
+
+  const blogCrossLocaleMatch = pathname.match(/^\/([a-z]{2})-([a-z]{2})\/([^\/]+)(\/.*)?$/);
+  if (blogCrossLocaleMatch) {
+    const bclLang = blogCrossLocaleMatch[1].toLowerCase();
+    const bclCountry = blogCrossLocaleMatch[2].toLowerCase();
+    const bclSlug = blogCrossLocaleMatch[3];
+    const bclRest = blogCrossLocaleMatch[4] || '';
+    const effectiveBclLang = bclLang === 'zh' ? 'zh' : bclLang;
+
+    const blogMatch = _blogSlugToRoute[bclSlug];
+    if (blogMatch) {
+      const correctSlug = blogMatch.translations[effectiveBclLang] || blogMatch.translations['en'];
+      if (correctSlug && correctSlug !== bclSlug) {
+        const redirectUrl = `${url.origin}/${bclLang}-${bclCountry}/${correctSlug}${bclRest}${url.search}`;
+        console.log(`[WORKER] Blog cross-locale redirect: ${pathname} -> /${bclLang}-${bclCountry}/${correctSlug}${bclRest}`);
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=31536000' },
+        });
+      }
+    }
   }
 
   if (isBlogPath(pathname)) {
@@ -1811,7 +1868,7 @@ async function handleRequest(request, env, ctx) {
       'gallery':            { fr:'galerie', en:'gallery', es:'galeria', de:'bildergalerie', ru:'galereya', pt:'galeria', zh:'tuku', hi:'chitravali', ar:'maarad' },
       'tools':              { fr:'outils', en:'tools', es:'herramientas', de:'werkzeuge', ru:'instrumenty', pt:'ferramentas', zh:'gongju', hi:'upkaran', ar:'adawat' },
       'surveys':            { fr:'sondages', en:'surveys', es:'encuestas', de:'umfragen', ru:'oprosy', pt:'pesquisas', zh:'diaocha', hi:'sarvekshan', ar:'istiftaat' },
-      'lawyer-listing':     { fr:'avocat', en:'lawyer', es:'abogado', de:'anwalt', ru:'advokat', pt:'advogado', zh:'lushi', hi:'vakil', ar:'muhamin' },
+      'lawyer-listing':     { fr:'avocat', en:'lawyer', es:'abogado', de:'anwalt', ru:'advokat', pt:'advogado', zh:'lushi', hi:'vakil', ar:'muhamun' },
     };
 
     // Build reverse map: slug → { langs: [languages that use this slug], route }
@@ -1829,6 +1886,12 @@ async function handleRequest(request, env, ctx) {
       }
     }
 
+    // Manual additions: truncated/legacy slugs that also appear cross-language in GSC
+    // These are NOT in ROUTE_LANG_SLUGS but must be detectable for redirect
+    if (!_slugToRoute['verzeichnis']) _slugToRoute['verzeichnis'] = { langs: ['de'], route: 'annuaire' };
+    if (!_slugToRoute['directorio']) _slugToRoute['directorio'] = { langs: ['es'], route: 'annuaire' };
+    if (!_slugToRoute['muhamin']) _slugToRoute['muhamin'] = { langs: ['ar'], route: 'lawyer-listing' }; // legacy variant → canonical muhamun
+
     if (restPath) {
       let csFirstSlug;
       try { csFirstSlug = decodeURIComponent(restPath.split('/').filter(Boolean)[0] || ''); }
@@ -1837,10 +1900,11 @@ async function handleRequest(request, env, ctx) {
       if (csFirstSlug) {
         const match = _slugToRoute[csFirstSlug];
         const effectiveUrlLang = urlLang === 'zh' ? 'zh' : urlLang;
-        if (match && !match.langs.includes(effectiveUrlLang)) {
-          // Slug belongs to a different language — find the correct slug for this locale
+        if (match) {
           const routeSlugs = ROUTE_LANG_SLUGS[match.route];
           const correctSlug = routeSlugs[effectiveUrlLang] || routeSlugs['en'];
+          // Redirect if: (a) slug belongs to a different language, OR
+          // (b) same language but slug is a legacy/truncated variant of the canonical slug
           if (correctSlug && correctSlug.split('/')[0] !== csFirstSlug) {
             const segments = restPath.split('/').filter(Boolean);
             segments[0] = correctSlug.split('/')[0];
@@ -2067,6 +2131,8 @@ async function handleRequest(request, env, ctx) {
         if (fallbackLocaleMatch) {
           spaHeaders.set('Content-Language', fallbackLocaleMatch[1]);
         }
+        // SEO FIX: Add canonical Link header (prevents GSC "duplicate without canonical" warnings)
+        spaHeaders.set('Link', `<https://sos-expat.com${pathname}>; rel="canonical"`);
         return new Response(spaResponse.body, {
           status: spaResponse.ok || spaResponse.status === 404 ? 200 : spaResponse.status,
           statusText: 'OK',
@@ -2086,6 +2152,9 @@ async function handleRequest(request, env, ctx) {
       if (ssrLocaleMatch) {
         newHeaders.set('Content-Language', ssrLocaleMatch[1]);
       }
+
+      // SEO FIX: Add canonical Link header (prevents GSC "duplicate without canonical" warnings)
+      newHeaders.set('Link', `<https://sos-expat.com${pathname}>; rel="canonical"`);
 
       // Ensure proper caching headers for bots
       if (!newHeaders.has('Cache-Control')) {

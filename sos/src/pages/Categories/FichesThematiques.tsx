@@ -587,13 +587,13 @@ const FichesThematiques: React.FC = () => {
               {t("ctaAnnuaire", lang)}
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              to={`/${lang}/fiches-pays`}
+            <a
+              href={`/${lang}/fiches-pays`}
               className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur transition-transform hover:scale-105 hover:bg-white/20"
             >
               {t("ctaFichesPays", lang)}
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </a>
           </motion.div>
         </motion.div>
       </section>
