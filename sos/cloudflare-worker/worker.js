@@ -1238,10 +1238,11 @@ async function handleRequest(request, env, ctx) {
     'nossos-pesquisas', 'nashi-oprosy', 'women-diaocha', 'hamare-sarvekshan', 'istiftaatuna',
   ]);
 
-  // Annuaire/Directory (all 9 languages) — Blog SSR (redirect removed from DirectoryController)
+  // Annuaire/Directory (all 9 languages) — Blog SSR
+  // Slugs from config/route-segments.php 'directory'
   const ANNUAIRE_SEGMENTS = new Set([
-    'annuaire', 'expat-directory', 'directorio-expat', 'expat-verzeichnis',
-    'diretorio-expat', 'spravochnik-expat', 'zhinan-expat', 'nirdeshika-expat', 'dalil-expat',
+    'annuaire', 'directory', 'directorio', 'verzeichnis',
+    'diretorio', 'spravochnik', 'minglu', 'nirdeshika', 'dalil',
   ]);
 
   // Search (all 9 languages) → Blog SSR
