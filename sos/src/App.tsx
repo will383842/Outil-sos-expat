@@ -236,18 +236,10 @@ const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
 const Annuaire = lazy(() => import('./pages/Annuaire/Annuaire'));
 
-// Public content pages (Redesign 2026)
-const Articles = lazy(() => import('./pages/Articles/Articles'));
-const FichesPays = lazy(() => import('./pages/Categories/FichesPays'));
-const FichesThematiques = lazy(() => import('./pages/Categories/FichesThematiques'));
+// Public content pages — blog pages removed (served by Laravel blog via Worker)
+// Only SPA-specific pages remain:
 const ProgrammeChatter = lazy(() => import('./pages/Categories/ProgrammeChatter'));
 const AffiliationPage = lazy(() => import('./pages/Categories/Affiliation'));
-const SondagesListing = lazy(() => import('./pages/Categories/SondagesListing'));
-const SondagesPage = lazy(() => import('./pages/Sondages/Sondages'));
-const SondagesResultats = lazy(() => import('./pages/Sondages/SondagesResultats'));
-const OutilsListing = lazy(() => import('./pages/Categories/OutilsListing'));
-const OutilsPage = lazy(() => import('./pages/Outils/Outils'));
-const GaleriePage = lazy(() => import('./pages/Galerie/Galerie'));
 
 // -------------------------------------------
 // Language config — chargement dynamique des traductions
