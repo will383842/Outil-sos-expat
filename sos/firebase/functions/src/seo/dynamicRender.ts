@@ -338,10 +338,19 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
           page.waitForSelector('[data-article-loaded="true"]', { timeout: PHASE2_TIMEOUT }),
         ]);
       } catch {
-        // No provider marker found within 15s — this is a static page or slow-loading profile
-        // Wait 1 more second for any remaining React renders
-        logger.info('Phase 2: No provider marker found, assuming static page');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // No provider marker found — this is a static page (Home, FAQ, HowItWorks, etc.)
+        // Wait for JSON-LD scripts to be fully rendered (translations load via fetch, not bundled)
+        logger.info('Phase 2: No provider marker found, waiting for JSON-LD to render...');
+        try {
+          // Wait up to 5s for at least 3 JSON-LD scripts (SEOHead WebPage + page-specific schemas)
+          await page.waitForFunction(
+            '() => document.querySelectorAll(\'script[type="application/ld+json"]\').length >= 3',
+            { timeout: 5000 }
+          );
+        } catch {
+          // Even if we don't get 3 scripts, wait 2s for any remaining renders
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
       }
     } catch {
       // If no selector appears, wait longer for dynamic content
