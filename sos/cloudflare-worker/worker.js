@@ -1724,9 +1724,14 @@ async function handleRequest(request, env, ctx) {
       '\u0645\u062D\u0627\u0645': 'ar',
       // Arabic romanized lawyer variants (for profile URLs like /muhami-gf/name)
       'muhami': 'ar',
-      // Expat/helper role translations
+      // Plural lawyer forms (for compound listing URLs like /advogados-romenia, /anwaelte-malta)
+      'avocats': 'fr', 'lawyers': 'en', 'abogados': 'es', 'anwaelte': 'de',
+      'advogados': 'pt', 'advokaty': 'ru',
+      'muhamun': 'ar', // Arabic plural lawyers
+      // Expat role translations (singular + plural)
       'expatrie': 'fr', 'expat': null, // 'expat' used by multiple langs, skip
       'expatriado': null, // used by both es and pt, skip
+      'wafid': 'ar', // Arabic expat (وافد)
     };
 
     if (restPath) {
@@ -1793,6 +1798,7 @@ async function handleRequest(request, env, ctx) {
         'terms_expats': 'terms-expats',       // Underscore → hyphen
         'terms_lawyers': 'terms-lawyers',     // Underscore → hyphen
         'haeufige-fragen': 'faq',             // Old DE FAQ slug → canonical
+        'voprosy': 'voprosy-otvety',           // Old RU FAQ slug (truncated) → canonical
       };
       if (firstSlug && LEGACY_SLUG_ALIASES[firstSlug]) {
         const canonicalSlug = LEGACY_SLUG_ALIASES[firstSlug];
@@ -1908,6 +1914,11 @@ async function handleRequest(request, env, ctx) {
           '\u062A\u0633\u062C\u064A\u0644': 'al-tasjil',                                 // تسجيل (without ال) → register
           '\u0645\u063A\u062A\u0631\u0628': 'mugtarib',                                   // مغترب → expat (register sub-path)
           '\u0645\u0624\u062B\u0631\u0648\u0646\u0627': 'muathiruna',                    // مؤثرونا → our-influencers
+          '\u0643\u0646-\u0645\u0624\u062B\u0631\u0627': 'kun-muathiran',                // كن-مؤثرا → become-influencer
+          '\u0643\u0646-\u0645\u0633\u0648\u0642\u0627': 'kun-musawwiqan',               // كن-مسوقا → become-chatter
+          '\u0633\u064A\u0627\u0633\u0629-\u0627\u0644\u062E\u0635\u0648\u0635\u064A\u0629': 'siyasat-al-khususiya', // سياسة-الخصوصية → privacy-policy
+          '\u0627\u0644\u062F\u0646\u0645\u0627\u0631\u0643': 'ad-danimark',             // الدنمارك → Denmark (country)
+          '\u0627\u0644\u0643\u0627\u0645\u064A\u0631\u0648\u0646': 'al-kamirun',        // الكاميرون → Cameroon (country)
         };
         const decodedFirstSlug = (() => { try { return decodeURIComponent(firstSlug); } catch (_e) { return firstSlug; } })();
         if (ARABIC_UNICODE_TO_ASCII[decodedFirstSlug]) {
