@@ -748,7 +748,7 @@ const Footer: React.FC = () => {
             href: surveysBlogUrl,
           },
           {
-            label: intl.formatMessage({ id: "footer.services.surveysResults", defaultMessage: "Résultats des Sondages" }),
+            label: intl.formatMessage({ id: "footer.services.surveysResults", defaultMessage: "Stats d'Expats" }),
             href: resultsSondagesUrl,
           },
           {
