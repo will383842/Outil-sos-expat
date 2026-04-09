@@ -1024,6 +1024,75 @@ const Press: React.FC = () => {
           </>
         )}
 
+        {/* ══════════════ SURVEY DATA — Données du sondage ══════════════ */}
+        <section className="py-20 sm:py-24 bg-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 rounded-3xl p-8 sm:p-10">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-3xl shrink-0">📊</div>
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {t("press.surveyData.title", "Le Grand Sondage Expat & Voyageur 2026")}
+                  </h2>
+                  <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                    {t("press.surveyData.subtitle", "Données exclusives issues de 6 000+ expatriés et voyageurs dans 54 pays. Libre d'utilisation (CC BY 4.0).")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+                {[
+                  { value: "6 321", label: t("press.surveyData.participants", "participants"), icon: "🌍" },
+                  { value: "54", label: t("press.surveyData.countries", "pays"), icon: "🗺️" },
+                  { value: "9", label: t("press.surveyData.languages", "langues"), icon: "🗣️" },
+                  { value: "17", label: t("press.surveyData.questions", "questions"), icon: "❓" },
+                ].map((kpi) => (
+                  <div key={kpi.label} className="bg-white rounded-2xl p-4 text-center shadow-sm border border-red-100/50">
+                    <span className="text-xl block mb-1">{kpi.icon}</span>
+                    <span className="text-2xl sm:text-3xl font-black text-red-600 block">{kpi.value}</span>
+                    <span className="text-[11px] text-gray-500 mt-1 block">{kpi.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3 mb-8 text-sm">
+                {[
+                  { pct: "65%", text: t("press.surveyData.stat1", "trouvent la vie plus chère à l'étranger"), icon: "💸" },
+                  { pct: "55%", text: t("press.surveyData.stat2", "sont satisfaits de leur vie à l'étranger"), icon: "😊" },
+                  { pct: "35%", text: t("press.surveyData.stat3", "citent l'administratif comme problème n°1"), icon: "📋" },
+                ].map((s) => (
+                  <div key={s.text} className="flex items-start gap-3 bg-white/70 rounded-xl p-3 border border-red-100/30">
+                    <span className="text-lg shrink-0">{s.icon}</span>
+                    <div>
+                      <span className="text-xl font-black text-red-600">{s.pct}</span>
+                      <p className="text-gray-600 text-xs mt-0.5">{s.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a href={`/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expat-2026/resultats" : "en-us/expat-surveys/the-great-expat-survey-2026/results"}`}
+                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-600/20">
+                  <BarChart3 className="w-4 h-4" />
+                  {t("press.surveyData.cta", "Voir tous les résultats et graphiques")}
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <a href={`/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expat-2026/resultats/export-csv" : "en-us/expat-surveys/the-great-expat-survey-2026/results/export-csv"}`}
+                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl border border-gray-200 transition-colors">
+                  <Download className="w-4 h-4" />
+                  {t("press.surveyData.csv", "Télécharger les données (CSV)")}
+                </a>
+              </div>
+
+              <p className="text-[11px] text-gray-400 mt-5 flex items-center gap-1.5">
+                <Shield className="w-3 h-3" />
+                {t("press.surveyData.license", "Données anonymes sous licence Creative Commons CC BY 4.0 — citation libre avec attribution à SOS-Expat.com")}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* ══════════════ FAQ ══════════════ */}
         <section id="press-faq" className="py-20 sm:py-24 bg-slate-50">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1056,7 +1125,7 @@ const Press: React.FC = () => {
                 { href: `/${lang}/how-it-works`, icon: Globe, label: t("press.nav.howItWorks", "Le service"), color: "text-blue-500" },
                 { href: `/${lang}/faq`, icon: FileText, label: t("press.nav.faq", "FAQ"), color: "text-emerald-500" },
                 { href: `/${lang}/testimonials`, icon: Quote, label: t("press.nav.testimonials", "T\u00e9moignages"), color: "text-purple-500" },
-                { href: `/${lang}/tarifs`, icon: BarChart3, label: t("press.nav.pricing", "Tarifs"), color: "text-orange-500" },
+                { href: `/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expat-2026/resultats" : "en-us/expat-surveys/the-great-expat-survey-2026/results"}`, icon: BarChart3, label: t("press.nav.surveyResults", "Résultats du sondage"), color: "text-orange-500" },
                 { href: `/${lang}/contact`, icon: Mail, label: t("press.nav.contact", "Nous contacter"), color: "text-gray-500" },
               ].map((link) => (
                 <a key={link.href} href={link.href}
