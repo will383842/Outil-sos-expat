@@ -1072,13 +1072,13 @@ const Press: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <a href={`/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expat-2026/resultats" : "en-us/expat-surveys/the-great-expat-survey-2026/results"}`}
+                <a href={`/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expatries-voyageurs/resultats" : "en-us/expat-surveys/the-great-expat-traveler-survey/results"}`}
                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-600/20">
                   <BarChart3 className="w-4 h-4" />
                   {t("press.surveyData.cta", "Voir tous les résultats et graphiques")}
                   <ArrowRight className="w-4 h-4" />
                 </a>
-                <a href={`/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expat-2026/resultats/export-csv" : "en-us/expat-surveys/the-great-expat-survey-2026/results/export-csv"}`}
+                <a href={`/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expatries-voyageurs/resultats/export-csv" : "en-us/expat-surveys/the-great-expat-traveler-survey/results/export-csv"}`}
                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl border border-gray-200 transition-colors">
                   <Download className="w-4 h-4" />
                   {t("press.surveyData.csv", "Télécharger les données (CSV)")}
@@ -1125,7 +1125,7 @@ const Press: React.FC = () => {
                 { href: `/${lang}/how-it-works`, icon: Globe, label: t("press.nav.howItWorks", "Le service"), color: "text-blue-500" },
                 { href: `/${lang}/faq`, icon: FileText, label: t("press.nav.faq", "FAQ"), color: "text-emerald-500" },
                 { href: `/${lang}/testimonials`, icon: Quote, label: t("press.nav.testimonials", "T\u00e9moignages"), color: "text-purple-500" },
-                { href: `/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expat-2026/resultats" : "en-us/expat-surveys/the-great-expat-survey-2026/results"}`, icon: BarChart3, label: t("press.nav.surveyResults", "Résultats du sondage"), color: "text-orange-500" },
+                { href: `/${lang === "fr" ? "fr-fr/sondages-expatries/le-grand-sondage-expatries-voyageurs/resultats" : "en-us/expat-surveys/the-great-expat-traveler-survey/results"}`, icon: BarChart3, label: t("press.nav.surveyResults", "Résultats du sondage"), color: "text-orange-500" },
                 { href: `/${lang}/contact`, icon: Mail, label: t("press.nav.contact", "Nous contacter"), color: "text-gray-500" },
               ].map((link) => (
                 <a key={link.href} href={link.href}

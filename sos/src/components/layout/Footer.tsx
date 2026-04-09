@@ -78,15 +78,15 @@ const SOCIAL_URLS = {
 } as const;
 
 const BLOG_SURVEYS_SEGMENTS: Record<string, { locale: string; slug: string; resultSlug: string }> = {
-  fr: { locale: "fr-fr", slug: "sondages-expatries", resultSlug: "le-grand-sondage-expat-2026/resultats" },
-  en: { locale: "en-us", slug: "expat-surveys", resultSlug: "the-great-expat-survey-2026/results" },
-  es: { locale: "es-es", slug: "encuestas-expatriados", resultSlug: "la-gran-encuesta-expat-2026/resultados" },
-  de: { locale: "de-de", slug: "expat-umfragen", resultSlug: "die-grosse-expat-umfrage-2026/ergebnisse" },
-  pt: { locale: "pt-pt", slug: "pesquisas-expatriados", resultSlug: "a-grande-pesquisa-expat-2026/resultados" },
-  ru: { locale: "ru-ru", slug: "oprosy-expatov", resultSlug: "bolshoj-opros-expatov-2026/rezultaty" },
-  ch: { locale: "zh-cn", slug: "expat-diaocha", resultSlug: "2026-expat-da-diaocha/jieguo" },
-  hi: { locale: "hi-in", slug: "pravasi-sarvekshan", resultSlug: "2026-expat-maha-sarvekshan/parinaam" },
-  ar: { locale: "ar-sa", slug: "istitalaat-mughtaribeen", resultSlug: "istiftaa-mughtaribeen-alkabir-2026/nataaij" },
+  fr: { locale: "fr-fr", slug: "sondages-expatries", resultSlug: "le-grand-sondage-expatries-voyageurs/resultats" },
+  en: { locale: "en-us", slug: "expat-surveys", resultSlug: "the-great-expat-traveler-survey/results" },
+  es: { locale: "es-es", slug: "encuestas-expatriados", resultSlug: "la-gran-encuesta-expatriados-viajeros/resultados" },
+  de: { locale: "de-de", slug: "expat-umfragen", resultSlug: "die-grosse-expat-reisende-umfrage/ergebnisse" },
+  pt: { locale: "pt-pt", slug: "pesquisas-expatriados", resultSlug: "a-grande-pesquisa-expatriados-viajantes/resultados" },
+  ru: { locale: "ru-ru", slug: "oprosy-expatov", resultSlug: "bolshoj-opros-ekspatov-puteshestvennikov/rezultaty" },
+  ch: { locale: "zh-cn", slug: "expat-diaocha", resultSlug: "waiji-renshi-lvxingzhe-da-diaocha/jieguo" },
+  hi: { locale: "hi-in", slug: "pravasi-sarvekshan", resultSlug: "pravasi-yatri-maha-sarvekshan/parinaam" },
+  ar: { locale: "ar-sa", slug: "istitalaat-mughtaribeen", resultSlug: "istiftaa-mughtaribin-musafirin-alkabir/nataaij" },
 };
 
 const BLOG_NEWS_SEGMENTS: Record<string, { locale: string; slug: string }> = {
