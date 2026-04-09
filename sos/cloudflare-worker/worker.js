@@ -1502,6 +1502,13 @@ async function handleRequest(request, env, ctx) {
       const lang2 = aliasLocale.split('-')[0];
       return Response.redirect(`https://sos-expat.com/${aliasLocale}/${sondageSlugs[lang2] || 'sondages-expatries'}`, 301);
     }
+    // sondages (old bare segment) → sondages-expatries
+    const bareSondageSegs = ['sondages', 'surveys', 'encuestas', 'umfragen', 'oprosy', 'pesquisas', 'diaocha', 'sarvekshan', 'istitalaat'];
+    if (bareSondageSegs.includes(aliasSegment)) {
+      const sondageSlugs = { fr:'sondages-expatries', en:'expat-surveys', es:'encuestas-expatriados', de:'expat-umfragen', pt:'pesquisas-expatriados', ru:'oprosy-expatov', zh:'expat-diaocha', hi:'pravasi-sarvekshan', ar:'istitalaat-mughtaribeen' };
+      const lang2 = aliasLocale.split('-')[0];
+      return Response.redirect(`https://sos-expat.com/${aliasLocale}/${sondageSlugs[lang2] || 'sondages-expatries'}`, 301);
+    }
     // nos-sondages → sondages-expatries
     if (aliasSegment === 'nos-sondages' || aliasSegment === 'our-surveys') {
       const sondageSlugs = { fr:'sondages-expatries', en:'expat-surveys', es:'encuestas-expatriados', de:'expat-umfragen', pt:'pesquisas-expatriados', ru:'oprosy-expatov', zh:'expat-diaocha', hi:'expat-sarvekshan', ar:'istiftaat-mughtaribeen' };
