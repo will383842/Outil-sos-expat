@@ -77,16 +77,16 @@ const SOCIAL_URLS = {
   linkedin: (import.meta.env.VITE_LINKEDIN_URL as string) || "",
 } as const;
 
-const BLOG_SURVEYS_SEGMENTS: Record<string, { locale: string; slug: string }> = {
-  fr: { locale: "fr-fr", slug: "sondages" },
-  en: { locale: "en-us", slug: "surveys" },
-  es: { locale: "es-es", slug: "encuestas" },
-  de: { locale: "de-de", slug: "umfragen" },
-  pt: { locale: "pt-pt", slug: "pesquisas" },
-  ru: { locale: "ru-ru", slug: "oprosy" },
-  ch: { locale: "zh-cn", slug: "diaocha" },
-  hi: { locale: "hi-in", slug: "sarvekshan" },
-  ar: { locale: "ar-sa", slug: "istitalaat" },
+const BLOG_SURVEYS_SEGMENTS: Record<string, { locale: string; slug: string; resultSlug: string }> = {
+  fr: { locale: "fr-fr", slug: "sondages-expatries", resultSlug: "le-grand-sondage-expat-2026/resultats" },
+  en: { locale: "en-us", slug: "expat-surveys", resultSlug: "the-great-expat-survey-2026/results" },
+  es: { locale: "es-es", slug: "encuestas-expatriados", resultSlug: "la-gran-encuesta-expat-2026/resultados" },
+  de: { locale: "de-de", slug: "expat-umfragen", resultSlug: "die-grosse-expat-umfrage-2026/ergebnisse" },
+  pt: { locale: "pt-pt", slug: "pesquisas-expatriados", resultSlug: "a-grande-pesquisa-expat-2026/resultados" },
+  ru: { locale: "ru-ru", slug: "oprosy-expatov", resultSlug: "bolshoj-opros-expatov-2026/rezultaty" },
+  ch: { locale: "zh-cn", slug: "expat-diaocha", resultSlug: "2026-expat-da-diaocha/jieguo" },
+  hi: { locale: "hi-in", slug: "pravasi-sarvekshan", resultSlug: "2026-expat-maha-sarvekshan/parinaam" },
+  ar: { locale: "ar-sa", slug: "istitalaat-mughtaribeen", resultSlug: "istiftaa-mughtaribeen-alkabir-2026/nataaij" },
 };
 
 const BLOG_NEWS_SEGMENTS: Record<string, { locale: string; slug: string }> = {
@@ -719,8 +719,7 @@ const Footer: React.FC = () => {
   const livingAbroadUrl = `https://sos-expat.com/${livingAbroadSegment.locale}/${livingAbroadSegment.slug}`;
   const newsSegment = BLOG_NEWS_SEGMENTS[resolvedLang] ?? BLOG_NEWS_SEGMENTS.fr;
   const newsUrl = `https://sos-expat.com/${newsSegment.locale}/${newsSegment.slug}`;
-  const resultsSondagesSlug = getTranslatedRouteSlug('resultats-sondages' as any, resolvedLang as any) || 'resultats-sondages';
-  const resultsSondagesUrl = `https://sos-expat.com/${surveysSegment.locale}/${resultsSondagesSlug}`;
+  const resultsSondagesUrl = `https://sos-expat.com/${surveysSegment.locale}/${surveysSegment.slug}/${surveysSegment.resultSlug}`;
 
   // Footer sections - SANS le lien "appel-expatrie" - avec routes traduites
   const footerSections = useMemo<Record<string, FooterSection>>(
