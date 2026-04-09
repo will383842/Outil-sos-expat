@@ -1222,20 +1222,18 @@ async function handleRequest(request, env, ctx) {
 
   // Gallery (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
   const GALERIE_SEGMENTS = new Set([
-    'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitralaya', 'chitravali', 'maarad',
+    'galerie', 'gallery', 'galeria', 'bildergalerie', 'galereya', 'tuku', 'chitravali', 'maarad',
   ]);
 
   // Sondages (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
+  // Synchronized with Blog config/route-segments.php
   const SONDAGES_SEGMENTS = new Set([
-    // Plain survey forms (generic listing + detail: /surveys/slug)
-    'sondages', 'surveys', 'encuestas', 'umfragen', 'oprosy', 'pesquisas', 'diaocha', 'sarvekshan', 'istiftaat',
-    // Compound survey forms (expat/vacationer/listing)
+    // Main expat surveys (route-segments.php 'sondages')
     'sondages-expatries', 'expat-surveys', 'encuestas-expatriados', 'expat-umfragen',
-    'pesquisas-expatriados', 'oprosy-expatov', 'expat-diaocha', 'expat-sarvekshan', 'istiftaat-mughtaribeen',
-    'sondages-vacanciers', 'vacationer-surveys', 'encuestas-vacacionistas', 'urlauber-umfragen',
-    'pesquisas-turistas', 'oprosy-otdykhayushchikh', 'dujia-diaocha', 'chhutti-sarvekshan', 'istiftaat-saaihin',
-    'nos-sondages', 'our-surveys', 'nuestras-encuestas', 'unsere-umfragen',
-    'nossos-pesquisas', 'nashi-oprosy', 'women-diaocha', 'hamare-sarvekshan', 'istiftaatuna',
+    'pesquisas-expatriados', 'oprosy-expatov', 'expat-diaocha', 'pravasi-sarvekshan', 'istitalaat-mughtaribeen',
+    // Vacationer surveys (route-segments.php 'sondages_vacanciers')
+    'sondages-vacanciers', 'holiday-surveys', 'encuestas-vacaciones', 'urlaubsumfragen',
+    'pesquisas-ferias', 'oprosy-otpusk', 'jiaqi-diaocha', 'chhutti-sarvekshan', 'istitalaat-ijaza',
   ]);
 
   // Annuaire/Directory (all 9 languages) — Blog SSR
@@ -1550,7 +1548,17 @@ async function handleRequest(request, env, ctx) {
       }
 
       // If blog returns 5xx, fall back to SPA instead of propagating the error to Google
+      // EXCEPT for sitemaps/XML files: SPA fallback returns HTML which breaks sitemap parsing
+      // → return 503 + Retry-After so Google retries later (GSC handles 503 gracefully)
       if (blogResponse.status >= 500) {
+        const isSitemapOrXml = pathname.endsWith('.xml') || pathname === '/robots.txt' || pathname === '/llms.txt' || pathname === '/ai.txt';
+        if (isSitemapOrXml) {
+          console.warn(`[WORKER] Blog returned ${blogResponse.status} for sitemap ${pathname}, returning 503 (no SPA fallback for XML)`);
+          return new Response('Sitemap temporarily unavailable', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain', 'Retry-After': '60', 'X-Worker-Active': 'true' },
+          });
+        }
         console.warn(`[WORKER] Blog returned ${blogResponse.status} for ${pathname}, falling back to SPA`);
         const spaFallback = new URL(pathname, PAGES_ORIGIN);
         spaFallback.search = url.search;
@@ -1577,7 +1585,20 @@ async function handleRequest(request, env, ctx) {
         headers: blogHeaders,
       });
     } catch (error) {
-      // Blog timeout or network error → fall back to SPA (Cloudflare Pages)
+      // Blog timeout or network error
+      const isSitemapOrXml = pathname.endsWith('.xml') || pathname === '/robots.txt' || pathname === '/llms.txt' || pathname === '/ai.txt';
+
+      // For sitemaps/XML: NEVER fall back to SPA (returns HTML → breaks sitemap parsing in GSC)
+      // Return 503 + Retry-After so Google retries later
+      if (isSitemapOrXml) {
+        console.error(`[WORKER] Blog proxy error for sitemap ${pathname}: ${error.message}, returning 503 (no SPA fallback for XML)`);
+        return new Response('Sitemap temporarily unavailable', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain', 'Retry-After': '60', 'X-Worker-Active': 'true' },
+        });
+      }
+
+      // For HTML pages: fall back to SPA (Cloudflare Pages)
       // instead of returning 503 which Google penalizes
       console.error(`[WORKER] Blog proxy error for ${pathname}: ${error.message}, falling back to SPA`);
       try {
