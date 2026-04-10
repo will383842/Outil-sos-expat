@@ -216,6 +216,45 @@ const Press: React.FC = () => {
   const [contactError, setContactError] = useState<string | null>(null);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [logosExpanded, setLogosExpanded] = useState(false);
+  const [surveyStats, setSurveyStats] = useState<{
+    participants: string; countries: string; satisfaction: string; expensive: string; admin: string;
+  }>({ participants: "6 321", countries: "54", satisfaction: "55%", expensive: "65%", admin: "35%" });
+
+  useEffect(() => {
+    fetch("https://sos-expat.com/api/v1/public/sondages-resultats?lang=" + lang)
+      .then(r => r.json())
+      .then((data: any[]) => {
+        if (!data || !data[0]) return;
+        const s = data[0];
+        const total = s.responses_count || s.results?.total || 0;
+        const geo = s.results?.geo?.length || 0;
+        const stats: any = { participants: total.toLocaleString(), countries: String(geo || "54") };
+        // Extract key percentages from results
+        if (s.results?.questions) {
+          for (const q of s.results.questions) {
+            if (!q.options) continue;
+            const qTotal = q.options.reduce((a: number, o: any) => a + (o.count || 0), 0) || 1;
+            // Satisfaction (emoji-based)
+            if (q.type === 'single' && q.options.some((o: any) => o.label?.includes('😊'))) {
+              const sat = q.options.filter((o: any) => o.label?.includes('😊') || o.label?.includes('🤩')).reduce((a: number, o: any) => a + (o.count || 0), 0);
+              stats.satisfaction = Math.round(sat / qTotal * 100) + '%';
+            }
+            // Cost of living
+            if (q.type === 'single' && q.options.some((o: any) => o.label?.includes('🟠'))) {
+              const exp = q.options.filter((o: any) => o.label?.includes('🟠') || o.label?.includes('🔴')).reduce((a: number, o: any) => a + (o.count || 0), 0);
+              stats.expensive = Math.round(exp / qTotal * 100) + '%';
+            }
+            // Admin problems
+            if (q.type === 'single' && q.options.some((o: any) => o.label?.includes('📋'))) {
+              const adm = q.options.find((o: any) => o.label?.includes('📋'));
+              if (adm) stats.admin = Math.round((adm.count || 0) / qTotal * 100) + '%';
+            }
+          }
+        }
+        setSurveyStats(prev => ({ ...prev, ...stats }));
+      })
+      .catch(() => {}); // Silently fail — hardcoded defaults remain
+  }, [lang]);
 
   const t = (id: string, defaultMessage?: string) => intl.formatMessage({ id, defaultMessage: defaultMessage || id });
 
@@ -1035,15 +1074,15 @@ const Press: React.FC = () => {
                     {t("press.surveyData.title", "Le Grand Sondage Expat & Voyageur 2026")}
                   </h2>
                   <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                    {t("press.surveyData.subtitle", "Données exclusives issues de 6 000+ expatriés et voyageurs dans 54 pays. Libre d'utilisation (CC BY 4.0).")}
+                    {t("press.surveyData.subtitle", `Données exclusives issues de ${surveyStats.participants}+ expatriés et voyageurs dans ${surveyStats.countries} pays. Libre d'utilisation (CC BY 4.0).`)}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
                 {[
-                  { value: "6 321", label: t("press.surveyData.participants", "participants"), icon: "🌍" },
-                  { value: "54", label: t("press.surveyData.countries", "pays"), icon: "🗺️" },
+                  { value: surveyStats.participants, label: t("press.surveyData.participants", "participants"), icon: "🌍" },
+                  { value: surveyStats.countries, label: t("press.surveyData.countries", "pays"), icon: "🗺️" },
                   { value: "9", label: t("press.surveyData.languages", "langues"), icon: "🗣️" },
                   { value: "17", label: t("press.surveyData.questions", "questions"), icon: "❓" },
                 ].map((kpi) => (
@@ -1057,9 +1096,9 @@ const Press: React.FC = () => {
 
               <div className="grid sm:grid-cols-3 gap-3 mb-8 text-sm">
                 {[
-                  { pct: "65%", text: t("press.surveyData.stat1", "trouvent la vie plus chère à l'étranger"), icon: "💸" },
-                  { pct: "55%", text: t("press.surveyData.stat2", "sont satisfaits de leur vie à l'étranger"), icon: "😊" },
-                  { pct: "35%", text: t("press.surveyData.stat3", "citent l'administratif comme problème n°1"), icon: "📋" },
+                  { pct: surveyStats.expensive, text: t("press.surveyData.stat1", "trouvent la vie plus chère à l'étranger"), icon: "💸" },
+                  { pct: surveyStats.satisfaction, text: t("press.surveyData.stat2", "sont satisfaits de leur vie à l'étranger"), icon: "😊" },
+                  { pct: surveyStats.admin, text: t("press.surveyData.stat3", "citent l'administratif comme problème n°1"), icon: "📋" },
                 ].map((s) => (
                   <div key={s.text} className="flex items-start gap-3 bg-white/70 rounded-xl p-3 border border-red-100/30">
                     <span className="text-lg shrink-0">{s.icon}</span>
