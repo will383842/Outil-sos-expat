@@ -2290,7 +2290,8 @@ export class TwilioCallManager {
       // P0 FIX 2026-01-20: IDEMPOTENCY CHECK - Prevent race condition where multiple webhooks
       // all try to cancel the payment simultaneously (causing 3x cancel attempts like we saw in Stripe logs)
       // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
-      const finalPaymentStatuses = ['cancelled', 'refunded', 'voided'];
+      // P0 FIX 2026-04-10: Added "processing" and "captured" - don't refund while capture is in progress or already done
+      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded', 'voided', 'processing'];
       if (finalPaymentStatuses.includes(callSession.payment.status)) {
         logger.info(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment.status}`);
         logger.info(`💸 [${refundDebugId}]   Skipping processRefund to prevent duplicate Stripe API calls`);
@@ -2557,7 +2558,11 @@ export class TwilioCallManager {
       // all try to process the payment simultaneously (causing 3x cancel attempts like we saw in logs)
       // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
       // P0 FIX 2026-02-19: Made atomic via transaction to prevent concurrent handleCallCompletion calls
-      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded', 'voided'];
+      // P0 FIX 2026-04-10: Added "processing" to prevent race between participant-leave and conference-end
+      // BUG: conference-end webhook reads payment.status="processing" (set by participant-leave),
+      // passes idempotency (not in finalStatuses), but shouldCapturePayment rejects "processing"
+      // as invalid → triggers processRefund instead of skipping → cancels payment during capture!
+      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded', 'voided', 'processing'];
       const finalSessionStatuses = ['completed', 'failed', 'cancelled'];
 
       const sessionRef = this.db.collection("call_sessions").doc(sessionId);
@@ -2862,6 +2867,13 @@ export class TwilioCallManager {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const paymentAny = session.payment as any;
     const hasPayPalAuthorization = !!paymentAny.authorizationId;
+
+    // P0 FIX 2026-04-10: Never attempt capture if payment is already in a terminal negative state
+    const terminalNegativeStatuses = ['voided', 'cancelled', 'refunded'];
+    if (isPayPal && terminalNegativeStatuses.includes(session.payment.status)) {
+      logger.info(`📄 ❌ PayPal payment already in terminal state: ${session.payment.status} - returning false`);
+      return false;
+    }
 
     if (isPayPal && hasPayPalAuthorization) {
       // PayPal payment with authorization - allow capture regardless of local status
@@ -3389,10 +3401,11 @@ export class TwilioCallManager {
     try {
       logger.info(`📄 Creating invoices for session in createInvoices: ${sessionId}`);
 
-      // Check if payment is refunded OR cancelled - if so, mark invoices as refunded
+      // Check if payment is refunded, cancelled, or voided - if so, mark invoices as refunded
       // P0 FIX: "cancelled" status happens when authorization is cancelled (not captured)
-      // Both "refunded" and "cancelled" mean the client got their money back
-      const isRefundedOrCancelled = session.payment.status === "refunded" || session.payment.status === "cancelled";
+      // P0 FIX 2026-04-10: "voided" status happens when PayPal authorization is voided
+      // All three mean the client got their money back
+      const isRefundedOrCancelled = session.payment.status === "refunded" || session.payment.status === "cancelled" || session.payment.status === "voided";
       const invoiceStatus = isRefundedOrCancelled ? "refunded" : "issued";
 
       // Get payment currency from payments collection
