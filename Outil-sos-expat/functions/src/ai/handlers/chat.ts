@@ -21,6 +21,7 @@ import type { Request, Response } from "express";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 import type { LLMMessage, ConversationData, ProviderType } from "../core/types";
+import { detectIntent, getIntentGuidance } from "../services/intentDetector";
 
 // =============================================================================
 // API KEY FOR CROSS-PROJECT COMMUNICATION (SOS → OUTIL)
@@ -344,6 +345,15 @@ export const aiChat = onRequest(
         }
       }
 
+      // Detect intent BEFORE adding user message to history (needs previous messages only)
+      const intent = detectIntent(safeMessage, history);
+      const intentGuidance = getIntentGuidance(intent);
+
+      // Inject intent guidance as system message if applicable
+      if (intentGuidance) {
+        history.push({ role: "system", content: intentGuidance });
+      }
+
       // Add sanitized user message
       history.push({ role: "user", content: safeMessage });
 
@@ -363,6 +373,8 @@ export const aiChat = onRequest(
       const providerLanguage = providerId
         ? await getProviderLanguage(providerId)
         : "fr";
+
+      logger.info("[aiChat] Intent detected", { intent, hasGuidance: !!intentGuidance });
 
       // Call AI with enriched context (including language + nationality)
       const service = createService();

@@ -48,12 +48,19 @@ export class ClaudeProvider extends BaseLLMProvider {
     // Préparer les messages pour l'API Claude
     const claudeMessages = this.formatMessages(options.messages);
 
+    // Prompt caching: send system prompt as array with cache_control
+    // This caches the system prompt across requests, saving ~90% input tokens
+    // Requires anthropic-version 2023-06-01 + anthropic-beta: prompt-caching-2024-07-31
+    const systemContent = options.systemPrompt
+      ? [{ type: "text" as const, text: options.systemPrompt, cache_control: { type: "ephemeral" as const } }]
+      : [];
+
     const requestBody = {
       model: config.MODEL,
       max_tokens: options.maxTokens || config.MAX_TOKENS,
       temperature: options.temperature ?? config.TEMPERATURE,
-      system: options.systemPrompt || "",
-      messages: claudeMessages
+      system: systemContent,
+      messages: claudeMessages,
     };
 
     logger.info("[Claude] Envoi requête", {
@@ -109,7 +116,8 @@ export class ClaudeProvider extends BaseLLMProvider {
         headers: {
           "Content-Type": "application/json",
           "x-api-key": this.apiKey,
-          "anthropic-version": AI_CONFIG.CLAUDE.API_VERSION
+          "anthropic-version": AI_CONFIG.CLAUDE.API_VERSION,
+          "anthropic-beta": "prompt-caching-2024-07-31",
         },
         body: JSON.stringify(body),
         signal: controller.signal

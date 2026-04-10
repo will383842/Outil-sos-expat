@@ -924,21 +924,26 @@ CRITICAL RULES:
     citations: string[] | undefined,
     preferClaude: boolean
   ): Promise<{ content: string; model: string; provider: "claude" | "gpt"; fallbackUsed: boolean; usage?: { inputTokens: number; outputTokens: number } }> {
-    // Enrichir le prompt avec le contexte de recherche ET les citations
-    let enrichedPrompt = systemPrompt;
+    // Injecter le contexte de recherche comme message user (pas dans le system prompt)
+    // pour éviter de gonfler le prompt système à chaque requête
+    const messagesWithSearch = [...messages];
     if (searchContext) {
-      enrichedPrompt += `\n\n--- INFORMATIONS DE RECHERCHE WEB ---\n${searchContext}`;
+      let searchMessage = `[Contexte recherche web — utilise ces informations pour ta réponse]\n${searchContext}`;
 
-      // Injecter les citations pour que le LLM puisse les référencer
       if (citations && citations.length > 0) {
-        enrichedPrompt += `\n\n--- SOURCES ---\n`;
+        searchMessage += `\n\nSources:\n`;
         citations.forEach((citation, i) => {
-          enrichedPrompt += `[${i + 1}] ${citation}\n`;
+          searchMessage += `[${i + 1}] ${citation}\n`;
         });
-        enrichedPrompt += `\nUtilise ces sources dans ta réponse en citant les numéros [1], [2], etc. quand pertinent.`;
+        searchMessage += `Cite les numéros [1], [2], etc. quand pertinent.`;
       }
 
-      enrichedPrompt += `\n--- FIN RECHERCHE ---`;
+      // Insérer le contexte juste avant le dernier message user
+      const lastUserIdx = messagesWithSearch.length - 1;
+      messagesWithSearch.splice(lastUserIdx, 0, {
+        role: "system" as const,
+        content: searchMessage,
+      });
     }
 
     // Ordre de priorité selon le type de provider avec CIRCUIT BREAKER
@@ -960,8 +965,8 @@ CRITICAL RULES:
         const result = await Promise.race([
           withExponentialBackoff(
             () => primaryProvider.chat({
-              messages,
-              systemPrompt: enrichedPrompt
+              messages: messagesWithSearch,
+              systemPrompt,
             }),
             { logContext: `[${primaryProvider.name}] Primary` }
           ),
@@ -996,8 +1001,8 @@ CRITICAL RULES:
         const result = await Promise.race([
           withExponentialBackoff(
             () => fallbackProvider.chat({
-              messages,
-              systemPrompt: enrichedPrompt
+              messages: messagesWithSearch,
+              systemPrompt,
             }),
             { logContext: `[${fallbackProvider.name}] Fallback` }
           ),

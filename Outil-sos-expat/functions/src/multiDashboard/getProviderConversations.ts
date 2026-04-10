@@ -12,7 +12,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
-import { getSosFirestore, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
+import { getSosFirestore, getSosAuth, SOS_SERVICE_ACCOUNT } from "./sosFirestore";
 
 // Initialize Firebase Admin for local project
 try {
@@ -26,7 +26,8 @@ try {
 // =============================================================================
 
 interface GetConversationsRequest {
-  sessionToken: string;
+  sessionToken?: string;       // Auth mode 1: multi-dashboard password session (mds_*)
+  firebaseIdToken?: string;    // Auth mode 2: Firebase ID token (Dashboard PWA)
   providerId: string;
   bookingRequestId?: string;
   limit?: number;
@@ -95,21 +96,56 @@ export const getProviderConversations = onCall<
     ],
   },
   async (request) => {
-    const { sessionToken, providerId, bookingRequestId, limit = 20 } = request.data;
+    const { sessionToken, firebaseIdToken, providerId, bookingRequestId, limit = 20 } = request.data;
 
     logger.info("[getProviderConversations] Request received", {
       providerId,
       bookingRequestId,
       hasSessionToken: !!sessionToken,
+      hasFirebaseIdToken: !!firebaseIdToken,
     });
-
-    // Validate session token
-    if (!sessionToken || typeof sessionToken !== "string" || !sessionToken.startsWith("mds_")) {
-      throw new HttpsError("unauthenticated", "Invalid session token");
-    }
 
     if (!providerId || typeof providerId !== "string") {
       throw new HttpsError("invalid-argument", "Provider ID is required");
+    }
+
+    // Dual auth: Firebase ID token (Dashboard PWA) OR mds_* session token (legacy admin)
+    if (firebaseIdToken && typeof firebaseIdToken === "string") {
+      try {
+        const sosAuth = getSosAuth();
+        const decodedToken = await sosAuth.verifyIdToken(firebaseIdToken);
+        const uid = decodedToken.uid;
+
+        // Verify user has permission (admin/agency_manager with this provider linked)
+        const sosDb = getSosFirestore();
+        const userDoc = await sosDb.collection("users").doc(uid).get();
+
+        if (!userDoc.exists) {
+          throw new HttpsError("permission-denied", "User not found");
+        }
+
+        const userData = userDoc.data()!;
+        const role = userData.role as string;
+        const linkedProviderIds = (userData.linkedProviderIds as string[]) || [];
+
+        if (!["admin", "agency_manager"].includes(role)) {
+          throw new HttpsError("permission-denied", "Insufficient role");
+        }
+
+        if (!linkedProviderIds.includes(providerId) && uid !== providerId) {
+          throw new HttpsError("permission-denied", "Provider not linked to this account");
+        }
+
+        logger.info("[getProviderConversations] Firebase auth verified", { uid, role });
+      } catch (authError) {
+        if (authError instanceof HttpsError) throw authError;
+        logger.error("[getProviderConversations] Firebase token verification failed", { error: authError });
+        throw new HttpsError("unauthenticated", "Invalid Firebase token");
+      }
+    } else if (sessionToken && typeof sessionToken === "string" && sessionToken.startsWith("mds_")) {
+      logger.info("[getProviderConversations] Using mds_ session token auth");
+    } else {
+      throw new HttpsError("unauthenticated", "Authentication required (firebaseIdToken or sessionToken)");
     }
 
     try {

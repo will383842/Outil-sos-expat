@@ -14,6 +14,7 @@ import {
   Loader2,
   Scale,
   Globe,
+  MessageSquare,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +25,8 @@ import {
 } from '../../types';
 import { auth, outilFunctions } from '../../config/firebase';
 import AiResponsePreview, { AiErrorBadge } from './AiResponsePreview';
+import ConversationThread from './ConversationThread';
+import { useProviderConversations } from '../../hooks/useProviderConversations';
 import toast from 'react-hot-toast';
 
 interface BookingRequestCardProps {
@@ -44,7 +47,11 @@ const STATUS_COLORS: Record<BookingRequest['status'], { bg: string; text: string
 export default function BookingRequestCard({ booking, isNew, onDelete, providerMap }: BookingRequestCardProps) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [isSsoLoading, setIsSsoLoading] = useState(false);
+  const [showConversations, setShowConversations] = useState(false);
   const { t } = useTranslation();
+  const { conversations, isLoading: convoLoading, fetchConversations } = useProviderConversations(
+    showConversations ? booking.providerId : undefined
+  );
   const statusColor = STATUS_COLORS[booking.status];
   const isHistory = booking.status === 'completed' || booking.status === 'cancelled';
   const serviceLabel = t(`service.${booking.serviceType}`, { defaultValue: booking.serviceType });
@@ -255,6 +262,40 @@ export default function BookingRequestCard({ booking, isNew, onDelete, providerM
         />
       )}
       {booking.aiError && <AiErrorBadge error={booking.aiError} />}
+
+      {/* Conversation History Toggle */}
+      <div className="mt-2">
+        <button
+          onClick={() => {
+            const next = !showConversations;
+            setShowConversations(next);
+            if (next) fetchConversations();
+          }}
+          className="flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 active:scale-[0.98] transition-all min-h-[36px]"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          {showConversations
+            ? t('conversation.hide', { defaultValue: 'Masquer conversations' })
+            : t('conversation.show', { defaultValue: 'Voir conversations IA' })}
+        </button>
+
+        {showConversations && convoLoading && (
+          <div className="flex items-center gap-2 py-3 text-xs text-gray-400">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            {t('conversation.loading', { defaultValue: 'Chargement...' })}
+          </div>
+        )}
+
+        {showConversations && !convoLoading && conversations.length > 0 && (
+          <ConversationThread messages={conversations[0].messages} />
+        )}
+
+        {showConversations && !convoLoading && conversations.length === 0 && (
+          <p className="text-xs text-gray-400 py-2">
+            {t('conversation.empty', { defaultValue: 'Aucune conversation IA pour ce prestataire' })}
+          </p>
+        )}
+      </div>
 
       {/* Action buttons */}
       <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">

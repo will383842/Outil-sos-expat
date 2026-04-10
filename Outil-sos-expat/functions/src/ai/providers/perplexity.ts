@@ -238,8 +238,11 @@ export function isFactualQuestion(message: string): boolean {
   // Doit avoir au moins 5 mots pour être considéré comme question
   if (/\?\s*$/.test(lowerMsg) && wordCount >= 5) return true;
 
-  // Messages longs = probablement une question détaillée
-  if (wordCount > 15) return true;
+  // Messages longs : seulement si > 25 mots ET contient un "?" ou un mot-clé interrogatif
+  // (Avant: >15 mots déclenchait toujours → trop de recherches inutiles)
+  if (wordCount > 25 && (/\?\s*$/.test(lowerMsg) || /\b(comment|pourquoi|quel|quelle|où|quand|combien|how|what|where|when|why|which)\b/.test(lowerMsg))) {
+    return true;
+  }
 
   return false;
 }

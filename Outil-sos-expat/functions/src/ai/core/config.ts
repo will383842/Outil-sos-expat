@@ -21,10 +21,10 @@ export const AI_CONFIG = {
   // Codes HTTP retryables
   RETRYABLE_STATUS_CODES: [408, 429, 500, 502, 503, 504] as const,
 
-  // Limites conversation (conversations de 30+ minutes)
-  MAX_HISTORY_MESSAGES: 100,  // 100 messages récents pour conversations longues
-  ALWAYS_KEEP_FIRST_MESSAGES: 3,  // Toujours garder les 3 premiers messages (contexte booking)
-  SUMMARY_THRESHOLD: 80,  // AUDIT-NOTE: Summary is consumed if it exists in Firestore, but no auto-generation is implemented yet. Manual summaries can be written by admin.
+  // Limites conversation — réduit pour moins de bruit et meilleure pertinence
+  MAX_HISTORY_MESSAGES: 40,  // Réduit de 100 → 40 (moins de tokens d'historique, meilleur focus)
+  ALWAYS_KEEP_FIRST_MESSAGES: 2,  // Réduit de 3 → 2 (contexte booking essentiel uniquement)
+  SUMMARY_THRESHOLD: 30,  // Réduit de 80 → 30 (résumer plus tôt pour garder le contexte)
 
   // Quota par défaut (appels IA par mois par provider)
   DEFAULT_QUOTA_LIMIT: 100,
@@ -33,7 +33,9 @@ export const AI_CONFIG = {
   OPENAI: {
     MODEL: "gpt-4o",
     TEMPERATURE: 0.3,
-    MAX_TOKENS: 4000,  // Augmenté de 3000 à 4000 pour réponses complètes
+    MAX_TOKENS: 2000,  // Réduit de 4000 → 2000 pour forcer des réponses concises
+    FREQUENCY_PENALTY: 0.6,  // Pénalise les répétitions de tokens
+    PRESENCE_PENALTY: 0.3,   // Encourage la diversité des sujets
     API_URL: "https://api.openai.com/v1/chat/completions"
   },
 
@@ -42,7 +44,7 @@ export const AI_CONFIG = {
   CLAUDE: {
     MODEL: "claude-3-5-sonnet-20241022",
     TEMPERATURE: 0.25,
-    MAX_TOKENS: 4000,
+    MAX_TOKENS: 2000,  // Réduit de 4000 → 2000 pour forcer des réponses concises
     API_URL: "https://api.anthropic.com/v1/messages",
     API_VERSION: "2023-06-01"
   },
@@ -51,7 +53,7 @@ export const AI_CONFIG = {
   PERPLEXITY: {
     MODEL: "sonar-pro",
     TEMPERATURE: 0.2,
-    MAX_TOKENS: 2500,
+    MAX_TOKENS: 1500,  // Réduit de 2500 → 1500 pour réponses ciblées
     API_URL: "https://api.perplexity.ai/chat/completions"
   }
 } as const;

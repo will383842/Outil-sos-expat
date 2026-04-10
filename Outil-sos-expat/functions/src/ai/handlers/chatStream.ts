@@ -22,6 +22,7 @@ import type { Request, Response } from "express";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 import type { LLMMessage, ConversationData, ProviderType } from "../core/types";
+import { detectIntent, getIntentGuidance } from "../services/intentDetector";
 import { AI_CONFIG } from "../core/config";
 import {
   getProviderType,
@@ -489,6 +490,13 @@ export const aiChatStream = onRequest(
 
       // Étape 3: Analyse et génération de la réponse
       sendProgress("analyzing", 3, "Analyse juridique en cours...");
+
+      // Detect intent and inject guidance before user message
+      const intent = detectIntent(safeMessage, history);
+      const intentGuidance = getIntentGuidance(intent);
+      if (intentGuidance) {
+        history.push({ role: "system", content: intentGuidance });
+      }
 
       // Add user message
       history.push({ role: "user", content: safeMessage });

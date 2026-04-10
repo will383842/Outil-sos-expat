@@ -52,7 +52,9 @@ export class OpenAIProvider extends BaseLLMProvider {
       model: config.MODEL,
       messages: openaiMessages,
       temperature: options.temperature ?? config.TEMPERATURE,
-      max_tokens: options.maxTokens || config.MAX_TOKENS
+      max_tokens: options.maxTokens || config.MAX_TOKENS,
+      frequency_penalty: config.FREQUENCY_PENALTY,
+      presence_penalty: config.PRESENCE_PENALTY,
     };
 
     logger.info("[OpenAI] Envoi requête", {
