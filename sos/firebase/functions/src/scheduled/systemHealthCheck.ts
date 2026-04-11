@@ -347,14 +347,27 @@ async function checkPendingTransfers(): Promise<CheckResult> {
     }
 
     let totalAmount = 0;
+    let zeroAmountCount = 0;
+    const oldestDays: number[] = [];
     for (const doc of pendingSnap.docs) {
-      totalAmount += doc.data().providerAmount || 0;
+      const data = doc.data();
+      const amt = data.providerAmount || data.amount || 0;
+      totalAmount += amt;
+      if (amt === 0) zeroAmountCount++;
+      const createdMs = data.createdAt?.toMillis?.() || 0;
+      if (createdMs > 0) oldestDays.push(Math.floor((Date.now() - createdMs) / (24 * 60 * 60 * 1000)));
     }
+
+    const maxDays = oldestDays.length > 0 ? Math.max(...oldestDays) : 0;
+    const details = zeroAmountCount > 0
+      ? `${zeroAmountCount} sans montant (résidus potentiels), plus ancien: ${maxDays}j`
+      : `Plus ancien: ${maxDays}j`;
 
     return {
       name: "Transferts KYC",
       status: "warning",
       message: `${pendingSnap.size} transfert(s) en attente KYC > 7j (${formatCurrency(totalAmount)})`,
+      details,
     };
   } catch (error) {
     return {
