@@ -1375,8 +1375,9 @@ async function handleRequest(request, env, ctx) {
     'programme', 'program', 'programa', 'programm', 'programma', 'jihua', 'karyakram', 'barnamaj',
     // search (all 9 languages)
     'recherche', 'search', 'buscar', 'suche', 'pesquisa', 'poisk', 'sousuo', 'khoj', 'bahth',
-    // special
+    // special — feed discovery (RSS + JSON Feed v1.1)
     'feed.xml',
+    'feed.json',
   ]);
 
   // Article segments (all 9 languages) -- listing + detail → Blog SSR (redesign 2026-04)
