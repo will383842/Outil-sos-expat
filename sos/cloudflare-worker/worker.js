@@ -905,6 +905,175 @@ function isProviderProfilePath(pathname) {
 }
 
 /**
+ * Build a branded 503 HTML response for blog pages when the Laravel blog
+ * backend is unreachable. Prior behavior was to proxy the request to the
+ * React SPA (Cloudflare Pages), which resulted in a confusing "wrong page"
+ * experience because the SPA doesn't know blog routes. This helper returns
+ * a clean multilingual error page with proper status + Retry-After so:
+ *   - users see an obvious "temporarily unavailable" message,
+ *   - monitoring tools correctly detect the outage (status 503 not 200),
+ *   - Google Search Console retries later instead of indexing the wrong page.
+ *
+ * @param {string} pathname - Current request path (used to detect locale).
+ * @param {number} [originalStatus=0] - Upstream status code (for debugging header).
+ * @param {string} [errorMsg=''] - Upstream error message (for debugging header).
+ * @returns {Response} 503 HTML response.
+ */
+function serviceUnavailableResponse(pathname, originalStatus = 0, errorMsg = '') {
+  // Detect locale from URL (e.g. /fr-fr/articles/... → fr)
+  const match = pathname.match(/^\/([a-z]{2})(-[a-z]{2})?(\/|$)/i);
+  const lang = match ? match[1].toLowerCase() : 'fr';
+
+  // Translations for the 9 supported languages
+  const i18n = {
+    fr: { title: 'Service temporairement indisponible', msg: 'Nous rencontrons un incident technique. Merci de réessayer dans quelques instants.', home: "Retour à l'accueil", retry: 'Réessayer' },
+    en: { title: 'Service temporarily unavailable', msg: 'We are experiencing a technical issue. Please try again in a few moments.', home: 'Back to home', retry: 'Retry' },
+    es: { title: 'Servicio temporalmente no disponible', msg: 'Estamos experimentando un problema técnico. Por favor, inténtelo de nuevo en unos momentos.', home: 'Volver al inicio', retry: 'Reintentar' },
+    de: { title: 'Dienst vorübergehend nicht verfügbar', msg: 'Wir haben ein technisches Problem. Bitte versuchen Sie es in einigen Augenblicken erneut.', home: 'Zur Startseite', retry: 'Erneut versuchen' },
+    pt: { title: 'Serviço temporariamente indisponível', msg: 'Estamos com um problema técnico. Por favor, tente novamente em alguns instantes.', home: 'Voltar ao início', retry: 'Tentar novamente' },
+    ru: { title: 'Сервис временно недоступен', msg: 'У нас технические проблемы. Пожалуйста, попробуйте снова через несколько мгновений.', home: 'На главную', retry: 'Повторить' },
+    ar: { title: 'الخدمة غير متاحة مؤقتًا', msg: 'نواجه مشكلة فنية. يرجى المحاولة مرة أخرى بعد لحظات قليلة.', home: 'العودة إلى الصفحة الرئيسية', retry: 'إعادة المحاولة' },
+    hi: { title: 'सेवा अस्थायी रूप से अनुपलब्ध', msg: 'हमें तकनीकी समस्या का सामना करना पड़ रहा है। कृपया कुछ क्षणों में पुनः प्रयास करें।', home: 'होम पर वापस जाएं', retry: 'पुनः प्रयास करें' },
+    zh: { title: '服务暂时不可用', msg: '我们遇到技术问题。请稍后再试。', home: '返回首页', retry: '重试' },
+  };
+  const t = i18n[lang] || i18n.fr;
+  const dir = (lang === 'ar' || lang === 'hi') ? 'rtl' : 'ltr';
+  const homeUrl = `/${match ? (match[1] + (match[2] || '')) : 'fr-fr'}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="${lang}" dir="${dir}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>${t.title} — SOS-Expat</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #4c1d95 100%);
+    color: #f1f5f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.5);
+  }
+  .icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+  }
+  .icon svg { width: 40px; height: 40px; color: #fff; }
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 16px;
+    letter-spacing: -0.02em;
+  }
+  p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin: 0 0 32px;
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  a, button {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+  }
+  a {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  }
+  button {
+    background: transparent;
+    color: #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+  }
+  a:hover, button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.45);
+  }
+  .brand {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #64748b;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <h1>${t.title}</h1>
+    <p>${t.msg}</p>
+    <div class="actions">
+      <a href="${homeUrl}">${t.home}</a>
+      <button onclick="location.reload()">${t.retry}</button>
+    </div>
+    <div class="brand">SOS-Expat &amp; Travelers</div>
+  </div>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Retry-After': '30',
+      'X-Worker-Active': 'true',
+      'X-Blog-Unavailable': 'true',
+      'X-Blog-Original-Status': String(originalStatus),
+      'X-Blog-Error': errorMsg ? errorMsg.slice(0, 100) : '',
+      'Content-Language': lang,
+    },
+  });
+}
+
+/**
  * Check if the URL path matches a blog/help article pattern
  * @param {string} pathname - The URL pathname
  * @returns {boolean} - True if the path matches a blog pattern
@@ -1496,11 +1665,11 @@ async function handleRequest(request, env, ctx) {
       const lang2 = aliasLocale.split('-')[0];
       return Response.redirect(`https://sos-expat.com/${aliasLocale}/${outilsSlugs[lang2] || 'outils'}`, 301);
     }
-    // resultats-sondages → sondages-expatries
+    // resultats-sondages → résultats du sondage universel
     if (aliasSegment === 'resultats-sondages' || aliasSegment === 'survey-results') {
-      const sondageSlugs = { fr:'sondages-expatries', en:'expat-surveys', es:'encuestas-expatriados', de:'expat-umfragen', pt:'pesquisas-expatriados', ru:'oprosy-expatov', zh:'expat-diaocha', hi:'expat-sarvekshan', ar:'istiftaat-mughtaribeen' };
       const lang2 = aliasLocale.split('-')[0];
-      return Response.redirect(`https://sos-expat.com/${aliasLocale}/${sondageSlugs[lang2] || 'sondages-expatries'}`, 301);
+      const segs = { fr:'sondages-expatries/le-grand-sondage-expatries-voyageurs/resultats', en:'expat-surveys/the-great-expat-traveler-survey/results', es:'encuestas-expatriados/la-gran-encuesta-expatriados-viajeros/resultados', de:'expat-umfragen/die-grosse-expat-reisende-umfrage/ergebnisse', pt:'pesquisas-expatriados/a-grande-pesquisa-expatriados-viajantes/resultados', ru:'oprosy-expatov/bolshoj-opros-ekspatov-puteshestvennikov/rezultaty', zh:'expat-diaocha/waiji-renshi-lvxingzhe-da-diaocha/jieguo', hi:'pravasi-sarvekshan/pravasi-yatri-maha-sarvekshan/parinaam', ar:'istitalaat-mughtaribeen/istiftaa-mughtaribin-musafirin-alkabir/nataaij' };
+      return Response.redirect(`https://sos-expat.com/${aliasLocale}/${segs[lang2] || segs.fr}`, 301);
     }
     // sondages (old bare segment) → sondages-expatries
     const bareSondageSegs = ['sondages', 'surveys', 'encuestas', 'umfragen', 'oprosy', 'pesquisas', 'diaocha', 'sarvekshan', 'istitalaat'];
@@ -1554,27 +1723,21 @@ async function handleRequest(request, env, ctx) {
         clearTimeout(blogTimer);
       }
 
-      // If blog returns 5xx, fall back to SPA instead of propagating the error to Google
-      // EXCEPT for sitemaps/XML files: SPA fallback returns HTML which breaks sitemap parsing
-      // → return 503 + Retry-After so Google retries later (GSC handles 503 gracefully)
+      // If blog returns 5xx, return a branded 503 HTML page instead of falling back
+      // to the React SPA. The SPA doesn't know blog routes, so serving it on a blog
+      // URL produces a confusing "design changed" experience for the user. A proper
+      // 503 + Retry-After is also correctly handled by GSC (Google retries later).
       if (blogResponse.status >= 500) {
         const isSitemapOrXml = pathname.endsWith('.xml') || pathname === '/robots.txt' || pathname === '/llms.txt' || pathname === '/ai.txt';
         if (isSitemapOrXml) {
-          console.warn(`[WORKER] Blog returned ${blogResponse.status} for sitemap ${pathname}, returning 503 (no SPA fallback for XML)`);
+          console.warn(`[WORKER] Blog returned ${blogResponse.status} for sitemap ${pathname}, returning 503 (XML)`);
           return new Response('Sitemap temporarily unavailable', {
             status: 503,
             headers: { 'Content-Type': 'text/plain', 'Retry-After': '60', 'X-Worker-Active': 'true' },
           });
         }
-        console.warn(`[WORKER] Blog returned ${blogResponse.status} for ${pathname}, falling back to SPA`);
-        const spaFallback = new URL(pathname, PAGES_ORIGIN);
-        spaFallback.search = url.search;
-        const spaResp = await fetch(spaFallback.toString(), { method: request.method, headers: request.headers });
-        const spaHeaders = new Headers(spaResp.headers);
-        spaHeaders.set('X-Worker-Active', 'true');
-        spaHeaders.set('X-Worker-Blog-Fallback', 'true');
-        spaHeaders.set('X-Blog-Original-Status', String(blogResponse.status));
-        return new Response(spaResp.body, { status: 200, statusText: 'OK', headers: spaHeaders });
+        console.warn(`[WORKER] Blog returned ${blogResponse.status} for ${pathname}, serving branded 503 page`);
+        return serviceUnavailableResponse(pathname, blogResponse.status);
       }
 
       const blogHeaders = new Headers(blogResponse.headers);
@@ -1605,24 +1768,13 @@ async function handleRequest(request, env, ctx) {
         });
       }
 
-      // For HTML pages: fall back to SPA (Cloudflare Pages)
-      // instead of returning 503 which Google penalizes
-      console.error(`[WORKER] Blog proxy error for ${pathname}: ${error.message}, falling back to SPA`);
-      try {
-        const spaFallback = new URL(pathname, PAGES_ORIGIN);
-        spaFallback.search = url.search;
-        const spaResp = await fetch(spaFallback.toString(), { method: request.method, headers: request.headers });
-        const spaHeaders = new Headers(spaResp.headers);
-        spaHeaders.set('X-Worker-Active', 'true');
-        spaHeaders.set('X-Worker-Blog-Fallback', 'error');
-        return new Response(spaResp.body, { status: 200, statusText: 'OK', headers: spaHeaders });
-      } catch (spaError) {
-        // Both blog AND SPA failed — only then return 503
-        return new Response('Service temporarily unavailable', {
-          status: 503,
-          headers: { 'Content-Type': 'text/plain', 'Retry-After': '30' },
-        });
-      }
+      // For HTML pages: return a branded 503 page. We never fall back to the
+      // React SPA on blog URLs because the SPA doesn't know blog routes
+      // (/articles, /countries, /faq, etc.) — serving it produces a broken UX
+      // where users see a wrong page while the Worker reports status 200. GSC
+      // tolerates 503 + Retry-After and retries later.
+      console.error(`[WORKER] Blog proxy error for ${pathname}: ${error.message}, serving branded 503 page`);
+      return serviceUnavailableResponse(pathname, 0, error.message);
     }
   }
 
