@@ -1214,6 +1214,8 @@ async function edgeCachePut(pathname, type, response, ttlSeconds) {
     const cache = caches.default;
     const cacheKey = new Request(buildCacheKey(pathname, type));
     const headers = new Headers(response.headers);
+    // Remove conflicting cache headers from origin (Firebase sets cdn-cache-control: private)
+    headers.delete('cdn-cache-control');
     headers.set('Cache-Control', `public, max-age=${ttlSeconds}`);
     headers.set('X-Edge-Cache-Stored', new Date().toISOString());
     headers.set('X-Edge-Cache-TTL', String(ttlSeconds));
@@ -2651,6 +2653,11 @@ async function handleSSR(request, pathname, url, userAgent, ctx) {
     newHeaders.set('X-Bot-Detected', botName);
     newHeaders.set('X-Edge-Cache', 'MISS');
 
+    // FIX: Remove cdn-cache-control: private set by Firebase/Cloud Run.
+    // This header overrides our Cache-Control: public and prevents
+    // Cloudflare Cache API (caches.default) from storing the response.
+    newHeaders.delete('cdn-cache-control');
+
     // SEO FIX: Set Content-Language header based on URL locale.
     // This gives Google an additional signal about the page language,
     // reinforcing the hreflang and html lang attribute.
@@ -2662,10 +2669,8 @@ async function handleSSR(request, pathname, url, userAgent, ctx) {
     // SEO FIX: Add canonical Link header (prevents GSC "duplicate without canonical" warnings)
     newHeaders.set('Link', `<https://sos-expat.com${pathname}>; rel="canonical"`);
 
-    // Ensure proper caching headers for bots
-    if (!newHeaders.has('Cache-Control')) {
-      newHeaders.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
-    }
+    // Override Cache-Control for bots (always public for edge caching)
+    newHeaders.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
 
     const response = new Response(ssrResponse.body, {
       status: ssrResponse.status,
