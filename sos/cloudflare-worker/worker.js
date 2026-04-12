@@ -1175,6 +1175,12 @@ function isBlogProxyPath(path) {
 
 const EDGE_CACHE_ENABLED = true;
 
+// Edge cache version — increment to invalidate ALL cached entries at once.
+// caches.default.delete() is PoP-local and doesn't propagate globally. When
+// a full cache purge is needed (e.g., after fixing a critical bug), bump
+// this version instead of deploying to force a global miss on all PoPs.
+const EDGE_CACHE_VERSION = 'v2';
+
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,
   SSR_404: 3600,
@@ -1184,7 +1190,7 @@ const EDGE_CACHE_TTL = {
 };
 
 function buildCacheKey(pathname, type) {
-  return `https://sos-expat.com/__edge-cache/${type}${pathname}`;
+  return `https://sos-expat.com/__edge-cache/${EDGE_CACHE_VERSION}/${type}${pathname}`;
 }
 
 async function edgeCacheGet(pathname, type) {
