@@ -195,10 +195,10 @@ function cacheHtml(path: string, html: string): void {
   memoryCache.set(path, { html, timestamp: now });
 
   // Evict oldest L1 entries if over limit
-  if (memoryCache.size > 100) {
+  if (memoryCache.size > 500) {
     const entries = Array.from(memoryCache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 100; i++) {
       memoryCache.delete(entries[i][0]);
     }
   }
@@ -449,7 +449,7 @@ export const renderForBotsV2 = onRequest(
     memory: '2GiB',  // FIX: 1GiB caused OOM (1056 MiB used). Puppeteer + Chromium peaks at ~1.0-1.1 GiB
     cpu: 1,  // memory > 1GiB requires cpu >= 1
     timeoutSeconds: 120,
-    minInstances: 1,  // Avoid 8-12s Puppeteer cold start for bots
+    minInstances: 3,  // 3 warm instances to cover crawl burst concurrency (was 1, caused cold starts under load)
     maxInstances: 10,
   },
   withAntiScraping(async (req: Request, res: Response) => {
@@ -569,8 +569,11 @@ export const renderForBotsV2 = onRequest(
 
     try {
       // Render the page
+      const renderStart = Date.now();
       logger.info('Rendering page with Puppeteer', { url: fullUrl });
       const { html, is404 } = await renderPage(fullUrl);
+      const renderDuration = Date.now() - renderStart;
+      logger.info('Render completed', { path: requestPath, duration_ms: renderDuration, is404 });
 
       if (is404) {
         // Return HTTP 404 for not-found pages — do NOT cache 404s

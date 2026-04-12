@@ -276,3 +276,30 @@ jobs:
             echo "    Vérifiez s'il n'y a pas de fonctions manquantes."
             exit 1
           fi
+
+      # ── Post-deploy: purge caches + warm SSR ─────────────────────────
+      - name: Purge Cloudflare Edge Cache
+        if: success()
+        run: |
+          curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
+          echo "Edge cache purged"
+
+      - name: Invalidate SSR Firestore Cache
+        if: success()
+        run: |
+          curl -s -X POST \
+            "https://europe-west1-sos-urgently-ac307.cloudfunctions.net/invalidateCacheEndpoint" \
+            -H "x-cache-invalidation-key: ${{ secrets.CACHE_INVALIDATION_KEY }}" \
+            -H "Content-Type: application/json" \
+            --data '{"clearAll":true}'
+          echo "SSR Firestore cache invalidated"
+
+      - name: Warm SSR Cache (priority pages)
+        if: success()
+        working-directory: sos
+        run: node scripts/warm-ssr-cache.js
+        timeout-minutes: 15

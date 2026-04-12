@@ -12,8 +12,8 @@
 const SSR_FUNCTION_URL =
   'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/renderForBotsV2';
 const SITE_BASE = 'https://sos-expat.com';
-const MAX_CONCURRENT = 1;       // Séquentiel — évite le rate limit de renderForBotsV2
-const DELAY_BETWEEN_MS = 2000;  // 2s entre chaque requête (~0.5 req/s)
+const MAX_CONCURRENT = 3;       // 3 concurrent — faster warm-up after deploys (was 1)
+const DELAY_BETWEEN_MS = 1000;  // 1s between batches (~3 req/s)
 const TIMEOUT_MS = 90_000;
 const RETRY_COUNT = 2;
 
@@ -182,7 +182,10 @@ async function warmUrl(urlPath, index, total) {
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      const res = await fetch(apiUrl, { signal: controller.signal });
+      const res = await fetch(apiUrl, {
+        signal: controller.signal,
+        headers: { 'x-cache-bypass': '1' }, // Force re-render (bypass Firestore L2 cache after deploy)
+      });
       clearTimeout(timeoutId);
 
       if (res.ok) {
