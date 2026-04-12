@@ -421,15 +421,16 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
  */
 function stripBotNoise(html: string): string {
   return html
-    // Remove external module scripts (<script type="module" src="...">)
-    // The src= attribute distinguishes external from inline scripts.
-    // This removes Vite's entry chunks without touching JSON-LD blocks.
-    .replace(/<script\b[^>]*\btype="module"\b[^>]*\bsrc="[^"]*"[^>]*>\s*<\/script>/gi, '')
-    .replace(/<script\b[^>]*\bsrc="[^"]*"\b[^>]*\btype="module"\b[^>]*>\s*<\/script>/gi, '')
+    // Remove external module scripts (<script type="module" ... src="...">)
+    // Simplified regex: match any <script ...type="module"...></script> with a src.
+    // Previous regex used \b word boundaries which failed when crossorigin="" was between
+    // type="module" and src="...", letting Vite entry chunks leak into bot HTML.
+    .replace(/<script\s[^>]*type="module"[^>]*src="[^"]*"[^>]*>\s*<\/script>/gi, '')
+    .replace(/<script\s[^>]*src="[^"]*"[^>]*type="module"[^>]*>\s*<\/script>/gi, '')
     // Remove <link rel="modulepreload"> (Vite build artifact)
-    .replace(/<link\b[^>]*\brel="modulepreload"\b[^>]*\/?>/gi, '')
+    .replace(/<link\s[^>]*rel="modulepreload"[^>]*\/?>/gi, '')
     // Remove <link rel="preload" as="script"> (preload hints for JS chunks)
-    .replace(/<link\b[^>]*\brel="preload"\b[^>]*\bas="script"\b[^>]*\/?>/gi, '')
+    .replace(/<link\s[^>]*rel="preload"[^>]*as="script"[^>]*\/?>/gi, '')
     // Collapse 3+ consecutive blank lines into 2 (whitespace cleanup)
     .replace(/(\r?\n\s*){3,}/g, '\n\n');
 }
