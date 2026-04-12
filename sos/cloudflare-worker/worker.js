@@ -1745,9 +1745,9 @@ async function handleBlogProxy(request, pathname, url, ctx) {
       });
     }
 
-    // ── L0: Edge Cache check for blog (GET only) ─────────────────────
+    // ── L0: Edge Cache check for blog (GET/HEAD) ─────────────────────
     const blogCacheKey = pathname + (url.search || '');
-    if (request.method === 'GET') {
+    if (request.method === 'GET' || request.method === 'HEAD') {
       const cached = await edgeCacheGet(blogCacheKey, 'blog');
       if (cached) {
         console.log(`[EDGE CACHE HIT] Blog: ${pathname}`);
@@ -1805,7 +1805,7 @@ async function handleBlogProxy(request, pathname, url, ctx) {
     // Laravel sets "private, must-revalidate" + Pragma: no-cache + Set-Cookie (XSRF, session)
     // by default. All three block Cloudflare Cache API from storing responses.
     // We strip session cookies and override cache headers for public caching.
-    if (request.method === 'GET' && blogResponse.status === 200) {
+    if ((request.method === 'GET' || request.method === 'HEAD') && blogResponse.status === 200) {
       const isHtml = (blogHeaders.get('Content-Type') || '').includes('text/html');
       const ttl = isHtml ? EDGE_CACHE_TTL.BLOG_HTML : EDGE_CACHE_TTL.BLOG_ASSET;
       blogHeaders.set('Cache-Control', `public, max-age=${ttl}`);
@@ -1822,7 +1822,7 @@ async function handleBlogProxy(request, pathname, url, ctx) {
     });
 
     // ── Store blog 200 responses in edge cache (non-blocking) ────────
-    if (request.method === 'GET' && blogResponse.status === 200) {
+    if ((request.method === 'GET' || request.method === 'HEAD') && blogResponse.status === 200) {
       const isHtml = (blogHeaders.get('Content-Type') || '').includes('text/html');
       const ttl = isHtml ? EDGE_CACHE_TTL.BLOG_HTML : EDGE_CACHE_TTL.BLOG_ASSET;
       ctx.waitUntil(edgeCachePut(blogCacheKey, 'blog', response.clone(), ttl));
