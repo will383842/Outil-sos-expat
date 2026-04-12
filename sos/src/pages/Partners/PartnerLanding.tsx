@@ -163,7 +163,7 @@ const SEO_CONSTANTS = {
 
 const OG_LOCALES: Record<string, string> = {
   fr: 'fr_FR', en: 'en_US', es: 'es_ES', de: 'de_DE',
-  pt: 'pt_BR', ru: 'ru_RU', zh: 'zh_CN', ch: 'zh_CN', ar: 'ar_SA', hi: 'hi_IN',
+  pt: 'pt_PT', ru: 'ru_RU', zh: 'zh_CN', ch: 'zh_CN', ar: 'ar_SA', hi: 'hi_IN',
 };
 
 const SUPPORTED_LANGS = ['fr', 'en', 'es', 'de', 'pt', 'ru', 'ch', 'ar', 'hi'] as const;
