@@ -2633,6 +2633,31 @@ async function handleSSR(request, pathname, url, userAgent, ctx) {
 
     clearTimeout(ssrTimer);
 
+    // CRITICAL: If SSR explicitly detected a 404 (via data-page-not-found marker),
+    // propagate the 404 directly to Google. This prevents soft 404s where the
+    // Worker would serve SPA 200 for non-existent URLs.
+    if (ssrResponse.status === 404) {
+      console.log(`[WORKER] SSR returned 404 for ${pathname}, propagating to bot`);
+      const newHeaders = new Headers(ssrResponse.headers);
+      newHeaders.set('X-Rendered-By', 'sos-expat-ssr');
+      newHeaders.set('X-Bot-Detected', botName);
+      newHeaders.set('X-Edge-Cache', 'MISS');
+      newHeaders.delete('cdn-cache-control');
+      const localeMatch = pathname.match(/^\/([a-z]{2})-[a-z]{2}(\/|$)/);
+      if (localeMatch) newHeaders.set('Content-Language', localeMatch[1]);
+      newHeaders.set('Link', `<https://sos-expat.com${pathname}>; rel="canonical"`);
+      newHeaders.set('Cache-Control', 'public, max-age=3600'); // 1h TTL for 404s
+
+      const response404 = new Response(ssrResponse.body, {
+        status: 404,
+        statusText: 'Not Found',
+        headers: newHeaders,
+      });
+      // Cache 404s for 1h to avoid re-rendering
+      ctx.waitUntil(edgeCachePut(pathname, 'ssr', response404.clone(), EDGE_CACHE_TTL.SSR_404));
+      return response404;
+    }
+
     // If SSR returns a redirect (302) or 5xx, fall back to SPA
     // This prevents: 1) redirect loops (SSR error → 302 to same domain → Worker → SSR → loop)
     //                2) 5xx errors propagated to Google
