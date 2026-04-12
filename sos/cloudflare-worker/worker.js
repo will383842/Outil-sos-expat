@@ -1802,12 +1802,17 @@ async function handleBlogProxy(request, pathname, url, ctx) {
     }
 
     // FIX: Override Laravel's Cache-Control: private for cacheable GET 200 responses.
-    // Laravel sets "private, must-revalidate" by default which blocks edge caching.
+    // Laravel sets "private, must-revalidate" + Pragma: no-cache + Set-Cookie (XSRF, session)
+    // by default. All three block Cloudflare Cache API from storing responses.
+    // We strip session cookies and override cache headers for public caching.
     if (request.method === 'GET' && blogResponse.status === 200) {
       const isHtml = (blogHeaders.get('Content-Type') || '').includes('text/html');
       const ttl = isHtml ? EDGE_CACHE_TTL.BLOG_HTML : EDGE_CACHE_TTL.BLOG_ASSET;
       blogHeaders.set('Cache-Control', `public, max-age=${ttl}`);
       blogHeaders.delete('cdn-cache-control');
+      blogHeaders.delete('Pragma');
+      blogHeaders.delete('Expires');
+      blogHeaders.delete('Set-Cookie'); // Remove Laravel session cookies (XSRF-TOKEN, session)
     }
 
     const response = new Response(blogResponse.body, {
