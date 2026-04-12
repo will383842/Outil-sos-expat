@@ -410,7 +410,7 @@ export const onMessageEventCreate = onDocumentCreated(
     console.log(`📬 [${debugId}]   uid: ${evt.uid || 'none'}`);
     console.log(`📬 [${debugId}]   to.email: ${evt.to?.email || 'none'}`);
     console.log(`📬 [${debugId}]   to.phone: ${evt.to?.phone ? evt.to.phone.slice(0, 8) + '...' : 'none'}`);
-    console.log(`📬 [${debugId}]   channels: ${evt.channels?.join(', ') || 'auto'}`);
+    console.log(`📬 [${debugId}]   channels: ${Array.isArray(evt.channels) ? evt.channels.join(', ') : 'auto'}`);
     console.log(`📬 [${debugId}]   context keys: ${Object.keys(evt.context || {}).join(', ') || 'none'}`);
 
     console.log(
