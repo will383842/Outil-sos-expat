@@ -419,8 +419,8 @@ async function renderPage(url: string): Promise<{ html: string; is404: boolean }
  *
  * Impact: reduces HTML size by ~20-40%, improving text/HTML ratio in SEO audits.
  */
-function stripBotNoise(html: string): string {
-  return html
+function stripBotNoise(html: string, path?: string): string {
+  let result = html
     // Remove external module scripts (<script type="module" ... src="...">)
     // Simplified regex: match any <script ...type="module"...></script> with a src.
     // Previous regex used \b word boundaries which failed when crossorigin="" was between
@@ -430,9 +430,59 @@ function stripBotNoise(html: string): string {
     // Remove <link rel="modulepreload"> (Vite build artifact)
     .replace(/<link\s[^>]*rel="modulepreload"[^>]*\/?>/gi, '')
     // Remove <link rel="preload" as="script"> (preload hints for JS chunks)
-    .replace(/<link\s[^>]*rel="preload"[^>]*as="script"[^>]*\/?>/gi, '')
-    // Collapse 3+ consecutive blank lines into 2 (whitespace cleanup)
-    .replace(/(\r?\n\s*){3,}/g, '\n\n');
+    .replace(/<link\s[^>]*rel="preload"[^>]*as="script"[^>]*\/?>/gi, '');
+
+  // Deduplicate meta tags: when React Helmet injected a tag (data-rh="true"),
+  // remove the static version from index.html. React Helmet appends new tags
+  // instead of replacing, leading to duplicate og:title/og:description with the
+  // static English version from index.html being parsed by Facebook/LinkedIn.
+  // We preserve the Helmet version (correct localized content) and remove the static.
+  const helmetTags = new Set<string>();
+  // Find all Helmet-managed tags and extract their "property" or "name" attribute
+  const helmetRegex = /<meta\s[^>]*data-rh="true"[^>]*>/gi;
+  const matches = result.match(helmetRegex) || [];
+  for (const tag of matches) {
+    const propMatch = tag.match(/\b(property|name)="([^"]+)"/i);
+    if (propMatch) helmetTags.add(`${propMatch[1]}="${propMatch[2]}"`);
+  }
+  // Remove static meta tags (without data-rh) when Helmet version exists
+  for (const key of helmetTags) {
+    // Match <meta ...key...> that does NOT contain data-rh="true"
+    const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const staticRegex = new RegExp(
+      `<meta\\s(?![^>]*data-rh="true")[^>]*${escaped}[^>]*/?>`,
+      'gi'
+    );
+    result = result.replace(staticRegex, '');
+  }
+
+  // Similarly deduplicate <title> tags: if Helmet set one (data-rh="true"),
+  // remove the static one from index.html
+  if (/<title\s[^>]*data-rh="true"[^>]*>/i.test(result)) {
+    // Remove the first <title>...</title> that does NOT have data-rh
+    result = result.replace(
+      /<title(?!\s[^>]*data-rh="true")[^>]*>[^<]*<\/title>/i,
+      ''
+    );
+  }
+
+  // Fix <html lang=""> attribute based on URL path locale.
+  // index.html hardcodes lang="fr" but React Helmet via Helmet htmlAttributes
+  // doesn't always propagate. Override directly in the HTML string.
+  if (path) {
+    const localeMatch = path.match(/^\/([a-z]{2})-([a-z]{2})(\/|$)/);
+    if (localeMatch) {
+      const lang = localeMatch[1];
+      result = result.replace(/<html(\s[^>]*)?\slang="[a-z-]+"/i, `<html$1 lang="${lang}"`);
+      // Also handle case where lang is the first attribute
+      if (!new RegExp(`<html[^>]*lang="${lang}"`, 'i').test(result)) {
+        result = result.replace(/<html(\s[^>]*)?>/i, `<html$1 lang="${lang}">`);
+      }
+    }
+  }
+
+  // Collapse 3+ consecutive blank lines into 2 (whitespace cleanup)
+  return result.replace(/(\r?\n\s*){3,}/g, '\n\n');
 }
 
 /**
@@ -591,7 +641,7 @@ export const renderForBotsV2 = onRequest(
       // Bots don't execute JavaScript, so Vite module scripts & modulepreload hints
       // are pure HTML noise that inflates the ratio without adding text content.
       // JSON-LD scripts (type="application/ld+json") are intentionally preserved.
-      const botHtml = stripBotNoise(html);
+      const botHtml = stripBotNoise(html, requestPath);
 
       // Cache the result (only for valid pages)
       cacheHtml(cacheKey, botHtml);
