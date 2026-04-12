@@ -1801,6 +1801,15 @@ async function handleBlogProxy(request, pathname, url, ctx) {
       blogHeaders.set('Location', location.replace(BLOG_ORIGIN, ''));
     }
 
+    // FIX: Override Laravel's Cache-Control: private for cacheable GET 200 responses.
+    // Laravel sets "private, must-revalidate" by default which blocks edge caching.
+    if (request.method === 'GET' && blogResponse.status === 200) {
+      const isHtml = (blogHeaders.get('Content-Type') || '').includes('text/html');
+      const ttl = isHtml ? EDGE_CACHE_TTL.BLOG_HTML : EDGE_CACHE_TTL.BLOG_ASSET;
+      blogHeaders.set('Cache-Control', `public, max-age=${ttl}`);
+      blogHeaders.delete('cdn-cache-control');
+    }
+
     const response = new Response(blogResponse.body, {
       status: blogResponse.status,
       statusText: blogResponse.statusText,
