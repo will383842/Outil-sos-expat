@@ -14,7 +14,9 @@ workers_dev = false
 # Route configuration for production
 routes = [
   { pattern = "sos-expat.com/*", zone_name = "sos-expat.com" },
-  { pattern = "www.sos-expat.com/*", zone_name = "sos-expat.com" }
+  { pattern = "www.sos-expat.com/*", zone_name = "sos-expat.com" },
+  { pattern = "sos-holidays.com/*", zone_name = "sos-holidays.com" },
+  { pattern = "www.sos-holidays.com/*", zone_name = "sos-holidays.com" }
 ]
 
 # Environment-specific configurations
