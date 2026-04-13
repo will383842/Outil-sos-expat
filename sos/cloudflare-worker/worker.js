@@ -1736,6 +1736,19 @@ if (aliasMatch) {
 async function handleBlogProxy(request, pathname, url, ctx) {
   console.log(`[WORKER] Blog proxy: ${pathname}`);
   try {
+    // Annuaire ?pays=slug → /xx-xx/annuaire/slug (301 at edge, before cache check)
+    // Prevents serving the cached index page when the user expects country entries.
+    const annuaireMatch = pathname.match(/^\/([a-z]{2}-[a-z]{2})\/([^\/]+)\/?$/);
+    if (annuaireMatch && ANNUAIRE_SEGMENTS.has(annuaireMatch[2]) && url.searchParams.has('pays')) {
+      const pays = url.searchParams.get('pays');
+      if (pays) {
+        return new Response(null, {
+          status: 301,
+          headers: { 'Location': `/${annuaireMatch[1]}/${annuaireMatch[2]}/${pays}` },
+        });
+      }
+    }
+
     // Legacy /blog/* — redirect 301 to new URL without /blog prefix
     if (pathname.startsWith('/blog/')) {
       const newPath = pathname.replace(/^\/blog/, '');
