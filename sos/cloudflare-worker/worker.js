@@ -2004,6 +2004,26 @@ async function handleMultiDashboard(request, pathname) {
 }
 
 function handleLocaleRedirects(pathname, url) {
+// TRAILING SLASH NORMALIZATION on locale root paths (e.g. /fr-fr/ → /fr-fr)
+// Without this, bots receive 200 for both /fr-fr and /fr-fr/ from SSR,
+// creating duplicate indexing. The canonical tag helps but a 301 is cleaner.
+// =========================================================================
+const trailingSlashLocaleMatch = pathname.match(/^(\/[a-z]{2}-[a-z]{2})\/$/i);
+if (trailingSlashLocaleMatch) {
+  const cleanPath = trailingSlashLocaleMatch[1];
+  const redirectUrl = `${url.origin}${cleanPath}${url.search}`;
+  console.log(`[WORKER] Trailing slash redirect: ${pathname} -> ${cleanPath}`);
+  return new Response(null, {
+    status: 301,
+    headers: {
+      'Location': redirectUrl,
+      'X-Worker-Active': 'true',
+      'X-Worker-Redirect': 'trailing-slash',
+      'Cache-Control': 'public, max-age=31536000',
+    },
+  });
+}
+
 // LOCALE CANONICALIZATION (ALL VISITORS): Redirect non-canonical locales
 // Applies to ALL visitors (not just bots) to prevent Google from indexing
 // duplicate pages under non-canonical locales like /fr-us/, /de-br/, etc.
