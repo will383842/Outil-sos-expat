@@ -234,7 +234,7 @@ const PartnersPage = lazy(() => import('./pages/Partners/PartnersPage'));
 const InfluencerDirectory = lazy(() => import('./pages/Influencer/InfluencerDirectory'));
 const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
-const Annuaire = lazy(() => import('./pages/Annuaire/Annuaire'));
+// const Annuaire = lazy(() => import('./pages/Annuaire/Annuaire')); // migrated to blog Laravel
 
 // Public content pages — blog pages removed (served by Laravel blog via Worker)
 // Only SPA-specific pages remain:
@@ -396,8 +396,10 @@ const routeConfigs: RouteConfig[] = [
   { path: "/sos-appel", component: SOSCall, translated: "sos-call" },
   { path: "/appel-expatrie", component: ExpatCall, translated: "expat-call" },
 
-  // Annuaire expatriés — ressources officielles par pays (CountryDirectory depuis Mission Control)
-  { path: "/annuaire", component: Annuaire, translated: "annuaire" },
+  // Annuaire expatriés — now served by blog Laravel (Cloudflare Worker proxies these paths).
+  // BlogRedirect forces a full page reload so the Worker intercepts and sends to blog SSR.
+  // ?pays=slug is preserved in the reload URL; the Worker then 301s to /annuaire/{slug}.
+  { path: "/annuaire", component: BlogRedirect, translated: "annuaire" },
 
   // ─── Blog content pages — COMMENTED OUT 2026-04-08 ───────────────────────────
   // These pages are now served by the blog Laravel via Cloudflare Worker.
