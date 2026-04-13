@@ -1179,14 +1179,14 @@ const EDGE_CACHE_ENABLED = true;
 // caches.default.delete() is PoP-local and doesn't propagate globally. When
 // a full cache purge is needed (e.g., after fixing a critical bug), bump
 // this version instead of deploying to force a global miss on all PoPs.
-const EDGE_CACHE_VERSION = 'v2';
+const EDGE_CACHE_VERSION = 'v3';
 
 const EDGE_CACHE_TTL = {
-  SSR_OK: 86400,
-  SSR_404: 3600,
-  BLOG_HTML: 3600,
-  BLOG_ASSET: 86400,
-  SITEMAP: 3600,
+  SSR_OK: 86400,   // 24h for valid pages
+  SSR_404: 600,    // 10 min for 404s (they may become valid — don't trap them in cache for 1h)
+  BLOG_HTML: 3600, // 1h for blog HTML
+  BLOG_ASSET: 86400, // 24h for blog assets
+  SITEMAP: 3600,   // 1h for sitemaps
 };
 
 function buildCacheKey(pathname, type) {
