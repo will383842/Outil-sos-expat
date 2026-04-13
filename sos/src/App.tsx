@@ -234,7 +234,6 @@ const PartnersPage = lazy(() => import('./pages/Partners/PartnersPage'));
 const InfluencerDirectory = lazy(() => import('./pages/Influencer/InfluencerDirectory'));
 const BloggerDirectory = lazy(() => import('./pages/Blogger/BloggerDirectory'));
 const ChatterDirectory = lazy(() => import('./pages/Chatter/ChatterDirectory'));
-// const Annuaire = lazy(() => import('./pages/Annuaire/Annuaire')); // migrated to blog Laravel
 
 // Public content pages — blog pages removed (served by Laravel blog via Worker)
 // Only SPA-specific pages remain:
