@@ -1179,7 +1179,7 @@ const EDGE_CACHE_ENABLED = true;
 // caches.default.delete() is PoP-local and doesn't propagate globally. When
 // a full cache purge is needed (e.g., after fixing a critical bug), bump
 // this version instead of deploying to force a global miss on all PoPs.
-const EDGE_CACHE_VERSION = 'v5';
+const EDGE_CACHE_VERSION = 'v6';
 
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,   // 24h for valid pages
