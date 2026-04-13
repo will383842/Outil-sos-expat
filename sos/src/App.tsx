@@ -399,6 +399,9 @@ const routeConfigs: RouteConfig[] = [
   // BlogRedirect forces a full page reload so the Worker intercepts and sends to blog SSR.
   // ?pays=slug is preserved in the reload URL; the Worker then 301s to /annuaire/{slug}.
   { path: "/annuaire", component: BlogRedirect, translated: "annuaire" },
+  // Sub-pages (country detail): /fr-fr/annuaire/afrique-du-sud — must also BlogRedirect
+  // so React Router doesn't 404 when the SPA loads for these URLs (e.g. stale browser cache).
+  { path: "/annuaire/:slug", component: BlogRedirect, translated: "annuaire" },
 
   // ─── Blog content pages — COMMENTED OUT 2026-04-08 ───────────────────────────
   // These pages are now served by the blog Laravel via Cloudflare Worker.
@@ -418,14 +421,20 @@ const routeConfigs: RouteConfig[] = [
   //
   // Hard redirects to blog Laravel (Cloudflare Worker intercepts these paths):
   { path: "/articles", component: BlogRedirect, translated: "articles" },
+  { path: "/articles/:slug", component: BlogRedirect, translated: "articles" },
   { path: "/fiches-pays", component: BlogRedirect, translated: "fiches-pays" },
+  { path: "/fiches-pays/:slug", component: BlogRedirect, translated: "fiches-pays" },
   { path: "/fiches-thematiques", component: BlogRedirect, translated: "fiches-thematiques" },
+  { path: "/fiches-thematiques/:slug", component: BlogRedirect, translated: "fiches-thematiques" },
   { path: "/nos-sondages", component: BlogRedirect, translated: "sondages-listing" },
   { path: "/sondages", component: BlogRedirect, translated: "sondages" },
+  { path: "/sondages/:slug", component: BlogRedirect, translated: "sondages" },
   { path: "/resultats-sondages", component: BlogRedirect, translated: "resultats-sondages" },
   { path: "/nos-outils", component: BlogRedirect, translated: "outils-listing" },
   { path: "/outils", component: BlogRedirect, translated: "outils" },
+  { path: "/outils/:slug", component: BlogRedirect, translated: "outils" },
   { path: "/galerie", component: BlogRedirect, translated: "galerie" },
+  { path: "/galerie/:slug", component: BlogRedirect, translated: "galerie" },
 
   // These SPA routes are KEPT (not blog content):
   { path: "/programme-chatter", component: ProgrammeChatter, translated: "programme-chatter" },
