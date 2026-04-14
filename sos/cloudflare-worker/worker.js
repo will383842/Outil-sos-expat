@@ -1094,13 +1094,16 @@ function isBlogProxyPath(path) {
 
   if (path === '/blog' || path.startsWith('/blog/')) return true;
 
-  // SEO files — sitemap.xml, robots.txt, llms.txt, ai.txt served from BLOG LARAVEL
+  // SEO files — sitemap.xml, llms.txt, ai.txt served from BLOG LARAVEL
   // The blog generates a dynamic sitemap index that includes all content types
   // (articles, categories, countries, tools, sondages, AND image bank).
   // This is scalable: any new content added via admin auto-appears in sitemap.
+  //
+  // NOTE: robots.txt is NOT proxied here — it's served from Cloudflare Pages
+  // (sos/public/robots.txt) so we can control Sitemap: declarations from the
+  // SOS-Expat repo directly instead of depending on blog Laravel.
   if (path === '/sitemap.xml') return true;
   if (path === '/sitemap-news.xml') return true;
-  if (path === '/robots.txt') return true;
   if (path === '/llms.txt') return true;
   if (path === '/ai.txt') return true;
   if (path === '/.well-known/indexnow-key.txt') return true;
@@ -1182,7 +1185,7 @@ const EDGE_CACHE_ENABLED = true;
 // caches.default.delete() is PoP-local and doesn't propagate globally. When
 // a full cache purge is needed (e.g., after fixing a critical bug), bump
 // this version instead of deploying to force a global miss on all PoPs.
-const EDGE_CACHE_VERSION = 'v8';
+const EDGE_CACHE_VERSION = 'v9';
 
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,   // 24h for valid pages
