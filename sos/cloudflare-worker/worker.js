@@ -1089,6 +1089,9 @@ function isMultiDashboardPath(pathname) {
  * Moved from inner function isBlogPath() in handleRequest.
  */
 function isBlogProxyPath(path) {
+  // Static HTML tools (e.g., /tools/job-tracker.html) — served directly by Cloudflare Pages
+  if (path.endsWith('.html')) return false;
+
   if (path === '/blog' || path.startsWith('/blog/')) return true;
 
   // SEO files — sitemap.xml, robots.txt, llms.txt, ai.txt served from BLOG LARAVEL
@@ -1179,7 +1182,7 @@ const EDGE_CACHE_ENABLED = true;
 // caches.default.delete() is PoP-local and doesn't propagate globally. When
 // a full cache purge is needed (e.g., after fixing a critical bug), bump
 // this version instead of deploying to force a global miss on all PoPs.
-const EDGE_CACHE_VERSION = 'v6';
+const EDGE_CACHE_VERSION = 'v8';
 
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,   // 24h for valid pages
@@ -1841,7 +1844,9 @@ async function handleBlogProxy(request, pathname, url, ctx) {
     });
 
     // ── Store blog 200 responses in edge cache (non-blocking) ────────
-    if ((request.method === 'GET' || request.method === 'HEAD') && blogResponse.status === 200) {
+    // Only cache GET responses — HEAD responses have no body and would poison the cache
+    // with empty entries that break subsequent GET requests for the same URL.
+    if (request.method === 'GET' && blogResponse.status === 200) {
       const isHtml = (blogHeaders.get('Content-Type') || '').includes('text/html');
       const ttl = isHtml ? EDGE_CACHE_TTL.BLOG_HTML : EDGE_CACHE_TTL.BLOG_ASSET;
       ctx.waitUntil(edgeCachePut(blogCacheKey, 'blog', response.clone(), ttl));
@@ -2538,7 +2543,7 @@ if (legacyLocaleMatch) {
 // This covers ALL current and future routes without maintaining a manual list.
 // Excludes: static assets, API paths, locale-prefixed paths, and root path.
 const cleanPath = pathname.replace(/\/$/, '') || '/';
-const isStaticAssetPath = /\.(js|css|png|jpg|jpeg|webp|svg|ico|gif|woff2?|ttf|json|xml|txt|map|wasm)$/i.test(pathname);
+const isStaticAssetPath = /\.(js|css|png|jpg|jpeg|webp|svg|ico|gif|woff2?|ttf|json|xml|txt|map|wasm|html)$/i.test(pathname);
 const isSystemPath = /^\/(assets|api|_next|__\/auth|favicon|manifest|robots|sitemap|sw\.js|firebase-messaging|sitemaps|ref\/|rec\/|prov\/|multi-dashboard)/i.test(pathname);
 const hasLocalePrefix = /^\/[a-z]{2}(-[a-z]{2})?(\/|$)/i.test(pathname);
 const isRootPath = cleanPath === '/';
