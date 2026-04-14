@@ -410,7 +410,6 @@ export const registerBlogger = onCall(
         firstName: input.firstName.trim(),
         lastName: input.lastName.trim(),
         ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
-        photoUrl: undefined,
         country: input.country.trim(),
         language: input.language,
         additionalLanguages: input.additionalLanguages || [],
@@ -428,8 +427,6 @@ export const registerBlogger = onCall(
         // Status - ACTIVE immediately (no quiz required)
         status: "active" as BloggerStatus,
         isVisible: false,
-        adminNotes: undefined,
-        suspensionReason: undefined,
 
         // Definitive role acknowledgment
         definitiveRoleAcknowledged: true,
