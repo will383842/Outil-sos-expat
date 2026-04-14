@@ -700,11 +700,11 @@ export const registerChatter = onCall(
           convertedAt: now,
           // Server-side tracking enrichment (post-cookie 2026)
           ...(input.trafficSource && {
-            utmSource: input.trafficSource.utmSource?.substring(0, 200),
-            utmMedium: input.trafficSource.utmMedium?.substring(0, 200),
-            utmCampaign: input.trafficSource.utmCampaign?.substring(0, 200),
-            utmContent: input.trafficSource.utmContent?.substring(0, 200),
-            utmTerm: input.trafficSource.utmTerm?.substring(0, 200),
+            ...(input.trafficSource.utmSource && { utmSource: input.trafficSource.utmSource.substring(0, 200) }),
+            ...(input.trafficSource.utmMedium && { utmMedium: input.trafficSource.utmMedium.substring(0, 200) }),
+            ...(input.trafficSource.utmCampaign && { utmCampaign: input.trafficSource.utmCampaign.substring(0, 200) }),
+            ...(input.trafficSource.utmContent && { utmContent: input.trafficSource.utmContent.substring(0, 200) }),
+            ...(input.trafficSource.utmTerm && { utmTerm: input.trafficSource.utmTerm.substring(0, 200) }),
             ...(input.trafficSource.fbclid || input.trafficSource.fbp || input.trafficSource.fbc ? {
               metaIds: {
                 ...(input.trafficSource.fbclid && { fbclid: input.trafficSource.fbclid }),
@@ -714,8 +714,8 @@ export const registerChatter = onCall(
             } : {}),
             ...(input.trafficSource.gclid ? { googleIds: { gclid: input.trafficSource.gclid } } : {}),
             ...(input.trafficSource.ttclid ? { tiktokIds: { ttclid: input.trafficSource.ttclid } } : {}),
-            sessionId: input.trafficSource.sessionId,
-            userCountry: input.trafficSource.userCountry,
+            ...(input.trafficSource.sessionId && { sessionId: input.trafficSource.sessionId }),
+            ...(input.trafficSource.userCountry && { userCountry: input.trafficSource.userCountry }),
           }),
         });
 
