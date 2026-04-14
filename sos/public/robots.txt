@@ -233,10 +233,12 @@ Disallow: /
 # ===========================================
 # SITEMAPS
 # ===========================================
-# sitemap.xml = index principal dynamique (Blog Laravel via Worker) — soumis dans GSC
-Sitemap: https://sos-expat.com/sitemap.xml
-# sitemap-index.xml = index Firebase Functions (profiles, listings, help, faq × 9 langues)
+# sitemap-index.xml = MASTER index (Firebase + Blog Laravel fusionnés)
+# Contient ~569 sub-sitemaps : profiles/listings/help/faq Firebase + articles/categories/
+# tags/countries/guides/programme/news/priority Country Campaign Blog Laravel
 Sitemap: https://sos-expat.com/sitemap-index.xml
+# sitemap-news.xml = Google News (top stories, articles récents <48h)
+Sitemap: https://sos-expat.com/sitemap-news.xml
 
 # ===========================================
 # FICHIERS SPÉCIAUX POUR IA
