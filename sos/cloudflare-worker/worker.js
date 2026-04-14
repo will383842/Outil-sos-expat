@@ -1898,6 +1898,20 @@ function cacheSitemapResponse(response) {
   return response;
 }
 
+// Helper: fetch with explicit timeout to avoid Cloudflare default 30s on Firebase cold starts
+async function fetchSitemapWithTimeout(targetUrl, timeoutMs = 20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(targetUrl, {
+      headers: { 'Accept': 'application/xml' },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Legacy sitemaps (unchanged, backward compatible)
 const SITEMAP_PROXY = {
   '/sitemaps/profiles.xml': 'https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapProfiles',
@@ -1919,9 +1933,7 @@ if (langSitemapMatch) {
   const lang = langSitemapMatch[2];
   const targetUrl = `https://europe-west1-sos-urgently-ac307.cloudfunctions.net/${funcName}?lang=${lang}`;
   try {
-    const sitemapResponse = await fetch(targetUrl, {
-      headers: { 'Accept': 'application/xml' },
-    });
+    const sitemapResponse = await fetchSitemapWithTimeout(targetUrl);
     const newHeaders = new Headers(sitemapResponse.headers);
     newHeaders.set('Content-Type', 'application/xml; charset=utf-8');
     newHeaders.set('Cache-Control', 'public, max-age=3600');
@@ -1941,9 +1953,7 @@ if (langSitemapMatch) {
 // Dynamic sitemap index: /sitemap-index.xml → sitemapIndex Cloud Function
 if (pathname === '/sitemap-index.xml') {
   try {
-    const sitemapResponse = await fetch('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapIndex', {
-      headers: { 'Accept': 'application/xml' },
-    });
+    const sitemapResponse = await fetchSitemapWithTimeout('https://europe-west1-sos-urgently-ac307.cloudfunctions.net/sitemapIndex');
     const newHeaders = new Headers(sitemapResponse.headers);
     newHeaders.set('Content-Type', 'application/xml; charset=utf-8');
     newHeaders.set('Cache-Control', 'public, max-age=3600');
@@ -1964,9 +1974,7 @@ if (SITEMAP_PROXY[pathname]) {
   try {
     // Forward query params (e.g., ?page=1 for paginated sitemaps)
     const sitemapTarget = url.search ? `${SITEMAP_PROXY[pathname]}${url.search}` : SITEMAP_PROXY[pathname];
-    const sitemapResponse = await fetch(sitemapTarget, {
-      headers: { 'Accept': 'application/xml' },
-    });
+    const sitemapResponse = await fetchSitemapWithTimeout(sitemapTarget);
     const newHeaders = new Headers(sitemapResponse.headers);
     newHeaders.set('Content-Type', 'application/xml; charset=utf-8');
     newHeaders.set('Cache-Control', 'public, max-age=3600');
