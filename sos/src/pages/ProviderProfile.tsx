@@ -489,6 +489,116 @@ const formatShortName = (provider: SosProfile): string => {
   return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
 };
 
+// [uiLang][providerLangCode] → adjectif localisé pour le H1
+const LANGUAGE_DESCRIPTORS: Record<string, Record<string, string>> = {
+  fr: {
+    fr: 'francophone', en: 'anglophone', nl: 'néerlandophone', de: 'germanophone',
+    es: 'hispanophone', pt: 'lusophone', ar: 'arabophone', zh: 'sinophone', ch: 'sinophone',
+    hi: 'hindophone', it: 'italophone', ru: 'russophone', tr: 'turcophone',
+    ja: 'japonophone', ko: 'coréanophone', pl: 'polonophone', sv: 'suédophone',
+    da: 'danophone', no: 'norvégophone', fi: 'finnophone', el: 'hellénophone',
+    he: 'hébraïphone', th: 'thaïphone', vi: 'vietnamophone',
+  },
+  en: {
+    fr: 'French-speaking', en: 'English-speaking', nl: 'Dutch-speaking', de: 'German-speaking',
+    es: 'Spanish-speaking', pt: 'Portuguese-speaking', ar: 'Arabic-speaking', zh: 'Chinese-speaking', ch: 'Chinese-speaking',
+    hi: 'Hindi-speaking', it: 'Italian-speaking', ru: 'Russian-speaking', tr: 'Turkish-speaking',
+    ja: 'Japanese-speaking', ko: 'Korean-speaking', pl: 'Polish-speaking', sv: 'Swedish-speaking',
+    da: 'Danish-speaking', no: 'Norwegian-speaking', fi: 'Finnish-speaking', el: 'Greek-speaking',
+    he: 'Hebrew-speaking', th: 'Thai-speaking', vi: 'Vietnamese-speaking',
+  },
+  es: {
+    fr: 'francófono', en: 'anglófono', nl: 'neerlandófono', de: 'germanófono',
+    es: 'hispanohablante', pt: 'lusófono', ar: 'arabófono', zh: 'sinófono', ch: 'sinófono',
+    hi: 'hindófono', it: 'italófono', ru: 'rusófono', tr: 'turcófono',
+    ja: 'japonófono', ko: 'coreófono', pl: 'polonófono', sv: 'suecófono',
+  },
+  de: {
+    fr: 'französischsprachig', en: 'englischsprachig', nl: 'niederländischsprachig', de: 'deutschsprachig',
+    es: 'spanischsprachig', pt: 'portugiesischsprachig', ar: 'arabischsprachig', zh: 'chinesischsprachig', ch: 'chinesischsprachig',
+    hi: 'hindisprachig', it: 'italienischsprachig', ru: 'russischsprachig', tr: 'türkischsprachig',
+    ja: 'japanischsprachig', ko: 'koreanischsprachig', pl: 'polnischsprachig', sv: 'schwedischsprachig',
+  },
+  pt: {
+    fr: 'francófono', en: 'anglófono', nl: 'neerlandófono', de: 'germanófono',
+    es: 'hispanófono', pt: 'lusófono', ar: 'arabófono', zh: 'sinófono', ch: 'sinófono',
+    hi: 'hindófono', it: 'italófono', ru: 'rusófono', tr: 'turcófono',
+    ja: 'japonófono', ko: 'coreófono', pl: 'polonófono', sv: 'suecófono',
+  },
+  ru: {
+    fr: 'франкофон', en: 'англофон', nl: 'нидерландоязычный', de: 'немецкоязычный',
+    es: 'испаноязычный', pt: 'португалоязычный', ar: 'арабоязычный', zh: 'китаеязычный', ch: 'китаеязычный',
+    hi: 'хиндиязычный', it: 'италоязычный', ru: 'русскоязычный', tr: 'тюркоязычный',
+    ja: 'японоязычный', ko: 'кореяноязычный', pl: 'польскоязычный', sv: 'шведскоязычный',
+  },
+  ch: {
+    fr: '法语者', en: '英语者', nl: '荷兰语者', de: '德语者',
+    es: '西班牙语者', pt: '葡萄牙语者', ar: '阿拉伯语者', zh: '汉语者', ch: '汉语者',
+    hi: '印地语者', it: '意大利语者', ru: '俄语者', tr: '土耳其语者',
+    ja: '日语者', ko: '韩语者', pl: '波兰语者', sv: '瑞典语者',
+  },
+  ar: {
+    fr: 'ناطق بالفرنسية', en: 'ناطق بالإنجليزية', nl: 'ناطق بالهولندية', de: 'ناطق بالألمانية',
+    es: 'ناطق بالإسبانية', pt: 'ناطق بالبرتغالية', ar: 'ناطق بالعربية', zh: 'ناطق بالصينية', ch: 'ناطق بالصينية',
+    hi: 'ناطق بالهندية', it: 'ناطق بالإيطالية', ru: 'ناطق بالروسية', tr: 'ناطق بالتركية',
+    ja: 'ناطق باليابانية', ko: 'ناطق بالكورية',
+  },
+  hi: {
+    fr: 'फ्रेंचभाषी', en: 'अंग्रेजीभाषी', nl: 'डचभाषी', de: 'जर्मनभाषी',
+    es: 'स्पेनिशभाषी', pt: 'पुर्तगालीभाषी', ar: 'अरबीभाषी', zh: 'चीनीभाषी', ch: 'चीनीभाषी',
+    hi: 'हिंदीभाषी', it: 'इतालवीभाषी', ru: 'रूसीभाषी', tr: 'तुर्कीभाषी',
+    ja: 'जापानीभाषी', ko: 'कोरियाईभाषी',
+  },
+};
+
+const MULTILINGUAL_LABEL: Record<string, string> = {
+  fr: 'multilingue', en: 'multilingual', es: 'multilingüe', de: 'mehrsprachig',
+  pt: 'multilíngue', ru: 'многоязычный', ch: '多语者', ar: 'متعدد اللغات', hi: 'बहुभाषी',
+};
+
+const AND_LABEL: Record<string, string> = {
+  fr: 'et', en: 'and', es: 'y', de: 'und', pt: 'e', ru: 'и', ch: '和', ar: 'و', hi: 'और',
+};
+
+/**
+ * Fallback pour toute langue non listée dans LANGUAGE_DESCRIPTORS.
+ * Construit un adjectif à partir du nom localisé de la langue.
+ * Ex : sw (Swahili) + en → "Swahili-speaking"
+ *      sw (Swahili) + fr → "swahiliphone"
+ */
+const buildFallbackDescriptor = (code: string, uiLang: string): string => {
+  const name = getLanguageName(code, uiLang) || getLanguageName(code, 'en') || code;
+  const n = name.toLowerCase();
+  switch (uiLang) {
+    case 'en': return `${name}-speaking`;
+    case 'fr': return `${n}phone`;
+    case 'de': return `${n}sprachig`;
+    case 'es': return `${n}fono`;
+    case 'pt': return `${n}fono`;
+    // Pour ru/ch/ar/hi la concaténation morphologique est trop complexe :
+    // on affiche juste le nom de la langue tel quel
+    default: return name;
+  }
+};
+
+const getSingleDescriptor = (code: string, uiLang: string): string => {
+  const map = LANGUAGE_DESCRIPTORS[uiLang] || LANGUAGE_DESCRIPTORS['fr'];
+  return map[code] || buildFallbackDescriptor(code, uiLang);
+};
+
+const formatLanguageDescriptor = (langCodes: string[], uiLang: string): string => {
+  if (langCodes.length === 0) return '';
+  const first = getSingleDescriptor(langCodes[0], uiLang);
+  if (langCodes.length === 1) return first;
+  if (langCodes.length === 2) {
+    const second = getSingleDescriptor(langCodes[1], uiLang);
+    const and = AND_LABEL[uiLang] || 'et';
+    return first && second ? `${first} ${and} ${second}` : first;
+  }
+  // 3+ langues : première langue + label "multilingue"
+  return first || MULTILINGUAL_LABEL[uiLang] || 'multilingual';
+};
+
 // ✅ Fonction de sanitization pour sécurité
 const sanitizeHTML = (html: string): string => {
   const tempDiv = document.createElement('div');
@@ -2506,11 +2616,14 @@ const ProviderProfile: React.FC = () => {
     .map(c => getCountryName(c, preferredLangKey))
     .filter(c => c && c !== countryName);
 
+  const languageDescriptor = formatLanguageDescriptor(languageCodes, preferredLangKey);
+
   const seoTitle = (() => {
     if (seoAI?.metaTitle) return seoAI.metaTitle;
     if (translation && !showOriginal && translation.seo?.metaTitle) return translation.seo.metaTitle;
     const brand = ' | SOS Expat';
-    const core = `${formatShortName(provider)} — ${roleLabel}${topSpecialty ? ` · ${topSpecialty}` : ''} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}`;
+    const langPart = languageDescriptor ? ` ${languageDescriptor}` : '';
+    const core = `${formatShortName(provider)} ${roleLabel}${langPart} ${intl.formatMessage({ id: "providerProfile.in" })} ${countryName}`;
     const maxCoreLength = 60 - brand.length;
     if (core.length <= maxCoreLength) return core + brand;
     const truncated = core.slice(0, maxCoreLength);
@@ -3000,7 +3113,7 @@ const ProviderProfile: React.FC = () => {
                           ? translation.title
                           : translation && !showOriginal && translation.seo?.h1
                           ? translation.seo.h1
-                          : `${formatShortName(provider)} — ${roleLabel}${topSpecialty ? ` · ${topSpecialty}` : ''} ${intl.formatMessage({ id: 'providerProfile.in' })} ${countryName}`}
+                          : `${formatShortName(provider)} ${roleLabel}${languageDescriptor ? ` ${languageDescriptor}` : ''} ${intl.formatMessage({ id: 'providerProfile.in' })} ${countryName}`}
                       </h1>
 
                       {/* Badge type */}
