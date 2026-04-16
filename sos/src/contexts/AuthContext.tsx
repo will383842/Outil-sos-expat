@@ -1685,13 +1685,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
-      // 'select_account' dans un popup = sélecteur de compte standard (pas de QR code).
-      // En mode redirect on NE met PAS de prompt : le sélecteur Google affiche sinon
-      // une option "Se connecter avec un autre appareil" (QR code passkey) qui déroute
-      // les nouveaux utilisateurs.
-      if (!forceRedirect) {
-        provider.setCustomParameters({ prompt: 'select_account' });
-      }
+      // FIXE QR CODE MOBILE: on utilise prompt:'login' dans TOUS les cas.
+      // Avec 'select_account', Google affiche son sélecteur de compte qui inclut
+      // une option passkey "Se connecter avec un autre appareil" (QR code) en premier
+      // plan sur mobile/iPhone — ça déroute totalement les nouveaux utilisateurs.
+      // Avec 'login', Google affiche directement le formulaire email+mot de passe
+      // classique, sans sélecteur ni QR code passkey.
+      // Trade-off accepté : les utilisateurs déjà connectés à Google doivent re-saisir
+      // leur email (une fois), mais l'expérience est claire et sans friction parasite.
+      provider.setCustomParameters({ prompt: 'login' });
 
       // FIX iOS Safari: setPersistence SANS await pour ne pas casser le lien
       // avec le geste utilisateur (tap). Safari bloque les popups si un await
