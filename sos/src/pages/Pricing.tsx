@@ -240,10 +240,11 @@ const Pricing: React.FC = () => {
       setError("");
 
       try {
+        const lawyerTotal = effectivePrices.lawyer?.price.totalAmount ?? 49;
         const result: ValidationResult = await validateCoupon({
           code: trimmedCode,
           userId: user?.id || "anonymous",
-          totalAmount: 49,
+          totalAmount: lawyerTotal,
           serviceType: "lawyer_call",
         });
 

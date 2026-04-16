@@ -2336,6 +2336,10 @@ const ProviderProfile: React.FC = () => {
   const structuredData = useMemo<Record<string, unknown> | undefined>(() => {
     if (!provider) return undefined;
     const displayName = formatPublicName(provider);
+    // Prix dynamiques — reflète les changements admin en temps réel
+    const schemaPrice = bookingPrice ? bookingPrice.eur : (isLawyer ? 49 : 19);
+    const schemaPriceFixed = schemaPrice.toFixed(2);
+    const schemaPriceRange = `€${Math.round(schemaPrice)}`;
     
     const roleLabel = isLawyer
       ? intl.formatMessage({ id: "providerProfile.attorney" })
@@ -2400,7 +2404,7 @@ const ProviderProfile: React.FC = () => {
           worstRating: 1,
         }
       }),
-      priceRange: isLawyer ? "€49" : "€19",
+      priceRange: schemaPriceRange,
       priceCurrency: "EUR",
       areaServed: (() => {
         const countries = [provider.country, ...(provider.operatingCountries || [])]
@@ -2427,7 +2431,7 @@ const ProviderProfile: React.FC = () => {
             return {
               "@type": "Offer",
               "@id": `https://sos-expat.com${window.location.pathname}#service-${index}`,
-              price: isLawyer ? "49.00" : "19.00",
+              price: schemaPriceFixed,
               priceCurrency: "EUR",
               availability: "https://schema.org/InStock",
               itemOffered: {
@@ -2451,6 +2455,7 @@ const ProviderProfile: React.FC = () => {
     providerStats,
     yearsLabel,
     preferredLangKey,
+    bookingPrice,
   ]);
 
   // BreadcrumbList + FAQPage schemas are already included in snippetData.jsonLD
@@ -2763,14 +2768,14 @@ const ProviderProfile: React.FC = () => {
           "areaServed": provider.country,
           "offers": {
             "@type": "Offer",
-            "price": isLawyer ? "49" : "19",
+            "price": bookingPrice ? String(Math.round(bookingPrice.eur)) : (isLawyer ? "49" : "19"),
             "priceCurrency": "EUR",
             "availability": "https://schema.org/InStock",
             "priceSpecification": {
               "@type": "UnitPriceSpecification",
-              "price": isLawyer ? "49" : "19",
+              "price": bookingPrice ? String(Math.round(bookingPrice.eur)) : (isLawyer ? "49" : "19"),
               "priceCurrency": "EUR",
-              "unitText": isLawyer ? "20 min" : "30 min",
+              "unitText": bookingPrice?.duration ? `${bookingPrice.duration} min` : (isLawyer ? "20 min" : "30 min"),
             },
           },
           "url": canonicalUrl,
@@ -2839,7 +2844,7 @@ const ProviderProfile: React.FC = () => {
           "estimatedCost": {
             "@type": "MonetaryAmount",
             "currency": "EUR",
-            "value": isLawyer ? "49" : "19"
+            "value": bookingPrice ? String(Math.round(bookingPrice.eur)) : (isLawyer ? "49" : "19")
           },
           "step": [
             {
@@ -2857,11 +2862,11 @@ const ProviderProfile: React.FC = () => {
               "position": 2,
               "name": intl.formatMessage(
                 { id: "providerProfile.howTo.step2.name", defaultMessage: "Payez la mise en relation ({price})" },
-                { price: isLawyer ? "49€" : "19€" }
+                { price: bookingPrice ? `${Math.round(bookingPrice.eur)}€` : (isLawyer ? "49€" : "19€") }
               ),
               "text": intl.formatMessage(
                 { id: "providerProfile.howTo.step2.text", defaultMessage: "Une empreinte bancaire de {price} est effectuée. Le paiement n'est capturé qu'après un appel réussi." },
-                { price: isLawyer ? "49€" : "19€" }
+                { price: bookingPrice ? `${Math.round(bookingPrice.eur)}€` : (isLawyer ? "49€" : "19€") }
               )
             },
             {
@@ -4529,7 +4534,6 @@ const ProviderProfile: React.FC = () => {
         onClose={() => { setShowAuthWizard(false); sessionStorage.removeItem('loginRedirect'); }}
         onSuccess={handleAuthSuccess}
         providerName={provider ? formatPublicName(provider) : undefined}
-        bookingRedirectUrl={provider ? `/booking-request/${provider.shortId || provider.id}` : undefined}
       />
     </Layout>
   );

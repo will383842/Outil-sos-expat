@@ -33,7 +33,6 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   devLog('[BOOKING_AUTH_DEBUG] 🧙 QuickAuthWizard RENDER', {
     isOpen,
     providerName,
-    bookingRedirectUrl,
     user: user ? { id: user.id, email: user.email } : null,
     authInitialized,
     isFullyReady,
@@ -223,7 +222,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
     // Update prevUserRef for next render
     prevUserRef.current = user;
-  }, [isOpen, user, authInitialized, isFullyReady, onSuccess, step, isGoogleLoading, pendingSuccess, getAuthAttempted, setAuthAttempted]);
+  }, [isOpen, user, authInitialized, isFullyReady, onSuccess, step, pendingSuccess, getAuthAttempted, setAuthAttempted]);
 
   // Fallback: gérer le cas où pendingSuccess est true (login email/password classique)
   useEffect(() => {
