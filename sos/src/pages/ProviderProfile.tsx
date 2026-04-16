@@ -2257,7 +2257,8 @@ const ProviderProfile: React.FC = () => {
       totalCalls: providerStats.completedCalls || provider.totalCalls,
       description: descriptionText
     } : null,
-    snippetLanguage
+    snippetLanguage,
+    bookingPrice?.eur ?? undefined
   );
   
   const educationText = useMemo(() => {

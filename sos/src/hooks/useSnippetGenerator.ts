@@ -7,25 +7,27 @@ import { generateSnippets, generateJSONLD, type SnippetProvider, type SnippetCon
 
 export function useSnippetGenerator(
   provider: SnippetProvider | null,
-  locale: string
+  locale: string,
+  priceEur?: number
 ) {
   return useMemo(() => {
     if (!provider) return null;
-    
+
     const config: SnippetConfig = {
       locale,
       includePrice: true,
       includeFAQ: true,
       includeHowTo: false,
-      includeReviews: true
+      includeReviews: true,
+      priceEur,
     };
-    
+
     const snippets = generateSnippets(provider, config);
     const jsonLD = generateJSONLD(provider, config);
-    
+
     return {
       snippets,
       jsonLD
     };
-  }, [provider, locale]);
+  }, [provider, locale, priceEur]);
 }

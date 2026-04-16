@@ -46,6 +46,8 @@ export interface SnippetConfig {
   includeFAQ?: boolean;
   includeHowTo?: boolean;
   includeReviews?: boolean;
+  /** Prix dynamique en EUR depuis Firestore (admin_config/pricing). Si absent, fallback sur 49/19. */
+  priceEur?: number;
 }
 
 export interface GeneratedSnippet {
@@ -683,7 +685,7 @@ export function generateSnippets(
   provider: SnippetProvider,
   config: SnippetConfig
 ): GeneratedSnippet {
-  const { locale, includePrice = true, includeFAQ = true } = config;
+  const { locale, includePrice = true, includeFAQ = true, priceEur } = config;
   
   const rawLang = locale.split('-')[0];
   // Normalize: 'zh' (ISO standard in URLs) → 'ch' (internal code used in FAQ_TEMPLATES)
@@ -691,9 +693,10 @@ export function generateSnippets(
   const templates = FAQ_TEMPLATES[baseLang] || FAQ_TEMPLATES['en'];
   const providerTemplates = provider.type === 'lawyer' ? templates.lawyer : templates.expat;
   
-  // Prix dynamique selon le type de prestataire
-  // Avocat: 49€ (20 min) | Expat: 19€ (30 min)
-  const dynamicPrice = provider.type === 'lawyer' ? '49€' : '19€';
+  // Prix dynamique : depuis Firestore via priceEur, sinon fallback 49/19
+  const fallbackPrice = provider.type === 'lawyer' ? 49 : 19;
+  const resolvedPriceEur = priceEur ?? fallbackPrice;
+  const dynamicPrice = `${Math.round(resolvedPriceEur)}€`;
 
   // Générer les FAQ
   const faqContent = providerTemplates.map(template => ({
