@@ -247,13 +247,22 @@ const AdminPricing: React.FC = () => {
   const selBase = base[service][currency];
   const selPromo = promo[service][currency];
 
+  // Track whether data was loaded from Firestore
+  const [dataSource, setDataSource] = useState<"loading" | "firestore" | "defaults">("loading");
+
   /* ----------- Load Firestore ----------- */
 
   const loadConfig = useCallback(async () => {
     const snap = await getDoc(doc(db, "admin_config", "pricing"));
-    if (!snap.exists()) return;
+    if (!snap.exists()) {
+      console.warn("[AdminPricing] ⚠️ Document admin_config/pricing n'existe PAS en Firestore. Les valeurs par défaut sont affichées.");
+      setDataSource("defaults");
+      return;
+    }
 
+    setDataSource("firestore");
     const data = snap.data() as PricingDoc;
+    console.log("[AdminPricing] 📄 Document chargé depuis Firestore:", JSON.stringify(data, null, 2));
 
     // Base
     const b = { ...base };
@@ -361,6 +370,19 @@ const AdminPricing: React.FC = () => {
       await performSave();
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
+
+      // Read-back verification: confirm data was actually written
+      const verifySnap = await getDoc(doc(db, "admin_config", "pricing"));
+      if (verifySnap.exists()) {
+        const saved = verifySnap.data()?.[service]?.[currency];
+        if (saved?.totalAmount !== Number(selBase.totalAmount)) {
+          console.error("[AdminPricing] MISMATCH! Expected:", selBase.totalAmount, "Got:", saved?.totalAmount);
+          toast.error(`Erreur de vérification : le prix sauvegardé (${saved?.totalAmount}) ne correspond pas au prix envoyé (${selBase.totalAmount}). Réessayez.`);
+          return;
+        }
+        console.log("[AdminPricing] ✅ Verified: Firestore has", saved.totalAmount, currency.toUpperCase(), "for", service);
+      }
+      setDataSource("firestore");
       toast.success(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
     } catch (error: unknown) {
       // If permission denied, try refreshing admin claims and retry
@@ -371,6 +393,12 @@ const AdminPricing: React.FC = () => {
           try {
             await performSave();
             clearPricingCache();
+            // Verify after retry too
+            const verifySnap2 = await getDoc(doc(db, "admin_config", "pricing"));
+            if (verifySnap2.exists()) {
+              const saved2 = verifySnap2.data()?.[service]?.[currency];
+              console.log("[AdminPricing] ✅ Verified after retry:", saved2?.totalAmount, currency.toUpperCase());
+            }
             toast.success(intl.formatMessage({ id: "admin.pricing.alertBasePriceSaved" }));
             return;
           } catch (retryError) {
@@ -446,6 +474,18 @@ const AdminPricing: React.FC = () => {
       await performSave();
       // Invalidate frontend cache so changes reflect immediately
       clearPricingCache();
+
+      // Read-back verification for promo
+      const verifySnap = await getDoc(doc(db, "admin_config", "pricing"));
+      if (verifySnap.exists()) {
+        const savedOverride = verifySnap.data()?.overrides?.[service]?.[currency];
+        if (savedOverride?.totalAmount !== Number(selPromo.totalAmount)) {
+          console.error("[AdminPricing] PROMO MISMATCH! Expected:", selPromo.totalAmount, "Got:", savedOverride?.totalAmount);
+          toast.error(`Erreur de vérification promo : prix sauvegardé (${savedOverride?.totalAmount}) ≠ prix envoyé (${selPromo.totalAmount}). Réessayez.`);
+          return;
+        }
+        console.log("[AdminPricing] ✅ Promo verified:", savedOverride.totalAmount, currency.toUpperCase(), "enabled:", savedOverride.enabled);
+      }
       toast.success(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
@@ -455,6 +495,11 @@ const AdminPricing: React.FC = () => {
           try {
             await performSave();
             clearPricingCache();
+            const verifySnap2 = await getDoc(doc(db, "admin_config", "pricing"));
+            if (verifySnap2.exists()) {
+              const saved2 = verifySnap2.data()?.overrides?.[service]?.[currency];
+              console.log("[AdminPricing] ✅ Promo verified after retry:", saved2?.totalAmount);
+            }
             toast.success(intl.formatMessage({ id: "admin.pricing.alertPromoPriceSaved" }));
             return;
           } catch (retryError) {
@@ -716,13 +761,28 @@ const AdminPricing: React.FC = () => {
             </div>
           </div>
 
-          {/* Context indicator */}
+          {/* Context indicator + data source */}
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500">{intl.formatMessage({ id: "admin.pricing.activeConfiguration" })}</span>
-              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
-                {intl.formatMessage({ id: SERVICE_LABEL_KEY[service] })} - {currency.toUpperCase()}
-              </span>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">{intl.formatMessage({ id: "admin.pricing.activeConfiguration" })}</span>
+                <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
+                  {intl.formatMessage({ id: SERVICE_LABEL_KEY[service] })} - {currency.toUpperCase()}
+                </span>
+              </div>
+              {dataSource === "firestore" ? (
+                <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-medium text-xs">
+                  <Check className="w-3 h-3" /> Firestore
+                </span>
+              ) : dataSource === "defaults" ? (
+                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full font-medium text-xs">
+                  <X className="w-3 h-3" /> Valeurs par défaut (document absent)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 bg-gray-50 text-gray-500 px-3 py-1 rounded-full font-medium text-xs">
+                  <RefreshCw className="w-3 h-3 animate-spin" /> Chargement...
+                </span>
+              )}
             </div>
           </div>
         </div>
