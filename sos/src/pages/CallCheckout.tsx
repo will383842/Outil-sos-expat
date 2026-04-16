@@ -1963,14 +1963,9 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                 callId = callResult.data.callId || currentCallSessionId;
               }
             } catch (cfErr: unknown) {
-              console.error("[PaymentRequest] createAndScheduleCall error:", cfErr);
-              // P1-2 FIX: Informer le client — le paiement est en manual capture,
-              // pas de débit tant que l'appel n'a pas eu lieu
-              currentOnError(
-                t("checkout.err.callSchedulingFailed") ||
-                "Une erreur est survenue lors de la planification de l'appel. Votre carte n'a pas été débitée. Veuillez réessayer."
-              );
-              return; // Stop le flow — pas de navigation vers payment-success
+              // Payment was already captured — do NOT block navigation.
+              // Log the error; callStatus stays "skipped" and user reaches success page.
+              console.error("[PaymentRequest] createAndScheduleCall error (non-blocking):", cfErr);
             }
           } else {
             console.warn("[PaymentRequest] Missing/invalid phone(s). Skipping call scheduling.", {
@@ -2341,13 +2336,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               }),
           ]);
 
-          // If call scheduling failed, inform the client
+          // If call scheduling failed, log but don't block — payment was already captured.
+          // The user must reach the success page; showing an error with "not charged" is wrong.
           if (!callResult) {
-            onError(
-              t("checkout.err.callSchedulingFailed") ||
-              "Une erreur est survenue lors de la planification de l'appel. Votre carte n'a pas été débitée. Veuillez réessayer."
+            console.warn(
+              "[createAndScheduleCall] failed after payment capture. callStatus stays 'skipped'. Proceeding to success page."
             );
-            return;
+            // callStatus remains "skipped" (set at line above)
           }
         } else {
           console.warn("Missing/invalid phone(s). Skipping call scheduling.");
@@ -3199,10 +3194,13 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
       finalTotal: currentTotal,
     });
 
+    // Discounts reduce the platform commission (connectionFeeAmount), NOT the provider share.
+    // Backend validates providerAmount === cfg.providerAmount with 0.5€ tolerance.
     return {
       ...effectivePricing,
       totalAmount: currentTotal,
-      providerAmount: Math.max(0, effectivePricing.providerAmount - totalDiscountApplied),
+      connectionFeeAmount: Math.max(0, effectivePricing.connectionFeeAmount - totalDiscountApplied),
+      // providerAmount stays unchanged — provider always gets their full share
     };
   }, [pricing, providerRole, selectedCurrency, activePromo, affiliateDiscount]);
 

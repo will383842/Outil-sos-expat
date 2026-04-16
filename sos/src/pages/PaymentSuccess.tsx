@@ -503,7 +503,9 @@ const SuccessPayment: React.FC = () => {
      P0 PERF FIX: Backoff exponentiel pour réduire le délai perçu
      ========================= */
   const [sessionRetryCount, setSessionRetryCount] = useState(0);
-  const [sessionLoadError, setSessionLoadError] = useState(false);
+  // If call scheduling was skipped (scheduling failed after payment capture), surface the
+  // "slow connection" banner immediately rather than waiting 12s for Firestore retries to give up.
+  const [sessionLoadError, setSessionLoadError] = useState(callStatus === "skipped");
   const MAX_SESSION_RETRIES = 12; // 12 retries avec backoff = ~12s max wait (au lieu de 20s)
 
   // P0 PERF FIX: Backoff exponentiel - délais progressifs (ms)
