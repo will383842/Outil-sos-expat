@@ -2121,7 +2121,14 @@ const FilterBottomSheet: React.FC<{
 /* =========================
    Composant principal
 ========================= */
+// DEBUG: Global mount time for performance tracing
+const __sosCallMountTime = typeof performance !== 'undefined' ? performance.now() : 0;
+
 const SOSCall: React.FC = () => {
+  // DEBUG: Log every render with timing
+  const __renderTime = performance.now();
+  console.log(`🔄 [SOSCall] RENDER at T=${__renderTime.toFixed(0)}ms (since mount: ${(__renderTime - __sosCallMountTime).toFixed(0)}ms)`);
+
   const intl = useIntl();
   const { language, enabledCountries, countriesLoading } = useApp();
   const { setWizardOpen } = useWizard();
@@ -2313,6 +2320,7 @@ const SOSCall: React.FC = () => {
 
   // Load FAQs from Firestore
   useEffect(() => {
+    const __faqT0 = performance.now();
     const loadFAQs = async () => {
       try {
         setIsLoadingFAQs(true);
@@ -2367,7 +2375,7 @@ const SOSCall: React.FC = () => {
             return (a.order || 999) - (b.order || 999);
           });
         
-        console.log(`Loaded ${loadedFAQs.length} FAQs from Firestore (filtered for language: ${langCode})`);
+        console.log(`⏱️ [SOSCall] FAQs loaded: ${loadedFAQs.length} in ${(performance.now() - __faqT0).toFixed(0)}ms`);
         setFaqData(loadedFAQs);
       } catch (error) {
         console.error('Error loading FAQs:', error);
@@ -2390,6 +2398,7 @@ const SOSCall: React.FC = () => {
 
   // Charger providers via REST API (plus fiable) avec fallback SDK
   useEffect(() => {
+    const __t0 = performance.now();
     console.log("🔍 [SOSCall] useEffect - Chargement des providers...");
     let isCancelled = false;
 
@@ -2510,19 +2519,25 @@ const SOSCall: React.FC = () => {
 
         if (isCancelled) return;
 
-        console.log(`✅ [SOSCall] REST API: ${docs.length} documents reçus (filtrés côté serveur)`);
+        const __t1 = performance.now();
+        console.log(`✅ [SOSCall] REST API: ${docs.length} documents reçus en ${(__t1 - __t0).toFixed(0)}ms`);
 
         const allProviders = docs
           .filter(doc => doc.data.type === "lawyer" || doc.data.type === "expat")
           .map(doc => transformToProvider(doc.id, doc.data));
 
+        const __t2 = performance.now();
+        console.log(`⏱️ [SOSCall] transformToProvider x${allProviders.length}: ${(__t2 - __t1).toFixed(0)}ms`);
+
         const validProviders = filterValidProviders(allProviders);
-        console.log(`✅ [SOSCall] ${validProviders.length} providers valides après filtrage`);
+        const __t3 = performance.now();
+        console.log(`⏱️ [SOSCall] filterValidProviders: ${(__t3 - __t2).toFixed(0)}ms → ${validProviders.length} providers valides`);
 
         if (validProviders.length > 0) {
           setRealProviders(validProviders);
           setFilteredProviders(validProviders);
           setIsLoadingProviders(false);
+          console.log(`⏱️ [SOSCall] setState done: ${(performance.now() - __t3).toFixed(0)}ms (total: ${(performance.now() - __t0).toFixed(0)}ms)`);
           return;
         }
 
@@ -2690,6 +2705,7 @@ const SOSCall: React.FC = () => {
 
   // Filtrage + tri
   useEffect(() => {
+    const __filterT0 = performance.now();
     if (realProviders.length === 0) {
       setFilteredProviders([]);
       return;
@@ -2972,6 +2988,7 @@ const SOSCall: React.FC = () => {
 
     setFilteredProviders(sorted);
     setPage(1);
+    console.log(`⏱️ [SOSCall] FILTER+SORT total: ${(performance.now() - __filterT0).toFixed(0)}ms (${sorted.length} providers)`);
   }, [
     realProviders,
     selectedType,
@@ -3116,10 +3133,12 @@ const SOSCall: React.FC = () => {
   const canonicalUrl = `${BASE_URL}/${lang}${PAGE_PATH}`; // Overridden by SEOHead below (correct canonical built in IIFE)
   const onlineCount = filteredProviders.filter((p) => p.isOnline).length;
   
-  const jsonLdSchemas = useMemo(() => 
-    generateAllSchemas(intl, filteredProviders, selectedType, onlineCount, lang, faqData),
-    [intl, filteredProviders, selectedType, onlineCount, lang, faqData]
-  );
+  const jsonLdSchemas = useMemo(() => {
+    const __schemaT0 = performance.now();
+    const result = generateAllSchemas(intl, filteredProviders, selectedType, onlineCount, lang, faqData);
+    console.log(`⏱️ [SOSCall] generateAllSchemas: ${(performance.now() - __schemaT0).toFixed(0)}ms`);
+    return result;
+  }, [intl, filteredProviders, selectedType, onlineCount, lang, faqData]);
 
   const seoTitle = intl.formatMessage({ 
     id: selectedType === "lawyer" 

@@ -533,6 +533,62 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     }
   }, [isOpen]);
 
+  // DEBUG: Measure touch responsiveness — logs when touch events arrive
+  // and whether the main thread is blocked. Check console on iPhone via
+  // Safari Web Inspector (Mac) or chrome://inspect (USB debug).
+  useEffect(() => {
+    if (!isOpen) return;
+    const wizardEl = wizardRef.current;
+    if (!wizardEl) return;
+
+    const openTime = performance.now();
+    console.log(`🟢 [WIZARD PERF] Wizard opened at T=${openTime.toFixed(0)}ms`);
+
+    // Monitor if main thread is blocked using a recurring timer
+    // If the interval fires late (> 200ms gap), the thread was blocked
+    let lastTick = performance.now();
+    const monitor = setInterval(() => {
+      const now = performance.now();
+      const gap = now - lastTick;
+      if (gap > 200) {
+        console.warn(`🔴 [WIZARD PERF] MAIN THREAD BLOCKED for ${gap.toFixed(0)}ms at T=${now.toFixed(0)}ms`);
+      }
+      lastTick = now;
+    }, 100);
+
+    // Log every touch event with timing
+    const onTouch = (e: Event) => {
+      const now = performance.now();
+      const sinceOpen = now - openTime;
+      const target = e.target as HTMLElement;
+      const tag = target.tagName;
+      const text = target.textContent?.slice(0, 30) || '';
+      console.log(`👆 [WIZARD PERF] ${e.type} at T+${sinceOpen.toFixed(0)}ms on <${tag}> "${text}"`);
+    };
+
+    // Log click events too (click fires after touch on mobile)
+    const onClick = (e: Event) => {
+      const now = performance.now();
+      const sinceOpen = now - openTime;
+      const target = e.target as HTMLElement;
+      const tag = target.tagName;
+      const text = target.textContent?.slice(0, 30) || '';
+      console.log(`🖱️ [WIZARD PERF] click at T+${sinceOpen.toFixed(0)}ms on <${tag}> "${text}"`);
+    };
+
+    wizardEl.addEventListener('touchstart', onTouch, { capture: true, passive: true });
+    wizardEl.addEventListener('touchend', onTouch, { capture: true, passive: true });
+    wizardEl.addEventListener('click', onClick, { capture: true });
+
+    return () => {
+      clearInterval(monitor);
+      wizardEl.removeEventListener('touchstart', onTouch, { capture: true } as EventListenerOptions);
+      wizardEl.removeEventListener('touchend', onTouch, { capture: true } as EventListenerOptions);
+      wizardEl.removeEventListener('click', onClick, { capture: true });
+      console.log(`🗑️ [WIZARD PERF] Diagnostics removed`);
+    };
+  }, [isOpen]);
+
   const canProceed = useMemo(() => {
     if (step === 1) return !!selectedCountry;
     if (step === 2) return selectedLanguages.length > 0;
