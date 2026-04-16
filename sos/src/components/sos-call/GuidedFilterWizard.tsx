@@ -545,6 +545,54 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     }
   }, [isOpen]);
 
+  // DEBUG: Diagnose touch/click blocking on mobile
+  // This logs what element receives the touch event and whether it reaches the wizard
+  useEffect(() => {
+    if (!isOpen) return;
+    const wizardEl = wizardRef.current;
+    if (!wizardEl) return;
+
+    const logTouch = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const tagName = target.tagName;
+      const classes = target.className?.toString?.().slice(0, 80) || '';
+      const zIndex = window.getComputedStyle(target).zIndex;
+      const pointerEvents = window.getComputedStyle(target).pointerEvents;
+      console.log(`🔴 [WIZARD DEBUG] touchstart on <${tagName}> z=${zIndex} pe=${pointerEvents} class="${classes}"`);
+
+      // Check what element is at the touch point
+      const touch = e.touches[0];
+      if (touch) {
+        const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (elementAtPoint) {
+          const atTag = elementAtPoint.tagName;
+          const atClass = elementAtPoint.className?.toString?.().slice(0, 80) || '';
+          const atZ = window.getComputedStyle(elementAtPoint).zIndex;
+          const atPE = window.getComputedStyle(elementAtPoint).pointerEvents;
+          const isInsideWizard = wizardEl.contains(elementAtPoint);
+          console.log(`🔵 [WIZARD DEBUG] elementFromPoint: <${atTag}> z=${atZ} pe=${atPE} insideWizard=${isInsideWizard} class="${atClass}"`);
+          if (!isInsideWizard) {
+            // Walk up the tree to find what's blocking
+            let el: HTMLElement | null = elementAtPoint as HTMLElement;
+            const path: string[] = [];
+            while (el && el !== document.body) {
+              path.push(`<${el.tagName} z=${window.getComputedStyle(el).zIndex} pe=${window.getComputedStyle(el).pointerEvents}>`);
+              el = el.parentElement;
+            }
+            console.log(`🚨 [WIZARD DEBUG] BLOCKING ELEMENT PATH:`, path.join(' > '));
+          }
+        }
+      }
+    };
+
+    document.addEventListener('touchstart', logTouch, { capture: true, passive: true });
+    console.log('✅ [WIZARD DEBUG] Touch diagnostic listener attached');
+    return () => {
+      document.removeEventListener('touchstart', logTouch, { capture: true } as EventListenerOptions);
+      console.log('🗑️ [WIZARD DEBUG] Touch diagnostic listener removed');
+    };
+  }, [isOpen]);
+
   const canProceed = useMemo(() => {
     if (step === 1) return !!selectedCountry;
     if (step === 2) return selectedLanguages.length > 0;
