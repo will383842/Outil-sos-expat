@@ -1,22 +1,15 @@
 // src/components/auth/QuickAuthWizard.tsx
 // Wizard d'authentification rapide pour une UX sans friction
 // Flow: Email → Password → Auto Login/Register (sans confirmation)
+// NOTE: Google Auth volontairement absent de ce wizard (flux réservation).
+// Sur mobile, Google affiche un QR code passkey pour certains comptes ce qui
+// crée une friction majeure en plein milieu d'une transaction. Email+mdp = zéro friction.
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { X, Mail, Lock, ArrowRight, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { devLog } from '../../utils/devLog';
-
-// Google Icon SVG
-const GoogleIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-  </svg>
-);
 
 type WizardStep = 'email' | 'password' | 'loading' | 'success';
 
@@ -25,8 +18,6 @@ interface QuickAuthWizardProps {
   onClose: () => void;
   onSuccess: () => void;
   providerName?: string;
-  /** URL to redirect to after Google login (for booking flow) */
-  bookingRedirectUrl?: string;
 }
 
 const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
@@ -34,10 +25,9 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   onClose,
   onSuccess,
   providerName,
-  bookingRedirectUrl,
 }) => {
   const intl = useIntl();
-  const { login, loginWithGoogle, register, user, authInitialized, isFullyReady } = useAuth();
+  const { login, register, user, authInitialized, isFullyReady } = useAuth();
 
   // 🔍 [BOOKING_AUTH_DEBUG] Log QuickAuthWizard render
   devLog('[BOOKING_AUTH_DEBUG] 🧙 QuickAuthWizard RENDER', {
@@ -58,14 +48,12 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [pendingSuccess, setPendingSuccess] = useState(false);
 
   // Refs
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
-  const googleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // FIX: Track previous isOpen state to only reset on actual modal open (false→true transition)
   const wasOpenRef = useRef(false);
@@ -168,7 +156,6 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       setError(null);
       setShowPassword(false);
       setIsSubmitting(false);
-      setIsGoogleLoading(false);
       setIsNewUser(false);
       setPendingSuccess(false);
       // Reset success flag when modal opens
@@ -180,9 +167,6 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }
     // Cleanup timeouts on close
     return () => {
-      if (googleTimeoutRef.current) {
-        clearTimeout(googleTimeoutRef.current);
-      }
       if (successTimeoutRef.current) {
         clearTimeout(successTimeoutRef.current);
       }
@@ -228,7 +212,6 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
       successCalledRef.current = true; // Prevent multiple calls
       setAuthAttempted(false); // Reset auth attempt flag in sessionStorage
       // Clear any pending states
-      setIsGoogleLoading(false);
       setPendingSuccess(false);
       // Small delay to ensure UI shows success briefly
       setTimeout(() => {
@@ -420,58 +403,6 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     }
   }, [email, password, login, register, intl, onSuccess, setAuthAttempted]);
 
-  // Handle Google login with timeout protection
-  const handleGoogleLogin = useCallback(async () => {
-    // FIX: Mark that an auth attempt is in progress
-    // Using sessionStorage so it survives component remounts during Google popup
-    setAuthAttempted(true);
-    setIsGoogleLoading(true);
-    setError(null);
-
-    // Set a timeout to reset loading state after 30 seconds
-    googleTimeoutRef.current = setTimeout(() => {
-      setIsGoogleLoading(false);
-      setError(intl.formatMessage({ id: 'auth.wizard.error.timeout' }));
-    }, 30000);
-
-    try {
-      // FIX: Ne PAS sauvegarder dans sessionStorage pour le popup!
-      // AuthContext ferait window.location.href qui entre en conflit avec onSuccess()
-      // On sauvegarde seulement si popup échoue et fallback vers redirect (voir catch ci-dessous)
-      // Le callback onSuccess() gère la navigation pour le cas popup
-      await loginWithGoogle(true);
-      // Clear timeout on success
-      if (googleTimeoutRef.current) {
-        clearTimeout(googleTimeoutRef.current);
-      }
-      setIsGoogleLoading(false);
-      setStep('success');
-      // FIX: Attendre que user Firestore soit chargé avant de naviguer
-      setPendingSuccess(true);
-    } catch (err) {
-      // Clear timeout on error
-      if (googleTimeoutRef.current) {
-        clearTimeout(googleTimeoutRef.current);
-      }
-      setIsGoogleLoading(false);
-
-      if ((err as { code?: string }).code === 'auth/popup-closed-by-user') {
-        // User closed popup - no error needed
-        return;
-      }
-      if ((err as { code?: string }).code === 'auth/popup-blocked') {
-        setError(intl.formatMessage({ id: 'auth.wizard.popupBlocked' }));
-      } else if ((err as { code?: string }).code === 'auth/cancelled-popup-request') {
-        // Another popup was opened - ignore
-        return;
-      } else if ((err as { code?: string }).code === 'auth/network-request-failed') {
-        setError(intl.formatMessage({ id: 'auth.wizard.error.network' }));
-      } else {
-        setError(intl.formatMessage({ id: 'auth.wizard.error.google' }));
-      }
-    }
-  }, [loginWithGoogle, intl, setAuthAttempted]);
-
   // Handle form submit based on current step
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -595,32 +526,6 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
           {/* Email Step */}
           {step === 'email' && (
             <form onSubmit={handleSubmit} className="space-y-4" id="quick-auth-email-form">
-              {/* Google Button - Primary */}
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isGoogleLoading || isSubmitting}
-                className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 min-h-[56px]"
-              >
-                {isGoogleLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <GoogleIcon />
-                    <FormattedMessage id="auth.wizard.continueGoogle" />
-                  </>
-                )}
-              </button>
-
-              {/* Divider */}
-              <div className="relative flex items-center py-2">
-                <div className="flex-1 border-t border-white/20" />
-                <span className="px-4 text-gray-500 text-sm">
-                  <FormattedMessage id="auth.wizard.or" />
-                </span>
-                <div className="flex-1 border-t border-white/20" />
-              </div>
-
               {/* Email Input */}
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -637,7 +542,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
                   placeholder={intl.formatMessage({ id: 'auth.wizard.emailPlaceholder' })}
                   className="w-full pl-12 pr-4 py-4 bg-white/5 border-2 border-white/10 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 transition-colors min-h-[56px]"
                   autoComplete="email"
-                  disabled={isSubmitting || isGoogleLoading}
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -652,7 +557,7 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!email || isSubmitting || isGoogleLoading}
+                disabled={!email || isSubmitting}
                 className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
               >
                 <FormattedMessage id="auth.wizard.continueEmail" defaultMessage="Continuer avec l'email" />
