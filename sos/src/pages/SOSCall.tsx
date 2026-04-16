@@ -894,7 +894,7 @@ const generateAllSchemas = (
       },
       "query-input": "required name=search_term_string",
     },
-    inLanguage: intl.locale,
+    inLanguage: intl.locale === 'ch' ? 'zh' : intl.locale,
   };
 
   const serviceSchema = {
@@ -987,7 +987,7 @@ const generateAllSchemas = (
       height: 630,
     },
     breadcrumb: { "@id": `${BASE_URL}${PAGE_PATH}/#breadcrumb` },
-    inLanguage: intl.locale,
+    inLanguage: intl.locale === 'ch' ? 'zh' : intl.locale,
     datePublished: "2024-01-01T00:00:00+00:00",
     dateModified: new Date().toISOString(),
   };
@@ -2123,7 +2123,7 @@ const FilterBottomSheet: React.FC<{
 ========================= */
 const SOSCall: React.FC = () => {
   const intl = useIntl();
-  const { language, enabledCountries } = useApp();
+  const { language, enabledCountries, countriesLoading } = useApp();
   const { setWizardOpen } = useWizard();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useLocaleNavigate();
@@ -2212,11 +2212,26 @@ const SOSCall: React.FC = () => {
   }, [language]);
 
   // Auto-show wizard on ALL devices (obligatory on every visit)
+  // FIX: Wait for enabledCountries to load before opening wizard to prevent
+  // layout shift (list jumps from ~250 countries to ~30 when Firestore responds).
+  // Also sync wizard state to global context in the SAME effect to eliminate the
+  // 1-frame race where CookieBanner z-[100] renders above the wizard.
   useEffect(() => {
-    if (!wizardCompleted) {
+    if (!wizardCompleted && !countriesLoading) {
       setShowWizard(true);
+      setWizardOpen(true);
     }
-  }, [wizardCompleted]);
+    return () => {
+      setWizardOpen(false);
+    };
+  }, [wizardCompleted, countriesLoading, setWizardOpen]);
+
+  // Keep wizard context in sync when wizard closes (e.g. after completion)
+  useEffect(() => {
+    if (!showWizard) {
+      setWizardOpen(false);
+    }
+  }, [showWizard, setWizardOpen]);
 
   // Track ViewContent when page loads with providers
   useEffect(() => {
@@ -2241,15 +2256,6 @@ const SOSCall: React.FC = () => {
 
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
-
-  // Sync wizard state with global context (to hide cookie banner & PWA popup)
-  useEffect(() => {
-    setWizardOpen(showWizard);
-    // Cleanup: reset wizard state when leaving the page
-    return () => {
-      setWizardOpen(false);
-    };
-  }, [showWizard, setWizardOpen]);
 
   // Handle wizard completion (supports multi-language selection)
   const handleWizardComplete = useCallback((filters: {
@@ -4157,6 +4163,15 @@ const SOSCall: React.FC = () => {
       {/* ========================================
           🧙 Guided Filter Wizard (Mobile-First)
       ======================================== */}
+      {/* Loading state: show spinner while waiting for enabled countries */}
+      {!wizardCompleted && countriesLoading && (
+        <div className="fixed inset-x-0 bottom-0 z-[80] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col items-center justify-center isolate"
+          style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
+        >
+          <div className="w-10 h-10 border-4 border-white/20 border-t-red-500 rounded-full animate-spin mb-4" />
+          <p className="text-white/60 text-sm"><FormattedMessage id="action.loading" defaultMessage="Chargement..." /></p>
+        </div>
+      )}
       <GuidedFilterWizard
         isOpen={showWizard}
         onComplete={handleWizardComplete}

@@ -75,6 +75,10 @@ const CountryFlag: React.FC<{ code: string; name?: string }> = ({ code, name }) 
     <img
       src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
       alt={name ? `Drapeau ${name}` : `Flag of ${code.toUpperCase()}`}
+      width={24}
+      height={16}
+      loading="lazy"
+      decoding="async"
       className="w-6 h-4 object-cover rounded-sm flex-shrink-0 pointer-events-none"
       draggable={false}
     />
@@ -206,9 +210,8 @@ const CountryStep: React.FC<{
 
       {/* Countries Grid - Scrollable */}
       <div
-        className="flex-1 overflow-y-auto overscroll-contain touch-manipulation"
+        className="flex-1 overflow-y-auto overscroll-contain"
         data-wizard-scroll
-        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredCountries.map((country) => (
@@ -340,9 +343,8 @@ const LanguageStep: React.FC<{
 
       {/* Languages Grid - Scrollable */}
       <div
-        className="flex-1 overflow-y-auto overscroll-contain touch-manipulation"
+        className="flex-1 overflow-y-auto overscroll-contain"
         data-wizard-scroll
-        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className="grid grid-cols-2 gap-2 pb-2">
           {filteredLanguages.map((lang) => {
@@ -551,7 +553,8 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   if (!isOpen) return null;
 
-  // z-[65] puts wizard above the main header (z-60) so touch events reach the wizard content.
+  // z-[80] puts wizard ABOVE the header (z-[70]) so touch events always reach wizard buttons.
+  // Previous z-[65] was BELOW header z-[70], causing taps near the top to be intercepted by the header.
   // isolation:isolate ensures own stacking context — prevents header compositing layers from
   // interfering with wizard touch events on mobile.
   // top uses calc() with safe-area-inset-top for PWA standalone mode (iPhone notch, Android cutout)
@@ -559,7 +562,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     <div
       ref={wizardRef}
       data-wizard
-      className="fixed inset-x-0 bottom-0 z-[65] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col isolate"
+      className="fixed inset-x-0 bottom-0 z-[80] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col isolate"
       style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))' }}
     >
 

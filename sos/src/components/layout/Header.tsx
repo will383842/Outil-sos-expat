@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApp } from "../../contexts/AppContext";
+import { useWizard } from "../../contexts/WizardContext";
 import { useAiToolAccess } from "../../hooks/useAiToolAccess";
 import {
   doc,
@@ -1548,6 +1549,7 @@ const Header: React.FC = () => {
   const navigate = useLocaleNavigate();
   const getLocalePath = useLocalePath();
   const { language } = useApp();
+  const { isWizardOpen } = useWizard();
   const { isLoading, user } = useAuth();
   const typedUser = user as WithAuthExtras | null;
   const affiliateRole = typedUser?.role as string | undefined;
@@ -1673,7 +1675,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-[70] md:select-none"
+        className={`fixed top-0 left-0 right-0 z-[70] md:select-none${isWizardOpen ? ' pointer-events-none' : ''}`}
         role="banner"
       >
         {/* ============================================================ */}
@@ -1813,7 +1815,7 @@ const Header: React.FC = () => {
         {/* ============================================================ */}
         {/* MOBILE HEADER */}
         {/* ============================================================ */}
-        {/* z-[70] ensures mobile header stays above all overlays (wizard z-50, modals z-50, sidedrawer z-60, desktop header z-60) */}
+        {/* z-[70] mobile header — wizard is now z-[80] and sets pointer-events:none on header when open */}
         {/* safe-area-inset-top: compense l'encoche/Dynamic Island iPhone + cutout Android en mode PWA standalone */}
         <div className="lg:hidden bg-gray-900 shadow-xl relative z-[70]" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <div className="px-4 py-3 flex items-center justify-between">
