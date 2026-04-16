@@ -523,22 +523,6 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     onComplete(data);
   }, [onComplete, selectedCountry, selectedLanguages]);
 
-  // Prevent body scroll when wizard is open.
-  // iOS Safari FIX: Only set overflow:hidden on body, NOT on html.
-  // Setting it on BOTH html+body causes iOS Safari to "capture" touch events
-  // on the html/body layer and not deliver them to position:fixed overlays.
-  // The wizard's own overscroll-contain prevents scroll chaining to body.
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add('wizard-scroll-lock');
-    } else {
-      document.body.classList.remove('wizard-scroll-lock');
-    }
-    return () => {
-      document.body.classList.remove('wizard-scroll-lock');
-    };
-  }, [isOpen]);
-
   // Reset wizard when opened
   useEffect(() => {
     if (isOpen) {
@@ -549,66 +533,6 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
     }
   }, [isOpen]);
 
-  // iOS Safari FIX: Force the wizard overlay to be recognized as a touch target.
-  // iOS Safari delays or drops touch events on position:fixed elements that appear
-  // over a scroll-locked body. Adding an explicit touchstart listener on the overlay
-  // element itself forces WebKit to register it in the hit-test layer tree.
-  // Also prevents background body scrolling on iOS by intercepting touchmove.
-  useEffect(() => {
-    if (!isOpen) return;
-    const wizardEl = wizardRef.current;
-    if (!wizardEl) return;
-
-    // No-op touchstart forces iOS Safari to add this element to its touch hit-test tree
-    const noop = () => {};
-    wizardEl.addEventListener('touchstart', noop, { passive: true });
-
-    // Prevent body scroll-through on iOS: block touchmove events that would
-    // bubble to body when the wizard scroll container is at its boundary.
-    // Only block if the touch is NOT inside a scrollable child at mid-scroll.
-    const preventBodyScroll = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      // Find the closest scrollable container inside the wizard
-      const scrollContainer = target.closest('[data-wizard-scroll]') as HTMLElement | null;
-      if (!scrollContainer) {
-        // Touch is on a non-scrollable area (header, footer, title) — block body scroll
-        e.preventDefault();
-        return;
-      }
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-      const isAtTop = scrollTop <= 0;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-      // If at scroll boundary, prevent body scroll-through
-      if (isAtTop || isAtBottom) {
-        // Allow if user is scrolling AWAY from the boundary
-        const touch = e.touches[0];
-        const startY = (scrollContainer as any).__touchStartY;
-        if (touch && startY !== undefined) {
-          const deltaY = touch.clientY - startY;
-          if ((isAtTop && deltaY > 0) || (isAtBottom && deltaY < 0)) {
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    const recordTouchStart = (e: TouchEvent) => {
-      const scrollContainer = (e.target as HTMLElement).closest('[data-wizard-scroll]') as any;
-      if (scrollContainer && e.touches[0]) {
-        scrollContainer.__touchStartY = e.touches[0].clientY;
-      }
-    };
-
-    wizardEl.addEventListener('touchstart', recordTouchStart, { passive: true });
-    wizardEl.addEventListener('touchmove', preventBodyScroll, { passive: false });
-
-    return () => {
-      wizardEl.removeEventListener('touchstart', noop);
-      wizardEl.removeEventListener('touchstart', recordTouchStart);
-      wizardEl.removeEventListener('touchmove', preventBodyScroll);
-    };
-  }, [isOpen]);
-
   const canProceed = useMemo(() => {
     if (step === 1) return !!selectedCountry;
     if (step === 2) return selectedLanguages.length > 0;
@@ -617,17 +541,24 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
 
   if (!isOpen) return null;
 
-  // z-[80] puts wizard ABOVE the header (z-[70]) so touch events always reach wizard buttons.
-  // isolation:isolate ensures own stacking context — prevents header compositing layers from
-  // interfering with wizard touch events on mobile.
-  // touch-action:manipulation on the container eliminates ALL tap delays on iOS Safari.
-  // -webkit-transform:translateZ(0) forces a GPU compositing layer on iOS, ensuring
-  // the wizard is in its own layer for touch hit-testing (fixes iOS touch event delivery).
+  // iOS Safari scroll lock strategy: NO overflow:hidden on body/html.
+  // Instead, a full-screen backdrop div at z-[79] with touch-action:none
+  // blocks all body interaction. The wizard sits above at z-[80].
+  // This is the standard iOS-safe approach used by all major modal libraries
+  // (Radix, Headless UI, etc.) because iOS Safari breaks touch events when
+  // body has overflow:hidden + position:fixed overlay.
   return (
+    <>
+    {/* Backdrop: blocks body scroll and interaction on iOS Safari */}
+    <div
+      className="fixed inset-0 z-[79]"
+      style={{ touchAction: 'none' }}
+      aria-hidden="true"
+    />
     <div
       ref={wizardRef}
       data-wizard
-      className="fixed inset-x-0 bottom-0 z-[80] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col isolate touch-manipulation"
+      className="fixed inset-x-0 bottom-0 z-[80] bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col touch-manipulation"
       style={{
         top: 'calc(76px + env(safe-area-inset-top, 0px))',
         WebkitTransform: 'translateZ(0)',
@@ -728,6 +659,7 @@ const GuidedFilterWizard: React.FC<GuidedFilterWizardProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };
 

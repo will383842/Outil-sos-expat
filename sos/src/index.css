@@ -65,17 +65,12 @@
   }
 }
 
-/* Wizard overlay scroll lock
- * Uses overflow:hidden on body ONLY — NOT on html.
- * iOS Safari BUG: setting overflow:hidden on BOTH html AND body causes WebKit
- * to capture touch events at the html/body compositing layer, preventing them
- * from reaching position:fixed overlays (like the wizard). This manifests as
- * "taps not working" for several seconds on iPhone.
- * The wizard's own overscroll-behavior:contain prevents scroll chaining.
- * NOTE: Do NOT add touch-action:none — it blocks tap-to-focus on inputs. */
+/* Wizard scroll lock — DEPRECATED: no longer using overflow:hidden on body.
+ * iOS Safari breaks touch events on position:fixed overlays when body has
+ * overflow:hidden. Instead, we use a backdrop div with touch-action:none
+ * to block body interaction while the wizard is open.
+ * Keeping the class definition in case it's referenced elsewhere. */
 body.wizard-scroll-lock {
-  overflow: hidden !important;
-  /* iOS Safari: prevent body bounce-scroll that can steal touch events */
   overscroll-behavior: none;
 }
 
