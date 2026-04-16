@@ -131,7 +131,7 @@ const RegisterClient: React.FC = () => {
           url: canonicalUrl,
           name: intl.formatMessage({ id: 'registerClient.seo.title' }),
           description: intl.formatMessage({ id: 'registerClient.seo.description' }),
-          inLanguage: currentLang,
+          inLanguage: currentLang === 'ch' ? 'zh' : currentLang,
           isPartOf: {
             '@type': 'WebSite',
             '@id': `${baseUrl}/#website`,

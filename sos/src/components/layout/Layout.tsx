@@ -143,9 +143,9 @@ const Layout: React.FC<LayoutProps> = ({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="SOS Expat & Travelers" />
         
-        {/* Content Language */}
-        <meta httpEquiv="content-language" content={language} />
-        <meta name="language" content={language} />
+        {/* Content Language — use ISO 639-1 code (zh not ch) for standards compliance */}
+        <meta httpEquiv="content-language" content={language === 'ch' ? 'zh' : language} />
+        <meta name="language" content={language === 'ch' ? 'zh' : language} />
         
         {/* Global Open Graph */}
         <meta property="og:type" content="website" />

@@ -92,7 +92,7 @@ const RegisterExpat: React.FC = () => {
         url: canonicalUrl,
         name: intl.formatMessage({ id: 'registerExpat.seo.title' }),
         description: intl.formatMessage({ id: 'registerExpat.seo.description' }),
-        inLanguage: lang,
+        inLanguage: lang === 'ch' ? 'zh' : lang,
         isPartOf: {
           '@type': 'WebSite',
           '@id': 'https://sos-expat.com/#website',

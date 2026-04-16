@@ -85,10 +85,14 @@ function getLocaleString(lang: string): string {
   return `${urlLang}-${country}`;
 }
 
-// Convertit le code de langue interne vers le code hreflang standard
+// Convertit le code de langue interne vers le code hreflang BCP 47
+// Aligné avec Blog Laravel CanonicalService::HREFLANG_MAP et SPA HrefLangConstants
+const HREFLANG_MAP: Record<string, string> = {
+  fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE', ru: 'ru-RU',
+  pt: 'pt-PT', ch: 'zh-Hans', hi: 'hi-IN', ar: 'ar-SA',
+};
 function getHreflangCode(lang: string): string {
-  // 'ch' (convention interne) devient 'zh-Hans' pour le chinois simplifié
-  return lang === 'ch' ? 'zh-Hans' : lang;
+  return HREFLANG_MAP[lang] || lang;
 }
 
 /**
@@ -1163,10 +1167,12 @@ export const sitemapIndex = onRequest(
       // FAQ (single sitemap, small enough)
       addSitemap(`${SITE_URL}/sitemaps/faq.xml`);
 
-      // Legacy sitemaps (backward compat — Google still references them)
-      addSitemap(`${SITE_URL}/sitemaps/profiles.xml`);
-      addSitemap(`${SITE_URL}/sitemaps/country-listings.xml`);
-      addSitemap(`${SITE_URL}/sitemaps/help.xml`);
+      // Legacy sitemaps REMOVED from index — they duplicate the per-lang
+      // sitemaps above (profiles-{lang}, listings-{lang}, help-{lang}).
+      // Keeping them in the index caused ~3 961 duplicate URLs which
+      // confused Google and contributed to de-indexation.
+      // The functions still respond (backward compat for any cached GSC
+      // references), but they are no longer advertised in the master index.
 
       // ── Blog Laravel sitemaps (fetched at runtime) ────────────────────
       // The blog regenerates sitemap.xml dynamically (articles, categories,

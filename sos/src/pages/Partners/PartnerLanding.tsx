@@ -762,12 +762,15 @@ const PartnerLanding: React.FC = () => {
     '@id': `${SEO_CONSTANTS.BASE_URL}/#website`,
     'name': SEO_CONSTANTS.SITE_NAME,
     'url': SEO_CONSTANTS.BASE_URL,
-    'inLanguage': language,
+    'inLanguage': language === 'ch' ? 'zh' : language,
     'potentialAction': {
       '@type': 'SearchAction',
       'target': {
         '@type': 'EntryPoint',
-        'urlTemplate': `${SEO_CONSTANTS.BASE_URL}/recherche?q={search_term_string}`,
+        'urlTemplate': `${SEO_CONSTANTS.BASE_URL}/${{
+          fr: 'recherche', en: 'search', es: 'buscar', de: 'suche',
+          pt: 'pesquisa', ru: 'poisk', ch: 'sousuo', hi: 'khoj', ar: 'bahth',
+        }[language] || 'recherche'}?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -1094,14 +1097,14 @@ const PartnerLanding: React.FC = () => {
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
 
         {/* Other meta */}
-        <meta name="language" content={language} />
+        <meta name="language" content={language === 'ch' ? 'zh' : language} />
         <meta name="revisit-after" content="7 days" />
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
 
         {/* AI-specific meta signals */}
         <meta name="ai-crawlable" content="true" />
-        <meta name="content-language" content={language} />
+        <meta name="content-language" content={language === 'ch' ? 'zh' : language} />
         <meta name="document-state" content="dynamic" />
         <meta name="content-type" content="B2B Partner Landing Page" />
         <meta name="expertise-level" content="professional" />

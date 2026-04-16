@@ -62,8 +62,8 @@ export const LandingMeta = memo<LandingMetaProps>(({ data }) => {
       <meta name="robots" content={seo.robots || 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
       <meta name="googlebot" content={seo.robots || 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
 
-      {/* Language & Locale */}
-      <meta name="language" content={routing.language} />
+      {/* Language & Locale — use ISO 639-1 (zh not ch) */}
+      <meta name="language" content={routing.language === 'ch' ? 'zh' : routing.language} />
       <meta httpEquiv="Content-Language" content={routing.locale} />
 
       {/* Canonical */}

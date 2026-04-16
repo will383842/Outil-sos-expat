@@ -465,7 +465,7 @@ const PasswordReset: React.FC = () => {
       "name": t('meta.title'),
       "description": t('meta.description'),
       "url": canonicalUrl,
-      "inLanguage": currentLang,
+      "inLanguage": currentLang === 'ch' ? 'zh' : currentLang,
       "isPartOf": {
         "@type": "WebSite",
         "@id": `${baseUrl}#website`,

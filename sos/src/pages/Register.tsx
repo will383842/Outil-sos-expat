@@ -383,7 +383,7 @@ const Register: React.FC = () => {
     name: intl.formatMessage({ id: "meta.register.title" }),
     description: intl.formatMessage({ id: "meta.register.description" }),
     url: canonicalUrl,
-    inLanguage: language,
+    inLanguage: language === 'ch' ? 'zh' : language,
     isPartOf: {
       "@type": "WebSite",
       "@id": `${SEO_BASE_URL}#website`,

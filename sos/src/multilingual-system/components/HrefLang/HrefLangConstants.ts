@@ -20,19 +20,26 @@ export const localeToPrefix: Record<LanguagesType, string> = {
 };
 
 /**
- * Map internal language codes to ISO hreflang codes for SEO
- * Note: 'ch' is our internal code for Chinese, but SEO requires 'zh-Hans' for simplified Chinese
+ * Map internal language codes to ISO hreflang codes for SEO (BCP 47 format).
+ *
+ * IMPORTANT: These MUST match the Blog Laravel's CanonicalService::HREFLANG_MAP
+ * to ensure consistent hreflang signals across the entire sos-expat.com domain.
+ * Blog uses: fr-FR, en-US, es-ES, de-DE, ru-RU, pt-PT, zh-Hans, hi-IN, ar-SA
+ *
+ * For country-specific content (blog articles about Thailand), the Blog overrides
+ * these with country-aware codes (e.g., fr-TH, en-TH). The SPA only serves
+ * generic pages so always uses the default country per language.
  */
 export const localeToHreflang: Record<LanguagesType, string> = {
-  en: "en",
-  es: "es",
-  fr: "fr",
-  de: "de",
-  ru: "ru",
-  pt: "pt",
-  hi: "hi",
-  ch: "zh-Hans", // Simplified Chinese (script-based, more universal)
-  ar: "ar",
+  en: "en-US",
+  es: "es-ES",
+  fr: "fr-FR",
+  de: "de-DE",
+  ru: "ru-RU",
+  pt: "pt-PT",
+  hi: "hi-IN",
+  ch: "zh-Hans", // Simplified Chinese (script-based, per BCP 47)
+  ar: "ar-SA",
 };
 
 /**

@@ -9,6 +9,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { isHolidaysDomain } from '../../utils/holidaysDetection';
 
 export interface OrganizationRating {
   ratingValue: number;
@@ -79,8 +80,8 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
   name = 'SOS Expat & Travelers',
   description = 'Emergency legal assistance for expats - Fast 24/7 help service for expatriates and travelers in 197 countries. Lawyers and expat experts available immediately.',
   legalName = 'SOS Expat & Travelers',
-  logo = 'https://sos-expat.com/sos-logo.webp',
-  url = 'https://sos-expat.com',
+  logo: logoProp,
+  url: urlProp,
   aggregateRating,
   sameAs = [
     'https://www.facebook.com/profile.php?id=61586372244009',
@@ -109,6 +110,11 @@ const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({
   includeWebSite = true,
   includeService = true
 }) => {
+  // Resolve domain-aware defaults for logo and url
+  const baseDomain = isHolidaysDomain() ? 'https://sos-holidays.com' : 'https://sos-expat.com';
+  const url = urlProp ?? baseDomain;
+  const logo = logoProp ?? `${baseDomain}/sos-logo.webp`;
+
   const schema = useMemo(() => {
     const baseUrl = url.replace(/\/$/, '');
 

@@ -279,6 +279,10 @@ export const COUNTRY_SLUG_TRANSLATIONS: Record<string, Record<string, string>> =
     fr: 'azerbaidjan', en: 'azerbaijan', es: 'azerbaiyan', de: 'aserbaidschan',
     pt: 'azerbaijao', ru: 'azerbaydzhan', zh: 'asetbaijiang', ar: 'azerbayjan', hi: 'azerbaijan',
   },
+  BA: {
+    fr: 'bosnie-herzegovine', en: 'bosnia-and-herzegovina', es: 'bosnia-y-herzegovina', de: 'bosnien-herzegowina',
+    pt: 'bosnia-herzegovina', ru: 'bosniya', zh: 'bosniya', ar: 'al-busna', hi: 'bosnia',
+  },
   BD: {
     fr: 'bangladesh', en: 'bangladesh', es: 'bangladesh', de: 'bangladesch',
     pt: 'bangladesh', ru: 'bangladesh', zh: 'mengjiala', ar: 'bangladesh', hi: 'bangladesh',

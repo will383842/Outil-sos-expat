@@ -289,7 +289,7 @@ const GroupAdminLanding: React.FC = () => {
       <FAQPageSchema
         faqs={faqItems.map(item => ({ question: item.q, answer: item.a }))}
         pageUrl={typeof window !== 'undefined' ? window.location.href : undefined}
-        inLanguage={intl.locale}
+        inLanguage={intl.locale === 'ch' ? 'zh' : intl.locale}
       />
 
       {/* Custom styles */}

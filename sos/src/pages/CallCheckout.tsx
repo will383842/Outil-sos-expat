@@ -3338,7 +3338,7 @@ const CallCheckout: React.FC<CallCheckoutProps> = ({
         name: t("meta.title"),
         description: t("meta.description"),
         url: `${window.location.origin}/${language}/checkout`,
-        inLanguage: language,
+        inLanguage: language === 'ch' ? 'zh' : language,
         mainEntity: {
           "@type": "Action",
           "@id": `${window.location.origin}/${language}/checkout#action`,

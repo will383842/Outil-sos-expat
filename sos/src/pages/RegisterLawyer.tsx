@@ -92,7 +92,7 @@ const RegisterLawyer: React.FC = () => {
         url: canonicalUrl,
         name: intl.formatMessage({ id: 'registerLawyer.seo.title' }),
         description: intl.formatMessage({ id: 'registerLawyer.seo.description' }),
-        inLanguage: lang,
+        inLanguage: lang === 'ch' ? 'zh' : lang,
         isPartOf: {
           '@type': 'WebSite',
           '@id': 'https://sos-expat.com/#website',

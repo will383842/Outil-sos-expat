@@ -1225,7 +1225,7 @@ const EDGE_CACHE_ENABLED = true;
 // caches.default.delete() is PoP-local and doesn't propagate globally. When
 // a full cache purge is needed (e.g., after fixing a critical bug), bump
 // this version instead of deploying to force a global miss on all PoPs.
-const EDGE_CACHE_VERSION = 'v11';
+const EDGE_CACHE_VERSION = 'v12';
 
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,   // 24h for valid pages
@@ -2151,7 +2151,18 @@ if (localeMatch) {
     'pt-pt', 'zh-cn', 'ar-sa', 'hi-in',
   ]);
 
-  if (VALID_LANGS.has(urlLang) && !CANONICAL_LOCALES.has(locale)) {
+  if (!VALID_LANGS.has(urlLang)) {
+    // Completely invalid language code (e.g., /xx-yy/) → 301 to French default
+    // Prevents ghost pages from being indexed by Google
+    const redirectUrl = `${url.origin}/fr-fr${restPath}${url.search}`;
+    console.log(`[WORKER] Invalid language '${urlLang}': ${pathname} -> /fr-fr${restPath}`);
+    return new Response(null, {
+      status: 301,
+      headers: { 'Location': redirectUrl, 'X-Worker-Active': 'true', 'Cache-Control': 'public, max-age=86400', 'X-Worker-Redirect': 'invalid-lang' },
+    });
+  }
+
+  if (!CANONICAL_LOCALES.has(locale)) {
     // Non-canonical locale — BUT skip redirect for blog/LP content about specific countries.
     // LP URLs use /{lang}-{destinationCountry}/segment/slug (e.g., fr-th/aide/visa-refuse)
     // Blog articles can also use /{lang}-{country}/ for country-specific content.

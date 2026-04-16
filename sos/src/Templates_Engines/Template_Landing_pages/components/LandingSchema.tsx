@@ -44,7 +44,7 @@ export const LandingSchema = memo<LandingSchemaProps>(({ data }) => {
     url: routing.canonicalUrl,
     name: seo.metaTitle,
     description: seo.metaDescription,
-    inLanguage: routing.language,
+    inLanguage: routing.language === 'ch' ? 'zh' : routing.language,
     isPartOf: {
       '@id': `${SEO.baseUrl}/#website`,
     },

@@ -2243,7 +2243,7 @@ const ProviderProfile: React.FC = () => {
       name: displayName,
       image: photoUrl,
       description: descriptionText,
-      inLanguage: preferredLangKey || 'fr',
+      inLanguage: (preferredLangKey === 'ch' ? 'zh' : preferredLangKey) || 'fr',
       address: {
         "@type": "PostalAddress",
         addressCountry: provider.country?.toUpperCase() || '',
@@ -2802,7 +2802,7 @@ const ProviderProfile: React.FC = () => {
             "height": IMAGE_SIZES.THUMBNAIL_HEIGHT,
             "encodingFormat": "image/jpeg",
             "representativeOfPage": true,
-            "inLanguage": preferredLangKey || 'fr',
+            "inLanguage": (preferredLangKey === 'ch' ? 'zh' : preferredLangKey) || 'fr',
             "author": {
               "@type": "Organization",
               "name": "SOS Expat & Travelers",

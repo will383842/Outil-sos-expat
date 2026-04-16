@@ -426,7 +426,7 @@ const Login: React.FC = () => {
             name: intl.formatMessage({ id: "seo.login.meta_title" }),
             description: intl.formatMessage({ id: "seo.login.meta_description" }),
             url: canonicalUrl,
-            inLanguage: currentLang,
+            inLanguage: currentLang === 'ch' ? 'zh' : currentLang,
             isPartOf: {
               "@id": `${baseUrl}/#website`,
             },

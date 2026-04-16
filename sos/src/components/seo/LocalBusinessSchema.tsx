@@ -8,6 +8,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { isHolidaysDomain } from '../../utils/holidaysDetection';
 
 export interface LocalBusinessRating {
   ratingValue: number;
@@ -84,9 +85,9 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
   name = 'SOS Expat & Travelers',
   description = 'Legal assistance and consulting service for expatriates and travelers - Online consultations with lawyers and experts in 197 countries. Available 24/7.',
   businessType = 'ProfessionalService',
-  url = 'https://sos-expat.com',
-  logo = 'https://sos-expat.com/sos-logo.webp',
-  image = 'https://sos-expat.com/og-image.webp',
+  url: urlProp,
+  logo: logoProp,
+  image: imageProp,
   telephone,
   email = '',
   priceRange = '€€',
@@ -107,6 +108,11 @@ const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
   ],
   inLanguage
 }) => {
+  const baseDomain = isHolidaysDomain() ? 'https://sos-holidays.com' : 'https://sos-expat.com';
+  const url = urlProp ?? baseDomain;
+  const logo = logoProp ?? `${baseDomain}/sos-logo.webp`;
+  const image = imageProp ?? `${baseDomain}/og-image.webp`;
+
   const schema = useMemo(() => {
     const baseUrl = url.replace(/\/$/, '');
 
@@ -247,10 +253,11 @@ export default LocalBusinessSchema;
 export const generateLocalBusinessSchema = (
   props: Partial<LocalBusinessSchemaProps> = {}
 ): Record<string, unknown> => {
+  const _baseDomain = isHolidaysDomain() ? 'https://sos-holidays.com' : 'https://sos-expat.com';
   const {
     name = 'SOS Expat & Travelers',
-    url = 'https://sos-expat.com',
-    logo = 'https://sos-expat.com/sos-logo.webp',
+    url = _baseDomain,
+    logo = `${_baseDomain}/sos-logo.webp`,
     aggregateRating,
     reviews = []
   } = props;

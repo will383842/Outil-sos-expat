@@ -598,14 +598,17 @@ const OptimizedHomePage: React.FC = () => {
     "@id": `${seoConst.BASE_URL}/#website`,
     "name": seoConst.SITE_NAME,
     "url": seoConst.BASE_URL,
-    "inLanguage": language,
-    // SearchAction only for expat (holidays has no search page — all non-home pages redirect)
+    "inLanguage": language === 'ch' ? 'zh' : language,
+    // SearchAction — use translated search segment per language (blog handles search)
     ...(!isHolidays && {
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": `${seoConst.BASE_URL}/recherche?q={search_term_string}`,
+          "urlTemplate": `${seoConst.BASE_URL}/${{
+            fr: 'recherche', en: 'search', es: 'buscar', de: 'suche',
+            pt: 'pesquisa', ru: 'poisk', ch: 'sousuo', hi: 'khoj', ar: 'bahth',
+          }[language] || 'recherche'}?q={search_term_string}`,
         },
         "query-input": "required name=search_term_string",
       },
@@ -1243,7 +1246,7 @@ const OptimizedHomePage: React.FC = () => {
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
         
         {/* Autres meta */}
-        <meta name="language" content={language} />
+        <meta name="language" content={language === 'ch' ? 'zh' : language} />
         <meta name="revisit-after" content="7 days" />
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
