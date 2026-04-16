@@ -18,6 +18,7 @@ import { setMetaPixelUserData, applyMetaPixelUserData, clearMetaPixelUserData } 
 import { captureTrafficSource } from './utils/trafficSource';
 import { devLog } from './utils/devLog';
 import './App.css';
+import { Toaster } from 'react-hot-toast';
 import PWAProvider from './components/pwa/PWAProvider';
 import { WizardProvider } from './contexts/WizardContext';
 import { FeedbackButton } from './components/feedback';
@@ -1342,6 +1343,7 @@ const App: React.FC = () => {
       )}
       </PWAProvider>
       </WizardProvider>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
     </IntlProvider>
   );
 };
