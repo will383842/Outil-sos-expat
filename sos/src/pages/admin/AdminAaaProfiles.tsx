@@ -167,6 +167,62 @@ if (typeof window !== 'undefined') {
     return { fixed };
   };
 
+  // Diagnostic: audit des numéros de téléphone manquants
+  (window as any).auditPhoneNumbers = async () => {
+    const { collection, query, getDocs } = await import('firebase/firestore');
+    const { db } = await import('../../config/firebase');
+    const snap = await getDocs(query(collection(db, 'sos_profiles')));
+    const missing: { id: string; role: string; gender: string; name: string }[] = [];
+    const stats = { total: 0, withPhone: 0, withoutPhone: 0, byGender: {} as Record<string, { total: number; missing: number }>, byRole: {} as Record<string, { total: number; missing: number }> };
+    for (const d of snap.docs) {
+      const data = d.data();
+      const phone = data.phone || data.phoneNumber || '';
+      const gender = data.gender || 'unknown';
+      const role = data.role || data.type || 'unknown';
+      stats.total++;
+      if (!stats.byGender[gender]) stats.byGender[gender] = { total: 0, missing: 0 };
+      if (!stats.byRole[role]) stats.byRole[role] = { total: 0, missing: 0 };
+      stats.byGender[gender].total++;
+      stats.byRole[role].total++;
+      if (phone && /^\+[1-9]\d{6,14}$/.test(phone)) {
+        stats.withPhone++;
+      } else {
+        stats.withoutPhone++;
+        stats.byGender[gender].missing++;
+        stats.byRole[role].missing++;
+        missing.push({ id: d.id, role, gender, name: data.fullName || `${data.firstName} ${data.lastName}` });
+      }
+    }
+    console.log('📊 AUDIT TÉLÉPHONES — sos_profiles');
+    console.log(`Total: ${stats.total} | Avec tel: ${stats.withPhone} | SANS tel: ${stats.withoutPhone}`);
+    console.log('Par genre:', stats.byGender);
+    console.log('Par rôle:', stats.byRole);
+    if (missing.length > 0) {
+      console.table(missing.slice(0, 50));
+    }
+    return { stats, missing };
+  };
+
+  // Fix: ajouter un téléphone de test aux profils qui n'en ont pas
+  (window as any).fixMissingPhones = async (dryRun = true) => {
+    const { auditPhoneNumbers } = window as any;
+    const { missing } = await auditPhoneNumbers();
+    if (missing.length === 0) { console.log('✅ Aucun profil sans téléphone'); return { fixed: 0 }; }
+    console.log(`${dryRun ? '🔍 DRY RUN' : '🔧 FIXING'}: ${missing.length} profils sans téléphone`);
+    if (dryRun) return { toFix: missing.length };
+    const { doc, updateDoc } = await import('firebase/firestore');
+    const { db } = await import('../../config/firebase');
+    let fixed = 0;
+    for (const p of missing) {
+      const phone = `+33${600000000 + Math.floor(Math.random() * 99999999)}`;
+      await updateDoc(doc(db, 'sos_profiles', p.id), { phone, phoneCountryCode: '+33' });
+      await updateDoc(doc(db, 'users', p.id), { phone, phoneCountryCode: '+33' }).catch(() => {});
+      fixed++;
+    }
+    console.log(`✅ ${fixed} profils corrigés avec un numéro de téléphone`);
+    return { fixed };
+  };
+
   // Scripts de gestion des avis (reviews)
   (window as any).reviewsTools = {
     // Générer les avis manquants pour correspondre au reviewCount
