@@ -3133,12 +3133,14 @@ const SOSCall: React.FC = () => {
   const canonicalUrl = `${BASE_URL}/${lang}${PAGE_PATH}`; // Overridden by SEOHead below (correct canonical built in IIFE)
   const onlineCount = filteredProviders.filter((p) => p.isOnline).length;
   
+  // FIX: Skip heavy schema generation while wizard is open (not needed yet, saves ~100ms)
   const jsonLdSchemas = useMemo(() => {
+    if (showWizard) return [];
     const __schemaT0 = performance.now();
     const result = generateAllSchemas(intl, filteredProviders, selectedType, onlineCount, lang, faqData);
     console.log(`⏱️ [SOSCall] generateAllSchemas: ${(performance.now() - __schemaT0).toFixed(0)}ms`);
     return result;
-  }, [intl, filteredProviders, selectedType, onlineCount, lang, faqData]);
+  }, [intl, filteredProviders, selectedType, onlineCount, lang, faqData, showWizard]);
 
   const seoTitle = intl.formatMessage({ 
     id: selectedType === "lawyer" 
@@ -3988,8 +3990,11 @@ const SOSCall: React.FC = () => {
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.mobileAriaLabel" })}
                 >
-                  {/* Affiche tous les providers filtrés sur mobile (pas de pagination) */}
-                  {filteredProviders.map((provider, index) => (
+                  {/* FIX: Don't render heavy provider cards while wizard is open.
+                      Rendering 50-100 ModernProfileCard (391 lines each) behind the wizard
+                      blocks the main thread for 6-8 seconds on iPhone, making the wizard
+                      completely unresponsive to touch events. */}
+                  {!showWizard && filteredProviders.map((provider, index) => (
                     <div key={provider.id} className="flex justify-center w-full overflow-hidden" role="listitem">
                       <ModernProfileCard
                         provider={provider}
@@ -4008,7 +4013,7 @@ const SOSCall: React.FC = () => {
                   role="list"
                   aria-label={intl.formatMessage({ id: "sosCall.providerList.desktopAriaLabel" })}
                 >
-                  {paginatedProviders.map((provider, index) => (
+                  {!showWizard && paginatedProviders.map((provider, index) => (
                     <div key={provider.id} role="listitem">
                       <ModernProfileCard
                         provider={provider}
