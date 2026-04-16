@@ -630,6 +630,7 @@ const AdminTrustpilot = lazy(() => import("../../pages/admin/AdminTrustpilot"));
 const AdminMetaAnalytics = lazy(() => import("../../pages/admin/AdminMetaAnalytics"));
 const AdminGoogleAdsAnalytics = lazy(() => import("../../pages/admin/AdminGoogleAdsAnalytics"));
 const AdminLandingPages = lazy(() => import("../../pages/admin/AdminLandingPages"));
+const AdminRepublicationRS = lazy(() => import("../../pages/admin/AdminRepublicationRS"));
 
 // ===== LAZY IMPORTS - MARKETING (UNIFIED) =====
 const AdminMarketingResources = lazy(() => import("../../pages/admin/marketing/AdminMarketingResources"));
@@ -2116,6 +2117,18 @@ const AdminRoutesV2: React.FC = () => {
         element={
           <Suspense fallback={<LoadingSpinner />}>
             <AdminLandingPages />
+          </Suspense>
+        }
+      />
+      <Route
+        path="marketing/republication-rs"
+        element={<Navigate to="marketing/republication-rs/linkedin" replace />}
+      />
+      <Route
+        path="marketing/republication-rs/:platform"
+        element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminRepublicationRS />
           </Suspense>
         }
       />

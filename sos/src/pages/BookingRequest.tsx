@@ -2292,6 +2292,19 @@ const BookingRequest: React.FC = () => {
       : "border-gray-200 hover:border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
   }`;
 
+  // ✅ Pre-fill form from authenticated user profile (zero-friction)
+  // Runs when user logs in or when user data becomes available after mount.
+  // Only fills empty fields — never overwrites what the user already typed.
+  useEffect(() => {
+    if (!user) return;
+    if (user.firstName && !getValues('firstName')) {
+      setValue('firstName', user.firstName, { shouldValidate: true });
+    }
+    if (user.phoneNumber && !getValues('clientPhone')) {
+      setValue('clientPhone', user.phoneNumber, { shouldValidate: true });
+    }
+  }, [user?.id]); // Re-run when a different user logs in — not on every render
+
   // P1-7 FIX: Auto-save formulaire dans sessionStorage (restauration après refresh/crash)
   const BOOKING_AUTOSAVE_KEY = 'sos_booking_form_autosave';
 

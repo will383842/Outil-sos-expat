@@ -75,6 +75,13 @@ import {
   // Press icons
   Newspaper,
   Image,
+  // Social republication icons
+  Share2,
+  Linkedin,
+  Facebook,
+  Instagram,
+  Pin,
+  AtSign,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -445,6 +452,57 @@ export const adminMenuTree: AdminMenuItem[] = [
             icon: Globe,
             badge: "NEW",
             descriptionKey: "admin.menu.landingPages.description",
+          },
+          {
+            id: "republication-rs",
+            labelKey: "admin.menu.republication",
+            icon: Share2,
+            badge: "NEW",
+            descriptionKey: "admin.menu.republication.description",
+            children: [
+              {
+                id: "republication-linkedin",
+                labelKey: "admin.menu.republication.linkedin",
+                path: "/admin/marketing/republication-rs/linkedin",
+                icon: Linkedin,
+                descriptionKey: "admin.menu.republication.linkedin.description",
+              },
+              {
+                id: "republication-pinterest",
+                labelKey: "admin.menu.republication.pinterest",
+                path: "/admin/marketing/republication-rs/pinterest",
+                icon: Pin,
+                descriptionKey: "admin.menu.republication.pinterest.description",
+              },
+              {
+                id: "republication-threads",
+                labelKey: "admin.menu.republication.threads",
+                path: "/admin/marketing/republication-rs/threads",
+                icon: AtSign,
+                descriptionKey: "admin.menu.republication.threads.description",
+              },
+              {
+                id: "republication-facebook",
+                labelKey: "admin.menu.republication.facebook",
+                path: "/admin/marketing/republication-rs/facebook",
+                icon: Facebook,
+                descriptionKey: "admin.menu.republication.facebook.description",
+              },
+              {
+                id: "republication-instagram",
+                labelKey: "admin.menu.republication.instagram",
+                path: "/admin/marketing/republication-rs/instagram",
+                icon: Instagram,
+                descriptionKey: "admin.menu.republication.instagram.description",
+              },
+              {
+                id: "republication-reddit",
+                labelKey: "admin.menu.republication.reddit",
+                path: "/admin/marketing/republication-rs/reddit",
+                icon: MessageSquare,
+                descriptionKey: "admin.menu.republication.reddit.description",
+              },
+            ],
           },
           {
             id: "trustpilot",

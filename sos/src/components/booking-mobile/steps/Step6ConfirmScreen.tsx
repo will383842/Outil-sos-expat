@@ -15,12 +15,24 @@ export const Step6ConfirmScreen: React.FC = () => {
   const currentCountryCode = watch('currentCountry');
   const autrePays = watch('autrePays');
   const clientPhone = watch('clientPhone');
+  const description = watch('description');
 
   // Resolve country code to display name in user's language
   const locale = intl.locale;
   const countryDisplay = currentCountryCode === OTHER_COUNTRY
     ? (autrePays || currentCountryCode)
     : resolveCountryName(currentCountryCode, locale);
+
+  // Truncate description for summary display
+  const descriptionPreview = description?.trim()
+    ? description.trim().length > 120
+      ? description.trim().slice(0, 120) + '…'
+      : description.trim()
+    : '';
+
+  const providerTypeLabel = isLawyer
+    ? intl.formatMessage({ id: 'providerType.lawyer', defaultMessage: 'Avocat' })
+    : intl.formatMessage({ id: 'providerType.expat', defaultMessage: 'Expatrié' });
 
   return (
     <div className="px-4 py-6 pb-32">
@@ -38,21 +50,35 @@ export const Step6ConfirmScreen: React.FC = () => {
       </p>
 
       {/* Summary */}
-      <div className="bg-gray-50 rounded-xl p-4 mb-4 text-sm">
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Nom</span>
-            <span className="font-medium">{firstName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Pays</span>
-            <span className="font-medium">{countryDisplay}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Téléphone</span>
-            <span className="font-medium">{clientPhone}</span>
-          </div>
+      <div className="bg-gray-50 rounded-xl p-4 mb-4 text-sm space-y-3">
+        <div className="flex justify-between items-start">
+          <span className="text-gray-500 shrink-0 mr-4">
+            {intl.formatMessage({ id: 'bookingRequest.summary.name', defaultMessage: 'Nom' })}
+          </span>
+          <span className="font-medium text-right">{firstName}</span>
         </div>
+        <div className="flex justify-between items-start">
+          <span className="text-gray-500 shrink-0 mr-4">
+            {intl.formatMessage({ id: 'bookingRequest.summary.country', defaultMessage: 'Pays' })}
+          </span>
+          <span className="font-medium text-right">{countryDisplay}</span>
+        </div>
+        <div className="flex justify-between items-start">
+          <span className="text-gray-500 shrink-0 mr-4">
+            {intl.formatMessage({ id: 'bookingRequest.summary.phone', defaultMessage: 'Téléphone' })}
+          </span>
+          <span className="font-medium text-right">{clientPhone}</span>
+        </div>
+        {descriptionPreview && (
+          <>
+            <div className="border-t border-gray-200 pt-3">
+              <p className="text-gray-500 mb-1">
+                {intl.formatMessage({ id: 'bookingRequest.summary.request', defaultMessage: 'Votre demande' })}
+              </p>
+              <p className="text-gray-800 text-xs leading-relaxed italic">"{descriptionPreview}"</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Provider + Price */}
@@ -71,7 +97,7 @@ export const Step6ConfirmScreen: React.FC = () => {
           )}
           <div>
             <p className="font-semibold text-gray-900">{provider?.name}</p>
-            <p className="text-xs text-gray-500">{isLawyer ? 'Avocat' : 'Expatrié'} • {displayDuration} min</p>
+            <p className="text-xs text-gray-500">{providerTypeLabel} • {displayDuration} min</p>
           </div>
         </div>
         <div className="text-right">

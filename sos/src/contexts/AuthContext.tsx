@@ -198,35 +198,37 @@ const isInAppBrowser = (): boolean => {
 };
 
 /**
- * Détecte si on doit forcer le mode redirect au lieu de popup
+ * Détecte si on doit forcer le mode redirect au lieu de popup.
  *
- * NOTE: authDomain est sos-urgently-ac307.firebaseapp.com (domaine Firebase par défaut).
- * Un custom authDomain sur un sous-domaine de sos-expat.com résoudrait les problèmes
- * ITP de Safari (cookies tiers bloqués), mais n'est pas encore configuré.
- * On force le redirect pour TOUS les appareils iOS (Safari inclus)
- * et les autres navigateurs mobiles problématiques.
- * Les popups sur mobile sont globalement peu fiables (bloqués par Safari,
- * problèmes de focus, etc.), le redirect est la méthode recommandée.
+ * Stratégie UX : on tente TOUJOURS le popup en premier (même sur iOS).
+ * - iOS 16.4+ supporte les popups (SFSafariViewController).
+ * - Si le popup échoue (auth/popup-blocked, auth/popup-closed-by-user),
+ *   le code de loginWithGoogle bascule automatiquement en redirect.
+ * - Seuls les WebViews in-app (Instagram, etc.) et les cas clairement
+ *   incompatibles forcent le redirect immédiatement.
+ *
+ * NOTE QR CODE: signInWithRedirect utilise firebaseapp.com comme authDomain
+ * intermédiaire. Avec prompt:'select_account', le sélecteur de compte Google
+ * affiche l'option "Se connecter avec un autre appareil" (QR code passkey).
+ * → En mode redirect on NE MET PAS de prompt pour éviter ce sélecteur.
  */
 const shouldForceRedirectAuth = (): boolean => {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
 
-  // Tous les appareils iOS → redirect (Safari, Chrome iOS, Firefox iOS, etc.)
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
-  if (isIOS) {
-    devLog('[Auth] iOS détecté - mode REDIRECT forcé (Safari bloque les popups)');
-    return true;
-  }
-
-  // Les WebViews Android peuvent aussi avoir des problèmes
+  // Les WebViews Android ne supportent pas du tout les popups Google OAuth
   const isAndroidWebView = /wv/.test(ua) && /Android/i.test(ua);
 
-  // Samsung Internet a parfois des problèmes
+  // Samsung Internet a parfois des problèmes avec les popups
   const isSamsungBrowser = /SamsungBrowser/i.test(ua);
 
-  // UC Browser, Brave, Firefox Focus et autres navigateurs alternatifs mobiles
-  const isAlternativeBrowser = /UCBrowser|Opera Mini|OPR|Brave|Focus/i.test(ua);
+  // UC Browser, Opera Mini et Firefox Focus bloquent les popups OAuth
+  const isAlternativeBrowser = /UCBrowser|Opera Mini|Focus/i.test(ua);
+
+  // iOS : NE PAS forcer le redirect — on tente le popup d'abord.
+  // iOS 16.4+ supporte les popups. Si ça échoue, loginWithGoogle fallback vers redirect.
+  // Avant on forçait redirect sur tout iOS ce qui passait par le sélecteur Google
+  // avec l'option QR code passkey.
 
   return isInAppBrowser() || isAndroidWebView || isSamsungBrowser || isAlternativeBrowser;
 };
@@ -1683,7 +1685,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
-      provider.setCustomParameters({ prompt: 'select_account' });
+      // 'select_account' dans un popup = sélecteur de compte standard (pas de QR code).
+      // En mode redirect on NE met PAS de prompt : le sélecteur Google affiche sinon
+      // une option "Se connecter avec un autre appareil" (QR code passkey) qui déroute
+      // les nouveaux utilisateurs.
+      if (!forceRedirect) {
+        provider.setCustomParameters({ prompt: 'select_account' });
+      }
 
       // FIX iOS Safari: setPersistence SANS await pour ne pas casser le lien
       // avec le geste utilisateur (tap). Safari bloque les popups si un await
@@ -1694,9 +1702,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         devWarn("[DEBUG] setPersistence error (non-blocking):", err)
       );
 
-      // 📱 Sur iOS et navigateurs problématiques: forcer redirect directement
+      // 📱 WebViews Android / Samsung / navigateurs alternatifs → redirect direct
       if (forceRedirect) {
-        devLog("[DEBUG] " + "🔄 GOOGLE LOGIN: Mode REDIRECT forcé (mobile/iOS)...");
+        devLog("[DEBUG] " + "🔄 GOOGLE LOGIN: Mode REDIRECT forcé (WebView/Samsung/alternatif)...");
         // If a booking is in progress, save the booking target instead of current page
         let redirectTarget = window.location.pathname + window.location.search;
         try {
@@ -1711,7 +1719,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         return;
       }
 
-      // 💻 Sur Desktop: essayer popup d'abord
+      // 💻 Desktop + iOS 16.4+ : essayer popup d'abord
       devLog("[DEBUG] " + "🔵 GOOGLE LOGIN: Tentative POPUP (desktop)...");
       try {
         const result = await signInWithPopup(auth, provider);

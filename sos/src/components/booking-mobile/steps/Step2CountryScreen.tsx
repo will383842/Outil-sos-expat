@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Controller } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { useMobileBooking } from '../context/MobileBookingContext';
@@ -10,6 +10,14 @@ export const Step2CountryScreen: React.FC = () => {
   const { control, watch, setValue, formState: { errors } } = form;
 
   const currentCountry = watch('currentCountry');
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    };
+  }, []);
 
   // Generate countries list in the user's current language
   const locale = intl.locale;
@@ -49,9 +57,20 @@ export const Step2CountryScreen: React.FC = () => {
                 errors.currentCountry ? 'border-red-400' : 'border-gray-300 focus:border-red-500'
               }`}
               onChange={(e) => {
-                field.onChange(e.target.value);
-                if (e.target.value !== OTHER_COUNTRY) {
+                const val = e.target.value;
+                field.onChange(val);
+
+                if (val !== OTHER_COUNTRY) {
                   setValue('autrePays', '');
+                }
+
+                // Auto-avance vers l'étape suivante si un vrai pays est sélectionné
+                // (pas "Autre" qui nécessite une saisie supplémentaire)
+                if (val && val !== OTHER_COUNTRY) {
+                  if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+                  autoAdvanceTimer.current = setTimeout(() => {
+                    goNextStep();
+                  }, 350);
                 }
               }}
             >
@@ -89,6 +108,7 @@ export const Step2CountryScreen: React.FC = () => {
               <input
                 {...field}
                 type="text"
+                autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();

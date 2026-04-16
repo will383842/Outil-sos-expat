@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { MobileBookingProvider, BookingFormData } from './context/MobileBookingContext';
+import { MobileBookingProvider, BookingFormData, useMobileBooking } from './context/MobileBookingContext';
 import { MobileBookingWizard } from './MobileBookingWizard';
 import type { Provider } from '@/types/provider';
 import { languagesData } from '@/data/languages-spoken';
@@ -22,6 +22,10 @@ interface MobileBookingWrapperProps {
 
   // Desktop fallback content
   desktopContent: React.ReactNode;
+
+  // Authenticated user data for pre-filling the form
+  userFirstName?: string;
+  userPhone?: string;
 }
 
 // Media query hook
@@ -51,12 +55,22 @@ export const MobileBookingWrapper: React.FC<MobileBookingWrapperProps> = ({
   onBack,
   initialValues = {},
   desktopContent,
+  userFirstName,
+  userPhone,
 }) => {
   const isMobile = useMediaQuery('(max-width: 820px)');
 
-  // Read wizard data from sessionStorage
+  // Read wizard data from sessionStorage + merge with user profile data
   const wizardDefaultValues = useMemo(() => {
     const defaults: Partial<BookingFormData> = { ...initialValues };
+
+    // Pre-fill from authenticated user profile (zero-friction: skip name/phone steps)
+    if (userFirstName) {
+      defaults.firstName = userFirstName;
+    }
+    if (userPhone) {
+      defaults.clientPhone = userPhone;
+    }
 
     try {
       const wizardData = sessionStorage.getItem('wizardFilters');
@@ -89,7 +103,7 @@ export const MobileBookingWrapper: React.FC<MobileBookingWrapperProps> = ({
     }
 
     return defaults;
-  }, [initialValues]);
+  }, [initialValues, userFirstName, userPhone]);
 
   // If not mobile, render desktop content
   if (!isMobile) {
@@ -111,7 +125,7 @@ export const MobileBookingWrapper: React.FC<MobileBookingWrapperProps> = ({
   );
 };
 
-// Inner component that uses the context
+// Inner component that uses the context — uses static import (no require() anti-pattern)
 interface MobileBookingWizardWithProviderProps {
   provider: Provider | null;
   isLawyer: boolean;
@@ -129,8 +143,6 @@ const MobileBookingWizardWithProvider: React.FC<MobileBookingWizardWithProviderP
   onSubmit,
   onBack,
 }) => {
-  // Import context hook here to ensure it's within provider
-  const { useMobileBooking } = require('./context/MobileBookingContext');
   const { setProvider, setDisplayEUR, setDisplayDuration } = useMobileBooking();
 
   // Sync external props to context
