@@ -152,7 +152,15 @@
     "backToDossiers": "Back to cases",
     "aiActive": "AI active",
     "consultationExpiredMessage": "Consultation time elapsed ({{minutes}} min) — History remains available",
-    "initializingChat": "Initializing AI chat..."
+    "initializingChat": "Initializing AI chat...",
+    "aiUnavailable": "AI assistant unavailable for this case",
+    "aiSkippedReason": {
+      "no_active_subscription": "The provider has no active AI subscription.",
+      "quota_exceeded": "Monthly AI quota exhausted.",
+      "ai_disabled": "The AI assistant is currently disabled.",
+      "no_provider_id": "Provider ID missing on this booking.",
+      "unknown": "Unknown reason — please contact support."
+    }
   },
   "bookingCard": {
     "lawyer": "Lawyer",

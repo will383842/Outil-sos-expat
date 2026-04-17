@@ -113,6 +113,12 @@ export const aiOnBookingCreated = onDocumentCreated(
         replyOnBookingCreated: settings.replyOnBookingCreated,
         FIX: "Vérifiez le document Firestore: settings/ai - enabled et replyOnBookingCreated doivent être true",
       });
+      await snap.ref.update({
+        aiProcessed: false,
+        aiSkipped: true,
+        aiSkippedReason: "ai_disabled",
+        aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
       return;
     }
 
@@ -132,6 +138,12 @@ export const aiOnBookingCreated = onDocumentCreated(
       logger.error(`❌ [AI-DEBUG-${debugId}] STEP 4 EXIT: No providerId in booking`, {
         bookingId,
         FIX: "Le booking doit contenir un providerId. Vérifiez que SOS envoie bien le providerId dans ingestBooking.",
+      });
+      await snap.ref.update({
+        aiProcessed: false,
+        aiSkipped: true,
+        aiSkippedReason: "no_provider_id",
+        aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
       return;
     }

@@ -35,6 +35,9 @@ interface CreateBookingResponse {
   bookingId?: string;
   conversationId?: string;
   alreadyExists?: boolean;
+  aiSkipped?: boolean;
+  aiSkippedReason?: string;
+  aiPending?: boolean;
   error?: string;
 }
 
@@ -98,16 +101,25 @@ export const createBookingFromRequest = onCall<
         const existingBooking = existingBookingsSnap.docs[0];
         const existingBookingData = existingBooking.data();
 
+        // The AI trigger writes `conversationId` (not `outilConversationId`) on the Outil booking.
+        // `outilConversationId` is only written on the SOS booking_request document.
+        const existingConvId = existingBookingData.conversationId as string | undefined;
+
         logger.info("[createBookingFromRequest] Booking already exists", {
           bookingId: existingBooking.id,
-          conversationId: existingBookingData.outilConversationId,
+          conversationId: existingConvId,
+          aiProcessed: existingBookingData.aiProcessed,
+          aiSkipped: existingBookingData.aiSkipped,
         });
 
         return {
           success: true,
           bookingId: existingBooking.id,
-          conversationId: existingBookingData.outilConversationId || existingBooking.id,
+          conversationId: existingConvId || existingBooking.id,
           alreadyExists: true,
+          aiSkipped: existingBookingData.aiSkipped === true,
+          aiSkippedReason: existingBookingData.aiSkippedReason,
+          aiPending: !existingConvId && existingBookingData.aiSkipped !== true,
         };
       }
 
@@ -154,20 +166,60 @@ export const createBookingFromRequest = onCall<
         externalId: bookingRequestId,
       });
 
-      // 5. Wait a bit for the AI trigger to create the conversation
-      // (aiOnBookingCreated should run automatically)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 5. Poll the booking until `aiOnBookingCreated` has either produced a conversation
+      // (aiProcessed=true with conversationId) or explicitly skipped (aiSkipped=true).
+      // A fixed 2s wait was too short for cold starts — the function returned `bookingRef.id`
+      // as a fallback, which doesn't match any real conversation doc, so the frontend stayed
+      // stuck on "Initialisation du chat IA...".
+      const MAX_WAIT_MS = 25000;
+      const POLL_INTERVAL_MS = 500;
+      const pollStart = Date.now();
 
-      // 6. Get the conversation ID
-      const updatedBooking = await bookingRef.get();
-      const updatedBookingData = updatedBooking.data();
-      const conversationId = updatedBookingData?.outilConversationId || bookingRef.id;
+      let conversationId: string | undefined;
+      let aiSkipped = false;
+      let aiSkippedReason: string | undefined;
 
-      // 7. Update the booking_request in SOS with the new IDs
+      while (Date.now() - pollStart < MAX_WAIT_MS) {
+        const snap = await bookingRef.get();
+        const data = snap.data();
+
+        if (data?.conversationId && typeof data.conversationId === "string") {
+          conversationId = data.conversationId;
+          break;
+        }
+        if (data?.aiSkipped === true) {
+          aiSkipped = true;
+          aiSkippedReason = data.aiSkippedReason;
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+      }
+
+      const aiPending = !conversationId && !aiSkipped;
+
+      if (aiPending) {
+        logger.warn("[createBookingFromRequest] AI trigger timeout — booking created but conversation not ready yet", {
+          bookingId: bookingRef.id,
+          waitedMs: Date.now() - pollStart,
+        });
+      } else if (aiSkipped) {
+        logger.warn("[createBookingFromRequest] AI skipped by trigger", {
+          bookingId: bookingRef.id,
+          reason: aiSkippedReason,
+        });
+      } else {
+        logger.info("[createBookingFromRequest] AI processed successfully", {
+          bookingId: bookingRef.id,
+          conversationId,
+          waitedMs: Date.now() - pollStart,
+        });
+      }
+
+      // 6. Update the booking_request in SOS with the new IDs (non-blocking)
       try {
         await sosDb.collection("booking_requests").doc(bookingRequestId).update({
           outilBookingId: bookingRef.id,
-          outilConversationId: conversationId,
+          ...(conversationId ? { outilConversationId: conversationId } : {}),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (updateError) {
@@ -179,8 +231,11 @@ export const createBookingFromRequest = onCall<
       return {
         success: true,
         bookingId: bookingRef.id,
-        conversationId: conversationId,
+        conversationId: conversationId || bookingRef.id,
         alreadyExists: false,
+        aiSkipped,
+        aiSkippedReason,
+        aiPending,
       };
 
     } catch (error) {

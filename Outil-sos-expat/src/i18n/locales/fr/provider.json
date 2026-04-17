@@ -151,7 +151,15 @@
     "backToDossiers": "Retour aux dossiers",
     "aiActive": "IA active",
     "consultationExpiredMessage": "Temps de consultation écoulé ({{minutes}} min) — L'historique reste consultable",
-    "initializingChat": "Initialisation du chat IA..."
+    "initializingChat": "Initialisation du chat IA...",
+    "aiUnavailable": "Assistant IA indisponible pour ce dossier",
+    "aiSkippedReason": {
+      "no_active_subscription": "Le prestataire n'a pas d'abonnement IA actif.",
+      "quota_exceeded": "Le quota mensuel d'appels IA est épuisé.",
+      "ai_disabled": "L'assistant IA est actuellement désactivé.",
+      "no_provider_id": "Identifiant prestataire manquant sur le dossier.",
+      "unknown": "Raison inconnue — contactez le support."
+    }
   },
   "bookingCard": {
     "lawyer": "Avocat",

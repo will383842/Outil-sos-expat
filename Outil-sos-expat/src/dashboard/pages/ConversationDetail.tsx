@@ -89,6 +89,12 @@ interface Booking {
   aiProcessed?: boolean;
   aiProcessedAt?: Timestamp;
   aiError?: string;
+  aiSkipped?: boolean;
+  aiSkippedReason?: string;
+  aiSkippedAt?: Timestamp;
+  conversationId?: string;
+  externalId?: string;
+  bookingRequestId?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   completedAt?: Timestamp;
@@ -1025,8 +1031,10 @@ export default function ConversationDetail() {
       }
 
       // Priority 2: Search by bookingId (fallback for older bookings)
+      // FIX: Use booking.id (the actual Outil booking ID) not the route `id`, which in
+      // multi-dashboard mode is the SOS booking_request ID and would never match.
       if (!convId) {
-        const convQuery = query(collection(db, "conversations"), where("bookingId", "==", id));
+        const convQuery = query(collection(db, "conversations"), where("bookingId", "==", booking.id));
         const convSnapshot = await getDocs(convQuery);
 
         if (!convSnapshot.empty) {
@@ -1070,20 +1078,35 @@ export default function ConversationDetail() {
           setConversation({ id: convId, bookingRequestId: id, providerId: booking.providerId } as unknown as Conversation);
         }
         // For bookings (Outil-native), wait for AI trigger or create fallback
+        // If AI was explicitly skipped (no access, quota exceeded, settings disabled), stop waiting.
+        else if (booking.aiSkipped) {
+          console.warn("[ConversationDetail] ⚠️ AI was skipped for this booking", {
+            bookingId: booking.id,
+            reason: booking.aiSkippedReason,
+          });
+          return;
+        }
         else if (!booking.aiProcessed) {
           console.log("[ConversationDetail] ⏳ Waiting for AI trigger to create conversation...", {
-            bookingId: id,
+            bookingId: booking.id,
             aiProcessed: booking.aiProcessed,
           });
           // AUDIT-FIX: Listen to booking changes in real-time so we detect when aiProcessed becomes true
-          // Previously this was a dead return — the user had to send a message to trigger re-render
-          const bookingRef = doc(db, "bookings", id);
+          // FIX: Use booking.id (the actual Outil booking ID) — in multi-dashboard mode the route
+          // `id` is the SOS booking_request ID and doc(db, "bookings", id) does not exist,
+          // which caused the chat to stay stuck on "Initialisation du chat IA...".
+          const bookingRef = doc(db, "bookings", booking.id);
           unsubMessages = onSnapshot(bookingRef, (bookingSnap) => {
             if (bookingSnap.exists()) {
               const updatedBooking = bookingSnap.data();
-              if (updatedBooking.aiProcessed && updatedBooking.conversationId) {
-                console.log("[ConversationDetail] ✅ AI processed! Conversation ready:", updatedBooking.conversationId);
-                // Update booking state — this will re-trigger this useEffect with aiProcessed=true
+              // Re-trigger on either success OR skip — both are terminal states for the
+              // "Initialisation..." screen and should stop the spinner.
+              if ((updatedBooking.aiProcessed && updatedBooking.conversationId) || updatedBooking.aiSkipped) {
+                console.log("[ConversationDetail] 🔔 Booking AI status updated:", {
+                  aiProcessed: updatedBooking.aiProcessed,
+                  aiSkipped: updatedBooking.aiSkipped,
+                  conversationId: updatedBooking.conversationId,
+                });
                 setBooking({ id: bookingSnap.id, ...updatedBooking } as Booking);
               }
             }
@@ -1304,6 +1327,17 @@ export default function ConversationDetail() {
               remainingTime={formattedTime}
               isExpired={isExpired}
             />
+          ) : booking?.aiSkipped ? (
+            <Card className="h-full flex items-center justify-center border-0 shadow-lg bg-amber-50">
+              <div className="text-center px-6">
+                <p className="text-amber-800 font-semibold mb-2">
+                  {t("page.aiUnavailable")}
+                </p>
+                <p className="text-amber-700 text-sm">
+                  {t(`page.aiSkippedReason.${booking.aiSkippedReason || "unknown"}`)}
+                </p>
+              </div>
+            </Card>
           ) : (
             <Card className="h-full flex items-center justify-center border-0 shadow-lg bg-gray-50">
               <div className="text-center">
