@@ -1977,7 +1977,15 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           }
 
           // Persister les documents et appeler onSuccess
-          const orderId = await currentPersistPaymentDocs(paymentIntent.id);
+          // P0 HOTFIX 2026-04-17: non-bloquant. Si persistPaymentDocs throw (Firestore rules,
+          // timeout, etc.), on navigue quand même vers PaymentSuccess car le scheduling
+          // backend a réussi (Cloud Task créé, appel garanti dans 4min).
+          let orderId: string | undefined = undefined;
+          try {
+            orderId = await currentPersistPaymentDocs(paymentIntent.id);
+          } catch (persistErr) {
+            console.error("[PaymentRequest] persistPaymentDocs non-blocking error:", persistErr);
+          }
 
           currentOnSuccess({
             paymentIntentId: paymentIntent.id,
@@ -2335,12 +2343,21 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                 callSchedulingError = cfErr;
                 return null;
               }),
-            // ④ Persist payment docs
+            // ④ Persist payment docs — NON-BLOQUANT.
+            // P0 HOTFIX 2026-04-17: si persistPaymentDocs throw (Firestore rules, permission,
+            // timeout, etc.), on ne doit PAS bloquer la navigation vers PaymentSuccess alors
+            // que le scheduling backend a réussi et que l'appel va avoir lieu dans 4 minutes.
+            // Le PaymentIntent Stripe est la source de vérité; l'order doc est un nice-to-have
+            // pour la facturation interne et peut être recréé via le webhook Stripe.
             persistPaymentDocs(paymentIntent.id)
               .then(id => {
                 console.log("🔵 [persistPaymentDocs] orderId:", id);
                 orderId = id;
                 return id;
+              })
+              .catch((persistErr: unknown) => {
+                console.error("[persistPaymentDocs] non-blocking error — user will still reach PaymentSuccess:", persistErr);
+                return null;
               }),
           ]);
 
