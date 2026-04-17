@@ -55,8 +55,12 @@ export class ClaudeProvider extends BaseLLMProvider {
       ? [{ type: "text" as const, text: options.systemPrompt, cache_control: { type: "ephemeral" as const } }]
       : [];
 
+    // options.model allows Firestore `settings/ai.claudeModel` to override the
+    // default — avoids a redeploy when Anthropic retires a snapshot.
+    const effectiveModel = options.model || config.MODEL;
+
     const requestBody = {
-      model: config.MODEL,
+      model: effectiveModel,
       max_tokens: options.maxTokens || config.MAX_TOKENS,
       temperature: options.temperature ?? config.TEMPERATURE,
       system: systemContent,
@@ -64,7 +68,8 @@ export class ClaudeProvider extends BaseLLMProvider {
     };
 
     logger.info("[Claude] Envoi requête", {
-      model: config.MODEL,
+      model: effectiveModel,
+      modelSource: options.model ? "settings_override" : "default_config",
       messageCount: claudeMessages.length,
       hasSystemPrompt: Boolean(options.systemPrompt)
     });

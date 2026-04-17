@@ -48,8 +48,10 @@ export class OpenAIProvider extends BaseLLMProvider {
     // Préparer les messages pour l'API OpenAI
     const openaiMessages = this.formatMessages(options.messages, options.systemPrompt);
 
+    const effectiveModel = options.model || config.MODEL;
+
     const requestBody = {
-      model: config.MODEL,
+      model: effectiveModel,
       messages: openaiMessages,
       temperature: options.temperature ?? config.TEMPERATURE,
       max_tokens: options.maxTokens || config.MAX_TOKENS,
@@ -58,7 +60,8 @@ export class OpenAIProvider extends BaseLLMProvider {
     };
 
     logger.info("[OpenAI] Envoi requête", {
-      model: config.MODEL,
+      model: effectiveModel,
+      modelSource: options.model ? "settings_override" : "default_config",
       messageCount: openaiMessages.length
     });
 

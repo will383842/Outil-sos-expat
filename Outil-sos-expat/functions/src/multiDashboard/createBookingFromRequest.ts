@@ -95,35 +95,92 @@ export const createBookingFromRequest = onCall<
       // Uses a transaction + deterministic doc ID so parallel calls (e.g. React
       // StrictMode double-mount, or the useEffect firing twice in quick succession)
       // converge on the same booking instead of racing to create duplicates.
+      // No `limit(1)`: historical race conditions may have created duplicates that
+      // we want to clean up in one pass.
       const existingBookingsSnap = await outilDb.collection("bookings")
         .where("externalId", "==", bookingRequestId)
-        .limit(1)
         .get();
 
-      if (!existingBookingsSnap.empty) {
-        const existingBooking = existingBookingsSnap.docs[0];
-        const existingBookingData = existingBooking.data();
+      // Prefer the most recent booking that is NOT stuck. If all are stuck, delete
+      // them all and fall through to create a fresh one.
+      const allExisting = existingBookingsSnap.docs.map(doc => ({
+        doc,
+        data: doc.data(),
+        createdAtMillis:
+          doc.data().createdAt?.toMillis?.() ??
+          (doc.data().createdAt?._seconds ? doc.data().createdAt._seconds * 1000 : 0),
+      })).sort((a, b) => b.createdAtMillis - a.createdAtMillis);
+
+      if (allExisting.length > 0) {
+        const existingBooking = allExisting[0].doc;
+        const existingBookingData = allExisting[0].data;
 
         // The AI trigger writes `conversationId` (not `outilConversationId`) on the Outil booking.
         // `outilConversationId` is only written on the SOS booking_request document.
         const existingConvId = existingBookingData.conversationId as string | undefined;
 
-        logger.info("[createBookingFromRequest] Booking already exists", {
-          bookingId: existingBooking.id,
-          conversationId: existingConvId,
-          aiProcessed: existingBookingData.aiProcessed,
-          aiSkipped: existingBookingData.aiSkipped,
-        });
+        // AUTO-RETRY: detect "stuck" bookings — AI never processed AND never skipped
+        // AND older than 90s. This happens if:
+        //  1) A pre-fix booking got stuck when LLMs errored without writing aiSkipped
+        //  2) The trigger was killed by Cloud Functions timeout before completion
+        //  3) The function was redeployed mid-execution
+        // Delete the zombie + fall through to create a fresh one so the new trigger fires.
+        const createdAtMillis =
+          existingBookingData.createdAt?.toMillis?.() ??
+          (existingBookingData.createdAt?._seconds ? existingBookingData.createdAt._seconds * 1000 : 0);
+        const ageMs = createdAtMillis ? Date.now() - createdAtMillis : 0;
+        const STUCK_AFTER_MS = 90_000; // 90s — more than any normal cold start + LLM latency
 
-        return {
-          success: true,
-          bookingId: existingBooking.id,
-          conversationId: existingConvId || existingBooking.id,
-          alreadyExists: true,
-          aiSkipped: existingBookingData.aiSkipped === true,
-          aiSkippedReason: existingBookingData.aiSkippedReason,
-          aiPending: !existingConvId && existingBookingData.aiSkipped !== true,
-        };
+        const isStuck =
+          existingBookingData.aiProcessed !== true &&
+          !existingConvId &&
+          existingBookingData.aiSkipped !== true &&
+          ageMs > STUCK_AFTER_MS;
+
+        // Also retry stuck bookings that skipped with a transient LLM error
+        // (quota/timeout/auth) if they're older than 5 min — the operator may
+        // have recharged the API keys since.
+        const RETRY_LLM_AFTER_MS = 5 * 60_000;
+        const isRetryableSkip =
+          existingBookingData.aiSkipped === true &&
+          ageMs > RETRY_LLM_AFTER_MS &&
+          typeof existingBookingData.aiSkippedReason === "string" &&
+          /^llm_/.test(existingBookingData.aiSkippedReason);
+
+        if (isStuck || isRetryableSkip) {
+          logger.warn("[createBookingFromRequest] Deleting zombie bookings to retry trigger", {
+            primaryBookingId: existingBooking.id,
+            ageMs,
+            reason: isStuck ? "stuck_no_terminal_state" : "retryable_llm_skip",
+            aiSkipped: existingBookingData.aiSkipped,
+            aiSkippedReason: existingBookingData.aiSkippedReason,
+            duplicatesDetected: allExisting.length,
+          });
+          // Delete ALL existing bookings for this externalId (including historical
+          // race-duplicates like the pair `N48w1o2g...` + `sfMHkTNEAN...` observed
+          // in logs before the deterministic-ID fix). Ensures the new trigger fires
+          // on a clean slate.
+          await Promise.all(allExisting.map(entry => entry.doc.ref.delete()));
+          // Fall through to the creation path below
+        } else {
+          logger.info("[createBookingFromRequest] Booking already exists", {
+            bookingId: existingBooking.id,
+            conversationId: existingConvId,
+            aiProcessed: existingBookingData.aiProcessed,
+            aiSkipped: existingBookingData.aiSkipped,
+            ageMs,
+          });
+
+          return {
+            success: true,
+            bookingId: existingBooking.id,
+            conversationId: existingConvId || existingBooking.id,
+            alreadyExists: true,
+            aiSkipped: existingBookingData.aiSkipped === true,
+            aiSkippedReason: existingBookingData.aiSkippedReason,
+            aiPending: !existingConvId && existingBookingData.aiSkipped !== true,
+          };
+        }
       }
 
       // 3. Check if there's already a conversation in SOS

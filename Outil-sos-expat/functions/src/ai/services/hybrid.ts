@@ -16,7 +16,8 @@ import { ClaudeProvider } from "../providers/claude";
 import { OpenAIProvider } from "../providers/openai";
 import { PerplexityProvider, isFactualQuestion } from "../providers/perplexity";
 import { getSystemPrompt, buildPromptForProvider } from "../prompts";
-import { withExponentialBackoff } from "./utils";
+import { withExponentialBackoff, getAISettings } from "./utils";
+import type { AISettings } from "../core/types";
 
 // =============================================================================
 // 🆕 DISCLAIMERS PAR NIVEAU DE CONFIANCE
@@ -917,6 +918,23 @@ CRITICAL RULES:
     };
   }
 
+  /**
+   * Read model overrides from Firestore `settings/ai` once per request.
+   * Allows hot-swapping Anthropic/OpenAI model IDs when a snapshot gets retired.
+   */
+  private async getModelOverrides(): Promise<{ claudeModel?: string; openaiModel?: string }> {
+    try {
+      const settings: AISettings = await getAISettings();
+      return {
+        claudeModel: settings.claudeModel,
+        openaiModel: settings.model,  // legacy field, used for OpenAI
+      };
+    } catch (e) {
+      logger.warn("[HybridAI] Failed to read model overrides, using config defaults", { error: e });
+      return {};
+    }
+  }
+
   private async callWithFallback(
     messages: LLMMessage[],
     systemPrompt: string,
@@ -924,6 +942,9 @@ CRITICAL RULES:
     citations: string[] | undefined,
     preferClaude: boolean
   ): Promise<{ content: string; model: string; provider: "claude" | "gpt"; fallbackUsed: boolean; usage?: { inputTokens: number; outputTokens: number } }> {
+    const modelOverrides = await this.getModelOverrides();
+    const modelFor = (name: "claude" | "openai"): string | undefined =>
+      name === "claude" ? modelOverrides.claudeModel : modelOverrides.openaiModel;
     // Injecter le contexte de recherche comme message user (pas dans le system prompt)
     // pour éviter de gonfler le prompt système à chaque requête
     const messagesWithSearch = [...messages];
@@ -967,6 +988,7 @@ CRITICAL RULES:
             () => primaryProvider.chat({
               messages: messagesWithSearch,
               systemPrompt,
+              model: modelFor(primaryProviderName),
             }),
             { logContext: `[${primaryProvider.name}] Primary` }
           ),
@@ -1003,6 +1025,7 @@ CRITICAL RULES:
             () => fallbackProvider.chat({
               messages: messagesWithSearch,
               systemPrompt,
+              model: modelFor(fallbackProviderName),
             }),
             { logContext: `[${fallbackProvider.name}] Fallback` }
           ),

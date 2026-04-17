@@ -72,6 +72,34 @@ export const aiOnBookingCreated = onDocumentCreated(
     // DEBUG STEP 2: Booking data received
     // ============================================================
     const bookingAny = booking as Record<string, unknown>;
+    const externalId = bookingAny.externalId as string | undefined;
+
+    /**
+     * Mirror the skip state to SOS `booking_requests/{externalId}` so the
+     * multi-dashboard (which reads from SOS Firestore) can display the terminal
+     * state instead of leaving the booking forever in "À traiter".
+     * Silent on failure — this is a UX enhancement, not a correctness requirement.
+     */
+    const syncSkipToSos = async (reason: string): Promise<void> => {
+      if (!externalId) return;
+      try {
+        const sosDb = getSosFirestore();
+        await sosDb.collection("booking_requests").doc(externalId).update({
+          aiSkipped: true,
+          aiSkippedReason: reason,
+          aiSkippedAt: new Date().toISOString(),
+          aiProcessedAt: new Date().toISOString(),
+          status: "expired",
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        logger.warn(`[AI-DEBUG-${debugId}] Skip-sync to SOS failed (non-blocking)`, {
+          externalId,
+          reason,
+          error: (e as Error).message,
+        });
+      }
+    };
     logger.info(`📦 [AI-DEBUG-${debugId}] STEP 2: BOOKING DATA RECEIVED`, {
       bookingId,
       hasBookingData: !!booking,
@@ -119,6 +147,7 @@ export const aiOnBookingCreated = onDocumentCreated(
         aiSkippedReason: "ai_disabled",
         aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+      await syncSkipToSos("ai_disabled");
       return;
     }
 
@@ -145,6 +174,7 @@ export const aiOnBookingCreated = onDocumentCreated(
         aiSkippedReason: "no_provider_id",
         aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+      await syncSkipToSos("no_provider_id");
       return;
     }
 
@@ -196,6 +226,7 @@ export const aiOnBookingCreated = onDocumentCreated(
           aiSkippedReason: aiStatus.accessReason,
           aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        await syncSkipToSos(aiStatus.accessReason || "no_access");
 
         return;
       }
@@ -223,6 +254,7 @@ export const aiOnBookingCreated = onDocumentCreated(
           aiSkippedReason: "quota_exceeded",
           aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        await syncSkipToSos("quota_exceeded");
 
         await notifyProvider(
           db,
@@ -405,10 +437,7 @@ export const aiOnBookingCreated = onDocumentCreated(
       // ============================================================
       // DEBUG STEP 12: SYNC TO SOS (AI Response + Conversation)
       // ============================================================
-      // If the booking has an externalId (SOS booking_request ID), sync everything back
-      const bookingAnyData = booking as Record<string, unknown>;
-      const externalId = bookingAnyData.externalId as string | undefined;
-
+      // externalId was extracted at the top of the handler for reuse by syncSkipToSos()
       if (externalId) {
         try {
           const sosDb = getSosFirestore();
@@ -532,6 +561,7 @@ export const aiOnBookingCreated = onDocumentCreated(
         aiError: errorMessage,
         aiErrorAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+      await syncSkipToSos(skipReason);
 
       const db = admin.firestore();
       await notifyProvider(

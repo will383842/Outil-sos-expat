@@ -24,8 +24,16 @@ export interface AISettings {
   enabled: boolean;
   replyOnBookingCreated: boolean;
   replyOnUserMessage: boolean;
+  /** OpenAI model ID. Default: AI_CONFIG.OPENAI.MODEL */
   model: string;
+  /** Perplexity model ID. Default: AI_CONFIG.PERPLEXITY.MODEL */
   perplexityModel: string;
+  /**
+   * Anthropic model ID for the Claude provider (hot-swappable via Firestore
+   * `settings/ai.claudeModel` to avoid redeploys when Anthropic retires models).
+   * Falls back to AI_CONFIG.CLAUDE.MODEL.
+   */
+  claudeModel?: string;
   temperature: number;
   maxOutputTokens: number;
   systemPrompt: string;

@@ -39,6 +39,12 @@ export interface ChatOptions {
   systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
+  /**
+   * Override the provider's default model for this call.
+   * If provided, supersedes AI_CONFIG.{PROVIDER}.MODEL.
+   * Enables hot-swap of models via Firestore `settings/ai` without redeploy.
+   */
+  model?: string;
 }
 
 // =============================================================================

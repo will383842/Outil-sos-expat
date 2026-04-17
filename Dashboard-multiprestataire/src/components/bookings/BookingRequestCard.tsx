@@ -42,6 +42,7 @@ const STATUS_COLORS: Record<BookingRequest['status'], { bg: string; text: string
   in_progress: { bg: 'bg-indigo-100', text: 'text-indigo-700', dot: 'bg-indigo-500' },
   completed: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  expired: { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
 };
 
 export default function BookingRequestCard({ booking, isNew, onDelete, providerMap }: BookingRequestCardProps) {
@@ -53,7 +54,12 @@ export default function BookingRequestCard({ booking, isNew, onDelete, providerM
     showConversations ? booking.providerId : undefined
   );
   const statusColor = STATUS_COLORS[booking.status];
-  const isHistory = booking.status === 'completed' || booking.status === 'cancelled';
+  const isHistory =
+    booking.status === 'completed' ||
+    booking.status === 'cancelled' ||
+    booking.status === 'expired' ||
+    booking.aiSkipped === true ||
+    Boolean(booking.aiError);
   const serviceLabel = t(`service.${booking.serviceType}`, { defaultValue: booking.serviceType });
   const statusLabel = t(`status.${booking.status}`);
 

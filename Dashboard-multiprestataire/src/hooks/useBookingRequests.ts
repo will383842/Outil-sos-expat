@@ -198,16 +198,19 @@ export function useBookingRequests(): UseBookingRequestsResult {
       setIsLoading(false);
     }
 
-    // Only fetch bookings from the last 2 hours (covers "new" + "active" + small buffer)
-    const twoHoursAgo = Timestamp.fromDate(new Date(Date.now() - 2 * ONE_HOUR));
+    // Fetch bookings from the last 30 days so the "Historique" tab actually shows
+    // historical bookings (previous 2h window made history invisible past 1h-2h).
+    // Ordered DESC with a generous limit per chunk; real-time onSnapshot keeps it fresh.
+    const THIRTY_DAYS_MS = 30 * 24 * ONE_HOUR;
+    const thirtyDaysAgo = Timestamp.fromDate(new Date(Date.now() - THIRTY_DAYS_MS));
 
     const unsubscribes = chunks.map((chunk) => {
       const q = query(
         collection(db, 'booking_requests'),
         where('providerId', 'in', chunk),
-        where('createdAt', '>', twoHoursAgo),
+        where('createdAt', '>', thirtyDaysAgo),
         orderBy('createdAt', 'desc'),
-        limit(100)
+        limit(200)
       );
 
       return onSnapshot(

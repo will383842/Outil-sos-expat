@@ -50,8 +50,10 @@ export class PerplexityProvider extends BaseLLMProvider {
     // Préparer les messages
     const messages = this.formatMessages(options.messages, options.systemPrompt);
 
+    const effectiveModel = options.model || config.MODEL;
+
     const requestBody: Record<string, unknown> = {
-      model: config.MODEL,
+      model: effectiveModel,
       messages,
       temperature: options.temperature ?? config.TEMPERATURE,
       max_tokens: options.maxTokens || config.MAX_TOKENS,
@@ -64,7 +66,8 @@ export class PerplexityProvider extends BaseLLMProvider {
     }
 
     logger.info("[Perplexity] Envoi requête recherche", {
-      model: config.MODEL,
+      model: effectiveModel,
+      modelSource: options.model ? "settings_override" : "default_config",
       messageCount: messages.length,
       hasDomainFilter: Boolean(options.searchDomainFilter)
     });
