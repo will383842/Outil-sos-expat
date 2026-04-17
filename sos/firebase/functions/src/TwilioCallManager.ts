@@ -2159,7 +2159,12 @@ export class TwilioCallManager {
         }
       }
 
-      await this.processRefund(sessionId, `failed_${reason}`);
+      // P0 HOTFIX 2026-04-17: bypassProcessingCheck=true pour que processRefund accepte de
+      // refund/cancel même si payment.status="processing" (état transient set par
+      // handleCallCompletion lock atomique avant d'appeler handleEarlyDisconnection
+      // → handleCallFailure → processRefund). Sans ce flag, processRefund skip et le
+      // PaymentIntent reste stuck en requires_capture (vu en prod 2026-04-17).
+      await this.processRefund(sessionId, `failed_${reason}`, { bypassProcessingCheck: true });
 
       // Create invoices even for failed/refunded calls (marked as refunded)
       const updatedSession = await this.getCallSession(sessionId);
@@ -2231,7 +2236,7 @@ export class TwilioCallManager {
   private async processRefund(
     sessionId: string,
     reason: string,
-    options?: { forceRefund?: boolean }
+    options?: { forceRefund?: boolean; bypassProcessingCheck?: boolean }
   ): Promise<void> {
     // 🔍 DEBUG P0: Log détaillé avec stack trace pour identifier l'origine du refund
     const refundDebugId = `refund_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -2291,11 +2296,32 @@ export class TwilioCallManager {
       // all try to cancel the payment simultaneously (causing 3x cancel attempts like we saw in Stripe logs)
       // P0 FIX 2026-02-02: Added "voided" as final state for PayPal
       // P0 FIX 2026-04-10: Added "processing" and "captured" - don't refund while capture is in progress or already done
-      const finalPaymentStatuses = ['captured', 'cancelled', 'refunded', 'voided', 'processing'];
-      if (finalPaymentStatuses.includes(callSession.payment.status)) {
-        logger.info(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in final state: ${callSession.payment.status}`);
+      // P0 HOTFIX 2026-04-17: "processing" est un état TRANSITOIRE set atomiquement par
+      // handleCallCompletion AVANT de décider capture vs refund. Quand handleCallCompletion
+      // appelle processRefund pour une early disconnect <60s, le status vient d'être mis à
+      // "processing" par lui-même et sans le flag bypassProcessingCheck, processRefund
+      // skipperait → PI stuck en requires_capture indéfiniment (jusqu'à stuckPaymentsRecovery).
+      // Le flag doit être passé uniquement par les callers qui ont LÉGITIMEMENT claim
+      // "processing" et qui enchaînent avec processRefund dans le MÊME flow.
+      const trulyFinalStatuses = ['captured', 'cancelled', 'refunded', 'voided'];
+      // Note: "processing" n'est pas dans le type PaymentStatus (déclaration legacy)
+      // mais est effectivement utilisé en runtime comme lock transitoire — cf. lignes 2583-2586
+      const isTransientProcessing = (callSession.payment.status as string) === 'processing';
+
+      if (trulyFinalStatuses.includes(callSession.payment.status)) {
+        logger.info(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment already in TRULY FINAL state: ${callSession.payment.status}`);
         logger.info(`💸 [${refundDebugId}]   Skipping processRefund to prevent duplicate Stripe API calls`);
         return;
+      }
+
+      if (isTransientProcessing && !options?.bypassProcessingCheck && !options?.forceRefund) {
+        logger.info(`💸 [${refundDebugId}] ⚠️ IDEMPOTENCY: Payment in transient "processing" state and caller did not opt-in bypass`);
+        logger.info(`💸 [${refundDebugId}]   Skipping processRefund (prevents race with concurrent capture)`);
+        return;
+      }
+
+      if (isTransientProcessing) {
+        logger.info(`💸 [${refundDebugId}] ⚠️ Payment in "processing" state but caller opted-in bypass (flow: ${reason}) — proceeding with refund/cancel`);
       }
 
       // CRITIQUE: Distinction entre cancel (non capturé) et refund (capturé)
@@ -2660,7 +2686,10 @@ export class TwilioCallManager {
         const refundReason = duration < CALL_CONFIG.MIN_CALL_DURATION
           ? `early_disconnect_duration_too_short: ${duration}s < ${CALL_CONFIG.MIN_CALL_DURATION}s`
           : 'Payment not authorized';
-        await this.processRefund(sessionId, refundReason);
+        // P0 HOTFIX 2026-04-17: bypassProcessingCheck=true car on vient juste de set
+        // payment.status="processing" atomiquement (lignes 2583-2586 du lock anti-race).
+        // Sans ce flag, processRefund voit "processing" (qu'on a nous-même écrit) et skip.
+        await this.processRefund(sessionId, refundReason, { bypassProcessingCheck: true });
         
         // Create invoices even for refunded calls (marked as refunded)
         const updatedSession = await this.getCallSession(sessionId);

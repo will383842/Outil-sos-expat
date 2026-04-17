@@ -513,8 +513,22 @@ export const aiOnBookingCreated = onDocumentCreated(
         errorName: (error as Error).name,
       });
 
+      // Classify the failure so the frontend can show a meaningful reason
+      // instead of spinning forever. LLM quota/auth errors surface as HTTP 401/429.
+      let skipReason = "llm_error";
+      if (/429|rate.?limit|insufficient_quota/i.test(errorMessage)) {
+        skipReason = "llm_quota_exceeded";
+      } else if (/401|403|unauthorized|invalid.*key|auth/i.test(errorMessage)) {
+        skipReason = "llm_auth_error";
+      } else if (/timeout|ETIMEDOUT|ECONNRESET/i.test(errorMessage)) {
+        skipReason = "llm_timeout";
+      }
+
       await snap.ref.update({
         aiProcessed: false,
+        aiSkipped: true,
+        aiSkippedReason: skipReason,
+        aiSkippedAt: admin.firestore.FieldValue.serverTimestamp(),
         aiError: errorMessage,
         aiErrorAt: admin.firestore.FieldValue.serverTimestamp(),
       });

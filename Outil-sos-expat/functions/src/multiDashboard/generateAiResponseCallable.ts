@@ -155,7 +155,8 @@ Format: Réponse directe, professionnelle, 3-4 phrases maximum. Pas de formatage
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-3-5-sonnet-20241022",
+      // claude-3-5-sonnet-20241022 retiré par Anthropic → Sonnet 4.6
+      model: "claude-sonnet-4-6",
       max_tokens: 500,
       temperature: 0.7,
       messages,

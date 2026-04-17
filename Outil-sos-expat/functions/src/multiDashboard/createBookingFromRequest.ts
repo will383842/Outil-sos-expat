@@ -92,6 +92,9 @@ export const createBookingFromRequest = onCall<
       const bookingRequestData = bookingRequestDoc.data()!;
 
       // 2. Check if booking already exists in Outil (by externalId)
+      // Uses a transaction + deterministic doc ID so parallel calls (e.g. React
+      // StrictMode double-mount, or the useEffect firing twice in quick succession)
+      // converge on the same booking instead of racing to create duplicates.
       const existingBookingsSnap = await outilDb.collection("bookings")
         .where("externalId", "==", bookingRequestId)
         .limit(1)
@@ -132,38 +135,53 @@ export const createBookingFromRequest = onCall<
         });
       }
 
-      // 4. Create booking in Outil (this will trigger aiOnBookingCreated)
-      const bookingRef = outilDb.collection("bookings").doc();
+      // 4. Create booking in Outil inside a transaction keyed on a deterministic
+      // doc ID built from bookingRequestId + providerId. If two concurrent calls
+      // race, only the first wins the create; the second sees the doc exist and
+      // reuses it. Prevents the dual-booking race observed in prod logs.
+      const deterministicDocId = `mdash_${bookingRequestId}_${providerId}`.slice(0, 480);
+      const bookingRef = outilDb.collection("bookings").doc(deterministicDocId);
 
-      await bookingRef.set({
-        externalId: bookingRequestId,
-        externalSource: "sos_multi_dashboard",
-        providerId: providerId,
-        providerType: bookingRequestData.providerType || "lawyer",
-        clientId: bookingRequestData.clientId || null,
-        clientName: bookingRequestData.clientName || "Client",
-        clientFirstName: bookingRequestData.clientName?.split(" ")[0] || "Client",
-        clientEmail: bookingRequestData.clientEmail || null,
-        clientPhone: bookingRequestData.clientPhone || null,
-        clientWhatsapp: bookingRequestData.clientWhatsapp || null,
-        clientCurrentCountry: bookingRequestData.clientCurrentCountry || null,
-        clientNationality: bookingRequestData.clientNationality || null,
-        clientLanguages: bookingRequestData.clientLanguages || ["fr"],
-        title: bookingRequestData.title || "Consultation",
-        description: bookingRequestData.description || "",
-        serviceType: bookingRequestData.serviceType || "consultation",
-        category: bookingRequestData.serviceType || "general",
-        urgency: "normal",
-        status: "pending",
-        source: "multi_dashboard",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        aiProcessed: false,
+      const didCreate = await outilDb.runTransaction(async (tx) => {
+        const snap = await tx.get(bookingRef);
+        if (snap.exists) {
+          logger.info("[createBookingFromRequest] Deterministic booking already exists (race avoided)", {
+            bookingId: bookingRef.id,
+          });
+          return false;
+        }
+        tx.set(bookingRef, {
+          externalId: bookingRequestId,
+          externalSource: "sos_multi_dashboard",
+          providerId: providerId,
+          providerType: bookingRequestData.providerType || "lawyer",
+          clientId: bookingRequestData.clientId || null,
+          clientName: bookingRequestData.clientName || "Client",
+          clientFirstName: bookingRequestData.clientName?.split(" ")[0] || "Client",
+          clientEmail: bookingRequestData.clientEmail || null,
+          clientPhone: bookingRequestData.clientPhone || null,
+          clientWhatsapp: bookingRequestData.clientWhatsapp || null,
+          clientCurrentCountry: bookingRequestData.clientCurrentCountry || null,
+          clientNationality: bookingRequestData.clientNationality || null,
+          clientLanguages: bookingRequestData.clientLanguages || ["fr"],
+          title: bookingRequestData.title || "Consultation",
+          description: bookingRequestData.description || "",
+          serviceType: bookingRequestData.serviceType || "consultation",
+          category: bookingRequestData.serviceType || "general",
+          urgency: "normal",
+          status: "pending",
+          source: "multi_dashboard",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          aiProcessed: false,
+        });
+        return true;
       });
 
-      logger.info("[createBookingFromRequest] Booking created in Outil", {
+      logger.info("[createBookingFromRequest] Booking ready in Outil", {
         bookingId: bookingRef.id,
         externalId: bookingRequestId,
+        created: didCreate,
       });
 
       // 5. Poll the booking until `aiOnBookingCreated` has either produced a conversation

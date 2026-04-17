@@ -40,9 +40,10 @@ export const AI_CONFIG = {
   },
 
   // Anthropic / Claude (pour avocats)
-  // Version stable recommandée pour production
+  // claude-3-5-sonnet-20241022 a été retiré par Anthropic (not_found_error).
+  // Migration vers Sonnet 4.6 : équivalent qualité, tarification proche, toujours supporté.
   CLAUDE: {
-    MODEL: "claude-3-5-sonnet-20241022",
+    MODEL: "claude-sonnet-4-6",
     TEMPERATURE: 0.25,
     MAX_TOKENS: 2000,  // Réduit de 4000 → 2000 pour forcer des réponses concises
     API_URL: "https://api.anthropic.com/v1/messages",
