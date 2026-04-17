@@ -8,6 +8,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { X, Mail, Lock, ArrowRight, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { devLog } from '../../utils/devLog';
 
@@ -345,10 +346,23 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
     setIsSubmitting(true);
     setError(null);
 
+    // Helper: feedback UX complet après une erreur d'auth
+    // (toast visible partout, focus + clear du champ password, vibration mobile)
+    const surfaceAuthError = (msg: string) => {
+      setError(msg);
+      try { toast.error(msg, { duration: 5000 }); } catch {}
+      try { (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }).vibrate?.(80); } catch {}
+      setPassword('');
+      window.requestAnimationFrame(() => {
+        passwordInputRef.current?.focus();
+        passwordInputRef.current?.select?.();
+      });
+    };
+
     try {
-      // Try to login first
+      // Try to login first — rememberMe=true pour persistance longue durée (Option C)
       devLog('[BOOKING_AUTH_DEBUG] 🔐 QuickAuthWizard calling login()...');
-      await login(email, password);
+      await login(email, password, true);
       devLog('[BOOKING_AUTH_DEBUG] ✅ QuickAuthWizard login() SUCCESS');
       setIsSubmitting(false);
       setStep('success');
@@ -385,19 +399,25 @@ const QuickAuthWizard: React.FC<QuickAuthWizardProps> = ({
 
           if (regErrorCode === 'auth/email-already-in-use') {
             // L'email existe déjà = c'était bien un mauvais mot de passe lors du login
-            setError(intl.formatMessage({ id: 'auth.wizard.wrongPassword' }));
+            surfaceAuthError(intl.formatMessage({
+              id: 'auth.wizard.wrongPassword',
+              defaultMessage: "Mot de passe incorrect. Réessayez ou cliquez sur « Mot de passe oublié ».",
+            }));
           } else if (regErrorCode === 'auth/weak-password') {
-            setError(intl.formatMessage({ id: 'auth.wizard.weakPassword' }));
+            surfaceAuthError(intl.formatMessage({ id: 'auth.wizard.weakPassword', defaultMessage: "Mot de passe trop faible (minimum 8 caractères)." }));
           } else {
-            setError(intl.formatMessage({ id: 'auth.wizard.error.register' }));
+            surfaceAuthError(intl.formatMessage({ id: 'auth.wizard.error.register', defaultMessage: "Erreur lors de l'inscription. Réessayez." }));
           }
         }
       } else if (errorCode === 'auth/too-many-requests') {
         setIsSubmitting(false);
-        setError(intl.formatMessage({ id: 'auth.wizard.tooManyAttempts' }));
+        surfaceAuthError(intl.formatMessage({ id: 'auth.wizard.tooManyAttempts', defaultMessage: "Trop de tentatives. Réessayez dans quelques minutes." }));
+      } else if (errorCode === 'auth/network-request-failed') {
+        setIsSubmitting(false);
+        surfaceAuthError(intl.formatMessage({ id: 'auth.networkError', defaultMessage: "Problème de connexion réseau. Vérifiez votre internet." }));
       } else {
         setIsSubmitting(false);
-        setError(intl.formatMessage({ id: 'auth.wizard.error.login' }));
+        surfaceAuthError(intl.formatMessage({ id: 'auth.wizard.error.login', defaultMessage: "Erreur de connexion. Réessayez." }));
       }
     }
   }, [email, password, login, register, intl, onSuccess, setAuthAttempted]);

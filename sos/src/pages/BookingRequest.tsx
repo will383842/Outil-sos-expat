@@ -74,6 +74,7 @@ import { createBookingRequest } from "../services/booking";
 import PhoneField from "@/components/PhoneField";
 import { smartNormalizePhone } from "@/utils/phone";
 import { FormattedMessage, useIntl } from "react-intl";
+import { toast } from "react-hot-toast";
 import IntlPhoneInput from "@/components/forms-data/IntlPhoneInput";
 import { trackMetaLead, trackMetaInitiateCheckout, getMetaIdentifiers, setMetaPixelUserData } from "@/utils/metaPixel";
 import { trackGoogleAdsLead, trackGoogleAdsBeginCheckout, setGoogleAdsUserData } from "@/utils/googleAds";
@@ -1504,6 +1505,27 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signInMethods, setSignInMethods] = useState<string[]>([]);
+  // Refs + compteur d'erreur pour feedback UX sur échec d'auth
+  // (toast visible même si le message HTML est hors viewport sur mobile,
+  //  focus + clear du champ pour que l'user puisse retaper sans friction,
+  //  shakeKey relance l'animation de shake à chaque nouvelle erreur).
+  const passwordInputRef = React.useRef<HTMLInputElement>(null);
+  const errorBannerRef = React.useRef<HTMLDivElement>(null);
+  const [shakeKey, setShakeKey] = React.useState(0);
+
+  // Factorise le feedback visible à appliquer après toute erreur d'auth
+  const surfaceAuthError = React.useCallback((msg: string) => {
+    setError(msg);
+    setShakeKey((k) => k + 1);
+    try { toast.error(msg, { duration: 5000 }); } catch {}
+    try { (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }).vibrate?.(80); } catch {}
+    // Laisse React peindre avant scroll/focus
+    window.requestAnimationFrame(() => {
+      errorBannerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      passwordInputRef.current?.focus();
+      passwordInputRef.current?.select?.();
+    });
+  }, []);
 
   const isValidEmail = (e: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
@@ -1566,13 +1588,32 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
       // FIX: Reset authPending si le login échoue
       onAuthFailed();
       const errorCode = err?.code;
+      let msg: string;
       if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/wrong-password') {
-        setError(intl.formatMessage({ id: "auth.wizard.wrongPassword", defaultMessage: "Mot de passe incorrect" }));
+        msg = intl.formatMessage({
+          id: "auth.wizard.wrongPassword",
+          defaultMessage: "Mot de passe incorrect. Réessayez ou cliquez sur « Mot de passe oublié ».",
+        });
       } else if (errorCode === 'auth/too-many-requests') {
-        setError(intl.formatMessage({ id: "auth.wizard.tooManyAttempts", defaultMessage: "Trop de tentatives. Réessayez plus tard." }));
+        msg = intl.formatMessage({
+          id: "auth.wizard.tooManyAttempts",
+          defaultMessage: "Trop de tentatives. Réessayez dans quelques minutes.",
+        });
+      } else if (errorCode === 'auth/network-request-failed') {
+        msg = intl.formatMessage({
+          id: "auth.networkError",
+          defaultMessage: "Problème de connexion réseau. Vérifiez votre internet.",
+        });
+      } else if (errorCode === 'auth/user-disabled') {
+        msg = intl.formatMessage({
+          id: "auth.userDisabled",
+          defaultMessage: "Ce compte a été désactivé. Contactez le support.",
+        });
       } else {
-        setError(err.message || intl.formatMessage({ id: "auth.loginError", defaultMessage: "Erreur de connexion" }));
+        msg = err.message || intl.formatMessage({ id: "auth.loginError", defaultMessage: "Erreur de connexion" });
       }
+      setPassword("");
+      surfaceAuthError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -1630,18 +1671,18 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
             setAuthStep("password-login");
             setPassword("");
             setConfirmPassword("");
-            setError(intl.formatMessage({
+            surfaceAuthError(intl.formatMessage({
               id: "auth.emailAlreadyExistsWrongPassword",
-              defaultMessage: "Ce compte existe déjà mais le mot de passe est différent. Entrez votre mot de passe habituel."
+              defaultMessage: "Ce compte existe déjà. Entrez votre mot de passe habituel ou utilisez « Mot de passe oublié »."
             }));
           } else if (loginErrorCode === 'auth/too-many-requests') {
-            setError(intl.formatMessage({ id: "auth.wizard.tooManyAttempts", defaultMessage: "Trop de tentatives. Réessayez plus tard." }));
+            surfaceAuthError(intl.formatMessage({ id: "auth.wizard.tooManyAttempts", defaultMessage: "Trop de tentatives. Réessayez dans quelques minutes." }));
           } else {
             // Autre erreur - basculer vers login
             setAuthStep("password-login");
             setPassword("");
             setConfirmPassword("");
-            setError(intl.formatMessage({
+            surfaceAuthError(intl.formatMessage({
               id: "auth.emailAlreadyExists",
               defaultMessage: "Ce compte existe déjà. Entrez votre mot de passe pour vous connecter."
             }));
@@ -1650,11 +1691,11 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
       } else if (errorCode === 'auth/weak-password') {
         // FIX: Reset authPending si l'inscription échoue
         onAuthFailed();
-        setError(intl.formatMessage({ id: "auth.wizard.weakPassword", defaultMessage: "Mot de passe trop faible" }));
+        surfaceAuthError(intl.formatMessage({ id: "auth.wizard.weakPassword", defaultMessage: "Mot de passe trop faible (minimum 8 caractères)." }));
       } else {
         // FIX: Reset authPending si l'inscription échoue
         onAuthFailed();
-        setError(err.message || intl.formatMessage({ id: "auth.registerError", defaultMessage: "Erreur lors de l'inscription" }));
+        surfaceAuthError(err.message || intl.formatMessage({ id: "auth.registerError", defaultMessage: "Erreur lors de l'inscription" }));
       }
     } finally {
       setIsLoading(false);
@@ -1700,11 +1741,29 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
 
       {/* Content */}
       <div className="p-6">
-        {/* Error message */}
+        {/* Keyframes pour le shake sur erreur d'auth — inline pour ne pas toucher tailwind.config */}
+        <style>{`
+          @keyframes sos-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+          }
+        `}</style>
+
+        {/* Error message (toujours rendu en haut — visible si formulaire court) */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
+          <div
+            ref={errorBannerRef}
+            key={`auth-error-${shakeKey}`}
+            className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-2xl flex items-start gap-3 shadow-sm"
+            style={{ animation: "sos-shake 0.4s ease-in-out" }}
+            role="alert"
+            aria-live="assertive"
+          >
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-sm text-red-700 font-medium">{error}</p>
           </div>
         )}
 
@@ -1775,21 +1834,27 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
               </button>
             </div>
 
-            <div>
+            <div key={`pwd-field-${shakeKey}`}>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {intl.formatMessage({ id: "auth.password", defaultMessage: "Mot de passe" })}
               </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div
+                className="relative"
+                style={shakeKey > 0 ? { animation: "sos-shake 0.4s ease-in-out" } : undefined}
+              >
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${error ? "text-red-500" : "text-gray-400"}`} />
                 <input
+                  ref={passwordInputRef}
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); if (error) setError(null); }}
                   onKeyPress={(e) => handleKeyPress(e, handleLogin)}
                   placeholder="••••••••"
-                  className={`${inputBaseClass} pl-12 pr-12`}
+                  className={`${inputBaseClass} pl-12 pr-12 ${error ? "border-red-400 focus:border-red-500 ring-2 ring-red-100" : ""}`}
                   autoComplete="current-password"
                   autoFocus
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "auth-password-error" : undefined}
                 />
                 <button
                   type="button"
@@ -1799,6 +1864,14 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {/* Message d'erreur inline à côté du champ — garantit la visibilité même
+                  si la bannière du haut est hors viewport sur mobile avec clavier ouvert */}
+              {error && (
+                <p id="auth-password-error" className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </p>
+              )}
             </div>
 
             <button
@@ -1823,11 +1896,15 @@ const EmailFirstAuth: React.FC<EmailFirstAuthProps> = ({
               )}
             </button>
 
-            {/* Forgot password link */}
+            {/* Forgot password link — mis en évidence quand une erreur de mdp vient de survenir */}
             <div className="text-center">
               <Link
                 to="/forgot-password"
-                className="text-sm text-red-500 hover:underline font-medium"
+                className={`text-sm font-semibold transition-colors ${
+                  error
+                    ? "text-red-600 underline underline-offset-4 decoration-2"
+                    : "text-red-500 hover:underline"
+                }`}
               >
                 {intl.formatMessage({ id: "auth.forgotPassword", defaultMessage: "Mot de passe oublié ?" })}
               </Link>
@@ -2830,6 +2907,32 @@ const BookingRequest: React.FC = () => {
     if (!ok || Object.values(validFlags).some((v) => !v)) {
       scrollToFirstIncomplete();
       return;
+    }
+
+    // BLOCAGE: empêcher que le client saisisse le numéro du prestataire
+    // (ou son propre numéro s'il est aussi le prestataire). Le backend rejette
+    // cette configuration et auto-annule le PaymentIntent côté Stripe, donc on
+    // arrête l'utilisateur ici avant même Stripe pour un message clair.
+    try {
+      const providerRawPhone =
+        (provider as unknown as { phoneNumber?: string; phone?: string })?.phoneNumber ||
+        (provider as unknown as { phoneNumber?: string; phone?: string })?.phone ||
+        "";
+      if (providerRawPhone && data.clientPhone) {
+        const clientE164 = smartNormalizePhone(data.clientPhone, "FR" as any);
+        const providerE164 = smartNormalizePhone(providerRawPhone, "FR" as any);
+        const clientVal = clientE164.ok && clientE164.e164 ? clientE164.e164 : data.clientPhone.replace(/\s+/g, "");
+        const providerVal = providerE164.ok && providerE164.e164 ? providerE164.e164 : providerRawPhone.replace(/\s+/g, "");
+        if (clientVal && providerVal && clientVal === providerVal) {
+          setFormError(
+            "Le numéro saisi est identique à celui du prestataire. Vous ne pouvez pas vous appeler vous-même. Merci d'indiquer votre numéro personnel."
+          );
+          scrollToFirstIncomplete();
+          return;
+        }
+      }
+    } catch (phoneCheckErr) {
+      console.warn("[BookingRequest] phone-identity check failed (non-blocking):", phoneCheckErr);
     }
 
     try {

@@ -1963,9 +1963,11 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
                 callId = callResult.data.callId || currentCallSessionId;
               }
             } catch (cfErr: unknown) {
-              // Payment was already captured — do NOT block navigation.
-              // Log the error; callStatus stays "skipped" and user reaches success page.
-              console.error("[PaymentRequest] createAndScheduleCall error (non-blocking):", cfErr);
+              // Backend auto-cancels the PaymentIntent when call scheduling fails.
+              // Surface the real error (e.g. "Numéros identiques", "Provider busy") to the user
+              // instead of navigating to success with a misleading "slow connection" banner.
+              console.error("[PaymentRequest] createAndScheduleCall error:", cfErr);
+              throw cfErr;
             }
           } else {
             console.warn("[PaymentRequest] Missing/invalid phone(s). Skipping call scheduling.", {
@@ -2310,6 +2312,12 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
 
           console.log("[PARALLEL] Starting call scheduling + payment docs in parallel...");
 
+          // Capture the scheduling error so we can surface it AFTER persistPaymentDocs completes,
+          // instead of silently navigating to success with a misleading "slow connection" banner.
+          // The backend auto-cancels the PaymentIntent when scheduling fails, so the message
+          // "Votre carte n'a pas été débitée" is accurate again.
+          let callSchedulingError: unknown = null;
+
           // Run both in parallel — they don't depend on each other
           const [callResult, orderResult] = await Promise.all([
             // ③ Schedule call
@@ -2324,7 +2332,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               })
               .catch((cfErr: unknown) => {
                 logCallableError("createAndScheduleCall:error", cfErr);
-                // Don't throw — let persistPaymentDocs complete
+                callSchedulingError = cfErr;
                 return null;
               }),
             // ④ Persist payment docs
@@ -2336,13 +2344,10 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
               }),
           ]);
 
-          // If call scheduling failed, log but don't block — payment was already captured.
-          // The user must reach the success page; showing an error with "not charged" is wrong.
-          if (!callResult) {
-            console.warn(
-              "[createAndScheduleCall] failed after payment capture. callStatus stays 'skipped'. Proceeding to success page."
-            );
-            // callStatus remains "skipped" (set at line above)
+          // If call scheduling failed, throw to let the outer catch surface the real error
+          // to the user. Backend already cancelled the PaymentIntent in Stripe.
+          if (callSchedulingError) {
+            throw callSchedulingError;
           }
         } else {
           console.warn("Missing/invalid phone(s). Skipping call scheduling.");

@@ -503,9 +503,11 @@ const SuccessPayment: React.FC = () => {
      P0 PERF FIX: Backoff exponentiel pour réduire le délai perçu
      ========================= */
   const [sessionRetryCount, setSessionRetryCount] = useState(0);
-  // If call scheduling was skipped (scheduling failed after payment capture), surface the
-  // "slow connection" banner immediately rather than waiting 12s for Firestore retries to give up.
-  const [sessionLoadError, setSessionLoadError] = useState(callStatus === "skipped");
+  // sessionLoadError surfaces a "slow connection" banner when Firestore retries exhaust.
+  // Do NOT init from callStatus === "skipped" anymore: with Fix #1 the user no longer
+  // reaches this page when scheduling fails, and hiding the countdown on "skipped" was
+  // both misleading and hid the compte-à-rebours for legitimate slow networks.
+  const [sessionLoadError, setSessionLoadError] = useState(false);
   const MAX_SESSION_RETRIES = 12; // 12 retries avec backoff = ~12s max wait (au lieu de 20s)
 
   // P0 PERF FIX: Backoff exponentiel - délais progressifs (ms)
@@ -1285,8 +1287,9 @@ const SuccessPayment: React.FC = () => {
               </div>
             )}
 
-            {/* États */}
-            {callState === "connecting" && !sessionLoadError && (
+            {/* États — le countdown reste visible même si sessionLoadError (connexion lente) :
+                l'horloge ne dépend pas du chargement Firestore, et le banner est déjà affiché ci-dessus */}
+            {callState === "connecting" && (
               <>
                 <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
                   <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
