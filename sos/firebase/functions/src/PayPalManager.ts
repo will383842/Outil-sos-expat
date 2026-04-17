@@ -1238,8 +1238,32 @@ export class PayPalManager {
           console.log(`✅ [PAYPAL] Call scheduled with taskId: ${schedulingResult.taskId}`);
         }
       } catch (scheduleError) {
-        // Ne pas faire échouer l'autorisation si le scheduling échoue
         console.error(`❌ [PAYPAL] Call scheduling failed:`, scheduleError);
+
+        // P0 FIX parité Stripe 2026-04-17: ne plus avaler silencieusement l'erreur.
+        // Avant: le frontend recevait {success:true}, naviguait vers PaymentSuccess avec
+        // un countdown qui ne menait à rien, puis stuckPaymentsRecovery voidait l'auth
+        // 30min plus tard. Maintenant on rollback le provider busy + throw avec un code
+        // spécifique pour que authorizePayPalOrderHttp remonte le vrai message au client.
+        // L'authorization PayPal créée plus haut reste AUTHORIZED et sera voidée par
+        // stuckPaymentsRecovery (inchangé) — fonds client NON débités (AUTHORIZED !== CAPTURED).
+        if (orderData.providerId) {
+          try {
+            const { setProviderAvailable } = await import("./callables/providerStatusManager");
+            await setProviderAvailable(orderData.providerId, 'paypal_scheduling_failed');
+            console.log(`🔄 [PAYPAL] Provider ${orderData.providerId} released after scheduling failure`);
+          } catch (rollbackErr) {
+            // Non-bloquant: safety timeout Cloud Task (10min) / cron inactivity (15min)
+            // débloquera le provider si setProviderAvailable échoue.
+            console.error(`❌ [PAYPAL] Failed to rollback provider busy:`, rollbackErr);
+          }
+        }
+
+        const schedulingErr = new Error(
+          `Call scheduling failed: ${scheduleError instanceof Error ? scheduleError.message : String(scheduleError)}`
+        );
+        (schedulingErr as Error & { code?: string }).code = 'CALL_SCHEDULING_FAILED';
+        throw schedulingErr;
       }
     }
 
@@ -3269,6 +3293,19 @@ export const authorizePayPalOrderHttp = onRequest(
         errorStack: error instanceof Error ? error.stack : undefined,
       });
       console.error("🔴 [PAYPAL AUTHORIZE HTTP ERROR] Full error:", error);
+
+      // P0 FIX parité Stripe 2026-04-17: remonter les erreurs "business" au client
+      // pour affichage clair (Faille #1 PayPal). Les autres erreurs gardent le message
+      // générique pour ne pas exposer des détails techniques internes.
+      const errorCode = (error as Error & { code?: string })?.code;
+      if (errorCode === 'CALL_SCHEDULING_FAILED') {
+        res.status(500).json({
+          error: "La planification de l'appel a échoué. Votre carte n'a pas été débitée. Veuillez réessayer.",
+          code: errorCode,
+        });
+        return;
+      }
+
       res.status(500).json({ error: "Failed to authorize order" });
     }
   }
