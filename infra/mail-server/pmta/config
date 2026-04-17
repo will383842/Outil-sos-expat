@@ -1,0 +1,192 @@
+postmaster admin@sos-expat.com
+host-name mail.providers-expat.com
+smtp-source-host 204.168.180.175 mail.providers-expat.com
+run-as-root yes
+log-file /var/log/pmta/log
+
+# REMOVED (open relay fix): smtp-listener 204.168.180.175:2525
+smtp-listener 127.0.0.1:2525
+smtp-listener 172.17.0.1:2525
+
+sync-msg-create false
+sync-msg-update false
+
+spool /var/spool/pmta
+
+http-mgmt-port 1983
+http-access 127.0.0.1 admin
+
+# --- Authentication ---
+<smtp-user outreach@sos-expat.com>
+    password REDACTED_SEE_VPS_CONFIG
+    source {pmta-auth}
+</smtp-user>
+
+<source {pmta-auth}>
+    require-auth true
+    pattern-list sender-domains
+</source>
+
+
+
+<source 127.0.0.1>
+    # Loopback: seul accès legitime pour BL Engine via Docker
+    always-allow-relaying yes
+    always-allow-api-submission yes
+    pattern-list sender-domains
+    log-connections yes
+</source>
+
+<source 172.17.0.0/16>
+    # Docker bridge: BL Engine container
+    always-allow-relaying yes
+    always-allow-api-submission yes
+    pattern-list sender-domains
+    log-connections yes
+</source>
+
+
+# --- Logging ---
+<acct-file /var/log/pmta/acct.csv>
+    max-size 50M
+</acct-file>
+
+<acct-file /var/log/pmta/diag.csv>
+    move-interval 1d
+    delete-after 30d
+</acct-file>
+
+# --- Virtual MTAs (DKIM signing per domain) ---
+<virtual-mta vmta-hub>
+    smtp-source-host 204.168.180.175 mail.hub-travelers.com
+    domain-key dkim,hub-travelers.com,/home/pmta/conf/mail/hub-travelers.com/dkim.pem
+    # Rehab lifted 2026-04-13 — back to normal limits after CSS delisting
+    <domain *>
+        use-starttls yes
+        max-msg-rate 20/h
+        max-smtp-out 2
+    </domain>
+</virtual-mta>
+
+<virtual-mta vmta-plane>
+    smtp-source-host 204.168.180.175 mail.plane-liberty.com
+    domain-key dkim,plane-liberty.com,/home/pmta/conf/mail/plane-liberty.com/dkim.pem
+    <domain *>
+        use-starttls yes
+        max-msg-rate 20/h
+        max-smtp-out 2
+    </domain>
+</virtual-mta>
+
+<virtual-mta vmta-provider>
+    smtp-source-host 204.168.180.175 mail.providers-expat.com
+    domain-key dkim,providers-expat.com,/home/pmta/conf/mail/providers-expat.com/dkim.pem
+    <domain *>
+        use-starttls yes
+        max-msg-rate 20/h
+        max-smtp-out 2
+    </domain>
+</virtual-mta>
+
+<virtual-mta vmta-emilia>
+    smtp-source-host 204.168.180.175 mail.emilia-mullerd.com
+    domain-key dkim,emilia-mullerd.com,/home/pmta/conf/mail/emilia-mullerd.com/dkim.pem
+    <domain *>
+        use-starttls yes
+        max-msg-rate 20/h
+        max-smtp-out 2
+    </domain>
+</virtual-mta>
+
+<virtual-mta vmta-planevilain>
+    smtp-source-host 204.168.180.175 mail.planevilain.com
+    domain-key dkim,planevilain.com,/home/pmta/conf/mail/planevilain.com/dkim.pem
+    <domain *>
+        use-starttls yes
+        max-msg-rate 20/h
+        max-smtp-out 2
+    </domain>
+</virtual-mta>
+
+# --- Pool (round-robin) ---
+<virtual-mta-pool outreach-pool>
+    virtual-mta vmta-plane
+    virtual-mta vmta-provider
+    virtual-mta vmta-emilia
+    virtual-mta vmta-planevilain
+</virtual-mta-pool>
+
+# --- Routing: match sender domain to VMTA for DKIM ---
+<pattern-list sender-domains>
+    mail-from /.*@hub-travelers\.com/ virtual-mta=vmta-hub
+    mail-from /.*@plane-liberty\.com/ virtual-mta=vmta-plane
+    mail-from /.*@providers-expat\.com/ virtual-mta=vmta-provider
+    mail-from /.*@emilia-mullerd\.com/ virtual-mta=vmta-emilia
+    mail-from /.*@planevilain\.com/ virtual-mta=vmta-planevilain
+    mail-from // virtual-mta=vmta-hub
+</pattern-list>
+
+# --- ISP rate limits ---
+<domain gmail.com>
+    max-msg-rate 20/h
+    max-smtp-out 1
+    max-msg-per-connection 5
+</domain>
+
+<domain hotmail.com>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+<domain outlook.com>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+<domain hotmail.fr>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+<domain outlook.fr>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+<domain live.fr>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+<domain live.com>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+
+<domain yahoo.com>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+<domain orange.fr>
+    max-msg-rate 20/h
+    max-smtp-out 1
+</domain>
+
+<domain *>
+    max-msg-rate 20/h
+    max-smtp-out 2
+    max-msg-per-connection 10
+    retry-after 10m
+    bounce-after 24h
+    use-starttls yes
+</domain>
+
+# ============================================================
+# REHABILITATION POOL — vmta-hub isolated
+# Created 2026-04-10 after phishing abuse incident
+# Use ONLY for warmup emails to known-good recipients
+# ============================================================
+<virtual-mta-pool rehab-hub-pool>
+    virtual-mta vmta-hub
+</virtual-mta-pool>
