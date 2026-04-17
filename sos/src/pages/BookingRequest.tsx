@@ -3336,6 +3336,30 @@ const BookingRequest: React.FC = () => {
         clientLanguages: clientLangs,
       };
 
+      // BLOCAGE symétrique au onSubmit desktop: empêcher que le client saisisse
+      // le numéro du prestataire. Sans ce check, le backend auto-annule le
+      // PaymentIntent et le client voit un countdown trompeur sur PaymentSuccess.
+      try {
+        const providerRawPhone =
+          (provider as unknown as { phoneNumber?: string; phone?: string })?.phoneNumber ||
+          (provider as unknown as { phoneNumber?: string; phone?: string })?.phone ||
+          "";
+        if (providerRawPhone && data.clientPhone) {
+          const clientE164 = smartNormalizePhone(data.clientPhone, "FR" as any);
+          const providerE164 = smartNormalizePhone(providerRawPhone, "FR" as any);
+          const clientVal = clientE164.ok && clientE164.e164 ? clientE164.e164 : data.clientPhone.replace(/\s+/g, "");
+          const providerVal = providerE164.ok && providerE164.e164 ? providerE164.e164 : providerRawPhone.replace(/\s+/g, "");
+          if (clientVal && providerVal && clientVal === providerVal) {
+            const msg = "Le numéro saisi est identique à celui du prestataire. Vous ne pouvez pas vous appeler vous-même. Merci d'indiquer votre numéro personnel.";
+            setFormError(msg);
+            try { toast.error(msg, { duration: 6000 }); } catch {}
+            return;
+          }
+        }
+      } catch (phoneCheckErr) {
+        console.warn("[BookingRequest mobile] phone-identity check failed (non-blocking):", phoneCheckErr);
+      }
+
       // Prepare booking data (same as desktop)
       const eurTotalForDisplay = displayEUR;
       const durationForDisplay = displayDuration;
