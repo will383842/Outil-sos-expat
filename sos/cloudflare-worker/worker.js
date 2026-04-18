@@ -486,6 +486,17 @@ const LANDING_PAGE_PATTERNS = [
   /^\/[a-z]{2}(-[a-z]{2})?\/gopaniyata-niti\/?$/i,       // HI
   /^\/[a-z]{2}(-[a-z]{2})?\/سياسة-الخصوصية\/?$/i,        // AR (native)
 
+  // Data deletion (Meta App Review requirement — GDPR Art. 17)
+  /^\/[a-z]{2}(-[a-z]{2})?\/suppression-donnees\/?$/i,   // FR
+  /^\/[a-z]{2}(-[a-z]{2})?\/data-deletion\/?$/i,         // EN
+  /^\/[a-z]{2}(-[a-z]{2})?\/eliminacion-datos\/?$/i,     // ES
+  /^\/[a-z]{2}(-[a-z]{2})?\/datenloeschung\/?$/i,        // DE
+  /^\/[a-z]{2}(-[a-z]{2})?\/udalenie-dannykh\/?$/i,      // RU
+  /^\/[a-z]{2}(-[a-z]{2})?\/exclusao-dados\/?$/i,        // PT
+  /^\/[a-z]{2}(-[a-z]{2})?\/shanchu-shuju\/?$/i,         // ZH
+  /^\/[a-z]{2}(-[a-z]{2})?\/data-vilopan\/?$/i,          // HI
+  /^\/[a-z]{2}(-[a-z]{2})?\/hadhf-albayanat\/?$/i,       // AR
+
   // Cookies
   /^\/[a-z]{2}(-[a-z]{2})?\/cookies\/?$/i,               // All latin langs
   /^\/[a-z]{2}(-[a-z]{2})?\/ملفات-التعريف\/?$/i,         // AR (native)
@@ -2443,6 +2454,7 @@ if (localeMatch) {
     'register':       { fr:'inscription', en:'register', es:'registro', de:'registrierung', ru:'registratsiya', pt:'cadastro', zh:'zhuce', hi:'panjikaran', ar:'al-tasjil' },
     'password-reset': { fr:'reinitialisation-mot-de-passe', en:'password-reset', es:'restablecer-contrasena', de:'passwort-zurucksetzen', ru:'sbros-parolya', pt:'redefinir-senha', zh:'chongzhi-mima', hi:'password-reset', ar:'iadat-tayin-kalimat-al-murur' },
     'privacy-policy': { fr:'politique-confidentialite', en:'privacy-policy', es:'politica-privacidad', de:'datenschutzrichtlinie', ru:'politika-konfidentsialnosti', pt:'politica-privacidade', zh:'yinsi-zhengce', hi:'gopaniyata-niti', ar:'siyasat-al-khususiya' },
+    'data-deletion':  { fr:'suppression-donnees', en:'data-deletion', es:'eliminacion-datos', de:'datenloeschung', ru:'udalenie-dannykh', pt:'exclusao-dados', zh:'shanchu-shuju', hi:'data-vilopan', ar:'hadhf-albayanat' },
     'providers':      { fr:'prestataires', en:'providers', es:'proveedores', de:'anbieter', ru:'postavshchiki', pt:'prestadores', zh:'fuwu-tigongzhe', hi:'seva-pradaata', ar:'muqadimi-al-khidmat' },
     'faq':            { fr:'faq', en:'faq', es:'preguntas-frecuentes', de:'faq', ru:'voprosy-otvety', pt:'perguntas-frequentes', zh:'changjian-wenti', hi:'aksar-puche-jaane-wale-sawal', ar:'al-asila-al-shaiya' },
     'help-center':    { fr:'centre-aide', en:'help-center', es:'centro-ayuda', de:'hilfezentrum', ru:'tsentr-pomoshchi', pt:'centro-ajuda', zh:'bangzhu-zhongxin', hi:'sahayata-kendra', ar:'markaz-almosaada' },
