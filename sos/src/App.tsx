@@ -101,6 +101,7 @@ const ServiceStatus = lazy(() => import('./pages/ServiceStatus'));
 const Consumers = lazy(() => import('./pages/Consumers'));
 const Cookies = lazy(() => import('./pages/Cookies'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const DataDeletion = lazy(() => import('./pages/DataDeletion'));
 const TermsExpats = lazy(() => import('./pages/TermsExpats'));
 const TermsLawyers = lazy(() => import('./pages/TermsLawyers'));
 const TermsClients = lazy(() => import('./pages/TermsClients'));
@@ -388,6 +389,7 @@ const routeConfigs: RouteConfig[] = [
     translated: "privacy-policy",
   },
   { path: "/cookies", component: Cookies, translated: "cookies" },
+  { path: "/data-deletion", component: DataDeletion, alias: "/suppression-donnees", translated: "data-deletion" },
   { path: "/consumers", component: Consumers, alias: "/consommateurs", translated: "consumers" },
   { path: "/statut-service", component: ServiceStatus, translated: "service-status" },
   { path: "/seo", component: SEO, alias: "/referencement", translated: "seo" },
