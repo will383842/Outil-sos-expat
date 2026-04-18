@@ -178,6 +178,8 @@ const resolveDocumentHref = (data: Record<string, unknown>, lang: SupportedLangu
     "terms-clients": "terms-clients",
     privacy: "privacy-policy",
     "privacy-policy": "privacy-policy",
+    "data-deletion": "data-deletion",
+    "suppression-donnees": "data-deletion",
     cookies: "cookies",
     legal: "consumers",
     consumers: "consumers",
@@ -672,6 +674,14 @@ const Footer: React.FC = () => {
         label: intl.formatMessage({ id: "footer.legal.cookies" }),
         href: `/${getTranslatedRouteSlug("cookies", resolvedLang)}`,
         order: 50,
+      },
+      {
+        label: intl.formatMessage({
+          id: "footer.legal.dataDeletion",
+          defaultMessage: resolvedLang === "fr" ? "Suppression des données" : "Data deletion",
+        }),
+        href: `/${getTranslatedRouteSlug("data-deletion", resolvedLang)}`,
+        order: 55,
       },
       {
         label: intl.formatMessage({ id: "footer.legal.consumers" }),

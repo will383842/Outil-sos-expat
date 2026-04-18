@@ -265,6 +265,7 @@ export type RouteKey =
   | "help-center"       // /centre-aide -> /help-center, /centro-ayuda, etc.
   | "testimonials"      // /testimonials -> /temoignages, /testimonios, etc.
   | "privacy-policy"    // /privacy-policy -> /politique-confidentialite, etc.
+  | "data-deletion"     // /data-deletion -> /suppression-donnees, etc. (Meta App Review requirement)
   | "cookies"            // /cookies -> /cookies, /cookies-politique, etc.
   | "consumers"          // /consumers -> /consommateurs, /consumidores, etc.
   | "service-status"    // /statut-service -> /service-status, /estado-servicio, etc.
@@ -656,6 +657,17 @@ const ROUTE_TRANSLATIONS: Record<RouteKey, Record<Language, string>> = {
     ch: "yinsi-zhengce",
     hi: "gopaniyata-niti",
     ar: "siyasat-al-khususiya",
+  },
+  "data-deletion": {
+    fr: "suppression-donnees",
+    en: "data-deletion",
+    es: "eliminacion-datos",
+    de: "datenloeschung",
+    ru: "udalenie-dannykh",
+    pt: "exclusao-dados",
+    ch: "shanchu-shuju",
+    hi: "data-vilopan",
+    ar: "hadhf-albayanat",
   },
   "cookies": {
     fr: "cookies",
