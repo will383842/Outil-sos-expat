@@ -38,11 +38,13 @@ type TranslationUnit = {
   dataCollection: string;
   dataProtection: string;
   dataSharing: string;
+  socialMediaApi: string;
   yourRights: string;
   contact: string;
   dataCollectionContent: string;
   dataProtectionContent: string;
   dataSharingContent: string;
+  socialMediaApiContent: string;
   rights: string[];
   contactContent: string;
   features: string[];
@@ -105,6 +107,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "Collecte des données",
         dataProtection: "Protection des données",
         dataSharing: "Partage des données",
+        socialMediaApi: "Réseaux sociaux et API Meta",
         yourRights: "Vos droits",
         contact: "Contact",
         dataCollectionContent:
@@ -113,6 +116,8 @@ const PrivacyPolicy: React.FC = () => {
           "Vos données sont chiffrées en transit et au repos lorsque c'est possible et stockées de manière sécurisée. Des mesures techniques et organisationnelles sont mises en œuvre pour prévenir tout accès non autorisé.",
         dataSharingContent:
           "Nous ne vendons jamais vos données personnelles. Nous partageons uniquement les informations nécessaires avec des prestataires vérifiés (paiements, téléphonie, hébergement) pour fournir le service demandé.",
+        socialMediaApiContent:
+          "Notre outil interne « Mission Control » utilise les API officielles de Meta (Facebook, Instagram, Threads) et de LinkedIn UNIQUEMENT pour publier du contenu sur nos propres comptes professionnels SOS-Expat. Nous ne collectons aucune donnée d'utilisateur Meta à des fins commerciales. Les commentaires reçus sur nos publications sont temporairement stockés pour permettre à notre équipe éditoriale de répondre, puis anonymisés sous 90 jours. Vous pouvez à tout moment révoquer l'accès depuis les paramètres « Applications connectées » de votre compte Facebook / Instagram / LinkedIn. Pour la suppression complète de vos données, consultez notre page Suppression des données.",
         rights: [
           "Droit d'accès à vos données",
           "Droit de rectification",
@@ -138,6 +143,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "Data Collection",
         dataProtection: "Data Protection",
         dataSharing: "Data Sharing",
+        socialMediaApi: "Social Media & Meta API",
         yourRights: "Your Rights",
         contact: "Contact",
         dataCollectionContent:
@@ -146,6 +152,8 @@ const PrivacyPolicy: React.FC = () => {
           "Your data is encrypted in transit and at rest where possible and stored securely. We apply technical and organizational measures to prevent unauthorized access.",
         dataSharingContent:
           "We never sell your personal data. We only share information necessary with vetted providers (payments, telephony, hosting) to deliver the requested service.",
+        socialMediaApiContent:
+          "Our internal tool 'Mission Control' uses the official Meta APIs (Facebook, Instagram, Threads) and LinkedIn API ONLY to publish content on our own SOS-Expat business accounts. We do NOT collect Meta user data for commercial purposes. Comments received on our publications are temporarily stored to allow our editorial team to reply, then anonymized after 90 days. You can revoke access at any time from the 'Connected Apps' section of your Facebook / Instagram / LinkedIn account settings. For full data deletion, see our Data Deletion page.",
         rights: [
           "Right of access",
           "Right to rectification",
@@ -171,6 +179,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "Recopilación de datos",
         dataProtection: "Protección de datos",
         dataSharing: "Compartir datos",
+        socialMediaApi: "Redes sociales y API Meta",
         yourRights: "Tus derechos",
         contact: "Contacto",
         dataCollectionContent:
@@ -179,6 +188,8 @@ const PrivacyPolicy: React.FC = () => {
           "Tus datos están cifrados en tránsito y en reposo cuando es posible y almacenados de forma segura. Aplicamos medidas técnicas y organizativas para prevenir accesos no autorizados.",
         dataSharingContent:
           "Nunca vendemos tus datos personales. Solo compartimos información necesaria con proveedores verificados (pagos, telefonía, alojamiento) para entregar el servicio solicitado.",
+        socialMediaApiContent:
+          "Nuestra herramienta interna 'Mission Control' utiliza las APIs oficiales de Meta (Facebook, Instagram, Threads) y de LinkedIn ÚNICAMENTE para publicar contenido en nuestras propias cuentas profesionales SOS-Expat. NO recopilamos datos de usuarios de Meta con fines comerciales. Los comentarios recibidos en nuestras publicaciones se almacenan temporalmente para que nuestro equipo editorial pueda responder, y se anonimizan a los 90 días. Puedes revocar el acceso en cualquier momento desde la sección 'Aplicaciones conectadas' de tu cuenta Facebook / Instagram / LinkedIn. Para la eliminación completa de tus datos, consulta nuestra página de Eliminación de datos.",
         rights: [
           "Derecho de acceso",
           "Derecho de rectificación",
@@ -204,6 +215,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "Datenerfassung",
         dataProtection: "Datenschutz",
         dataSharing: "Datenweitergabe",
+        socialMediaApi: "Soziale Medien und Meta-API",
         yourRights: "Ihre Rechte",
         contact: "Kontakt",
         dataCollectionContent:
@@ -212,6 +224,8 @@ const PrivacyPolicy: React.FC = () => {
           "Ihre Daten werden während der Übertragung und im Ruhezustand verschlüsselt und sicher gespeichert. Wir setzen technische und organisatorische Maßnahmen ein, um unbefugten Zugriff zu verhindern.",
         dataSharingContent:
           "Wir verkaufen niemals Ihre persönlichen Daten. Wir geben nur die notwendigen Informationen an geprüfte Anbieter weiter (Zahlungen, Telefonie, Hosting), um den angeforderten Service bereitzustellen.",
+        socialMediaApiContent:
+          "Unser internes Tool 'Mission Control' nutzt die offiziellen Meta-APIs (Facebook, Instagram, Threads) und die LinkedIn-API AUSSCHLIESSLICH zur Veröffentlichung von Inhalten auf unseren eigenen SOS-Expat Geschäftskonten. Wir erfassen KEINE Meta-Nutzerdaten für kommerzielle Zwecke. Auf unsere Beiträge erhaltene Kommentare werden vorübergehend gespeichert, damit unser Redaktionsteam antworten kann, und nach 90 Tagen anonymisiert. Sie können den Zugriff jederzeit unter 'Verbundene Apps' in Ihren Facebook / Instagram / LinkedIn-Kontoeinstellungen widerrufen. Für die vollständige Löschung Ihrer Daten siehe unsere Seite Datenlöschung.",
         rights: [
           "Recht auf Zugang",
           "Recht auf Berichtigung",
@@ -237,6 +251,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "Сбор данных",
         dataProtection: "Защита данных",
         dataSharing: "Обмен данными",
+        socialMediaApi: "Социальные сети и Meta API",
         yourRights: "Ваши права",
         contact: "Контакт",
         dataCollectionContent:
@@ -245,6 +260,8 @@ const PrivacyPolicy: React.FC = () => {
           "Ваши данные зашифрованы при передаче и хранении и надежно защищены. Мы применяем технические и организационные меры для предотвращения несанкционированного доступа.",
         dataSharingContent:
           "Мы никогда не продаем ваши личные данные. Мы делимся только необходимой информацией с проверенными поставщиками (платежи, телефония, хостинг) для предоставления запрошенной услуги.",
+        socialMediaApiContent:
+          "Наш внутренний инструмент 'Mission Control' использует официальные API Meta (Facebook, Instagram, Threads) и LinkedIn ИСКЛЮЧИТЕЛЬНО для публикации контента в наших собственных бизнес-аккаунтах SOS-Expat. Мы НЕ собираем данные пользователей Meta в коммерческих целях. Комментарии, полученные на наших публикациях, временно сохраняются для ответа нашей редакционной команды, затем анонимизируются через 90 дней. Вы можете в любой момент отозвать доступ из настроек 'Подключённые приложения' вашего аккаунта Facebook / Instagram / LinkedIn. Для полного удаления данных см. нашу страницу Удаление данных.",
         rights: [
           "Право на доступ",
           "Право на исправление",
@@ -271,6 +288,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "Coleta de dados",
         dataProtection: "Proteção de dados",
         dataSharing: "Compartilhamento de dados",
+        socialMediaApi: "Redes sociais e API Meta",
         yourRights: "Seus direitos",
         contact: "Contato",
         dataCollectionContent:
@@ -279,6 +297,8 @@ const PrivacyPolicy: React.FC = () => {
           "Seus dados são criptografados em trânsito e armazenamento e protegidos com segurança. Aplicamos medidas técnicas e organizacionais para evitar acesso não autorizado.",
         dataSharingContent:
           "Nunca vendemos seus dados pessoais. Compartilhamos apenas as informações necessárias com fornecedores verificados (pagamentos, telefonia, hospedagem) para fornecer o serviço solicitado.",
+        socialMediaApiContent:
+          "Nossa ferramenta interna 'Mission Control' usa as APIs oficiais da Meta (Facebook, Instagram, Threads) e do LinkedIn EXCLUSIVAMENTE para publicar conteúdo em nossas próprias contas profissionais SOS-Expat. NÃO coletamos dados de usuários Meta para fins comerciais. Os comentários recebidos em nossas publicações são armazenados temporariamente para que nossa equipe editorial possa responder, e anonimizados após 90 dias. Você pode revogar o acesso a qualquer momento na seção 'Aplicativos conectados' da sua conta Facebook / Instagram / LinkedIn. Para a exclusão completa de seus dados, consulte nossa página de Exclusão de dados.",
         rights: [
           "Direito de acesso",
           "Direito de retificação",
@@ -304,6 +324,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "डेटा संग्रह",
         dataProtection: "डेटा सुरक्षा",
         dataSharing: "डेटा साझाकरण",
+        socialMediaApi: "सोशल मीडिया और Meta API",
         yourRights: "आपके अधिकार",
         contact: "संपर्क",
         dataCollectionContent:
@@ -312,6 +333,8 @@ const PrivacyPolicy: React.FC = () => {
           "आपका डेटा ट्रांज़िट और स्टोरेज में एन्क्रिप्ट किया गया है और सुरक्षित रूप से संग्रहीत है। हम अनधिकृत पहुंच को रोकने के लिए तकनीकी और संगठनात्मक उपाय लागू करते हैं।",
         dataSharingContent:
           "हम कभी भी आपके व्यक्तिगत डेटा को नहीं बेचते। हम केवल आवश्यक जानकारी सत्यापित प्रदाताओं (भुगतान, टेलीफोनी, होस्टिंग) के साथ साझा करते हैं ताकि सेवा प्रदान की जा सके।",
+        socialMediaApiContent:
+          "हमारा आंतरिक टूल 'Mission Control' केवल हमारे अपने SOS-Expat व्यावसायिक खातों पर सामग्री प्रकाशित करने के लिए Meta (Facebook, Instagram, Threads) और LinkedIn के आधिकारिक API का उपयोग करता है। हम वाणिज्यिक उद्देश्यों के लिए Meta उपयोगकर्ता डेटा एकत्र नहीं करते। हमारी पोस्ट पर प्राप्त टिप्पणियाँ हमारी संपादकीय टीम द्वारा प्रतिक्रिया देने के लिए अस्थायी रूप से संग्रहीत की जाती हैं, फिर 90 दिनों के बाद अनाम कर दी जाती हैं। आप किसी भी समय अपने Facebook / Instagram / LinkedIn खाते की 'जुड़े हुए ऐप्स' सेटिंग्स से एक्सेस रद्द कर सकते हैं। पूर्ण डेटा विलोपन के लिए, हमारा डेटा विलोपन पृष्ठ देखें।",
         rights: [
           "पहुंच का अधिकार",
           "सुधार का अधिकार",
@@ -338,6 +361,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "جمع البيانات",
         dataProtection: "حماية البيانات",
         dataSharing: "مشاركة البيانات",
+        socialMediaApi: "وسائل التواصل الاجتماعي و Meta API",
         yourRights: "حقوقك",
         contact: "اتصل",
         dataCollectionContent:
@@ -346,6 +370,8 @@ const PrivacyPolicy: React.FC = () => {
           "يتم تشفير بياناتك أثناء النقل والتخزين عند الإمكان ويتم تخزينها بشكل آمن. يتم تنفيذ تدابير تقنية وتنظيمية لمنع أي وصول غير مصرح به.",
         dataSharingContent:
           "لا نبيع بياناتك الشخصية أبداً. نشارك فقط المعلومات الضرورية مع مقدمي خدمات معروفين (المدفوعات، الهاتف، الاستضافة) لتقديم الخدمة المطلوبة.",
+        socialMediaApiContent:
+          "تستخدم أداتنا الداخلية 'Mission Control' واجهات برمجة التطبيقات الرسمية لـ Meta (Facebook, Instagram, Threads) و LinkedIn فقط لنشر المحتوى على حسابات أعمال SOS-Expat الخاصة بنا. نحن لا نجمع بيانات مستخدمي Meta لأغراض تجارية. يتم تخزين التعليقات المستلمة على منشوراتنا مؤقتاً للسماح لفريقنا التحريري بالرد، ثم يتم إخفاء هويتها بعد 90 يوماً. يمكنك إلغاء الوصول في أي وقت من إعدادات 'التطبيقات المتصلة' في حسابك على Facebook / Instagram / LinkedIn. لحذف بياناتك بالكامل، راجع صفحة حذف البيانات.",
         rights: [
           "الحق في الوصول إلى بياناتك",
           "الحق في التصحيح",
@@ -372,6 +398,7 @@ const PrivacyPolicy: React.FC = () => {
         dataCollection: "数据收集",
         dataProtection: "数据保护",
         dataSharing: "数据共享",
+        socialMediaApi: "社交媒体与 Meta API",
         yourRights: "您的权利",
         contact: "联系方式",
         dataCollectionContent:
@@ -380,6 +407,8 @@ const PrivacyPolicy: React.FC = () => {
           "您的数据在传输和存储时（在可能的情况下）均经过加密并安全保存。我们采取技术和组织措施以防止未经授权的访问。",
         dataSharingContent:
           "我们绝不会出售您的个人数据。我们仅与经过审核的服务提供商（支付、通信、托管）共享提供所请求服务所必需的信息。",
+        socialMediaApiContent:
+          "我们的内部工具 'Mission Control' 仅使用 Meta（Facebook、Instagram、Threads）和 LinkedIn 的官方 API 在我们自己的 SOS-Expat 商业账户上发布内容。我们不会出于商业目的收集 Meta 用户数据。我们出版物上收到的评论会临时存储以便我们的编辑团队回复，然后在 90 天后匿名化。您可以随时从 Facebook / Instagram / LinkedIn 账户的「已连接应用」设置中撤销访问权限。如需完全删除数据，请参阅我们的数据删除页面。",
         rights: [
           "访问权",
           "更正权",
@@ -421,6 +450,11 @@ const PrivacyPolicy: React.FC = () => {
         icon: Users,
         titleKey: "dataSharing",
         contentKey: "dataSharingContent",
+      },
+      {
+        icon: Globe,
+        titleKey: "socialMediaApi",
+        contentKey: "socialMediaApiContent",
       },
     ],
     []
