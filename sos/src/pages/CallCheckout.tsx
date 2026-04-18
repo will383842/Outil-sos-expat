@@ -1990,7 +1990,7 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(
           currentOnSuccess({
             paymentIntentId: paymentIntent.id,
             call: callStatus,
-            orderId: orderId,
+            orderId: orderId ?? '',
             callId: callId,
           });
         } catch (err) {
