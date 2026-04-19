@@ -24,7 +24,6 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  ArrowLeft,
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useAntiBot } from '@/hooks/useAntiBot';
@@ -216,7 +215,6 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
   }, [getSavedGroupUrls]);
 
   const [savedUrls] = useState<string[]>(() => getSavedGroupUrls());
-  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<GroupAdminRegistrationData>({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
@@ -381,9 +379,10 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     setTouchedFields(prev => new Set(prev).add(field));
   }, []);
 
-  // Validation
-  const validateStep1 = (): boolean => {
+  // Validation — single-page form: validate all fields (personal + group + terms) at once
+  const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
+    // Personal info
     if (!formData.firstName.trim()) errors.firstName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
     if (!formData.lastName.trim()) errors.lastName = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
     if (!formData.email.trim()) errors.email = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
@@ -393,13 +392,8 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
       else if (formData.password.length < MIN_PASSWORD_LENGTH) errors.password = intl.formatMessage({ id: 'form.error.passwordTooShort', defaultMessage: 'Min {min} characters' }, { min: MIN_PASSWORD_LENGTH });
     }
     if (!formData.country) errors.country = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
-  const validateStep2 = (): boolean => {
-    const errors: Record<string, string> = {};
-    // Validate group URL: must be http(s), parseable URL with a hostname that contains a TLD
+    // Group info
     if (!formData.groupUrl) {
       errors.groupUrl = intl.formatMessage({ id: 'groupadmin.register.error.groupUrlRequired', defaultMessage: 'Valid group or community URL required' });
     } else {
@@ -422,22 +416,22 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
     if (!formData.groupType) errors.groupType = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
     if (!formData.groupSize) errors.groupSize = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
     if (!formData.groupCountry) errors.groupCountry = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });
+
+    // Terms
     if (!formData.acceptTerms)
       errors.acceptTerms = intl.formatMessage({ id: 'groupadmin.register.error.termsRequired', defaultMessage: 'You must accept the terms' });
-    setValidationErrors(prev => ({ ...prev, ...errors }));
-    return Object.keys(errors).length === 0;
-  };
 
-  const handleNextStep = () => {
-    if (validateStep1()) {
-      setStep(2);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep2()) return;
+    if (!validateForm()) {
+      // Scroll to first error for better UX
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
     setBotError(null);
 
@@ -544,19 +538,11 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
         </div>
       )}
 
-      {/* Progress indicator */}
-      <div className="flex items-center justify-center gap-4 mb-2">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 1 ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}>1</div>
-        <div className={`w-16 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-indigo-500' : 'bg-white/10'}`} />
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 2 ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}>2</div>
-      </div>
-
-      {/* STEP 1: Personal Info */}
-      {step === 1 && (
-        <div className="space-y-5">
-          <h3 className="text-lg font-bold">
-            <FormattedMessage id="groupadmin.register.step1.title" defaultMessage="Your Information" />
-          </h3>
+      {/* Personal Info */}
+      <div className="space-y-5">
+        <h3 className="text-lg font-bold">
+          <FormattedMessage id="groupadmin.register.step1.title" defaultMessage="Your Information" />
+        </h3>
 
           {/* Name row */}
           <div className="grid md:grid-cols-2 gap-4">
@@ -832,24 +818,13 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             </div>
           </div>
 
-          {/* Next button */}
-          <button
-            type="button"
-            onClick={handleNextStep}
-            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 flex items-center justify-center gap-2 min-h-[48px]"
-          >
-            <FormattedMessage id="groupadmin.register.next" defaultMessage="Next" />
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+      </div>
 
-      {/* STEP 2: Group Info */}
-      {step === 2 && (
-        <div className="space-y-5">
-          <h3 className="text-lg font-bold">
-            <FormattedMessage id="groupadmin.register.step2.title" defaultMessage="Your Group / Community" />
-          </h3>
+      {/* Group Info */}
+      <div className="space-y-5 pt-4 border-t border-white/10">
+        <h3 className="text-lg font-bold">
+          <FormattedMessage id="groupadmin.register.step2.title" defaultMessage="Your Group / Community" />
+        </h3>
 
           {/* Group URL with history */}
           <div className="space-y-1">
@@ -1159,37 +1134,25 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
             )}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex-1 py-4 bg-white/10 hover:bg-white/10 text-white font-medium rounded-2xl transition-colors items-center justify-center gap-2 min-h-[48px] border"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <FormattedMessage id="groupadmin.register.back" defaultMessage="Back" />
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading || !formData.acceptTerms}
-              className="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 items-center justify-center gap-2 min-h-[48px]"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 rounded-full animate-spin" />
-                  <FormattedMessage id="groupadmin.register.submitting" defaultMessage="Submitting..." />
-                </>
-              ) : (
-                <>
-                  <FormattedMessage id="groupadmin.register.submit" defaultMessage="Create Account" />
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+          {/* Submit button */}
+          <button
+            type="submit"
+            disabled={loading || !formData.acceptTerms}
+            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 flex items-center justify-center gap-2 min-h-[48px]"
+          >
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 rounded-full animate-spin" />
+                <FormattedMessage id="groupadmin.register.submitting" defaultMessage="Submitting..." />
+              </>
+            ) : (
+              <>
+                <FormattedMessage id="groupadmin.register.submit" defaultMessage="Create Account" />
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+      </div>
     </form>
   );
 };
