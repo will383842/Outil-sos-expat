@@ -212,6 +212,7 @@ describe('Wise Webhook Handler', () => {
 
     // Create a mock handler that simulates the real webhook logic
     webhookHandler = async (req, res) => {
+      try {
       // Method validation
       if (req.method !== 'POST') {
         mockLogger.warn('[WiseWebhook] Invalid method', { method: req.method });
@@ -247,6 +248,8 @@ describe('Wise Webhook Handler', () => {
           res.status(401).send('Invalid signature');
           return;
         }
+      } else {
+        mockLogger.info('[WiseWebhook] Signature verification skipped (secret not configured)');
       }
 
       const event = req.body;
@@ -320,6 +323,11 @@ describe('Wise Webhook Handler', () => {
       }
 
       res.status(200).send('OK');
+      } catch (error) {
+        // Match real handler: return 200 even on processing errors, log for investigation
+        mockLogger.error('[WiseWebhook] Error processing webhook', { error });
+        res.status(200).send('OK - Error logged');
+      }
     };
   });
 
