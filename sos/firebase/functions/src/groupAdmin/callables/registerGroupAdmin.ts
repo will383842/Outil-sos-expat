@@ -429,7 +429,7 @@ export const registerGroupAdmin = onCall(
       const affiliateCodeProvider = generateAffiliateCode(input.firstName, userId, "provider");
 
       // Unified code (new system: 1 code, 1 link /r/CODE)
-      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId);
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId, input.email);
 
       // 10b. Resolve commission plan (Lifetime Rate Lock)
       const planSnapshot = await snapshotLockedRates("groupAdmin");
@@ -545,6 +545,29 @@ export const registerGroupAdmin = onCall(
         const groupAdminRef = db.collection("group_admins").doc(userId);
         const userRef = db.collection("users").doc(userId);
         const userDoc = await transaction.get(userRef);
+
+        // Re-verify recruiter is still active at commit time (anti race-condition:
+        // admin could have banned recruiter between resolveCode() and this transaction).
+        // If recruiter is no longer active, drop the referral silently — prevents
+        // creating a recruitment record against a banned account.
+        if (recruitedBy) {
+          const recruiterRef = db.collection("group_admins").doc(recruitedBy);
+          const recruiterSnap = await transaction.get(recruiterRef);
+          const recruiterStatus = recruiterSnap.exists ? (recruiterSnap.data() as any)?.status : null;
+          if (recruiterStatus !== "active") {
+            logger.warn("[registerGroupAdmin] Recruiter no longer active at commit time — dropping referral", {
+              recruitedBy,
+              recruiterStatus,
+              userId,
+            });
+            recruitedBy = null;
+            recruitedByCode = null;
+            // Mutate the in-progress groupAdmin object so the write reflects dropped referral.
+            // Safe even on transaction retry — the recheck runs every time.
+            (groupAdmin as any).recruitedBy = null;
+            (groupAdmin as any).recruitedByCode = null;
+          }
+        }
 
         // Now do all writes
         transaction.set(groupAdminRef, groupAdmin);

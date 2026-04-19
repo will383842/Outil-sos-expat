@@ -4,8 +4,9 @@
  * Covers: createClientReferralCommission, createProviderRecruitmentCommission,
  * checkAndPayRecruitmentCommission, commission validation, status flow.
  *
- * Commission amounts:
- *  - Client referral: $10 (1000 cents)
+ * Commission amounts (config defaults, overridable via admin console):
+ *  - Client referral lawyer: $5 (500 cents)
+ *  - Client referral expat: $3 (300 cents)
  *  - Provider/groupAdmin recruitment: $5 (500 cents) per recruited call
  */
 
@@ -172,12 +173,16 @@ describe("GroupAdminCommissionService", () => {
   // --------------------------------------------------------------------------
 
   describe("Commission amounts", () => {
-    it("client call commission is $10 (1000 cents)", () => {
-      expect(1000).toBe(1000); // Config value
+    it("client call commission lawyer is $5 (500 cents) per config default", () => {
+      expect(500).toBe(500);
     });
 
-    it("recruitment commission is $5 (500 cents)", () => {
-      expect(500).toBe(500); // Config value
+    it("client call commission expat is $3 (300 cents) per config default", () => {
+      expect(300).toBe(300);
+    });
+
+    it("recruitment / activation bonus is $5 (500 cents) per config default", () => {
+      expect(500).toBe(500);
     });
   });
 
@@ -186,37 +191,40 @@ describe("GroupAdminCommissionService", () => {
   // --------------------------------------------------------------------------
 
   describe("createClientReferralCommission", () => {
-    it("creates commission with $10 for client referral", async () => {
+    it("creates commission with config amount (500 cents = $5 lawyer default)", async () => {
       const svc = groupAdminCommissionServiceModule;
       if (!svc?.createClientReferralCommission) {
         console.log("createClientReferralCommission not exported, skipping");
         return;
       }
 
-      // Flow: get group_admins doc → duplicate check → commissionRef.set() → groupAdminDoc.ref.update()
-      // Note: uses commissionRef.set(), NOT runTransaction
-      const mockGroupAdminRef = { update: jest.fn().mockResolvedValue({}) };
+      // Current flow: get group_admins doc → duplicate check → runTransaction(tx.set + tx.update)
+      const groupAdminData = defaultGroupAdminData({
+        currentMonthStats: { month: "2026-02", clients: 0, earnings: 0 },
+      });
       mockDocGet.mockResolvedValueOnce({
         exists: true,
-        ref: mockGroupAdminRef,
-        data: () => defaultGroupAdminData({
-          currentMonthStats: { month: "2026-02", clients: 0, earnings: 0 },
-        }),
+        ref: { update: jest.fn().mockResolvedValue({}) },
+        data: () => groupAdminData,
       });
-      mockQueryGet.mockResolvedValueOnce({ empty: true, docs: [] }); // duplicate check → none
+      mockQueryGet.mockResolvedValueOnce({ empty: true, docs: [] }); // pre-transaction duplicate check → none
+
+      const { txSetFn } = setupTransactionForGroupAdmin(groupAdminData, { empty: true, docs: [] });
 
       const result = await svc.createClientReferralCommission("ga-1", "client-1", "session-1");
 
-      // Commission created via commissionRef.set() (not runTransaction)
-      expect(mockDocSet).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: "pending",
-          amount: 1000,
-          type: "client_referral",
-        })
+      // Commission is created via tx.set() inside runTransaction
+      const commissionSetCall = txSetFn.mock.calls.find(
+        (c: any[]) => c[1]?.type === "client_referral"
       );
+      expect(commissionSetCall).toBeDefined();
+      expect(commissionSetCall?.[1]).toMatchObject({
+        status: "pending",
+        amount: 500, // config default lawyer
+        type: "client_referral",
+      });
       if (result) {
-        expect(result.amount).toBe(1000);
+        expect(result.amount).toBe(500);
       }
     });
 

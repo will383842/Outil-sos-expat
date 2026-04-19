@@ -511,7 +511,7 @@ export const registerChatter = onCall(
       const affiliateCodeProvider = generateChatterProviderCode(affiliateCodeClient);
 
       // Unified code (new system: 1 code, 1 link /r/CODE)
-      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId);
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId, input.email);
 
       console.log("[registerChatter] STEP 10: Codes generated", JSON.stringify({
         userId, affiliateCode, affiliateCodeClient, affiliateCodeRecruitment, affiliateCodeProvider, elapsed: Date.now() - startTime,

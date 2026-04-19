@@ -392,7 +392,7 @@ export const registerBlogger = onCall(
         generateBloggerAffiliateCodes(input.firstName, uid);
 
       // Unified code (new system: 1 code, 1 link /r/CODE)
-      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, uid);
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, uid, input.email);
 
       // 7b. Resolve commission plan (Lifetime Rate Lock)
       const planSnapshot = await snapshotLockedRates("blogger");

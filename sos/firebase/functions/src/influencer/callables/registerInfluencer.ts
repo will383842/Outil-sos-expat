@@ -403,7 +403,7 @@ export const registerInfluencer = onCall(
       const affiliateCodeProvider = generateProviderCode(affiliateCodeClient);
 
       // Unified code (new system: 1 code, 1 link /r/CODE)
-      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId);
+      const affiliateCode = generateUnifiedAffiliateCode(input.firstName, userId, input.email);
 
       // 8. V2: Capture current rates (frozen at registration)
       const capturedRates = captureCurrentRates(config);

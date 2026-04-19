@@ -366,9 +366,16 @@ export async function handleAffiliateUserCreated(event: any) {
         });
       }
 
-      // 9. Update user document with affiliate fields
+      // 9. Update user document with affiliate fields + clean pending referral fields
+      // (referredByUserId / referredByChatter / referredByGroupAdmin / etc. now authoritative)
+      const cleanupFields: Record<string, unknown> = {};
+      if (referredByUserId) {
+        cleanupFields.pendingReferralCode = FieldValue.delete();
+        cleanupFields.referralCapturedAt = FieldValue.delete();
+      }
       await db.collection("users").doc(userId).update({
         ...affiliateFields,
+        ...cleanupFields,
         updatedAt: Timestamp.now(),
       });
 

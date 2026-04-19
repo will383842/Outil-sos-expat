@@ -1941,6 +1941,11 @@ export {
   adminGetDLQStats
 } from './scheduled/processDLQ';
 
+// Scheduled retry for failed Backlink Engine user-registered webhooks (every 30 min)
+export {
+  processBacklinkEngineDLQ,
+} from './scheduled/processBacklinkEngineDLQ';
+
 // ========== TWILIO RECORDINGS BACKUP - SUPPRIME ==========
 // Les fonctions de backup recording ont ete supprimees car l'enregistrement
 // des appels est desactive pour conformite RGPD (commit 12a83a9)
@@ -3275,6 +3280,12 @@ export {
 export {
   consolidatedOnCallCompleted,
 } from './triggers/consolidatedOnCallCompleted';
+
+// ========== CLAIMS FAILURE ALERT TRIGGER ==========
+// Fires Telegram alert when syncRoleClaims fails after all retries (user blocked from role-gated routes)
+export {
+  onClaimsFailureAlert,
+} from './triggers/onClaimsFailureAlert';
 
 // ========== CONSOLIDATED onUserCreated TRIGGER ==========
 // Replaces 9 individual onDocumentCreated triggers on users/{userId}

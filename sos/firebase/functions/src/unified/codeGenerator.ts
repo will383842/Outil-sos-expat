@@ -13,9 +13,14 @@
 /**
  * Generate a unified affiliate code from firstName and UID.
  * Synchronous — no Firestore lookups needed (UID guarantees uniqueness).
+ *
+ * @param firstName - User's first name (any script)
+ * @param uid - Firebase UID (guarantees uniqueness)
+ * @param emailFallback - Optional email to derive prefix when firstName is 100%
+ *   non-Latin (e.g. "李小明") and would otherwise produce a generic "XX" prefix.
  */
-export function generateUnifiedAffiliateCode(firstName: string, uid: string): string {
-  // Clean and normalize first name
+export function generateUnifiedAffiliateCode(firstName: string, uid: string, emailFallback?: string): string {
+  // Clean and normalize first name: strip diacritics, keep only Latin letters
   const cleanName = firstName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // Remove diacritics (é→e, ñ→n)
@@ -23,8 +28,25 @@ export function generateUnifiedAffiliateCode(firstName: string, uid: string): st
     .toUpperCase()
     .slice(0, 4);
 
-  // Ensure at least 2 chars prefix
-  const prefix = cleanName.length >= 2 ? cleanName : (cleanName + "XX").slice(0, 2);
+  // Prefix selection:
+  //   - primary: normalized first name (≥2 chars)
+  //   - fallback: email local-part (before @), cleaned the same way
+  //   - last resort: "XX"
+  let prefix: string;
+  if (cleanName.length >= 2) {
+    prefix = cleanName;
+  } else if (emailFallback) {
+    const localPart = emailFallback.split("@")[0] || "";
+    const cleanEmail = localPart
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Za-z]/g, "")
+      .toUpperCase()
+      .slice(0, 4);
+    prefix = cleanEmail.length >= 2 ? cleanEmail : (cleanName + "XX").slice(0, 2);
+  } else {
+    prefix = (cleanName + "XX").slice(0, 2);
+  }
 
   // Take last 6 alphanumeric chars of UID (guaranteed unique)
   const uidSuffix = uid

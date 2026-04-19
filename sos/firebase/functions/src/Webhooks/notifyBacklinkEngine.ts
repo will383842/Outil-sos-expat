@@ -8,11 +8,34 @@
  */
 
 import * as functions from "firebase-functions";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getApps, initializeApp } from "firebase-admin/app";
 import { BACKLINK_ENGINE_WEBHOOK_SECRET as BACKLINK_SECRET } from "../lib/secrets";
 
 const BACKLINK_ENGINE_WEBHOOK_URL =
   process.env.BACKLINK_ENGINE_WEBHOOK_URL ||
   "https://backlinks.life-expat.com/api/webhooks/sos-expat/user-registered";
+
+/** Write failed webhook into a DLQ collection for scheduled retry */
+async function writeBacklinkDLQ(payload: Record<string, unknown>, reason: string): Promise<void> {
+  try {
+    if (!getApps().length) initializeApp();
+    const db = getFirestore();
+    await db.collection("backlink_engine_dlq").add({
+      payload,
+      reason,
+      attempts: 1,
+      createdAt: Timestamp.now(),
+      nextRetryAt: Timestamp.fromMillis(Date.now() + 15 * 60 * 1000), // +15 min
+      status: "pending",
+    });
+  } catch (err) {
+    functions.logger.error("[notifyBacklinkEngine] Failed to write DLQ entry:", {
+      err: err instanceof Error ? err.message : err,
+      reason,
+    });
+  }
+}
 
 interface NotifyBacklinkEngineParams {
   email: string;
@@ -72,7 +95,11 @@ export async function notifyBacklinkEngineUserRegistered(
         email,
         userType,
       });
-      // Don't throw - user registration should succeed even if webhook fails
+      // Queue for retry instead of silently dropping
+      await writeBacklinkDLQ(
+        { email, userId, userType, firstName, lastName, phone, metadata },
+        `HTTP ${response.status}: ${errorText.substring(0, 500)}`
+      );
       return;
     }
 
@@ -88,6 +115,10 @@ export async function notifyBacklinkEngineUserRegistered(
       email,
       userType,
     });
-    // Don't throw - user registration should succeed even if webhook fails
+    // Queue for retry — network error / timeout
+    await writeBacklinkDLQ(
+      { email, userId, userType, firstName, lastName, phone, metadata },
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
