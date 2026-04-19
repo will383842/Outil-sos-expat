@@ -2466,6 +2466,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     try {
       setIsLoading(true);
       await reload(firebaseUser);
+      // Force token refresh so custom claims (role, etc.) set by backend triggers
+      // (e.g. syncRoleClaims after registerGroupAdmin) are available immediately
+      // instead of waiting up to 1h for the current token to expire.
+      await firebaseUser.getIdToken(true);
       await updateUserState(firebaseUser);
     } catch (e) {
       devError('[Auth] refreshUser error:', e);
