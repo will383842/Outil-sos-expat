@@ -1685,6 +1685,7 @@ export interface RequestInfluencerWithdrawalResponse {
 export interface UpdateInfluencerProfileInput {
   phone?: string;
   country?: string;
+  language?: SupportedInfluencerLanguage;
   additionalLanguages?: SupportedInfluencerLanguage[];
   platforms?: InfluencerPlatform[];
   bio?: string;

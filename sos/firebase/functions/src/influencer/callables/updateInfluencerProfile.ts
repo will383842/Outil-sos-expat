@@ -63,6 +63,10 @@ export const updateInfluencerProfile = onCall(
     // 2. Validate input
     const input = request.data as UpdateInfluencerProfileInput;
 
+    if (input.language !== undefined && !VALID_LANGUAGES.includes(input.language)) {
+      throw new HttpsError("invalid-argument", `Invalid language: ${input.language}`);
+    }
+
     if (input.additionalLanguages) {
       for (const lang of input.additionalLanguages) {
         if (!VALID_LANGUAGES.includes(lang)) {
@@ -117,6 +121,10 @@ export const updateInfluencerProfile = onCall(
 
       if (input.country !== undefined) {
         updates.country = input.country.toUpperCase();
+      }
+
+      if (input.language !== undefined) {
+        updates.language = input.language;
       }
 
       if (input.additionalLanguages !== undefined) {

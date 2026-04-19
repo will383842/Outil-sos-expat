@@ -30,6 +30,43 @@ const InfluencerProfile: React.FC = () => {
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [savingLanguage, setSavingLanguage] = useState(false);
+  const [languageSaved, setLanguageSaved] = useState(false);
+  const [languageError, setLanguageError] = useState<string | null>(null);
+
+  const SUPPORTED_LANGUAGES: { value: string; label: string }[] = [
+    { value: 'fr', label: 'Français' },
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Español' },
+    { value: 'pt', label: 'Português' },
+    { value: 'de', label: 'Deutsch' },
+    { value: 'ar', label: 'العربية' },
+    { value: 'zh', label: '中文' },
+    { value: 'ru', label: 'Русский' },
+    { value: 'hi', label: 'हिन्दी' },
+  ];
+
+  const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = e.target.value;
+    if (!newLanguage || newLanguage === influencer?.language) return;
+
+    setSavingLanguage(true);
+    setLanguageError(null);
+    setLanguageSaved(false);
+    try {
+      const updateProfile = httpsCallable(functionsAffiliate, 'updateInfluencerProfile');
+      await updateProfile({ language: newLanguage });
+      setLanguageSaved(true);
+      setTimeout(() => setLanguageSaved(false), 2500);
+      if (refreshDashboard) refreshDashboard();
+    } catch (err) {
+      console.error('[InfluencerProfile] Language update error:', err);
+      setLanguageError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    } finally {
+      setSavingLanguage(false);
+    }
+  };
+
   const displayedPhoto = localPhotoUrl ?? influencer?.photoUrl ?? null;
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,10 +223,25 @@ const InfluencerProfile: React.FC = () => {
               <p className="text-gray-900 dark:text-white">{influencer?.country}</p>
             </div>
             <div>
-              <label className="text-sm dark:text-gray-400">
+              <label htmlFor="influencer-language-select" className="text-sm dark:text-gray-400 flex items-center gap-2">
                 <FormattedMessage id="influencer.profile.language" defaultMessage="Langue" />
+                {savingLanguage && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
+                {languageSaved && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
               </label>
-              <p className="text-gray-900 dark:text-white">{influencer?.language}</p>
+              <select
+                id="influencer-language-select"
+                value={influencer?.language || ''}
+                onChange={handleLanguageChange}
+                disabled={savingLanguage}
+                className="mt-1 w-full sm:w-auto min-h-[44px] px-3 py-2 rounded-lg bg-white dark:bg-white/10 text-gray-900 dark:text-white border border-gray-300 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:opacity-60"
+              >
+                {SUPPORTED_LANGUAGES.map(lang => (
+                  <option key={lang.value} value={lang.value}>{lang.label}</option>
+                ))}
+              </select>
+              {languageError && (
+                <p className="mt-1 text-xs text-red-500">{languageError}</p>
+              )}
             </div>
           </div>
         </div>
