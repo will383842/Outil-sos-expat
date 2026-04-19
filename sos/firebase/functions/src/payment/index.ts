@@ -58,6 +58,12 @@ export {
 } from './triggers';
 
 // ============================================================================
+// SCHEDULED
+// ============================================================================
+
+export { reconcileStuckWithdrawals as paymentReconcileStuckWithdrawals } from './scheduled/reconcileStuckWithdrawals';
+
+// ============================================================================
 // TYPES (for use by other modules)
 // ============================================================================
 

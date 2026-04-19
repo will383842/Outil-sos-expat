@@ -7,6 +7,14 @@
  * Plans define commission rates for specific time periods.
  * When an affiliate registers during a plan's active period,
  * rates are permanently locked onto their profile.
+ *
+ * @deprecated 2026-04-19 — prefer the unified callables `adminCreateCommissionPlan` /
+ *   `adminUpdateCommissionPlan` / `adminListCommissionPlans` / `adminDeleteCommissionPlan`
+ *   from `unified/callables/adminPlans.ts`. Both routes write to the same
+ *   `commission_plans` collection, but the unified ones include the full V2 plan
+ *   schema (bonuses, discount, withdrawal rules) with zod validation.
+ *   Kept here for backwards compatibility with `AdminCommissionPlans.tsx` and
+ *   `Commissions/tabs/PlansTab.tsx` — migrate those UIs then remove this file.
  */
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
@@ -183,6 +191,12 @@ export const manageCommissionPlans = onCall(
 
     const { action, data } = request.data as { action: string; data?: any };
 
+    logger.warn("[manageCommissionPlans] DEPRECATED callable used", {
+      action,
+      caller: request.auth.uid,
+      hint: "Migrate to adminCreateCommissionPlan/adminUpdateCommissionPlan (unified/callables/adminPlans.ts)",
+    });
+
     switch (action) {
       case "list":
         return listPlans(db);
@@ -255,7 +269,7 @@ async function getPlan(db: FirebaseFirestore.Firestore, planId: string) {
 // ============================================================================
 
 async function getActivePlan(db: FirebaseFirestore.Firestore) {
-  const now = Timestamp.now();
+  const nowMs = Date.now();
   const snapshot = await db
     .collection("commission_plans")
     .where("isActive", "==", true)
@@ -264,7 +278,10 @@ async function getActivePlan(db: FirebaseFirestore.Firestore) {
   const activePlans = snapshot.docs
     .filter((doc) => {
       const data = doc.data();
-      return data.startDate <= now && data.endDate >= now;
+      // Fix 2026-04-19: compare milliseconds (previous Timestamp<=Timestamp was object comparison)
+      const startMs = (data.startDate as Timestamp | undefined)?.toMillis?.() ?? 0;
+      const endMs = (data.endDate as Timestamp | undefined)?.toMillis?.() ?? Number.MAX_SAFE_INTEGER;
+      return startMs <= nowMs && endMs >= nowMs;
     })
     .sort((a, b) => (b.data().priority || 0) - (a.data().priority || 0));
 
@@ -294,21 +311,26 @@ async function createPlan(
   data: any,
   adminId: string
 ) {
-  if (!data?.name || !data?.startDate || !data?.endDate) {
+  if (!data?.name || !data?.startDate) {
     throw new HttpsError(
       "invalid-argument",
-      "name, startDate, endDate are required"
+      "name and startDate are required"
     );
   }
 
   const now = Timestamp.now();
   const planRef = db.collection("commission_plans").doc();
 
+  // Empty endDate means "unlimited" — store 9999-12-31 so comparisons still work
+  const endDateValue = data.endDate
+    ? Timestamp.fromDate(new Date(data.endDate))
+    : Timestamp.fromDate(new Date("9999-12-31T23:59:59Z"));
+
   const plan: Omit<CommissionPlan, "id"> = {
     name: data.name,
     description: data.description || "",
     startDate: Timestamp.fromDate(new Date(data.startDate)),
-    endDate: Timestamp.fromDate(new Date(data.endDate)),
+    endDate: endDateValue,
     isActive: data.isActive ?? true,
     priority: data.priority ?? 0,
     chatterRates: data.chatterRates || {
@@ -393,7 +415,11 @@ async function updatePlan(
   if (data.name !== undefined) updates.name = data.name;
   if (data.description !== undefined) updates.description = data.description;
   if (data.startDate !== undefined) updates.startDate = Timestamp.fromDate(new Date(data.startDate));
-  if (data.endDate !== undefined) updates.endDate = Timestamp.fromDate(new Date(data.endDate));
+  if (data.endDate !== undefined) {
+    updates.endDate = data.endDate
+      ? Timestamp.fromDate(new Date(data.endDate))
+      : Timestamp.fromDate(new Date("9999-12-31T23:59:59Z"));
+  }
   if (data.isActive !== undefined) updates.isActive = data.isActive;
   if (data.priority !== undefined) updates.priority = data.priority;
   if (data.chatterRates !== undefined) updates.chatterRates = data.chatterRates;

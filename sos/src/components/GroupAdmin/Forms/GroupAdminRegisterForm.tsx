@@ -399,8 +399,24 @@ const GroupAdminRegisterForm: React.FC<GroupAdminRegisterFormProps> = ({
 
   const validateStep2 = (): boolean => {
     const errors: Record<string, string> = {};
-    if (!formData.groupUrl || !/^https?:\/\/.+/.test(formData.groupUrl))
+    // Validate group URL: must be http(s), parseable URL with a hostname that contains a TLD
+    if (!formData.groupUrl) {
       errors.groupUrl = intl.formatMessage({ id: 'groupadmin.register.error.groupUrlRequired', defaultMessage: 'Valid group or community URL required' });
+    } else {
+      let groupUrlValid = false;
+      try {
+        const parsed = new URL(formData.groupUrl.trim());
+        groupUrlValid =
+          (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+          parsed.hostname.includes('.') &&
+          parsed.hostname.length >= 4;
+      } catch {
+        groupUrlValid = false;
+      }
+      if (!groupUrlValid) {
+        errors.groupUrl = intl.formatMessage({ id: 'groupadmin.register.error.groupUrlRequired', defaultMessage: 'Valid group or community URL required' });
+      }
+    }
     if (!formData.groupName || formData.groupName.length < 3)
       errors.groupName = intl.formatMessage({ id: 'groupadmin.register.error.groupNameRequired', defaultMessage: 'Group name required (min 3 chars)' });
     if (!formData.groupType) errors.groupType = intl.formatMessage({ id: 'form.error.required', defaultMessage: 'Required' });

@@ -206,7 +206,11 @@ export function getRecruitmentMonthsRemaining(
 }
 
 /**
- * Get Top 3 bonus multiplier based on monthly rank
+ * @deprecated 2026-04-19 — Multipliers removed 2026-03 (commit ee0dafdf). Top 3 is cash-only
+ * via scheduled/crossRoleMonthlyTop3.ts. This helper is no longer called by any runtime path
+ * and always returns 1.0 when multipliers are disabled (default).
+ *
+ * Get Top 3 bonus multiplier based on monthly rank.
  */
 export function getTop3Bonus(
   rank: number | null,

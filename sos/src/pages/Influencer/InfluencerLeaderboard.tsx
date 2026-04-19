@@ -10,10 +10,12 @@ import InfluencerDashboardLayout from '@/components/Influencer/Layout/Influencer
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Trophy, Medal, Crown, Star, Sparkles } from 'lucide-react';
 
+// Top 3 cash prizes — mirrors backend: scheduled/crossRoleMonthlyTop3.ts (TOP1_PRIZE=20000, TOP2=10000, TOP3=5000 cents)
+// Multipliers removed permanently 2026-03 (commit ee0dafdf); cash only since then.
 const TOP3_BONUSES = [
-  { rank: 1, multiplier: 'x2.00', label: 'Gold', color: 'from-yellow-400 to-amber-500', textColor: 'text-yellow-700 dark:text-yellow-300', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20' },
-  { rank: 2, multiplier: 'x1.50', label: 'Silver', color: 'from-gray-300 to-gray-400', textColor: 'text-gray-600 dark:text-gray-300', bgColor: 'bg-gray-50 dark:bg-gray-800/30' },
-  { rank: 3, multiplier: 'x1.15', label: 'Bronze', color: 'from-amber-500 to-orange-600', textColor: 'text-amber-700 dark:text-amber-300', bgColor: 'bg-amber-50 dark:bg-amber-900/20' },
+  { rank: 1, cashAmount: '$200', label: 'Gold', color: 'from-yellow-400 to-amber-500', textColor: 'text-yellow-700 dark:text-yellow-300', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20' },
+  { rank: 2, cashAmount: '$100', label: 'Silver', color: 'from-gray-300 to-gray-400', textColor: 'text-gray-600 dark:text-gray-300', bgColor: 'bg-gray-50 dark:bg-gray-800/30' },
+  { rank: 3, cashAmount: '$50', label: 'Bronze', color: 'from-amber-500 to-orange-600', textColor: 'text-amber-700 dark:text-amber-300', bgColor: 'bg-amber-50 dark:bg-amber-900/20' },
 ] as const;
 
 const UI = {
@@ -78,7 +80,7 @@ const InfluencerLeaderboard: React.FC = () => {
                   <Star className="w-4 h-4 text-white" />
                 )}
               </div>
-              <p className={`text-lg font-bold ${bonus.textColor}`}>{bonus.multiplier}</p>
+              <p className={`text-lg font-bold ${bonus.textColor}`}>{bonus.cashAmount}</p>
               <p className="text-[10px] dark:text-gray-700 sm:text-xs">
                 <FormattedMessage
                   id={`influencer.leaderboard.bonus.rank${bonus.rank}`}
@@ -164,7 +166,7 @@ const InfluencerLeaderboard: React.FC = () => {
                         TOP3_BONUSES[entry.rank - 1].bgColor
                       } ${TOP3_BONUSES[entry.rank - 1].textColor}`}>
                         <Sparkles className="w-2.5 h-2.5" />
-                        {TOP3_BONUSES[entry.rank - 1].multiplier}
+                        {TOP3_BONUSES[entry.rank - 1].cashAmount}
                       </span>
                     )}
                   </div>

@@ -41,6 +41,35 @@ const VALID_PAYMENT_METHODS: InfluencerPaymentMethod[] = [
   "wise", "bank_transfer", "mobile_money"
 ];
 
+const WITHDRAWAL_LOCK_TTL_MS = 2 * 60 * 1000;
+
+async function acquireWithdrawalLock(userId: string): Promise<() => Promise<void>> {
+  const db = getFirestore();
+  const lockRef = db.collection("withdrawal_locks").doc(userId);
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(lockRef);
+    if (snap.exists) {
+      const createdAt = (snap.data()?.createdAt as Timestamp | undefined)?.toMillis() ?? 0;
+      if (Date.now() - createdAt < WITHDRAWAL_LOCK_TTL_MS) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "WITHDRAWAL_IN_PROGRESS: Another withdrawal request is already being processed"
+        );
+      }
+    }
+    tx.set(lockRef, { userId, createdAt: Timestamp.now() });
+  });
+
+  return async () => {
+    try {
+      await lockRef.delete();
+    } catch (err) {
+      logger.warn("[requestInfluencerWithdrawal] Failed to release withdrawal lock", { userId, error: err });
+    }
+  };
+}
+
 /**
  * Convert legacy Influencer payment details to centralized PaymentMethodDetails
  */
@@ -165,6 +194,9 @@ export const requestWithdrawal = onCall(
         "TELEGRAM_REQUIRED: You must connect Telegram before requesting a withdrawal"
       );
     }
+
+    // 2c. Acquire pessimistic lock to prevent concurrent withdrawals for the same user
+    const releaseLock = await acquireWithdrawalLock(userId);
 
     try {
       // 3. Get influencer data
@@ -314,6 +346,8 @@ export const requestWithdrawal = onCall(
 
       logger.error("[requestInfluencerWithdrawal] Error", { userId, error });
       throw new HttpsError("internal", "Failed to process withdrawal request");
+    } finally {
+      await releaseLock();
     }
   }
 );

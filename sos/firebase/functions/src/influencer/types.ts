@@ -239,21 +239,21 @@ export interface Influencer {
   /** Best ever rank */
   bestRank: number | null;
 
-  // ---- Gamification ----
+  // ---- Gamification (DEPRECATED 2026-04-19 — retained for backwards compat with existing Firestore docs) ----
 
-  /** Current streak (consecutive days with activity) */
+  /** @deprecated Streak system removed 2026-03 (commit 2e3a846a). Field kept for backwards compat with existing docs. Never read by runtime. */
   currentStreak: number;
 
-  /** Best streak ever */
+  /** @deprecated Streak system removed 2026-03 (commit 2e3a846a). Field kept for backwards compat. */
   bestStreak: number;
 
   /**
-   * Commission multiplier for this month (reward for being top 3 previous month)
-   * 1.0 = no bonus, 2.0 = double, 1.5 = +50%, 1.15 = +15%
+   * @deprecated Top 3 multipliers removed 2026-03 (commit ee0dafdf). Top 3 is now pure cash via crossRoleMonthlyTop3.
+   * Field kept for backwards compat with existing Firestore docs. Never read by runtime.
    */
   monthlyTopMultiplier: number;
 
-  /** Month during which the multiplier is active (YYYY-MM format, null if no active bonus) */
+  /** @deprecated See monthlyTopMultiplier. Kept for backwards compat. */
   monthlyTopMultiplierMonth: string | null;
 
   // ---- Recruitment (who recruited this influencer) ----
@@ -921,9 +921,12 @@ export interface InfluencerConfig {
 
   // ---- Top 3 Monthly Bonuses ----
 
-  top1BonusMultiplier: number;  // 2.00 = +100%
-  top2BonusMultiplier: number;  // 1.50 = +50%
-  top3BonusMultiplier: number;  // 1.15 = +15%
+  /** @deprecated Multipliers removed 2026-03 (commit ee0dafdf). Top 3 is cash-only via crossRoleMonthlyTop3. Retained for config doc compat. */
+  top1BonusMultiplier: number;
+  /** @deprecated See top1BonusMultiplier. */
+  top2BonusMultiplier: number;
+  /** @deprecated See top1BonusMultiplier. */
+  top3BonusMultiplier: number;
 
   // ---- Recruitment Commission ----
 

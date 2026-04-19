@@ -72,19 +72,31 @@ export async function checkGroupAdminProviderRecruitment(
       return { success: false, error: "GroupAdmin system not active" };
     }
 
-    // 2. Find GroupAdmin by provider code (preferred) or recruitment code (fallback)
+    // 2. Find GroupAdmin by provider code (preferred), recruitment code (legacy),
+    //    or unified affiliateCode (new system: /r/CODE without prefix).
+    const normalizedCode = recruitmentCode.toUpperCase();
     let gaQuery = await db
       .collection("group_admins")
-      .where("affiliateCodeProvider", "==", recruitmentCode.toUpperCase())
+      .where("affiliateCodeProvider", "==", normalizedCode)
       .where("status", "==", "active")
       .limit(1)
       .get();
 
-    // Fallback: search by affiliateCodeRecruitment for backward compatibility
+    // Fallback 1: legacy affiliateCodeRecruitment
     if (gaQuery.empty) {
       gaQuery = await db
         .collection("group_admins")
-        .where("affiliateCodeRecruitment", "==", recruitmentCode.toUpperCase())
+        .where("affiliateCodeRecruitment", "==", normalizedCode)
+        .where("status", "==", "active")
+        .limit(1)
+        .get();
+    }
+
+    // Fallback 2: unified affiliateCode (for providers recruited via /r/CODE link)
+    if (gaQuery.empty) {
+      gaQuery = await db
+        .collection("group_admins")
+        .where("affiliateCode", "==", normalizedCode)
         .where("status", "==", "active")
         .limit(1)
         .get();
@@ -245,19 +257,33 @@ export async function awardGroupAdminProviderRecruitmentCommission(
         const clientDoc = await db.collection("users").doc(clientId).get();
         if (clientDoc.exists) {
           const clientData = clientDoc.data();
+          // Resolve client's GA referrer — same priority as onCallCompleted handler:
+          // 1. referredByGroupAdmin (unified + legacy, set by affiliate resolver)
+          // 2. pendingReferralCode / referredBy with GROUP- prefix (legacy only)
+          const referredByGA = (clientData as any)?.referredByGroupAdmin;
           const pendingCode = clientData?.pendingReferralCode;
           const referredBy = clientData?.referredBy;
-          const groupAdminCode = (pendingCode && typeof pendingCode === "string" && pendingCode.toUpperCase().startsWith("GROUP-"))
-            ? pendingCode.toUpperCase()
-            : (referredBy && typeof referredBy === "string" && referredBy.toUpperCase().startsWith("GROUP-"))
-              ? referredBy.toUpperCase()
-              : null;
+          const groupAdminCode =
+            (referredByGA && typeof referredByGA === "string")
+              ? referredByGA.toUpperCase()
+              : (pendingCode && typeof pendingCode === "string" && pendingCode.toUpperCase().startsWith("GROUP-"))
+                ? pendingCode.toUpperCase()
+                : (referredBy && typeof referredBy === "string" && referredBy.toUpperCase().startsWith("GROUP-"))
+                  ? referredBy.toUpperCase()
+                  : null;
 
           if (groupAdminCode) {
-            const gaQuery = await db.collection("group_admins")
-              .where("affiliateCodeClient", "==", groupAdminCode)
+            // Try unified code first, then legacy affiliateCodeClient
+            let gaQuery = await db.collection("group_admins")
+              .where("affiliateCode", "==", groupAdminCode)
               .limit(1)
               .get();
+            if (gaQuery.empty) {
+              gaQuery = await db.collection("group_admins")
+                .where("affiliateCodeClient", "==", groupAdminCode)
+                .limit(1)
+                .get();
+            }
             if (!gaQuery.empty) {
               clientGroupAdminReferrerId = gaQuery.docs[0].id;
             }

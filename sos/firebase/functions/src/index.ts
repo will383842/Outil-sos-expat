@@ -3009,7 +3009,7 @@ export {
   // Scheduled (individual validate/release REMOVED - consolidated in consolidatedCommissions.ts)
   // influencerValidatePendingCommissions,  // → consolidatedValidateCommissions
   // influencerReleaseValidatedCommissions,  // → consolidatedReleaseCommissions
-  influencerMonthlyTop3Rewards,
+  // influencerMonthlyTop3Rewards, // DISABLED 2026-04-19 — remplacé par crossRoleMonthlyTop3 (évite doubles paiements Top 3)
   // Initialization
   initializeInfluencerConfig,
   // Training callables
@@ -3127,6 +3127,8 @@ export {
   paymentProcessAutomaticPayments,
   paymentWebhookWise,
   paymentWebhookFlutterwave,
+  // Scheduled
+  paymentReconcileStuckWithdrawals,
 } from './payment';
 
 // ========== GROUPADMIN SYSTEM ==========
@@ -3351,7 +3353,7 @@ export {
   chatterEndWeeklyChallenge,
   chatterTierBonusCheck,
   chatterResetCaptainMonthly,
-  chatterMonthlyTop3Rewards,
+  // chatterMonthlyTop3Rewards, // DISABLED 2026-04-19 — remplacé par crossRoleMonthlyTop3 (évite doubles paiements Top 3)
   chatterAggregateActivityFeed,
   getCurrentChallenge,
   getChallengeHistory,

@@ -103,14 +103,25 @@ export async function handleCallCompleted(
 
       const clientData = clientDoc.data()!;
 
-      // Check for GroupAdmin referral code in multiple fields:
-      // 1. pendingReferralCode (set at client registration from ?ref=GROUP-XXXX)
-      // 2. referredBy (set by global affiliate onUserCreated if code was resolved)
+      // Check for GroupAdmin referral in multiple fields:
+      // 1. referredByGroupAdmin (set by affiliate onUserCreated when actorType=groupAdmin — unified + legacy)
+      // 2. pendingReferralCode (legacy GROUP- prefixed code, set at registration)
+      // 3. referredBy (legacy fallback, GROUP- prefixed)
       let groupAdminCode: string | null = null;
 
-      const pendingCode = clientData.pendingReferralCode;
-      if (pendingCode && typeof pendingCode === "string" && pendingCode.toUpperCase().startsWith(GROUP_ADMIN_CODE_PREFIX)) {
-        groupAdminCode = pendingCode.toUpperCase();
+      // Priority 1: referredByGroupAdmin — populated by affiliate resolver for ANY code format
+      // (unified JEAN1A2B3C or legacy GROUP-JEAN123), so use it unconditionally when present.
+      const referredByGA = (clientData as any).referredByGroupAdmin;
+      if (referredByGA && typeof referredByGA === "string") {
+        groupAdminCode = referredByGA.toUpperCase();
+      }
+
+      // Priority 2 & 3: legacy fields with GROUP- prefix (pre-unified clients)
+      if (!groupAdminCode) {
+        const pendingCode = clientData.pendingReferralCode;
+        if (pendingCode && typeof pendingCode === "string" && pendingCode.toUpperCase().startsWith(GROUP_ADMIN_CODE_PREFIX)) {
+          groupAdminCode = pendingCode.toUpperCase();
+        }
       }
 
       if (!groupAdminCode) {
@@ -126,12 +137,21 @@ export async function handleCallCompleted(
 
       // ================================================================
       // FIND GROUP ADMIN by affiliate code
+      // Try unified code first, then legacy affiliateCodeClient (both may coexist per GA doc).
       // ================================================================
-      const groupAdminQuery = await db
+      let groupAdminQuery = await db
         .collection("group_admins")
-        .where("affiliateCodeClient", "==", groupAdminCode)
+        .where("affiliateCode", "==", groupAdminCode)
         .limit(1)
         .get();
+
+      if (groupAdminQuery.empty) {
+        groupAdminQuery = await db
+          .collection("group_admins")
+          .where("affiliateCodeClient", "==", groupAdminCode)
+          .limit(1)
+          .get();
+      }
 
       if (groupAdminQuery.empty) {
         logger.warn("[onCallCompletedGroupAdmin] GroupAdmin not found for code", {

@@ -174,11 +174,11 @@ const GroupAdminRegister: React.FC = () => {
         }, data.password);
       }
 
-      // Step 2: Call Cloud Function
+      // Step 2: Call Cloud Function (client-side timeout below prevents infinite spinner)
       const registerGroupAdmin = httpsCallable(functionsAffiliate, 'registerGroupAdmin');
       let result;
       try {
-        result = await registerGroupAdmin({
+        const callPromise = registerGroupAdmin({
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.email,
@@ -203,6 +203,11 @@ const GroupAdminRegister: React.FC = () => {
           termsAffiliateVersion: data.termsAffiliateVersion || '1.0',
           termsAffiliateType: data.termsAffiliateType || 'terms_affiliate',
         });
+        // Client-side safety net: fail after 50s even if Firebase SDK timeout misfires
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(Object.assign(new Error('Registration request timed out'), { code: 'deadline-exceeded' })), 50000)
+        );
+        result = await Promise.race([callPromise, timeoutPromise]);
       } catch (cfError) {
         // CRITICAL: If Cloud Function fails, delete the orphaned Firebase Auth user
         // to prevent accounts without groupAdmin profiles
