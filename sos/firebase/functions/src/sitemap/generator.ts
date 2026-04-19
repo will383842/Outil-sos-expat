@@ -116,10 +116,19 @@ const ROUTE_TRANSLATIONS: Record<string, Record<string, string>> = {
 };
 
 /**
- * Get translated route slug for a language
+ * Get translated route slug for a language.
+ *
+ * Internal normalization: `ROUTE_TRANSLATIONS` and `localeRoutes.ts` both use
+ * `ch` as the historical key for Chinese, but URL locales emitted by this
+ * sitemap (and served by the SPA / Cloudflare Worker) use `zh-cn` (lang=`zh`).
+ * Without this alias the sitemap emits untranslated English slugs under the
+ * Chinese locale (e.g. /zh-cn/how-it-works) which the Worker then 301-redirects
+ * to the translated slug (/zh-cn/ruhe-yunzuo), triggering GSC's "Page avec
+ * redirection" warning on the sitemap entry itself.
  */
 function getTranslatedRouteSlug(routeKey: string, lang: string): string {
-  return ROUTE_TRANSLATIONS[routeKey]?.[lang] || routeKey;
+  const normalizedLang = lang === 'zh' ? 'ch' : lang;
+  return ROUTE_TRANSLATIONS[routeKey]?.[normalizedLang] || routeKey;
 }
 
 /**
