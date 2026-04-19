@@ -277,7 +277,8 @@ export const influencerOnProviderCallCompleted = onDocumentUpdated(
     }
 
     // P1-4 AUDIT FIX: Skip commissions for very short calls (< 30s)
-    if ((callData.duration ?? 0) < 30) return;
+    // Harmonized 2026-04-19: align with unified/handleCallCompleted.ts (60s min)
+    if ((callData.duration ?? 0) < 60) return;
 
     const providerId = callData.providerId;
     if (!providerId) {

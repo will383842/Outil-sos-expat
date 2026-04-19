@@ -43,6 +43,41 @@ const VALID_LANGUAGES: SupportedInfluencerLanguage[] = [
   "fr", "en", "es", "pt", "ar", "de", "zh", "ru", "hi"
 ];
 
+const EMAIL_LOCK_TTL_MS = 30 * 1000;
+
+function hashEmailForLock(email: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 32);
+}
+
+async function acquireEmailLock(email: string): Promise<() => Promise<void>> {
+  const db = getFirestore();
+  const lockRef = db.collection("influencer_email_locks").doc(hashEmailForLock(email));
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(lockRef);
+    if (snap.exists) {
+      const createdAt = (snap.data()?.createdAt as Timestamp | undefined)?.toMillis() ?? 0;
+      if (Date.now() - createdAt < EMAIL_LOCK_TTL_MS) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "EMAIL_REGISTRATION_IN_PROGRESS: An inscription is already being processed for this email"
+        );
+      }
+    }
+    tx.set(lockRef, { createdAt: Timestamp.now() });
+  });
+
+  return async () => {
+    try {
+      await lockRef.delete();
+    } catch (err) {
+      logger.warn("[registerInfluencer] Failed to release email lock", { email, error: err });
+    }
+  };
+}
+
 // Valid platforms
 const VALID_PLATFORMS: InfluencerPlatform[] = [
   "facebook", "instagram", "twitter", "linkedin", "tiktok", "youtube",
@@ -158,6 +193,10 @@ export const registerInfluencer = onCall(
     if (input.bio && input.bio.length > 1000) {
       throw new HttpsError("invalid-argument", "Bio must be less than 1000 characters");
     }
+
+    // Pessimistic lock on email to prevent duplicate concurrent registrations
+    // (race condition where 2 parallel requests both pass the email duplicate check)
+    const releaseEmailLock = await acquireEmailLock(input.email);
 
     try {
       // 3. Get config and check registrations enabled
@@ -706,6 +745,8 @@ export const registerInfluencer = onCall(
       }
 
       throw new HttpsError("internal", "Failed to register influencer");
+    } finally {
+      await releaseEmailLock();
     }
   }
 );

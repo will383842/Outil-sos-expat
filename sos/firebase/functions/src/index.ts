@@ -3281,6 +3281,11 @@ export {
   consolidatedOnCallCompleted,
 } from './triggers/consolidatedOnCallCompleted';
 
+// ========== PAYMENT REFUND AUTO-CANCEL COMMISSIONS (C3 audit fix 2026-04-19) ==========
+// Fires on payments/{id} update → "refunded" status. Cancels all affiliate
+// commissions tied to that call session across 5 role systems automatically.
+export { onPaymentRefunded } from './triggers/onPaymentRefunded';
+
 // ========== CLAIMS FAILURE ALERT TRIGGER ==========
 // Fires Telegram alert when syncRoleClaims fails after all retries (user blocked from role-gated routes)
 export {

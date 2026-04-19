@@ -11,7 +11,10 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 
-const MAX_DEPTH = 10;
+// Raised from 10 → 50 on 2026-04-19: with MAX_DEPTH=10 a circular MLM chain
+// of 12+ levels could evade detection (walk stopped before closing the loop).
+// Both walk directions are capped, so worst case = 2 × 50 = 100 Firestore reads.
+const MAX_DEPTH = 50;
 
 /**
  * Detect if a referral would create a circular chain in the given collection.
