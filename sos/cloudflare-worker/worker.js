@@ -1236,7 +1236,13 @@ const EDGE_CACHE_ENABLED = true;
 // caches.default.delete() is PoP-local and doesn't propagate globally. When
 // a full cache purge is needed (e.g., after fixing a critical bug), bump
 // this version instead of deploying to force a global miss on all PoPs.
-const EDGE_CACHE_VERSION = 'v13';
+//
+// v14 (2026-04-20): bumped to refresh the master sitemap-index.xml so
+// GSC sees varied per-sub-sitemap lastmods (commit 28172f98 added proper
+// lastmod parsing from the blog's /sitemap.xml). Without this bump, the
+// old cached response with uniform `2026-04-19` lastmods stayed alive
+// for up to 1h.
+const EDGE_CACHE_VERSION = 'v14';
 
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,   // 24h for valid pages
