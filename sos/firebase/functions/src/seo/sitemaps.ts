@@ -1140,12 +1140,17 @@ export const sitemapIndex = onRequest(
       const seenUrls = new Set<string>();
       const sitemapBlocks: string[] = [];
 
-      const addSitemap = (url: string) => {
+      // Per-sitemap lastmod. Previously all 638 sub-sitemaps were stamped with
+      // the same `today` date, giving GSC no signal about which sub-sitemap
+      // actually changed. Result: GSC processed only 2 of 638 children in the
+      // first several days, leaving ~25 000 URLs undiscovered. Honouring each
+      // sub-sitemap's own lastmod lets GSC prioritise fresh ones.
+      const addSitemap = (url: string, lastmod: string = today) => {
         if (seenUrls.has(url)) return;
         seenUrls.add(url);
         sitemapBlocks.push(`  <sitemap>
     <loc>${url}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${lastmod}</lastmod>
   </sitemap>`);
       };
 
@@ -1197,14 +1202,28 @@ export const sitemapIndex = onRequest(
 
         if (blogResponse.ok) {
           const blogXml = await blogResponse.text();
-          const locRegex = /<loc>([^<]+)<\/loc>/g;
+          // Parse each <sitemap>…</sitemap> block to preserve its own <lastmod>.
+          // The blog's SeoController emits proper per-sub-sitemap lastmods
+          // (based on Article/Category/etc. updated_at — see
+          // Blog_sos-expat_frontend/app/Http/Controllers/SeoController.php).
+          // Honouring them here signals to GSC which sub-sitemaps actually
+          // changed since its last crawl.
+          const blockRegex = /<sitemap>\s*<loc>([^<]+)<\/loc>\s*(?:<lastmod>([^<]+)<\/lastmod>\s*)?<\/sitemap>/g;
           let match: RegExpExecArray | null;
-          while ((match = locRegex.exec(blogXml)) !== null) {
+          while ((match = blockRegex.exec(blogXml)) !== null) {
             const url = match[1].trim();
+            const blogLastmod = (match[2] || '').trim();
             // Safety: only include URLs that point to our canonical domain
             if (url.startsWith(SITE_URL)) {
               const before = seenUrls.size;
-              addSitemap(url);
+              // Keep only the YYYY-MM-DD date portion to match Firebase
+              // sub-sitemaps' format (sitemaps.org accepts both full W3C
+              // datetime and bare date; staying uniform avoids false
+              // positives in GSC's "no changes" comparison).
+              const normalizedLastmod = blogLastmod
+                ? blogLastmod.substring(0, 10)
+                : today;
+              addSitemap(url, normalizedLastmod);
               if (seenUrls.size > before) blogCount++;
             }
           }
