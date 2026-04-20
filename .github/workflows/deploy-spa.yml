@@ -1,0 +1,92 @@
+name: Deploy SPA to Cloudflare Pages
+
+# Fallback manual deploy for the sos/ React SPA when CF Pages auto-build
+# fails to pick up new commits. Introduced 2026-04-20 after commit 72faefc3
+# (Review schema itemReviewed fix) did not reach prod: CF Pages dashboard
+# showed a "recent deploy" but the served JS bundle hash never changed.
+#
+# Safety profile:
+#  - Path filter: only triggers on sos/src, sos/public, sos/package*, vite config
+#  - Reuses existing CLOUDFLARE_API_TOKEN secret (already validated for Worker)
+#  - Build runs FIRST; if it fails, no deploy is attempted → prod untouched
+#  - Deploy uses --branch=main so it lands on the production alias alongside
+#    whatever the broken auto-build last produced (Pages keeps previous
+#    versions and can be rolled back with one click from the dashboard)
+#  - workflow_dispatch enabled for manual trigger without a code change
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sos/src/**'
+      - 'sos/public/**'
+      - 'sos/package.json'
+      - 'sos/package-lock.json'
+      - 'sos/vite.config.ts'
+      - 'sos/index.html'
+      - 'sos/tsconfig*.json'
+      - 'sos/scripts/**'
+      - '.github/workflows/deploy-spa.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-spa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: sos/package-lock.json
+
+      - name: Install dependencies
+        working-directory: sos
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Build SPA
+        working-directory: sos
+        env:
+          # Prebuild scripts generate firebase-config from env vars.
+          # CF Pages passes them via project settings; we mirror what we know
+          # is safe-public (non-secret) here. Missing optional vars are
+          # tolerated by gen-firebase-config.cjs fallbacks.
+          CI: 'true'
+          NODE_OPTIONS: '--max-old-space-size=4096'
+        run: npm run build
+
+      - name: Verify build output
+        working-directory: sos
+        run: |
+          if [ ! -d dist ]; then
+            echo "::error::sos/dist does not exist — build likely failed silently"
+            exit 1
+          fi
+          if [ ! -f dist/index.html ]; then
+            echo "::error::sos/dist/index.html missing — incomplete build"
+            exit 1
+          fi
+          CHUNKS=$(find dist/assets -name '*.js' 2>/dev/null | wc -l)
+          echo "Build OK: $CHUNKS JS chunks produced"
+          if [ "$CHUNKS" -lt 5 ]; then
+            echo "::error::Only $CHUNKS JS chunks — suspiciously low, aborting deploy"
+            exit 1
+          fi
+
+      - name: Deploy to Cloudflare Pages (project sos-expat, branch main)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: fe7c0b2676e091898d565b8eba1544ad
+          command: pages deploy sos/dist --project-name=sos-expat --branch=main --commit-dirty=true
+
+      - name: Post-deploy summary
+        if: success()
+        run: |
+          echo "✅ SPA deployed to Cloudflare Pages project 'sos-expat' on branch 'main'"
+          echo "    Commit: ${{ github.sha }}"
+          echo "    Rollback (if needed): CF Pages dashboard → Deployments → Restore previous"
