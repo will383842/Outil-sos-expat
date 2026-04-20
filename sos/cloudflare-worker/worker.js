@@ -1242,7 +1242,14 @@ const EDGE_CACHE_ENABLED = true;
 // lastmod parsing from the blog's /sitemap.xml). Without this bump, the
 // old cached response with uniform `2026-04-19` lastmods stayed alive
 // for up to 1h.
-const EDGE_CACHE_VERSION = 'v14';
+// v15 (2026-04-20, same day): bumped again to invalidate cached SSR
+// bot responses on provider profile pages. Review schema fix
+// (72faefc3) was live in the SPA + Firebase SSR cache was explicitly
+// invalidated, but the Worker's own caches.default layer kept serving
+// the pre-fix rendered HTML for the 24h TTL. Bumping the cache key
+// version is the supported global-invalidation mechanism (per code
+// comments above) since caches.default.delete() is PoP-local only.
+const EDGE_CACHE_VERSION = 'v15';
 
 const EDGE_CACHE_TTL = {
   SSR_OK: 86400,   // 24h for valid pages
