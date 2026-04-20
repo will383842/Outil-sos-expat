@@ -2810,7 +2810,13 @@ const ProviderProfile: React.FC = () => {
         </Helmet>
       ) : null}
 
-      {/* Review Schema JSON-LD — enables Google Rich Snippets with stars on provider profiles */}
+      {/* Review Schema JSON-LD — enables Google Rich Snippets with stars on provider profiles.
+          itemReviewed MUST point to the specific provider (not the default "SOS Expat &
+          Travelers" Organization). Google's review-snippet guidelines reject "self-serving
+          reviews" where a business reviews itself on its own site — observed 2026-04-19:
+          GSC "Extraits d'avis" dropped from 116 → 6 valid items because every review was
+          emitted with itemReviewed = SOS Expat Organization. See:
+          https://developers.google.com/search/docs/appearance/structured-data/review-snippet#guidelines */}
       {reviews.length > 0 && (
         <ReviewSchema
           reviews={reviews
@@ -2823,6 +2829,13 @@ const ProviderProfile: React.FC = () => {
               comment: r.comment,
               createdAt: r.createdAt,
             }))}
+          itemReviewed={{
+            type: isLawyer ? 'LegalService' : 'ProfessionalService',
+            name: formatPublicName(provider),
+            url: canonicalUrl,
+            ...(provider?.bio && { description: String(provider.bio).slice(0, 300) }),
+            ...(provider?.photoURL && { image: String(provider.photoURL) }),
+          }}
           baseUrl={canonicalUrl}
           includeAggregateRating={false}
         />
